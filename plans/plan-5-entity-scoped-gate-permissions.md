@@ -83,7 +83,7 @@ Open details the draft must pin down before code:
 Pin down `data_object_name` token + verbatim-override verb (or the alternatives), so B-D are
 mechanical.
 
-### B. Rewrite `deriveGate` (emit_fact_sheet.ts) and DELETE the re-prefix path
+### B. Rewrite `deriveGate` (generate_blueprints.ts) and DELETE the re-prefix path
 - Emit `<entityToken>:<verb>`. Remove the `reprefixModuleIdSet` parameter, the `reprefixed` flag,
   and the installing-unit prefix branch added in plan-4 step D. `gateModule` is still resolved (for
   the section-7 "realizing module" display column), but no longer drives the code's prefix.

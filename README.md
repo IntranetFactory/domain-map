@@ -180,6 +180,12 @@ There is no direct tool→APQC link. Tools reach APQC transitively: `tools → s
 
 **Detail:** SKILL.md § "Phase D — Process-skill discovery"; [references/discover-cross-domain-processes.md](.claude/skills/domain-map-analyst/references/discover-cross-domain-processes.md); [references/discovery-query.md](.claude/skills/domain-map-analyst/references/discovery-query.md).
 
+### Adjudicate discretionary coverage (`b3`)
+
+Validate/Research park "flagship vendors also model X" ideas as `b3:` blocks in `audits/<CODE>/state.yaml` (split-shaped ones go to [`_missing-domains.md`](audits/_missing-domains.md) / [`_modularization-backlog.md`](audits/_modularization-backlog.md)). They are non-blocking and never auto-run, so they sit until you call them deliberately.
+
+**Prompt:** *"Adjudicate the discretionary-coverage backlog: harvest every `b3:` block across `audits/*/state.yaml` plus `_missing-domains.md` and `_modularization-backlog.md`, and for each candidate decide load (additive vendor-checked insert) / promote to a `b2` decision / drop. Don't default-skip."*
+
 ## Build scripts (not modes)
 
 Modes carry user-review gates and Rule #1 discipline (`record_status='new'` on every AI-derived row, never auto-approved). Build scripts are deterministic, idempotent, and user-triggered with no per-row review. They produce artifacts (markdown blueprints, JSON snapshots, ranked tables) from live catalog state; they don't add catalog rows that need approval.
@@ -187,9 +193,9 @@ Modes carry user-review gates and Rule #1 discipline (`record_status='new'` on e
 | Task | Command | What it does |
 |---|---|---|
 | **Create the domain-map JSON snapshot** | `bun run scripts/emit_domain_map.ts` | Emits three files: [`catalog/domain-map.json`](catalog/domain-map.json) (domains + modules, each with `personas[]` and tagged `processes[]`), [`catalog/personas.json`](catalog/personas.json) (every persona + its reach), and [`catalog/processes.json`](catalog/processes.json) (only processes in use). A full catalog snapshot for external tooling. Regenerable from live state. Git-tracked. |
-| **Regenerate one module blueprint** | `bun run scripts/emit_fact_sheet.ts --module <CODE>` | Emits [`catalog/blueprints/<module-code>-semantic-blueprint.md`](catalog/blueprints/) for one module. Run after fix-loop writes that touched the module. |
-| **Regenerate every module blueprint** | `bun run scripts/emit_fact_sheet.ts --all` | Emits every per-module blueprint in one pass. Run after multi-domain changes. |
-| **CI drift check on blueprints** | `bun run scripts/emit_fact_sheet.ts --all --check` | Exits non-zero if any blueprint would change. Use to gate commits. |
+| **Regenerate one module blueprint** | `bun run scripts/generate_blueprints.ts --module <CODE>` | Emits [`catalog/blueprints/<module-code>-semantic-blueprint.md`](catalog/blueprints/) for one module. Run after fix-loop writes that touched the module. |
+| **Regenerate every module blueprint** | `bun run scripts/generate_blueprints.ts --all` | Emits every per-module blueprint in one pass. Run after multi-domain changes. |
+| **CI drift check on blueprints** | `bun run scripts/generate_blueprints.ts --all --check` | Exits non-zero if any blueprint would change. Use to gate commits. |
 | **Catalog-wide Semantius coverage rollup** | `bun run scripts/analytics/coverage_rollup.ts` | Read-only catalog-wide score (`strict_score` + `operational_score` per system skill, per module, per domain). Surfaces which tools push a skill below 100%. Read-only. |
 | **Ranked discovery candidates (read-only)** | `bun run scripts/analytics/discovery_query.ts --top 25` | Read-only Phase D candidate list. **Different from Pass 2 in mode c**: no `--persist` flag means no `handoff_processes` writes, just the table. Useful for ad-hoc inspection. |
 | **APQC PCF refresh (rare)** | none yet (one-off loader when needed) | When APQC publishes a new PCF version, or an industry-specific PCF gets added, author a `scripts/loaders/import_apqc_pcf_<version>.ts` one-off. Not a recurring workflow. |
@@ -219,14 +225,14 @@ The `use-semantius` skill is the canonical home for platform mechanics (CLI auth
 
 - [`.claude/skills/domain-map-analyst/`](.claude/skills/domain-map-analyst/) — skill definition (SKILL.md + references).
 - [`catalog/`](catalog/) — everything the catalog publisher consumes to produce the public site and installable skills. Contents:
-  - [`catalog/blueprints/`](catalog/blueprints/) — per-module semantic blueprints, emitted from live state via [`scripts/emit_fact_sheet.ts`](scripts/emit_fact_sheet.ts).
+  - [`catalog/blueprints/`](catalog/blueprints/) — per-module semantic blueprints, emitted from live state via [`scripts/generate_blueprints.ts`](scripts/generate_blueprints.ts).
   - [`catalog/domain-map.json`](catalog/domain-map.json), [`catalog/personas.json`](catalog/personas.json), [`catalog/processes.json`](catalog/processes.json) — emitted snapshots of the catalog (gitted but regenerable in one pass via [`scripts/emit_domain_map.ts`](scripts/emit_domain_map.ts)). `domain-map.json` carries per-domain / per-module `personas[]` + tagged `processes[]`; the two sibling files are the full persona list and the in-use process list.
   - [`catalog/skill-specs/<DOMAIN>/`](catalog/skill-specs/) — one folder per domain containing everything the catalog publisher needs to ship that domain's skill:
     - `spec.json` — structured per-domain data (modules, data_objects, handoffs, capabilities, aliases, enums, system_skills, roles). Loaded on demand by the skill at runtime. Emitted from live state.
     - `catalog.yaml` — buyer-facing catalog UX content (tagline, description, category). Consumed by the site generator only; Rule #20 governs writes.
     - `SKILL.md` — pre-rendered template with placeholders substituted from `spec.json` and `catalog.yaml`. Shipped verbatim into the installable skill.
   - [`catalog/domain-skill-template/`](catalog/domain-skill-template/) — the single source-of-truth template (`SKILL.md` with `{{...}}` placeholders + generic `references/`). The emitter reads this and writes per-domain rendered `SKILL.md` files into `skill-specs/<DOMAIN>/`. The web site generator does pure file copy: template's `references/` + per-domain folder.
-- [`scripts/`](scripts/) — committed TypeScript utilities (Bun). Includes the fact-sheet emitter (`emit_fact_sheet.ts`), domain-map JSON emitter (`emit_domain_map.ts`), and two subdirectories:
+- [`scripts/`](scripts/) — committed TypeScript utilities (Bun). Includes the blueprint emitter (`generate_blueprints.ts`), domain-map JSON emitter (`emit_domain_map.ts`), and two subdirectories:
   - [`scripts/loaders/`](scripts/loaders/) — reusable, idempotent load/fix/backfill patterns referenced from SKILL.md and `references/`. Reference loader: [`load_research.ts`](scripts/loaders/load_research.ts).
   - [`scripts/analytics/`](scripts/analytics/) — read-only and analytics-with-persistence patterns. Phase D entry point: [`discovery_query.ts`](scripts/analytics/discovery_query.ts). Coverage rollup: [`coverage_rollup.ts`](scripts/analytics/coverage_rollup.ts).
 - [`.tmp_deploy/`](.tmp_deploy/) — **gitignored** scratch space for dated one-off work (per-domain audit fixes, in-flight drafts). Anything in here will be lost if the working tree is wiped. When a one-off earns repeated reference from SKILL.md or `references/`, promote it to `scripts/loaders/`.

@@ -1,209 +1,63 @@
-# === SUPERSEDED 2026-06-06: per-domain-skill restoration ===
-# The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
-# Any open item that says "author/split a per-module system skill", "one system skill per
-# domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELED.
-# New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
-# domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
-# DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
-# cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
-# re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
-# === end supersession note ===
 schema_version: 2
 domain: SPM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-11"
+
+# 2026-06-11 build-out: B2-S1 resolved (keep split, vendor-grounded Phase 0). Phases A/M/B/S
+# executed; 8 masters modularized into 3 modules, strategic_initiatives embedded from SEM.
+# All structural bands pass. Resolved items moved to history.md. Open items below only.
 
 b1a:
   - id: B1A-B9D-VERIFY
     summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
-  - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 1 capability awaiting a build. Gated on B2-S1 (SPM vs SEM duplication decision)."
-    finding: "Live 2026-06-07: SPM (domain_id 9) has 0 domain_modules rows (M1 hard fail) and 1 capability_domains row, so it is not deployable. The module shape cannot be authored until B2-S1 resolves. Master-level corrective work that survives any B2-S1 resolution (entity_type, aliases, catalog UX, outbound APQC tags) has been executed; everything else is blocked on the build."
-    action: "Resolve B2-S1, then run Phase A then M then B then S to author the module set, capabilities, masters, and the domain-grain system skill. If multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. Do NOT scaffold modules before B2-S1."
-    blocked_by:
-      - {type: user_decision, ref: B2-S1}
-
-b1b:
-  - id: B1B-S1
-    summary: M1 hard fail, SPM has zero domain_modules; blocks the entire M / B / E / F cascade until B2-S1 duplication decision resolves.
-    finding: domain_modules count for SPM is 0 (verified live 2026-06-07); legacy domain_data_objects rollup carries 9 masters + 5 non-master rows but Phase M was never executed. Recommended provisional shape pending B2-S1, 2 full modules SPM-PORTFOLIO-PLANNING (mastering 273 275 278 280) + SPM-RESOURCE-CAPACITY (mastering 277 279 276 281) with strategic_initiatives (274) consumed from SEM-EXECUTION-TRACKING per single-master rule.
-    blocked_by:
-      - {type: user_decision, ref: B2-S1}
-    affected_modules: []
-    affected_entities: [strategic_portfolios, strategic_initiatives, roadmap_items, business_value_assessments, resource_allocations, demand_intake_requests, scenario_plans, dependency_chains, benefits_tracking_records]
-
-  - id: B1B-S3
-    summary: B7 hard fail, zero users edges; gated on module shape so verb-form is correct.
-    finding: data_object_relationships pulled with related_data_object_id=748 (users) returns no rows for any SPM master (273, 274, 275, 276, 277, 278, 279, 280, 281). Rule #10 requires explicit edges (portfolio owner, initiative sponsor, demand requester, scenario planner, allocation approver, etc.).
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: verb_form_depends_on_module_ownership}
-    affected_masters:
-      - {data_object_id: 273, name: strategic_portfolios, target_module_id: null, workflow: owner_actor}
-      - {data_object_id: 274, name: strategic_initiatives, target_module_id: null, workflow: sponsor_plus_approver}
-      - {data_object_id: 275, name: roadmap_items, target_module_id: null, workflow: planner_actor}
-      - {data_object_id: 276, name: business_value_assessments, target_module_id: null, workflow: assessor_plus_approver}
-      - {data_object_id: 277, name: resource_allocations, target_module_id: null, workflow: allocator_plus_approver}
-      - {data_object_id: 278, name: demand_intake_requests, target_module_id: null, workflow: requester_plus_approver}
-      - {data_object_id: 279, name: scenario_plans, target_module_id: null, workflow: planner_plus_reviewer}
-      - {data_object_id: 281, name: benefits_tracking_records, target_module_id: null, workflow: owner_actor}
-
-  - id: B1B-S5
-    summary: F1 + F2 legacy domain-level system skill; RETIRED-grain item reframed per 2026-06-06 supersession. Gated on module shape.
-    finding: skills row id=6 (spm-system, skill_type=system, domain_id=9, domain_module_id=NULL) is the legacy pre-modular system skill. Under the 2026-06-06 per-domain-skill model this is now the CORRECT grain (exactly one domain-grain system skill, domain_id set, domain_module_id null). The old F1/F2 per-module-skill ask is CANCELED. Once modules exist, the domain-grain skill DERIVES its toolset from domain_module_tools; no per-module system skills are authored. skill_tools is dropped.
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: toolset_derivation_needs_module_tools}
-    affected_entities: [skills, domain_module_tools]
-    extra_legacy_skill_id: 6
-    extra_note: "Per-module tool re-authoring tracked in audits/_modularization-backlog.md."
-
-  - id: B1B-S6
-    summary: B12 zero SPM-owned lifecycle states; gated on module shape and B2-S3 config-shape exemption on dependency_chains.
-    finding: 5 lifecycle states on strategic_initiatives (274) owned by SEM module 106 (proposed, approved, in_progress, completed, cancelled). The other 8 SPM masters have zero lifecycle states. entity_type is now classified operational_workflow on 8 masters (273 274 275 276 277 278 279 281) as of 2026-06-07, so B12 now applies to all 8; dependency_chains (280) stays unclassified pending B2-S3. Rule #12 requires master + required data_objects with a real workflow to ship state machines once the owning module exists.
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: module_id_must_be_set_on_states}
-      - {type: user_decision, ref: B2-S3, reason: dependency_chains_config_shape_exemption}
-    affected_masters:
-      - {data_object_id: 273, name: strategic_portfolios, target_module_id: null, workflow: proposed_active_under_review_rebalanced_sunset}
-      - {data_object_id: 275, name: roadmap_items, target_module_id: null, workflow: planned_committed_in_development_released_cancelled}
-      - {data_object_id: 276, name: business_value_assessments, target_module_id: null, workflow: draft_submitted_approved}
-      - {data_object_id: 277, name: resource_allocations, target_module_id: null, workflow: proposed_approved_committed_consumed}
-      - {data_object_id: 278, name: demand_intake_requests, target_module_id: null, workflow: submitted_screened_approved_rejected_fulfilled}
-      - {data_object_id: 279, name: scenario_plans, target_module_id: null, workflow: draft_evaluated_approved_archived}
-      - {data_object_id: 281, name: benefits_tracking_records, target_module_id: null, workflow: baseline_tracking_realized_at_risk_written_off}
-
-  - id: B1B-S7
-    summary: B4 pattern flags all false-by-default on every SPM master; positive re-evaluation pending B2-S2 per-flag user decisions.
-    finding: Every SPM master (273, 274, 275, 276, 277, 278, 279, 280, 281) has has_personal_content = has_submit_lock = has_single_approver = false. Per Rule #12 / B4, false-by-default is not the same as false-after-review. Candidates flagged in Bucket 2 B2-S2.
-    blocked_by:
-      - {type: user_decision, ref: B2-S2}
-    affected_masters:
-      - {data_object_id: 276, name: business_value_assessments, target_module_id: null, workflow: candidate_submit_lock_plus_single_approver}
-      - {data_object_id: 279, name: scenario_plans, target_module_id: null, workflow: candidate_submit_lock}
-      - {data_object_id: 278, name: demand_intake_requests, target_module_id: null, workflow: candidate_single_approver}
-      - {data_object_id: 277, name: resource_allocations, target_module_id: null, workflow: candidate_single_approver}
-      - {data_object_id: 274, name: strategic_initiatives, target_module_id: null, workflow: candidate_single_approver_pending_B2-S1}
-
-  - id: B1B-S8
-    summary: B10b NULL source_domain_module_id on all 13 outbound handoffs; gated on module shape.
-    finding: Every outbound handoff (793, 178, 240, 244, 243, 245, 246, 242, 792, 794, 795, 796, 241) carries source_domain_module_id=NULL because no SPM modules exist. 5 outbound rows additionally carry target_domain_module_id=NULL (245, 246, 792, 794, 795); the target-side NULLs are report-only owed by EPM and VSDP per asymmetry rule.
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: needs_chosen_module_set_for_deterministic_backfill}
-    affected_handoffs:
-      - {handoff_id: 793, direction: outbound, source_domain: SPM, target_domain: TALENT-MGMT, payload: business_value_assessments, null_field: source_domain_module_id}
-      - {handoff_id: 178, direction: outbound, source_domain: SPM, target_domain: WORK-MGMT, payload: okr_objectives, null_field: source_domain_module_id}
-      - {handoff_id: 240, direction: outbound, source_domain: SPM, target_domain: WORK-MGMT, payload: strategic_initiatives, null_field: source_domain_module_id}
-      - {handoff_id: 244, direction: outbound, source_domain: SPM, target_domain: WORK-MGMT, payload: strategic_portfolios, null_field: source_domain_module_id}
-      - {handoff_id: 243, direction: outbound, source_domain: SPM, target_domain: PROD-MGMT, payload: roadmap_items, null_field: source_domain_module_id}
-      - {handoff_id: 245, direction: outbound, source_domain: SPM, target_domain: EPM, payload: strategic_initiatives, null_field: source_and_target_domain_module_id}
-      - {handoff_id: 246, direction: outbound, source_domain: SPM, target_domain: EPM, payload: scenario_plans, null_field: source_and_target_domain_module_id}
-      - {handoff_id: 242, direction: outbound, source_domain: SPM, target_domain: SWP, payload: resource_allocations, null_field: source_domain_module_id}
-      - {handoff_id: 792, direction: outbound, source_domain: SPM, target_domain: EPM, payload: benefits_tracking_records, null_field: source_and_target_domain_module_id}
-      - {handoff_id: 794, direction: outbound, source_domain: SPM, target_domain: VSDP, payload: dependency_chains, null_field: source_and_target_domain_module_id}
-      - {handoff_id: 795, direction: outbound, source_domain: SPM, target_domain: EPM, payload: benefits_tracking_records, null_field: source_and_target_domain_module_id}
-      - {handoff_id: 796, direction: outbound, source_domain: SPM, target_domain: WORK-MGMT, payload: business_value_assessments, null_field: source_domain_module_id}
-      - {handoff_id: 241, direction: outbound, source_domain: SPM, target_domain: SWP, payload: strategic_initiatives, null_field: source_domain_module_id}
-
-  - id: B1B-S9
-    summary: B9b zero intra-domain cross-module handoffs; vacuously skipped because module count is currently 0.
-    finding: Precondition (>=2 modules) currently false; B9b vacuously skipped. Once B1B-S1 lands a 2-module shape, several intra-domain handoffs become expected (demand_intake.approved cross-module to resource module; scenario_plan.evaluated cross-module to planning module; business_value_assessment.completed cross-module to benefits module).
-    blocked_by:
-      - {type: depends_on, ref: B1B-S1, reason: needs_at_least_two_modules}
-    affected_entities: [handoffs]
+    finding: "This domain was last fully reconciled before B9d existed. Its handoff payload tags are B9d-unverified in BOTH directions. Not part of the build-out deliverables; carried as a follow-up audit pass."
+    action: "Run scripts/analytics/b9d_resolver.ts SPM in both directions; classify every payload, re-point ROLL-UPs on the source, surface MIS-TAGs, write ORPHANs into the owner's backlog. Do not touch record_status (Rule #1)."
 
 b2:
-  - id: B2-S1
-    summary: SPM vs. SEM domain duplication decision; gates the SPM module shape and every Bucket 3 candidate.
-    question: SPM (id 9) and SEM (id 166) overlap heavily. SPM has 0 modules; SEM has 3 (SEM-STRATEGY-DEFINITION, SEM-EXECUTION-TRACKING, SEM-OPERATING-RHYTHM). Single shared capability SEM-PORTFOLIO-ALIGN dual-linked. strategic_initiatives (274) lifecycle states all owned by SEM module 106. Flagship vendors and the Gartner Magic Quadrant cover both surfaces as one product / one market. Which catalog shape captures SPM?
+  - id: B2-HANDOFF-REATTRIB
+    summary: "3 outbound handoffs fire on SEM-published events but are recorded source=SPM; re-attribute to SEM (destructive, touches SEM)."
+    question: "Under the (c) split, strategic_initiatives and okr_objectives are SEM's masters, so initiative.* and okr_objective.* events are SEM-published. Handoffs 178 (okr_objective.created -> WORK-MGMT), 245 (initiative.completed -> EPM), 241 (initiative.kickoff -> SWP) are recorded source_domain_id=9 (SPM) and were left with source_domain_module_id NULL during B10b backfill. Should they be re-attributed to SEM (source_domain_id=166, source module SEM-EXECUTION-TRACKING / the okr-owning SEM module)?"
     options:
-      - "(a) merge SPM into SEM, retire SPM domain row, land the 9 legacy-rollup SPM masters in new SEM modules"
-      - "(b) merge SEM into SPM, SPM is canonical, SEM's 3 modules re-host on SPM"
-      - "(c) keep split with clear boundary: SPM owns planning / investment / scenario / capacity surface (8 unique masters), SEM owns execution / OKR / operating-rhythm surface, strategic_initiatives stays mastered by SEM and SPM consumes; finish SPM module shape per B1B-S1 recommended-default (SPM-PORTFOLIO-PLANNING + SPM-RESOURCE-CAPACITY)"
-    why: Editorial / architectural; depends on platform-vs-silos thinking. Catalog evidence supports (c) most cleanly because SPM has 8 unique masters SEM does not, but vendor evidence is mixed (single Gartner MQ, single flagship product per vendor covering both).
-
-  - id: B2-S2
-    summary: B4 pattern flag positive re-evaluation per Rule #12; per-flag yes / no answers from user.
-    question: Which of the following pattern-flag candidates should flip from false to true?
-    options:
-      - "business_value_assessments.has_submit_lock (freeze on publish so dependents can rely on it)"
-      - "business_value_assessments.has_single_approver (PMO / sponsor approval gate)"
-      - "scenario_plans.has_submit_lock (freeze on evaluation for downstream what-if comparisons)"
-      - "demand_intake_requests.has_single_approver (intake-board approval)"
-      - "resource_allocations.has_single_approver (resource committee approval)"
-      - "strategic_initiatives.has_single_approver (executive sponsor; pending B2-S1 because SEM may own this master)"
-    why: Pattern flags are workflow-shape judgments the user owns. Per Rule #15 the consideration record stays in the audit conversation, never in data_objects.notes.
-
-  - id: B2-S3
-    summary: dependency_chains (280) config-shape exemption per Rule #12. Gates the master's entity_type classification.
-    question: Should dependency_chains (280) take the config-shape exemption (no lifecycle state machine) or carry a workflow state machine? The master's entity_type is intentionally LEFT 'unclassified' until this resolves, since the answer picks the entity_type value.
-    options:
-      - "(a) config-shape: PATCH entity_type=operational_record, skip lifecycle authoring; track via record_status alone"
-      - "(b) workflow: PATCH entity_type=operational_workflow and author a small state machine (e.g. identified / acknowledged / resolved)"
-      - "(c) defer pending more flagship-vendor evidence"
-    why: dependency_chains describes a network of inter-initiative dependencies typically refreshed on snapshot, not state-machined. The entity_type value encodes the answer (operational_record vs operational_workflow), so classifying it now would pre-empt the decision. Rule #15 forbids writing the config-shape note to data_objects.notes.
-
-  - id: B2-APQC-DELETE
-    summary: 3 outbound substring-only handoff_processes rows are now superseded by precise agent_curated children; DELETE of the stale parents needs user sign-off (destructive).
-    question: Three outbound handoffs carried discovery_substring handoff_processes rows that are now superseded by more precise agent_curated children inserted 2026-06-07. The substring parents are weak / wrong-fit. Should the stale parent rows be DELETED?
-    options:
-      - "DELETE handoff_processes id=130 (handoff 241 -> process 16, L2 substring) now superseded by 241 -> process 106 (Execute strategic initiatives, L3)"
-      - "DELETE handoff_processes id=131 (handoff 245 -> process 16, L2 substring) now superseded by 245 -> process 107 (Review execution of strategic initiatives, L3)"
-      - "DELETE handoff_processes id=132 (handoff 242 -> process 713 'Determine sales resource allocation', wrong-fit sales-bound) now superseded by 242 -> process 905 (Identify, select, and assign resources, L4)"
-    why: DELETE is destructive; the agent never deletes unapproved. The additive precise children are already loaded (record_status=new), so the catalog is correct even before the deletes; the parents are just redundant clutter.
+      - "(a) re-attribute all 3 to SEM as source (corrects the (c) boundary; adds SEM outbound; overwrites existing source_domain_id)"
+      - "(b) leave as-is (SPM keeps them as forwarded events; source_domain_module_id stays NULL)"
+      - "(c) delete the 3 rows if SEM already publishes the same outbound edges (check for SEM duplicates first)"
+    why: "Destructive overwrite of existing rows + adds rows attributed to a neighbor domain. Recommended (a): it matches the boundary the user just chose. Needs sign-off because it overwrites a non-empty FK and modifies SEM's outbound surface."
 
 b3:
+  # Discretionary additive entities flagship vendors also model. Non-blocking; module landing now resolved.
   - id: B3-PROGRAM-INCREMENTS
     candidate: program_increments
-    rationale: SAFe / scaled-agile cadence rows grouping initiatives into 8-12 week delivery quanta. Often mastered separately from initiatives in scaled-agile-focused tools. B2-S1 changes module landing.
+    rationale: "SAFe / scaled-agile cadence rows grouping initiatives into 8-12 week delivery quanta."
     vendor_evidence: [Jira Align, ServiceNow Strategic Portfolio Management]
-    proposed_module: SPM-PORTFOLIO-PLANNING (pending B2-S1)
-
-  - id: B3-OKR-OBJECTIVES-MASTERY
-    candidate: okr_objectives
-    rationale: Currently consumed at the legacy rollup layer (relationship row 1054 advanced_by). In flagship SPM tools OKRs are often a separate master with their own lifecycle. B2-S1 may move mastery between SPM and SEM.
-    vendor_evidence: [Jira Align, ServiceNow Strategic Portfolio Management, Planview Portfolios]
-    proposed_module: SPM-PORTFOLIO-PLANNING or SEM-OPERATING-RHYTHM (pending B2-S1)
-
+    proposed_module: SPM-PORTFOLIO-PLANNING
   - id: B3-INVESTMENT-CATEGORIES
     candidate: investment_categories
-    rationale: Buckets that aggregate initiatives by funding source, business unit, or strategic theme. Clarity investment hierarchy is its key conceptual model.
+    rationale: "Buckets that aggregate initiatives by funding source / business unit / strategic theme (Clarity investment hierarchy)."
     vendor_evidence: [Clarity PPM, Apptio IT Planning Foundation]
-    proposed_module: SPM-PORTFOLIO-PLANNING (pending B2-S1)
-
+    proposed_module: SPM-PORTFOLIO-PLANNING
   - id: B3-CAPACITY-POOLS
     candidate: capacity_pools or resource_pools
-    rationale: ServiceNow + Planview model resource pools as a separate master from individual allocations. Currently resource_allocations is the only resource master, missing the pool-level rollup.
+    rationale: "Pool-level resource rollup separate from individual allocations (ServiceNow + Planview model pools)."
     vendor_evidence: [ServiceNow Strategic Portfolio Management, Planview Portfolios]
-    proposed_module: SPM-RESOURCE-CAPACITY (pending B2-S1)
-
+    proposed_module: SPM-RESOURCE-CAPACITY
   - id: B3-PORTFOLIO-FUNDING-DECISIONS
     candidate: portfolio_funding_decisions
-    rationale: Decision logs separate from initiative lifecycle. Apptio + Clarity model decision events for audit-traceability (who approved what, when, with what business case). business_value_assessments carries the value side but not the decision side.
+    rationale: "Decision log separate from initiative lifecycle (Apptio + Clarity decision events for audit-traceability)."
     vendor_evidence: [Apptio IT Planning Foundation, Clarity PPM]
-    proposed_module: SPM-PORTFOLIO-PLANNING (pending B2-S1)
-
-  - id: B3-APPROVAL-WORKFLOWS-CONSUMER
-    candidate: approval_workflows
-    rationale: Cross-cutting capability APPROVAL-WORKFLOW already in catalog. SPM should declare consumer linkage. ServiceNow's whole portfolio governance is approval-workflow-driven.
-    vendor_evidence: [ServiceNow Strategic Portfolio Management]
-    proposed_module: SPM-PORTFOLIO-PLANNING (pending B2-S1)
-
+    proposed_module: SPM-PORTFOLIO-PLANNING
   - id: B3-PORTFOLIO-MILESTONES
-    candidate: milestone_definitions or portfolio_milestones
-    rationale: Cross-initiative milestones tied to portfolio rollups (releases, financial close, exec reviews).
+    candidate: portfolio_milestones
+    rationale: "Cross-initiative milestones tied to portfolio rollups (releases, financial close, exec reviews)."
     vendor_evidence: [Microsoft Project for the Web, Smartsheet]
-    proposed_module: SPM-PORTFOLIO-PLANNING (pending B2-S1)
-
+    proposed_module: SPM-PORTFOLIO-PLANNING
   - id: B3-RISK-REGISTERS
     candidate: risk_registers
-    rationale: Initiative-level risk tracking. ServiceNow IRM integration with SPM, Clarity risk module. Currently absent from SPM's footprint; may belong in GRC and be consumed here.
+    rationale: "Initiative-level risk tracking; likely a GRC master consumed by SPM rather than a new SPM master."
     vendor_evidence: [ServiceNow Strategic Portfolio Management, Clarity PPM]
-    proposed_module: SPM-PORTFOLIO-PLANNING as consumer of GRC master (pending B2-S1)
-
+    proposed_module: SPM-PORTFOLIO-PLANNING as consumer of GRC master
   - id: B3-VALUE-STREAMS-CONSUMER
     candidate: value_streams
-    rationale: Master separate from dependency_chains. Jira Align + ServiceNow VSDP both model value streams as first-class entities for SAFe portfolio mapping. SPM consumes from VSDP via handoffs but doesn't declare. VSDP is sibling domain (id 80) so the right shape is likely consumer not master.
+    rationale: "VSDP masters value_streams (id 80 sibling); SPM should declare a consumer link rather than master."
     vendor_evidence: [Jira Align, ServiceNow Value Stream Delivery Platform]
-    proposed_module: SPM-PORTFOLIO-PLANNING as consumer of VSDP master (pending B2-S1)
+    proposed_module: SPM-PORTFOLIO-PLANNING as consumer of VSDP master

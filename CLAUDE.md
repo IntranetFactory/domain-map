@@ -19,10 +19,10 @@ The same applies to "remembering" anything across conversations: if it's worth r
 The em-dash character (`—`, U+2014) is **forbidden everywhere** in this project. Never write one. Use a comma, parenthesis, colon, or sentence break instead. This applies to:
 
 - All prose: code comments, docs, plan files, commit messages, PR descriptions.
-- All emitted artifacts: generated fact sheets, loaders, SQL.
+- All emitted artifacts: generated blueprints, loaders, SQL.
 - All catalog data written via `semantius`: descriptions, notes, labels, business_logic fields. If you author a description and it contains an em-dash, rewrite it before loading.
 
-The fact sheet emitter at [scripts/emit_fact_sheet.ts](scripts/emit_fact_sheet.ts) sanitizes em-dashes from DB-sourced content at render time as a safety net, but don't rely on that: keep them out of the source data.
+The blueprint emitter at [scripts/generate_blueprints.ts](scripts/generate_blueprints.ts) sanitizes em-dashes from DB-sourced content at render time as a safety net, but don't rely on that: keep them out of the source data.
 
 En-dashes (`–`, U+2013) and ASCII hyphens (`-`) are fine. The rule is specifically about the em-dash.
 

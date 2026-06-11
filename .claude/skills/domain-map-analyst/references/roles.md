@@ -79,7 +79,7 @@ Each row assigns ONE actor ONE RACI letter on ONE process. The actor is polymorp
 - **R (responsible).** *persona*: grant the process's gates + the gated entities' write tier. *skill*: require/emit `process_tools` (or, for a domain skill, `domain_module_tools`) coverage of the process's mutating ops (the AI-native case, R = agent).
 - **A (accountable).** *persona*: an approval gate. *skill*: an autonomous-action note (rare; usually A stays human even when R is an agent).
 - **C (consulted).** a consultation lifecycle state when input is required (`consultation_blocking = true`), else a read grant.
-- **I (informed).** a notification side effect (`trigger_event` / `webhook_receiver`) to the actor.
+- **I (informed).** No derived grant or notification wiring today: the catalog has no `webhook_receiver` entity and `trigger_events` carry no actor FK, so an Informed assignment cannot resolve to a notification side effect. It is a recorded responsibility fact, the `process_raci` I row itself, which surfaces in the per-function RACI reveal (B9e) but produces no permission or notification grant.
 
 ### The process-to-permission edge
 

@@ -313,7 +313,7 @@ Self-references allowed (`User` directly manages `User`).
 
 ### Delete-mode derivation (B4)
 
-The delete mode is NOT stored per edge; it is DERIVED from the stored inputs by `deriveDeleteMode` in `scripts/emit_fact_sheet.ts` and emitted as the section-5 `delete_mode` / `fk_format` columns. Plan 4 added a presence-conditional dimension: whether the edge's OTHER endpoint is in the deploying unit. An intra-scope (§5.1) or built-in (§5.2) edge has its target present; a cross-scope (§5.3) edge has its target absent, so no FK can be emitted in this unit. The applied `ON DELETE` lands in the tenant DB at deploy.
+The delete mode is NOT stored per edge; it is DERIVED from the stored inputs by `deriveDeleteMode` in `scripts/generate_blueprints.ts` and emitted as the section-5 `delete_mode` / `fk_format` columns. Plan 4 added a presence-conditional dimension: whether the edge's OTHER endpoint is in the deploying unit. An intra-scope (§5.1) or built-in (§5.2) edge has its target present; a cross-scope (§5.3) edge has its target absent, so no FK can be emitted in this unit. The applied `ON DELETE` lands in the tenant DB at deploy.
 
 Target present (intra-scope / built-in edge), over every `relationship_kind`:
 
@@ -520,7 +520,7 @@ Records hosts beyond the primary `domain_modules.domain_id`. Convention: never b
 |---|---|---|---|
 | `data_object_id` | reference → `data_objects` | yes | The master this state belongs to |
 | `state_name` | text | yes | snake_case noun-form (`draft`, `submitted`, `approved`, `closed`). Used by `permission_verb_override` derivation. |
-| `state_order` | int | yes | Ordering for the state machine; not a strict topological constraint, but the fact sheet emits states in this order |
+| `state_order` | int | yes | Ordering for the state machine; not a strict topological constraint, but the blueprint emits states in this order |
 | `is_initial` | boolean | yes | Default `false`. Exactly one state per data_object should have `is_initial=true`. |
 | `is_terminal` | boolean | yes | Default `false`. Multiple terminal states are allowed (`closed`, `cancelled`, `rejected`). |
 | `requires_permission` | boolean | yes | Default `false`. TRUE = transitioning *into* this state needs an explicit permission; produces a `<module>:<verb>_<entity>` workflow gate during permission materialization. |

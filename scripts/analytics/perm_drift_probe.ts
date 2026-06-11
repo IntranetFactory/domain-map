@@ -74,7 +74,7 @@ function deriveFromBlueprint(code: string): Set<string> {
 }
 
 async function emit(code: string): Promise<void> {
-  const proc = Bun.spawn(["bun", "run", "scripts/emit_fact_sheet.ts", "--module", code, "--no-cache"], {
+  const proc = Bun.spawn(["bun", "run", "scripts/generate_blueprints.ts", "--module", code, "--no-cache"], {
     stdout: "pipe",
     stderr: "pipe",
   });

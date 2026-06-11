@@ -1,4 +1,4 @@
-# plan-domain-fact-sheets.md — Holistic-map extensions for per-domain fact sheets
+# plan-generate-blueprints.md — Holistic-map extensions for per-domain fact sheets
 
 > **Status:** design intent (stable). Operational status (what's done, what's next) lives in [plan-master-tasks.md](plan-master-tasks.md) once execution starts.
 >
@@ -14,7 +14,7 @@ A **per-domain fact sheet** is a single markdown file emitted by a new generator
 
 **Consumed by:** `semantius-architect` gains a new **Stage 0 — Load fact sheet if available**. When a fact sheet exists for the requested domain, architect loads it before asking the user anything and uses it to pre-populate entity list (Stage 3), intra-domain relationships (Stage 4), vendor template suggestion (Stage 2), aliases, permissions table, business rules, and cross-model links (§6).
 
-**Emitted by:** a new `.tmp_deploy/emit_fact_sheet.ts <domain_code>` script that queries the catalog and renders markdown.
+**Emitted by:** a new `.tmp_deploy/generate_blueprints.ts <domain_code>` script that queries the catalog and renders markdown.
 
 ### Fact sheet shape
 
@@ -268,7 +268,7 @@ For each in-scope master data_object:
 
 ## 7. Fact sheet generator
 
-New script: `.tmp_deploy/emit_fact_sheet.ts <domain_code> [--out path] [--all]`.
+New script: `.tmp_deploy/generate_blueprints.ts <domain_code> [--out path] [--all]`.
 
 - Reads every section from §1's contract via PostgREST queries (no cube — single-row joins, not aggregation)
 - Renders markdown with stable section ordering matching the contract
@@ -400,20 +400,20 @@ Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed
 
 **Step 6 — Fact sheet generator + CI drift check** (small) ✓ 2026-05-22
 
-- [x] Build [`scripts/emit_fact_sheet.ts`](scripts/emit_fact_sheet.ts) — single self-contained Bun script, 13 sections + YAML frontmatter, runs against live PostgREST. Lives in `scripts/` (tracked) rather than `.tmp_deploy/` (gitignored scratch); the generator is contract code, not scratch — see Note I.
+- [x] Build [`scripts/generate_blueprints.ts`](scripts/generate_blueprints.ts) — single self-contained Bun script, 13 sections + YAML frontmatter, runs against live PostgREST. Lives in `scripts/` (tracked) rather than `.tmp_deploy/` (gitignored scratch); the generator is contract code, not scratch — see Note I.
 - [x] Implement §4 derivation rules — baseline tier (`<slug>:read|manage|admin`), lifecycle-derived workflow gates with `permission_verb_override` honored, pattern-flag-derived gates (`view_all_*`, `manage_all_*`, `submit_*`) + business rules (`<entity>_edit_scope`, `submit_restricted_to_*`, `approve_*_requires_approver`), §1 multi-paragraph composed narrative (description + capabilities + cost-band + min-org-size + flagship vendors + RACI + master-count + pattern-flag prose).
 - [x] Implement `--all` mode — iterates every domain, writes `domain-fact-sheets/<DOMAIN_CODE>.md`. Combines with `--check` for the drift check.
-- [x] CI / pre-commit drift check — `bun run scripts/emit_fact_sheet.ts --all --check` exits non-zero if any fact sheet would change. **No GitHub Actions workflow is wired up** because this repo has no existing CI infrastructure; the drift command is documented here and ready to be invoked by a future workflow or pre-commit hook. Single-domain check works too: `bun run scripts/emit_fact_sheet.ts ATS --check`.
+- [x] CI / pre-commit drift check — `bun run scripts/generate_blueprints.ts --all --check` exits non-zero if any fact sheet would change. **No GitHub Actions workflow is wired up** because this repo has no existing CI infrastructure; the drift command is documented here and ready to be invoked by a future workflow or pre-commit hook. Single-domain check works too: `bun run scripts/generate_blueprints.ts ATS --check`.
 
 **Step 7 — First fact sheet emission for ATS** (small) ✓ 2026-05-22
 
-- [x] Run the generator for ATS — `bun run scripts/emit_fact_sheet.ts ATS`
+- [x] Run the generator for ATS — `bun run scripts/generate_blueprints.ts ATS`
 - [x] Commit [`domain-fact-sheets/ATS.md`](domain-fact-sheets/ATS.md) — first PR-reviewable fact sheet
 - [ ] *(Architect-blueprint comparison deferred — the `semantius-architect` repo owns Stage 0 adoption per §8. Structural parity will be verified there when adoption ships.)*
 
 **Notes from execution:**
 
-- **Note I — Generator location: `scripts/`, not `.tmp_deploy/`.** Plan §7 originally proposed `.tmp_deploy/emit_fact_sheet.ts`, but `.tmp_deploy/` is gitignored scratch (per [SKILL.md:277](.claude/skills/domain-map-analyst/SKILL.md#L277) and Note H) — loaders that capture write-time intent and immediately drift. The fact sheet generator is the opposite: contract code that anyone regenerating sheets needs, and that a CI drift check has to invoke. A first attempt tried to keep the literal `.tmp_deploy/` path via a `!.tmp_deploy/emit_fact_sheet.ts` gitignore exception; user pushback (rightly) flagged that as the wrong layout — "scripts to a folder where any reasonable person would expect them". Resolution: the generator lives at [`scripts/emit_fact_sheet.ts`](scripts/emit_fact_sheet.ts), tracked by default, no `.gitignore` gymnastics. The §7 path reference in this plan has been updated to match. Loaders stay in `.tmp_deploy/`.
+- **Note I — Generator location: `scripts/`, not `.tmp_deploy/`.** Plan §7 originally proposed `.tmp_deploy/generate_blueprints.ts`, but `.tmp_deploy/` is gitignored scratch (per [SKILL.md:277](.claude/skills/domain-map-analyst/SKILL.md#L277) and Note H) — loaders that capture write-time intent and immediately drift. The fact sheet generator is the opposite: contract code that anyone regenerating sheets needs, and that a CI drift check has to invoke. A first attempt tried to keep the literal `.tmp_deploy/` path via a `!.tmp_deploy/generate_blueprints.ts` gitignore exception; user pushback (rightly) flagged that as the wrong layout — "scripts to a folder where any reasonable person would expect them". Resolution: the generator lives at [`scripts/generate_blueprints.ts`](scripts/generate_blueprints.ts), tracked by default, no `.gitignore` gymnastics. The §7 path reference in this plan has been updated to match. Loaders stay in `.tmp_deploy/`.
 - **Note J — Output shape was iterated.** The first emitted ATS sheet was structurally correct (all 13 sections present, derivation rules firing) but visually weak: §2 was just an inventory table, no quick-overview, no mermaid; §3 was four separate role-grouped tables; no YAML frontmatter; §1 was a single sentence from `domains.description`. Comparing against `_DRAFT_ats-domain-fact-sheet.md` (the architect-output gold standard kept locally during this design pass) drove a redesign: YAML frontmatter (`artifact`, `domain_code`/`slug`, `entities`, `related_domains`, counts), §1 Overview composed from description + capabilities + cost-band + min-org-size + flagship vendors + RACI + master inventory + pattern-flag prose, §2 single quick-overview table (Name=plural_label, Description) + one colored mermaid graph with classDef per role, §3 single unified inventory table with a Role column instead of four sub-tables. Lesson: emitting an artifact and reading it cold is faster feedback than reasoning about the rendering rules in the abstract — do that pass on the first domain before declaring a generator done.
 
 **Step 8 — Phase B3 (lifecycle states + pattern flags) for top 20 domains** (large; one-time backfill) ✓ 2026-05-22
@@ -425,7 +425,7 @@ Steps 1–7 form the **MVP path** — once 7 ships, ATS has a complete committed
 **Notes from execution:**
 
 - **Note K — INC-MGMT slot is benign.** Plan §6.3 listed 20 domains; the catalog has 19 of them. `INC-MGMT` was never loaded as a standalone domain because incident management is masters under `ITSM` (`service_incidents` data_object). No backfill needed — the omission reflects how the catalog actually models the market, not a gap. If incident-management ever ships as a standalone domain (e.g. an IRP-style market), it picks up its own Phase B3 row at that point.
-- **Note L — Generator bug surfaced by step 8 data.** Step 7 emitted ATS against an empty lifecycle states table; the permission-name derivation in [scripts/emit_fact_sheet.ts](scripts/emit_fact_sheet.ts) appended `_<entity_singular>` to the verb even when `permission_verb_override` was set. That produced absurd duplicates like `ats:hire_candidate_candidate` once real overrides started flowing. Fixed at [emit_fact_sheet.ts:579-580](scripts/emit_fact_sheet.ts#L579-L580) and [emit_fact_sheet.ts:830-833](scripts/emit_fact_sheet.ts#L830-L833): when an override is set, it now replaces the entire verb segment (yielding `ats:hire_candidate`, `ats:approve_offer`, `ats:approve_requisition`); when no override is set, the auto-derivation stays `<state_name>_<entity_singular>` (e.g. `ats:completed_consider_background_check`). Lesson: derivation rules need to be tested against realistic data, not an empty table — Step 7's "first emission" should arguably have included at least a couple of hand-authored lifecycle states to flush out cases like this before Step 8 multiplied them.
+- **Note L — Generator bug surfaced by step 8 data.** Step 7 emitted ATS against an empty lifecycle states table; the permission-name derivation in [scripts/generate_blueprints.ts](scripts/generate_blueprints.ts) appended `_<entity_singular>` to the verb even when `permission_verb_override` was set. That produced absurd duplicates like `ats:hire_candidate_candidate` once real overrides started flowing. Fixed at [generate_blueprints.ts:579-580](scripts/generate_blueprints.ts#L579-L580) and [generate_blueprints.ts:830-833](scripts/generate_blueprints.ts#L830-L833): when an override is set, it now replaces the entire verb segment (yielding `ats:hire_candidate`, `ats:approve_offer`, `ats:approve_requisition`); when no override is set, the auto-derivation stays `<state_name>_<entity_singular>` (e.g. `ats:completed_consider_background_check`). Lesson: derivation rules need to be tested against realistic data, not an empty table — Step 7's "first emission" should arguably have included at least a couple of hand-authored lifecycle states to flush out cases like this before Step 8 multiplied them.
 - **Note M — One non-blocking collision: `candidates.hired` and `job_applications.hired` both override to `hire_candidate`.** The ATS fact sheet now shows `ats:hire_candidate` twice in §8.1 (one row per source data_object). That's a real data-modeling judgment call: hiring a `candidate` and marking a `job_application` `hired` is conceptually the same gate, so collapsing to a single permission is fine. The generator could dedupe but the duplicate rows still convey "this gate fires from two state transitions" usefully. Worth flagging if the deployer later treats this as two separate permissions — it should treat them as one.
 - **Note N — Sub-agent parser format held up at scale.** All 7 cluster drafts parsed cleanly with the same loader (`load_phase_b3.ts`) on first run after a small NOT-NULL fix on `permission_verb_override` (column requires `""` not `null` when no override is set). 441 inserts went through in seconds via the chunked bulk-insert idiom (Note E lesson applied — no per-row spawns this time).
 

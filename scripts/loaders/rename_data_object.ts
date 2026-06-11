@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// rename_data_object.ts — Step 3 of plan-domain-fact-sheets.md.
+// rename_data_object.ts — Step 3 of plan-generate-blueprints.md.
 //
 // Renames a single `data_objects.data_object_name` and cascades the impact to
 // downstream string references. Foreign-key references (domain_data_objects,

@@ -390,3 +390,33 @@ record_status omitted on inserts, never wrote any `notes` column).
 - **b3 backlog (9 candidates):** speculative, gated on B2-S1, untouched.
 - **Report-only owed-by-others** (inbound APQC, target-side module FK NULLs on EPM/VSDP, etc.):
   not in scope for SPM's audit per the asymmetry rule.
+
+## 2026-06-11 — Build-out (Research/build mode, user-directed)
+
+### Summary
+
+Full build-out of the SPM domain, executed after a fresh Phase 0 vendor-surface pass resolved the gating B2-S1 (SPM-vs-SEM) decision. The user (chat, 2026-06-11) chose **keep the split** (option c), **take all recommended** workflow flags, and **delete** the 3 stale APQC tags. Everything landed at `record_status='new'`.
+
+**Phase 0 re-grounding (the prior audit's recommendation was a Rule-#22 violation).** The 2026-06-07 q-SPM.md recommended (c) on the rationale "least disruptive / matches live state" — a forbidden basis. Fresh Phase 0 ([.tmp_deploy/SPM-phase0-2026-06-11.md](../../.tmp_deploy/SPM-phase0-2026-06-11.md)) re-grounded (c) in actual vendor evidence: SEM is anchored in a distinct pure-play strategy-execution / OKR vendor market (Cascade, ClearPoint, AchieveIt, Quantive, WorkBoard, Profit.co, i-nexus, Microsoft Viva Goals) with a different buyer (Chief Strategy Officer / Chief of Staff vs PMO/CIO) and ~4x smaller TAM (~$600M vs ~$2.5B). Gartner classifies "Strategy Execution Management" as a use case *within* the SPM category, and the SPM heavyweights (ServiceNow, Planview, Broadcom) are absorbing OKRs — the classic umbrella-overlap shape. The catalog handles it via two domains sharing the dual-linked `SEM-PORTFOLIO-ALIGN` capability and single-mastership of `strategic_initiatives` (mastered by SEM, embedded by SPM).
+
+### What was built
+
+- **Phase A:** 8 SPM-native capabilities (`SPM-DEMAND-INTAKE`, `SPM-VALUE-SCORING`, `SPM-PORTFOLIO-STRUCTURING`, `SPM-ROADMAP-PLANNING`, `SPM-DEPENDENCY-MGMT`, `SPM-BENEFITS-REALIZATION`, `SPM-RESOURCE-ALLOCATION`, `SPM-SCENARIO-PLANNING`) + `capability_domains` (9 total incl. dual-linked SEM-PORTFOLIO-ALIGN).
+- **Phase M:** 3 full modules — **SPM-DEMAND-MGMT** (343), **SPM-PORTFOLIO-PLANNING** (344), **SPM-RESOURCE-CAPACITY** (345). 9 `domain_module_capabilities`. Module-grain catalog UX (tagline + description) authored on all 3.
+- **DMDO:** 17 rows. 8 masters (273/275/276/277/278/279/280/281), 1 embedded_master (274 strategic_initiatives, canonical = SEM), consumers/contributor for cross-domain reads (work_items, service_projects, financial_scenarios, workforce_scenarios, position_demand_forecasts) + users consumer on each module.
+- **entity_type:** `dependency_chains` (280) classified `operational_record` (config-shape, q8=a). All other masters already `operational_workflow`. 0 unclassified.
+- **Pattern flags:** `business_value_assessments` submit_lock + single_approver; `scenario_plans` submit_lock; `demand_intake_requests` single_approver; `resource_allocations` single_approver.
+- **Lifecycle states:** 30 new across the 7 operational_workflow masters, anchored to their realizing modules, with workflow gates + verb overrides (e.g. `approve_business_value_assessment`, `activate_strategic_portfolio`, `commit_roadmap_item`, `realize_benefit`, `evaluate_scenario_plan`). (274's 5 states remain SEM-owned.)
+- **Relationships:** 20 new — 9 intra-domain workflow edges (demand→initiative, portfolio→initiative, initiative→{bva, roadmap, allocation, benefits}, scenario→allocation, dependency→{initiative, roadmap}) + 11 `users` actor edges (Rule #10).
+- **Handoffs:** backfilled `source_domain_module_id` on 10 outbound rows (B10b). Added 2 intra-domain cross-module handoffs (B9b): demand_intake.approved DEMAND→PORTFOLIO and resource_allocation.committed RESOURCE→PORTFOLIO.
+- **Phase S:** 13 new tools (CRUD + gates for the masters), all `coverage_tier='platform'`; query_business_value_assessments already existed. 33 `domain_module_tools` across the 3 modules, **all platform-tier → strict Semantius score 100%**. Uses `notify_person` abstraction (not channel primitives). spm-system skill (id 6, domain-grain) now derives a non-empty toolset.
+- **APQC:** deleted 3 stale `discovery_substring` `handoff_processes` rows (id 130/131/132), superseded by precise agent_curated children (user-approved destructive step).
+
+### Checklist verdict (post-build)
+
+Pass: A1-A4, M1-M8, B1-B5, B6/B7 (intra + users edges), B9b, B10b (outbound), B11 (aliases pre-existing), B12, B13, C1, F2-F5 (100% score), F7. M7 clean (each master single-mastered; 274 master-SEM / embedded-SPM).
+
+### Open follow-ups (carried in state.yaml)
+
+- **B2-HANDOFF-REATTRIB (new b2, surfaced):** outbound handoffs 178 (okr_objective.created → WORK-MGMT), 245 (initiative.completed → EPM), 241 (initiative.kickoff → SWP) fire on SEM-published events (okr_objectives / strategic_initiatives are SEM's masters under the (c) split) but are recorded `source_domain_id=9` (SPM). Their `source_domain_module_id` was left NULL. Correct fix is to re-attribute source to SEM (166) — a destructive overwrite of existing rows that also adds SEM outbound, so it needs user sign-off. Not auto-applied.
+- **B1A-B9D-VERIFY (carried b1a):** B9d handoff-payload realization has never run on this domain; run it on a later audit pass.

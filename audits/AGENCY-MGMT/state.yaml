@@ -11,7 +11,7 @@
 schema_version: 2
 domain: AGENCY-MGMT
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-05"
 
 b1a:
@@ -162,6 +162,16 @@ b2:
       - "(a) Keep distinct (audit default; current modular shape masters it in 210)"
       - "(b) Refactor to consume PSA + contribute agency-specific columns"
     why: "Modeling philosophy decision; both shapes are defensible and the choice affects how PSA's audit treats project_time_entries downstream."
+  - id: B2-B9D-OWN-32
+    summary: "Agency Management Software: name an owner for \"Manage and Operate Service Delivery System\" (no one is responsible for it today)"
+    question: |
+      Contract Lifecycle Management forwards agency job to Agency Management Software to manage and Operate Service Delivery System, but Agency Management Software does not yet have anyone assigned to manage and Operate Service Delivery System, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Agency Management Software owns, and assign a named owner once Agency Management Software sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Agency Management Software decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-AGENCY-MGMT.md q13.
+    extra_b9d_added: "2026-06-11"
 
 b3:
   - id: B3-AGENCY-RATE-CARDS

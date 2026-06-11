@@ -78,7 +78,7 @@ const inList = (ids: (number | string)[]) => `(${ids.join(",")})`;
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
 // Project rule: no em-dashes in emitted artifacts. DB-sourced strings get sanitized at
-// render time as the same safety net emit_fact_sheet.ts applies. U+2014 -> ", ".
+// render time as the same safety net generate_blueprints.ts applies. U+2014 -> ", ".
 function clean<T>(v: T): T {
   // Spaced em-dash ("a — b") -> ", "; bare em-dash -> "-". Keeps single spacing.
   return (typeof v === "string" ? (v.replace(/\s*—\s*/g, ", ") as unknown as T) : v);

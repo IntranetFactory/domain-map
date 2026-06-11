@@ -122,7 +122,7 @@ Executed as §9 step 3 immediately after the migration. Find/replace pass across
 | Surface | Change |
 |---|---|
 | `.tmp_deploy/discovery_query.ts` (Phase D) | Unfiltered view stays "all handoffs". Signal-2 view adds `source_domain_id != target_domain_id` filter. Per-module bucketing (plan-modules.md §5.2 line 207) and PCF-anchored sub-clustering ([plan-handoff-processes.md](plan-handoff-processes.md)) both stay out of scope here. |
-| `scripts/emit_fact_sheet.ts` | Table name in PostgREST URLs; computed-field name (`cross_domain_handoff_label` → `handoff_label`); section labels in rendered markdown. |
+| `scripts/generate_blueprints.ts` | Table name in PostgREST URLs; computed-field name (`cross_domain_handoff_label` → `handoff_label`); section labels in rendered markdown. |
 | `.tmp_deploy/load_*.ts` (every handoff-touching loader) | Table name; computed-field name. Find/replace; ~30 references catalog-wide. |
 | `.claude/skills/domain-map-analyst/SKILL.md` | Hard rule #13 (`cross_domain_handoffs.integration_pattern` row gets the new `lifecycle_progression` value; `friction_level` row unchanged); module-at-a-glance entity row; Phase 3 step 2 ("If the reactor is the same domain, it's intra-domain, out of scope": invert this; intra-domain is now in scope with `integration_pattern: lifecycle_progression` for in-process state transitions); Phase 3 step 3 (add classification guidance: pick `lifecycle_progression` when no message moves, otherwise pick from the existing five values); the anti-pattern "Recording intra-domain events in `cross_domain_handoffs`" (delete or invert); B9 and B10 wording; B10b query paths; trigger-event ownership references; Phase D body; quick-reference reflows. Add the new authoring rule from §5 to the Phase B procedure for any new market load. |
 | `.claude/skills/domain-map-analyst/references/module-shape.md` | Entity row for handoffs; field list; description block. |
@@ -207,7 +207,7 @@ Live verification:
 ### Code and documentation sweep (§8)
 
 - [x] `.tmp_deploy/discovery_query.ts`: no old-name hits (Signal-2 filter guidance lives in `references/discovery-query.md`)
-- [x] `scripts/emit_fact_sheet.ts` updated (PostgREST URLs and placeholder labels)
+- [x] `scripts/generate_blueprints.ts` updated (PostgREST URLs and placeholder labels)
 - [x] `.claude/skills/domain-map-analyst/SKILL.md` updated (rule #13 enum, module-at-a-glance, Phase 3 inversion, B9/B10/B10b queries, Phase D, quick reference)
 - [x] `.claude/skills/domain-map-analyst/references/module-shape.md` updated (heading renamed, entity description rewritten, hard-invariant subsection removed, `lifecycle_progression` added)
 - [x] `.claude/skills/domain-map-analyst/references/discovery-query.md` updated (Signal-2 filter note added)
@@ -221,7 +221,7 @@ Live verification:
 These files still contain `cross_domain_handoffs` / `cross_domain_handoff_label` mentions by design; rewriting them would falsify history:
 - `crud.log`: append-only audit log of every `semantius` CLI call; the old name appears in request payloads recorded at the time the call was made.
 - `plan-done-master-tasks.md`: archive of completed plans, preserved as-written.
-- `blueprints/modules/*-semantic-blueprint.md`: emitter output, regenerated on the next `scripts/emit_fact_sheet.ts --all` run (the emitter has been updated to use the new name).
+- `blueprints/modules/*-semantic-blueprint.md`: emitter output, regenerated on the next `scripts/generate_blueprints.ts --all` run (the emitter has been updated to use the new name).
 - `.tmp_deploy/*.ts`: completed migration / backfill scripts (`rename_handoffs_table.ts`, `fix_computed_fields_json.ts`, `revert_computed_field_metadata.ts`, `backfill_ats_handoff_modules_2026_05_23.ts`, `backfill_itam_handoff_modules_2026_05_24.ts`) reference the old name historically.
 - `plan-modules.md`: 5 intentional history-note references that point at plan-handoffs.md for the rename context.
 - `plan-handoffs.md`: this file (the source of truth for the rename).
@@ -237,4 +237,4 @@ These files still contain `cross_domain_handoffs` / `cross_domain_handoff_label`
 - [ ] Per-module bucketing in Phase D discovery (plan-modules.md §5.2 follow-up)
 - [ ] Retroactive ATS intra-domain handoff load (separate focused pass)
 - [ ] PCF-anchored discovery via `handoff_processes` junction (split to [plan-handoff-processes.md](plan-handoff-processes.md))
-- [ ] Fact-sheet re-emission (on-demand; not part of this plan, but `scripts/emit_fact_sheet.ts` must continue to build after the rename)
+- [ ] Fact-sheet re-emission (on-demand; not part of this plan, but `scripts/generate_blueprints.ts` must continue to build after the rename)

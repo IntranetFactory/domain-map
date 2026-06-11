@@ -32,7 +32,9 @@
 //                      row is self-describing: domain, the function's responsibility on it, persona, how
 //                      the persona attaches (persona_via: own/descendant/seam), process, and letter, so
 //                      "who is R/A/C/I for market D" is answerable without joining personas.json.
-//                      `personas[]` stays the literal membership list; `parent` is emitted for tree nav.
+//                      `personas[]` stays the literal membership list; `actor_personas[]` is the dedup
+//                      roll-up of the persona codes in raci[] (own + descendant + seam); `parent` is
+//                      emitted for tree nav.
 //
 // RELEASE GATE (all four artifacts, consistent). By DEFAULT every file is restricted to RELEASED
 // domains (catalog_release set and on/before today) and the data related to them: domain-map.json
@@ -57,7 +59,7 @@
 // The "USED" set in processes.json is the broader union: gate ∪ raci ∪ handoff ∪ tool edges.
 //
 // All catalog reads go through scripts/lib/catalog.ts so this script and the per-module
-// blueprint emitter (emit_fact_sheet.ts) share one source for the underlying tables.
+// blueprint emitter (generate_blueprints.ts) share one source for the underlying tables.
 //
 // Usage:
 //   bun run scripts/emit_domain_map.ts                       # write all four under catalog/ (RELEASED only)
@@ -184,9 +186,10 @@ type DomainRespRef = {
 // NULL business_function_id, owner-anchored to a domain this function's subtree owns).
 type FunctionRaciRef = {
   domain: string; // a market the function declares (or "(undeclared)" for own/descendant work outside it)
-  responsibility: string; // the function's responsibility on that domain: owner | contributor | consumer
+  responsibility: string; // the strongest responsibility over the function's subtree on that domain: owner | contributor | consumer
   persona: string; // role_code of the actor
   persona_via: string; // own | descendant | seam
+  process_code: string | null; // APQC PCF dotted code, e.g. "1.2.5"
   process_key: string;
   process_name: string;
   raci: string; // responsible | accountable | consulted | informed
@@ -201,6 +204,7 @@ type BusinessFunctionOut = {
   persona_count: number;
   domains: DomainRespRef[]; // domains this function owns/contributes-to/consumes
   personas: string[]; // role_codes of personas whose business_function_id is this function (LITERAL members)
+  actor_personas: string[]; // dedup roll-up of the persona codes appearing in raci[] (own + descendant + seam actors)
   raci: FunctionRaciRef[]; // per-market (persona, process, RACI-letter) triples; see FunctionRaciRef
 };
 
@@ -921,6 +925,7 @@ const functionsOut: BusinessFunctionOut[] = (all.businessFunctions as any[])
             responsibility: resp,
             persona: pcode,
             persona_via: a.via,
+            process_code: (proc.process_code as string) ?? null,
             process_key: proc.process_key as string,
             process_name: (proc.process_name as string) ?? "",
             raci: letter,
@@ -945,6 +950,7 @@ const functionsOut: BusinessFunctionOut[] = (all.businessFunctions as any[])
         (RACI_RANK[x.raci] ?? 9) - (RACI_RANK[y.raci] ?? 9) ||
         x.persona.localeCompare(y.persona),
     );
+    const actorPersonas = [...new Set(raci.map((r) => r.persona))].sort((a, b) => a.localeCompare(b));
 
     const parent =
       fn.parent_business_function_id != null
@@ -959,6 +965,7 @@ const functionsOut: BusinessFunctionOut[] = (all.businessFunctions as any[])
       persona_count: personas.length,
       domains,
       personas,
+      actor_personas: actorPersonas,
       raci,
     };
   })
@@ -991,6 +998,9 @@ console.error(
     `set-consistency ${raciCheckFailures === 0 ? "PASSED" : `FAILED (${raciCheckFailures})`}; ` +
     `empty (Phase-2 backlog): ${emptyRaciFns.length ? emptyRaciFns.join(", ") : "none"}`,
 );
+// Hard guard: a split persona set (an "own" actor that is not a member, or an unknown via) is the
+// rev.9 bug this whole reveal was rebuilt to prevent. Fail the emit (non-zero exit) on any mismatch.
+if (raciCheckFailures > 0) process.exitCode = 1;
 for (const f of functionsOut) {
   if (f.raci.length === 0) continue;
   const byLetter: Record<string, number> = {};
@@ -1020,7 +1030,7 @@ const personasJson =
 const processesJson = JSON.stringify({ processes: processesOut }, null, 2) + "\n";
 // Only `personas` (a role_code string[]) is collapsed; `domains` is an object array (untouched).
 const functionsJson =
-  collapseStringArrays(JSON.stringify({ business_functions: functionsOut }, null, 2), ["personas"]) + "\n";
+  collapseStringArrays(JSON.stringify({ business_functions: functionsOut }, null, 2), ["personas", "actor_personas"]) + "\n";
 
 const mode = ALL ? "--all (unfiltered)" : "released-only";
 if (STDOUT) {

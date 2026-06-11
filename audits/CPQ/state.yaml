@@ -11,7 +11,7 @@
 schema_version: 2
 domain: CPQ
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-07"
 
 b1a:
@@ -136,6 +136,16 @@ b2:
       - "b: Retarget to PCF 10283 (Manage product master data, look up exact id)"
       - "c: Retarget to a 10410.x id (specify)"
     why: "Insertion was a fallback; user owns the retarget call."
+  - id: B2-B9D-OWN-149
+    summary: "Configure-Price-Quote: name an owner for \"Develop and manage sales proposals, bids, and quotes\" (no one is responsible for it today)"
+    question: |
+      Contract Lifecycle Management forwards cpq contract draft to Configure-Price-Quote to develop and manage sales proposals, bids, and quotes, but Configure-Price-Quote does not yet have anyone assigned to develop and manage sales proposals, bids, and quotes, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Configure-Price-Quote owns, and assign a named owner once Configure-Price-Quote sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Configure-Price-Quote decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CPQ.md q14.
+    extra_b9d_added: "2026-06-11"
 
 b3:
   - id: B3-E1

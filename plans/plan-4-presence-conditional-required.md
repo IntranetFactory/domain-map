@@ -28,7 +28,7 @@ Out of scope:
   relationship-layer completion of that same audit and reuses its vocabulary; it introduces NO
   "closure" concept.
 - **Plan 2 `deriveDeleteMode` - DONE (2026-06-01).** `deriveDeleteMode(relationship_kind,
-  owner_side, is_required) -> {mode, fk_format}` (live at scripts/emit_fact_sheet.ts:1050)
+  owner_side, is_required) -> {mode, fk_format}` (live at scripts/generate_blueprints.ts:1050)
   already emits per-edge delete-mode / FK format in blueprint section 5. Plan 4 adds ONE input
   (target-in-scope) and TWO new output branches: reference / association + required + absent =>
   no FK / no constraint, and composition + required + absent => emit FLAGGED as a step-B audit
@@ -108,7 +108,7 @@ Confirm before step C emits.
   scope. User-reviewed (Rule #1).
 
 ### C. Make `deriveDeleteMode` presence-conditional (emitter code)
-- Add a target-in-scope input to `deriveDeleteMode` (emit_fact_sheet.ts:1050). The in-scope test
+- Add a target-in-scope input to `deriveDeleteMode` (generate_blueprints.ts:1050). The in-scope test
   is per-blueprint and already available: the emitter partitions intra-scope (section 5.1) vs
   cross-scope (section 5.3) edges, so "target installed?" is decidable at emit time with no
   deploy-time knowledge.
@@ -124,14 +124,14 @@ Confirm before step C emits.
 ### D. Gate re-prefix AND mint (TWO emitter functions, not one; folds into ledger row 6)
 The gate work is half label, half permission, and BOTH halves are needed or §7 and §8.1
 disagree (Plan 1's M1 cross-check fails).
-- **`deriveGate` (emit_fact_sheet.ts:373-388) - the §7 label.** Today it reads the prefix off
+- **`deriveGate` (generate_blueprints.ts:373-388) - the §7 label.** Today it reads the prefix off
   the realizing module (:380-387). To re-prefix to the installing unit it needs a SIGNATURE
   CHANGE: receive the current blueprint's installing-unit slug + the in-scope `moduleIdSet`.
   When the realizing module is NOT in scope but the entity IS, emit the installing unit's slug
   (`hiring-starter:approve_offer`) instead of the absent module's (`ats-offers:approve_offer`).
   This is not "edit accordingly"; it is a new parameter threaded through both callers (§7 and
   the §8.1 generator below).
-- **`deriveWorkflowGatesAndRules` (emit_fact_sheet.ts:1082) - the §8.1 mint.** Today it
+- **`deriveWorkflowGatesAndRules` (generate_blueprints.ts:1082) - the §8.1 mint.** Today it
   mints a workflow-gate permission ONLY for states the module owns as realizer
   (`realizingId === thisModuleId`) or as master of a NULL-realizer state (the ownership guard at
   :1100-1103). A starter owns NEITHER (it only `embedded_master`s, and the realizing id points

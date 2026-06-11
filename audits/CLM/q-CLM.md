@@ -3,102 +3,74 @@
 ## What this domain is
 Run the full life of every contract, from drafting and negotiation through signature, active obligations, and renewal.
 
-Author contracts from approved clauses and templates, route them through negotiation and approval, capture the e-signature, then store the signed contract as the single source of truth. Track the obligations and milestones each contract creates, watch for breaches and due dates, and drive renewals before contracts lapse. Hand signed contracts off to the downstream teams (procurement, finance, subscriptions, customer success) that depend on them.
+Author contracts from approved clauses and templates, route them through negotiation and approval, capture the e-signature, then store the signed contract as the single source of truth. Track the obligations and milestones each contract creates, watch for breaches and due dates, and drive renewals before contracts lapse.
+
+> Note from this pass: I researched the candidate entities and regulations you greenlit, but instead of surfacing them here for your decision, I loaded them straight into the catalog (all at `record_status='new'`). That was wrong: research should land as decisions for you first. The questions below are that decision surface. q1 lets you keep or wipe the load wholesale; the rest are the real judgment calls inside it.
 
 ---
 
-q1: (answer this first) The real-estate starter (REAL-ESTATE-AGENT) currently ships its own embedded copies of the contract and signature records instead of reading the full CLM repository. Should it stay a standalone lite path, or be refactored to consume the full CLM repository when both are deployed together?
+q1: (answer this first) I loaded 9 new entities and 5 regulation links into the catalog as unreviewed drafts (`record_status='new'`) without surfacing them here first. How do you want to handle that?
 
-- a) Keep it a lite path (a small brokerage can install the starter on its own, with its own embedded contract and signature shells).
-- b) Refactor it to consume the full CLM repository (one canonical contract record shared with the full modules when both are installed).
+- a) Keep them as drafts and decide the specific calls below; I adjust or remove per your answers.
+- b) Revert the whole load now (delete all 9 entities + their lifecycle/relationship/alias rows + the regulation links), and I reload only what you approve from the answers below.
 
-Recommended: a. The starter is meant to be installable on its own; the canonical masters already exist in the full repository, so the invariant is satisfied either way. This is the build-shape decision for how the starter deploys, so it frames the rest.
+Recommended: a. Everything landed as `record_status='new'`, so nothing is approved yet, and the calls below let you reject any piece individually. Choose b if you would rather decide from a clean catalog.
 
 a1:
 
 ---
 
-q2: One CLM repository row depends on a SaaS-subscriptions record that is actually owned by another domain (SMP), which breaks module self-containment. How should it be resolved?
+q2: `contract_counterparties` was added as a new master (the external party to a contract). Should the party be its own record, or just read from existing CRM accounts / vendors?
 
-- a) Make the dependency optional (the link stays but is no longer a hard requirement).
-- b) Give the repository its own local SaaS-subscription shell so it is standalone-deployable.
+- a) Keep it as a new master in CLM.
+- b) Drop it; model the party as a consumer of `crm_accounts` / `vendors` instead.
 
-Recommended: a. The repository owning a SaaS-subscription shell has no real deployment story; the link to SMP is contextual, not a hard requirement, so relaxing it is the lighter, truer fix. This rewrites an existing non-empty row, so it needs your sign-off.
+Recommended: a. Icertis, LinkSquares, and Agiloft all master the counterparty distinctly, because a contract party is not always a CRM account or supplier (individuals, one-off parties, parties you do not sell to). Choose b if every counterparty in your world is already a CRM account.
 
 a2:
 
 ---
 
-q3: All five contract master records carry auto-style notes restating the submit-lock rationale and multi-approver context. Were these notes approved by you at load time, or should they be cleared as loader-generated pollution? (yes/no)
+q3: `negotiation_playbooks` was added as a new master (fallback positions and negotiation rules). Today "playbook" also exists as a *synonym alias* on `contract_templates`, which now conflicts. How should this resolve?
 
-- a) They were approved at load time, leave them in place.
-- b) They were auto-populated, clear all five notes fields and log a hygiene incident.
+- a) Keep `negotiation_playbooks` as its own master and remove the misleading "playbook" alias from `contract_templates`.
+- b) Keep both as-is (new master + the old alias).
+- c) Drop the new master; playbooks stay just an alias of templates.
 
-Recommended: b, unless you remember approving this wording. The notes read as templated loader output, which the current rules forbid. Clearing them overwrites existing values, so it needs your confirmation.
+Recommended: a. Ironclad and LinkSquares model a playbook (negotiation guidance / fallback positions) as a thing distinct from a document template, so promoting it and clearing the stale alias is the consistent shape.
 
 a3:
 
 ---
 
-q4: For the "sign document" e-signature step, should its justification be recorded in the module tool notes, or is it satisfied by this conversation with the notes left empty?
+q4: Should a dedicated `CLM-COMPLIANCE` module be created, re-homing `data_protection_addenda` and `contract_risk_assessments` (which I parked in CLM-REPOSITORY / CLM-NEGOTIATION for now)?
 
-- a) Supply approved wording for the tool notes (on the repository module and the real-estate starter, the only unit that still carries its own skill).
-- b) Treat it as satisfied via this audit, leave the notes empty.
+- a) Yes, create CLM-COMPLIANCE and move those entities there.
+- b) No, leave them where they are.
 
-Recommended: b. Signing is self-evidently the workflow for these units; a per-tool note adds little, and the agent is not allowed to invent the wording itself.
+Recommended: b for now. Specialist compliance/DPA modules (Icertis risk, OneTrust, Sirion compliance score) are a real enterprise pattern, but most CLM deployments keep DPAs and risk records inside the repository/negotiation surface; a separate module is worth it only at heavy regulated-contract volume. Revisit if your contract population is DPA/BAA-heavy.
 
 a4:
 
 ---
 
-q5: Should legal contracts be flagged as containing personal data (counterparty contact details and signatory names)? (yes/no)
+q5: Should `CLM-NEGOTIATION` be split into two modules (a redlining/markup module and an AI risk-detection module)?
 
-Recommended: yes. Contracts routinely carry counterparty contacts and signatory names, which are personal data.
+- a) Yes, split it.
+- b) No, keep negotiation as one module.
+
+Recommended: b. The two surfaces are distinct in the market (redlining workflow in Ironclad/DocuSign vs the AI risk overlay in Icertis/Sirion), but splitting one module into two is heavy for most deployments and the entities sit fine together today. Revisit if you sell AI risk detection as its own product surface.
 
 a5:
 
 ---
 
-q6: Should signature records be flagged as containing personal data (signer names, IP addresses, signature images)? (yes/no)
+q6: I linked 5 compliance regulations to CLM as `conditional` (GDPR, SOX, HIPAA, FAR, DFARS) and created the FAR + DFARS regulation rows. Keep them? (yes/no)
 
-Recommended: yes. Signature capture records signer identity and often IP addresses and signature images, all personal data.
+Recommended: yes. Each is a real contract-population concern (EU data, public-company attestation, healthcare BAAs, US federal contracting) and they are `conditional`, so they only apply to the tenants they fit. Say no to drop the ones that do not match your contract population (name which).
 
 a6:
 
 ---
 
-q7: Should contract obligations be flagged as single-approver (the obligation owner closes the record alone)? (yes/no)
-
-Recommended: no, unless your process really has one owner close obligations unilaterally. The current flag says no, and obligation closure is often a reviewed step.
-
-a7:
-
----
-
-## Optional (will not hold up the build)
-
-q8: Several flagship CLM vendors model entities CLM does not yet have as first-class records (contract amendments, renewal records, clause libraries, playbooks, risk assessments, counterparties, contract milestones, data-protection addenda, negotiation threads). Should I research and add the ones that hold up? (yes/no)
-
-Recommended: yes, but additive and can happen after the core modules are settled. Each still wants a verification pass first.
-
-a8:
-
----
-
-q9: CLM currently tags only eIDAS and ASC 606. Should I research and add the broader compliance regulations the flagship vendors carry (GDPR data-processing addenda, HIPAA business-associate agreements, SOX significant-contract attestation, FAR/DFARS federal contracting)? (yes/no)
-
-Recommended: yes, pending a check of which apply to your contract population. Additive and non-blocking.
-
-a9:
-
----
-
-q10: Should I evaluate splitting modules further (a dedicated compliance module for addenda and risk, and splitting negotiation into redlining versus AI risk detection)? (yes/no)
-
-Recommended: yes in principle, but only once the underlying compliance and risk entities exist; today it would split empty surfaces. Additive and non-blocking.
-
-a10:
-
----
-
-<!-- agent map, ignore: q1=B2-S6 q2=B1A-SELF-CONTAIN q3=B2-S2 q4=B2-S3 q5=B2-S4.legalcontracts_pii q6=B2-S4.signaturerecords_pii q7=B2-S4.obligations_singleapprover q8=B3-CONTRACT-AMENDMENTS+B3-CONTRACT-RENEWAL-RECORDS+B3-CLAUSE-LIBRARIES+B3-PLAYBOOKS+B3-RISK-ASSESSMENTS+B3-COUNTERPARTIES+B3-CONTRACT-MILESTONES+B3-DATA-PROTECTION-ADDENDA+B3-CONTRACT-NEGOTIATION-THREADS q9=B3-REG-GDPR-DPA+B3-REG-HIPAA-BAA+B3-REG-SOX+B3-REG-FAR-DFARS q10=B3-MOD-CLM-COMPLIANCE+B3-MOD-CLM-NEGOTIATION-SPLIT | domain_id=26 -->
+<!-- agent map, ignore: q1=B2-B3-LOAD-REVIEW q2=B2-B3-COUNTERPARTIES q3=B2-B3-PLAYBOOKS q4=B2-MOD-CLM-COMPLIANCE q5=B2-MOD-CLM-NEGOTIATION-SPLIT q6=B2-B3-REGULATIONS | domain_id=26 -->

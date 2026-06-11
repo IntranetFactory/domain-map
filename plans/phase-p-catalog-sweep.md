@@ -14,7 +14,7 @@ rotted `_core` RBAC with a catalog-owned persona/RACI layer:
   was re-pointed from `_core` `roles` to `domain_roles`.
 - The 102 old `_core` personas were DELETED. **Consequence: every domain now has ZERO personas
   except ATS** (the pilot, authored via `scripts/loaders/load_ats_personas_pilot.ts`).
-- The emitter (`scripts/emit_fact_sheet.ts`) now derives + emits §9 (baseline roles, permission
+- The emitter (`scripts/generate_blueprints.ts`) now derives + emits §9 (baseline roles, permission
   hierarchy, RACI realization, functional ownership). Permissions are auto-derived per module
   (no authoring). There is NO §10 (deployable closure was removed: modules are self-contained).
 - The audit "E-band" is now the persona/RACI review band (SKILL.md `### E. Personas, RACI &

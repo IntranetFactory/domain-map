@@ -1,7 +1,7 @@
 schema_version: 2
 domain: SMP
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 b1a:
@@ -99,6 +99,17 @@ b2:
     options:
       - "(a) Add SMP-WORKFLOW-AUTOMATION capability realized on 185; keep APP-LIFECYCLE too."
       - "(b) Keep APP-LIFECYCLE as the sole 185 capability."
+  - id: B2-B9D-OWN-156
+    summary: "SaaS Management Platforms: name an owner for \"Manage demand for products\" (no one is responsible for it today)"
+    question: |
+      Contract Lifecycle Management hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage demand for products, so that step currently has nobody responsible for it. Who should own it?
+    options:
+      - "The a named owner runs it and approves it."
+      - "The a named owner runs it and the HR Business Partner approves."
+      - "Leave it unassigned for now."
+    why: |
+      SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-SMP.md q9.
+    extra_b9d_added: "2026-06-11"
 
 b3:
   - id: B3-DEFERRED-COMPLIANCE-ENTITIES

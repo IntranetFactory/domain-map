@@ -11,7 +11,7 @@
 schema_version: 2
 domain: SUB-MGMT
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 # 2026-06-06 execute pass landed all open b1a EXECUTE items at record_status='new':
@@ -132,6 +132,16 @@ b2:
       - "(b) Mis-attribution, remove the SUB-MGMT host_domain row."
       - "(c) Refactor: starter consumes SUB-MGMT-BILLING module rather than embedding customer_invoices."
     why: "Starter 171 embeds 10 data_objects of which only customer_invoices (107) is a SUB-MGMT master. The host-junction row was created during HVAC starter load; SUB-MGMT and FSM overlap only on this one master."
+  - id: B2-B9D-OWN-148
+    summary: "Subscription and Revenue Lifecycle Management: name an owner for \"Manage customers and accounts\" (no one is responsible for it today)"
+    question: |
+      Contract Lifecycle Management forwards customer subscription to Subscription and Revenue Lifecycle Management to manage customers and accounts, but Subscription and Revenue Lifecycle Management does not yet have anyone assigned to manage customers and accounts, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Subscription and Revenue Lifecycle Management owns, and assign a named owner once Subscription and Revenue Lifecycle Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Subscription and Revenue Lifecycle Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SUB-MGMT.md q17.
+    extra_b9d_added: "2026-06-11"
 
 b3:
   - id: B3-E-SUBSCRIPTION-PLANS

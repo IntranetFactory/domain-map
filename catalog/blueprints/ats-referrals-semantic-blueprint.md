@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-fact_sheet_version: "2.0"
+blueprint_version: "2.0"
 license: MIT
 system_name: ATS-REFERRALS
 system_description: Employee Referrals

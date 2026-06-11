@@ -1,7 +1,7 @@
 // scripts/lib/catalog.ts
 //
 // Single source of truth for "what data does Semantius hold about a given module."
-// Both emit_fact_sheet.ts (markdown blueprint emitter) and emit_domain_map.ts (JSON
+// Both generate_blueprints.ts (markdown blueprint emitter) and emit_domain_map.ts (JSON
 // topology + catalog emitter) call into this library. Any consumer that needs a
 // structured per-module view of the catalog should import from here, do NOT
 // re-implement the queries inline — drift between consumers is what this layer exists
@@ -12,9 +12,9 @@
 //   loadModuleCatalog(moduleIds, index) → ModuleCatalog    (one or many module ids)
 //
 // loadModuleCatalog accepts an array of module ids so the same path serves single-
-// module fact sheets and multi-module aggregations (legacy starter-kit bundles). The
+// module blueprints and multi-module aggregations (legacy starter-kit bundles). The
 // returned scope is the union of the input modules' data_objects with the strongest
-// role per data_object winning, matching emit_fact_sheet.ts's existing semantics.
+// role per data_object winning, matching generate_blueprints.ts's existing semantics.
 
 export type Row = Record<string, unknown>;
 

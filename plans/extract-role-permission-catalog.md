@@ -25,7 +25,7 @@ Move 100% of catalog-origin role + permission data out of `_core` into Domain Ma
 - **Disabling the auto-grant trigger / RPC / platform logic.** That's a platform-engineering concern; capture the empirical observation (matching timestamps, `granted_by=null`) in a separate finding for whoever owns `_core` to act on. The catalog extraction makes the auto-grant moot for catalog work even if it stays in place.
 - **The ATS audit close-out.** Resumes after this migration lands.
 - **Schema changes to `_core` tables themselves.** We only DELETE rows from them; we do not ALTER columns.
-- **All other skills are off-limits.** `semantic-model-deployer`, `semantic-model-optimizer`, `semantic-model-analyst`, `semantius-skill-maker`, `semantius-agent-maker`, `semantius-deploy-test-maker`, `use-semantius` are NOT updated by this plan. They consume blueprint artifacts (the `catalog/blueprints/*-semantic-blueprint.md` files emitted by `scripts/emit_fact_sheet.ts`), not the raw catalog tables. As long as the emitter produces byte-identical blueprints after the migration, these skills' inputs are unchanged and their behaviour is unchanged. The byte-identical-blueprint guarantee is the contract that makes this hands-off possible; it is enforced as a hard gate in Phase E and Phase F.
+- **All other skills are off-limits.** `semantic-model-deployer`, `semantic-model-optimizer`, `semantic-model-analyst`, `semantius-skill-maker`, `semantius-agent-maker`, `semantius-deploy-test-maker`, `use-semantius` are NOT updated by this plan. They consume blueprint artifacts (the `catalog/blueprints/*-semantic-blueprint.md` files emitted by `scripts/generate_blueprints.ts`), not the raw catalog tables. As long as the emitter produces byte-identical blueprints after the migration, these skills' inputs are unchanged and their behaviour is unchanged. The byte-identical-blueprint guarantee is the contract that makes this hands-off possible; it is enforced as a hard gate in Phase E and Phase F.
 
 ---
 
@@ -107,7 +107,7 @@ A3. **Inventory the loader scripts (scripts/loaders/*.ts):** every loader that P
 - The one we just ran: `.tmp_deploy/fix_ats_audit_2026_06_01.ts`
 
 A4. **Inventory generators / emitters:**
-- `scripts/emit_fact_sheet.ts` — does it read from `_core.permissions` to render the per-module blueprint's permission section? If yes, re-point to `domain_permissions` in Phase E.
+- `scripts/generate_blueprints.ts` — does it read from `_core.permissions` to render the per-module blueprint's permission section? If yes, re-point to `domain_permissions` in Phase E.
 - `scripts/analytics/discovery_query.ts` — verify it doesn't touch the role/perm tables.
 - `scripts/analytics/*.ts` — same scan.
 
@@ -140,7 +140,7 @@ Phase A6 produces the exact id sets to preserve, as a verification baseline for 
 
 A7. **Snapshot the existing blueprints.** This is the contract baseline for the byte-identical-regeneration gate.
 
-- Run `bun run scripts/emit_fact_sheet.ts --all` to regenerate every blueprint against the **pre-migration** catalog (i.e. `_core.roles` / `_core.permissions` are still polluted; the emitter reads from where it currently reads from).
+- Run `bun run scripts/generate_blueprints.ts --all` to regenerate every blueprint against the **pre-migration** catalog (i.e. `_core.roles` / `_core.permissions` are still polluted; the emitter reads from where it currently reads from).
 - Copy the resulting `catalog/blueprints/` directory verbatim to `.tmp_deploy/blueprints-pre-migration-<YYYY_MM_DD>/`. This snapshot is the contract.
 - Record the exact file list (count + names) of `catalog/blueprints/*-semantic-blueprint.md`. After migration the emitter MUST produce **the same set of files** (no additions, no removals).
 - Record a checksum (e.g. SHA256) of each file. After migration each checksum MUST match.
@@ -261,16 +261,16 @@ E5. **references/loader-idiom.md** — starter-module pre-flight (`validateStart
 
 E6. **scripts/loaders/*.ts** — every loader from the Phase A inventory that wrote to `_core.{roles,permissions,role_permissions,permission_hierarchy}`. Re-point to `domain_*` equivalents. For .tmp_deploy/ dated one-offs, mark each one "MIGRATED 2026-06-XX" in a comment at the top; do NOT delete the file (audit trail).
 
-E7. **scripts/emit_fact_sheet.ts — THE LOAD-BEARING CHANGE.** The blueprint emitter is the contract surface other skills consume.
+E7. **scripts/generate_blueprints.ts — THE LOAD-BEARING CHANGE.** The blueprint emitter is the contract surface other skills consume.
 
 - Re-point every read of `_core.roles` / `_core.permissions` / `_core.role_permissions` / `_core.permission_hierarchy` (that's about catalog content, not platform RBAC) to `domain_roles` / `domain_permissions` / `domain_role_permissions` / `domain_permission_hierarchy`.
 - Preserve every other emitter behaviour exactly: section ordering, prose templates, table column order, alphabetisation, code-block fencing, em-dash sanitisation, blank-line patterns, trailing newline. Any divergence breaks the byte-identical guarantee.
-- Run `bun run scripts/emit_fact_sheet.ts --all` against the post-migration catalog.
+- Run `bun run scripts/generate_blueprints.ts --all` against the post-migration catalog.
 - Diff the regenerated `catalog/blueprints/` against the A7 snapshot:
   - **File set parity:** `ls catalog/blueprints/*.md` must produce exactly the same filenames as the A7 snapshot — no additions, no removals.
   - **Per-file byte equality:** for every file, the new SHA256 must match the A7 snapshot's SHA256.
 - If any file differs OR any file is added / removed, this is a Phase E7 bug that MUST be fixed before Phase F. Common causes: emitter reads a field that doesn't have the same default on the new entity, FK join order differs, a `notes` column was being included from `_core.role_permissions.notes` (always empty) and is now NULL on the new table (NULL vs empty string render differently). Each is fixable by tightening the emitter; the contract is non-negotiable.
-- Re-run `bun run scripts/emit_fact_sheet.ts --all --check` as the final acceptance test. This must exit zero (no drift detected) against the post-migration catalog with the snapshot as the comparison source.
+- Re-run `bun run scripts/generate_blueprints.ts --all --check` as the final acceptance test. This must exit zero (no drift detected) against the post-migration catalog with the snapshot as the comparison source.
 
 **Why this is the hardest part of the migration.** Every consumer of these blueprints (semantic-model-deployer, semantic-model-optimizer, semantic-model-analyst, semantius-skill-maker, semantius-agent-maker, semantius-deploy-test-maker, use-semantius, and any future skill) treats the blueprint as a black-box contract. As long as the blueprints don't change, no consumer changes. The moment a blueprint differs by even a whitespace, downstream skills may diverge silently. Hold E7 to the byte.
 
@@ -299,7 +299,7 @@ A read-only deliverable that answers "are we ready to DELETE from `_core`?".
 F0. **Blueprint byte-identical re-verification.** Independent of Phase E7's own verification, re-run the blueprint diff one more time as the leading entry of the comparison report:
 
 ```
-bun run scripts/emit_fact_sheet.ts --all --check
+bun run scripts/generate_blueprints.ts --all --check
 ```
 
 Expected: exit zero, zero files changed. If anything has drifted since Phase E7's run (because catalog content changed during Phase E rewrite, because a loader ran, because a blueprint section depends on a field that's only now stable), find the source of drift and fix it before continuing. Phase F cannot proceed with a non-zero `--check` exit; Phase G cannot proceed without F0 passing.

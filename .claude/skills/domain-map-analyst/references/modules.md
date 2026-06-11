@@ -92,7 +92,7 @@ Permissions are **derived** from `data_object_lifecycle_states` (workflow gates)
 
 ### Write tier by `entity_type` (B2)
 
-Read is uniformly `<module>:read`. Which baseline governs an entity's WRITES is derived from `data_objects.entity_type` (not stored, not authored): `deriveWriteTier` in `scripts/emit_fact_sheet.ts` resolves it and renders the section-3 "write tier" column.
+Read is uniformly `<module>:read`. Which baseline governs an entity's WRITES is derived from `data_objects.entity_type` (not stored, not authored): `deriveWriteTier` in `scripts/generate_blueprints.ts` resolves it and renders the section-3 "write tier" column.
 
 | `entity_type` | write tier |
 |---|---|

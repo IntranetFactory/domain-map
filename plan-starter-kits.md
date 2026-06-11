@@ -112,7 +112,7 @@ All keep `module_kind='full'` (the default). No data migration on existing rows.
 
 ## Fact-sheet emitter changes
 
-Current emitter ([scripts/emit_fact_sheet.ts](scripts/emit_fact_sheet.ts)) produces two kinds of blueprint:
+Current emitter ([scripts/generate_blueprints.ts](scripts/generate_blueprints.ts)) produces two kinds of blueprint:
 
 - Per-module: `blueprints/modules/<module-code>-semantic-blueprint.md`
 - Per-starter-kit: `blueprints/starter-kits/<DOMAIN-CODE>-semantic-blueprint.md` driven by `domain_starter_modules` (the `--starter-kit <DOMAIN_CODE>` flag and the `emitOneStarterKit()` path around lines 1203-1247)
@@ -188,7 +188,7 @@ Strict ordering: emitter must stop reading `domain_starter_modules` before the e
    - `update_entity` on `domain_modules` adds the validation rule "full module ⇒ domain_id NOT NULL".
    - `update_entity` on `domain_module_data_objects` adds the `set_record` validation rule for invariant #1.
 2. **Loader changes.** Implement `validateStarterModule()` and `validateStarterDataObjectJunction()` in the shared loader idiom ([.claude/skills/domain-map-analyst/references/loader-idiom.md](.claude/skills/domain-map-analyst/references/loader-idiom.md)).
-3. **Emitter changes.** Adjust [scripts/emit_fact_sheet.ts](scripts/emit_fact_sheet.ts) for the new starter blueprint path and inherited-lifecycle rendering. Remove the `--starter-kit` flag, the `emitOneStarterKit()` function, and the `domain_starter_modules` GET. Update CLI flags.
+3. **Emitter changes.** Adjust [scripts/generate_blueprints.ts](scripts/generate_blueprints.ts) for the new starter blueprint path and inherited-lifecycle rendering. Remove the `--starter-kit` flag, the `emitOneStarterKit()` function, and the `domain_starter_modules` GET. Update CLI flags.
 4. **Delete entity.** `delete_entity` on `domain_starter_modules`. Cascade removes the 78 rows, the fields, and the physical table.
 5. **SKILL.md and references cleanup.** Apply all edits enumerated above in one pass.
 6. **First starter kit.** Author one real starter end-to-end as a validation pass. Candidate: `CRM-LITE` (well-understood domain, clear embedded set: customers + contacts + leads + opportunities) OR a persona starter to stress-test the cross-domain shape (Real Estate Agent). Decision made when this step is reached, not before.

@@ -55,6 +55,16 @@ a5:
 
 ---
 
+q7: Accounting Practice Management forwards engagement letter to Legal Practice Management to evaluate and manage financial performance, but Legal Practice Management does not yet have anyone assigned to evaluate and manage financial performance, so this step has no owner. How should it be handled?
+- a) Record it now as work Legal Practice Management owns, and assign a named owner once Legal Practice Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Legal Practice Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a7:
+
+---
+
 ## Optional (will not hold up the build)
 
 q6: Every flagship law-firm platform ships four matter-scoped records that are not modeled yet: matter documents, key dates and deadlines, matter parties (with their roles), and legal tasks. Should I research and add the ones that hold up? (yes/no)
@@ -65,4 +75,4 @@ a6:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S3 q2=B2-S1.conflictpii q3=B2-S1.filingapprover q4=B1A-SELF-CONTAIN q5=B2-S4 q6=B3-1+B3-2+B3-3+B3-4 | domain_id=150 -->
+<!-- agent map, ignore: q1=B2-S3 q2=B2-S1.conflictpii q3=B2-S1.filingapprover q4=B1A-SELF-CONTAIN q5=B2-S4 q6=B3-1+B3-2+B3-3+B3-4 q7=B2-B9D-OWN-300 | domain_id=150 -->

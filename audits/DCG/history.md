@@ -473,3 +473,63 @@ gated on user decisions B2-S1 / B2-S2 or on the unbuilt-domain prerequisite.
 state.yaml (recorded here in history only). All remaining open work waits on the user.
 
 JWT errors: none encountered.
+
+## 2026-06-11 - Build
+
+Full build-out of the previously-unbuilt domain (B1A-BUILD), executed against user answers
+collected in chat (the q-DCG.md decisions): module split = **6 modules** (B2-S1 option a),
+capabilities = **all 10** (B2-S2 option a), pattern flags = **all 4 flips** (B2-S5). The
+config-shape calls (B2-S4 / q4-q6) were resolved structurally via `entity_type`: data_domains
+= `catalog`, glossary_terms = `operational_workflow` (gets lifecycle), data_usage_metrics =
+`computed`. Everything landed at `record_status='new'`. Loaders in `.tmp_deploy/`:
+build_dcg_core.ts, build_dcg_handoff_fix.ts, build_dcg_tools.ts, build_dcg_personas.ts;
+verify_dcg.ts confirmed all bands.
+
+### Executed
+
+| Phase | Detail |
+| --- | --- |
+| A - capabilities | 10 `capabilities` (DCG-* codes) + 10 `capability_domains` for domain 88. |
+| A - modules | 6 `domain_modules` (full): DCG-CATALOG 337, DCG-LINEAGE 338, DCG-GLOSSARY 339, DCG-STEWARDSHIP 340, DCG-ACCESS-GOV 341, DCG-DATA-PRODUCTS 342. 10 `domain_module_capabilities` (every cap realized, every module realizes >=1 - M4/M6 pass). Catalog UX (tagline+description, buyer voice) written into empty A4/M8 fields on the domain and all 6 modules. |
+| B - DMDO | 16 `domain_module_data_objects`: 9 `master/required` (data_assets, data_domains, data_lineage_relationships, glossary_terms, data_stewardship_assignments, data_certifications, data_classifications, data_access_policies, data_usage_metrics). **M7 resolution**: data_products (232), metric_definitions (252), ontologies (254) are canonically mastered at module grain elsewhere (DATA-AI-PLAT module 224, METRICS-LAYER module 275), so DCG carries them as `embedded_master`, NOT master. data_assets (300) is master in DCG-CATALOG and `embedded_master` in the 4 sibling modules that operate on it (autonomous-deployable-units; M7 passes). Plus 11 `consumer/optional` rows on the ingested external metadata (ml_models, feature_sets, bi_reports/dashboards, cloud_databases, pipeline_runs, query_lineage_records, kgp KG entities, merge_rules, dq_dimensions, lcap_business_objects) routed to CATALOG/LINEAGE/GLOSSARY. |
+| B - entity_type | Classified the 11 `unclassified` masters (B13 pass). 6 `operational_workflow`, 1 `operational_record` (data_lineage_relationships), 1 `catalog` (data_domains), 1 `computed` (data_usage_metrics); embedded data_products + ontologies classified `operational_workflow` as a catalog-wide property. |
+| B - pattern flags | data_access_policies (submit_lock + single_approver), data_certifications (single_approver), data_classifications (submit_lock), data_stewardship_assignments (personal_content). |
+| B - lifecycle | 26 `data_object_lifecycle_states` across the 6 workflow-bearing masters (data_assets, glossary_terms, data_classifications, data_stewardship_assignments, data_certifications, data_access_policies), each anchored to its realizing DCG module via `domain_module_id`, gated transitions marked `requires_permission` with verb overrides. B12 pass. |
+| B - aliases | 18 `data_object_aliases` (>=1 synonym pair per non-self-explanatory master). |
+| B - relationships | 17 `data_object_relationships`: 10 intra-domain (B6), 6 `users` edges (B7, against builtin id 748), 1 cross-domain outbound (glossary_terms -> kgp_ontologies, B8). |
+| B - trigger_events | 5 new events for gated terminal/approval states (data_asset.deprecated, glossary_term.deprecated, data_classification.approved, data_access_policy.approved, data_stewardship_assignment.revoked). |
+| B - handoff FKs (B1B-S6 / B10b) | All 13 previously-NULL DCG-side module FKs resolved (outbound 0 NULL, inbound 0 NULL). 12 inbound resolved to the consuming DCG module; outbound 158 set to DCG-ACCESS-GOV. |
+| S - tools | 18 new tools (CRUD writes coverage_tier='platform', 1 compute='external'); 47 `domain_module_tools` across the 6 modules. dcg-system skill (id 10) now derives a 37-tool toolset. **Strict Semantius score 92%** (34/37 platform); the 3 non-platform (classify_text, notify_team, analyze_lineage_impact) are all `optional`, so the required floor is 100% platform. F2/F3/F4/F5 pass; F7 honored (notify_person/notify_team abstractions, no channel primitives). |
+| E - personas | 5 `domain_roles` (DATA-STEWARD, DATA-OWNER, DATA-CATALOG-ADMIN, DATA-GOVERNANCE-LEAD [cross-functional], DATA-CONSUMER); 19 `role_modules` reach rows (E1/E2/E3 pass). |
+| E - RACI | 16 gated lifecycle states wired to PCF processes (275, 1208, 1210, 1212, 1215); 12 `process_raci` rows (each gated process has >=1 R + >=1 A - E4 pass). |
+
+Verification (verify_dcg.ts): M1, M2, M4, M6, M7, A2, A4, M8, B1, B5, B10b, B12, B13, B14,
+F1, F2, F3, E1, E2, E4 all PASS.
+
+### Surfaced (no write; awaiting user)
+
+- **New finding - trigger_event 2 mis-pointing**: `access_policy.updated` (trigger_event id 2,
+  used by outbound handoff 158 DCG -> DATA-AI-PLAT) has `data_object_id=226` (lakehouse_tables,
+  a DATA-AI-PLAT entity) instead of `data_access_policies` (307). The handoff's DCG-side module
+  FK was set to DCG-ACCESS-GOV from the event name; the FK re-point on the trigger event is an
+  overwrite of an existing value (destructive) and is left for user sign-off (new b2 item
+  B2-TRIGGER-FIX).
+- **B2-S3 / B1B-S7** (Rule #18 wording on handoffs 158 / 223 / 265): unchanged. Destructive
+  overwrite of existing descriptions; out of the build scope; still awaiting user wording.
+- **B2-S6** (regulation scoping): unchanged. Not in the build's explicit scope; still open.
+- **B1A-B9D-VERIFY**: B9d handoff-payload realization has not been run on this domain; separate
+  from the build and still open.
+- **B1B-S9** (neighbor consumer-DMDO declarations): the DCG-side masters now exist, so this is
+  now purely report-only on the 9 neighbor domains' own audits.
+
+### Resolved & removed from state.yaml (recorded here)
+
+B1A-BUILD, B1B-S1, B1B-S2, B1B-S4, B1B-S6, B2-S1, B2-S2, B2-S4, B2-S5 - all executed this pass.
+
+### Post-build status
+
+`next_action_by: user`. Domain is structurally complete (all build bands green). Remaining
+open: B2-S3 (wording), B2-S6 (regulations), B2-TRIGGER-FIX (new), B1A-B9D-VERIFY, B1B-S7,
+B1B-S9 (report-only), and the b3 backlog. No `record_status` changed (Rule #1).
+
+JWT errors: none encountered.

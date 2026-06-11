@@ -11,7 +11,7 @@
 schema_version: 2
 domain: CRM
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-08"
 
 b1a:
@@ -48,6 +48,16 @@ b2:
 
 # b3 refreshed with Phase 0 verdicts (2026-06-08). GROUP A = CRM-native additive (ready to load
 # on user go, q1). GROUP B = belongs to another domain (q3/q4). Discretionary; never blocks finished.
+  - id: B2-B9D-OWN-3
+    summary: "Customer Relationship Management: name an owner for \"Market and Sell Products and Services\" (no one is responsible for it today)"
+    question: |
+      Contract Lifecycle Management forwards opportunity to Customer Relationship Management to market and Sell Products and Services, but Customer Relationship Management does not yet have anyone assigned to market and Sell Products and Services, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Customer Relationship Management owns, and assign a named owner once Customer Relationship Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CRM.md q6.
+    extra_b9d_added: "2026-06-11"
 b3:
   # --- GROUP A: confirmed CRM-native, additive, fits an existing module (q1) ---
   - id: B3-CRM-COMPETITORS

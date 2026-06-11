@@ -14,6 +14,7 @@
         }
       ],
       "personas": [],
+      "actor_personas": [],
       "raci": []
     },
     {
@@ -34,6 +35,7 @@
         }
       ],
       "personas": [],
+      "actor_personas": [],
       "raci": []
     },
     {
@@ -54,12 +56,14 @@
         }
       ],
       "personas": ["GRC-COMPLIANCE-TRAINING-MANAGER"],
+      "actor_personas": ["GRC-COMPLIANCE-TRAINING-MANAGER"],
       "raci": [
         {
           "domain": "LMS",
           "responsibility": "contributor",
           "persona": "GRC-COMPLIANCE-TRAINING-MANAGER",
           "persona_via": "own",
+          "process_code": "7.3.4.6",
           "process_key": "manage_examinations",
           "process_name": "Manage examinations and certifications",
           "raci": "accountable"
@@ -69,6 +73,7 @@
           "responsibility": "contributor",
           "persona": "GRC-COMPLIANCE-TRAINING-MANAGER",
           "persona_via": "own",
+          "process_code": "2.1.3.5.1",
           "process_key": "train_employees_appropriate",
           "process_name": "Train employees on appropriate regulatory requirements",
           "raci": "accountable"
@@ -78,6 +83,7 @@
           "responsibility": "contributor",
           "persona": "GRC-COMPLIANCE-TRAINING-MANAGER",
           "persona_via": "own",
+          "process_code": "2.1.3.5.1",
           "process_key": "train_employees_appropriate",
           "process_name": "Train employees on appropriate regulatory requirements",
           "raci": "responsible"
@@ -98,12 +104,14 @@
         }
       ],
       "personas": ["HRSD-CASE-AGENT", "HRSD-KNOWLEDGE-MANAGER", "HRSD-SERVICE-MANAGER"],
+      "actor_personas": ["HRSD-CASE-AGENT", "HRSD-KNOWLEDGE-MANAGER", "HRSD-SERVICE-MANAGER"],
       "raci": [
         {
           "domain": "HRSD",
           "responsibility": "owner",
           "persona": "HRSD-SERVICE-MANAGER",
           "persona_via": "own",
+          "process_code": "7.7.2",
           "process_key": "manage_employee_inquiry_process",
           "process_name": "Manage employee inquiry process",
           "raci": "accountable"
@@ -113,6 +121,7 @@
           "responsibility": "owner",
           "persona": "HRSD-CASE-AGENT",
           "persona_via": "own",
+          "process_code": "7.7.2",
           "process_key": "manage_employee_inquiry_process",
           "process_name": "Manage employee inquiry process",
           "raci": "responsible"
@@ -122,6 +131,7 @@
           "responsibility": "owner",
           "persona": "HRSD-KNOWLEDGE-MANAGER",
           "persona_via": "own",
+          "process_code": "7.7.2",
           "process_key": "manage_employee_inquiry_process",
           "process_name": "Manage employee inquiry process",
           "raci": "informed"
@@ -146,12 +156,14 @@
         }
       ],
       "personas": ["HR-BUSINESS-PARTNER", "HR-HRIS-ADMIN", "HR-ORG-DESIGN-ANALYST", "HR-PEOPLE-OPS-SPECIALIST"],
+      "actor_personas": ["HIRING-MANAGER", "HR-BUSINESS-PARTNER", "HR-HRIS-ADMIN", "HR-ORG-DESIGN-ANALYST", "HR-PEOPLE-OPS-SPECIALIST", "HRSD-CASE-AGENT", "HRSD-KNOWLEDGE-MANAGER", "HRSD-SERVICE-MANAGER", "LD-INSTRUCTIONAL-DESIGNER", "LD-INSTRUCTOR", "LD-LEARNING-ADMIN", "PEOPLE-MANAGER", "RECRUITING-COORDINATOR", "RECRUITING-MANAGER", "RECRUITING-RECRUITER", "RECRUITING-SOURCER"],
       "raci": [
         {
           "domain": "ATS",
           "responsibility": "owner",
           "persona": "HIRING-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.2.4.1",
           "process_key": "draw_up_make_offer",
           "process_name": "Draw up and make offer",
           "raci": "accountable"
@@ -161,6 +173,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-RECRUITER",
           "persona_via": "descendant",
+          "process_code": "7.2.4.1",
           "process_key": "draw_up_make_offer",
           "process_name": "Draw up and make offer",
           "raci": "responsible"
@@ -170,6 +183,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-MANAGER",
           "persona_via": "descendant",
+          "process_code": "7.2.4.1",
           "process_key": "draw_up_make_offer",
           "process_name": "Draw up and make offer",
           "raci": "consulted"
@@ -179,6 +193,7 @@
           "responsibility": "owner",
           "persona": "HIRING-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.2.4.3",
           "process_key": "hire_candidate",
           "process_name": "Hire candidate",
           "raci": "accountable"
@@ -188,6 +203,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-RECRUITER",
           "persona_via": "descendant",
+          "process_code": "7.2.4.3",
           "process_key": "hire_candidate",
           "process_name": "Hire candidate",
           "raci": "responsible"
@@ -197,6 +213,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-MANAGER",
           "persona_via": "descendant",
+          "process_code": "7.2.3.2",
           "process_key": "interview_candidates",
           "process_name": "Interview candidates",
           "raci": "accountable"
@@ -206,6 +223,7 @@
           "responsibility": "owner",
           "persona": "HIRING-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.2.3.2",
           "process_key": "interview_candidates",
           "process_name": "Interview candidates",
           "raci": "responsible"
@@ -215,6 +233,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-RECRUITER",
           "persona_via": "descendant",
+          "process_code": "7.2.3.2",
           "process_key": "interview_candidates",
           "process_name": "Interview candidates",
           "raci": "consulted"
@@ -224,6 +243,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-COORDINATOR",
           "persona_via": "descendant",
+          "process_code": "7.2.3.2",
           "process_key": "interview_candidates",
           "process_name": "Interview candidates",
           "raci": "informed"
@@ -233,6 +253,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-MANAGER",
           "persona_via": "descendant",
+          "process_code": "7.2.2.5",
           "process_key": "manage_employee_referral",
           "process_name": "Manage employee referral programs",
           "raci": "accountable"
@@ -242,6 +263,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-RECRUITER",
           "persona_via": "descendant",
+          "process_code": "7.2.2.5",
           "process_key": "manage_employee_referral",
           "process_name": "Manage employee referral programs",
           "raci": "responsible"
@@ -251,6 +273,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-MANAGER",
           "persona_via": "descendant",
+          "process_code": "7.2.1",
           "process_key": "manage_employee_requisitions",
           "process_name": "Manage employee requisitions",
           "raci": "accountable"
@@ -260,6 +283,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-RECRUITER",
           "persona_via": "descendant",
+          "process_code": "7.2.1",
           "process_key": "manage_employee_requisitions",
           "process_name": "Manage employee requisitions",
           "raci": "responsible"
@@ -269,6 +293,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-MANAGER",
           "persona_via": "descendant",
+          "process_code": "7.2.4",
           "process_key": "manage_new_hire_re_hire",
           "process_name": "Manage new hire/re-hire",
           "raci": "accountable"
@@ -278,6 +303,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-COORDINATOR",
           "persona_via": "descendant",
+          "process_code": "7.2.4",
           "process_key": "manage_new_hire_re_hire",
           "process_name": "Manage new hire/re-hire",
           "raci": "consulted"
@@ -287,6 +313,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-MANAGER",
           "persona_via": "descendant",
+          "process_code": "7.2.5.1",
           "process_key": "obtain_candidate_background",
           "process_name": "Obtain candidate background information",
           "raci": "accountable"
@@ -296,6 +323,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-RECRUITER",
           "persona_via": "descendant",
+          "process_code": "7.2.5.1",
           "process_key": "obtain_candidate_background",
           "process_name": "Obtain candidate background information",
           "raci": "responsible"
@@ -305,6 +333,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-MANAGER",
           "persona_via": "descendant",
+          "process_code": "7.2.2",
           "process_key": "recruit_source_candidates",
           "process_name": "Recruit/Source candidates",
           "raci": "accountable"
@@ -314,6 +343,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-RECRUITER",
           "persona_via": "descendant",
+          "process_code": "7.2.2",
           "process_key": "recruit_source_candidates",
           "process_name": "Recruit/Source candidates",
           "raci": "responsible"
@@ -323,6 +353,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-SOURCER",
           "persona_via": "descendant",
+          "process_code": "7.2.2",
           "process_key": "recruit_source_candidates",
           "process_name": "Recruit/Source candidates",
           "raci": "responsible"
@@ -332,6 +363,7 @@
           "responsibility": "owner",
           "persona": "HIRING-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.2.2",
           "process_key": "recruit_source_candidates",
           "process_name": "Recruit/Source candidates",
           "raci": "informed"
@@ -341,6 +373,7 @@
           "responsibility": "owner",
           "persona": "HR-BUSINESS-PARTNER",
           "persona_via": "own",
+          "process_code": "1.1.5",
           "process_key": "conduct_organization",
           "process_name": "Conduct organization restructuring opportunities",
           "raci": "accountable"
@@ -350,6 +383,7 @@
           "responsibility": "owner",
           "persona": "HR-ORG-DESIGN-ANALYST",
           "persona_via": "own",
+          "process_code": "1.1.5",
           "process_key": "conduct_organization",
           "process_name": "Conduct organization restructuring opportunities",
           "raci": "responsible"
@@ -359,6 +393,7 @@
           "responsibility": "owner",
           "persona": "PEOPLE-MANAGER",
           "persona_via": "seam",
+          "process_code": "1.1.5",
           "process_key": "conduct_organization",
           "process_name": "Conduct organization restructuring opportunities",
           "raci": "consulted"
@@ -368,6 +403,7 @@
           "responsibility": "owner",
           "persona": "HR-BUSINESS-PARTNER",
           "persona_via": "own",
+          "process_code": "1.2.5",
           "process_key": "create_organizational_design",
           "process_name": "Create organizational design",
           "raci": "accountable"
@@ -377,6 +413,7 @@
           "responsibility": "owner",
           "persona": "HR-ORG-DESIGN-ANALYST",
           "persona_via": "own",
+          "process_code": "1.2.5",
           "process_key": "create_organizational_design",
           "process_name": "Create organizational design",
           "raci": "responsible"
@@ -386,6 +423,7 @@
           "responsibility": "owner",
           "persona": "PEOPLE-MANAGER",
           "persona_via": "seam",
+          "process_code": "1.2.5",
           "process_key": "create_organizational_design",
           "process_name": "Create organizational design",
           "raci": "consulted"
@@ -395,6 +433,7 @@
           "responsibility": "owner",
           "persona": "HR-HRIS-ADMIN",
           "persona_via": "own",
+          "process_code": "1.2.5",
           "process_key": "create_organizational_design",
           "process_name": "Create organizational design",
           "raci": "informed"
@@ -404,6 +443,7 @@
           "responsibility": "owner",
           "persona": "HR-HRIS-ADMIN",
           "persona_via": "own",
+          "process_code": "7.1.2.16",
           "process_key": "develop_maintain_job",
           "process_name": "Develop and maintain job descriptions",
           "raci": "accountable"
@@ -413,6 +453,7 @@
           "responsibility": "owner",
           "persona": "HR-ORG-DESIGN-ANALYST",
           "persona_via": "own",
+          "process_code": "7.1.2.16",
           "process_key": "develop_maintain_job",
           "process_name": "Develop and maintain job descriptions",
           "raci": "responsible"
@@ -422,6 +463,7 @@
           "responsibility": "owner",
           "persona": "HR-BUSINESS-PARTNER",
           "persona_via": "own",
+          "process_code": "7.1.2.16",
           "process_key": "develop_maintain_job",
           "process_name": "Develop and maintain job descriptions",
           "raci": "consulted"
@@ -431,6 +473,7 @@
           "responsibility": "owner",
           "persona": "PEOPLE-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.6.2.2",
           "process_key": "manage_leave_absence",
           "process_name": "Manage leave of absence",
           "raci": "accountable"
@@ -440,6 +483,7 @@
           "responsibility": "owner",
           "persona": "HR-PEOPLE-OPS-SPECIALIST",
           "persona_via": "own",
+          "process_code": "7.6.2.2",
           "process_key": "manage_leave_absence",
           "process_name": "Manage leave of absence",
           "raci": "responsible"
@@ -449,6 +493,7 @@
           "responsibility": "owner",
           "persona": "HR-BUSINESS-PARTNER",
           "persona_via": "own",
+          "process_code": "7.6.2.2",
           "process_key": "manage_leave_absence",
           "process_name": "Manage leave of absence",
           "raci": "consulted"
@@ -458,6 +503,7 @@
           "responsibility": "owner",
           "persona": "HR-HRIS-ADMIN",
           "persona_via": "own",
+          "process_code": "7.6.2.2",
           "process_key": "manage_leave_absence",
           "process_name": "Manage leave of absence",
           "raci": "informed"
@@ -467,6 +513,7 @@
           "responsibility": "owner",
           "persona": "HR-BUSINESS-PARTNER",
           "persona_via": "own",
+          "process_code": "7.7.3",
           "process_key": "manage_maintain_employee_data",
           "process_name": "Manage and maintain employee data",
           "raci": "accountable"
@@ -476,6 +523,7 @@
           "responsibility": "owner",
           "persona": "HR-PEOPLE-OPS-SPECIALIST",
           "persona_via": "own",
+          "process_code": "7.7.3",
           "process_key": "manage_maintain_employee_data",
           "process_name": "Manage and maintain employee data",
           "raci": "responsible"
@@ -485,6 +533,7 @@
           "responsibility": "owner",
           "persona": "HR-HRIS-ADMIN",
           "persona_via": "own",
+          "process_code": "7.7.3",
           "process_key": "manage_maintain_employee_data",
           "process_name": "Manage and maintain employee data",
           "raci": "consulted"
@@ -494,6 +543,7 @@
           "responsibility": "owner",
           "persona": "PEOPLE-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.7.3",
           "process_key": "manage_maintain_employee_data",
           "process_name": "Manage and maintain employee data",
           "raci": "informed"
@@ -503,6 +553,7 @@
           "responsibility": "owner",
           "persona": "HR-BUSINESS-PARTNER",
           "persona_via": "own",
+          "process_code": "7.6.2",
           "process_key": "manage_separation",
           "process_name": "Manage separation",
           "raci": "accountable"
@@ -512,6 +563,7 @@
           "responsibility": "owner",
           "persona": "HR-PEOPLE-OPS-SPECIALIST",
           "persona_via": "own",
+          "process_code": "7.6.2",
           "process_key": "manage_separation",
           "process_name": "Manage separation",
           "raci": "responsible"
@@ -521,6 +573,7 @@
           "responsibility": "owner",
           "persona": "PEOPLE-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.6.2",
           "process_key": "manage_separation",
           "process_name": "Manage separation",
           "raci": "consulted"
@@ -530,6 +583,7 @@
           "responsibility": "owner",
           "persona": "HR-HRIS-ADMIN",
           "persona_via": "own",
+          "process_code": "7.6.2",
           "process_key": "manage_separation",
           "process_name": "Manage separation",
           "raci": "informed"
@@ -539,6 +593,7 @@
           "responsibility": "owner",
           "persona": "LD-LEARNING-ADMIN",
           "persona_via": "descendant",
+          "process_code": "7.3.4.7",
           "process_key": "monitor_evaluate_learning",
           "process_name": "Monitor and evaluate learning programs",
           "raci": "accountable"
@@ -548,6 +603,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTIONAL-DESIGNER",
           "persona_via": "descendant",
+          "process_code": "7.3.4.7",
           "process_key": "monitor_evaluate_learning",
           "process_name": "Monitor and evaluate learning programs",
           "raci": "responsible"
@@ -557,6 +613,7 @@
           "responsibility": "owner",
           "persona": "PEOPLE-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.6.3",
           "process_key": "relocate_employees_manage",
           "process_name": "Relocate employees and manage assignments",
           "raci": "accountable"
@@ -566,6 +623,7 @@
           "responsibility": "owner",
           "persona": "HR-PEOPLE-OPS-SPECIALIST",
           "persona_via": "own",
+          "process_code": "7.6.3",
           "process_key": "relocate_employees_manage",
           "process_name": "Relocate employees and manage assignments",
           "raci": "responsible"
@@ -575,6 +633,7 @@
           "responsibility": "owner",
           "persona": "HR-BUSINESS-PARTNER",
           "persona_via": "own",
+          "process_code": "7.6.3",
           "process_key": "relocate_employees_manage",
           "process_name": "Relocate employees and manage assignments",
           "raci": "consulted"
@@ -584,6 +643,7 @@
           "responsibility": "owner",
           "persona": "HR-HRIS-ADMIN",
           "persona_via": "own",
+          "process_code": "7.6.3",
           "process_key": "relocate_employees_manage",
           "process_name": "Relocate employees and manage assignments",
           "raci": "informed"
@@ -593,6 +653,7 @@
           "responsibility": "owner",
           "persona": "HRSD-SERVICE-MANAGER",
           "persona_via": "descendant",
+          "process_code": "7.7.2",
           "process_key": "manage_employee_inquiry_process",
           "process_name": "Manage employee inquiry process",
           "raci": "accountable"
@@ -602,6 +663,7 @@
           "responsibility": "owner",
           "persona": "HRSD-CASE-AGENT",
           "persona_via": "descendant",
+          "process_code": "7.7.2",
           "process_key": "manage_employee_inquiry_process",
           "process_name": "Manage employee inquiry process",
           "raci": "responsible"
@@ -611,6 +673,7 @@
           "responsibility": "owner",
           "persona": "HRSD-KNOWLEDGE-MANAGER",
           "persona_via": "descendant",
+          "process_code": "7.7.2",
           "process_key": "manage_employee_inquiry_process",
           "process_name": "Manage employee inquiry process",
           "raci": "informed"
@@ -620,6 +683,7 @@
           "responsibility": "owner",
           "persona": "PEOPLE-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.3.4.3",
           "process_key": "align_learning_programs",
           "process_name": "Align learning programs with competencies and skills",
           "raci": "accountable"
@@ -629,6 +693,7 @@
           "responsibility": "owner",
           "persona": "LD-LEARNING-ADMIN",
           "persona_via": "descendant",
+          "process_code": "7.3.4.3",
           "process_key": "align_learning_programs",
           "process_name": "Align learning programs with competencies and skills",
           "raci": "responsible"
@@ -638,6 +703,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTIONAL-DESIGNER",
           "persona_via": "descendant",
+          "process_code": "7.3.4.3",
           "process_key": "align_learning_programs",
           "process_name": "Align learning programs with competencies and skills",
           "raci": "consulted"
@@ -647,6 +713,7 @@
           "responsibility": "owner",
           "persona": "LD-LEARNING-ADMIN",
           "persona_via": "descendant",
+          "process_code": "7.3.4.5",
           "process_key": "develop_conduct_manage_employee",
           "process_name": "Develop, conduct, and manage employee training programs",
           "raci": "accountable"
@@ -656,6 +723,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTIONAL-DESIGNER",
           "persona_via": "descendant",
+          "process_code": "7.3.4.5",
           "process_key": "develop_conduct_manage_employee",
           "process_name": "Develop, conduct, and manage employee training programs",
           "raci": "responsible"
@@ -665,6 +733,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTOR",
           "persona_via": "descendant",
+          "process_code": "7.3.4.5",
           "process_key": "develop_conduct_manage_employee",
           "process_name": "Develop, conduct, and manage employee training programs",
           "raci": "consulted"
@@ -674,6 +743,7 @@
           "responsibility": "owner",
           "persona": "PEOPLE-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.3.4.5",
           "process_key": "develop_conduct_manage_employee",
           "process_name": "Develop, conduct, and manage employee training programs",
           "raci": "informed"
@@ -683,6 +753,7 @@
           "responsibility": "owner",
           "persona": "LD-LEARNING-ADMIN",
           "persona_via": "descendant",
+          "process_code": "7.3.3.2",
           "process_key": "develop_employee_career_plans",
           "process_name": "Develop employee career plans and career paths",
           "raci": "accountable"
@@ -692,6 +763,7 @@
           "responsibility": "owner",
           "persona": "PEOPLE-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.3.3.2",
           "process_key": "develop_employee_career_plans",
           "process_name": "Develop employee career plans and career paths",
           "raci": "responsible"
@@ -701,6 +773,7 @@
           "responsibility": "owner",
           "persona": "LD-LEARNING-ADMIN",
           "persona_via": "descendant",
+          "process_code": "5.2.3.7",
           "process_key": "evaluate_training_effectiveness",
           "process_name": "Evaluate training effectiveness",
           "raci": "accountable"
@@ -710,6 +783,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTIONAL-DESIGNER",
           "persona_via": "descendant",
+          "process_code": "5.2.3.7",
           "process_key": "evaluate_training_effectiveness",
           "process_name": "Evaluate training effectiveness",
           "raci": "responsible"
@@ -719,6 +793,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTOR",
           "persona_via": "descendant",
+          "process_code": "5.2.3.7",
           "process_key": "evaluate_training_effectiveness",
           "process_name": "Evaluate training effectiveness",
           "raci": "consulted"
@@ -728,6 +803,7 @@
           "responsibility": "owner",
           "persona": "LD-LEARNING-ADMIN",
           "persona_via": "descendant",
+          "process_code": "7.3.4.6",
           "process_key": "manage_examinations",
           "process_name": "Manage examinations and certifications",
           "raci": "responsible"
@@ -737,6 +813,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTOR",
           "persona_via": "descendant",
+          "process_code": "7.3.4.6",
           "process_key": "manage_examinations",
           "process_name": "Manage examinations and certifications",
           "raci": "consulted"
@@ -746,6 +823,7 @@
           "responsibility": "owner",
           "persona": "LD-LEARNING-ADMIN",
           "persona_via": "descendant",
+          "process_code": "5.2.3.3",
           "process_key": "manage_training_schedule",
           "process_name": "Manage training schedule",
           "raci": "accountable"
@@ -755,6 +833,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTOR",
           "persona_via": "descendant",
+          "process_code": "5.2.3.3",
           "process_key": "manage_training_schedule",
           "process_name": "Manage training schedule",
           "raci": "responsible"
@@ -764,6 +843,7 @@
           "responsibility": "owner",
           "persona": "LD-LEARNING-ADMIN",
           "persona_via": "descendant",
+          "process_code": "7.3.4.7",
           "process_key": "monitor_evaluate_learning",
           "process_name": "Monitor and evaluate learning programs",
           "raci": "accountable"
@@ -773,6 +853,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTIONAL-DESIGNER",
           "persona_via": "descendant",
+          "process_code": "7.3.4.7",
           "process_key": "monitor_evaluate_learning",
           "process_name": "Monitor and evaluate learning programs",
           "raci": "responsible"
@@ -782,6 +863,7 @@
           "responsibility": "owner",
           "persona": "PEOPLE-MANAGER",
           "persona_via": "seam",
+          "process_code": "2.1.3.5.1",
           "process_key": "train_employees_appropriate",
           "process_name": "Train employees on appropriate regulatory requirements",
           "raci": "consulted"
@@ -806,6 +888,7 @@
         }
       ],
       "personas": [],
+      "actor_personas": [],
       "raci": []
     },
     {
@@ -822,12 +905,14 @@
         }
       ],
       "personas": ["LD-INSTRUCTIONAL-DESIGNER", "LD-INSTRUCTOR", "LD-LEARNING-ADMIN"],
+      "actor_personas": ["LD-INSTRUCTIONAL-DESIGNER", "LD-INSTRUCTOR", "LD-LEARNING-ADMIN", "PEOPLE-MANAGER"],
       "raci": [
         {
           "domain": "LMS",
           "responsibility": "owner",
           "persona": "PEOPLE-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.3.4.3",
           "process_key": "align_learning_programs",
           "process_name": "Align learning programs with competencies and skills",
           "raci": "accountable"
@@ -837,6 +922,7 @@
           "responsibility": "owner",
           "persona": "LD-LEARNING-ADMIN",
           "persona_via": "own",
+          "process_code": "7.3.4.3",
           "process_key": "align_learning_programs",
           "process_name": "Align learning programs with competencies and skills",
           "raci": "responsible"
@@ -846,6 +932,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTIONAL-DESIGNER",
           "persona_via": "own",
+          "process_code": "7.3.4.3",
           "process_key": "align_learning_programs",
           "process_name": "Align learning programs with competencies and skills",
           "raci": "consulted"
@@ -855,6 +942,7 @@
           "responsibility": "owner",
           "persona": "LD-LEARNING-ADMIN",
           "persona_via": "own",
+          "process_code": "7.3.4.5",
           "process_key": "develop_conduct_manage_employee",
           "process_name": "Develop, conduct, and manage employee training programs",
           "raci": "accountable"
@@ -864,6 +952,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTIONAL-DESIGNER",
           "persona_via": "own",
+          "process_code": "7.3.4.5",
           "process_key": "develop_conduct_manage_employee",
           "process_name": "Develop, conduct, and manage employee training programs",
           "raci": "responsible"
@@ -873,6 +962,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTOR",
           "persona_via": "own",
+          "process_code": "7.3.4.5",
           "process_key": "develop_conduct_manage_employee",
           "process_name": "Develop, conduct, and manage employee training programs",
           "raci": "consulted"
@@ -882,6 +972,7 @@
           "responsibility": "owner",
           "persona": "PEOPLE-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.3.4.5",
           "process_key": "develop_conduct_manage_employee",
           "process_name": "Develop, conduct, and manage employee training programs",
           "raci": "informed"
@@ -891,6 +982,7 @@
           "responsibility": "owner",
           "persona": "LD-LEARNING-ADMIN",
           "persona_via": "own",
+          "process_code": "7.3.3.2",
           "process_key": "develop_employee_career_plans",
           "process_name": "Develop employee career plans and career paths",
           "raci": "accountable"
@@ -900,6 +992,7 @@
           "responsibility": "owner",
           "persona": "PEOPLE-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.3.3.2",
           "process_key": "develop_employee_career_plans",
           "process_name": "Develop employee career plans and career paths",
           "raci": "responsible"
@@ -909,6 +1002,7 @@
           "responsibility": "owner",
           "persona": "LD-LEARNING-ADMIN",
           "persona_via": "own",
+          "process_code": "5.2.3.7",
           "process_key": "evaluate_training_effectiveness",
           "process_name": "Evaluate training effectiveness",
           "raci": "accountable"
@@ -918,6 +1012,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTIONAL-DESIGNER",
           "persona_via": "own",
+          "process_code": "5.2.3.7",
           "process_key": "evaluate_training_effectiveness",
           "process_name": "Evaluate training effectiveness",
           "raci": "responsible"
@@ -927,6 +1022,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTOR",
           "persona_via": "own",
+          "process_code": "5.2.3.7",
           "process_key": "evaluate_training_effectiveness",
           "process_name": "Evaluate training effectiveness",
           "raci": "consulted"
@@ -936,6 +1032,7 @@
           "responsibility": "owner",
           "persona": "LD-LEARNING-ADMIN",
           "persona_via": "own",
+          "process_code": "7.3.4.6",
           "process_key": "manage_examinations",
           "process_name": "Manage examinations and certifications",
           "raci": "responsible"
@@ -945,6 +1042,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTOR",
           "persona_via": "own",
+          "process_code": "7.3.4.6",
           "process_key": "manage_examinations",
           "process_name": "Manage examinations and certifications",
           "raci": "consulted"
@@ -954,6 +1052,7 @@
           "responsibility": "owner",
           "persona": "LD-LEARNING-ADMIN",
           "persona_via": "own",
+          "process_code": "5.2.3.3",
           "process_key": "manage_training_schedule",
           "process_name": "Manage training schedule",
           "raci": "accountable"
@@ -963,6 +1062,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTOR",
           "persona_via": "own",
+          "process_code": "5.2.3.3",
           "process_key": "manage_training_schedule",
           "process_name": "Manage training schedule",
           "raci": "responsible"
@@ -972,6 +1072,7 @@
           "responsibility": "owner",
           "persona": "LD-LEARNING-ADMIN",
           "persona_via": "own",
+          "process_code": "7.3.4.7",
           "process_key": "monitor_evaluate_learning",
           "process_name": "Monitor and evaluate learning programs",
           "raci": "accountable"
@@ -981,6 +1082,7 @@
           "responsibility": "owner",
           "persona": "LD-INSTRUCTIONAL-DESIGNER",
           "persona_via": "own",
+          "process_code": "7.3.4.7",
           "process_key": "monitor_evaluate_learning",
           "process_name": "Monitor and evaluate learning programs",
           "raci": "responsible"
@@ -990,6 +1092,7 @@
           "responsibility": "owner",
           "persona": "PEOPLE-MANAGER",
           "persona_via": "seam",
+          "process_code": "2.1.3.5.1",
           "process_key": "train_employees_appropriate",
           "process_name": "Train employees on appropriate regulatory requirements",
           "raci": "consulted"
@@ -1018,12 +1121,14 @@
         }
       ],
       "personas": ["LEGAL-COMPLIANCE-SPECIALIST"],
+      "actor_personas": ["LEGAL-COMPLIANCE-SPECIALIST"],
       "raci": [
         {
           "domain": "ATS",
           "responsibility": "contributor",
           "persona": "LEGAL-COMPLIANCE-SPECIALIST",
           "persona_via": "own",
+          "process_code": "7.2.4.3",
           "process_key": "hire_candidate",
           "process_name": "Hire candidate",
           "raci": "informed"
@@ -1033,6 +1138,7 @@
           "responsibility": "contributor",
           "persona": "LEGAL-COMPLIANCE-SPECIALIST",
           "persona_via": "own",
+          "process_code": "7.2.4",
           "process_key": "manage_new_hire_re_hire",
           "process_name": "Manage new hire/re-hire",
           "raci": "responsible"
@@ -1042,6 +1148,7 @@
           "responsibility": "contributor",
           "persona": "LEGAL-COMPLIANCE-SPECIALIST",
           "persona_via": "own",
+          "process_code": "2.1.3.5.1",
           "process_key": "train_employees_appropriate",
           "process_name": "Train employees on appropriate regulatory requirements",
           "raci": "informed"
@@ -1062,6 +1169,7 @@
         }
       ],
       "personas": [],
+      "actor_personas": [],
       "raci": []
     },
     {
@@ -1078,6 +1186,7 @@
         }
       ],
       "personas": [],
+      "actor_personas": [],
       "raci": []
     },
     {
@@ -1094,12 +1203,14 @@
         }
       ],
       "personas": ["RECRUITING-COORDINATOR", "RECRUITING-MANAGER", "RECRUITING-RECRUITER", "RECRUITING-SOURCER"],
+      "actor_personas": ["HIRING-MANAGER", "RECRUITING-COORDINATOR", "RECRUITING-MANAGER", "RECRUITING-RECRUITER", "RECRUITING-SOURCER"],
       "raci": [
         {
           "domain": "ATS",
           "responsibility": "owner",
           "persona": "HIRING-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.2.4.1",
           "process_key": "draw_up_make_offer",
           "process_name": "Draw up and make offer",
           "raci": "accountable"
@@ -1109,6 +1220,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-RECRUITER",
           "persona_via": "own",
+          "process_code": "7.2.4.1",
           "process_key": "draw_up_make_offer",
           "process_name": "Draw up and make offer",
           "raci": "responsible"
@@ -1118,6 +1230,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-MANAGER",
           "persona_via": "own",
+          "process_code": "7.2.4.1",
           "process_key": "draw_up_make_offer",
           "process_name": "Draw up and make offer",
           "raci": "consulted"
@@ -1127,6 +1240,7 @@
           "responsibility": "owner",
           "persona": "HIRING-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.2.4.3",
           "process_key": "hire_candidate",
           "process_name": "Hire candidate",
           "raci": "accountable"
@@ -1136,6 +1250,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-RECRUITER",
           "persona_via": "own",
+          "process_code": "7.2.4.3",
           "process_key": "hire_candidate",
           "process_name": "Hire candidate",
           "raci": "responsible"
@@ -1145,6 +1260,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-MANAGER",
           "persona_via": "own",
+          "process_code": "7.2.3.2",
           "process_key": "interview_candidates",
           "process_name": "Interview candidates",
           "raci": "accountable"
@@ -1154,6 +1270,7 @@
           "responsibility": "owner",
           "persona": "HIRING-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.2.3.2",
           "process_key": "interview_candidates",
           "process_name": "Interview candidates",
           "raci": "responsible"
@@ -1163,6 +1280,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-RECRUITER",
           "persona_via": "own",
+          "process_code": "7.2.3.2",
           "process_key": "interview_candidates",
           "process_name": "Interview candidates",
           "raci": "consulted"
@@ -1172,6 +1290,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-COORDINATOR",
           "persona_via": "own",
+          "process_code": "7.2.3.2",
           "process_key": "interview_candidates",
           "process_name": "Interview candidates",
           "raci": "informed"
@@ -1181,6 +1300,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-MANAGER",
           "persona_via": "own",
+          "process_code": "7.2.2.5",
           "process_key": "manage_employee_referral",
           "process_name": "Manage employee referral programs",
           "raci": "accountable"
@@ -1190,6 +1310,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-RECRUITER",
           "persona_via": "own",
+          "process_code": "7.2.2.5",
           "process_key": "manage_employee_referral",
           "process_name": "Manage employee referral programs",
           "raci": "responsible"
@@ -1199,6 +1320,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-MANAGER",
           "persona_via": "own",
+          "process_code": "7.2.1",
           "process_key": "manage_employee_requisitions",
           "process_name": "Manage employee requisitions",
           "raci": "accountable"
@@ -1208,6 +1330,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-RECRUITER",
           "persona_via": "own",
+          "process_code": "7.2.1",
           "process_key": "manage_employee_requisitions",
           "process_name": "Manage employee requisitions",
           "raci": "responsible"
@@ -1217,6 +1340,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-MANAGER",
           "persona_via": "own",
+          "process_code": "7.2.4",
           "process_key": "manage_new_hire_re_hire",
           "process_name": "Manage new hire/re-hire",
           "raci": "accountable"
@@ -1226,6 +1350,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-COORDINATOR",
           "persona_via": "own",
+          "process_code": "7.2.4",
           "process_key": "manage_new_hire_re_hire",
           "process_name": "Manage new hire/re-hire",
           "raci": "consulted"
@@ -1235,6 +1360,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-MANAGER",
           "persona_via": "own",
+          "process_code": "7.2.5.1",
           "process_key": "obtain_candidate_background",
           "process_name": "Obtain candidate background information",
           "raci": "accountable"
@@ -1244,6 +1370,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-RECRUITER",
           "persona_via": "own",
+          "process_code": "7.2.5.1",
           "process_key": "obtain_candidate_background",
           "process_name": "Obtain candidate background information",
           "raci": "responsible"
@@ -1253,6 +1380,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-MANAGER",
           "persona_via": "own",
+          "process_code": "7.2.2",
           "process_key": "recruit_source_candidates",
           "process_name": "Recruit/Source candidates",
           "raci": "accountable"
@@ -1262,6 +1390,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-RECRUITER",
           "persona_via": "own",
+          "process_code": "7.2.2",
           "process_key": "recruit_source_candidates",
           "process_name": "Recruit/Source candidates",
           "raci": "responsible"
@@ -1271,6 +1400,7 @@
           "responsibility": "owner",
           "persona": "RECRUITING-SOURCER",
           "persona_via": "own",
+          "process_code": "7.2.2",
           "process_key": "recruit_source_candidates",
           "process_name": "Recruit/Source candidates",
           "raci": "responsible"
@@ -1280,6 +1410,7 @@
           "responsibility": "owner",
           "persona": "HIRING-MANAGER",
           "persona_via": "seam",
+          "process_code": "7.2.2",
           "process_key": "recruit_source_candidates",
           "process_name": "Recruit/Source candidates",
           "raci": "informed"
@@ -1300,6 +1431,7 @@
         }
       ],
       "personas": [],
+      "actor_personas": [],
       "raci": []
     },
     {
@@ -1316,6 +1448,7 @@
         }
       ],
       "personas": [],
+      "actor_personas": [],
       "raci": []
     }
   ]

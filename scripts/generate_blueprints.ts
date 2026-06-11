@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-// scripts/emit_fact_sheet.ts - plan-modules.md §11 step 4 (revised per §9, session 3).
+// scripts/generate_blueprints.ts - plan-modules.md §11 step 4 (revised per §9, session 3).
 //
 // Per-module emitter:
-//   Per-module fact sheets → blueprints/<MODULE-CODE>-semantic-blueprint.md
+//   Per-module blueprints → blueprints/<MODULE-CODE>-semantic-blueprint.md
 //   One per `domain_modules` row. The deployable unit's surface: data_objects assigned to
 //   this module, lifecycle states on this module's masters, module-scoped permissions and
 //   business rules, capabilities realized, outbound/inbound integration handoffs, architect
@@ -11,14 +11,13 @@
 //   rollup, not rendered here; see scripts/analytics/coverage_rollup.ts.)
 //
 // Starter-kit rendering is gone (multi-module bundles are no longer authored as a separate
-// artifact). Cross-cutting modules live alongside everyone else in blueprints/; their fact
-// sheet swaps the parent-domain section for a host-domains section.
+// artifact). Cross-cutting modules live alongside everyone else in blueprints/; their blueprint swaps the parent-domain section for a host-domains section.
 //
 // Usage:
-//   bun run scripts/emit_fact_sheet.ts --module ATS-CANDIDATE-CRM
-//   bun run scripts/emit_fact_sheet.ts --regenerate         # refresh ONLY the existing blueprint files
-//   bun run scripts/emit_fact_sheet.ts --regenerate --check # CI drift check over existing files
-//   bun run scripts/emit_fact_sheet.ts --all                # (re)generate a file for EVERY module (rare)
+//   bun run scripts/generate_blueprints.ts --module ATS-CANDIDATE-CRM
+//   bun run scripts/generate_blueprints.ts --regenerate         # refresh ONLY the existing blueprint files
+//   bun run scripts/generate_blueprints.ts --regenerate --check # CI drift check over existing files
+//   bun run scripts/generate_blueprints.ts --all                # (re)generate a file for EVERY module (rare)
 //
 // "Regenerate" means refresh what already exists on disk; it never creates a file for a module
 // that has no blueprint yet (that is what --all does). Default to --regenerate. Use --all only
@@ -69,10 +68,10 @@ if (CLEAR_CACHE) {
 
 if (!ALL && !REGEN && !MODULE_CODE) {
   console.error("usage:");
-  console.error("  emit_fact_sheet.ts --module <MODULE_CODE> [--no-cache] [--clear-cache]");
-  console.error("  emit_fact_sheet.ts --regenerate [--check] [--no-cache]   # refresh ONLY existing blueprint files");
-  console.error("  emit_fact_sheet.ts --all [--check] [--no-cache]          # (re)generate a file for EVERY module");
-  console.error("  emit_fact_sheet.ts --clear-cache");
+  console.error("  generate_blueprints.ts --module <MODULE_CODE> [--no-cache] [--clear-cache]");
+  console.error("  generate_blueprints.ts --regenerate [--check] [--no-cache]   # refresh ONLY existing blueprint files");
+  console.error("  generate_blueprints.ts --all [--check] [--no-cache]          # (re)generate a file for EVERY module");
+  console.error("  generate_blueprints.ts --clear-cache");
   exit(2);
 }
 
@@ -80,7 +79,7 @@ const ROOT = "c:/dev/domain-map";
 const BLUEPRINTS_DIR = `${ROOT}/catalog/blueprints`;
 const BLUEPRINT_SUFFIX = "-semantic-blueprint.md";
 const TODAY = new Date().toISOString().slice(0, 10);
-const FACT_SHEET_VERSION = "2.0";
+const BLUEPRINT_VERSION = "2.0";
 
 // ---------- catalog index (loaded once via lib) ----------
 // Types, pg helper, and scoped query helpers live in ./lib/catalog.ts. Aliasing
@@ -93,7 +92,7 @@ const { index, all: allRelationships } = (await loadCachedCatalog({ forceRefresh
 const { domainsById, domainsByCode, dataObjectsById, industriesById, modulesById, modulesByCode } = index;
 const allModules = index.modules;
 const USERS_ID = index.usersId;
-void allModules; // referenced by emitOneModuleFactSheet driver below
+void allModules; // referenced by emitOneModuleBlueprint driver below
 void domainsByCode; // exported alias for future callers; harmless if unused here
 
 // ---------- helpers ----------
@@ -483,21 +482,21 @@ function renderDependencies(scopeRows: ScopeRow[], owners: Map<number, OwnerInfo
   return out;
 }
 
-// Coverage % is no longer rendered in the per-module fact sheet. It is computed at the domain
+// Coverage % is no longer rendered in the per-module blueprint. It is computed at the domain
 // grain from `domain_module_tools` (rolled up over the domain's primary + host modules) by
 // scripts/analytics/coverage_rollup.ts, after the per-domain-skill migration retired the
 // per-module `system` skill + `skill_tools` grain. The former dead `computeCoverage` helper that
 // read `skill_tools` was removed with that migration (it had no call site).
 
 // ============================================================
-// UNIFIED FACT-SHEET EMITTER
+// UNIFIED BLUEPRINT EMITTER
 // One body shape for both single-module and multi-module (starter-kit / future bundle)
-// fact sheets. Scope = union of input modules' data_objects, strongest role wins per
+// blueprints. Scope = union of input modules' data_objects, strongest role wins per
 // data_object. Front matter difference is the length of the `domain_modules:` list.
 // ============================================================
 
-async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<string> {
-  if (modules.length === 0) throw new Error("emitFactSheet requires at least one module");
+async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<string> {
+  if (modules.length === 0) throw new Error("emitBlueprint requires at least one module");
 
   // All scoped queries (DMDO aggregation, aliases, relationships, co-masters, owners,
   // lifecycle states, handoff attribution, related-module derivation) live in
@@ -532,7 +531,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
   const out: string[] = [];
 
   // Front matter
-  // The fact sheet IS the semantic-blueprint artifact: a human-readable + machine-parseable
+  // The blueprint IS the semantic-blueprint artifact: a human-readable + machine-parseable
   // description of one deployable system (module) or its starter-kit bundle.
   //   - system_name: the canonical name a deploy tool / agent skill addresses the system by.
   //     Single module: the module code (`ATS-CANDIDATE-CRM`). Starter-kit / multi-module:
@@ -580,7 +579,7 @@ async function emitFactSheet(modules: ModuleRow[], kindLabel?: string): Promise<
 
   out.push("---");
   out.push("artifact: semantic-blueprint");
-  out.push(`fact_sheet_version: "${FACT_SHEET_VERSION}"`);
+  out.push(`blueprint_version: "${BLUEPRINT_VERSION}"`);
   out.push("license: MIT");
   out.push(`system_name: ${systemName}`);
   out.push(`system_description: ${escapeYaml(systemDescription)}`);
@@ -1458,8 +1457,8 @@ function deriveMarketRaci(parentDomains: Domain[], arel: AllRelationships): Func
 // IO + driver
 // ============================================================
 
-async function emitOneModuleFactSheet(m: ModuleRow): Promise<{ path: string; changed: boolean }> {
-  const md = await emitFactSheet([m]);
+async function emitOneModuleBlueprint(m: ModuleRow): Promise<{ path: string; changed: boolean }> {
+  const md = await emitBlueprint([m]);
   const outPath = resolve(BLUEPRINTS_DIR, `${moduleSlug(m.domain_module_code)}${BLUEPRINT_SUFFIX}`);
   let changed = true;
   if (existsSync(outPath)) {
@@ -1492,7 +1491,7 @@ async function emitModuleList(modules: ModuleRow[], label: string): Promise<void
   const failures: { code: string; message: string }[] = [];
   for (const m of modules) {
     try {
-      const r = await emitOneModuleFactSheet(m);
+      const r = await emitOneModuleBlueprint(m);
       if (r.changed) modulesChanged++;
       console.log(`${r.changed ? (CHECK ? "WOULD-CHANGE" : "wrote") : "unchanged"}  module ${m.domain_module_code}  →  ${r.path}`);
     } catch (e) {
@@ -1524,7 +1523,7 @@ if (MODULE_CODE) {
     console.error(`module ${MODULE_CODE} not found in domain_modules`);
     exit(2);
   }
-  const r = await emitOneModuleFactSheet(m);
+  const r = await emitOneModuleBlueprint(m);
   console.log(`${r.changed ? (CHECK ? "WOULD-CHANGE" : "wrote") : "unchanged"}  ${MODULE_CODE}  →  ${r.path}`);
   if (CHECK && r.changed) exit(1);
 } else if (REGEN) {

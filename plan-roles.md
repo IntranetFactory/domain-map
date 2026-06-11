@@ -1,6 +1,6 @@
 # plan-roles.md — Roles as cross-module permission containers
 
-> **Status:** Phase 1A authoring landed (2026-05-23). Schema, ATS permission materialization, and the 5 ATS roles + 24 `role_modules` + 29 `role_permissions` are live in the catalog. Transitive-admin test passes (`ats-offers:admin` ⊃ `:approve_offer` + `:rescind_offer` via `permission_hierarchy`). **Remaining Phase 1A work: extend `emit_fact_sheet.ts` (§6.1 step 6) and update the deployer SKILL (§6.1 step 7).**
+> **Status:** Phase 1A authoring landed (2026-05-23). Schema, ATS permission materialization, and the 5 ATS roles + 24 `role_modules` + 29 `role_permissions` are live in the catalog. Transitive-admin test passes (`ats-offers:admin` ⊃ `:approve_offer` + `:rescind_offer` via `permission_hierarchy`). **Remaining Phase 1A work: extend `generate_blueprints.ts` (§6.1 step 6) and update the deployer SKILL (§6.1 step 7).**
 >
 > **Naming note (2026-05-23):** the catalog table is `domain_modules` (not `modules`) — `modules` collides with the Semantius platform's own `modules` table. FK columns referencing it are `domain_module_id`. The catalog *concept* is still "a module" in prose; only the table/column identifiers carry the prefix. See [`plan-modules.md` §4.1](plan-modules.md).
 >
@@ -260,7 +260,7 @@ Additive. Three phases. **Each phase serializes within a domain: modules first, 
 3. **Next.** Hand-author the 5 ATS roles (`RECRUITING-RECRUITER`, `HIRING-MANAGER`, `RECRUITING-COORDINATOR`, `RECRUITING-SOURCER`, `RECRUITING-MANAGER`). The Hiring Manager row has `business_function_id=NULL` per §7 Q2 resolution. Roles are flat (no `parent_role_id`) per §7 Q3 resolution — Manager/IC differences are expressed via permission tier on the same modules. **Validation:** each role has ≥2 `role_modules` entries per §7 Q5 (the 2-module floor).
 4. Load `role_modules` rows (~26 rows — `RECRUITING-MANAGER` declares its own rows since there's no inheritance) with deliberate per-row `interaction_level` review per §4.2. Only `primary` / `secondary` — no `read_only` (the read-only-ness is captured by the role's permission bundle holding only `:read` for that module).
 5. Load `role_permissions` rows (~26 rows across all 5 roles — each role declares its complete bundle directly; tier-level permissions per §4.3 keep the row count low). **Validation:** every referenced permission row exists in the catalog (the materialization in step 2 makes this safe; query `/permissions?permission_name=eq.<code>` per row before inserting).
-6. Extend [`scripts/emit_fact_sheet.ts`](scripts/emit_fact_sheet.ts) to render a "Roles" section on the per-module fact sheet (`modules/<MODULE-CODE>.md`) showing which roles touch this module + at what `interaction_level`, plus a "Roles in this market" section on the starter-kit fact sheet (`starter-kits/<DOMAIN-CODE>.md`) with the role-union on-ramp answer per §5.1.
+6. Extend [`scripts/generate_blueprints.ts`](scripts/generate_blueprints.ts) to render a "Roles" section on the per-module fact sheet (`modules/<MODULE-CODE>.md`) showing which roles touch this module + at what `interaction_level`, plus a "Roles in this market" section on the starter-kit fact sheet (`starter-kits/<DOMAIN-CODE>.md`) with the role-union on-ramp answer per §5.1.
 7. Update [`semantic-model-deployer` SKILL](../../C:\dev\semantius-cli\skills\use-semantius) to read `role_permissions` at user-provisioning time and provision the user with those permissions directly. No role-side resolution needed — Semantius's existing `permission_hierarchy` table handles tier expansion at request time (`:admin` auto-grants underlying `:manage` / `:read` / lifecycle-gate permissions).
 
 **Role skills are NOT part of Phase 1A.** Deferred to Phase 2 per §4.4.
@@ -336,7 +336,7 @@ Then load the 5 ATS roles. Suggested approach (mirrors the proven pattern from [
    - Inserts ~26 `role_modules` rows per §4.2 with `interaction_level` from the table. **Validate the 2-module floor** before any insert.
    - Inserts ~26 `role_permissions` rows per §4.3 — resolve `permission_id` by looking up `permissions.permission_name` against the codes in §4.3 (already materialized in step 2).
    - End-to-end sanity: query `role_permissions` joined to `permission_hierarchy` for `RECRUITING-MANAGER` and verify that granting `ats-offers:admin` transitively unlocks `ats-offers:approve_offer` and `ats-offers:rescind_offer`.
-4. Extend `scripts/emit_fact_sheet.ts` to render the "Roles" sections per §6.1 step 6.
+4. Extend `scripts/generate_blueprints.ts` to render the "Roles" sections per §6.1 step 6.
 5. Phase 1B (ITSM) and Phase 2 follow per §6.2 / §6.3.
 
 ---
@@ -388,7 +388,7 @@ Both loaders ([extend_permissions_and_roles_schema.ts](.tmp_deploy/extend_permis
 - [x] §6.1 step 4 — `role_modules` rows loaded (24 rows — final count after deduping the §4.2 reference table; `RECRUITING-MANAGER` declares its own rows directly) with `interaction_level` per row; only `primary` / `secondary` used
 - [x] §6.1 step 5 — `role_permissions` rows loaded (29 rows: Recruiter 8, Hiring Manager 7, Coordinator 4, Sourcer 4, Manager 6; each role declares its complete bundle using tier-level permissions per §4.3)
 - [x] §6.1 step 5 — Every referenced `permission_code` exists in catalog (loader pre-flight resolves all 18 distinct names to ids before any write)
-- [ ] §6.1 step 6 — `emit_fact_sheet.ts` renders "Roles" section per domain
+- [ ] §6.1 step 6 — `generate_blueprints.ts` renders "Roles" section per domain
 - [ ] §6.1 step 7 — `semantic-model-deployer` SKILL reads `role_permissions` at provisioning time and provisions directly (no role-side resolution — Semantius's existing `permission_hierarchy` handles tier expansion at request time)
 - [x] End-to-end test (schema-level): `permission_hierarchy` shows `ats-offers:admin (id=10037)` transitively includes both `ats-offers:approve_offer (10038)` and `ats-offers:rescind_offer (10039)` with `origin='model'`. The runtime tenant-provision test is gated on the deployer SKILL change (§6.1 step 7) and lands with it.
 - [ ] Architect review of ATS roles in re-emitted fact sheet (gated on §6.1 step 6)

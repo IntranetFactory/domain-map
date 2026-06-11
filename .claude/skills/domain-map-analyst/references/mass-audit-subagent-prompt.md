@@ -16,7 +16,7 @@ to finish, reviews the produced audit files, then dispatches the next wave.
 
 ONE artifact: a new file at `audits/<DOMAIN_CODE>.md` (or, if the file exists,
 a new dated section appended per `audits/README.md`). NOTHING ELSE. No DB
-writes. No fact-sheet regeneration. No load scripts. No chat narrative beyond
+writes. No blueprint regeneration. No load scripts. No chat narrative beyond
 a one-line completion summary.
 
 If the audit surfaces a candidate market that has no row in `domains`, the
@@ -138,7 +138,7 @@ not load anything to the database. You produce one markdown file and stop.
 ### Pass 1 — Structural (per-domain completeness checklist)
 
 Run every in-scope band check from SKILL.md § "Per-domain completeness
-checklist": S1-S3, A1-A3 (skip A5 unless explicitly asked), M1-M7, B1-B12,
+checklist": S1-S3, A1-A3 (skip A5 unless explicitly asked), M1-M7, B1-B15,
 C1-C2, D1, E1-E6, F1-F5, F7, H1. For each failing check, capture the query
 output snippet so the audit file shows evidence.
 

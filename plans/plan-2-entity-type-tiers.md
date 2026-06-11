@@ -59,8 +59,8 @@ Confirm this table before B4 emits. It is total over all four `relationship_kind
 ### A. entity_type wiring (B2)
 - Add `entity_type` to the `data_objects` SELECT in `catalog.ts` and to the `DataObject` type.
 - Implement `deriveWriteTier(entity_type, endpoints)` returning `{read, writeTier|null}`, total over every enum value: operational_workflow / operational_record give `manage`, catalog gives `admin`, junction gives `admin` if an endpoint is catalog else `manage` (resolved from the relationship endpoints), computed gives no write, unclassified gives the graceful `:manage` fallback marked pending.
-- Render the per-entity write tier as a NEW column in blueprint section 3 (entities), via the section-3 renderer (the §3 entity table at `emit_fact_sheet.ts:605-644`; add the column to the header list at `emit_fact_sheet.ts:612`), NOT `deriveWorkflowGatesAndRules`.
-- The section 8 module-level baselines (`:read` / `:manage` / `:admin`) are UNCHANGED, those permissions exist per module regardless of `entity_type`. The only change inside `deriveWorkflowGatesAndRules` is the M6 guard (step B): suppress flag-derived overrides on computed / no-write entities. The uniform `:manage` baseline push (`emit_fact_sheet.ts:938`) stays as the module baseline. Section 8 gets NO new per-entity column: its table is per-permission, not per-entity, so the write tier belongs in section 3 only.
+- Render the per-entity write tier as a NEW column in blueprint section 3 (entities), via the section-3 renderer (the §3 entity table at `generate_blueprints.ts:605-644`; add the column to the header list at `generate_blueprints.ts:612`), NOT `deriveWorkflowGatesAndRules`.
+- The section 8 module-level baselines (`:read` / `:manage` / `:admin`) are UNCHANGED, those permissions exist per module regardless of `entity_type`. The only change inside `deriveWorkflowGatesAndRules` is the M6 guard (step B): suppress flag-derived overrides on computed / no-write entities. The uniform `:manage` baseline push (`generate_blueprints.ts:938`) stays as the module baseline. Section 8 gets NO new per-entity column: its table is per-permission, not per-entity, so the write tier belongs in section 3 only.
 - Promote the `entity_type -> tier` mapping into SKILL.md Rule #12 (or a new RBAC rule) and `references/modules.md` section 4 as the canonical derivation (it currently lives only in `plans/entity-type-permission-possibilities.md`).
 
 ### B. entity_type invariants (M5, M6)
@@ -70,11 +70,11 @@ Confirm this table before B4 emits. It is total over all four `relationship_kind
 ### C. delete-mode (B4)
 - Implement `deriveDeleteMode(relationship_kind, owner_side, is_required)` returning `{mode, fk_format}` per the table above.
 - Emit the resolved delete-mode and FK format as columns in blueprint section 5.
-- Document the canonical rule in `module-shape.md` (and delete the stale `kind+necessity` -> delete-mode formula in `plan-domain-fact-sheets.md`, which lives at the repo root, around line 82).
+- Document the canonical rule in `module-shape.md` (and delete the stale `kind+necessity` -> delete-mode formula in `plan-generate-blueprints.md`, which lives at the repo root, around line 82).
 
 ### D. Verification
 - Snapshot `catalog/blueprints/` before changes. Force a catalog-cache refresh first (delete `.tmp_deploy/.catalog-cache.json` or pass `forceRefresh`): the cache validity check does not detect the new `entity_type` column, so a fresh-but-pre-change cache within its 5-minute TTL would emit `entity_type` as undefined.
-- Regenerate ONLY the existing blueprint files (one `bun run scripts/emit_fact_sheet.ts --module <CODE>` per file already in `catalog/blueprints/`). Do NOT use `--all`: the committed corpus is a curated subset (~18 modules), and `--all` would emit ~130 new blueprints for unclassified modules that have no committed file. Diff. Expected diffs: the new per-entity write-tier column in section 3; the new delete-mode / FK columns in section 5; and, in section 8, the M6 guard suppressing flag-derived overrides on classified catalog / junction / computed masters that still carry a legacy flag. No other section should move.
+- Regenerate ONLY the existing blueprint files (one `bun run scripts/generate_blueprints.ts --module <CODE>` per file already in `catalog/blueprints/`). Do NOT use `--all`: the committed corpus is a curated subset (~18 modules), and `--all` would emit ~130 new blueprints for unclassified modules that have no committed file. Diff. Expected diffs: the new per-entity write-tier column in section 3; the new delete-mode / FK columns in section 5; and, in section 8, the M6 guard suppressing flag-derived overrides on classified catalog / junction / computed masters that still carry a legacy flag. No other section should move.
 - Gate: re-run `--module <CODE> --check` over the same existing files and confirm zero drift. Append a `skill-changelog` Decisions entry for the entity_type and delete-mode derivations.
 
 ## Live-write inventory
@@ -91,9 +91,9 @@ the deployer selects FK shapes rather than reconstructing them.
 ## Status
 EXECUTED 2026-06-01. B2 (write-tier wiring + section-3 column), B4 (`deriveDeleteMode` +
 section-5 columns), and the M5 / M6 guard + soft annotations are implemented in
-`scripts/emit_fact_sheet.ts` + `scripts/lib/catalog.ts`; the delete-mode table above is the one
+`scripts/generate_blueprints.ts` + `scripts/lib/catalog.ts`; the delete-mode table above is the one
 that shipped. The 18 existing blueprints were regenerated (existing files only, NOT `--all`) and
 pass per-module `--check` with zero drift. Docs updated (SKILL.md Rule #12, references/modules.md
-section 4, references/module-shape.md, plan-domain-fact-sheets.md) and a Plan 2 skill-changelog
+section 4, references/module-shape.md, plan-generate-blueprints.md) and a Plan 2 skill-changelog
 entry added. Data debt surfaced (3 non-operational masters carrying legacy flags) is deferred to
 per-domain review. No live writes.

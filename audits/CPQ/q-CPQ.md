@@ -133,6 +133,16 @@ a12:
 
 ---
 
+q14: Contract Lifecycle Management forwards cpq contract draft to Configure-Price-Quote to develop and manage sales proposals, bids, and quotes, but Configure-Price-Quote does not yet have anyone assigned to develop and manage sales proposals, bids, and quotes, so this step has no owner. How should it be handled?
+- a) Record it now as work Configure-Price-Quote owns, and assign a named owner once Configure-Price-Quote sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Configure-Price-Quote decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a14:
+
+---
+
 ## Optional (will not hold up the build)
 
 q13: Flagship CPQ vendors model a few entities CPQ does not yet capture: guided-selling questionnaires (saved scripts that route the seller), proposal templates (the sell-side document distinct from a contract draft), price books (environment groupings that wrap pricing rules), and deal-scoring records (per-quote AI margin and win-probability output). Should I research and add the ones that hold up? (yes/no)
@@ -143,4 +153,4 @@ a13:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B2-S4.quotediscountlock q5=B2-S4.contractdraftlock q6=B2-S4.quotepii q7=B2-S5 q8=B2-S6 q9=B2-H1r-204 q10=B2-H1r-517 q11=B2-H1r-527 q12=B2-H1r-1236 q13=B3-E1+B3-E2+B3-E3+B3-E4 | domain_id=73 -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B2-S4.quotediscountlock q5=B2-S4.contractdraftlock q6=B2-S4.quotepii q7=B2-S5 q8=B2-S6 q9=B2-H1r-204 q10=B2-H1r-517 q11=B2-H1r-527 q12=B2-H1r-1236 q13=B3-E1+B3-E2+B3-E3+B3-E4 q14=B2-B9D-OWN-149 | domain_id=73 -->

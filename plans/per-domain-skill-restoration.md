@@ -62,7 +62,7 @@ encode the wrong target. It migrates to one coherent model and brings every off-
   `emp-exp-system` (skill id 55, on module 64), domain 67 -> `expense-system` (skill id 57, on module
   191). `skill_name` is not unique. No other of the 67 targets collides.
 - Verified clean: requirement_level only {required, optional}; record_status only {new}; 1:1
-  skill<->module; no system skill has both domain_id and domain_module_id null; emit_fact_sheet.ts
+  skill<->module; no system skill has both domain_id and domain_module_id null; generate_blueprints.ts
   does NOT render per-module skills (dead `computeCoverage`, no call site).
 
 ## 3. What changes (overview, fully resolved, no gates)
@@ -168,7 +168,7 @@ Step 7 (repoint docs and scripts; live-grep, do not edit from memory):
     host_domains; per-domain unit; NO fallback; reuse the `m11_rollup_probe.ts` host_domains idiom) and
     `scripts/analytics/audit_backlog.ts` (F2 = module without `domain_module_tools`, starters exempt).
     Run both BEFORE (baseline) and AFTER (gate). Clean the dead skill references in
-    `scripts/emit_fact_sheet.ts`. Document the new entities' enums in SKILL.md for `enum_drift_probe.ts`.
+    `scripts/generate_blueprints.ts`. Document the new entities' enums in SKILL.md for `enum_drift_probe.ts`.
 
 Step 8 (verify + commit): 0 per-module full skills; one per-domain `system` skill per full-module
   domain; the 5 starter skills intact; `domain_module_tools` == 2013; `process_tools` == 226;
