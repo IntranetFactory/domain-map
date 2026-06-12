@@ -111,22 +111,22 @@ b1b:
     action: >
       Once B1A-BUILD lands, PATCH source_domain_module_id on the 7 outbound rows. For the 3 CSM-targeted
       handoffs (904, 908, 910), PATCH target_domain_module_id=112 (CSM-CASE-MGMT) once CSM declares the
-      consumer DMDOs. For ERP-FIN (905, 906, 909), GRC (907), TELEMATICS (315): target/source side
+      consumer DMDOs. For FIN (905, 906, 909), GRC (907), TELEMATICS (315): target/source side
       remains NULL until each modularizes.
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-BUILD}
       - {type: domain_audit, blocking_domain: CSM, milestone: declare-consumer-dmdos-on-623-624}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: first-modularization}
+      - {type: domain_audit, blocking_domain: FIN, milestone: first-modularization}
       - {type: domain_audit, blocking_domain: GRC, milestone: first-modularization}
       - {type: domain_audit, blocking_domain: TELEMATICS, milestone: first-modularization}
     affected_handoffs:
       - {handoff_id: 315, direction: inbound, source_domain: TELEMATICS, target_domain: INS-CLAIMS, trigger_event: "dashcam_event.collision", payload: "dashcam_events", null_field: both}
       - {handoff_id: 904, direction: outbound, source_domain: INS-CLAIMS, target_domain: CSM, trigger_event: "insurance_claim.fnol_received", payload: "insurance_claims", null_field: both}
-      - {handoff_id: 905, direction: outbound, source_domain: INS-CLAIMS, target_domain: ERP-FIN, trigger_event: "claim_payment.issued", payload: "claim_payments", null_field: both}
-      - {handoff_id: 906, direction: outbound, source_domain: INS-CLAIMS, target_domain: ERP-FIN, trigger_event: "claim_settlement.approved", payload: "claim_settlements", null_field: both}
+      - {handoff_id: 905, direction: outbound, source_domain: INS-CLAIMS, target_domain: FIN, trigger_event: "claim_payment.issued", payload: "claim_payments", null_field: both}
+      - {handoff_id: 906, direction: outbound, source_domain: INS-CLAIMS, target_domain: FIN, trigger_event: "claim_settlement.approved", payload: "claim_settlements", null_field: both}
       - {handoff_id: 907, direction: outbound, source_domain: INS-CLAIMS, target_domain: GRC, trigger_event: "siu_case.opened", payload: "siu_cases", null_field: both}
       - {handoff_id: 908, direction: outbound, source_domain: INS-CLAIMS, target_domain: CSM, trigger_event: "insurance_claim.closed", payload: "insurance_claims", null_field: both}
-      - {handoff_id: 909, direction: outbound, source_domain: INS-CLAIMS, target_domain: ERP-FIN, trigger_event: "salvage_recovery.posted", payload: "salvage_recovery_records", null_field: both}
+      - {handoff_id: 909, direction: outbound, source_domain: INS-CLAIMS, target_domain: FIN, trigger_event: "salvage_recovery.posted", payload: "salvage_recovery_records", null_field: both}
       - {handoff_id: 910, direction: outbound, source_domain: INS-CLAIMS, target_domain: CSM, trigger_event: "insurance_policy.cancelled", payload: "insurance_policies", null_field: both}
 
   - id: B1B-B11-ALIASES

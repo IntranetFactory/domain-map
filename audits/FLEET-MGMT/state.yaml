@@ -62,7 +62,7 @@ b1b:
       -> 206. Partner-side NULLs persist: TELEMATICS (148) has zero modules so 4
       cross-edges stay NULL on TELEMATICS side; FLEET-MAINT (149) has zero
       modules so 3 cross-edges stay NULL on FLEET-MAINT side; FSM (31) partially
-      populated (handoffs 318, 884 carry source_domain_module_id=161); ERP-FIN
+      populated (handoffs 318, 884 carry source_domain_module_id=161); FIN
       (65) module shape not verified.
     action: >-
       PATCH the FLEET-MGMT-side module FK on all 11 rows per the mapping above
@@ -71,17 +71,17 @@ b1b:
       target; 877 maintenance_defect -> 205 target). This is now agent-solvable
       on the FLEET-MGMT side but is a separate Phase-B handoff-FK pass, not part
       of the modularization scope. Partner-side NULLs remain report-only until
-      TELEMATICS, FLEET-MAINT, and ERP-FIN modularize.
+      TELEMATICS, FLEET-MAINT, and FIN modularize.
     blocked_by:
       - {type: domain_audit, blocking_domain: TELEMATICS, milestone: modules-authored}
       - {type: domain_audit, blocking_domain: FLEET-MAINT, milestone: modules-authored}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: module-shape-confirmed}
+      - {type: domain_audit, blocking_domain: FIN, milestone: module-shape-confirmed}
     affected_handoffs:
       - {handoff_id: 874, direction: outbound, source_domain: FLEET-MGMT, target_domain: TELEMATICS, trigger_event: fleet_vehicle.assigned, payload: fleet_vehicles, null_field: both}
       - {handoff_id: 875, direction: outbound, source_domain: FLEET-MGMT, target_domain: FLEET-MAINT, trigger_event: fleet_vehicle.acquired, payload: fleet_vehicles, null_field: both}
       - {handoff_id: 313, direction: outbound, source_domain: FLEET-MGMT, target_domain: FLEET-MAINT, trigger_event: vehicle_inspection.failed, payload: vehicle_inspections, null_field: both}
-      - {handoff_id: 317, direction: outbound, source_domain: FLEET-MGMT, target_domain: ERP-FIN, trigger_event: fuel_transaction.posted, payload: fuel_transactions, null_field: both}
-      - {handoff_id: 876, direction: outbound, source_domain: FLEET-MGMT, target_domain: ERP-FIN, trigger_event: fleet_vehicle.retired, payload: fleet_vehicles, null_field: both}
+      - {handoff_id: 317, direction: outbound, source_domain: FLEET-MGMT, target_domain: FIN, trigger_event: fuel_transaction.posted, payload: fuel_transactions, null_field: both}
+      - {handoff_id: 876, direction: outbound, source_domain: FLEET-MGMT, target_domain: FIN, trigger_event: fleet_vehicle.retired, payload: fleet_vehicles, null_field: both}
       - {handoff_id: 318, direction: inbound, source_domain: FSM, target_domain: FLEET-MGMT, trigger_event: vehicle.dispatched, payload: fleet_assignments, null_field: target_only}
       - {handoff_id: 319, direction: inbound, source_domain: TELEMATICS, target_domain: FLEET-MGMT, trigger_event: driver_behavior_event.triggered, payload: driver_behavior_events, null_field: both}
       - {handoff_id: 321, direction: inbound, source_domain: TELEMATICS, target_domain: FLEET-MGMT, trigger_event: vehicle_trip.completed, payload: vehicle_trips, null_field: both}
@@ -388,7 +388,7 @@ b3:
   - id: B3-FREIGHT-AUDIT
     candidate: FREIGHT-AUDIT (Freight Audit and Payment)
     rationale: >-
-      The fuel_transaction.posted -> ERP-FIN handoff is one side of a broader
+      The fuel_transaction.posted -> FIN handoff is one side of a broader
       freight-bill-audit workflow that's a distinct buyer concern (validating
       carrier invoices, GL coding by lane, dispute mgmt). Cass + U.S. Bank are
       pure-plays. Already queued via append_missing_domain.ts.

@@ -111,7 +111,7 @@ The absence of a `master` row anywhere in `domain_data_objects` for a `kind='pla
 
 ### 3.5 NOT adding (initially proposed, retracted after review)
 
-- ~~`data_objects.master_cluster` text column~~ — redundant. The `master` role on `domain_data_objects` already supplies the cluster routing. Deployer query: for any `embedded_master` row, look up the data_object's `master` row to find the canonical owner domain. `cost_centers` → mastered by ERP-FIN; deployer routes there.
+- ~~`data_objects.master_cluster` text column~~ — redundant. The `master` role on `domain_data_objects` already supplies the cluster routing. Deployer query: for any `embedded_master` row, look up the data_object's `master` row to find the canonical owner domain. `cost_centers` → mastered by FIN; deployer routes there.
 - ~~`domain_workflow_gates` table~~ — derivable from `data_object_lifecycle_states.requires_permission` + the pattern flags on `data_objects`. See §6 derivation rules.
 - ~~`domain_business_rules` table~~ — same. Derivable from the pattern flags.
 - ~~`data_object_state_transitions` table~~ — defer. State ordering via `state_order` is sufficient for first cut; explicit transition graph is a v2 add if needed.

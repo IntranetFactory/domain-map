@@ -313,7 +313,7 @@ const skillToolsMatrix: Record<string, SkillToolTuple[]> = {
     ["query_financial_scenarios", "required"],
     ["update_budget", "required"],
     ["update_forecast", "required"],
-    ["query_journal_entries", "required", "Consumer from ERP-FIN — variance reporting input"],
+    ["query_journal_entries", "required", "Consumer from FIN — variance reporting input"],
     ["generate_text", "optional", "Variance commentary / narrative generation"],
   ],
   "pa-system": [
@@ -404,7 +404,7 @@ const skillToolsMatrix: Record<string, SkillToolTuple[]> = {
     ["create_audit_engagement", "required"],
     ["update_audit_report", "required"],
     ["close_follow_up_action", "required", "Closure → GRC issue closure handoff"],
-    ["query_journal_entries", "required", "Consumer from ERP-FIN for forensic review"],
+    ["query_journal_entries", "required", "Consumer from FIN for forensic review"],
     ["query_forecasts", "required", "Consumer from EPM for forecast-accuracy audit"],
     ["query_issues", "required", "Reads GRC issues created from AUDIT findings"],
     ["query_employees", "required", "For fieldwork roster + SoD testing"],

@@ -51,15 +51,15 @@ b1a:
       - {dmdo_id: 516, entity: job_offers, module: COMP-STATEMENTS, role: consumer, necessity: required, master_domain: ATS}
 
   - id: B1A-S8
-    summary: "Report-only routing: 5 outbound NULL target_domain_module_id + 1 inbound NULL target_domain_module_id need consumer DMDOs declared on the target domains. Schedule b1 audits on PA, HCM, EMP-EXP, ERP-FIN."
-    finding: "B10b in-scope partial-fail surfaces 5 outbound rows with NULL target_domain_module_id where the target domain has not declared a consumer DMDO on the payload data_object: 422 (HCM, merit_recommendations), 424 (ERP-FIN, equity_grants), 1125 (HCM, compensation_plans), 1136 (EMP-EXP, compensation_statements), 1141 (ERP-FIN, earning_codes). Plus 1 inbound: 1105 (PA, workforce_segments). COMP-MGMT cannot patch derivatively; the fix is on the target side."
-    action: "Schedule b1 audits on PA, HCM, EMP-EXP, ERP-FIN to declare the consumer DMDOs on these payloads, then re-run B10b in COMP-MGMT to derive the target_domain_module_id. Not COMP-MGMT's fix to make."
+    summary: "Report-only routing: 5 outbound NULL target_domain_module_id + 1 inbound NULL target_domain_module_id need consumer DMDOs declared on the target domains. Schedule b1 audits on PA, HCM, EMP-EXP, FIN."
+    finding: "B10b in-scope partial-fail surfaces 5 outbound rows with NULL target_domain_module_id where the target domain has not declared a consumer DMDO on the payload data_object: 422 (HCM, merit_recommendations), 424 (FIN, equity_grants), 1125 (HCM, compensation_plans), 1136 (EMP-EXP, compensation_statements), 1141 (FIN, earning_codes). Plus 1 inbound: 1105 (PA, workforce_segments). COMP-MGMT cannot patch derivatively; the fix is on the target side."
+    action: "Schedule b1 audits on PA, HCM, EMP-EXP, FIN to declare the consumer DMDOs on these payloads, then re-run B10b in COMP-MGMT to derive the target_domain_module_id. Not COMP-MGMT's fix to make."
     affected_handoffs:
       - {handoff_id: 422, direction: outbound, target_domain: HCM, payload: merit_recommendations, null_field: target_domain_module_id}
-      - {handoff_id: 424, direction: outbound, target_domain: ERP-FIN, payload: equity_grants, null_field: target_domain_module_id}
+      - {handoff_id: 424, direction: outbound, target_domain: FIN, payload: equity_grants, null_field: target_domain_module_id}
       - {handoff_id: 1125, direction: outbound, target_domain: HCM, payload: compensation_plans, null_field: target_domain_module_id}
       - {handoff_id: 1136, direction: outbound, target_domain: EMP-EXP, payload: compensation_statements, null_field: target_domain_module_id}
-      - {handoff_id: 1141, direction: outbound, target_domain: ERP-FIN, payload: earning_codes, null_field: target_domain_module_id}
+      - {handoff_id: 1141, direction: outbound, target_domain: FIN, payload: earning_codes, null_field: target_domain_module_id}
       - {handoff_id: 1105, direction: inbound, source_domain: PA, payload: workforce_segments, null_field: target_domain_module_id}
 
   - id: B1A-PHASE-P

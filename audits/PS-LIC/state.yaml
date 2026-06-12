@@ -81,25 +81,25 @@ b1b:
     summary: "All 6 PS-LIC outbound handoffs still have NULL source_domain_module_id; 4 also have NULL target_domain_module_id."
     finding: >-
       Source FKs: handoffs 921, 922, 923, 924, 925, 926 all have `source_domain_module_id IS NULL` because PS-LIC has zero
-      modules. Target FKs: handoffs 921 (ERP-FIN), 922 (GRC), 925 (ERP-FIN), 926 (GRC) all have `target_domain_module_id IS
-      NULL` because GRC and ERP-FIN have zero modules. Handoffs 923 and 924 already have `target_domain_module_id=112`
+      modules. Target FKs: handoffs 921 (FIN), 922 (GRC), 925 (FIN), 926 (GRC) all have `target_domain_module_id IS
+      NULL` because GRC and FIN have zero modules. Handoffs 923 and 924 already have `target_domain_module_id=112`
       (CSM-CASE-MGMT) per the 2026-05-31 Continuation.
     action: >-
       Source FK PATCH for all 6 rows: derive `source_domain_module_id` from the module that masters each event's
       `trigger_events.data_object_id` (handoff 921 -> PS-LIC-FEES, 922 -> PS-LIC-INSPECTION-AND-ENFORCEMENT, 923 ->
       PS-LIC-INSPECTION-AND-ENFORCEMENT, 924 -> PS-LIC-ISSUANCE-AND-RENEWAL, 925 -> PS-LIC-ISSUANCE-AND-RENEWAL, 926 ->
       PS-LIC-INSPECTION-AND-ENFORCEMENT under the recommended module shape). Target FK PATCH for handoffs 921, 925 once
-      ERP-FIN modularizes; for handoffs 922, 926 once GRC modularizes.
+      FIN modularizes; for handoffs 922, 926 once GRC modularizes.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-M1}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: M1}
+      - {type: domain_audit, blocking_domain: FIN, milestone: M1}
       - {type: domain_audit, blocking_domain: GRC, milestone: M1}
     affected_handoffs:
-      - {handoff_id: 921, direction: outbound, source_domain: PS-LIC, target_domain: ERP-FIN, trigger_event: regulatory_fee.assessed, payload: regulatory_fees, null_field: both}
+      - {handoff_id: 921, direction: outbound, source_domain: PS-LIC, target_domain: FIN, trigger_event: regulatory_fee.assessed, payload: regulatory_fees, null_field: both}
       - {handoff_id: 922, direction: outbound, source_domain: PS-LIC, target_domain: GRC, trigger_event: code_violation.issued, payload: code_violations, null_field: both}
       - {handoff_id: 923, direction: outbound, source_domain: PS-LIC, target_domain: CSM, trigger_event: permit_inspection.failed, payload: permit_inspections, null_field: source_only}
       - {handoff_id: 924, direction: outbound, source_domain: PS-LIC, target_domain: CSM, trigger_event: license_renewal.due, payload: license_renewals, null_field: source_only}
-      - {handoff_id: 925, direction: outbound, source_domain: PS-LIC, target_domain: ERP-FIN, trigger_event: license.issued, payload: license_records, null_field: both}
+      - {handoff_id: 925, direction: outbound, source_domain: PS-LIC, target_domain: FIN, trigger_event: license.issued, payload: license_records, null_field: both}
       - {handoff_id: 926, direction: outbound, source_domain: PS-LIC, target_domain: GRC, trigger_event: permit_inspection.failed, payload: permit_inspections, null_field: both}
 
   - id: B1B-B9-MISSING
@@ -108,12 +108,12 @@ b1b:
       `/trigger_events?data_object_id=in.(641,642,643,644,645,646)` returns 8 events; `/handoffs?source_domain_id=eq.46`
       returns 6 outbound rows. Events `permit_application.submitted` (id 1052), `permit_application.approved` (id 1053), and
       `permit_inspection.scheduled` (id 1056) each have zero subscribers. All three are valid published verbs that should
-      have at least one cross-domain subscriber (CSM constituent acknowledgement, ERP-FIN fee intake, dispatch via FSM or
+      have at least one cross-domain subscriber (CSM constituent acknowledgement, FIN fee intake, dispatch via FSM or
       CCAAS). The events now carry `event_category` (1052/1053/1056 = lifecycle), but the missing-subscriber drafts still
       gate on per-module FK derivation.
     action: >-
       Once B1B-M1 cures, draft handoff rows per the Authoring rule. Minimal proposed set: `permit_application.submitted` to
-      CSM (acknowledgement case) and ERP-FIN (fee intake); `permit_application.approved` to CSM (approval notification);
+      CSM (acknowledgement case) and FIN (fee intake); `permit_application.approved` to CSM (approval notification);
       `permit_inspection.scheduled` to FSM (inspector dispatch, if modeled; otherwise CSM scheduling case). Populate both
       `source_domain_module_id` (from PS-LIC's M1 cure) and `target_domain_module_id` (subject to target M1 cures).
     blocked_by:

@@ -61,14 +61,14 @@ b1b:
       (verb plus inverse_verb plus relationship_type plus relationship_kind plus
       is_required plus owner_side). Examples: `recall_events triggers
       compliance_obligations` (handoffs 359, target GRC), `recall_events
-      triggers_inventory_hold` (handoff 360, target ERP-FIN, payload to confirm),
+      triggers_inventory_hold` (handoff 360, target FIN, payload to confirm),
       `traceability_lots originates_from harvest_records` (target FMIS), `traceability_lots
       aggregates milkings` (target DAIRY-MGMT).
     blocked_by:
       - {type: depends_on, ref: B1A-S5, reason: intra-domain DOR cluster lands first to anchor verb vocabulary}
     affected_handoffs:
       - {handoff_id: 359, direction: outbound, source_domain: FOOD-TRACE, target_domain: GRC, trigger_event: recall_event.initiated, payload: recall_events, null_field: null}
-      - {handoff_id: 360, direction: outbound, source_domain: FOOD-TRACE, target_domain: ERP-FIN, trigger_event: recall_event.initiated, payload: recall_events, null_field: null}
+      - {handoff_id: 360, direction: outbound, source_domain: FOOD-TRACE, target_domain: FIN, trigger_event: recall_event.initiated, payload: recall_events, null_field: null}
       - {handoff_id: 361, direction: outbound, source_domain: FOOD-TRACE, target_domain: FSQM, trigger_event: supplier_certification.expired, payload: supplier_certifications, null_field: null}
       - {handoff_id: 362, direction: outbound, source_domain: FOOD-TRACE, target_domain: SUP-LIFE, trigger_event: supplier_certification.expired, payload: supplier_certifications, null_field: null}
       - {handoff_id: 971, direction: outbound, source_domain: FOOD-TRACE, target_domain: FSQM, trigger_event: traceability_lot.created, payload: traceability_lots, null_field: null}
@@ -127,10 +127,10 @@ b1b:
       / key_data_elements / harvest_records / bulk_milk_shipments -> 256; supplier_certifications
       / suppliers -> 258. The opposite-side FK cures incrementally per neighbor.
     blocked_by:
-      - {type: catalog_addition, scope: modules, trigger: "neighbor domains (GRC, ERP-FIN, FSQM, SUP-LIFE, AUDIT, FMIS, DAIRY-MGMT, MFG-OPS, FARMER-DIRECT-SALES) modularize to fill the opposite-side module FK"}
+      - {type: catalog_addition, scope: modules, trigger: "neighbor domains (GRC, FIN, FSQM, SUP-LIFE, AUDIT, FMIS, DAIRY-MGMT, MFG-OPS, FARMER-DIRECT-SALES) modularize to fill the opposite-side module FK"}
     affected_handoffs:
       - {handoff_id: 359, direction: outbound, source_domain: FOOD-TRACE, target_domain: GRC, trigger_event: recall_event.initiated, payload: recall_events, null_field: both}
-      - {handoff_id: 360, direction: outbound, source_domain: FOOD-TRACE, target_domain: ERP-FIN, trigger_event: recall_event.initiated, payload: recall_events, null_field: both}
+      - {handoff_id: 360, direction: outbound, source_domain: FOOD-TRACE, target_domain: FIN, trigger_event: recall_event.initiated, payload: recall_events, null_field: both}
       - {handoff_id: 361, direction: outbound, source_domain: FOOD-TRACE, target_domain: FSQM, trigger_event: supplier_certification.expired, payload: supplier_certifications, null_field: both}
       - {handoff_id: 362, direction: outbound, source_domain: FOOD-TRACE, target_domain: SUP-LIFE, trigger_event: supplier_certification.expired, payload: supplier_certifications, null_field: both}
       - {handoff_id: 971, direction: outbound, source_domain: FOOD-TRACE, target_domain: FSQM, trigger_event: traceability_lot.created, payload: traceability_lots, null_field: both}

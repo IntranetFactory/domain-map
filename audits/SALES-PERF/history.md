@@ -156,7 +156,7 @@ The market surface for SALES-PERF (ICM / SPM) is unusually pure-play and tightly
 | `SALES-PERF-COMMISSIONS` | credited transactions, commission calculations, statements, adjustments, draws, crediting rules, eligibility rules | `COMMISSION-CALCULATION`, `PAYEE-STATEMENTS` |
 | `SALES-PERF-DISPUTES` | commission disputes, dispute resolution audit trails | `COMMISSION-CALCULATION` (shared) |
 | `SALES-PERF-SPIF` | spifs, spif enrollments, bonuses | `SPIF-MGMT` |
-| `SALES-PERF-COMP-EXPENSE` | commission_expense_accruals, commission_expense_reversals, clawback_provisions (ASC 606 carve-out for finance handoff) | (cross-cuts to ERP-FIN) |
+| `SALES-PERF-COMP-EXPENSE` | commission_expense_accruals, commission_expense_reversals, clawback_provisions (ASC 606 carve-out for finance handoff) | (cross-cuts to FIN) |
 
 8 modules cleanly maps onto the 8 capabilities. The market split is reasonably canonical: Varicent, Xactly, Spiff, CaptivateIQ, Performio, SAP Commissions all cluster execution into one product surface (Commissions + Disputes + Statements), then split Plan Design / Territory / Quota / Capacity as separate planning surfaces. Anaplan, Pigment, Board attack the planning half only.
 

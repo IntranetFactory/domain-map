@@ -12,7 +12,7 @@ Current footprint:
 - 4 solutions all `coverage_level='primary'`: ServiceNow Telecommunications Workflows, Amdocs CES, Netcracker Digital BSS, Blue Planet (A3 passes).
 - 7 regulations linked (mandatory): Enhanced 911, GDPR, ISO/IEC 27001, NIS2, CSRD, EU Cyber Resilience Act, EU VAT Directive.
 - 7 `domain_data_objects` rows, all `role=master, necessity=required, kind=domain_owned`: `telco_service_catalog`, `telco_service_orders`, `telco_subscriptions`, `service_provisioning_workflows`, `network_inventory_records`, `telco_customer_bills`, `service_trouble_tickets`. All sit in the legacy `domain_data_objects` rollup only, none in `domain_module_data_objects` (because no modules exist).
-- 7 outbound `handoffs` rows, 0 inbound. All 7 outbound have `source_domain_module_id=NULL` (B10b fail). Targets: CSM (2 rows, both NULL `target_domain_module_id`), ERP-FIN (2 rows, both NULL target FK), ITSM (3 rows, `target_domain_module_id=38`).
+- 7 outbound `handoffs` rows, 0 inbound. All 7 outbound have `source_domain_module_id=NULL` (B10b fail). Targets: CSM (2 rows, both NULL `target_domain_module_id`), FIN (2 rows, both NULL target FK), ITSM (3 rows, `target_domain_module_id=38`).
 - 9 `trigger_events` rows on the 7 masters. All 9 have `event_category=''` (empty string, B9 sub-defect). Two events (`telco_service_order.submitted`, `telco_service_catalog.updated`) have NO `handoffs` row at all.
 - 0 `data_object_lifecycle_states` rows on any of the 7 masters (B12 hard fail).
 - 0 `data_object_aliases` rows on any of the 7 masters (B11 fail).
@@ -92,11 +92,11 @@ B-band:
 - B5 vacuous (no embedded_master rows yet).
 - B6 FAIL. Zero intra-domain `data_object_relationships` between the 7 masters. Expected edges: `telco_service_orders fulfills_via service_provisioning_workflows`, `telco_subscriptions provisioned_by service_provisioning_workflows`, `telco_service_orders results_in telco_subscriptions`, `telco_subscriptions billed_by telco_customer_bills`, `telco_subscriptions occupies network_inventory_records`, `service_trouble_tickets references telco_subscriptions`, `telco_service_catalog defines telco_service_orders`.
 - B7 FAIL. Zero edges from any master to `users`. Each of the 7 masters carries at least one user-typed actor (order agent, billing specialist, network engineer, care agent, provisioning specialist).
-- B8 partial: 2 outbound cross-domain `data_object_relationships` rows exist (both to `customer_cases` in CSM). Outbound handoffs to ERP-FIN, ITSM have no mirror rows in `data_object_relationships`.
+- B8 partial: 2 outbound cross-domain `data_object_relationships` rows exist (both to `customer_cases` in CSM). Outbound handoffs to FIN, ITSM have no mirror rows in `data_object_relationships`.
 - B9 partial: 9 trigger_events exist; 7 handoffs cover 7 of the 9 events. Two events have no handoff: `telco_service_order.submitted` (id 1060) and `telco_service_catalog.updated` (id 1068). Also: every trigger_event row has `event_category=''` (empty), violating the enum check (allowed: `lifecycle`, `state_change`, `threshold`, `signal`). Fix routes to a small PATCH loader.
 - B9b vacuous (zero modules ⇒ no intra-domain cross-module surface).
-- B10 (report-only): zero inbound handoffs from any source domain. Discovery: zero `embedded_master` / `contributor` / `consumer` rows in this domain mean no canonical-owner-elsewhere expectation. Inbound surface is genuinely empty at the catalog level. Likely real gap: TPM / HCM / ERP-FIN / CRM should be publishing events into TELCO-BSS (new customer ⇒ account-create; tariff change ⇒ catalog-update; employee-departure ⇒ subscription-cancel). Listed as report-only follow-ups by owing domain below.
-- B10b HARD FAIL. 7 of 7 outbound handoffs have `source_domain_module_id=NULL`. Of those 7, 4 also have `target_domain_module_id=NULL` (2 CSM, 2 ERP-FIN); 3 have `target_domain_module_id=38` (ITSM module `ITSM-INCIDENT-MGMT`). Fix on this side requires M1 first (no source module exists to attribute to). The 4 NULL target FKs route as report-only to CSM and ERP-FIN.
+- B10 (report-only): zero inbound handoffs from any source domain. Discovery: zero `embedded_master` / `contributor` / `consumer` rows in this domain mean no canonical-owner-elsewhere expectation. Inbound surface is genuinely empty at the catalog level. Likely real gap: TPM / HCM / FIN / CRM should be publishing events into TELCO-BSS (new customer ⇒ account-create; tariff change ⇒ catalog-update; employee-departure ⇒ subscription-cancel). Listed as report-only follow-ups by owing domain below.
+- B10b HARD FAIL. 7 of 7 outbound handoffs have `source_domain_module_id=NULL`. Of those 7, 4 also have `target_domain_module_id=NULL` (2 CSM, 2 FIN); 3 have `target_domain_module_id=38` (ITSM module `ITSM-INCIDENT-MGMT`). Fix on this side requires M1 first (no source module exists to attribute to). The 4 NULL target FKs route as report-only to CSM and FIN.
 - B11 FAIL. Zero aliases on any of 7 masters. Candidates: `telco_service_catalog` ⇔ "Product Offering Catalog" (TM Forum SID), `telco_subscriptions` ⇔ "Customer Bill Inquiry" / "Service Instance" (TM Forum), `telco_customer_bills` ⇔ "Customer Invoice" (TM Forum), `service_trouble_tickets` ⇔ "Trouble Report" (TM Forum SID), `network_inventory_records` ⇔ "Resource Inventory" (TM Forum).
 - B12 HARD FAIL. Zero lifecycle states on any of 7 masters. None of these are config-shaped (each has real workflow: orders accepted/provisioned/completed, subscriptions activated/suspended/cancelled, bills issued/paid/disputed, tickets opened/triaged/resolved/closed).
 
@@ -125,7 +125,7 @@ F-band:
 
 H-band:
 
-- H1 HARD FAIL. 7 cross-domain handoffs (3 to ITSM, 2 to CSM, 2 to ERP-FIN), zero `handoff_processes` rows. Volume expectation per the H-band: 4 to 6 NEW `agent_curated` tags + 1 or 2 deferrals. Authored as a single Bucket 1 item B1-H1 with a 7-row sub-table.
+- H1 HARD FAIL. 7 cross-domain handoffs (3 to ITSM, 2 to CSM, 2 to FIN), zero `handoff_processes` rows. Volume expectation per the H-band: 4 to 6 NEW `agent_curated` tags + 1 or 2 deferrals. Authored as a single Bucket 1 item B1-H1 with a 7-row sub-table.
 
 ### Pass 2, Market audit (semantic)
 
@@ -157,11 +157,11 @@ Edges discovered via outbound handoffs (no inbound, no cross-domain DMDO yet):
 | --- | --- | --- | --- |
 | ITSM (id 1) | 3 | outbound to module 38 | `service_provisioning.failed`, `service_trouble_ticket.opened`, `network_inventory.updated` all route to `service_incidents` in ITSM-INCIDENT-MGMT. |
 | CSM (id 30) | 2 | outbound, both NULL target module | `telco_subscription.suspended`, `telco_service_order.completed`. |
-| ERP-FIN (id 65) | 2 | outbound, both NULL target module | `telco_subscription.activated`, `telco_customer_bill.issued`. |
+| FIN (id 65) | 2 | outbound, both NULL target module | `telco_subscription.activated`, `telco_customer_bill.issued`. |
 
-Only ITSM clears the weight-3 threshold for a full pairwise pass; CSM and ERP-FIN get one-line summaries.
+Only ITSM clears the weight-3 threshold for a full pairwise pass; CSM and FIN get one-line summaries.
 
-### Pass 4, Pairwise reconciliation (ITSM at weight 3; CSM, ERP-FIN summary)
+### Pass 4, Pairwise reconciliation (ITSM at weight 3; CSM, FIN summary)
 
 ITSM (target_domain_module_id=38, ITSM-INCIDENT-MGMT):
 
@@ -178,7 +178,7 @@ Section 5 (cross-domain `data_object_relationships`): no rows tying TELCO-BSS ma
 
 CSM (weight 2 summary): `telco_subscriptions` and `telco_service_orders` both already have `opens customer_cases` edges in `data_object_relationships` (the only 2 non-legacy DOR rows that exist). Handoffs are loaded but both have NULL target module attribution (CSM B10b owes the fix). No reverse cross-domain edges from CSM into TELCO-BSS exist.
 
-ERP-FIN (weight 2 summary): both handoffs (`telco_subscription.activated`, `telco_customer_bill.issued`) carry `data_object_id` pointing at TELCO-BSS masters (the payload is the publisher's master, which is the unusual case noted in B10b's sub-case 2 diagnostic: payload and trigger_event data_object match exactly). No `data_object_relationships` row mirrors these handoffs. ERP-FIN must hold a `consumer` row on `telco_subscriptions` and `telco_customer_bills` in whichever ERP-FIN module realizes AR / billing ingest. Both NULL target_domain_module_id values route as report-only to ERP-FIN.
+FIN (weight 2 summary): both handoffs (`telco_subscription.activated`, `telco_customer_bill.issued`) carry `data_object_id` pointing at TELCO-BSS masters (the payload is the publisher's master, which is the unusual case noted in B10b's sub-case 2 diagnostic: payload and trigger_event data_object match exactly). No `data_object_relationships` row mirrors these handoffs. FIN must hold a `consumer` row on `telco_subscriptions` and `telco_customer_bills` in whichever FIN module realizes AR / billing ingest. Both NULL target_domain_module_id values route as report-only to FIN.
 
 ### Bucket 1, In-scope confirmed gaps
 
@@ -186,7 +186,7 @@ ERP-FIN (weight 2 summary): both handoffs (`telco_subscription.activated`, `telc
 
 | ID | Band | Finding | Proposed fix |
 | --- | --- | --- | --- |
-| B1-S1 | A2 | Zero `capability_domains` rows. | Author 5 to 8 capabilities aligned to TM Forum eTOM Level 2: `TELCO-ORDER-MGMT`, `TELCO-CATALOG-MGMT`, `TELCO-PROVISIONING`, `TELCO-INVENTORY-MGMT`, `TELCO-BILLING`, `TELCO-ASSURANCE`, `TELCO-SUBSCRIPTION-MGMT`. Apply Cross-cutting capability convention; some (e.g. `BILLING`) may be flagged as cross-cutting if they show up in CPQ / ERP-FIN. Load via Phase A loader. |
+| B1-S1 | A2 | Zero `capability_domains` rows. | Author 5 to 8 capabilities aligned to TM Forum eTOM Level 2: `TELCO-ORDER-MGMT`, `TELCO-CATALOG-MGMT`, `TELCO-PROVISIONING`, `TELCO-INVENTORY-MGMT`, `TELCO-BILLING`, `TELCO-ASSURANCE`, `TELCO-SUBSCRIPTION-MGMT`. Apply Cross-cutting capability convention; some (e.g. `BILLING`) may be flagged as cross-cutting if they show up in CPQ / FIN. Load via Phase A loader. |
 | B1-S2 | M1, M2, M4, M6 | Zero `domain_modules` rows. Hard fail; gates every downstream concern. | Author 5 to 7 full modules following the TM Forum eTOM split. Recommended initial set: `TELCO-BSS-ORDER-MGMT`, `TELCO-BSS-CATALOG`, `TELCO-BSS-PROVISIONING`, `TELCO-BSS-INVENTORY`, `TELCO-BSS-BILLING`, `TELCO-BSS-ASSURANCE`, `TELCO-BSS-SUBSCRIPTIONS`. Carry capabilities from B1-S1; place the 7 existing masters per their natural module. Surface to user as a draft before loading (Bucket 2 item B2-2 carries the modularization shape question). |
 | B1-S3 | F2, F3 | Zero per-module system skills (Rule #17). | After B1-S2 lands, author one `skill_type='system'` row per module with `domain_module_id` set and `skill_name='<module_code_lower>_agent'`; each gets 5 to 12 `skill_tools` rows including the existing 7 query tools (re-pointed), plus the existing `send_email` row, plus `notify_person` / `notify_team` for generic notifications, plus mutate tools per master, plus workflow gates per Bucket 1 item B1-S4 lifecycle states. |
 | B1-S4 | F1 | Retire legacy `skills` row id 111 (`telco-bss-system`, kebab) after per-module skills land. | DELETE row 111 (also retires its 8 `skill_tools` rows via cascade). Order: B1-S3 first, then B1-S4. |
@@ -195,7 +195,7 @@ ERP-FIN (weight 2 summary): both handoffs (`telco_subscription.activated`, `telc
 | B1-S7 | B6 | Zero intra-domain edges between the 7 masters. | Author 7 edges per the list in Pass 1 B6 finding: `telco_service_orders fulfills_via service_provisioning_workflows`, `telco_subscriptions provisioned_by service_provisioning_workflows`, `telco_service_orders results_in telco_subscriptions`, `telco_subscriptions billed_by telco_customer_bills`, `telco_subscriptions occupies network_inventory_records`, `service_trouble_tickets references telco_subscriptions`, `telco_service_catalog defines telco_service_orders`. Load via standard relationship loader; each carries `relationship_verb`, `inverse_verb`, `relationship_type`, `relationship_kind`, `is_required`, `owner_side`. |
 | B1-S8 | B7 | Zero `users` edges on the 7 masters (Rule #10). | Author 7 edges from `users` to each master: order agent, billing specialist, network engineer, care agent, provisioning specialist, catalog manager, network inventory custodian. Use existing `users` data_object row (`kind='platform_builtin'`). |
 | B1-S9 | B11 | Zero aliases on the 7 masters. | Author 5 to 7 aliases per the TM Forum SID mappings listed in B11 finding above. Surface to user for review before loading (some are buyer-facing labels marketing may care about). |
-| B1-S10 | B10b | All 7 outbound `handoffs` have `source_domain_module_id=NULL`. | After B1-S2 modules land, derive per the rule (module that holds the trigger event's data_object with strongest role). Patch via a small loader; modelled on `scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts`. Also: 4 of the 7 still need `target_domain_module_id` (2 to CSM modules, 2 to ERP-FIN modules), but those PATCHes belong to CSM / ERP-FIN audits (report-only here). |
+| B1-S10 | B10b | All 7 outbound `handoffs` have `source_domain_module_id=NULL`. | After B1-S2 modules land, derive per the rule (module that holds the trigger event's data_object with strongest role). Patch via a small loader; modelled on `scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts`. Also: 4 of the 7 still need `target_domain_module_id` (2 to CSM modules, 2 to FIN modules), but those PATCHes belong to CSM / FIN audits (report-only here). |
 | B1-S11 | B9 | Two trigger events have no handoff row: `telco_service_order.submitted` (1060), `telco_service_catalog.updated` (1068). Also: all 9 trigger_events have `event_category=''` (empty string violates the enum). | (a) Author missing handoffs OR explicitly justify as leaf (`order.submitted` plausibly fires only the internal provisioning workflow, not a cross-domain handoff; `catalog.updated` may fire CSM agent-training and CRM offer-sync handoffs). (b) Patch `event_category` on all 9 rows to one of `lifecycle`, `state_change`, `threshold`, `signal`. Most should be `state_change`. |
 | B1-S12 | B11 / domain_aliases | Zero `domain_aliases` rows on the domain itself. | Author 3 to 5 aliases that feed catalog search and agent triggers per Rule #20: "telco BSS", "telecom billing systems", "OSS BSS", "communications service provider platform", "convergent charging". Surface to user before loading. |
 
@@ -211,11 +211,11 @@ Per-handoff PCF tagging table:
 | --- | --- | --- | --- | --- | --- | --- |
 | 927 | TELCO-BSS -> ITSM | service_trouble_ticket.opened | service_incidents | Triage IT service delivery incidents | 1299 (ext 20903) | L4, confident |
 | 928 | TELCO-BSS -> ITSM | service_provisioning.failed | service_incidents | Triage IT service delivery incidents | 1299 (ext 20903) | L4, confident |
-| 929 | TELCO-BSS -> ERP-FIN | telco_customer_bill.issued | telco_customer_bills | Invoice customer | 302 (ext 10743) | L3, confident |
+| 929 | TELCO-BSS -> FIN | telco_customer_bill.issued | telco_customer_bills | Invoice customer | 302 (ext 10743) | L3, confident |
 | 930 | TELCO-BSS -> CSM | telco_subscription.suspended | telco_subscriptions | Manage customer service problems, requests, and inquiries | 196 (ext 10388) | L3, confident |
 | 931 | TELCO-BSS -> CSM | telco_service_order.completed | telco_service_orders | Handle sales order inquiries including post-order fulfillment transactions | 740 (ext 10200) | L4, plausible (sales order PCF, telco service order shape) |
 | 932 | TELCO-BSS -> ITSM | network_inventory.updated | service_incidents | Maintain IT asset records | 1312 (ext 20918) | L4, confident (network inventory IS IT asset shape) |
-| 933 | TELCO-BSS -> ERP-FIN | telco_subscription.activated | telco_subscriptions | Generate customer billing data | 1351 (ext 10795) | L3, confident (subscription activation is the upstream billing-data trigger) |
+| 933 | TELCO-BSS -> FIN | telco_subscription.activated | telco_subscriptions | Generate customer billing data | 1351 (ext 10795) | L3, confident (subscription activation is the upstream billing-data trigger) |
 
 Deferred-to-Discover: none. All 7 have at least plausible L3/L4 PCF anchors in `apqc_pcf_cross_industry`. The one weak match (931, `handle sales order inquiries`) is the cleanest among the available "order" rows for the post-completion customer notification pattern; if the user disagrees, Discover Pass 3 can re-classify as a custom telco process.
 
@@ -243,7 +243,7 @@ Deferred-to-Discover: none. All 7 have at least plausible L3/L4 PCF anchors in `
    - `OPERATIONS-ORDER-MANAGER` (Order Mgmt + Provisioning),
    - `OPERATIONS-NETWORK-ENGINEER` (Inventory + Provisioning + Assurance),
    - `CUSTOMER-SERVICE-CARE-AGENT` (Subscriptions + Assurance + cross-domain CSM read),
-   - `FINANCE-BILLING-SPECIALIST` (Billing + Subscriptions + cross-domain ERP-FIN),
+   - `FINANCE-BILLING-SPECIALIST` (Billing + Subscriptions + cross-domain FIN),
    - `MARKETING-CATALOG-MANAGER` (Catalog only, possibly cross-cutting with CPQ),
    - `OPERATIONS-PROVISIONING-SPECIALIST` (Provisioning + Inventory).
    Decision: which subset to author in the same load as B1-S2.
@@ -278,7 +278,7 @@ Candidate entities surfaced from vendor knowledge; Phase 0 protocol has not been
 
 Candidates queued to `audits/_missing-domains.md`:
 
-- **TELCO-RAFM** (Telecommunications Revenue Assurance and Fraud Management). Evidence: Subex HyperSense, Mobileum WeDo, Araxxe, Neural Technologies. Adjacent to TELCO-BSS, ERP-FIN, GRC.
+- **TELCO-RAFM** (Telecommunications Revenue Assurance and Fraud Management). Evidence: Subex HyperSense, Mobileum WeDo, Araxxe, Neural Technologies. Adjacent to TELCO-BSS, FIN, GRC.
 - **TELCO-NMS** (Telecommunications Network Management Systems). Evidence: IBM Netcool, Cisco Crosswork, Nokia NSP, Ciena Manage Control Plan, VMware Telco Cloud. Adjacent to TELCO-BSS, ITSM, AIOPS.
 
 ### Cross-bucket dependencies
@@ -300,10 +300,10 @@ Candidates queued to `audits/_missing-domains.md`:
 ### Report-only follow-ups (owed by other domains)
 
 - **CSM B10b** owes `target_domain_module_id` PATCH on handoffs 930 (`telco_subscription.suspended` ⇒ `telco_subscriptions` payload, route to CSM module that consumes telco subscriptions) and 931 (`telco_service_order.completed` ⇒ `telco_service_orders` payload). Both are currently NULL on the target side.
-- **ERP-FIN B10b** owes `target_domain_module_id` PATCH on handoffs 929 (`telco_customer_bill.issued`) and 933 (`telco_subscription.activated`). Both currently NULL on the target side.
+- **FIN B10b** owes `target_domain_module_id` PATCH on handoffs 929 (`telco_customer_bill.issued`) and 933 (`telco_subscription.activated`). Both currently NULL on the target side.
 - **CSM B8 / B10** owes inbound handoffs into TELCO-BSS where a case escalates back (e.g. `customer_case.escalated_for_billing_dispute` ⇒ TELCO-BSS billing). None loaded today; CSM-side audit decides whether the catalog needs the row.
 - **ITSM B8 / B10** owes inbound handoffs into TELCO-BSS where an incident resolution closes a trouble ticket back (e.g. `service_incident.resolved` ⇒ TELCO-BSS `service_trouble_tickets`). None loaded today; ITSM-side audit decides.
-- **ERP-FIN B8 / B10** owes inbound handoffs for upstream price changes (`tariff_change.effective` ⇒ TELCO-BSS catalog repricing). Currently absent.
+- **FIN B8 / B10** owes inbound handoffs for upstream price changes (`tariff_change.effective` ⇒ TELCO-BSS catalog repricing). Currently absent.
 - **HCM B10** owes inbound (`employee.terminated` ⇒ TELCO-BSS subscription cancel for employee lines). Currently absent.
 - **CRM B10** owes inbound (`account.created` ⇒ TELCO-BSS subscriber-record-create) for B2C / B2B account-creation flow. Currently absent.
 - **GRC / DLP B10** owes inbound for CPNI / GDPR data-subject-request workflows feeding into TELCO-BSS subscription / billing records. Surfaces only if user adds CPNI to Bucket 2 item B2-3.
@@ -336,7 +336,7 @@ Total writes: 9 PATCHes + 7 INSERTs = 16 rows touched.
 - **B2-1** (em-dashes in `domains.description` / `domains.business_logic`): wording approval (Bucket 2); even though the project rule forbids em-dashes, the replacement text needs user approval per the audit framing. Defer.
 - **B2-2 / B2-3 / B2-4 / B2-5 / B2-6**: Bucket 2 judgment.
 - **B3-1 through B3-13**: Phase 0 speculative; need vendor-schema vetting.
-- Report-only follow-ups owed by **CSM / ERP-FIN / ITSM / HCM / CRM / GRC**: not TELCO-BSS authoring scope.
+- Report-only follow-ups owed by **CSM / FIN / ITSM / HCM / CRM / GRC**: not TELCO-BSS authoring scope.
 
 ### Deferred count
 
@@ -356,7 +356,7 @@ Structural Validate b1 pass against live state. Re-runs all bands (A, M, B [B5/B
 - 4 solutions all `coverage_level='primary'` (A3 pass).
 - 7 mandatory regulations linked.
 - 7 `domain_data_objects` rows, all `role=master, necessity=required, kind=domain_owned` (B1 pass). No `embedded_master` / `contributor` / `consumer` rows (B5 vacuous, B10 discovery returns nothing owed).
-- 7 outbound `handoffs`, 0 inbound. All 7 outbound carry `source_domain_module_id=NULL` (B10b fail, gated on M1). 3 target ITSM module 38; 2 target CSM (NULL target_domain_module_id, owed by CSM); 2 target ERP-FIN (NULL target_domain_module_id, owed by ERP-FIN).
+- 7 outbound `handoffs`, 0 inbound. All 7 outbound carry `source_domain_module_id=NULL` (B10b fail, gated on M1). 3 target ITSM module 38; 2 target CSM (NULL target_domain_module_id, owed by CSM); 2 target FIN (NULL target_domain_module_id, owed by FIN).
 - 9 `trigger_events` on the 7 masters, all `event_category='state_change'` (B1-S11b applied 2026-05-31). 2 events still lack `handoffs` rows (1060 `telco_service_order.submitted`, 1068 `telco_service_catalog.updated`), B1-S11a still pending.
 - 0 lifecycle states on any master (B12 hard fail, unchanged).
 - 0 aliases on any master (B11 fail, unchanged).
@@ -390,7 +390,7 @@ S1 (direct FKs to `domains`, for id 42):
 | `domain_regulations` | `domain_id` | 7 | yes | pass |
 | `solution_domains` | `domain_id` | 4 | yes | pass |
 | `handoffs` | `source_domain_id` | 7 | yes | pass |
-| `handoffs` | `target_domain_id` | 0 | usually non-zero | flagged (B10 inbound owed by HCM/CRM/CSM/ITSM/ERP-FIN/GRC) |
+| `handoffs` | `target_domain_id` | 0 | usually non-zero | flagged (B10 inbound owed by HCM/CRM/CSM/ITSM/FIN/GRC) |
 | `skills` | `domain_id` | 1 (legacy) | yes after F2 | partial (F1 / F2 fail) |
 | `domains` | `parent_domain_id` | 0 | only with sub-domains | pass |
 | `domain_aliases` | `domain_id` | 0 | optional | flagged (B1-S12) |
@@ -421,11 +421,11 @@ B-band:
 - B5 vacuous (no embedded_master).
 - B6 FAIL. Zero intra-domain `data_object_relationships` between the 7 masters. 7 expected edges (per the 2026-05-30 list).
 - B7 FAIL. Zero edges to `users` (data_object id 748). 7 expected edges per the 7 actor roles enumerated in B1-S8.
-- B8 partial. 2 outbound DOR rows to CSM `customer_cases` (id 103). ITSM, ERP-FIN have no DOR mirrors of their handoffs. Outbound-direction DOR rows owed: `service_trouble_tickets escalates_as service_incidents`, `service_provisioning_workflows raises service_incidents`, `network_inventory_records triggers service_incidents` (all to ITSM `service_incidents` id 47); `telco_customer_bills posts_to <ERP-FIN AR object>`, `telco_subscriptions provisions_billable_to <ERP-FIN AR object>` (target masters TBD on ERP-FIN side).
+- B8 partial. 2 outbound DOR rows to CSM `customer_cases` (id 103). ITSM, FIN have no DOR mirrors of their handoffs. Outbound-direction DOR rows owed: `service_trouble_tickets escalates_as service_incidents`, `service_provisioning_workflows raises service_incidents`, `network_inventory_records triggers service_incidents` (all to ITSM `service_incidents` id 47); `telco_customer_bills posts_to <FIN AR object>`, `telco_subscriptions provisions_billable_to <FIN AR object>` (target masters TBD on FIN side).
 - B9 partial. 9 trigger_events exist; 7 of 9 carry ≥1 handoff. 2 events still have no handoff: 1060 `telco_service_order.submitted` and 1068 `telco_service_catalog.updated` (B1-S11a still pending; carried). All 9 carry valid `event_category='state_change'` (B1-S11b applied; PASS on the enum sub-defect).
 - B9b vacuous (0 modules; no cross-module surface).
-- B10 (report-only, inbound discovery): 0 dependencies (no embedded_master / contributor / consumer). Discovery returns nothing this domain is structurally owed. Likely-real gaps surfaced from the 2026-05-30 review remain report-only follow-ups for HCM / CRM / CSM / ITSM / ERP-FIN / GRC.
-- B10b HARD FAIL on the source side. 7 of 7 outbound have `source_domain_module_id=NULL`. Gated on M1 (no source module to attribute to). On the target side: 3 ITSM rows correctly carry `target_domain_module_id=38`; 4 (2 CSM, 2 ERP-FIN) carry NULL `target_domain_module_id`, which is each target domain's B10b to fix (report-only here).
+- B10 (report-only, inbound discovery): 0 dependencies (no embedded_master / contributor / consumer). Discovery returns nothing this domain is structurally owed. Likely-real gaps surfaced from the 2026-05-30 review remain report-only follow-ups for HCM / CRM / CSM / ITSM / FIN / GRC.
+- B10b HARD FAIL on the source side. 7 of 7 outbound have `source_domain_module_id=NULL`. Gated on M1 (no source module to attribute to). On the target side: 3 ITSM rows correctly carry `target_domain_module_id=38`; 4 (2 CSM, 2 FIN) carry NULL `target_domain_module_id`, which is each target domain's B10b to fix (report-only here).
 - B11 FAIL. Zero `data_object_aliases` on any of 7 masters. TM Forum SID alias candidates carried from 2026-05-30. Bucket 2 B2-6 wording approval still pending.
 - B12 HARD FAIL. Zero `data_object_lifecycle_states` on any master. None of the 7 are config-shape (every one has real workflow). Gated on M1 (lifecycle state `domain_module_id` FK requires modules to exist for proper attribution).
 
@@ -474,9 +474,9 @@ Edges via outbound handoffs (unchanged from 2026-05-30):
 | --- | --- | --- |
 | ITSM (id 1) | 3 | outbound to module 38 (ITSM-INCIDENT-MGMT) |
 | CSM (id 30) | 2 | outbound, both NULL target module |
-| ERP-FIN (id 65) | 2 | outbound, both NULL target module |
+| FIN (id 65) | 2 | outbound, both NULL target module |
 
-Only ITSM clears the weight-3 threshold for the full four-leg pass. CSM, ERP-FIN summary below.
+Only ITSM clears the weight-3 threshold for the full four-leg pass. CSM, FIN summary below.
 
 ### Pass 4, Pairwise reconciliation
 
@@ -491,7 +491,7 @@ Section 5 (cross-domain DOR): no rows tying TELCO-BSS masters to ITSM `service_i
 
 CSM (weight 2 summary): 2 outbound handoffs on `telco_subscriptions` (id 655) and `telco_service_orders` (id 654). DOR rows already exist (both `opens customer_cases`). Both handoffs carry NULL `target_domain_module_id` (CSM B10b owes). No inbound from CSM into TELCO-BSS.
 
-ERP-FIN (weight 2 summary): 2 outbound on `telco_customer_bills` (id 658, handoff 929) and `telco_subscriptions` (id 655, handoff 933, payload `telco_subscriptions`). No mirroring DOR rows. Both handoffs carry NULL `target_domain_module_id` (ERP-FIN B10b owes). No inbound.
+FIN (weight 2 summary): 2 outbound on `telco_customer_bills` (id 658, handoff 929) and `telco_subscriptions` (id 655, handoff 933, payload `telco_subscriptions`). No mirroring DOR rows. Both handoffs carry NULL `target_domain_module_id` (FIN B10b owes). No inbound.
 
 ### Bucket 1, In-scope confirmed gaps
 
@@ -549,10 +549,10 @@ ERP-FIN (weight 2 summary): 2 outbound on `telco_customer_bills` (id 658, handof
 ### Report-only follow-ups (owed by other domains)
 
 - **CSM B10b** owes `target_domain_module_id` PATCH on 930 (`telco_subscription.suspended` payload `telco_subscriptions`) and 931 (`telco_service_order.completed` payload `telco_service_orders`).
-- **ERP-FIN B10b** owes `target_domain_module_id` PATCH on 929 (`telco_customer_bill.issued`) and 933 (`telco_subscription.activated`).
+- **FIN B10b** owes `target_domain_module_id` PATCH on 929 (`telco_customer_bill.issued`) and 933 (`telco_subscription.activated`).
 - **CSM B8 / B10** owes inbound `customer_case.escalated_for_billing_dispute` ⇒ TELCO-BSS.
 - **ITSM B8 / B10** owes inbound `service_incident.resolved` ⇒ TELCO-BSS `service_trouble_tickets`.
-- **ERP-FIN B8 / B10** owes inbound `tariff_change.effective` ⇒ TELCO-BSS catalog repricing.
+- **FIN B8 / B10** owes inbound `tariff_change.effective` ⇒ TELCO-BSS catalog repricing.
 - **HCM B10** owes inbound `employee.terminated` ⇒ TELCO-BSS subscription cancel for employee lines.
 - **CRM B10** owes inbound `account.created` ⇒ TELCO-BSS subscriber-record-create.
 - **GRC / DLP B10** owes inbound for CPNI / GDPR data-subject-request workflows (conditional on B2-3 adding CPNI).
@@ -606,7 +606,7 @@ Total writes: 8 PATCHes + 10 INSERTs = 18 rows touched. No JWT errors.
 - **b1b blocked on the build**: B1B-S1, S2, S6, S7, S8, S10, S11a all gated on B2-2 (modules must land first; lifecycle/DOR/users/source-FK need the module surface).
 - **Superseded (skill grain, 2026-06-06)**: B1B-S3 (per-module system skills + skill_tools) is CANCELED. B1B-S4 (retire legacy skill 111) is moot: skill 111 is a domain-grain `system` skill (domain_id=42, domain_module_id=NULL), which IS the correct post-supersession shape; do NOT delete it (optional cosmetic rename only). Both reframed as notes; supersession header kept.
 - **b3 backlog**: 13 candidate entities (B3-1..B3-13) carried; speculative, route per the chosen module shape.
-- **Report-only owed by other domains**: CSM / ERP-FIN target-FK backfills, and inbound handoffs owed by CSM / ITSM / ERP-FIN / HCM / CRM / GRC (unchanged).
+- **Report-only owed by other domains**: CSM / FIN target-FK backfills, and inbound handoffs owed by CSM / ITSM / FIN / HCM / CRM / GRC (unchanged).
 
 ### UI links (tables written)
 

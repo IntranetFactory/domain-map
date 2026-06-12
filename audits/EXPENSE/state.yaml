@@ -55,15 +55,15 @@ b1b:
   - id: B1B-H1
     summary: "APQC tagging: 7 net-new agent_curated handoff_processes proposals plus 4 REPLACE candidates against existing discovery_* rows; several need PCF lookups deferred to fix time."
     finding: |
-      10 of 17 cross-domain handoffs remain untagged (129 to ERP-FIN, 171 to SPEND-MGMT, 551 to ERP-FIN, 552 to SPEND-MGMT, 555 to SPEND-MGMT, 599 to PAYROLL, 165 from SPEND-MGMT, 559 from SPEND-MGMT, 600 from SPEND-MGMT, 1157 from PAYROLL). 4 prior `discovery_*` rows (38 to PCF 317, 101 to 59, 139 to 59, 468 to 41) are REPLACE / CONFIRM candidates. 3 net-new `agent_curated` rows shipped between 2026-05-30 and 2026-05-31 (130, 553, 554) remain `record_status='new'`; H1 quality headline (`record_status='approved'`) is still 0. Independent of the module split.
+      10 of 17 cross-domain handoffs remain untagged (129 to FIN, 171 to SPEND-MGMT, 551 to FIN, 552 to SPEND-MGMT, 555 to SPEND-MGMT, 599 to PAYROLL, 165 from SPEND-MGMT, 559 from SPEND-MGMT, 600 from SPEND-MGMT, 1157 from PAYROLL). 4 prior `discovery_*` rows (38 to PCF 317, 101 to 59, 139 to 59, 468 to 41) are REPLACE / CONFIRM candidates. 3 net-new `agent_curated` rows shipped between 2026-05-30 and 2026-05-31 (130, 553, 554) remain `record_status='new'`; H1 quality headline (`record_status='approved'`) is still 0. Independent of the module split.
     action: |
       Author a chunked POST of `handoff_processes` rows for the net-new untagged handoffs where the PCF id is resolvable (599 to PCF 1445, 1157 to PCF 1445 / 58 / 316, 129 to PCF 1379, 551 to PCF 1379, 171 to PCF 1442). Defer the remaining (552, 555, 165, 559, 600) and the 4 REPLACE candidates to a separate pass once the user approves REPLACE semantics (B2-EM-adjacent). All rows ship `record_status='new'` (R1).
     blocked_by:
       - {type: user_decision, ref: B2-EM, reason: "optional; REPLACE semantics on existing discovery_* rows is a Bucket 2 conversation"}
     affected_handoffs:
-      - {handoff_id: 129, direction: outbound, source_domain: EXPENSE, target_domain: ERP-FIN, trigger_event: expense_report.approved, payload: expense_reports, null_field: handoff_processes_row}
+      - {handoff_id: 129, direction: outbound, source_domain: EXPENSE, target_domain: FIN, trigger_event: expense_report.approved, payload: expense_reports, null_field: handoff_processes_row}
       - {handoff_id: 171, direction: outbound, source_domain: EXPENSE, target_domain: SPEND-MGMT, trigger_event: expense_policy.updated, payload: expense_policies, null_field: handoff_processes_row}
-      - {handoff_id: 551, direction: outbound, source_domain: EXPENSE, target_domain: ERP-FIN, trigger_event: expense_line.posted_to_gl, payload: expense_lines, null_field: handoff_processes_row}
+      - {handoff_id: 551, direction: outbound, source_domain: EXPENSE, target_domain: FIN, trigger_event: expense_line.posted_to_gl, payload: expense_lines, null_field: handoff_processes_row}
       - {handoff_id: 552, direction: outbound, source_domain: EXPENSE, target_domain: SPEND-MGMT, trigger_event: expense_line.policy_violation, payload: expense_lines, null_field: handoff_processes_row}
       - {handoff_id: 555, direction: outbound, source_domain: EXPENSE, target_domain: SPEND-MGMT, trigger_event: travel_booking.out_of_policy, payload: travel_bookings, null_field: handoff_processes_row}
       - {handoff_id: 599, direction: outbound, source_domain: EXPENSE, target_domain: PAYROLL, trigger_event: expense_line.approved, payload: expense_lines, null_field: handoff_processes_row}

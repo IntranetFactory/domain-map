@@ -100,8 +100,8 @@ b1b:
       - {handoff_id: 322, direction: outbound, source_domain: B2C-COMM, target_domain: OMS, trigger_event: commerce_order.placed, payload: commerce_orders, null_field: source_domain_module_id}
       - {handoff_id: 323, direction: outbound, source_domain: B2C-COMM, target_domain: CRM, trigger_event: commerce_order.placed, payload: commerce_orders, null_field: source_domain_module_id}
       - {handoff_id: 324, direction: outbound, source_domain: B2C-COMM, target_domain: LOYALTY, trigger_event: commerce_order.placed, payload: commerce_orders, null_field: source_domain_module_id}
-      - {handoff_id: 325, direction: outbound, source_domain: B2C-COMM, target_domain: ERP-FIN, trigger_event: commerce_order.confirmed, payload: payment_transactions, null_field: source_domain_module_id}
-      - {handoff_id: 326, direction: outbound, source_domain: B2C-COMM, target_domain: ERP-FIN, trigger_event: commerce_order.refunded, payload: commerce_orders, null_field: source_domain_module_id}
+      - {handoff_id: 325, direction: outbound, source_domain: B2C-COMM, target_domain: FIN, trigger_event: commerce_order.confirmed, payload: payment_transactions, null_field: source_domain_module_id}
+      - {handoff_id: 326, direction: outbound, source_domain: B2C-COMM, target_domain: FIN, trigger_event: commerce_order.refunded, payload: commerce_orders, null_field: source_domain_module_id}
       - {handoff_id: 327, direction: outbound, source_domain: B2C-COMM, target_domain: MA, trigger_event: cart.abandoned, payload: carts, null_field: source_domain_module_id}
       - {handoff_id: 328, direction: outbound, source_domain: B2C-COMM, target_domain: MA, trigger_event: checkout.started, payload: checkouts, null_field: source_domain_module_id}
       - {handoff_id: 329, direction: outbound, source_domain: B2C-COMM, target_domain: CRM, trigger_event: payment.declined, payload: payment_transactions, null_field: source_domain_module_id}

@@ -34,7 +34,7 @@ b1b:
       candidates: (a) WORK-MGMT.okr_objective.scored (1375 exists) -> module 106;
       (b) WORK-MGMT.okr_objective.committed (1374 exists) -> module 105; (c)
       EPM.financial_plan.approved -> 106; (d) EPM.variance_analysis.material_variance
-      -> 107; (e) ERP-FIN.financial_period.closed -> 106; (f)
+      -> 107; (e) FIN.financial_period.closed -> 106; (f)
       TALENT-MGMT.performance_review.completed -> 107. (a) + (b) are ready now
       because source events exist; (c)-(f) need source-domain coordination or
       the B1A-S3 events (now loaded: okr_objective.deprecated 1574,
@@ -48,7 +48,7 @@ b1b:
       - {direction: inbound_candidate, source_domain: WORK-MGMT, target_domain: SEM, trigger_event: okr_objective.committed, payload: okr_objectives, null_field: target_domain_module_id_candidate_105}
       - {direction: inbound_candidate, source_domain: EPM, target_domain: SEM, trigger_event: financial_plan.approved, payload: financial_plans, null_field: source_event_not_loaded}
       - {direction: inbound_candidate, source_domain: EPM, target_domain: SEM, trigger_event: variance_analysis.material_variance, payload: variance_analyses, null_field: source_event_not_loaded}
-      - {direction: inbound_candidate, source_domain: ERP-FIN, target_domain: SEM, trigger_event: financial_period.closed, payload: financial_periods, null_field: source_domain_no_modules}
+      - {direction: inbound_candidate, source_domain: FIN, target_domain: SEM, trigger_event: financial_period.closed, payload: financial_periods, null_field: source_domain_no_modules}
       - {direction: inbound_candidate, source_domain: TALENT-MGMT, target_domain: SEM, trigger_event: performance_review.completed, payload: performance_reviews, null_field: source_event_not_loaded}
 
   - id: B1B-S4
@@ -86,20 +86,20 @@ b1b:
       - {handoff_id: 178, direction: outbound, source_domain: SPM, target_domain: WORK-MGMT, trigger_event: okr_objective.created, payload: okr_objectives, null_field: publisher_ownership_review}
 
   - id: B1B-S6
-    summary: "Backfill cross-domain consumer DMDOs on SEM masters from SPM, EPM, ERP-FIN, HCM."
+    summary: "Backfill cross-domain consumer DMDOs on SEM masters from SPM, EPM, FIN, HCM."
     finding: >-
       SEM has only one cross-domain consumer DMDO today (WORK-MGMT-TASK-EXEC 149
       on strategic_initiatives 274). Expected additions from the workflow shape:
       (a) SPM modules `consumer + optional` on strategic_initiatives; (b) EPM
       modules `consumer + required` on strategic_initiatives (variance attribution)
-      and `consumer + optional` on okr_objectives (benefits); (c) ERP-FIN modules
+      and `consumer + optional` on okr_objectives (benefits); (c) FIN modules
       `consumer + optional` on strategic_initiatives (revenue attribution); (d)
       HCM modules `consumer + optional` on okr_objectives if performance reviews
       tie to OKRs. None are SEM's fix; queued to each receiving domain's b1 audit.
     blocked_by:
       - {type: domain_audit, blocking_domain: SPM, milestone: phase_b_modules_loaded}
       - {type: domain_audit, blocking_domain: EPM, milestone: phase_b_modules_loaded}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: phase_b_modules_loaded}
+      - {type: domain_audit, blocking_domain: FIN, milestone: phase_b_modules_loaded}
       - {type: domain_audit, blocking_domain: HCM, milestone: phase_b_modules_loaded}
     affected_masters:
       - {data_object_id: 274, name: strategic_initiatives, target_module_id: null, workflow: cross_domain_consume}
@@ -165,13 +165,13 @@ b2:
       - "(a) Author 2 now (WORK-MGMT.okr_objective.committed and .scored), queue 4 with cross-domain coordination."
       - "(b) Queue all 6 until source-domain Phase 0 / b1 audits land."
       - "(c) Author 2 now AND queue a SEM follow-up audit for the 4 once source audits return."
-    why: "Workflow priority: 2 are mechanically clean (events exist); 4 need EPM / ERP-FIN / TALENT-MGMT audits to land first. Depends on B2-S5 intent."
+    why: "Workflow priority: 2 are mechanically clean (events exist); 4 need EPM / FIN / TALENT-MGMT audits to land first. Depends on B2-S5 intent."
 
   - id: B2-S5
     summary: "Integrated vs write-mostly SEM intent (decides whether B1B-S1 is acted on)."
     question: >-
       Should SEM model the integrated-publisher path (act on B1B-S1 / B2-S2 with
-      inbound handoffs from EPM / ERP-FIN / TALENT-MGMT) or the write-mostly path
+      inbound handoffs from EPM / FIN / TALENT-MGMT) or the write-mostly path
       (accept the zero-inbound asymmetry as workflow-correct, decline B1B-S1)?
       Also folds in the earlier pattern-flag re-evaluation: should
       strategic_initiatives.has_submit_lock flip to true for terminal states

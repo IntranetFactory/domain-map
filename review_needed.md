@@ -50,7 +50,7 @@
 | VSDP | End-to-end DevOps platforms covering source control, CI/CD, build, test, release, value-stream analytics. Vendors: GitLab, GitHub Enterprise, Atlassian, Azure DevOps, JetBrains Space, JFrog, CloudBees, Harness, Digital.ai. | 100 |
 | WEB-CONTOPS | Editorial workflow, content audit/inventory, accessibility scanning, content quality enforcement, technical SEO governance, broken-link monitoring for external web properties. Vendors: Siteimprove, GatherContent, Acrolinx, Conductor, Lumar, Optimizely CMP, AudioEye, Acquia Optimize. | 100 |
 | WORK-MGMT | Task, project, and workflow management for cross-functional work, dashboards, automations, OKR tracking. Vendors: Monday.com, Asana, Smartsheet, ClickUp, Wrike, Trello, Basecamp, Teamwork, Hive. | 100 |
-| ERP-FIN | GL, AP/AR, fixed assets, period close, multi-entity/multi-currency consolidation, revenue recognition. The accounting system of record. | 92 |
+| FIN | GL, AP/AR, fixed assets, period close, multi-entity/multi-currency consolidation, revenue recognition. The accounting system of record. | 92 |
 | B2C-COMM | Storefront, catalog, cart, checkout, and order capture for B2C and B2B digital commerce. Vendors: Salesforce Commerce Cloud, Shopify, Adobe Commerce, BigCommerce, SAP Commerce Cloud, commercetools, Oracle Commerce, VTEX. | 91 |
 | FARMER-DIRECT-SALES | Direct-to-consumer (CSA shares, online farm stores, farmers market POS) and farm-to-wholesale commerce platforms for small/mid-scale farms. | 90 |
 | AGENCY-MGMT | Vertical operations platform for advertising, marketing, creative, PR, media agencies. Job/traffic management, time tracking with rate cards, retainer accounting, media buying, creative review, multi-rate billing, per-job profitability. | 89 |

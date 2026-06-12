@@ -36,16 +36,16 @@ b1a:
 b1b:
   - id: B1B-S9
     summary: "B10b report-only; 4 outbound rows still carry NULL target_domain_module_id pending target-domain audits"
-    finding: "Outbound handoffs 484 (ERP-FIN), 485 (SUB-MGMT), 1014 (CLM), 1015 (ERP-FIN) carry NULL target_domain_module_id. Target-side modules are owed by the target domains' b1 audits."
+    finding: "Outbound handoffs 484 (FIN), 485 (SUB-MGMT), 1014 (CLM), 1015 (FIN) carry NULL target_domain_module_id. Target-side modules are owed by the target domains' b1 audits."
     blocked_by:
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: "phase-B-DMDOs-on-sales_quotes-and-quote_discounts"}
+      - {type: domain_audit, blocking_domain: FIN, milestone: "phase-B-DMDOs-on-sales_quotes-and-quote_discounts"}
       - {type: domain_audit, blocking_domain: SUB-MGMT, milestone: "module-receiving-sales_quote.accepted_by_buyer"}
       - {type: domain_audit, blocking_domain: CLM, milestone: "re-resolve-1014-target-against-CLM-REPOSITORY-vs-CLM-AUTHORING"}
     affected_handoffs:
-      - {handoff_id: 484, direction: outbound, source_domain: CPQ, target_domain: ERP-FIN, trigger_event: "sales_quote.approved", payload: sales_quotes, null_field: target_domain_module_id}
+      - {handoff_id: 484, direction: outbound, source_domain: CPQ, target_domain: FIN, trigger_event: "sales_quote.approved", payload: sales_quotes, null_field: target_domain_module_id}
       - {handoff_id: 485, direction: outbound, source_domain: CPQ, target_domain: SUB-MGMT, trigger_event: "sales_quote.accepted_by_buyer", payload: sales_quotes, null_field: target_domain_module_id}
       - {handoff_id: 1014, direction: outbound, source_domain: CPQ, target_domain: CLM, trigger_event: "quote_discount.approved", payload: quote_discounts, null_field: target_domain_module_id}
-      - {handoff_id: 1015, direction: outbound, source_domain: CPQ, target_domain: ERP-FIN, trigger_event: "quote_discount.threshold_exceeded", payload: quote_discounts, null_field: target_domain_module_id}
+      - {handoff_id: 1015, direction: outbound, source_domain: CPQ, target_domain: FIN, trigger_event: "quote_discount.threshold_exceeded", payload: quote_discounts, null_field: target_domain_module_id}
 
 b2:
   - id: B2-S1

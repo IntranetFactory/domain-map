@@ -32,11 +32,11 @@ b1a:
     affected_handoffs:
       - {handoff_id: 927, process_id: 1299, target_domain: ITSM, trigger_event: service_trouble_ticket.opened}
       - {handoff_id: 928, process_id: 1299, target_domain: ITSM, trigger_event: service_provisioning.failed}
-      - {handoff_id: 929, process_id: 302, target_domain: ERP-FIN, trigger_event: telco_customer_bill.issued}
+      - {handoff_id: 929, process_id: 302, target_domain: FIN, trigger_event: telco_customer_bill.issued}
       - {handoff_id: 930, process_id: 196, target_domain: CSM, trigger_event: telco_subscription.suspended}
       - {handoff_id: 931, process_id: 740, target_domain: CSM, trigger_event: telco_service_order.completed}
       - {handoff_id: 932, process_id: 1312, target_domain: ITSM, trigger_event: network_inventory.updated}
-      - {handoff_id: 933, process_id: 1351, target_domain: ERP-FIN, trigger_event: telco_subscription.activated}
+      - {handoff_id: 933, process_id: 1351, target_domain: FIN, trigger_event: telco_subscription.activated}
 
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capability_domains awaiting a build."
@@ -112,7 +112,7 @@ b1b:
 
   - id: B1B-S10
     summary: "Backfill `handoffs.source_domain_module_id` on all 7 outbound rows (B10b)."
-    finding: "B10b fails on the source side: 7 of 7 outbound handoffs (927-933) have `source_domain_module_id=NULL`. Target side: 3 ITSM rows correctly carry `target_domain_module_id=38`; 4 (2 CSM, 2 ERP-FIN) carry NULL target FK (owed by CSM/ERP-FIN audits, not this domain's fix)."
+    finding: "B10b fails on the source side: 7 of 7 outbound handoffs (927-933) have `source_domain_module_id=NULL`. Target side: 3 ITSM rows correctly carry `target_domain_module_id=38`; 4 (2 CSM, 2 FIN) carry NULL target FK (owed by CSM/FIN audits, not this domain's fix)."
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S2, reason: "no source module exists to attribute to until B1B-S2 lands"}
 

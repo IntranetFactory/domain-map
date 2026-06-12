@@ -683,6 +683,450 @@
       "related_domains": ["HCM", "HRSD"]
     },
     {
+      "code": "CLM",
+      "name": "Contract Lifecycle Management",
+      "description": "Authoring, negotiation, execution, and post-signature management of contracts.",
+      "catalog_release": "2026-06-11",
+      "business_functions": [
+        {
+          "name": "Contract Operations",
+          "responsibility": "owner"
+        },
+        {
+          "name": "Procurement",
+          "responsibility": "contributor"
+        },
+        {
+          "name": "Sales",
+          "responsibility": "contributor"
+        }
+      ],
+      "modules": [
+        {
+          "code": "CLM-AUTHORING",
+          "name": "Contract Authoring",
+          "description": "Template-driven contract drafting with the approved clause library. Masters contract_templates and contract_clauses; produces draft legal_contracts that flow into CLM-NEGOTIATION. Realizes CLM-CONTRACT-AUTHORING and CLM-CLAUSE-LIBRARY-MGMT.",
+          "personas": [
+            {
+              "code": "CONTRACT-OPS-MANAGER",
+              "name": "Contract Operations Manager",
+              "interaction_level": "secondary"
+            },
+            {
+              "code": "CONTRACT-OPS-SPECIALIST",
+              "name": "Contract Operations Specialist",
+              "interaction_level": "primary"
+            },
+            {
+              "code": "LEGAL-COUNSEL",
+              "name": "Legal Counsel",
+              "interaction_level": "primary"
+            },
+            {
+              "code": "PROCUREMENT-CONTRACT-LIAISON",
+              "name": "Procurement Contract Liaison",
+              "interaction_level": "secondary"
+            }
+          ],
+          "processes": [
+            {
+              "key": "develop_manage_sales_proposals",
+              "name": "Develop and manage sales proposals, bids, and quotes",
+              "via": "handoff"
+            },
+            {
+              "key": "manage_legal_ethical_issues",
+              "name": "Manage legal and ethical issues",
+              "via": "handoff"
+            },
+            {
+              "key": "provide_legal_advice_counseling",
+              "name": "Provide legal advice/counseling",
+              "via": "gate"
+            },
+            {
+              "key": "provide_sourcing_governance",
+              "name": "Provide sourcing governance",
+              "via": "handoff"
+            },
+            {
+              "key": "resolve_customer_problems",
+              "name": "Resolve customer problems, requests, and inquiries",
+              "via": "handoff"
+            }
+          ],
+          "related_modules": ["CLM-NEGOTIATION"]
+        },
+        {
+          "code": "CLM-NEGOTIATION",
+          "name": "Negotiation and Redlining",
+          "description": "Track-changes negotiation with counterparty exchange, version comparison, and clause-risk detection. Consumes legal_contracts and contract_clauses; gates the in_negotiation -> approved lifecycle transition. Requires sign_document for signature workflow; coverage drops below 100% on the sign_document leg.",
+          "personas": [
+            {
+              "code": "CONTRACT-OPS-MANAGER",
+              "name": "Contract Operations Manager",
+              "interaction_level": "secondary"
+            },
+            {
+              "code": "LEGAL-COUNSEL",
+              "name": "Legal Counsel",
+              "interaction_level": "primary"
+            },
+            {
+              "code": "PROCUREMENT-CONTRACT-LIAISON",
+              "name": "Procurement Contract Liaison",
+              "interaction_level": "secondary"
+            }
+          ],
+          "processes": [
+            {
+              "key": "negotiate_document_agreements",
+              "name": "Negotiate and document agreements/contracts",
+              "via": "gate"
+            }
+          ],
+          "related_modules": ["CLM-AUTHORING", "CLM-REPOSITORY"]
+        },
+        {
+          "code": "CLM-OBLIGATION-MGMT",
+          "name": "Obligation Management",
+          "description": "Register, tracking, and alerting for contract obligations (deliverables, SLA milestones, payment terms). Masters contract_obligations. Publishes obligation.due and obligation.breached events that fan out to OP-RES / GRC.",
+          "personas": [
+            {
+              "code": "CONTRACT-OPS-MANAGER",
+              "name": "Contract Operations Manager",
+              "interaction_level": "primary"
+            },
+            {
+              "code": "CONTRACT-OPS-SPECIALIST",
+              "name": "Contract Operations Specialist",
+              "interaction_level": "primary"
+            }
+          ],
+          "processes": [
+            {
+              "key": "evaluate_enterprise_regulatory",
+              "name": "Evaluate enterprise regulatory and compliance obligations",
+              "via": "gate"
+            },
+            {
+              "key": "prepare_periodic_financial",
+              "name": "Prepare periodic financial forecasts",
+              "via": "handoff"
+            }
+          ],
+          "related_modules": ["CLM-REPOSITORY"]
+        },
+        {
+          "code": "CLM-RENEWAL",
+          "name": "Renewal Management",
+          "description": "Date-based renewal alerting, auto-renewal-clause detection, and renewal execution. Consumes legal_contracts; publishes renewal.30_day_warning and legal_contract.renewed. Distinct from amendments which run through CLM-REPOSITORY.",
+          "personas": [
+            {
+              "code": "CONTRACT-OPS-MANAGER",
+              "name": "Contract Operations Manager",
+              "interaction_level": "primary"
+            },
+            {
+              "code": "CONTRACT-OPS-SPECIALIST",
+              "name": "Contract Operations Specialist",
+              "interaction_level": "primary"
+            }
+          ],
+          "processes": [
+            {
+              "key": "manage_contracts",
+              "name": "Manage contracts",
+              "via": "gate"
+            },
+            {
+              "key": "negotiate_document_agreements",
+              "name": "Negotiate and document agreements/contracts",
+              "via": "handoff"
+            }
+          ],
+          "related_modules": ["CLM-REPOSITORY"]
+        },
+        {
+          "code": "CLM-REPOSITORY",
+          "name": "Contract Repository",
+          "description": "Executed-contract index. Masters legal_contracts (post-signature) and signature_records. Contributes terms to saas_subscriptions and software_licenses (the buyer-side records that consume contract terms). The system of record for the active, expired, renewed, and terminated lifecycle states.",
+          "personas": [
+            {
+              "code": "CONTRACT-OPS-MANAGER",
+              "name": "Contract Operations Manager",
+              "interaction_level": "primary"
+            },
+            {
+              "code": "CONTRACT-OPS-SPECIALIST",
+              "name": "Contract Operations Specialist",
+              "interaction_level": "primary"
+            },
+            {
+              "code": "LEGAL-COUNSEL",
+              "name": "Legal Counsel",
+              "interaction_level": "secondary"
+            },
+            {
+              "code": "PROCUREMENT-CONTRACT-LIAISON",
+              "name": "Procurement Contract Liaison",
+              "interaction_level": "secondary"
+            }
+          ],
+          "processes": [
+            {
+              "key": "develop_manage_sales_proposals",
+              "name": "Develop and manage sales proposals, bids, and quotes",
+              "via": "handoff"
+            },
+            {
+              "key": "evaluate_manage_financial",
+              "name": "Evaluate and manage financial performance",
+              "via": "handoff"
+            },
+            {
+              "key": "manage_contracts",
+              "name": "Manage contracts",
+              "via": "gate"
+            },
+            {
+              "key": "manage_customers_accounts",
+              "name": "Manage customers and accounts",
+              "via": "handoff"
+            },
+            {
+              "key": "manage_demand_products",
+              "name": "Manage demand for products",
+              "via": "handoff"
+            },
+            {
+              "key": "manage_operate_service_delivery",
+              "name": "Manage and Operate Service Delivery System",
+              "via": "handoff"
+            },
+            {
+              "key": "negotiate_document_agreements",
+              "name": "Negotiate and document agreements/contracts",
+              "via": "handoff"
+            },
+            {
+              "key": "provide_sourcing_governance",
+              "name": "Provide sourcing governance",
+              "via": "handoff"
+            },
+            {
+              "key": "service_products",
+              "name": "Service products",
+              "via": "handoff"
+            }
+          ],
+          "related_modules": ["CLM-NEGOTIATION", "CLM-OBLIGATION-MGMT", "CLM-RENEWAL", "HCM-ORG-POSITIONS", "LMS-COMPLIANCE-TRAINING", "REAL-ESTATE-AGENT", "TRAINING-RECORDS-STARTER"]
+        },
+        {
+          "code": "REAL-ESTATE-AGENT",
+          "name": "Real Estate Agent (solo / small firm bundle)",
+          "description": "Solo-agent and small-firm persona bundle. Single-install deployable for individual real estate agents covering lead capture and contact relationships (CRM-LEAD-MGT, CRM-ACCT-MGT), listing creation and MLS syndication, tour scheduling, transaction execution, disclosure handling (RE-BROK-AGENT-OPS), and contract reference (CLM-REPOSITORY). One module to install; larger brokerages deploy the underlying full modules and skip the starter.",
+          "personas": [],
+          "processes": [],
+          "related_modules": ["CLM-REPOSITORY"]
+        }
+      ],
+      "personas": [
+        {
+          "code": "CONTRACT-OPS-MANAGER",
+          "name": "Contract Operations Manager",
+          "interaction_level": "primary"
+        },
+        {
+          "code": "CONTRACT-OPS-SPECIALIST",
+          "name": "Contract Operations Specialist",
+          "interaction_level": "primary"
+        },
+        {
+          "code": "LEGAL-COUNSEL",
+          "name": "Legal Counsel",
+          "interaction_level": "primary"
+        },
+        {
+          "code": "PROCUREMENT-CONTRACT-LIAISON",
+          "name": "Procurement Contract Liaison",
+          "interaction_level": "secondary"
+        }
+      ],
+      "module_personas": [
+        {
+          "code": "CONTRACT-OPS-MANAGER",
+          "name": "Contract Operations Manager",
+          "interaction_level": "primary"
+        },
+        {
+          "code": "CONTRACT-OPS-SPECIALIST",
+          "name": "Contract Operations Specialist",
+          "interaction_level": "primary"
+        },
+        {
+          "code": "LEGAL-COUNSEL",
+          "name": "Legal Counsel",
+          "interaction_level": "primary"
+        },
+        {
+          "code": "PROCUREMENT-CONTRACT-LIAISON",
+          "name": "Procurement Contract Liaison",
+          "interaction_level": "secondary"
+        }
+      ],
+      "processes": [
+        {
+          "key": "develop_manage_sales_proposals",
+          "name": "Develop and manage sales proposals, bids, and quotes",
+          "via": "handoff"
+        },
+        {
+          "key": "evaluate_enterprise_regulatory",
+          "name": "Evaluate enterprise regulatory and compliance obligations",
+          "via": "gate"
+        },
+        {
+          "key": "evaluate_manage_financial",
+          "name": "Evaluate and manage financial performance",
+          "via": "handoff"
+        },
+        {
+          "key": "manage_contracts",
+          "name": "Manage contracts",
+          "via": "gate"
+        },
+        {
+          "key": "manage_customers_accounts",
+          "name": "Manage customers and accounts",
+          "via": "handoff"
+        },
+        {
+          "key": "manage_demand_products",
+          "name": "Manage demand for products",
+          "via": "handoff"
+        },
+        {
+          "key": "manage_legal_ethical_issues",
+          "name": "Manage legal and ethical issues",
+          "via": "handoff"
+        },
+        {
+          "key": "manage_operate_service_delivery",
+          "name": "Manage and Operate Service Delivery System",
+          "via": "handoff"
+        },
+        {
+          "key": "market_sell_products_services",
+          "name": "Market and Sell Products and Services",
+          "via": "handoff"
+        },
+        {
+          "key": "negotiate_document_agreements",
+          "name": "Negotiate and document agreements/contracts",
+          "via": "gate"
+        },
+        {
+          "key": "prepare_periodic_financial",
+          "name": "Prepare periodic financial forecasts",
+          "via": "handoff"
+        },
+        {
+          "key": "provide_legal_advice_counseling",
+          "name": "Provide legal advice/counseling",
+          "via": "gate"
+        },
+        {
+          "key": "provide_sourcing_governance",
+          "name": "Provide sourcing governance",
+          "via": "handoff"
+        },
+        {
+          "key": "resolve_customer_problems",
+          "name": "Resolve customer problems, requests, and inquiries",
+          "via": "handoff"
+        },
+        {
+          "key": "service_products",
+          "name": "Service products",
+          "via": "handoff"
+        }
+      ],
+      "module_processes": [
+        {
+          "key": "develop_manage_sales_proposals",
+          "name": "Develop and manage sales proposals, bids, and quotes",
+          "via": "handoff"
+        },
+        {
+          "key": "evaluate_enterprise_regulatory",
+          "name": "Evaluate enterprise regulatory and compliance obligations",
+          "via": "gate"
+        },
+        {
+          "key": "evaluate_manage_financial",
+          "name": "Evaluate and manage financial performance",
+          "via": "handoff"
+        },
+        {
+          "key": "manage_contracts",
+          "name": "Manage contracts",
+          "via": "gate"
+        },
+        {
+          "key": "manage_customers_accounts",
+          "name": "Manage customers and accounts",
+          "via": "handoff"
+        },
+        {
+          "key": "manage_demand_products",
+          "name": "Manage demand for products",
+          "via": "handoff"
+        },
+        {
+          "key": "manage_legal_ethical_issues",
+          "name": "Manage legal and ethical issues",
+          "via": "handoff"
+        },
+        {
+          "key": "manage_operate_service_delivery",
+          "name": "Manage and Operate Service Delivery System",
+          "via": "handoff"
+        },
+        {
+          "key": "negotiate_document_agreements",
+          "name": "Negotiate and document agreements/contracts",
+          "via": "gate"
+        },
+        {
+          "key": "prepare_periodic_financial",
+          "name": "Prepare periodic financial forecasts",
+          "via": "handoff"
+        },
+        {
+          "key": "provide_legal_advice_counseling",
+          "name": "Provide legal advice/counseling",
+          "via": "gate"
+        },
+        {
+          "key": "provide_sourcing_governance",
+          "name": "Provide sourcing governance",
+          "via": "handoff"
+        },
+        {
+          "key": "resolve_customer_problems",
+          "name": "Resolve customer problems, requests, and inquiries",
+          "via": "handoff"
+        },
+        {
+          "key": "service_products",
+          "name": "Service products",
+          "via": "handoff"
+        }
+      ],
+      "related_domains": ["HCM", "LMS"]
+    },
+    {
       "code": "HCM",
       "name": "Human Capital Management",
       "description": "Core HR system of record covering worker data, organisation and position management, self-service, and lifecycle workflows. The HRIS / system-of-record layer of the HR stack.",
@@ -1036,7 +1480,7 @@
               "via": "handoff"
             }
           ],
-          "related_modules": ["ATS-RECRUITMENT-PIPELINE", "HCM-CORE-WORKER", "LMS-COMPLIANCE-TRAINING", "LMS-COURSE-DELIVERY", "LMS-ILT-DELIVERY", "LMS-PATHS"]
+          "related_modules": ["ATS-RECRUITMENT-PIPELINE", "CLM-REPOSITORY", "HCM-CORE-WORKER", "LMS-COMPLIANCE-TRAINING", "LMS-COURSE-DELIVERY", "LMS-ILT-DELIVERY", "LMS-PATHS"]
         }
       ],
       "personas": [
@@ -1457,7 +1901,7 @@
           "via": "handoff"
         }
       ],
-      "related_domains": ["ATS", "HRSD", "LMS"]
+      "related_domains": ["ATS", "CLM", "HRSD", "LMS"]
     },
     {
       "code": "HRSD",
@@ -1894,7 +2338,7 @@
               "via": "gate"
             }
           ],
-          "related_modules": ["HCM-CORE-WORKER", "HCM-LIFECYCLE-WORKFLOWS", "HCM-ORG-POSITIONS", "HRSD-CASE-MGMT", "LMS-AUTOMATION", "LMS-COURSE-DELIVERY", "LMS-CREDENTIALS", "LMS-CT-GDPR", "LMS-ILT-DELIVERY", "TRAINING-RECORDS-STARTER"]
+          "related_modules": ["CLM-REPOSITORY", "HCM-CORE-WORKER", "HCM-LIFECYCLE-WORKFLOWS", "HCM-ORG-POSITIONS", "HRSD-CASE-MGMT", "LMS-AUTOMATION", "LMS-COURSE-DELIVERY", "LMS-CREDENTIALS", "LMS-CT-GDPR", "LMS-ILT-DELIVERY", "TRAINING-RECORDS-STARTER"]
         },
         {
           "code": "LMS-COURSE-DELIVERY",
@@ -2093,7 +2537,7 @@
             }
           ],
           "processes": [],
-          "related_modules": ["LMS-COMPLIANCE-TRAINING", "LMS-CREDENTIALS"]
+          "related_modules": ["CLM-REPOSITORY", "LMS-COMPLIANCE-TRAINING", "LMS-CREDENTIALS"]
         }
       ],
       "personas": [
@@ -2294,7 +2738,7 @@
           "via": "gate"
         }
       ],
-      "related_domains": ["HCM", "HRSD"]
+      "related_domains": ["CLM", "HCM", "HRSD"]
     }
   ]
 }

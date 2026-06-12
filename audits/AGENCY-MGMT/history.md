@@ -16,7 +16,7 @@
 
 | Neighbor | Out | In | DMDO | Cross-rels | Weight | Pass shape |
 |---|---|---|---|---|---|---|
-| ERP-FIN | 3 | 0 | 0 | 0 | 3 | Pairwise (full) |
+| FIN | 3 | 0 | 0 | 0 | 3 | Pairwise (full) |
 | CLM | 1 | 1 | 1 (consumer on `legal_contracts`) | 1 (legal_contracts seeds agency_jobs) | 4 | Pairwise (full) |
 | CRM | 1 | 1 | 1 (consumer on `crm_opportunities`) | 0 | 3 | Pairwise (full) |
 | PSA | 2 | 0 | 0 | 0 | 2 | Lightweight |
@@ -45,7 +45,7 @@ AGENCY-MGMT Semantius score (strict): **uncomputable** (M1 cascade).
 
 | ID | Band | Finding | Fix |
 |---|---|---|---|
-| B1-S1 | **M1 hard fail, catastrophic** | Zero `domain_modules` rows on AGENCY-MGMT (id 153). Per Rule #14 the domain MUST have ≥1 `module_kind='full'` row; with 11 capabilities and 8 masters, it MUST have ≥2 full modules. Every downstream band cascades from this. The 8 already-loaded masters cannot be associated with a realizing module; the detached system skill (id 26) cannot anchor; cross-domain handoffs cannot pin to a realizing module on the AGENCY-MGMT side. Phase A was completed without Phase M; this is the same gap pattern called out in references/skill-changelog.md for ERP-FIN / GRC / AUDIT / EPM / S2P. The fix surface is a Phase M load that introduces the module skeleton, populates `domain_module_data_objects` from the existing `domain_data_objects` (migrating master / consumer rows), and attaches the system skill (id 26) to one of the new modules. A natural module split anchored on the capability map: **AGENCY-MGMT-JOB-TRAFFIC** (jobs, time entries, estimates, profitability), **AGENCY-MGMT-MEDIA-BUY** (media plans, insertion orders), and **AGENCY-MGMT-CREATIVE-OPS** (creative briefs, creative deliverables, proofing). Surface the proposed split as B2-S1 for user approval before any Phase M load; the agent cannot pick the boundary unilaterally because the module count drives every downstream load. | Phase M loader after B2-S1 decision: insert 2 or 3 `domain_modules` rows (`module_kind='full'`); INSERT `domain_module_data_objects` rows mirroring the existing `domain_data_objects` rollup with `domain_module_id` pinned to the chosen module; PATCH `skills.id=26` to set `domain_module_id`; cascade-PATCH the 12 handoffs' `source_domain_module_id` / `target_domain_module_id`. |
+| B1-S1 | **M1 hard fail, catastrophic** | Zero `domain_modules` rows on AGENCY-MGMT (id 153). Per Rule #14 the domain MUST have ≥1 `module_kind='full'` row; with 11 capabilities and 8 masters, it MUST have ≥2 full modules. Every downstream band cascades from this. The 8 already-loaded masters cannot be associated with a realizing module; the detached system skill (id 26) cannot anchor; cross-domain handoffs cannot pin to a realizing module on the AGENCY-MGMT side. Phase A was completed without Phase M; this is the same gap pattern called out in references/skill-changelog.md for FIN / GRC / AUDIT / EPM / S2P. The fix surface is a Phase M load that introduces the module skeleton, populates `domain_module_data_objects` from the existing `domain_data_objects` (migrating master / consumer rows), and attaches the system skill (id 26) to one of the new modules. A natural module split anchored on the capability map: **AGENCY-MGMT-JOB-TRAFFIC** (jobs, time entries, estimates, profitability), **AGENCY-MGMT-MEDIA-BUY** (media plans, insertion orders), and **AGENCY-MGMT-CREATIVE-OPS** (creative briefs, creative deliverables, proofing). Surface the proposed split as B2-S1 for user approval before any Phase M load; the agent cannot pick the boundary unilaterally because the module count drives every downstream load. | Phase M loader after B2-S1 decision: insert 2 or 3 `domain_modules` rows (`module_kind='full'`); INSERT `domain_module_data_objects` rows mirroring the existing `domain_data_objects` rollup with `domain_module_id` pinned to the chosen module; PATCH `skills.id=26` to set `domain_module_id`; cascade-PATCH the 12 handoffs' `source_domain_module_id` / `target_domain_module_id`. |
 | B1-S2 | **B9 missing event_category** | 6 trigger_events carry empty `event_category` (Rule #13 enum must be one of `lifecycle / state_change / threshold / signal`): 525 `agency_time_entry.submitted`, 526 `agency_retainer.threshold_reached`, 527 `agency_retainer.depleted`, 528 `media_plan.approved`, 529 `media_plan.executed`, 530 `creative_brief.approved`. | PATCH: 525 → `state_change`; 526 → `threshold`; 527 → `threshold`; 528 → `state_change`; 529 → `state_change`; 530 → `state_change`. Independent of M1; can be applied immediately. |
 | B1-S3 | **F2 hard-fail, detached system skill** | `skills.id=26` (`agency-mgmt-system`, `skill_type='system'`) carries `domain_module_id IS NULL`. Per Rule #17 every `domain_modules` row carries exactly one system skill. Currently there are zero modules and one detached skill. | Cannot fix independently; the skill needs a module to attach to (B1-S1). On B2-S1 module choice, PATCH skill 26 `domain_module_id` to the most workflow-central new module (most likely the JOB-TRAFFIC module). If the split yields 3 modules, decide whether to split the system skill into 3 (one per module per Rule #17) or attach the existing one to a single module and create 2 more system skills. The 3-module split with 3 system skills is the clean shape; surfaced as B2-S2. |
 | B1-S4 | **F3 hard-fail, zero skill_tools** | The detached system skill (id 26) has zero `skill_tools` rows. Per Rule #17 every system skill ships with ≥1 tool. With no module surface, no Phase F load could have populated tools. | Cannot fix independently; gated on B1-S1 + B1-S3 resolution. On module creation, author the tools floor per module: `query_<entity>` + `mutate_<entity>` + `compute_<entity>` for each module's masters. Recommended floor counts: JOB-TRAFFIC roughly 8-12 tools (agency_jobs, agency_time_entries, agency_estimates each get query + mutate); MEDIA-BUY roughly 6-8 tools (media_plans, insertion_orders); CREATIVE-OPS roughly 6-8 tools (creative_briefs, creative_deliverables, plus the proofing side_effect tools `request_review`, `record_approval`). |
@@ -61,12 +61,12 @@ The analyst's structural-pass model of each handoff produces the following PCF a
 | handoff_id | source → target | trigger_event | payload | Proposed PCF row | PCF id | Confidence |
 |---|---|---|---|---|---|---|
 | 344 | AGENCY-MGMT → DAM | `deliverable.approved` | `creative_deliverables` | "Manage product marketing material" or child | 141 (L3) | confident L3 |
-| 345 | AGENCY-MGMT → ERP-FIN | `agency_invoice.issued` | `agency_jobs` | "Invoice customer" | 302 (L3) | confident L3 |
-| 346 | AGENCY-MGMT → ERP-FIN | `media_costs.posted` | `insertion_orders` | "Process accounts payable" or "Audit invoices and key data in AP system" child | 1433 (L4) | medium |
+| 345 | AGENCY-MGMT → FIN | `agency_invoice.issued` | `agency_jobs` | "Invoice customer" | 302 (L3) | confident L3 |
+| 346 | AGENCY-MGMT → FIN | `media_costs.posted` | `insertion_orders` | "Process accounts payable" or "Audit invoices and key data in AP system" child | 1433 (L4) | medium |
 | 343 | AGENCY-MGMT → CLM | `estimate.approved` | `legal_contracts` | (existing `agent_curated` row at PCF 148 L3 "Manage customers and accounts" looks reasonable; KEEP) | 148 | confident L3 |
 | 514 | AGENCY-MGMT → CRM | `agency_retainer.depleted` | `agency_retainers` | "Manage customer accounts" (within "Manage sales partners / accounts" cluster) | needs lookup | medium |
 | 515 | AGENCY-MGMT → PSA | `creative_brief.approved` | `creative_briefs` | "Develop project plans" | 1661 (L4) | confident L4 |
-| 516 | AGENCY-MGMT → ERP-FIN | `media_plan.executed` | `media_plans` | "Establish marketing budgets" or "Create marketing budget" | 134 (L3) or 647 (L4) | confident L3 |
+| 516 | AGENCY-MGMT → FIN | `media_plan.executed` | `media_plans` | "Establish marketing budgets" or "Create marketing budget" | 134 (L3) or 647 (L4) | confident L3 |
 | 513 | AGENCY-MGMT → PSA | `agency_time_entry.submitted` | `agency_time_entries` | "Report time" or "Collect and record employee time worked" | 312 (L3) or 1414 (L4) | confident L3 |
 | 342 | CLM → AGENCY-MGMT | `legal_contract.signed` | `agency_jobs` | (existing `agent_curated` row at PCF 32 L2 "Manage and Operate Service Delivery System"; KEEP, L2 acceptable, downstream L3 child preferred at review time) | 32 | medium |
 | 347 | S2P → AGENCY-MGMT | `vendor_invoice.received` | `insertion_orders` | "Audit invoices and key data in AP system" or parent "Process accounts payable" | 1433 (L4) | confident L4 |
@@ -92,7 +92,7 @@ Proposed `agent_curated` action summary: 8 INSERTs (344, 345, 346, 514, 515, 516
 
 Most pairwise neighbors are short because AGENCY-MGMT's substrate is M1-degenerate. Sections 1 + 2 collapse into the universal B1-S7 cascade. Sections 3-5 are below per neighbor.
 
-**ERP-FIN ↔ AGENCY-MGMT (weight 3, full).** Wired pairs: 3 outbound (345 `agency_invoice.issued` → `agency_jobs`; 346 `media_costs.posted` → `insertion_orders`; 516 `media_plan.executed` → `media_plans`). Section 2: all 3 have NULL `source_domain_module_id` (AGENCY-MGMT M1 cascade) and NULL `target_domain_module_id` (ERP-FIN's B10b: ERP-FIN has 0 DMDO data per the catalog-wide b2 baseline). Section 3: missing handoff candidate ERP-FIN → AGENCY-MGMT on `invoice.paid` for the agency to mark `agency_jobs` as `paid`, closing the cash cycle. Section 4: ERP-FIN should declare consumer DMDOs on `agency_jobs`, `insertion_orders`, `media_plans` once ERP-FIN's Phase B lands. Section 5: zero cross-relationship rows exist between AGENCY-MGMT masters and ERP-FIN entities; on Phase B, propose `agency_jobs feeds_revenue_recognition revenue_recognition_records` (ASC 606 anchor), `insertion_orders generate accounts_payable_items`.
+**FIN ↔ AGENCY-MGMT (weight 3, full).** Wired pairs: 3 outbound (345 `agency_invoice.issued` → `agency_jobs`; 346 `media_costs.posted` → `insertion_orders`; 516 `media_plan.executed` → `media_plans`). Section 2: all 3 have NULL `source_domain_module_id` (AGENCY-MGMT M1 cascade) and NULL `target_domain_module_id` (FIN's B10b: FIN has 0 DMDO data per the catalog-wide b2 baseline). Section 3: missing handoff candidate FIN → AGENCY-MGMT on `invoice.paid` for the agency to mark `agency_jobs` as `paid`, closing the cash cycle. Section 4: FIN should declare consumer DMDOs on `agency_jobs`, `insertion_orders`, `media_plans` once FIN's Phase B lands. Section 5: zero cross-relationship rows exist between AGENCY-MGMT masters and FIN entities; on Phase B, propose `agency_jobs feeds_revenue_recognition revenue_recognition_records` (ASC 606 anchor), `insertion_orders generate accounts_payable_items`.
 
 **CLM ↔ AGENCY-MGMT (weight 4, full).** Wired pairs: 1 outbound (343 `estimate.approved` → `legal_contracts`), 1 inbound (342 `legal_contract.signed` → `agency_jobs`). DMDO: AGENCY-MGMT consumes `legal_contracts` (already loaded). Section 2: both handoffs have NULL FK on AGENCY-MGMT side (M1 cascade). 343 has NULL `source_domain_module_id`; 342 has NULL `target_domain_module_id` and its CLM-side `source_domain_module_id=127` is populated. Section 3: clean. Section 4: clean. Section 5: cross-relationship `legal_contracts seeds agency_jobs` (id 513) exists, healthy.
 
@@ -193,7 +193,7 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 
 | Owing domain | Owed work |
 |---|---|
-| ERP-FIN | B10b: populate `target_domain_module_id` on outbound handoffs 345 / 346 / 516. Phase B (no DMDO data exists on ERP-FIN per the catalog-wide b2 baseline): declare consumer DMDOs on `agency_jobs` (478), `insertion_orders` (482), `media_plans` (481) in whichever ERP-FIN module subscribes (likely the billing / revenue-recognition module). |
+| FIN | B10b: populate `target_domain_module_id` on outbound handoffs 345 / 346 / 516. Phase B (no DMDO data exists on FIN per the catalog-wide b2 baseline): declare consumer DMDOs on `agency_jobs` (478), `insertion_orders` (482), `media_plans` (481) in whichever FIN module subscribes (likely the billing / revenue-recognition module). |
 | CRM | B10b: populate `target_domain_module_id` on outbound handoff 514 (already populated at 46). Confirm 46 is the intended target module. CRM-side cross-relationship: propose `crm_opportunities seeds agency_jobs` on CRM's next audit. |
 | HCM | B10b: populate `target_domain_module_id` on inbound handoff 348 is owed by AGENCY-MGMT (NULL is on AGENCY-MGMT side, this is M1 cascade), not HCM. HCM's source side (`source_domain_module_id=54`) is populated. No HCM-side owed work. |
 | CLM | B10b: populate `source_domain_module_id` on handoff 343 is owed by AGENCY-MGMT (M1 cascade). CLM's `target_domain_module_id=127` is populated. CLM previously surfaced this in its own audit (CLM B1-S6); CLM owes nothing further. |
@@ -240,7 +240,7 @@ Verified post-load: all 6 events carry a non-empty `event_category`.
 | handoff_id | process_id | PCF row | New hp.id |
 |---|---|---|---|
 | 344 (AGENCY-MGMT → DAM, `deliverable.approved`) | 141 | "Manage product marketing material" (L3) | 255 |
-| 345 (AGENCY-MGMT → ERP-FIN, `agency_invoice.issued`) | 302 | "Invoice customer" (L3) | 256 |
+| 345 (AGENCY-MGMT → FIN, `agency_invoice.issued`) | 302 | "Invoice customer" (L3) | 256 |
 | 347 (S2P → AGENCY-MGMT, `vendor_invoice.received`) | 1433 | "Audit invoices and key data in AP system" (L4) | 257 |
 | 515 (AGENCY-MGMT → PSA, `creative_brief.approved`) | 1661 | "Develop project plans" (L4) | 258 |
 
@@ -251,10 +251,10 @@ Verified post-load: 4 new rows, all `proposal_source='agent_curated'`, `record_s
 | handoff_id | Reason for deferral |
 |---|---|
 | 513 (AGENCY-MGMT → PSA, `agency_time_entry.submitted`) | Two PCF options listed: 312 (L3 "Report time") OR 1414 (L4 "Collect and record employee time worked"). User picks granularity. |
-| 516 (AGENCY-MGMT → ERP-FIN, `media_plan.executed`) | Two PCF options listed: 134 (L3 "Establish marketing budgets") OR 647 (L4 "Create marketing budget"). User picks. |
+| 516 (AGENCY-MGMT → FIN, `media_plan.executed`) | Two PCF options listed: 134 (L3 "Establish marketing budgets") OR 647 (L4 "Create marketing budget"). User picks. |
 | 514 (AGENCY-MGMT → CRM, `agency_retainer.depleted`) | Audit says "needs lookup"; no single confident PCF id. |
 | 341 (CRM → AGENCY-MGMT, `crm_opportunity.won`) | Audit confidence "medium" with alternative listed (669 vs parent); user picks. |
-| 346 (AGENCY-MGMT → ERP-FIN, `media_costs.posted`) | Two PCF options (1433 L4 child or parent "Process accounts payable"); audit confidence "medium". User picks. |
+| 346 (AGENCY-MGMT → FIN, `media_costs.posted`) | Two PCF options (1433 L4 child or parent "Process accounts payable"); audit confidence "medium". User picks. |
 | 348 (HCM → AGENCY-MGMT, `employee.terminated`) | Audit recommends REPLACE on the existing `discovery_override` row (process 41 "Manage employee onboarding…" looks wrong) but says "needs lookup"; replacement target not pinned. User decides. |
 
 ### Count
@@ -285,7 +285,7 @@ This is a re-validation of the prior structural state; vendor surface unchanged 
 
 | ID | Band | Finding | Fix |
 |---|---|---|---|
-| B1A-H1-APQC-REMAINDER | H1 APQC tagging | 5 of 12 handoffs still carry zero `handoff_processes` rows: 341 (CRM→AGENCY, `crm_opportunity.won` → agency_jobs), 346 (AGENCY→ERP-FIN, `media_costs.posted` → insertion_orders), 513 (AGENCY→PSA, `agency_time_entry.submitted` → agency_time_entries), 514 (AGENCY→CRM, `agency_retainer.depleted` → agency_retainers), 516 (AGENCY→ERP-FIN, `media_plan.executed` → media_plans). Prior continuation 2026-05-31 deferred these pending user PCF granularity picks; with PCF candidate lookups available the agent can propose single confident rows. | INSERT 5 `handoff_processes` rows after PCF lookup pass; `proposal_source='agent_curated'`, `record_status` omitted (defaults `new`). |
+| B1A-H1-APQC-REMAINDER | H1 APQC tagging | 5 of 12 handoffs still carry zero `handoff_processes` rows: 341 (CRM→AGENCY, `crm_opportunity.won` → agency_jobs), 346 (AGENCY→FIN, `media_costs.posted` → insertion_orders), 513 (AGENCY→PSA, `agency_time_entry.submitted` → agency_time_entries), 514 (AGENCY→CRM, `agency_retainer.depleted` → agency_retainers), 516 (AGENCY→FIN, `media_plan.executed` → media_plans). Prior continuation 2026-05-31 deferred these pending user PCF granularity picks; with PCF candidate lookups available the agent can propose single confident rows. | INSERT 5 `handoff_processes` rows after PCF lookup pass; `proposal_source='agent_curated'`, `record_status` omitted (defaults `new`). |
 | B1A-H1-REPLACE-348 | H1 APQC tagging | Handoff 348 (HCM→AGENCY, `employee.terminated` → agency_time_entries) carries `discovery_override` row at process 41 ("Manage employee onboarding, training, and development" L2). Prior audit flagged this as wrong: the handoff terminates time entries, not onboards. | After PCF lookup for "exit" / "separation" / "Manage employee information" cluster, propose REPLACE: DELETE the existing override row + INSERT a new `agent_curated` row pointing at the correct exit-processing PCF activity. |
 | B1A-AS1-EVENT-MODULE-FK | B9 trigger_events.domain_module_id | All 11 AGENCY-MGMT trigger_events carry `domain_module_id IS NULL`. This is M1 cascade; the events fire from masters that have no realizing module. The fix is gated on B1B-AS1-MODULES (Phase M load) but the PATCH itself is a single deterministic backfill once module IDs exist; flagging as agent-solvable downstream rather than blocked-only because the operation is mechanical. | After B1B-AS1-MODULES lands, PATCH all 11 events to set `domain_module_id` per the master→module mapping (jobs/time/estimates/retainers→JOB-TRAFFIC; media_plans/insertion_orders→MEDIA-BUY; creative_briefs/creative_deliverables→CREATIVE-OPS). |
 | B1A-AS2-REG-ASC606 | A4 regulation linkage | The `domains.business_logic` column on AGENCY-MGMT cites ASC 606 ("project-based revenue recognition under ASC 606"); regulation id 57 ("ASC 606 Revenue Recognition") exists in the catalog; no `domain_regulations` row links them. | INSERT one `domain_regulations` row: `{domain_id: 153, regulation_id: 57, applicability: 'mandatory'}` (or whichever applicability value the catalog enforces; verify at fix time). Independent of M1. |
@@ -468,14 +468,14 @@ rule:
 | 342 | inbound (CLM->AGENCY) | target_domain_module_id | 210 |
 | 343 | outbound (AGENCY->CLM) | source_domain_module_id | 210 |
 | 344 | outbound (AGENCY->DAM) | source_domain_module_id | 212 |
-| 345 | outbound (AGENCY->ERP-FIN) | source_domain_module_id | 210 |
-| 346 | outbound (AGENCY->ERP-FIN) | source_domain_module_id | 211 |
+| 345 | outbound (AGENCY->FIN) | source_domain_module_id | 210 |
+| 346 | outbound (AGENCY->FIN) | source_domain_module_id | 211 |
 | 347 | inbound (S2P->AGENCY) | target_domain_module_id | 211 |
 | 348 | inbound (HCM->AGENCY) | target_domain_module_id | 210 |
 | 513 | outbound (AGENCY->PSA) | source_domain_module_id | 210 |
 | 514 | outbound (AGENCY->CRM) | source_domain_module_id | 210 |
 | 515 | outbound (AGENCY->PSA) | source_domain_module_id | 212 |
-| 516 | outbound (AGENCY->ERP-FIN) | source_domain_module_id | 211 |
+| 516 | outbound (AGENCY->FIN) | source_domain_module_id | 211 |
 
 Prior value on every patched field: NULL. The opposite-side FKs that were already set
 (e.g. 343 target=127, 513 target=88, 514 target=46, 348 source=54) were left untouched.
@@ -506,10 +506,10 @@ PCF matches chosen after `/processes?...source_framework=eq.apqc_pcf_cross_indus
 | hp id | handoff | source -> target | trigger_event | payload | PCF process | id / ext_id / level |
 |---|---|---|---|---|---|---|
 | 937 | 341 | CRM -> AGENCY | crm_opportunity.won | agency_jobs | Manage leads/opportunities | 147 / 10182 / L3 |
-| 938 | 346 | AGENCY -> ERP-FIN | media_costs.posted | insertion_orders | Process accounts payable (AP) | 315 / 10756 / L3 |
+| 938 | 346 | AGENCY -> FIN | media_costs.posted | insertion_orders | Process accounts payable (AP) | 315 / 10756 / L3 |
 | 939 | 513 | AGENCY -> PSA | agency_time_entry.submitted | agency_time_entries | Report time | 312 / 10753 / L3 |
 | 940 | 514 | AGENCY -> CRM | agency_retainer.depleted | agency_retainers | Manage customers and accounts | 148 / 10183 / L3 |
-| 941 | 516 | AGENCY -> ERP-FIN | media_plan.executed | media_plans | Perform general accounting | 307 / 10748 / L3 |
+| 941 | 516 | AGENCY -> FIN | media_plan.executed | media_plans | Perform general accounting | 307 / 10748 / L3 |
 
 After this pass all 12 cross-domain handoffs on AGENCY-MGMT carry >=1 `handoff_processes`
 row (H1 coverage 12/12; 0 deferred). None are `record_status='approved'` (awaiting reviewer).

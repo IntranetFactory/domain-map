@@ -1,6 +1,74 @@
 {
   "personas": [
     {
+      "code": "CONTRACT-OPS-MANAGER",
+      "name": "Contract Operations Manager",
+      "description": "Accountable for the contract lifecycle end to end: owns the repository, signs off on approvals and executions, drives obligation tracking and renewals, and keeps authoring and negotiation moving across the team.",
+      "business_function_id": 74,
+      "business_function": "Contract Operations",
+      "record_status": "new",
+      "module_count": 5,
+      "domain_count": 1,
+      "modules": ["CLM-AUTHORING", "CLM-NEGOTIATION", "CLM-OBLIGATION-MGMT", "CLM-RENEWAL", "CLM-REPOSITORY"],
+      "domains": ["CLM"],
+      "processes": [
+        {
+          "key": "evaluate_enterprise_regulatory",
+          "name": "Evaluate enterprise regulatory and compliance obligations",
+          "raci": "accountable"
+        },
+        {
+          "key": "manage_contracts",
+          "name": "Manage contracts",
+          "raci": "accountable"
+        },
+        {
+          "key": "negotiate_document_agreements",
+          "name": "Negotiate and document agreements/contracts",
+          "raci": "accountable"
+        },
+        {
+          "key": "provide_legal_advice_counseling",
+          "name": "Provide legal advice/counseling",
+          "raci": "accountable"
+        }
+      ]
+    },
+    {
+      "code": "CONTRACT-OPS-SPECIALIST",
+      "name": "Contract Operations Specialist",
+      "description": "Runs the day-to-day contract workflow: assembles drafts from approved templates, shepherds signature envelopes, tracks obligations to closure, and processes renewals ahead of expiry.",
+      "business_function_id": 74,
+      "business_function": "Contract Operations",
+      "record_status": "new",
+      "module_count": 4,
+      "domain_count": 1,
+      "modules": ["CLM-AUTHORING", "CLM-OBLIGATION-MGMT", "CLM-RENEWAL", "CLM-REPOSITORY"],
+      "domains": ["CLM"],
+      "processes": [
+        {
+          "key": "evaluate_enterprise_regulatory",
+          "name": "Evaluate enterprise regulatory and compliance obligations",
+          "raci": "responsible"
+        },
+        {
+          "key": "manage_contracts",
+          "name": "Manage contracts",
+          "raci": "responsible"
+        },
+        {
+          "key": "negotiate_document_agreements",
+          "name": "Negotiate and document agreements/contracts",
+          "raci": "informed"
+        },
+        {
+          "key": "provide_legal_advice_counseling",
+          "name": "Provide legal advice/counseling",
+          "raci": "informed"
+        }
+      ]
+    },
+    {
       "code": "GRC-COMPLIANCE-TRAINING-MANAGER",
       "name": "Compliance Training Manager",
       "description": "Runs regulatory and policy training programs end to end: schedules compliance campaigns, tracks assignment completion, assembles training evidence, manages recertification, and produces regulator filings.",
@@ -423,6 +491,40 @@
       ]
     },
     {
+      "code": "LEGAL-COUNSEL",
+      "name": "Legal Counsel",
+      "description": "Reviews and approves contract language, clause and template content, and redlines counterparty terms during negotiation. The legal gate on what the organization is willing to sign.",
+      "business_function_id": 7,
+      "business_function": "Legal",
+      "record_status": "new",
+      "module_count": 3,
+      "domain_count": 1,
+      "modules": ["CLM-AUTHORING", "CLM-NEGOTIATION", "CLM-REPOSITORY"],
+      "domains": ["CLM"],
+      "processes": [
+        {
+          "key": "evaluate_enterprise_regulatory",
+          "name": "Evaluate enterprise regulatory and compliance obligations",
+          "raci": "informed"
+        },
+        {
+          "key": "manage_contracts",
+          "name": "Manage contracts",
+          "raci": "consulted"
+        },
+        {
+          "key": "negotiate_document_agreements",
+          "name": "Negotiate and document agreements/contracts",
+          "raci": "responsible"
+        },
+        {
+          "key": "provide_legal_advice_counseling",
+          "name": "Provide legal advice/counseling",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
       "code": "PEOPLE-MANAGER",
       "name": "People Manager",
       "description": "Cross-functional people leader who assigns and nudges direct reports through required and developmental learning, monitors completion and certification status, and follows up on overdue training.",
@@ -482,6 +584,25 @@
         {
           "key": "train_employees_appropriate",
           "name": "Train employees on appropriate regulatory requirements",
+          "raci": "consulted"
+        }
+      ]
+    },
+    {
+      "code": "PROCUREMENT-CONTRACT-LIAISON",
+      "name": "Procurement Contract Liaison",
+      "description": "Bridges sourcing and contracting: turns awarded sourcing outcomes into draft agreements, consults on supplier terms during negotiation, and reads the repository for active supplier commitments.",
+      "business_function_id": 19,
+      "business_function": "Procurement",
+      "record_status": "new",
+      "module_count": 3,
+      "domain_count": 1,
+      "modules": ["CLM-AUTHORING", "CLM-NEGOTIATION", "CLM-REPOSITORY"],
+      "domains": ["CLM"],
+      "processes": [
+        {
+          "key": "negotiate_document_agreements",
+          "name": "Negotiate and document agreements/contracts",
           "raci": "consulted"
         }
       ]

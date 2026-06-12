@@ -1,5 +1,5 @@
 schema_version: 2
-domain: ERP-FIN
+domain: FIN
 status: feedback_needed
 next_action_by: agent
 last_audit: "2026-06-06"
@@ -29,7 +29,7 @@ b1a:
     summary: "C1 sparse: only Accounting (owner) loaded; missing Finance / FP&A / Tax / Treasury business_function_domains rows."
     finding: >
       business_function_domains for domain 65 has 1 row (Accounting, owner). Per the 2026-05-30 audit,
-      ERP-FIN warrants additional rows: Finance (contributor for treasury / banking / fixed-assets),
+      FIN warrants additional rows: Finance (contributor for treasury / banking / fixed-assets),
       FP&A (consumer for EPM bridge), Tax (consumer for legal-entity / multi-jurisdiction), Treasury
       (contributor for bank_accounts / cash_transactions). The 2026-05-31 Continuation deferred per the
       orchestrator's no-new-business_function_domains-contributors/consumers rule.
@@ -41,7 +41,7 @@ b1a:
       - {type: user_decision, ref: B1A-S3, reason: "business_function name targets to resolve"}
 
   - id: B1A-S4
-    summary: "B11 fail: 0 data_object_aliases on any of the 11 ERP-FIN masters."
+    summary: "B11 fail: 0 data_object_aliases on any of the 11 FIN masters."
     finding: >
       0 rows in data_object_aliases for data_object_id in (109, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203).
       2026-05-30 audit proposed ~25 aliases (Chart of Accounts, G/L Account, Journal Voucher, JE, Fiscal Period,
@@ -68,20 +68,20 @@ b1a:
       - {type: user_decision, ref: B1A-S4, reason: "alias_type and solution_id arbitration for vendor-specific terms (Rule #18)"}
 
   - id: B1A-HANDOFF-MODULE-FK-REMAINDER
-    summary: "B10b no-candidate: 89 inbound handoffs carry NULL target_domain_module_id because ERP-FIN models no DMDO row for their payload."
+    summary: "B10b no-candidate: 89 inbound handoffs carry NULL target_domain_module_id because FIN models no DMDO row for their payload."
     finding: >
       The 2026-06-06 b1a pass set source_domain_module_id on all 16 outbound handoffs and
-      target_domain_module_id on the 8 inbound handoffs whose payload IS modeled by an ERP-FIN module
+      target_domain_module_id on the 8 inbound handoffs whose payload IS modeled by an FIN module
       (145 payroll_journal_entries -> 245, 210 expense_reports -> 245, 109 revenue_recognition_records -> 248).
-      The other 89 inbound handoffs name payloads no ERP-FIN module declares any role on (crm_opportunities,
+      The other 89 inbound handoffs name payloads no FIN module declares any role on (crm_opportunities,
       claim_payments, customer_invoices, msp_invoices, time_entries, clinical_encounters, meter_reads, etc.),
-      so the deterministic B10b rule yields no candidate ERP-FIN module.
+      so the deterministic B10b rule yields no candidate FIN module.
     action: >
       Per B10b "no-candidate" sub-case 2: for each of the 89, decide whether to load a consumer
-      domain_module_data_objects row on the receiving ERP-FIN module (preferred - captures the dependency,
+      domain_module_data_objects row on the receiving FIN module (preferred - captures the dependency,
       then re-run the B10b backfill to set target_domain_module_id) OR accept the handoff as a domain-level
       signal with no module owner. Most posting-flavored inbound (sub-ledger.posted) belong as consumer rows
-      on ERP-FIN-GL-CLOSE (245); revenue/billing-flavored on ERP-FIN-REVENUE-RECOGNITION (248).
+      on FIN-GL-CLOSE (245); revenue/billing-flavored on FIN-REVENUE-RECOGNITION (248).
     blocked_by:
       - {type: user_decision, ref: B1A-HANDOFF-MODULE-FK-REMAINDER, reason: "per-handoff consumer-DMDO vs domain-level-signal decision; master-data judgment beyond deterministic B10b"}
 
@@ -89,7 +89,7 @@ b1b:
   - id: B1B-PERSONA-RACI
     summary: "Phase P (personas, role_modules, process_raci, lifecycle.process_id) now applies: multi-module domain built."
     finding: >
-      ERP-FIN is now a 4-module domain. Per the 2026-06-02 phase-P triage, a multi-module result triggers
+      FIN is now a 4-module domain. Per the 2026-06-02 phase-P triage, a multi-module result triggers
       Phase P after the module/skill/master work. No personas, role_modules, or process_raci rows exist for
       the 4 new modules yet. The system-skill prerequisite (B1A-SYSTEM-SKILLS) is now satisfied (skills 298-301).
     blocked_by:
@@ -99,15 +99,15 @@ b2:
   - id: B2-MODULE-SPLIT-CONFIRM
     summary: "4-module split shipped (B2-S4 option b); confirm vs the 6-module default."
     question: >
-      The modularization implemented option (b): 4 modules (ERP-FIN-GL-CLOSE, ERP-FIN-FIXED-ASSETS,
-      ERP-FIN-CASH-BANKING, ERP-FIN-REVENUE-RECOGNITION), dropping the standalone AR-BILLING and AP-DISBURSE
-      modules from the 6-module default because neither has any ERP-FIN-mastered data_object (customer-invoice
+      The modularization implemented option (b): 4 modules (FIN-GL-CLOSE, FIN-FIXED-ASSETS,
+      FIN-CASH-BANKING, FIN-REVENUE-RECOGNITION), dropping the standalone AR-BILLING and AP-DISBURSE
+      modules from the 6-module default because neither has any FIN-mastered data_object (customer-invoice
       processing is mastered by CRM/OMS/SUB-MGMT, supplier-invoice by AP-AUTO). The AR (60) and AP (61)
-      capabilities were anchored to ERP-FIN-CASH-BANKING instead. Keep at 4 modules or add the two
+      capabilities were anchored to FIN-CASH-BANKING instead. Keep at 4 modules or add the two
       borrowed-master modules?
     options:
       - "keep 4 modules (agent recommends; no orphan capability, no empty module, no borrowed master promoted)"
-      - "add ERP-FIN-AR-BILLING + ERP-FIN-AP-DISBURSE as borrowed-master/consumer modules and move caps 60/61 there"
+      - "add FIN-AR-BILLING + FIN-AP-DISBURSE as borrowed-master/consumer modules and move caps 60/61 there"
     why: "Reversible module-design decision; affects downstream skill/persona/handoff-FK fan-out."
 
   - id: B2-S1
@@ -154,7 +154,7 @@ b2:
   - id: B2-S7
     summary: "B1A-S7 pass (b): approve reviewed handoff_processes tags."
     question: >
-      The 2026-06-06 b1a pass left 110 of 113 ERP-FIN cross-domain handoffs tagged with handoff_processes
+      The 2026-06-06 b1a pass left 110 of 113 FIN cross-domain handoffs tagged with handoff_processes
       rows (97 agent_curated, 11 discovery_substring, 2 discovery_override), all at record_status='new'.
       Which should flip to approved?
     options:
@@ -168,18 +168,18 @@ b3:
     rationale: >
       Flagship ERPs (S/4HANA, Oracle Fusion, NetSuite, Workday, D365 Finance) model the chart-of-accounts as
       a multi-segment structure (Company-Account-Department-Project-IntercompanyPartner) where each segment is
-      a first-class master. ERP-FIN currently has monolithic general_ledger_accounts; the segment layer is missing.
+      a first-class master. FIN currently has monolithic general_ledger_accounts; the segment layer is missing.
     vendor_evidence: ["SAP S/4HANA", "Oracle Fusion Cloud ERP", "Oracle NetSuite", "Workday Financial Management", "Microsoft Dynamics 365 Finance"]
-    proposed_module: "ERP-FIN-GL-CLOSE (master) or separate ERP-FIN-COA-SEGMENTS"
+    proposed_module: "FIN-GL-CLOSE (master) or separate FIN-COA-SEGMENTS"
 
   - id: B3-JOURNAL-ENTRY-LINES
     candidate: journal_entry_lines
     rationale: >
-      Flagship ERPs model journal-entry-headers and journal-entry-lines as separate entities. ERP-FIN
+      Flagship ERPs model journal-entry-headers and journal-entry-lines as separate entities. FIN
       journal_entries is single-row; line resolution is valuable for IFRS 16 / ASC 842 lease accounting and
       intercompany line matching.
     vendor_evidence: ["SAP S/4HANA", "Oracle Fusion Cloud ERP", "Oracle NetSuite", "Workday Financial Management"]
-    proposed_module: "ERP-FIN-GL-CLOSE (master, child of journal_entries id 194)"
+    proposed_module: "FIN-GL-CLOSE (master, child of journal_entries id 194)"
 
   - id: B3-CURRENCIES
     candidate: currencies / exchange_rates
@@ -187,23 +187,23 @@ b3:
       Multi-currency consolidation depends on these masters. Workday Currency Conversion Rate, SAP Exchange
       Rate Type. Currencies plausibly cross-domain (catalog-wide master layer).
     vendor_evidence: ["SAP S/4HANA", "Workday Financial Management", "Oracle Fusion Cloud ERP"]
-    proposed_module: "catalog-wide master module, or ERP-FIN-GL-CLOSE / ERP-FIN-CASH-BANKING (master role)"
+    proposed_module: "catalog-wide master module, or FIN-GL-CLOSE / FIN-CASH-BANKING (master role)"
 
   - id: B3-ALLOCATIONS
     candidate: allocations / allocation_rules
     rationale: >
       SAP Cost Allocation Cycle, Oracle Allocation Rules, NetSuite Allocation Schedule. Allocate corporate
-      cost across cost centers / departments / projects. Absent from ERP-FIN.
+      cost across cost centers / departments / projects. Absent from FIN.
     vendor_evidence: ["SAP S/4HANA", "Oracle Fusion Cloud ERP", "Oracle NetSuite"]
-    proposed_module: "ERP-FIN-GL-CLOSE (master) or separate ERP-FIN-COST-ALLOCATION"
+    proposed_module: "FIN-GL-CLOSE (master) or separate FIN-COST-ALLOCATION"
 
   - id: B3-REVALUATION-RUNS
     candidate: revaluation_runs
     rationale: >
-      FX revaluation runs are first-class in S/4HANA and Oracle Fusion. ERP-FIN has cash_transactions but no
+      FX revaluation runs are first-class in S/4HANA and Oracle Fusion. FIN has cash_transactions but no
       FX-revaluation orchestration.
     vendor_evidence: ["SAP S/4HANA", "Oracle Fusion Cloud ERP"]
-    proposed_module: "ERP-FIN-CASH-BANKING (master)"
+    proposed_module: "FIN-CASH-BANKING (master)"
 
   - id: B3-CONSOLIDATION-UNITS
     candidate: consolidation_units / elimination_entries
@@ -211,7 +211,7 @@ b3:
       Multi-entity consolidation is first-class in S/4HANA, Oracle Fusion, OneStream. intercompany_transactions
       covers part but the consolidation-orchestration layer is missing.
     vendor_evidence: ["SAP S/4HANA", "Oracle Fusion Cloud ERP", "OneStream Platform"]
-    proposed_module: "ERP-FIN-GL-CLOSE (master, consolidation side)"
+    proposed_module: "FIN-GL-CLOSE (master, consolidation side)"
 
   - id: B3-REVENUE-CONTRACTS
     candidate: revenue_contracts / performance_obligations
@@ -219,41 +219,41 @@ b3:
       ASC 606 / IFRS 15 require revenue contracts and performance obligations as first-class entities.
       revenue_recognition_records is currently flat-shaped without contract / PO decomposition. Note that
       revenue_recognition_records (109) is mastered catalog-wide by SUB-MGMT-SUBSCRIPTIONS; child entities
-      may belong there or in ERP-FIN-REVENUE-RECOGNITION as embedded.
+      may belong there or in FIN-REVENUE-RECOGNITION as embedded.
     vendor_evidence: ["SAP S/4HANA", "Oracle Fusion Cloud ERP", "Workday Financial Management"]
-    proposed_module: "ERP-FIN-REVENUE-RECOGNITION (embedded) or SUB-MGMT-SUBSCRIPTIONS (master)"
+    proposed_module: "FIN-REVENUE-RECOGNITION (embedded) or SUB-MGMT-SUBSCRIPTIONS (master)"
 
   - id: B3-TAX-CODES
     candidate: tax_codes / tax_jurisdictions
     rationale: >
-      SAP Tax Code, Oracle Tax Code / Jurisdiction, D365 Finance Tax Group. Absent from ERP-FIN. May overlap
+      SAP Tax Code, Oracle Tax Code / Jurisdiction, D365 Finance Tax Group. Absent from FIN. May overlap
       with a future TAX-MGMT domain promotion.
     vendor_evidence: ["SAP S/4HANA", "Oracle Fusion Cloud ERP", "Microsoft Dynamics 365 Finance"]
-    proposed_module: "ERP-FIN-GL-CLOSE (master, with embedded_master if TAX-MGMT emerges later)"
+    proposed_module: "FIN-GL-CLOSE (master, with embedded_master if TAX-MGMT emerges later)"
 
   - id: B3-MISSING-MASTER-AR-AP
-    candidate: customer_invoices / supplier_invoices / payments (ERP-FIN angle)
+    candidate: customer_invoices / supplier_invoices / payments (FIN angle)
     rationale: >
-      ERP-FIN exposes AR (60) and AP (61) capabilities but masters no receivable/payable entity: customer
-      invoicing is mastered by CRM/OMS/SUB-MGMT and supplier-invoice processing by AP-AUTO. If ERP-FIN should
+      FIN exposes AR (60) and AP (61) capabilities but masters no receivable/payable entity: customer
+      invoicing is mastered by CRM/OMS/SUB-MGMT and supplier-invoice processing by AP-AUTO. If FIN should
       hold its own AR/AP ledger sub-ledger detail (open-item management, dunning, payment runs) rather than only
       consuming downstream masters, candidate masters customer_invoices / supplier_invoices / payments would
-      anchor dedicated ERP-FIN-AR-BILLING / ERP-FIN-AP-DISBURSE modules. Flagged, not filled (scope).
+      anchor dedicated FIN-AR-BILLING / FIN-AP-DISBURSE modules. Flagged, not filled (scope).
     vendor_evidence: ["SAP S/4HANA", "Oracle Fusion Cloud ERP", "Oracle NetSuite", "Microsoft Dynamics 365 Finance"]
-    proposed_module: "ERP-FIN-AR-BILLING / ERP-FIN-AP-DISBURSE (new, gated on B2-MODULE-SPLIT-CONFIRM)"
+    proposed_module: "FIN-AR-BILLING / FIN-AP-DISBURSE (new, gated on B2-MODULE-SPLIT-CONFIRM)"
 
   - id: B3-CSRD
     candidate: "Corporate Sustainability Reporting Directive (regulation)"
     rationale: >
       EU mandatory disclosure for large companies, 2026 / 2027 phase-in. Currently only the ESG domain holds
-      CSRD; ERP-FIN should also surface it as it shapes financial-impact disclosures.
+      CSRD; FIN should also surface it as it shapes financial-impact disclosures.
     vendor_evidence: []
     proposed_module: "(regulations row; n/a module)"
 
   - id: B3-PILLAR-TWO
     candidate: "OECD Pillar Two / Global Minimum Tax (regulation)"
     rationale: >
-      OECD 15% minimum effective tax rate for multinationals, 2024+. Touches ERP-FIN multi-entity
+      OECD 15% minimum effective tax rate for multinationals, 2024+. Touches FIN multi-entity
       consolidation and tax reporting.
     vendor_evidence: []
     proposed_module: "(regulations row; n/a module)"

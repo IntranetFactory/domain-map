@@ -93,7 +93,7 @@ q8: For the GRC pairwise reconciliation (GRC is the heaviest neighbor), how shou
 
 - a) Defer it until the modules exist, since most legs are blocked on module attribution.
 - b) Run a lightweight GRC pairwise now to surface candidate missing handoffs from the GRC side.
-- c) Run CSM and ERP-FIN pairwise too, even though they are lighter-weight neighbors.
+- c) Run CSM and FIN pairwise too, even though they are lighter-weight neighbors.
 
 Recommended: a. Most reconciliation legs cannot be wired until the module split lands (the source-side module attribution on the three BANK-OPS to GRC handoffs is null until BANK-OPS has modules), so deferring avoids rework. This is a process-sequencing call, not a market-shape one.
 

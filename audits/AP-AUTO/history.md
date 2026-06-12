@@ -15,7 +15,7 @@
 
 | Neighbor | Out | In | DMDO touching AP-AUTO | Cross-rels | Weight | Pass shape |
 |---|---|---|---|---|---|---|
-| ERP-FIN | 4 (125, 126, 191, 192, 542) | 2 (537, 597) | AP-AUTO consumes `bank_accounts` (inbound), publishes `payment_runs.executed` to ERP-FIN | 0 | 7 | Pairwise (full, gated on M1) |
+| FIN | 4 (125, 126, 191, 192, 542) | 2 (537, 597) | AP-AUTO consumes `bank_accounts` (inbound), publishes `payment_runs.executed` to FIN | 0 | 7 | Pairwise (full, gated on M1) |
 | S2P | 1 (545) | 3 (581, 583, 584) | AP-AUTO consumes `purchase_orders`, `goods_receipts`; AP-AUTO contributes to `supplier_invoices` (S2P-mastered) | 0 | 5 | Pairwise (full, gated on M1) |
 | SUP-LIFE | 1 (543) | 3 (128, 547, 596) | AP-AUTO consumes `suppliers` (SUP-LIFE-mastered), reacts to `supplier_qualifications` | 1 (`supplier_qualifications unblocks payment_runs`) | 5 | Pairwise (full, gated on M1) |
 | SPEND-MGMT | 1 (598) | 2 (168, 556) | none beyond the handoff payloads | 0 | 3 | Pairwise (full, gated on M1) |
@@ -64,7 +64,7 @@ The four-leg pairwise reconciliation is gated on B1-S1 producing modules. Collap
 
 | ID | Neighbor | Finding | Fix shape |
 |---|---|---|---|
-| B1-B1 | ERP-FIN | Outbound handoffs 125 (`payment_run.executed`), 126 (`supplier_invoice.matched`), 542 (`invoice_match.three_way_passed`), 191 (`supplier_invoice.duplicate_detected`), 192 (`payment.exception`) all fire to ERP-FIN with no `data_object_relationships` row mirroring them on the AP-AUTO master side. `payment_run.executed` should land as `payment_runs posts_journal_to journal_entries` (or similar). | Author 3-5 outbound cross-domain edges per B8 once modules exist. |
+| B1-B1 | FIN | Outbound handoffs 125 (`payment_run.executed`), 126 (`supplier_invoice.matched`), 542 (`invoice_match.three_way_passed`), 191 (`supplier_invoice.duplicate_detected`), 192 (`payment.exception`) all fire to FIN with no `data_object_relationships` row mirroring them on the AP-AUTO master side. `payment_run.executed` should land as `payment_runs posts_journal_to journal_entries` (or similar). | Author 3-5 outbound cross-domain edges per B8 once modules exist. |
 | B1-B2 | S2P | Outbound handoff 545 (`invoice_match.exception_raised` → S2P) lacks a mirror cross-rel `invoice_matches escalates_to purchase_orders` or similar. Inbound rels `purchase_orders→invoice_matches` and `goods_receipts→invoice_matches` are also missing. | Author 3 cross-domain edges (1 outbound + 2 inbound mirror, the inbound is on S2P's B8 not AP-AUTO's). Only the outbound is in scope for AP-AUTO. |
 | B1-B3 | SUP-LIFE | Outbound handoff 543 (`invoice_match.exception_raised` → SUP-LIFE) lacks the mirror cross-rel `invoice_matches escalates_to suppliers` (or similar verb). | Author 1 outbound cross-domain edge per B8. |
 | B1-B4 | SPEND-MGMT | Outbound handoff 598 (`invoice_match.three_way_passed` → SPEND-MGMT) lacks a mirror cross-rel. | Author 1 outbound cross-domain edge per B8. |
@@ -75,12 +75,12 @@ AP-AUTO has **30 cross-domain handoffs** (10 outbound + 20 inbound). **Only 9 ca
 
 | B1 ID | handoff_id | source → target | trigger_event | payload | Proposed PCF (`process_name` / `external_id` / L) | Confidence |
 |---|---|---|---|---|---|---|
-| B1-H1-01 | 125 | AP-AUTO → ERP-FIN | `payment_run.executed` | `payment_runs` | Process and distribute payments / `10862` / L4 (id 1422) | confident L4 |
-| B1-H1-02 | 126 | AP-AUTO → ERP-FIN | `supplier_invoice.matched` | `invoice_matches` | Audit invoices and key data in AP system / `10871` / L4 (id 1433) | confident L4 |
-| B1-H1-03 | 191 | AP-AUTO → ERP-FIN | `supplier_invoice.duplicate_detected` | `supplier_invoices` | Research/Resolve payable exceptions / `10875` / L4 (id 1437) | confident L4 |
-| B1-H1-04 | 192 | AP-AUTO → ERP-FIN | `payment.exception` | `payment_runs` | Process and distribute payments / `10862` / L4 (id 1422) | confident L4 (existing discovery_override; keep PCF, flip source to agent_curated) |
+| B1-H1-01 | 125 | AP-AUTO → FIN | `payment_run.executed` | `payment_runs` | Process and distribute payments / `10862` / L4 (id 1422) | confident L4 |
+| B1-H1-02 | 126 | AP-AUTO → FIN | `supplier_invoice.matched` | `invoice_matches` | Audit invoices and key data in AP system / `10871` / L4 (id 1433) | confident L4 |
+| B1-H1-03 | 191 | AP-AUTO → FIN | `supplier_invoice.duplicate_detected` | `supplier_invoices` | Research/Resolve payable exceptions / `10875` / L4 (id 1437) | confident L4 |
+| B1-H1-04 | 192 | AP-AUTO → FIN | `payment.exception` | `payment_runs` | Process and distribute payments / `10862` / L4 (id 1422) | confident L4 (existing discovery_override; keep PCF, flip source to agent_curated) |
 | B1-H1-05 | 193 | AP-AUTO → CSM | `payment.exception` | `payment_runs` | Process and distribute payments / `10862` / L4 (id 1422) | confident L4 (existing discovery_override; keep) |
-| B1-H1-06 | 542 | AP-AUTO → ERP-FIN | `invoice_match.three_way_passed` | `invoice_matches` | Process accounts payable (AP) / `10756` / L3 (id 315) | confident L3 (the three-way-pass and the AP-side liability post are both inside the same L3 AP process; L4 alternatives like "Audit invoices and key data" 10871 do not capture the release-for-payment step) |
+| B1-H1-06 | 542 | AP-AUTO → FIN | `invoice_match.three_way_passed` | `invoice_matches` | Process accounts payable (AP) / `10756` / L3 (id 315) | confident L3 (the three-way-pass and the AP-side liability post are both inside the same L3 AP process; L4 alternatives like "Audit invoices and key data" 10871 do not capture the release-for-payment step) |
 | B1-H1-07 | 543 | AP-AUTO → SUP-LIFE | `invoice_match.exception_raised` | `invoice_matches` | Research/Resolve payable exceptions / `10875` / L4 (id 1437) | confident L4 |
 | B1-H1-08 | 544 | AP-AUTO → AUDIT | `invoice_match.manual_override` | `invoice_matches` | Audit invoices and key data in AP system / `10871` / L4 (id 1433) | confident L4 |
 | B1-H1-09 | 545 | AP-AUTO → S2P | `invoice_match.exception_raised` | `invoice_matches` | Reconcile purchase orders / `10297` / L4 (id 813) | confident L4 (the S2P-side reaction to a match exception is PO reconciliation, not AP-side exception resolution) |
@@ -92,7 +92,7 @@ AP-AUTO has **30 cross-domain handoffs** (10 outbound + 20 inbound). **Only 9 ca
 | B1-H1-15 | 298 | RE-PROP-MGMT → AP-AUTO | `rent_payment.received` | `rent_payments` | Process accounts payable (AP) / `10756` / L3 (id 315) | medium L3 (rent payment received is AR on the property side; the AP-side reaction tracks the disbursement, AP L3 fits) |
 | B1-H1-16 | 316 | FLEET-MAINT → AP-AUTO | `vehicle_work_order.completed` | `vehicle_work_orders` | Process accounts payable (AP) / `10756` / L3 (id 315) | confident L3 (vendor work-order completion triggers the supplier invoice that AP processes) |
 | B1-H1-17 | 340 | ACCT-PRACT-MGMT → AP-AUTO | `tax_return.filed` | `supplier_invoices` | Process payables taxes / `10874` / L4 (id 1436) | confident L4 (existing discovery_substring points at "Prepare tax returns" 10931 which is a different L4 in tax management; the AP-side reaction to a filed tax return is AP-payables-taxes processing, so replace the existing tag) |
-| B1-H1-18 | 537 | ERP-FIN → AP-AUTO | `bank_account.added` | `bank_accounts` | Manage in-house bank accounts / `10760` / L3 (id 320) | confident L3 (existing discovery_substring; keep) |
+| B1-H1-18 | 537 | FIN → AP-AUTO | `bank_account.added` | `bank_accounts` | Manage in-house bank accounts / `10760` / L3 (id 320) | confident L3 (existing discovery_substring; keep) |
 | B1-H1-19 | 547 | SUP-LIFE → AP-AUTO | `supplier_qualification.approved` | `supplier_qualifications` | Manage suppliers / `10280` / L3 (id 167) | confident L3 (qualification approval unblocks AP payment routing) |
 | B1-H1-20 | 553 | EXPENSE → AP-AUTO | `expense_line.approved` | `expense_lines` | Process reimbursements and advances / `10883` / L4 (id 1445) | confident L4 |
 | B1-H1-21 | 556 | SPEND-MGMT → AP-AUTO | `vendor_payment_authorization.approved` | `vendor_payment_authorizations` | Authorize payment / `20104` / L4 (id 945) | confident L4 |
@@ -104,7 +104,7 @@ Additional inbound handoffs proposed in a follow-up tag pass (extending the coun
 - handoff 584 (S2P → AP-AUTO, `goods_receipt.posted`) → propose `Process accounts payable (AP) / 10756 / L3 (id 315)`; goods receipt posting triggers the three-way-match readiness check on the AP side.
 - handoff 588 (VMS → AP-AUTO, `contingent_invoice.received`) → propose `Process accounts payable (AP) / 10756 / L3 (id 315)`; contingent-workforce invoices land in the same AP pipeline.
 - handoff 596 (SUP-LIFE → AP-AUTO, `supplier_qualification.expired`) → propose `Manage suppliers / 10280 / L3 (id 167)`; expiration blocks payment, a supplier-management event with AP downstream.
-- handoff 597 (ERP-FIN → AP-AUTO, `bank_account.statement_received`) → propose `Manage in-house bank accounts / 10760 / L3 (id 320)`; existing discovery_substring; keep.
+- handoff 597 (FIN → AP-AUTO, `bank_account.statement_received`) → propose `Manage in-house bank accounts / 10760 / L3 (id 320)`; existing discovery_substring; keep.
 - handoff 733 (IDP → AP-AUTO, `extracted_record.completed`) → propose `Process accounts payable (AP) / 10756 / L3 (id 315)`; IDP feed into the AP capture pipeline.
 - handoff 734 (IDP → AP-AUTO, `extracted_record.requires_review`) → propose `Research/Resolve payable exceptions / 10875 / L4 (id 1437)`; review-needed records are exceptions at AP.
 - handoff 216 (CLM → AP-AUTO, `legal_contract.amended`) → already `agent_curated` at `Process accounts receivable (AR) / 10744 / L3 (id 303)` which is the wrong fit; legal contract amendments propagate payment terms into AP, propose replacement `Process accounts payable (AP) / 10756 / L3 (id 315)`.
@@ -169,7 +169,7 @@ Other plausible candidates surfaced by the vendor matrix but not surfaced here p
 
 These items the AP-AUTO audit identified but another domain owns the fix; surfaced here so the user can schedule audits on those domains. Not in AP-AUTO's Bucket 1 by Rule #11 of the audit protocol.
 
-- **ERP-FIN B8 owes (inbound cross-rels mirroring AP-AUTO outbound):** `journal_entries draws_from payment_runs` (handoff 125 mirror), `journal_entries posts_liability_from invoice_matches` (handoffs 126, 542 mirror), `exceptions_log captures_from payment_runs` (handoff 192 mirror). Surfaces when ERP-FIN's B8 is next audited.
+- **FIN B8 owes (inbound cross-rels mirroring AP-AUTO outbound):** `journal_entries draws_from payment_runs` (handoff 125 mirror), `journal_entries posts_liability_from invoice_matches` (handoffs 126, 542 mirror), `exceptions_log captures_from payment_runs` (handoff 192 mirror). Surfaces when FIN's B8 is next audited.
 - **S2P B8 owes:** `purchase_orders reconciled_by invoice_matches` (handoff 545 mirror), and inbound cross-rels `purchase_orders→invoice_matches`, `goods_receipts→invoice_matches` already partially loaded (B1-B2).
 - **SUP-LIFE B8 owes:** `suppliers escalated_by invoice_matches` (handoff 543 mirror).
 - **SPEND-MGMT B8 owes:** `spend_commitments fulfilled_by invoice_matches` (handoff 598 mirror).
@@ -177,13 +177,13 @@ These items the AP-AUTO audit identified but another domain owns the fix; surfac
 - **AUDIT B8 owes:** the existing edge `audit_findings reviews invoice_matches` (row 336) is the AUDIT-outbound mirror of handoff 544; the AP-AUTO-outbound mirror `invoice_matches generates audit_findings` is plausibly worth adding (decide on AP-AUTO's next pass).
 - **HCM B9 / B10b on `org_units`:** AP-AUTO embedded-masters `org_units` (HCM-mastered, id 34). HCM owes the outbound handoff `org_unit.created` / `org_unit.deactivated` to AP-AUTO (and other consumers); not currently loaded. Surfaces when HCM is next validated.
 - **SUP-LIFE / MDM dual-master on `suppliers`:** the catalog-wide M7 query shows `data_object_id=206 suppliers` has `role=master` in both SUP-LIFE (`domain_id=28`) and MDM (`domain_id=87`); this is a catalog-wide hard fail per Rule M7 but the resolution is not AP-AUTO's; surfaces for SUP-LIFE or MDM audit. AP-AUTO consumer rows are unaffected by which side wins.
-- **B10b counterparty NULL FKs** on all 30 of AP-AUTO's handoffs: every counterparty domain (ERP-FIN, S2P, SUP-LIFE, SPEND-MGMT, EXPENSE, IDP, AUDIT, CLM, CSM, VMS, ACCT-PRACT-MGMT, RE-CRE, RE-PROP-MGMT, FLEET-MAINT, HCM) owes the module-FK fix on its own side. Many of these counterparties also have zero modules (S2P, SUP-LIFE, SPEND-MGMT, EXPENSE, IDP, AUDIT, ACCT-PRACT-MGMT verified zero modules during neighbor discovery); the cure depends on those domains' M1 fixes landing first.
+- **B10b counterparty NULL FKs** on all 30 of AP-AUTO's handoffs: every counterparty domain (FIN, S2P, SUP-LIFE, SPEND-MGMT, EXPENSE, IDP, AUDIT, CLM, CSM, VMS, ACCT-PRACT-MGMT, RE-CRE, RE-PROP-MGMT, FLEET-MAINT, HCM) owes the module-FK fix on its own side. Many of these counterparties also have zero modules (S2P, SUP-LIFE, SPEND-MGMT, EXPENSE, IDP, AUDIT, ACCT-PRACT-MGMT verified zero modules during neighbor discovery); the cure depends on those domains' M1 fixes landing first.
 
 ### Pairwise reconciliation pre-modularization sketch
 
 The four-leg pairwise diff requires both sides to be modularized to produce non-vacuous module-pair findings. Sketch per heavy neighbor (gated on B1-S1 + the counterparty's own M1):
 
-- **AP-AUTO ↔ ERP-FIN (weight 7):** 4 outbound + 2 inbound handoffs; once both sides are modularized, expect AP-AUTO-PAYMENT-RUNS → ERP-FIN-GL on payment_run.executed; AP-AUTO-MATCHING → ERP-FIN-GL on invoice_match.three_way_passed; AP-AUTO-MATCHING → ERP-FIN-AP-EXCEPTIONS on supplier_invoice.duplicate_detected; AP-AUTO-PAYMENT-RUNS → ERP-FIN-TREASURY on payment.exception; ERP-FIN-CASH-MGMT → AP-AUTO-PAYMENT-RUNS on bank_account.added; ERP-FIN-CASH-MGMT → AP-AUTO-PAYMENT-RUNS on bank_account.statement_received.
+- **AP-AUTO ↔ FIN (weight 7):** 4 outbound + 2 inbound handoffs; once both sides are modularized, expect AP-AUTO-PAYMENT-RUNS → FIN-GL on payment_run.executed; AP-AUTO-MATCHING → FIN-GL on invoice_match.three_way_passed; AP-AUTO-MATCHING → FIN-AP-EXCEPTIONS on supplier_invoice.duplicate_detected; AP-AUTO-PAYMENT-RUNS → FIN-TREASURY on payment.exception; FIN-CASH-MGMT → AP-AUTO-PAYMENT-RUNS on bank_account.added; FIN-CASH-MGMT → AP-AUTO-PAYMENT-RUNS on bank_account.statement_received.
 - **AP-AUTO ↔ S2P (weight 5):** 1 outbound + 3 inbound; expect AP-AUTO-MATCHING ← S2P-PO-MGMT on purchase_order.issued / changed; AP-AUTO-MATCHING ← S2P-RECEIVING on goods_receipt.posted; AP-AUTO-MATCHING → S2P-PO-MGMT on invoice_match.exception_raised.
 - **AP-AUTO ↔ SUP-LIFE (weight 5):** 1 outbound + 3 inbound; expect AP-AUTO-PAYMENT-RUNS ← SUP-LIFE-SUPPLIER-PORTAL on supplier.bank_changed (HIGH friction: fraud-vector, requires dual approval); AP-AUTO-PAYMENT-RUNS ← SUP-LIFE-QUAL on supplier_qualification.approved / expired; AP-AUTO-MATCHING → SUP-LIFE-QUAL on invoice_match.exception_raised.
 - **AP-AUTO ↔ SPEND-MGMT (weight 3):** 1 outbound + 2 inbound; expect AP-AUTO-MATCHING ← SPEND-MGMT on supplier_invoice.received; AP-AUTO-PAYMENT-RUNS ← SPEND-MGMT on vendor_payment_authorization.approved; AP-AUTO-MATCHING → SPEND-MGMT on invoice_match.three_way_passed.
@@ -308,7 +308,7 @@ Unnamed candidates queued for any future Phase 0 pass: `early_payment_discount_o
 
 ### Report-only follow-ups (owed by other domains)
 
-Carried from 2026-05-30. ERP-FIN B8, S2P B8, SUP-LIFE B8, SPEND-MGMT B8, CSM B8, AUDIT B8, HCM B9/B10b on `org_units`, SUP-LIFE / MDM dual-master on `suppliers` (catalog-wide M7 hard fail unaffected by AP-AUTO), B10b counterparty NULL FK backfill on each of 30 handoffs across 15 counterparty domains (many of which have their own M1 hard fail).
+Carried from 2026-05-30. FIN B8, S2P B8, SUP-LIFE B8, SPEND-MGMT B8, CSM B8, AUDIT B8, HCM B9/B10b on `org_units`, SUP-LIFE / MDM dual-master on `suppliers` (catalog-wide M7 hard fail unaffected by AP-AUTO), B10b counterparty NULL FK backfill on each of 30 handoffs across 15 counterparty domains (many of which have their own M1 hard fail).
 
 ### Decisions
 

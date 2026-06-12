@@ -32,7 +32,7 @@ Auto-derived from existing `handoffs` rows (NULL module FKs aside, the domain ed
 | FSM | 1 | outbound (handoff 299 on `tenant_maintenance_request.created`) | Maintenance dispatch. |
 | LSD | 1 | outbound (handoff 300 on `property_tenant.evicted`) | Eviction legal matter. |
 | GRC | 1 | outbound (handoff 310 on `rental_application.approved`) | Compliance audit trail (Fair Housing fair-treatment evidence). |
-| ERP-FIN | 1 | outbound (handoff 864 on `rent_payment.received`) | GL posting. |
+| FIN | 1 | outbound (handoff 864 on `rent_payment.received`) | GL posting. |
 | CSM | 1 | outbound (handoff 865 on `rental_unit.vacant`) | Resident off-boarding ticket / case. |
 
 Every neighbor is at edge weight under 3 individually, so Pass 4 collapses to a one-line per-neighbor note (no full 5-section diff). The aggregate finding is that **every cross-domain edge above is structurally incomplete** (NULL module FKs on the source side, because there are no source modules to attribute to). The B10b backfill cannot run until the M-band ships.
@@ -43,7 +43,7 @@ For every neighbor above the only fix that can land from this audit is "wait for
 
 - **RE-INVEST**: target_domain_module_id NULL on both rows; once RE-INVEST modularizes its lease-rollup module, both handoffs need the target side filled.
 - **RE-BROKERAGE**: inbound handoff 296 already has `source_domain_module_id=151` (RE-BROK-AGENT-OPS); `target_domain_module_id` will resolve once RE-PROP-MGMT modularizes (target module = the `RE-PM-LEASING-PIPELINE` module that consumes the closing).
-- **AP-AUTO, FSM, LSD, GRC, ERP-FIN, CSM**: each is a one-row consumer dependency; the consumer DMDO row on the target side (other domain's audit) is the symmetric leg.
+- **AP-AUTO, FSM, LSD, GRC, FIN, CSM**: each is a one-row consumer dependency; the consumer DMDO row on the target side (other domain's audit) is the symmetric leg.
 
 No in-scope fixes from this domain land in Pass 4; everything routes through Bucket 1's M-band fix.
 
@@ -62,7 +62,7 @@ No in-scope fixes from this domain land in Pass 4; everything routes through Buc
 | B1-S7 | B7 | Zero `users` edges on any of the 6 masters. Expected: `users` manages `rental_units` (property_manager), `users` assigned-to `tenant_maintenance_requests` (coordinator), `users` reviews `rental_applications` (leasing_agent), `users` approves `rental_applications` (manager), `users` records `rent_payments` (bookkeeper). | Author 5 `data_object_relationships` rows with `related_data_object_id=748` (users built-in) per Rule #10. |
 | B1-S8 | B9 | Five trigger events (rows 957, 958, 959, 960, 961) have `event_category=''`. Allowed values are `lifecycle`, `state_change`, `threshold`, `signal`. Proposed: 957 `rental_unit.listed` -> `lifecycle`; 958 `rental_unit.occupied` -> `state_change`; 959 `rental_unit.vacant` -> `state_change`; 960 `rental_lease.executed` -> `lifecycle`; 961 `rental_lease.renewed` -> `lifecycle`. | PATCH `event_category` on rows 957-961. |
 | B1-S9 | B9 | Four trigger events have no subscriber (`handoffs` rows): 287 (`rental_application.approved`) only fires to GRC; 289 (`rent_payment.delinquent`), 957 (`rental_unit.listed`), 958 (`rental_unit.occupied`), 960 (`rental_lease.executed`), 961 (`rental_lease.renewed`) have ZERO handoffs. | Author handoffs for the missing fan-out (delinquent -> CSM/collections, listed -> CSM/CDP/vacancy syndication, executed -> RE-INVEST, renewed -> RE-INVEST). |
-| B1-S10 | B10b | All 7 outbound handoffs (298, 299, 300, 301, 310, 864, 865) and the 1 inbound (296) have NULL on at least one module FK. Outbound: every `source_domain_module_id` is NULL (root cause is the M-band failure); some `target_domain_module_id` rows are also NULL pending the partner-domain audit (AP-AUTO, RE-INVEST, LSD, GRC, FSM, ERP-FIN, CSM). | After the M-band lands, run the per-handoff backfill: `source_domain_module_id` resolves from the new RE-PROP-MGMT module that masters the event's data_object. |
+| B1-S10 | B10b | All 7 outbound handoffs (298, 299, 300, 301, 310, 864, 865) and the 1 inbound (296) have NULL on at least one module FK. Outbound: every `source_domain_module_id` is NULL (root cause is the M-band failure); some `target_domain_module_id` rows are also NULL pending the partner-domain audit (AP-AUTO, RE-INVEST, LSD, GRC, FSM, FIN, CSM). | After the M-band lands, run the per-handoff backfill: `source_domain_module_id` resolves from the new RE-PROP-MGMT module that masters the event's data_object. |
 | B1-S11 | B11 | Zero `data_object_aliases` on any of the 6 masters. Non-self-explanatory candidates: `rental_units` -> "Apartment, Unit, Door" (vendor terminology); `property_tenants` -> "Resident, Renter, Lessee"; `rental_applications` -> "Application, Lease App"; `rental_leases` -> "Lease, Rental Agreement". | Author 4 to 8 alias rows. |
 | B1-S12 | B12 | Zero `data_object_lifecycle_states` rows for any of the 6 masters. Expected workflows: `rental_units` (vacant -> listed -> applied -> approved -> occupied -> vacating -> vacant), `rental_applications` (draft -> submitted -> screening -> approved/declined -> withdrawn), `rental_leases` (drafted -> sent -> signed -> active -> ending -> terminated -> renewed), `rent_payments` (due -> received -> late -> delinquent -> in_collections), `property_tenants` (prospective -> current -> notice_given -> moved_out -> evicted), `tenant_maintenance_requests` (submitted -> triaged -> assigned -> in_progress -> resolved -> closed). | Draft state machines (initial / terminal flags, `requires_permission=true` on workflow gates, `domain_module_id` per module), load via focused loader. |
 | B1-S13 | F1 | Legacy domain-level `re-prop-mgmt-system` skill (id 98, `skill_type=system`, `domain_id=144`, `domain_module_id=null`). Acceptable transitional state per F1, but once per-module system skills land it must retire. | Plan to DELETE skill 98 after Phase S authors per-module replacements. The 8 existing `skill_tools` rows redistribute by module. |
@@ -116,7 +116,7 @@ Two regulations themselves are also missing from `regulations`:
 | handoff_id | source -> target | trigger_event | payload | Proposed PCF row | PCF id | Confidence |
 |---|---|---|---|---|---|---|
 | 298 | RE-PROP-MGMT -> AP-AUTO | `rent_payment.received` | rent_payments | Process accounts receivable (AR) | 303 | confident L3 |
-| 864 | RE-PROP-MGMT -> ERP-FIN | `rent_payment.received` | rental_leases | Post receivable entries | 1353 | confident L4 |
+| 864 | RE-PROP-MGMT -> FIN | `rent_payment.received` | rental_leases | Post receivable entries | 1353 | confident L4 |
 | 299 | RE-PROP-MGMT -> FSM | `tenant_maintenance_request.created` | tenant_maintenance_requests | Request unplanned maintenance | 824 | confident L4 |
 | 300 | RE-PROP-MGMT -> LSD | `property_tenant.evicted` | property_tenants | Receive work product and manage/monitor case and work performed | 1627 | medium L4 (LSD-side activity; PCF cross-industry has no eviction-specific row) |
 | 301 | RE-PROP-MGMT -> RE-INVEST | `rent_payment.received` | rental_leases | Generate customer billing data | 1351 | medium L4 (RE-INVEST receives the rent-roll for owner statements) |
@@ -186,13 +186,13 @@ Inbound dependencies and partner-side fixes that route to other domains' audits.
 | FSM | Consumer DMDO row on `tenant_maintenance_requests` plus the `target_domain_module_id` PATCH on handoff 299 | FSM owns the work-order dispatch. |
 | LSD | Consumer DMDO row on `property_tenants` plus `target_domain_module_id` PATCH on handoff 300 | LSD owns the eviction-case legal matter. |
 | GRC | Consumer DMDO row on `property_tenants` plus `target_domain_module_id` PATCH on handoff 310 | GRC owns the fair-housing fair-treatment audit trail. |
-| ERP-FIN | Consumer DMDO row on `rental_leases` (or on `lease_charges` if B1-U2 lands) plus `target_domain_module_id` PATCH on handoff 864 | ERP-FIN owns the GL posting. |
+| FIN | Consumer DMDO row on `rental_leases` (or on `lease_charges` if B1-U2 lands) plus `target_domain_module_id` PATCH on handoff 864 | FIN owns the GL posting. |
 | CSM | Consumer DMDO row on `rental_units` plus `target_domain_module_id` PATCH on handoff 865 | CSM owns the resident-services ticket. |
 | RE-BROKERAGE | B6 mirror, `real_estate_transactions` spawns `rental_units` (relationship row needs the in-domain leg on RE-BROKERAGE's audit) | Symmetric to the existing `rental_units` opens-from `customer_cases` row (id 473), which itself looks mis-pointed (related_data_object_id=103 is `customer_cases` not `real_estate_transactions`); flag for RE-BROKERAGE audit. |
 
 Two missing-domain candidates surfaced and queued via `scripts/analytics/append_missing_domain.ts`:
 
-- **HOA-MGMT** (Homeowner Association Management): FrontSteps, AppFolio Condo, CINC Systems, Buildium Association, PayHOA, Vantaca. Adjacency RE-PROP-MGMT, ERP-FIN, LSD. Surface includes owner-roster management, board governance, architectural review, dues collection, reserve studies, violation tracking, community communications.
+- **HOA-MGMT** (Homeowner Association Management): FrontSteps, AppFolio Condo, CINC Systems, Buildium Association, PayHOA, Vantaca. Adjacency RE-PROP-MGMT, FIN, LSD. Surface includes owner-roster management, board governance, architectural review, dues collection, reserve studies, violation tracking, community communications.
 - **STR-MGMT** (Short-Term Rental Management): Guesty, Hostaway, Lodgify, Hospitable, Hostfully, OwnerRez. Adjacency RE-PROP-MGMT, HOSP-PMS, RE-INVEST. Surface includes channel-manager syndication, dynamic pricing, guest messaging, cleaning-team scheduling, occupancy-tax remittance, OTA payout reconciliation.
 
 Both queued; triage at the next missing-domains review.
@@ -219,7 +219,7 @@ Total: 25 rows touched (5 PATCH + 20 INSERT). All inserts ship `record_status='n
 - **B1-S5**: no action (prefixed names pass automatically).
 - **B1-S6 (intra-domain relationships)**: audit lists 7 edges in prose, but does not pre-specify the per-edge `owner_side`, `relationship_kind`, `is_required` tuples; judgment per edge needed.
 - **B1-S9 (missing handoffs for delinquent/listed/executed/renewed/occupied)**: new handoffs without pre-specified handoff_id, also gated on missing target modules.
-- **B1-S10 (B10b FK PATCHes)**: `source_domain_module_id` blocked by zero RE-PROP-MGMT modules; `target_domain_module_id` not derivable. Confirmed live: target domains AP-AUTO (29), LSD (25), RE-INVEST (146), GRC (15), ERP-FIN (65) have zero `domain_modules`; CSM modules (112-114) and FSM modules (161-163) do not hold any RE-PROP-MGMT payload data_object via `domain_module_data_objects` (handoff 299's `target_domain_module_id=161` was already set pre-audit and is left as-is).
+- **B1-S10 (B10b FK PATCHes)**: `source_domain_module_id` blocked by zero RE-PROP-MGMT modules; `target_domain_module_id` not derivable. Confirmed live: target domains AP-AUTO (29), LSD (25), RE-INVEST (146), GRC (15), FIN (65) have zero `domain_modules`; CSM modules (112-114) and FSM modules (161-163) do not hold any RE-PROP-MGMT payload data_object via `domain_module_data_objects` (handoff 299's `target_domain_module_id=161` was already set pre-audit and is left as-is).
 - **B1-S12 (lifecycle states)**: per-state `domain_module_id` required by Rule #14 and M5; blocked by M-band.
 - **B1-S13 (F1 legacy skill 98)**: gated on Phase S authoring per-module replacements first.
 - **B1-M1, B1-M2, B1-M3, B1-M4, B1-M5**: new entities, deferred (new modules also needed).
@@ -247,7 +247,7 @@ UI:
 
 Validate b1 structural audit (passes A, M, B, C, D, E, F, H) against live state via `semantius` CLI. Re-run after the 2026-05-31 Continuation loader landed 25 rows. **The M-band still fails outright** (zero `domain_modules` for `domain_id=144`); every downstream band inherits that gate.
 
-- Current footprint: 6 master data_objects (`rental_units` 357, `property_tenants` 358, `rental_applications` 359, `rent_payments` 360, `tenant_maintenance_requests` 361, `rental_leases` 362) plus 1 contributor (`supplier_invoices` 75, mastered by S2P); 6 capabilities (RE-PM-TENANT-SCREENING, RE-PM-RENT-COLLECTION, RE-PM-MAINT-REQUEST, RE-PM-LEASING-PIPELINE, RE-PM-PROP-ACCOUNTING, RE-PM-VACANCY-MARKETING); 7 solutions (AppFolio Property Manager, Buildium, Yardi Breeze, Entrata Platform, RealPage Property Management, Rent Manager, Yardi Voyager); **0 `domain_modules` rows**; 1 `domain_regulations` (FCRA, applicability=mandatory, loaded 2026-05-31 Continuation); 4 `business_function_domains` (Business Operations owner, AR contributor, Customer Service contributor, Finance consumer); 10 trigger events (rows 287, 288, 289, 290, 291, 957, 958, 959, 960, 961, all with valid `event_category`); 7 outbound handoffs (298 to AP-AUTO, 299 to FSM, 300 to LSD, 301 to RE-INVEST, 310 to GRC, 864 to ERP-FIN, 865 to CSM); 1 inbound handoff (296 from RE-BROKERAGE); 10 `data_object_aliases` across 4 masters; 1 legacy domain-level system skill `re-prop-mgmt-system` (id 98) with 8 `skill_tools` rows; 0 module-level system skills (gated on M-band).
+- Current footprint: 6 master data_objects (`rental_units` 357, `property_tenants` 358, `rental_applications` 359, `rent_payments` 360, `tenant_maintenance_requests` 361, `rental_leases` 362) plus 1 contributor (`supplier_invoices` 75, mastered by S2P); 6 capabilities (RE-PM-TENANT-SCREENING, RE-PM-RENT-COLLECTION, RE-PM-MAINT-REQUEST, RE-PM-LEASING-PIPELINE, RE-PM-PROP-ACCOUNTING, RE-PM-VACANCY-MARKETING); 7 solutions (AppFolio Property Manager, Buildium, Yardi Breeze, Entrata Platform, RealPage Property Management, Rent Manager, Yardi Voyager); **0 `domain_modules` rows**; 1 `domain_regulations` (FCRA, applicability=mandatory, loaded 2026-05-31 Continuation); 4 `business_function_domains` (Business Operations owner, AR contributor, Customer Service contributor, Finance consumer); 10 trigger events (rows 287, 288, 289, 290, 291, 957, 958, 959, 960, 961, all with valid `event_category`); 7 outbound handoffs (298 to AP-AUTO, 299 to FSM, 300 to LSD, 301 to RE-INVEST, 310 to GRC, 864 to FIN, 865 to CSM); 1 inbound handoff (296 from RE-BROKERAGE); 10 `data_object_aliases` across 4 masters; 1 legacy domain-level system skill `re-prop-mgmt-system` (id 98) with 8 `skill_tools` rows; 0 module-level system skills (gated on M-band).
 - Bucket 1 (in-scope, agent fixable): **18 items**. Carry-forward majority plus one new finding (B1-S14: existing `data_object_relationships` row 473 looks mis-pointed). Items B1-S5 (B3 pre-prefixed) and the initial B1-S7 / B1-S8 / B1-S11 / B1-M7 / 4 APQC rows are dropped, having been applied 2026-05-31 Continuation.
 - Bucket 2 (surface-for-user, judgment): 7 items (carry forward from 2026-05-30).
 - Bucket 3 (Phase 0 pending, speculative): 6 items (carry forward).
@@ -383,7 +383,7 @@ Carry-forward, unchanged.
 
 ### Report-only follow-ups (owed by other domains)
 
-Unchanged from 2026-05-30. Inbound module-FK gaps and partner-side consumer DMDO rows owed by AP-AUTO, FSM, LSD, RE-INVEST, GRC, ERP-FIN, CSM, RE-BROKERAGE. Each routes to those domains' own audits.
+Unchanged from 2026-05-30. Inbound module-FK gaps and partner-side consumer DMDO rows owed by AP-AUTO, FSM, LSD, RE-INVEST, GRC, FIN, CSM, RE-BROKERAGE. Each routes to those domains' own audits.
 
 ### Per-bucket prompts
 

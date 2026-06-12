@@ -51,7 +51,7 @@ b1a:
 
   - id: B1A-S4
     summary: "Author 5 intra-OMS + 3-4 cross-domain data_object_relationships rows; B6 hard fail + B8 partial."
-    finding: "Zero intra-OMS data_object_relationships rows among the 5 masters. Only 3 catalog rows touch OMS masters: 454 return_authorizations opens customer_cases, 455 order_allocations opens customer_cases, 971 inv_stock_balances informs_atp_of order_allocations. Workflow-shape implies 5 intra-domain edges (sourcing_decisions relates_to order_allocations, order_allocations stages_pickup_for store_pickup_orders, inventory_locations sources_for order_allocations, return_authorizations originates_from order_allocations, store_pickup_orders staged_at inventory_locations) and 3-4 cross-domain edges (order_allocations triggers_credit_memo_for credit_memos in ERP-FIN, sourcing_decisions informs_promise_for commerce_orders in B2C-COMM, store_pickup_orders fulfills commerce_orders in B2C-COMM, return_authorizations refunds commerce_orders in B2C-COMM)."
+    finding: "Zero intra-OMS data_object_relationships rows among the 5 masters. Only 3 catalog rows touch OMS masters: 454 return_authorizations opens customer_cases, 455 order_allocations opens customer_cases, 971 inv_stock_balances informs_atp_of order_allocations. Workflow-shape implies 5 intra-domain edges (sourcing_decisions relates_to order_allocations, order_allocations stages_pickup_for store_pickup_orders, inventory_locations sources_for order_allocations, return_authorizations originates_from order_allocations, store_pickup_orders staged_at inventory_locations) and 3-4 cross-domain edges (order_allocations triggers_credit_memo_for credit_memos in FIN, sourcing_decisions informs_promise_for commerce_orders in B2C-COMM, store_pickup_orders fulfills commerce_orders in B2C-COMM, return_authorizations refunds commerce_orders in B2C-COMM)."
     action: "Pre-specify the full per-row tuple (data_object_id, related_data_object_id, relationship_verb, inverse_verb, relationship_type, relationship_kind, is_required, owner_side) for each edge, then load. Cross-domain edges into B2C-COMM point at masters (commerce_orders 381, order_lines 382) that B2C-COMM has not yet canonically DMDO-mastered; flag the dependency in B2C-COMM's audit. NOT in the state-driven execute allow-list (data_object_relationships); carried for the build/fix-loop."
     blocked_by:
       - {type: depends_on, ref: B1A-S1, reason: "cross-domain edges to B2C-COMM masters are stronger once OMS modules exist"}
@@ -81,23 +81,23 @@ b1a:
     status: superseded
 
   - id: B1A-S10
-    summary: "Schedule b1 audits on B2C-COMM, ERP-FIN, CSM to resolve FK gaps on OMS handoffs; B10 + B10b + B5 report-only."
-    finding: "13 of 15 outbound rows carry NULL target_domain_module_id (other domains' B10b audit work: B2C-COMM 6, ERP-FIN 5, CSM 3, plus 1 already populated to CRM-ACCT-MGT 46). 2 inbound from B2C-COMM (322 + 502) carry NULL source_domain_module_id (B2C-COMM B9 / B10b). 2 inbound from INV-MGMT (1051 + 1052) carry NULL target_domain_module_id (own work, gated by B1A-S1). Plus 2 broken-pointer DMDO rows on INV (id 248 inventory_locations embedded_master + required at INV-CORE-STOCK 61; id 256 order_allocations consumer + required at INV-REPLENISHMENT 62) need OMS's own master DMDO rows to land."
-    action: "Schedule b1 audits on B2C-COMM, ERP-FIN, CSM. Report-only from OMS's perspective; nothing derivable from existing OMS modules (OMS has none). INV-MGMT B5 resolves automatically once OMS B1A-S1 lands the master rows."
+    summary: "Schedule b1 audits on B2C-COMM, FIN, CSM to resolve FK gaps on OMS handoffs; B10 + B10b + B5 report-only."
+    finding: "13 of 15 outbound rows carry NULL target_domain_module_id (other domains' B10b audit work: B2C-COMM 6, FIN 5, CSM 3, plus 1 already populated to CRM-ACCT-MGT 46). 2 inbound from B2C-COMM (322 + 502) carry NULL source_domain_module_id (B2C-COMM B9 / B10b). 2 inbound from INV-MGMT (1051 + 1052) carry NULL target_domain_module_id (own work, gated by B1A-S1). Plus 2 broken-pointer DMDO rows on INV (id 248 inventory_locations embedded_master + required at INV-CORE-STOCK 61; id 256 order_allocations consumer + required at INV-REPLENISHMENT 62) need OMS's own master DMDO rows to land."
+    action: "Schedule b1 audits on B2C-COMM, FIN, CSM. Report-only from OMS's perspective; nothing derivable from existing OMS modules (OMS has none). INV-MGMT B5 resolves automatically once OMS B1A-S1 lands the master rows."
     affected_handoffs:
-      - {handoff_id: 981, direction: outbound, source_domain: OMS, target_domain: ERP-FIN, trigger_event: inventory_location.opened, payload: inventory_locations, null_field: target_domain_module_id}
+      - {handoff_id: 981, direction: outbound, source_domain: OMS, target_domain: FIN, trigger_event: inventory_location.opened, payload: inventory_locations, null_field: target_domain_module_id}
       - {handoff_id: 982, direction: outbound, source_domain: OMS, target_domain: B2C-COMM, trigger_event: inventory_location.capacity_threshold_breached, payload: inventory_locations, null_field: target_domain_module_id}
-      - {handoff_id: 983, direction: outbound, source_domain: OMS, target_domain: ERP-FIN, trigger_event: order_allocation.created, payload: order_allocations, null_field: target_domain_module_id}
+      - {handoff_id: 983, direction: outbound, source_domain: OMS, target_domain: FIN, trigger_event: order_allocation.created, payload: order_allocations, null_field: target_domain_module_id}
       - {handoff_id: 984, direction: outbound, source_domain: OMS, target_domain: B2C-COMM, trigger_event: order_allocation.created, payload: order_allocations, null_field: target_domain_module_id}
       - {handoff_id: 985, direction: outbound, source_domain: OMS, target_domain: CSM, trigger_event: order_allocation.failed, payload: order_allocations, null_field: target_domain_module_id}
       - {handoff_id: 986, direction: outbound, source_domain: OMS, target_domain: B2C-COMM, trigger_event: order_allocation.reassigned, payload: order_allocations, null_field: target_domain_module_id}
       - {handoff_id: 987, direction: outbound, source_domain: OMS, target_domain: CSM, trigger_event: return_authorization.issued, payload: return_authorizations, null_field: target_domain_module_id}
-      - {handoff_id: 988, direction: outbound, source_domain: OMS, target_domain: ERP-FIN, trigger_event: return_authorization.received, payload: return_authorizations, null_field: target_domain_module_id}
+      - {handoff_id: 988, direction: outbound, source_domain: OMS, target_domain: FIN, trigger_event: return_authorization.received, payload: return_authorizations, null_field: target_domain_module_id}
       - {handoff_id: 990, direction: outbound, source_domain: OMS, target_domain: B2C-COMM, trigger_event: sourcing_decision.computed, payload: sourcing_decisions, null_field: target_domain_module_id}
-      - {handoff_id: 991, direction: outbound, source_domain: OMS, target_domain: ERP-FIN, trigger_event: sourcing_decision.computed, payload: sourcing_decisions, null_field: target_domain_module_id}
+      - {handoff_id: 991, direction: outbound, source_domain: OMS, target_domain: FIN, trigger_event: sourcing_decision.computed, payload: sourcing_decisions, null_field: target_domain_module_id}
       - {handoff_id: 992, direction: outbound, source_domain: OMS, target_domain: CSM, trigger_event: sourcing_decision.overridden, payload: sourcing_decisions, null_field: target_domain_module_id}
       - {handoff_id: 993, direction: outbound, source_domain: OMS, target_domain: B2C-COMM, trigger_event: store_pickup_order.ready, payload: store_pickup_orders, null_field: target_domain_module_id}
-      - {handoff_id: 995, direction: outbound, source_domain: OMS, target_domain: ERP-FIN, trigger_event: store_pickup_order.expired, payload: store_pickup_orders, null_field: target_domain_module_id}
+      - {handoff_id: 995, direction: outbound, source_domain: OMS, target_domain: FIN, trigger_event: store_pickup_order.expired, payload: store_pickup_orders, null_field: target_domain_module_id}
       - {handoff_id: 322, direction: inbound, source_domain: B2C-COMM, target_domain: OMS, trigger_event: commerce_order.placed, payload: commerce_orders, null_field: source_domain_module_id}
       - {handoff_id: 502, direction: inbound, source_domain: B2C-COMM, target_domain: OMS, trigger_event: order_line.added, payload: order_lines, null_field: source_domain_module_id}
       - {handoff_id: 1051, direction: inbound, source_domain: INV-MGMT, target_domain: OMS, trigger_event: inv_stock_balance.on_hand_changed, payload: order_allocations, null_field: target_domain_module_id}
@@ -232,7 +232,7 @@ b3:
 
   - id: B3-D1
     candidate: RETURNS-MGMT candidate domain
-    rationale: "Returns Management and Reverse Logistics Orchestration. Adjacent to OMS (RMA workflow is the OMS-RETURNS contact surface), B2C-COMM (self-serve return portal), CSM (case-driven returns), ERP-FIN (refund accounting). Goes through audits/_missing-domains.md triage."
+    rationale: "Returns Management and Reverse Logistics Orchestration. Adjacent to OMS (RMA workflow is the OMS-RETURNS contact surface), B2C-COMM (self-serve return portal), CSM (case-driven returns), FIN (refund accounting). Goes through audits/_missing-domains.md triage."
     vendor_evidence: [Loop Returns, Happy Returns, Narvar Return and Exchange, AfterShip Returns, ReturnGO, Returnly]
 
   - id: B3-D2

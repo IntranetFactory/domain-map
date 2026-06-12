@@ -69,12 +69,12 @@ b1b:
   - id: B1B-S9
     summary: PATCH source_domain_module_id (now resolvable on the 5 FLEET-MAINT outbound) and target_domain_module_id on the 9 FLEET-MAINT handoffs once partners modularize.
     finding: |
-      The module split landed 2026-06-02 so the FLEET-MAINT source-side FK on the 5 outbound handoffs now resolves locally: vehicle_work_order.completed (316, 320) and maintenance_defect.reported (877, 878) -> FLEET-MAINT-WORK-ORDER (249); parts_inventory.adjusted (879) -> FLEET-MAINT-PARTS (251). The 4 inbound source-side FKs and the target-side FKs on outbounds toward FLEET-MGMT (147, now modularized: 204/205/206), EAM, AP-AUTO, ERP-FIN, TELEMATICS stay NULL until each partner side is mapped. Handoff 878 already carries target_domain_module_id=38 (ITSM-INCIDENT-MGMT).
+      The module split landed 2026-06-02 so the FLEET-MAINT source-side FK on the 5 outbound handoffs now resolves locally: vehicle_work_order.completed (316, 320) and maintenance_defect.reported (877, 878) -> FLEET-MAINT-WORK-ORDER (249); parts_inventory.adjusted (879) -> FLEET-MAINT-PARTS (251). The 4 inbound source-side FKs and the target-side FKs on outbounds toward FLEET-MGMT (147, now modularized: 204/205/206), EAM, AP-AUTO, FIN, TELEMATICS stay NULL until each partner side is mapped. Handoff 878 already carries target_domain_module_id=38 (ITSM-INCIDENT-MGMT).
     blocked_by:
       - {type: domain_audit, blocking_domain: TELEMATICS, milestone: M1_modules_exist}
       - {type: domain_audit, blocking_domain: AP-AUTO, milestone: M1_modules_exist}
       - {type: domain_audit, blocking_domain: EAM, milestone: M1_modules_exist}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: M1_modules_exist}
+      - {type: domain_audit, blocking_domain: FIN, milestone: M1_modules_exist}
     affected_handoffs:
       - {handoff_id: 875, direction: inbound, source_domain: FLEET-MGMT, target_domain: FLEET-MAINT, trigger_event: fleet_vehicle.acquired, payload: fleet_vehicles, null_field: both_module_fks}
       - {handoff_id: 313, direction: inbound, source_domain: FLEET-MGMT, target_domain: FLEET-MAINT, trigger_event: vehicle_inspection.failed, payload: vehicle_inspections, null_field: both_module_fks}
@@ -83,7 +83,7 @@ b1b:
       - {handoff_id: 881, direction: inbound, source_domain: TELEMATICS, target_domain: FLEET-MAINT, trigger_event: fleet_vehicle.mileage_milestone_reached, payload: fleet_vehicles, null_field: both_module_fks}
       - {handoff_id: 316, direction: outbound, source_domain: FLEET-MAINT, target_domain: AP-AUTO, trigger_event: vehicle_work_order.completed, payload: vehicle_work_orders, null_field: target_module_fk}
       - {handoff_id: 320, direction: outbound, source_domain: FLEET-MAINT, target_domain: EAM, trigger_event: vehicle_work_order.completed, payload: vehicle_work_orders, null_field: target_module_fk}
-      - {handoff_id: 879, direction: outbound, source_domain: FLEET-MAINT, target_domain: ERP-FIN, trigger_event: parts_inventory.adjusted, payload: vehicle_parts_inventory, null_field: target_module_fk}
+      - {handoff_id: 879, direction: outbound, source_domain: FLEET-MAINT, target_domain: FIN, trigger_event: parts_inventory.adjusted, payload: vehicle_parts_inventory, null_field: target_module_fk}
       - {handoff_id: 878, direction: outbound, source_domain: FLEET-MAINT, target_domain: ITSM, trigger_event: maintenance_defect.reported, payload: service_incidents, null_field: source_module_fk}
   - id: B1B-S10
     summary: Author data_object_aliases for FLEET-MAINT masters (vendor lexicon hints) after user supplies exact tuples.
@@ -177,13 +177,13 @@ b1b:
     affected_handoffs:
       - {handoff_id: 320, direction: outbound, source_domain: FLEET-MAINT, target_domain: EAM, trigger_event: vehicle_work_order.completed, payload: vehicle_work_orders, null_field: target_module_fk}
   - id: B1B-B5
-    summary: BOUNDARY ERP-FIN, source FK now resolvable; target module FK pending ERP-FIN M1.
+    summary: BOUNDARY FIN, source FK now resolvable; target module FK pending FIN M1.
     finding: |
-      Outbound handoff 879 (parts_inventory.adjusted -> ERP-FIN). FLEET-MAINT source-side now resolves to FLEET-MAINT-PARTS (251). ERP-FIN has zero domain_modules; likely target ERP-FIN-INVENTORY-ACCOUNTING per PCF 1326.
+      Outbound handoff 879 (parts_inventory.adjusted -> FIN). FLEET-MAINT source-side now resolves to FLEET-MAINT-PARTS (251). FIN has zero domain_modules; likely target FIN-INVENTORY-ACCOUNTING per PCF 1326.
     blocked_by:
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: M1_modules_exist}
+      - {type: domain_audit, blocking_domain: FIN, milestone: M1_modules_exist}
     affected_handoffs:
-      - {handoff_id: 879, direction: outbound, source_domain: FLEET-MAINT, target_domain: ERP-FIN, trigger_event: parts_inventory.adjusted, payload: vehicle_parts_inventory, null_field: target_module_fk}
+      - {handoff_id: 879, direction: outbound, source_domain: FLEET-MAINT, target_domain: FIN, trigger_event: parts_inventory.adjusted, payload: vehicle_parts_inventory, null_field: target_module_fk}
   - id: B1B-B6
     summary: BOUNDARY ITSM, source module FK now resolvable (FLEET-MAINT modular); target side already resolved.
     finding: |
@@ -223,7 +223,7 @@ b2:
     options:
       - (a) Intra-domain only (FLEET-MAINT-WORK-ORDER 249 consumes)
       - (b) Outbound to AP-AUTO for repair invoice
-      - (c) Outbound to ERP-FIN for fixed-asset depreciation
+      - (c) Outbound to FIN for fixed-asset depreciation
       - (d) Outbound to FLEET-MGMT for vehicle return-to-service status
       - (a) + (b) + (d) (recommended)
     why: Event fires but no handoff row consumes it; need user to scope outbound shape.

@@ -19,7 +19,7 @@
 | PORT-MONIT | 1 | 0 | 0 | 0 (payload `portfolio_companies` is PORT-MONIT-owned but no relationship row exists yet) | 2 | Pairwise (full) |
 | HCM | 0 | 0 | 0 | 1 (users 748 administers / signs off / models / executes / holds across 5 CAP-TABLE masters) | 1 | Pairwise (full) |
 | EM-FUND-PLATFORM | 0 | 0 | 1 (EM-FUND-CAPTABLE-LITE `embedded_master + optional` on `cap_tables`) | 0 | 2 | Pairwise (full) |
-| ERP-FIN | 0 | 0 | 0 | 0 (implied via `asc718_expense_periods` feeding GL, currently no edge) | 1 | Lightweight |
+| FIN | 0 | 0 | 0 | 0 (implied via `asc718_expense_periods` feeding GL, currently no edge) | 1 | Lightweight |
 | ESIGN | 0 | 0 | 0 | 0 (implied via grant acceptance, currently no edge) | 1 | Lightweight |
 | CLM | 0 | 0 | 0 | 0 (implied via investor-rights agreements / stock-purchase agreements; not modeled) | 1 | Lightweight |
 | GRC | 0 | 0 | 0 | 0 (implied via SOX significant-grant attestation; not modeled) | 1 | Lightweight |
@@ -82,7 +82,7 @@ For each neighbor with edge weight >= 3 the 5-section pairwise diff produced the
 
 **Lighter neighbors (1 weight, one-line summaries):**
 
-- **ERP-FIN <-> CAP-TABLE (weight 1).** No handoffs, no DMDO, no cross-relationships. Implied edge: `asc718_expense_periods.closed → gl_journal_entries` for booking SBC expense to the general ledger; surfaced in B3-CAND-08 as a missing handoff candidate.
+- **FIN <-> CAP-TABLE (weight 1).** No handoffs, no DMDO, no cross-relationships. Implied edge: `asc718_expense_periods.closed → gl_journal_entries` for booking SBC expense to the general ledger; surfaced in B3-CAND-08 as a missing handoff candidate.
 - **ESIGN <-> CAP-TABLE (weight 1).** No handoffs, no DMDO. Implied edge: `signature_records` (CLM-owned) used for grant acceptance, board-consent capture, and secondary-transaction execution; surfaced in B3-CAND-09 as a missing cross-domain edge.
 - **CLM <-> CAP-TABLE (weight 1).** No handoffs, no DMDO. Implied edges: investor-rights agreements, stock-purchase agreements, subscription agreements are all `legal_contracts`-shaped and should flow CLM → CAP-TABLE; deferred to B3.
 - **GRC <-> CAP-TABLE (weight 1).** No handoffs, no DMDO. Implied edge for SOX significant-grant attestation, deferred to B3.
@@ -150,7 +150,7 @@ Market-audit Pass 2 ran the semantic enumeration against Carta, Pulley, Ledgy, A
 | B3-CAND-05 | `board_consents` | Carta, Pulley, Shoobx all model board consents (written / meeting) as first-class records for grant issuance, repricing, and pool refreshes. The CAP-TABLE state machine has `approved` states but no record of which board action approved them. | new master in CAP-TABLE-LEDGER or a new module `CAP-TABLE-BOARD-CONSENTS` |
 | B3-CAND-06 | `share_certificates` / `stock_certificates` | Carta, Pulley, Ledgy issue digital share certificates with QR codes and DLT-anchored proofs (Astrella and Shoobx are particularly heavy here). Currently no certificate entity, `shareholder_records` is the closest but conflates legal-record-of-ownership with the certificate itself. | new master in CAP-TABLE-LEDGER |
 | B3-CAND-07 | `espp_records` / `espp_offerings` | Shareworks, J.P. Morgan Workplace Solutions, Carta all run ESPP (Employee Stock Purchase Plans) with per-offering enrollment, payroll withholding, purchase events, and qualifying / disqualifying holding-period tracking. Currently no ESPP entity, the program-level shape is opaque. | new master in CAP-TABLE-EMPLOYEE-PORTAL or a new module `CAP-TABLE-ESPP` |
-| B3-CAND-08 | Handoff: `asc718_expense_period.closed → ERP-FIN.gl_journal_entries` | Carta / Pulley both push monthly SBC expense to the general ledger; absent from current handoff set. | inserted as a handoff, not a new entity |
+| B3-CAND-08 | Handoff: `asc718_expense_period.closed → FIN.gl_journal_entries` | Carta / Pulley both push monthly SBC expense to the general ledger; absent from current handoff set. | inserted as a handoff, not a new entity |
 | B3-CAND-09 | Handoff / cross-rel: `signature_records → equity_grants` for grant acceptance, board consents, secondary transactions | Carta, Pulley, Shoobx, AngelList Stack all wire DocuSign / native e-sig for grant acceptance and board consent. Currently no ESIGN handoff or cross-relationship row references CAP-TABLE. | inserted as handoffs + cross-relationships, not a new entity |
 | B3-CAND-10 | `phantom_shares` / `sar_grants` / `profits_interests` (alternative-equity instruments) | Ledgy (VSOP for DE), Carta (US phantom-equity), Shareworks (profits interests for LLC). Currently equity_grants conflates all instrument types; profits-interest LLC mechanics differ enough to warrant a separate entity. | optional new master in CAP-TABLE-GRANTS or `CAP-TABLE-ALT-EQUITY` |
 | B3-CAND-11 | `beneficial_owners` / `kyc_records` | FinCEN beneficial-ownership reporting (Corporate Transparency Act 2024) requires cap-table issuers to maintain a beneficial-owner record distinct from `shareholder_records`. AML / KYC checks at secondary-transaction time map to a per-holder KYC record. | new master in CAP-TABLE-LEDGER or a new module `CAP-TABLE-COMPLIANCE` |
@@ -159,7 +159,7 @@ Market-audit Pass 2 ran the semantic enumeration against Carta, Pulley, Ledgy, A
 #### MODULARIZATION candidates
 
 - **`CAP-TABLE-CONVERTIBLES` module candidate.** If B3-CAND-01 / 02 / 03 (SAFEs, convertible notes, warrants) get loaded, a 7th module for the convertibles slice makes more sense than overloading CAP-TABLE-LEDGER. 6 modules + 1 = 7, consistent with capability count.
-- **`CAP-TABLE-TAX-REPORTING` module candidate.** B3-CAND-04 (tax forms) + handoff B3-CAND-08 (ASC 718 → ERP-FIN) belong together; could pair with CAP-TABLE-VALUATIONS as a sibling.
+- **`CAP-TABLE-TAX-REPORTING` module candidate.** B3-CAND-04 (tax forms) + handoff B3-CAND-08 (ASC 718 → FIN) belong together; could pair with CAP-TABLE-VALUATIONS as a sibling.
 - **`CAP-TABLE-ESPP` module candidate.** B3-CAND-07 (ESPP records). If ESPP is in scope, it's a sufficiently distinct workflow (offering periods + payroll withholding) to warrant its own module rather than living in CAP-TABLE-EMPLOYEE-PORTAL.
 - **`CAP-TABLE-COMPLIANCE` module candidate.** B3-CAND-11 (beneficial owners + KYC) is a distinct compliance workflow likely shared with KYC/AML domains (B2C / B2B onboarding). Likely a cross-cutting module hosted on both CAP-TABLE and KYC-AML if that domain exists.
 - **`CAP-TABLE-BOARD-CONSENTS` module candidate.** B3-CAND-05 + B3-CAND-12 (board consents + voting records). Could also live as `BOARD-MGMT` cross-cutting module hosted by CAP-TABLE + GRC + AUDIT + IPO-MGMT.
@@ -239,7 +239,7 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 | CLM | Consider adding outbound handoffs to CAP-TABLE on investor-rights agreements, stock-purchase agreements, subscription agreements (legal_contracts → CAP-TABLE entities). |
 | GRC | Consider adding inbound handoff from CAP-TABLE on `equity_grant.granted` for SOX significant-grant attestation tracking. |
 | AUDIT | Consider adding inbound handoff from CAP-TABLE on 409A finalization for audit-evidence packaging. |
-| ERP-FIN | Consider adding inbound from CAP-TABLE on `asc718_expense_period.closed` for SBC expense GL booking (B3-CAND-08). |
+| FIN | Consider adding inbound from CAP-TABLE on `asc718_expense_period.closed` for SBC expense GL booking (B3-CAND-08). |
 
 ### Decisions
 
@@ -364,7 +364,7 @@ _(empty pending user review)_
 
 ### Report-only follow-ups (owed by other domains)
 
-Same matrix as the 2026-05-30 audit (COMP-MGMT, FUND-ADMIN, PORT-MONIT, HCM, EM-FUND-PLATFORM, ESIGN, CLM, GRC, AUDIT, ERP-FIN). No new owed work surfaced this pass.
+Same matrix as the 2026-05-30 audit (COMP-MGMT, FUND-ADMIN, PORT-MONIT, HCM, EM-FUND-PLATFORM, ESIGN, CLM, GRC, AUDIT, FIN). No new owed work surfaced this pass.
 
 ### Spot-check links
 

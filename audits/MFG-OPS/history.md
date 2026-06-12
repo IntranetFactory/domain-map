@@ -129,7 +129,7 @@ Neighbors via `handoffs` (cross-domain only) and `solution_domains` adjacency:
 | PLM (165) | 3 | Inbound: 1087 (ECO released), 1091 (manufacturing_bom released), 1092 (manufacturing_routing released). All 3 source from PLM modules 66 and 68. |
 | EAM (53) | 3 | Outbound: 949 (downtime), 953 (schedule published). Inbound: 867 (eam_work_order.completed). |
 | FSQM (157) | 2 | Inbound: 975 (critical_control_point.deviation), 979 (sanitation_record.completed). |
-| ERP-FIN (65) | 1 | Outbound: 950 (production_order.completed). |
+| FIN (65) | 1 | Outbound: 950 (production_order.completed). |
 | GRC (15) | 1 | Outbound: 951 (production_quality_inspection.failed). |
 | FOOD-TRACE (155) | 1 | Outbound: 954 (produced_unit.completed). |
 | ITSM (1) | 1 | Outbound: 952 (shop_floor_case.opened -> service_incidents). |
@@ -158,7 +158,7 @@ Deep pairwise reconciliation (Pass 4) runs only against edge weight >= 3. That i
 
 - **EAM B10b owes:** `handoffs` rows 867, 949, 953 all carry NULL `source_domain_module_id` or `target_domain_module_id` on the EAM side. EAM is modularized; the PATCH (set the EAM module FK) is owed by the next EAM Validate run.
 - **GRC B10b owes:** handoff 951 (`production_quality_inspection.failed` -> GRC) has `target_domain_module_id=NULL`. GRC's next Validate run should set this to the GRC nonconformance / incident-tracking module.
-- **ERP-FIN B10b owes:** handoff 950 (`production_order.completed` -> ERP-FIN) has `target_domain_module_id=NULL`. ERP-FIN's next Validate sets it to the cost-accounting module that consumes WIP-completion.
+- **FIN B10b owes:** handoff 950 (`production_order.completed` -> FIN) has `target_domain_module_id=NULL`. FIN's next Validate sets it to the cost-accounting module that consumes WIP-completion.
 - **ITSM B10b owes:** handoff 952 already targets ITSM module 38 (correctly wired on the ITSM side), but Bucket 2 #7 raises the architectural question whether ITSM is the right consumer. Surfaces to ITSM only if Bucket 2 #7 lands "reroute".
 - **FOOD-TRACE B10b owes:** handoff 954 (`produced_unit.completed` -> FOOD-TRACE) has `target_domain_module_id=NULL`. FOOD-TRACE's next Validate sets the target module.
 - **FSQM B10b owes:** handoffs 975, 979 both have `source_domain_module_id=NULL` on the FSQM side. FSQM's next Validate sets the source modules.
@@ -267,7 +267,7 @@ Finding-type counts:
 |---|---|---|---|
 | B1-S10 | B6 | Only 3 intra-domain `data_object_relationships` rows across 7 masters (599↔476 / 597→477 / 476→599 are EAM-touching). Pure intra-MFG-OPS master↔master edges are missing: `production_orders→work_instructions` (executes), `production_orders→produced_units` (produces), `production_orders→production_schedules` (scheduled_in), `production_quality_inspections→produced_units` (inspects), `shop_floor_cases→production_orders` (raised_against). | Author ≥5 intra-domain `data_object_relationships` edges with `relationship_verb` + `inverse_verb` + cardinality + `relationship_kind` + `is_required` + `owner_side`. Loader pattern from prior cluster-drafts loads. Independent of module split. |
 | B1-S11 | B7 | Zero `users` edges across all 7 MFG-OPS masters (users id 748). Per Rule #10, every master with a user-typed actor must edge to `users`. MFG-OPS masters all have actors: `production_orders` (released_by), `work_instructions` (author / approver), `production_schedules` (planner / publisher), `produced_units` (operator), `production_downtime_events` (recorder / acknowledger), `production_quality_inspections` (inspector), `shop_floor_cases` (opener / assignee / supervisor). | Author 7-10 `users` edges per Rule #10. Independent of module split. |
-| B1-S12 | B8 outbound | 6 outbound cross-domain handoffs, only the EAM-axis (rows on `production_downtime_events` and `production_schedules`) has corresponding cross-domain `data_object_relationships` rows. Missing on the MFG-OPS source side: `production_orders→` ERP-FIN payload (handoff 950), `production_quality_inspections→` GRC payload (951), `shop_floor_cases→` ITSM `service_incidents` (952), `produced_units→` FOOD-TRACE payload (954). | Author ≥4 outbound cross-domain `data_object_relationships` edges. Independent of module split (the source-side row uses MFG-OPS master ids on the left). Skip the row on handoff 952 if Bucket 2 #7 lands "reroute" or "drop". |
+| B1-S12 | B8 outbound | 6 outbound cross-domain handoffs, only the EAM-axis (rows on `production_downtime_events` and `production_schedules`) has corresponding cross-domain `data_object_relationships` rows. Missing on the MFG-OPS source side: `production_orders→` FIN payload (handoff 950), `production_quality_inspections→` GRC payload (951), `shop_floor_cases→` ITSM `service_incidents` (952), `produced_units→` FOOD-TRACE payload (954). | Author ≥4 outbound cross-domain `data_object_relationships` edges. Independent of module split (the source-side row uses MFG-OPS master ids on the left). Skip the row on handoff 952 if Bucket 2 #7 lands "reroute" or "drop". |
 | B1-S13 | B4 | All 7 masters carry the three pattern flags `false` and were considered this pass. `production_orders` plausibly carries `has_single_approver=true` (production-order release is supervisor-gated in regulated industries). `work_instructions` plausibly carries `has_submit_lock=true` (instruction is locked once released to the floor; revisions require re-approval). The other 5 stay `false`. | Surface to user: do they want PATCH on `production_orders.has_single_approver=true` and `work_instructions.has_submit_lock=true`? Per Rule #12 the consideration is recorded here in the audit, not via `notes`. Independent of module split. |
 
 #### MODULARIZATION ISSUES
@@ -318,7 +318,7 @@ Neighbors via `handoffs` (cross-domain only) and `solution_domains` adjacency (P
 | PLM | 165 | 3 | Inbound: 1087 (ECO released), 1091 (manufacturing_bom released), 1092 (manufacturing_routing released). Source modules 66 / 68 set on PLM side. |
 | EAM | 53 | 3 | Outbound: 949 (downtime), 953 (schedule published). Inbound: 867 (eam_work_order.completed). |
 | FSQM | 157 | 2 | Inbound: 975 (critical_control_point.deviation), 979 (sanitation_record.completed). |
-| ERP-FIN | 65 | 1 | Outbound: 950 (production_order.completed). |
+| FIN | 65 | 1 | Outbound: 950 (production_order.completed). |
 | GRC | 15 | 1 | Outbound: 951 (production_quality_inspection.failed). |
 | FOOD-TRACE | 155 | 1 | Outbound: 954 (produced_unit.completed). |
 | ITSM | 1 | 1 | Outbound: 952 (shop_floor_case.opened -> service_incidents). |
@@ -348,7 +348,7 @@ Deep pairwise (Pass 4) on edge weight >= 3: PLM and EAM.
 
 - **EAM B10b owes:** handoffs 867, 949, 953 still carry NULL module FKs on the EAM side.
 - **GRC B10b owes:** handoff 951 (`production_quality_inspection.failed` -> GRC) still NULL `target_domain_module_id`.
-- **ERP-FIN B10b owes:** handoff 950 (`production_order.completed` -> ERP-FIN) still NULL `target_domain_module_id`.
+- **FIN B10b owes:** handoff 950 (`production_order.completed` -> FIN) still NULL `target_domain_module_id`.
 - **ITSM B10b owes:** handoff 952 still targets ITSM module 38; depends on Bucket 2 #7.
 - **FOOD-TRACE B10b owes:** handoff 954 still NULL `target_domain_module_id`.
 - **FSQM B10b owes:** handoffs 975, 979 still NULL `source_domain_module_id` on the FSQM side.
@@ -434,7 +434,7 @@ user_edges 9 INSERT.
 ### Surfaced (no write; user decision owed)
 
 - **B1A-S12 (B8 outbound mirror).** Underspecified for additive write: for handoffs 950
-  (ERP-FIN), 951 (GRC), 954 (FOOD-TRACE) the payload IS the MFG-OPS master itself and the
+  (FIN), 951 (GRC), 954 (FOOD-TRACE) the payload IS the MFG-OPS master itself and the
   consuming-side target `data_object` is not enumerated; authoring would require other-domains'
   consuming masters (scope-creep, unseen ids). The one concrete row (952: shop_floor_cases 601 ->
   service_incidents 47) is gated on B2-SHOP-FLOOR-CASES-ITSM. User must name the consuming-side

@@ -92,7 +92,7 @@ b1b:
     summary: 8 outbound CLM handoffs carry NULL target_domain_module_id; backfill is each target domain's B10b work.
     finding: >
       Live read of /handoffs?or=(source_domain_id.eq.26,target_domain_id.eq.26) confirms 8 outbound rows with NULL target FK:
-      41 (S2P), 215 (S2P), 216 (AP-AUTO), 342 (AGENCY-MGMT), 518 (ERP-FIN), 519 (SUB-MGMT), 520 (CSM), 521 (GRC).
+      41 (S2P), 215 (S2P), 216 (AP-AUTO), 342 (AGENCY-MGMT), 518 (FIN), 519 (SUB-MGMT), 520 (CSM), 521 (GRC).
       CLM-side source_domain_module_id is populated on every one. Per the B10b asymmetry rule, the target module is the
       receiving domain's audit responsibility.
     action: On each target domain's b1 audit, PATCH the target_domain_module_id to the consuming module. Add consumer DMDO on the relevant CLM master if the receiving domain does not already declare the dependency.
@@ -100,7 +100,7 @@ b1b:
       - {type: domain_audit, blocking_domain: S2P, milestone: b1-b10b-backfill-target}
       - {type: domain_audit, blocking_domain: AP-AUTO, milestone: b1-b10b-backfill-target}
       - {type: domain_audit, blocking_domain: AGENCY-MGMT, milestone: b1-b10b-backfill-target}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: b1-b10b-backfill-target}
+      - {type: domain_audit, blocking_domain: FIN, milestone: b1-b10b-backfill-target}
       - {type: domain_audit, blocking_domain: SUB-MGMT, milestone: b1-b10b-backfill-target}
       - {type: domain_audit, blocking_domain: CSM, milestone: b1-b10b-backfill-target}
       - {type: domain_audit, blocking_domain: GRC, milestone: b1-b10b-backfill-target}
@@ -109,7 +109,7 @@ b1b:
       - {handoff_id: 215, direction: outbound, source_domain: CLM, target_domain: S2P, trigger_event: legal_contract.expired, payload: legal_contracts, null_field: target_domain_module_id}
       - {handoff_id: 216, direction: outbound, source_domain: CLM, target_domain: AP-AUTO, trigger_event: legal_contract.amended, payload: legal_contracts, null_field: target_domain_module_id}
       - {handoff_id: 342, direction: outbound, source_domain: CLM, target_domain: AGENCY-MGMT, trigger_event: legal_contract.signed, payload: agency_jobs, null_field: target_domain_module_id}
-      - {handoff_id: 518, direction: outbound, source_domain: CLM, target_domain: ERP-FIN, trigger_event: legal_contract.signed, payload: legal_contracts, null_field: target_domain_module_id}
+      - {handoff_id: 518, direction: outbound, source_domain: CLM, target_domain: FIN, trigger_event: legal_contract.signed, payload: legal_contracts, null_field: target_domain_module_id}
       - {handoff_id: 519, direction: outbound, source_domain: CLM, target_domain: SUB-MGMT, trigger_event: legal_contract.signed, payload: legal_contracts, null_field: target_domain_module_id}
       - {handoff_id: 520, direction: outbound, source_domain: CLM, target_domain: CSM, trigger_event: contract_obligation.due, payload: contract_obligations, null_field: target_domain_module_id}
       - {handoff_id: 521, direction: outbound, source_domain: CLM, target_domain: GRC, trigger_event: contract_obligation.breached, payload: contract_obligations, null_field: target_domain_module_id}
@@ -134,7 +134,7 @@ b1b:
   - id: B1B-CONSUMER-DMDO
     summary: 7 downstream domains need consumer DMDOs on CLM masters per pairwise reconciliation.
     finding: >
-      Pairwise Section 4 surfaced (in the 2026-05-30 audit) that SUB-MGMT, AGENCY-MGMT, CPQ, ERP-FIN, CSM, GRC, AP-AUTO each
+      Pairwise Section 4 surfaced (in the 2026-05-30 audit) that SUB-MGMT, AGENCY-MGMT, CPQ, FIN, CSM, GRC, AP-AUTO each
       consume CLM masters (legal_contracts, contract_templates, or contract_obligations) without declaring the dependency via a
       domain_module_data_objects row in the receiving module. Re-confirmed on this pass: handoffs 41, 63, 215, 216, 342, 469, 482,
       517, 518, 519, 520, 521, 1014 all imply consumer DMDOs that the target domain has not loaded.
@@ -143,7 +143,7 @@ b1b:
       - {type: domain_audit, blocking_domain: SUB-MGMT, milestone: b1-consumer-dmdo}
       - {type: domain_audit, blocking_domain: AGENCY-MGMT, milestone: b1-consumer-dmdo}
       - {type: domain_audit, blocking_domain: CPQ, milestone: b1-consumer-dmdo}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: b1-consumer-dmdo}
+      - {type: domain_audit, blocking_domain: FIN, milestone: b1-consumer-dmdo}
       - {type: domain_audit, blocking_domain: CSM, milestone: b1-consumer-dmdo}
       - {type: domain_audit, blocking_domain: GRC, milestone: b1-consumer-dmdo}
       - {type: domain_audit, blocking_domain: AP-AUTO, milestone: b1-consumer-dmdo}

@@ -4,7 +4,7 @@
 
 ### Summary
 
-- **Current footprint:** 4 full modules (`MSP-PSA-SVC-DESK` 137, `MSP-PSA-CONTRACTS` 138, `MSP-PSA-TIME-BILLING` 139, `MSP-PSA-DISPATCH` 140), 0 starters, no `domain_module_host_domains` cross-cutting hosts. 5 masters (`msp_tickets`, `msp_contracts`, `msp_time_entries`, `msp_invoices`, `msp_clients`). 6 capabilities (`MSP-TICKET`, `MSP-CONTRACT`, `MSP-BILLING`, `MSP-TIME`, `MSP-DISPATCH`, `MSP-CSAT`), all bound to a module via `domain_module_capabilities`. 10 solutions across coverage levels (5 primary, 2 secondary, 1 partial in CW RMM, plus 2 supporting). 20 DMDO rows (5 master, 15 non-master). 16 trigger_events on the 5 masters. 22 lifecycle states. 10 cross-domain handoffs (3 outbound to CSM/ERP-FIN, 2 outbound to REMOTE-ACCESS/HAM, plus the SVC-DESK consumers) and 4 intra-domain cross-module handoffs. 12 aliases. 17 data_object_relationships (incl. 7 platform_builtin `users` 748 edges, per Rule #10). 1 system skill (id 85) with 6 skill_tools. 0 MSP-PSA permissions. 0 MSP-PSA `role_modules`. 0 MSP-PSA roles. 0 APQC tags on any of the 10 cross-domain handoffs.
+- **Current footprint:** 4 full modules (`MSP-PSA-SVC-DESK` 137, `MSP-PSA-CONTRACTS` 138, `MSP-PSA-TIME-BILLING` 139, `MSP-PSA-DISPATCH` 140), 0 starters, no `domain_module_host_domains` cross-cutting hosts. 5 masters (`msp_tickets`, `msp_contracts`, `msp_time_entries`, `msp_invoices`, `msp_clients`). 6 capabilities (`MSP-TICKET`, `MSP-CONTRACT`, `MSP-BILLING`, `MSP-TIME`, `MSP-DISPATCH`, `MSP-CSAT`), all bound to a module via `domain_module_capabilities`. 10 solutions across coverage levels (5 primary, 2 secondary, 1 partial in CW RMM, plus 2 supporting). 20 DMDO rows (5 master, 15 non-master). 16 trigger_events on the 5 masters. 22 lifecycle states. 10 cross-domain handoffs (3 outbound to CSM/FIN, 2 outbound to REMOTE-ACCESS/HAM, plus the SVC-DESK consumers) and 4 intra-domain cross-module handoffs. 12 aliases. 17 data_object_relationships (incl. 7 platform_builtin `users` 748 edges, per Rule #10). 1 system skill (id 85) with 6 skill_tools. 0 MSP-PSA permissions. 0 MSP-PSA `role_modules`. 0 MSP-PSA roles. 0 APQC tags on any of the 10 cross-domain handoffs.
 - **Vendor-surface basis (Pass 2 flagship enumeration):** ConnectWise PSA, Datto Autotask PSA (Kaseya), Kaseya BMS, HaloPSA, SuperOps, SyncroMSP, Atera (with PSA), Naverisk (with PSA), Pulseway (with PSA), Promys PSA, Tigerpaw One. Compliance anchors are light for MSP-PSA itself (SOC 2 of the MSP, plus PCI for client estates handled by techs); the regulated workload sits in adjacent RMM / DSPM / VULN-MGMT rather than in MSP-PSA proper.
 - **Bucket 1 (in-scope, agent fixable):** 11 items.
 - **Bucket 2 (surface-for-user, judgment):** 6 items.
@@ -17,7 +17,7 @@
 | REMOTE-ACCESS (132) | 1 | 2 | 1 (`remote_sessions` consumer on SVC-DESK 137) | 0 | 5 | Pairwise (full) |
 | RMM (130) | 0 | 1 | 2 (`rmm_agents` consumer on SVC-DESK 137 + DISPATCH 140, `monitoring_alerts` consumer on SVC-DESK 137) | 0 | 4 | Pairwise (full) |
 | CSM (30) | 2 | 0 | 0 | 0 | 3 | Pairwise (full) |
-| ERP-FIN (65) | 2 | 0 | 0 | 0 | 3 | Pairwise (full) |
+| FIN (65) | 2 | 0 | 0 | 0 | 3 | Pairwise (full) |
 | HAM (51) | 1 | 0 | 1 (`hardware_assets` consumer on SVC-DESK 137 + DISPATCH 140) | 0 | 3 | Pairwise (full) |
 | WSC (75) | 0 | 1 | 1 (`chat_messages` consumer on SVC-DESK 137) | 1 (`chat_messages materializes_as msp_tickets`) | 4 | Pairwise (full) |
 | ITSM (1) | 0 | 0 | 0 | 0 | 0 | Lightweight (boundary check, sibling market) |
@@ -39,9 +39,9 @@ MSP-PSA Semantius score: NOT COMPUTABLE today. The single skill 85 spans the who
 |---|---|---|---|
 | B1-S1 | **M7, sibling consumer DMDOs on masters** | `msp_tickets` (233, master in SVC-DESK 137) is `consumer + contributor` in TIME-BILLING 139 (id 692, contributor) and `contributor` in DISPATCH 140 (id 695, contributor). Contributors are allowed sibling roles, but the `consumer + required` on `msp_clients` (237) replicated across SVC-DESK 137 (id 683) and TIME-BILLING 139 (id 694) and DISPATCH 140 (id 697) is the standard sibling-consumer pattern. The CLM-style M7 default would DELETE. However, contributor on time-entries (writing time entries against a ticket from DISPATCH) IS a write back to a sibling master, that is the intended Phase E pattern, not M7 incoherence. Re-classify: `msp_clients` consumer triples on every other module is the only M7 trip, and it is genuine. Surface architectural choice as B2-S1; on user approval of DELETE, proceed to DELETE the consumer rows in SVC-DESK, TIME-BILLING, DISPATCH for `msp_clients`. | DELETE 3 `domain_module_data_objects` rows: (137, 237, consumer) id=683, (139, 237, consumer) id=694, (140, 237, consumer) id=697. CONTRACTS 138 keeps the master row. |
 | B1-S2 | **B11 advisory, Rule #15 stale `notes` on handoff** | Handoff 835 (`chat_messages` from WSC -> MSP-PSA SVC-DESK) carries `notes='target NULL until MSP-PSA is modularized'`. The target IS populated (`target_domain_module_id=137`); the note is stale provenance commentary that Rule #15 forbids. | PATCH handoff 835 set `notes=''`. |
-| B1-S3 | **B10b report-only (outbound NULLs owed by other domains)** | 4 outbound handoffs carry NULL `target_domain_module_id`: 161 (HAM), 523 (CSM), 524 (ERP-FIN), 525 (CSM), 526 (ERP-FIN). The 5 NULLs span HAM (1), CSM (2), ERP-FIN (2). Per B10b's asymmetry, target module is the target-domain's audit work. MSP-PSA's source side is populated on every outbound row. | Schedule b1 audits for HAM, CSM, ERP-FIN to populate `target_domain_module_id` on those rows. |
+| B1-S3 | **B10b report-only (outbound NULLs owed by other domains)** | 4 outbound handoffs carry NULL `target_domain_module_id`: 161 (HAM), 523 (CSM), 524 (FIN), 525 (CSM), 526 (FIN). The 5 NULLs span HAM (1), CSM (2), FIN (2). Per B10b's asymmetry, target module is the target-domain's audit work. MSP-PSA's source side is populated on every outbound row. | Schedule b1 audits for HAM, CSM, FIN to populate `target_domain_module_id` on those rows. |
 | B1-S4 | **B10b report-only (inbound NULLs owed by source domains)** | 3 inbound handoffs carry NULL `source_domain_module_id`: 159 (RMM), 163 (REMOTE-ACCESS), 647 (REMOTE-ACCESS). Handoff 835 (WSC) has `source_domain_module_id=115` populated. | Schedule b1 audits for RMM and REMOTE-ACCESS to populate `source_domain_module_id`. |
-| B1-S5 | **Pairwise, missing consumer DMDOs on downstream domains** | Several MSP-PSA-targeted outbound handoffs imply consumer DMDOs on the target side that do not exist: CSM consumes `msp_tickets` (523) and `msp_contracts` (525) but no CSM module declares; ERP-FIN consumes `msp_contracts` (526) and `msp_invoices` (524) but no ERP-FIN module declares; HAM is consumer-side for `hardware_assets` (already mastered there, so the outbound is HAM-mastering, not MSP-PSA's owe). | Each target domain's b1 audit adds a `consumer` DMDO row on the relevant MSP-PSA master in the receiving module. Not MSP-PSA's fix; surface here so target audits can pick it up. |
+| B1-S5 | **Pairwise, missing consumer DMDOs on downstream domains** | Several MSP-PSA-targeted outbound handoffs imply consumer DMDOs on the target side that do not exist: CSM consumes `msp_tickets` (523) and `msp_contracts` (525) but no CSM module declares; FIN consumes `msp_contracts` (526) and `msp_invoices` (524) but no FIN module declares; HAM is consumer-side for `hardware_assets` (already mastered there, so the outbound is HAM-mastering, not MSP-PSA's owe). | Each target domain's b1 audit adds a `consumer` DMDO row on the relevant MSP-PSA master in the receiving module. Not MSP-PSA's fix; surface here so target audits can pick it up. |
 | B1-S6 | **E1 hard fail, no role_modules on any module** | The 4 MSP-PSA modules carry zero `role_modules` rows. Phase E for the domain has not run. The catalog therefore does not specify which roles use SVC-DESK, CONTRACTS, TIME-BILLING, DISPATCH. Expected roles based on capability shape: MSP-TECHNICIAN (uses SVC-DESK + TIME-BILLING + DISPATCH, primary), MSP-DISPATCHER (DISPATCH primary, SVC-DESK secondary), MSP-ACCOUNT-MANAGER (CONTRACTS primary, SVC-DESK + TIME-BILLING secondary), MSP-BILLING-ADMIN (TIME-BILLING + CONTRACTS, primary), MSP-CSAT-ANALYST (SVC-DESK, secondary). | Insert 5 `roles` rows + `role_modules` junctions per the role->module map above. Author Phase E for MSP-PSA. |
 | B1-S7 | **E3 hard fail, no permissions on any module** | The 4 modules have no `permissions` rows. Rule #14's scaffold expects baseline read/manage/admin per module (12 minimum) plus workflow-gate permissions from lifecycle states with `requires_permission=true` (16 of 22 lifecycle states qualify). | Insert 12 baseline permissions (3 per module x 4 modules) + 16 workflow-gate permissions derived from lifecycle states. Wire `role_permissions` after B1-S6 lands. |
 | B1-S8 | **F2 hard fail, system skills missing on 4 modules** | Rule #17 invariant: each `domain_modules` row gets exactly one `skill_type='system'` skill with `domain_module_id` set. Catalog state: 1 skill (`msp-psa-system`, id 85) bound to `domain_id=131` only, `domain_module_id=NULL`. Each of SVC-DESK 137, CONTRACTS 138, TIME-BILLING 139, DISPATCH 140 needs its own module-bound system skill. | Author 4 new `skills` rows (e.g. `msp-psa-svc-desk-system`, `msp-psa-contracts-system`, `msp-psa-time-billing-system`, `msp-psa-dispatch-system`), each with `skill_type='system'`, `domain_id=131`, `domain_module_id=<id>`. The legacy single domain-wide skill 85 either gets RETIRED (preferred, since Rule #17 is "one per module" not "one per domain") or REPURPOSED to `skill_type='role'`/`process`. Surface as B2-S6. Author `skill_tools` rows for each new module skill, with 5 to 12 tools per module (queries + mutates on the module's masters + side_effects). |
@@ -58,9 +58,9 @@ Zero of 10 cross-domain handoffs carry `handoff_processes` rows. The audit propo
 | 161 | MSP-PSA SVC-DESK -> HAM | `ticket.created` | `hardware_assets` | Manage asset data / Maintain asset master | needs PCF lookup | confident L3 |
 | 163 | REMOTE-ACCESS -> MSP-PSA TIME-BILLING | `msp_session.completed` | `msp_time_entries` | Manage employee time / Capture labor time | needs PCF lookup | confident L3 |
 | 523 | MSP-PSA SVC-DESK -> CSM | `msp_ticket.escalated` | `msp_tickets` | Manage customer service problems, requests, and inquiries (10388) | 10388 | confident L3 |
-| 524 | MSP-PSA TIME-BILLING -> ERP-FIN | `msp_invoice.issued` | `msp_invoices` | Process accounts receivable / Invoice customer | needs PCF lookup | confident L3 |
+| 524 | MSP-PSA TIME-BILLING -> FIN | `msp_invoice.issued` | `msp_invoices` | Process accounts receivable / Invoice customer | needs PCF lookup | confident L3 |
 | 525 | MSP-PSA CONTRACTS -> CSM | `msp_contract.renewal_due` | `msp_contracts` | Manage sales partners / Manage customer accounts (renewal) | needs PCF lookup | confident L3 |
-| 526 | MSP-PSA CONTRACTS -> ERP-FIN | `msp_contract.activated` | `msp_contracts` | Process revenue accounting / Manage customer contracts | needs PCF lookup | confident L3 |
+| 526 | MSP-PSA CONTRACTS -> FIN | `msp_contract.activated` | `msp_contracts` | Process revenue accounting / Manage customer contracts | needs PCF lookup | confident L3 |
 | 647 | REMOTE-ACCESS -> MSP-PSA SVC-DESK | `remote_session.ended` | `remote_sessions` | Manage IT service requests / Resolve customer service requests | needs PCF lookup | medium |
 | 835 | WSC -> MSP-PSA SVC-DESK | `msp_ticket.from_chat` | `chat_messages` | Manage customer service requests | needs PCF lookup | medium |
 
@@ -87,7 +87,7 @@ Zero of 10 cross-domain handoffs carry `handoff_processes` rows. The audit propo
 
 **CSM (30) <-> MSP-PSA (weight 3).** Wired pairs: 2 (523 SVC-DESK -> CSM `msp_ticket.escalated`; 525 CONTRACTS -> CSM `msp_contract.renewal_due`). Section 2: both have NULL `target_domain_module_id` (CSM's B10b). Section 3: missing reverse handoff `customer_complaint.filed` CSM -> MSP-PSA SVC-DESK (a CSM customer-side complaint should open or escalate a ticket). Surface as Phase 0 candidate. Section 4: clean. Section 5: no cross-relationship rows between `msp_tickets`/`msp_contracts` and `customer_cases`/`customer_complaints` (CSM masters).
 
-**ERP-FIN (65) <-> MSP-PSA (weight 3).** Wired pairs: 2 (524 TIME-BILLING -> ERP-FIN `msp_invoice.issued`; 526 CONTRACTS -> ERP-FIN `msp_contract.activated`). Section 2: both have NULL `target_domain_module_id` (ERP-FIN's B10b). Section 3: missing reverse handoff `customer_payment.received` ERP-FIN -> MSP-PSA TIME-BILLING to transition `msp_invoices` from `issued` -> `paid`. Section 4: clean. Section 5: no cross-rel between `msp_invoices` and `customer_payments` / `general_ledger_entries` (ERP-FIN masters).
+**FIN (65) <-> MSP-PSA (weight 3).** Wired pairs: 2 (524 TIME-BILLING -> FIN `msp_invoice.issued`; 526 CONTRACTS -> FIN `msp_contract.activated`). Section 2: both have NULL `target_domain_module_id` (FIN's B10b). Section 3: missing reverse handoff `customer_payment.received` FIN -> MSP-PSA TIME-BILLING to transition `msp_invoices` from `issued` -> `paid`. Section 4: clean. Section 5: no cross-rel between `msp_invoices` and `customer_payments` / `general_ledger_entries` (FIN masters).
 
 **HAM (51) <-> MSP-PSA (weight 3).** Wired pairs: 1 (161 SVC-DESK -> HAM `ticket.created`). Section 2: 161 has NULL `target_domain_module_id` (HAM's B10b). Section 3: missing reverse handoff `hardware_asset.warranty_expired` HAM -> MSP-PSA CONTRACTS for renewal opportunity surfacing. Section 4: clean. Section 5: no cross-rel between `msp_tickets` and `hardware_assets`; the consumer DMDO is the only structural link.
 
@@ -186,7 +186,7 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 | RMM | B10b: populate `source_domain_module_id` on handoff 159. Add APQC tag candidate `monitoring_alert.threshold_breached` -> appropriate L3 process. |
 | REMOTE-ACCESS | B10b: populate `source_domain_module_id` on handoffs 163, 647; populate `target_domain_module_id` on handoff 160. |
 | CSM | B10b: populate `target_domain_module_id` on handoffs 523, 525. Add `consumer` DMDO on `msp_tickets` (233) and `msp_contracts` (234) on the receiving CSM module. Consider authoring reverse `customer_complaint.filed` handoff. |
-| ERP-FIN | B10b: populate `target_domain_module_id` on handoffs 524, 526. Add `consumer` DMDO on `msp_invoices` (236) and `msp_contracts` (234). Consider authoring reverse `customer_payment.received` handoff. |
+| FIN | B10b: populate `target_domain_module_id` on handoffs 524, 526. Add `consumer` DMDO on `msp_invoices` (236) and `msp_contracts` (234). Consider authoring reverse `customer_payment.received` handoff. |
 | HAM | B10b: populate `target_domain_module_id` on handoff 161. Consider authoring reverse `hardware_asset.warranty_expired` handoff. |
 | WSC | B11 / Rule #15: review `chat_messages` (565) `data_objects.notes` for auto-populated pattern-flag prose; revert if not user-approved (per B2-S3). |
 
@@ -203,9 +203,9 @@ Applied truly-technical Bucket 1 fixes only; everything requiring user judgment 
 | ID | Reason for deferral |
 |---|---|
 | B1-S1 | Gated on B2-S1 (user picks DELETE vs PROMOTE for the 3 `msp_clients` sibling consumer DMDOs). |
-| B1-S3 | Report-only; B10b NULL target FKs are owed by HAM (1), CSM (2), ERP-FIN (2) audits. Not MSP-PSA's fix. |
+| B1-S3 | Report-only; B10b NULL target FKs are owed by HAM (1), CSM (2), FIN (2) audits. Not MSP-PSA's fix. |
 | B1-S4 | Report-only; B10b NULL source FKs are owed by RMM (1) and REMOTE-ACCESS (2) audits. Not MSP-PSA's fix. |
-| B1-S5 | Report-only; pairwise consumer DMDOs belong to CSM / ERP-FIN / HAM audits. Not MSP-PSA's fix. |
+| B1-S5 | Report-only; pairwise consumer DMDOs belong to CSM / FIN / HAM audits. Not MSP-PSA's fix. |
 | B1-S6 | Gated on B2-S5 (5-role list confirmation). New roles authoring is not derivable from audit alone. |
 | B1-S7 | Depends on B1-S6 (role list) and on B2-S5; 12 baseline + 16 workflow-gate permissions cannot be wired without the role layer. |
 | B1-S8 | Gated on B2-S4 (retire vs repurpose skill 85). New module-bound system skills are net-new entities. |
@@ -252,7 +252,7 @@ Fresh structural Validate b1 audit. Confirms prior continuation fix (B1-S2) land
 - **B7 (lifecycle states):** PASS. 22 states across 5 masters with proper `domain_module_id` binding and `requires_permission` flags. 16 states gate-flagged for workflow-gate permission materialization (per Rule #12 / Rule #14).
 - **B9 (event_category enum):** PASS. All 16 events `state_change` or `threshold`.
 - **B9b (handoff integration_pattern enum):** PASS. All 14 use catalog values (`api_call`, `manual_handoff`, `event_stream`, `batch_sync`, `lifecycle_progression`).
-- **B10b (handoff FK populated):** PARTIAL-FAIL unchanged. 4 outbound NULL `target_domain_module_id` (160, 161, 523, 525, 526) owed by REMOTE-ACCESS, HAM, CSM x2, ERP-FIN x2; 3 inbound NULL `source_domain_module_id` (159, 163, 647) owed by RMM, REMOTE-ACCESS x2.
+- **B10b (handoff FK populated):** PARTIAL-FAIL unchanged. 4 outbound NULL `target_domain_module_id` (160, 161, 523, 525, 526) owed by REMOTE-ACCESS, HAM, CSM x2, FIN x2; 3 inbound NULL `source_domain_module_id` (159, 163, 647) owed by RMM, REMOTE-ACCESS x2.
 - **B11 (Rule #15 notes pollution):** PASS on handoff 835 (cleared 2026-05-31 continuation). chat_messages (565) data_object `notes` STILL carries auto-populated Rule #12 reasoning prose; that note belongs to WSC, not MSP-PSA (B2-S3 routes).
 - **B12 (data_object_aliases):** PASS. 12 aliases across all 5 masters, all carry `notes=""`.
 - **C (intra-domain relationships):** PASS. 17 relationships including 6 inter-master FKs (msp_clients holds_contracts msp_contracts; msp_contracts covers_tickets msp_tickets; msp_clients raises_tickets msp_tickets; msp_tickets accrues_time msp_time_entries; msp_clients receives_invoices msp_invoices; msp_invoices consolidates_time msp_time_entries; msp_contracts generates_invoices msp_invoices) + 7 platform_builtin `users` 748 edges + 3 cross-domain edges to chat_messages, customer_complaints, customer_subscriptions.
@@ -267,7 +267,7 @@ Fresh structural Validate b1 audit. Confirms prior continuation fix (B1-S2) land
 - **F3 (skill_tools floor):** ADVISORY unchanged. Skill 85 carries 6 skill_tools (5 query + 1 side_effect), but module-level coverage unverifiable until F2 cured.
 - **F4 (operation_kind <-> data_object_id invariants):** PASS. The 5 query_* tools all carry their data_object_id; notify_person (side_effect) carries NULL as required.
 - **F5 (Semantius score):** NOT COMPUTABLE per-module. Rolls up from F2 hard-fail.
-- **H1 (APQC tagging):** PARTIAL-PROGRESS. 4 of 14 handoffs now carry `handoff_processes` rows (all `proposal_source=agent_curated`, `record_status=new`). 10 untagged remain (159 RMM->SVC-DESK monitoring_alert.threshold_breached; 161 SVC-DESK->HAM ticket.created hardware_assets; 523 SVC-DESK->CSM msp_ticket.escalated; 524 TIME-BILLING->ERP-FIN msp_invoice.issued; 525 CONTRACTS->CSM msp_contract.renewal_due; 526 CONTRACTS->ERP-FIN msp_contract.activated; 1244 SVC-DESK->DISPATCH msp_ticket.created; 1245 SVC-DESK->TIME-BILLING msp_time_entry.approved; 1246 CONTRACTS->TIME-BILLING msp_contract.activated; 1247 CONTRACTS->SVC-DESK msp_contract.suspended). PCF lookup table below.
+- **H1 (APQC tagging):** PARTIAL-PROGRESS. 4 of 14 handoffs now carry `handoff_processes` rows (all `proposal_source=agent_curated`, `record_status=new`). 10 untagged remain (159 RMM->SVC-DESK monitoring_alert.threshold_breached; 161 SVC-DESK->HAM ticket.created hardware_assets; 523 SVC-DESK->CSM msp_ticket.escalated; 524 TIME-BILLING->FIN msp_invoice.issued; 525 CONTRACTS->CSM msp_contract.renewal_due; 526 CONTRACTS->FIN msp_contract.activated; 1244 SVC-DESK->DISPATCH msp_ticket.created; 1245 SVC-DESK->TIME-BILLING msp_time_entry.approved; 1246 CONTRACTS->TIME-BILLING msp_contract.activated; 1247 CONTRACTS->SVC-DESK msp_contract.suspended). PCF lookup table below.
 
 ### Bucket 1 (count summary)
 
@@ -287,9 +287,9 @@ Fresh structural Validate b1 audit. Confirms prior continuation fix (B1-S2) land
 Carryover items from 2026-05-30:
 
 - **B1-S1** (M7, 3 sibling consumer rows on msp_clients) - blocked on B2-S1.
-- **B1-S3** (B10b outbound NULL target_domain_module_id on 161 HAM, 523 CSM, 524 ERP-FIN, 525 CSM, 526 ERP-FIN) - report-only; owed by HAM/CSM/ERP-FIN audits.
+- **B1-S3** (B10b outbound NULL target_domain_module_id on 161 HAM, 523 CSM, 524 FIN, 525 CSM, 526 FIN) - report-only; owed by HAM/CSM/FIN audits.
 - **B1-S4** (B10b inbound NULL source_domain_module_id on 159 RMM, 163 REMOTE-ACCESS, 647 REMOTE-ACCESS) - report-only; owed by RMM/REMOTE-ACCESS audits. Handoff 160 also has NULL target (REMOTE-ACCESS owes).
-- **B1-S5** (pairwise consumer DMDOs missing on CSM, ERP-FIN, HAM target modules) - report-only.
+- **B1-S5** (pairwise consumer DMDOs missing on CSM, FIN, HAM target modules) - report-only.
 - **B1-S6** (E1/E2: 5 roles missing) - blocked on B2-S5.
 - **B1-S7** (E3: 12 baseline + 16 workflow-gate permissions missing) - depends on B1-S6.
 - **B1-S8** (F2: 4 module-bound system skills missing) - blocked on B2-S4.
@@ -307,9 +307,9 @@ APQC PCF candidates for the 10 untagged handoffs (Bucket 1 actionable):
 | 159 | RMM -> SVC-DESK | monitoring_alert.threshold_breached | msp_tickets | Operate IT user support | 20921 (id 295) | confident L3 (mirrors 160/163/647) |
 | 161 | SVC-DESK -> HAM | ticket.created | hardware_assets | Maintain IT asset records | 20918 (id 1312) | confident L4 |
 | 523 | SVC-DESK -> CSM | msp_ticket.escalated | msp_tickets | Manage customer service problems, requests, and inquiries | 10388 (id 196) | confident L3 (mirrors 835) |
-| 524 | TIME-BILLING -> ERP-FIN | msp_invoice.issued | msp_invoices | Invoice customer | 10743 (id 302) | confident L3 |
+| 524 | TIME-BILLING -> FIN | msp_invoice.issued | msp_invoices | Invoice customer | 10743 (id 302) | confident L3 |
 | 525 | CONTRACTS -> CSM | msp_contract.renewal_due | msp_contracts | Manage customer service problems, requests, and inquiries | 10388 (id 196) | medium L3 (renewal-outreach is closest cross-industry parent) |
-| 526 | CONTRACTS -> ERP-FIN | msp_contract.activated | msp_contracts | Maintain IT customer contracts | 20637 (id 1094) | confident L4 |
+| 526 | CONTRACTS -> FIN | msp_contract.activated | msp_contracts | Maintain IT customer contracts | 20637 (id 1094) | confident L4 |
 | 1244 | SVC-DESK -> DISPATCH | msp_ticket.created | msp_tickets | Operate IT user support | 20921 (id 295) | confident L3 (intra-domain) |
 | 1245 | SVC-DESK -> TIME-BILLING | msp_time_entry.approved | msp_time_entries | Report time | 10753 (id 312) | confident L3 |
 | 1246 | CONTRACTS -> TIME-BILLING | msp_contract.activated | msp_contracts | Maintain IT customer contracts | 20637 (id 1094) | confident L4 |
@@ -343,7 +343,7 @@ If B2-S7 picks (a) PROMOTE msp_dispatch_schedules, that decision dovetails with 
 | RMM | B10b: populate `source_domain_module_id` on handoff 159. |
 | REMOTE-ACCESS | B10b: populate `source_domain_module_id` on 163, 647; populate `target_domain_module_id` on 160. |
 | CSM | B10b: populate `target_domain_module_id` on 523, 525. Add `consumer` DMDOs on `msp_tickets` (233) and `msp_contracts` (234) on the receiving CSM module. |
-| ERP-FIN | B10b: populate `target_domain_module_id` on 524, 526. Add `consumer` DMDOs on `msp_invoices` (236) and `msp_contracts` (234). |
+| FIN | B10b: populate `target_domain_module_id` on 524, 526. Add `consumer` DMDOs on `msp_invoices` (236) and `msp_contracts` (234). |
 | HAM | B10b: populate `target_domain_module_id` on 161. |
 | WSC | Rule #15: revert `chat_messages` (565) `data_objects.notes` if not user-approved (per B2-S3). |
 
@@ -429,8 +429,8 @@ already necessity=optional).
 
 ### Left (untouched)
 
-- **b1b blocked on other domains' audits:** B1B-S3 (HAM/CSM/ERP-FIN B10b target FK), B1B-S4
-  (RMM/REMOTE-ACCESS B10b source/target FK), B1B-S5 (CSM/ERP-FIN consumer DMDOs on MSP-PSA masters).
+- **b1b blocked on other domains' audits:** B1B-S3 (HAM/CSM/FIN B10b target FK), B1B-S4
+  (RMM/REMOTE-ACCESS B10b source/target FK), B1B-S5 (CSM/FIN consumer DMDOs on MSP-PSA masters).
 - **b1b blocked on user decision:** B1B-S1 (M7, ref B2-S1), B1B-S6 (roles, ref B2-S5),
   B1B-S7 (permissions, depends B1B-S6/B2-S5), B1B-S10 (DISPATCH M1, ref B2-S7).
 - **b1b RETIRED (superseded 2026-06-06):** B1B-S8 (per-module system skills), B1B-S9 (skill_tools

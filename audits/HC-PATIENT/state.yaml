@@ -46,14 +46,14 @@ b1a:
 
   - id: B1A-B8-CROSS-DOMAIN-RELS
     summary: Author outbound cross-domain payload-target `data_object_relationships` rows for handoffs 900, 903 (and 901 if B2-3 keeps it). Handoffs 899 / 902 already covered by rows 466, 467.
-    finding: B8 partial fail. Outbound handoffs to ERP-FIN (900 clinical_encounter.completed; 903 clinical_note.signed) have no corresponding payload-target relationship row, and ERP-FIN does not master a clean target (`invoices`) per the prior audit, so the target master is not named. Handoff 901 (clinical_order.placed -> ITSM service_incidents) is semantically suspect (see B2-3).
-    action: Draft rows for handoffs 900, 903 once the ERP-FIN (or HC-RCM intermediary) target master is named. Defer 901 until B2-3 resolves. Blocked on the target master decision, which is a B2 / Phase 0 dependency.
+    finding: B8 partial fail. Outbound handoffs to FIN (900 clinical_encounter.completed; 903 clinical_note.signed) have no corresponding payload-target relationship row, and FIN does not master a clean target (`invoices`) per the prior audit, so the target master is not named. Handoff 901 (clinical_order.placed -> ITSM service_incidents) is semantically suspect (see B2-3).
+    action: Draft rows for handoffs 900, 903 once the FIN (or HC-RCM intermediary) target master is named. Defer 901 until B2-3 resolves. Blocked on the target master decision, which is a B2 / Phase 0 dependency.
     affected_handoffs:
-      - {handoff_id: 900, direction: outbound, source_domain: HC-PATIENT, target_domain: ERP-FIN, trigger_event: clinical_encounter.completed, payload: clinical_encounters, null_field: relationship}
-      - {handoff_id: 903, direction: outbound, source_domain: HC-PATIENT, target_domain: ERP-FIN, trigger_event: clinical_note.signed, payload: clinical_notes, null_field: relationship}
+      - {handoff_id: 900, direction: outbound, source_domain: HC-PATIENT, target_domain: FIN, trigger_event: clinical_encounter.completed, payload: clinical_encounters, null_field: relationship}
+      - {handoff_id: 903, direction: outbound, source_domain: HC-PATIENT, target_domain: FIN, trigger_event: clinical_note.signed, payload: clinical_notes, null_field: relationship}
     blocked_by:
       - {type: depends_on, ref: B2-3, reason: handoff 901 semantic correctness blocks one of the rows}
-      - {type: catalog_addition, scope: domains, trigger: ERP-FIN / HC-RCM target master not named}
+      - {type: catalog_addition, scope: domains, trigger: FIN / HC-RCM target master not named}
 
   - id: B1A-B9-ORPHAN-EVENT
     summary: Trigger event 1022 (`patient_appointment.scheduled`) has zero `handoffs` rows; the publish leg is orphaned.
@@ -86,10 +86,10 @@ b1a:
     action: After B1A-BUILD lands, run the standard backfill PATCH for the 5 outbound handoffs per the wiring above.
     affected_handoffs:
       - {handoff_id: 899, direction: outbound, source_domain: HC-PATIENT, target_domain: CSM, trigger_event: patient_appointment.no_show, payload: patient_appointments, null_field: source_domain_module_id}
-      - {handoff_id: 900, direction: outbound, source_domain: HC-PATIENT, target_domain: ERP-FIN, trigger_event: clinical_encounter.completed, payload: clinical_encounters, null_field: source_domain_module_id}
+      - {handoff_id: 900, direction: outbound, source_domain: HC-PATIENT, target_domain: FIN, trigger_event: clinical_encounter.completed, payload: clinical_encounters, null_field: source_domain_module_id}
       - {handoff_id: 901, direction: outbound, source_domain: HC-PATIENT, target_domain: ITSM, trigger_event: clinical_order.placed, payload: service_incidents, null_field: source_domain_module_id}
       - {handoff_id: 902, direction: outbound, source_domain: HC-PATIENT, target_domain: CSM, trigger_event: patient_referral.created, payload: patient_referrals, null_field: source_domain_module_id}
-      - {handoff_id: 903, direction: outbound, source_domain: HC-PATIENT, target_domain: ERP-FIN, trigger_event: clinical_note.signed, payload: clinical_notes, null_field: source_domain_module_id}
+      - {handoff_id: 903, direction: outbound, source_domain: HC-PATIENT, target_domain: FIN, trigger_event: clinical_note.signed, payload: clinical_notes, null_field: source_domain_module_id}
     blocked_by:
       - {type: prerequisite_entity, ref: B1A-BUILD}
 

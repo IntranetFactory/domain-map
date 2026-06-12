@@ -70,11 +70,11 @@ S3 per-master coverage: every master returns 0 lifecycle states, 0 aliases, and 
 - **B5 N/A.** No `embedded_master` rows exist on BANK-OPS (since no modules).
 - **B6 FAIL.** Zero intra-domain edges among the 8 masters in `data_object_relationships`. The only two rows on BANK-OPS masters point cross-domain (rows 462, 463: `account_openings opens customer_cases` and `banking_cases opens customer_cases`). The verb `opens` for both is suspect (account_openings doesn't open CSM customer_cases, it creates an account; banking_cases is itself a case shell, so "opens customer_cases" reads as a chain rather than a verb). Intra-domain edges that should exist by workflow: `loan_applications spawns loan_disbursements`, `account_applications spawns account_openings`, `loan_applications requires banking_kyc_reviews`, `account_applications requires banking_kyc_reviews`, `wire_transfers logs banking_transactions`, `loan_disbursements logs banking_transactions`, `banking_cases references banking_transactions`.
 - **B7 FAIL.** Zero `users` edges (related_data_object_id=748). Every master has user-typed actors: loan_applications (originator, underwriter), account_applications (owner, KYC officer), banking_kyc_reviews (reviewer), banking_cases (case_owner, escalation_manager), wire_transfers (initiator, approver), banking_transactions (poster), loan_disbursements (funder), account_openings (relationship_manager).
-- **B8 FAIL (outbound direction).** Of the 7 outbound cross-domain handoffs, only 2 have a `data_object_relationships` row that mirrors the payload (rows 462, 463 against `customer_cases`). Five outbound handoffs have no relationship mirror: `banking_kyc_review.flagged` -> GRC (no edge to GRC compliance entity), `wire_transfer.sanctions_hit` -> GRC, `banking_transaction.suspicious` -> GRC, `loan_disbursement.executed` -> ERP-FIN, `wire_transfer.initiated` -> ERP-FIN.
+- **B8 FAIL (outbound direction).** Of the 7 outbound cross-domain handoffs, only 2 have a `data_object_relationships` row that mirrors the payload (rows 462, 463 against `customer_cases`). Five outbound handoffs have no relationship mirror: `banking_kyc_review.flagged` -> GRC (no edge to GRC compliance entity), `wire_transfer.sanctions_hit` -> GRC, `banking_transaction.suspicious` -> GRC, `loan_disbursement.executed` -> FIN, `wire_transfer.initiated` -> FIN.
 - **B9 partial / event_category FAIL.** 10 trigger_events authored (good coverage on the 8 masters). All 10 carry `event_category=""` (empty). Per Rule #13 the enum is `lifecycle | state_change | threshold | signal`. Every event here reads as `state_change` (e.g. `loan_application.submitted`, `wire_transfer.sanctions_hit`); two read as `signal` (`banking_transaction.suspicious`, `banking_kyc_review.flagged`). Cure: PATCH `event_category` per event. Also: 3 of 10 trigger_events have no `handoffs` row at all (`loan_application.submitted`, `loan_application.approved`, `account_application.submitted`) - these are intra-domain progressions and become intra-domain `handoffs` once modules exist (B9b runs only post-modularization).
 - **B9b N/A.** Domain has no modules, so the multi-module cross-pair query doesn't apply yet. Re-run B9b after M1 is cured.
 - **B10 (inbound, report-only).** Zero inbound handoffs. Since BANK-OPS has zero `embedded_master` / `consumer` / `contributor` rows (because no modules), the discovery procedure has nothing to scan. Inbound publishers from CRM (contacts -> banking_kyc_reviews via customer.created), MDM (party master refresh), HCM (employee.terminated may close access on accounts), SECOPS (incident.escalated could open a banking_case) may be owed once BANK-OPS is modularized, but those are speculative until then. Report-only.
-- **B10b.** All 7 outbound handoffs have NULL `source_domain_module_id` AND NULL `target_domain_module_id`. The source-side NULL is legitimate by virtue of M1 (source domain not modularized). The target-side NULL is owed by the target domain's B10b pass (GRC, ERP-FIN, CSM) - those rows resolve when those target domains run their own B10b. Report-only on the target side; the source-side resolves automatically once M1 is fixed (re-run the backfill loader after Phase M ships).
+- **B10b.** All 7 outbound handoffs have NULL `source_domain_module_id` AND NULL `target_domain_module_id`. The source-side NULL is legitimate by virtue of M1 (source domain not modularized). The target-side NULL is owed by the target domain's B10b pass (GRC, FIN, CSM) - those rows resolve when those target domains run their own B10b. Report-only on the target side; the source-side resolves automatically once M1 is fixed (re-run the backfill loader after Phase M ships).
 - **B11 FAIL.** Zero aliases. Non-self-explanatory masters: `banking_kyc_reviews` (aliases: AML review, EDD review, CDD review, BSA review, due-diligence file), `banking_cases` (aliases: dispute case, bank dispute, complaint, regulatory case), `wire_transfers` (aliases: SWIFT, MT103, Fedwire, RTGS transfer), `banking_transactions` (aliases: posting, ledger entry, account movement).
 - **B12 FAIL.** Zero `data_object_lifecycle_states` rows for any master. Workflow-bearing masters needing state machines: `loan_applications` (draft / submitted / under_review / approved / declined / funded / archived), `account_applications` (submitted / kyc_pending / approved / declined / converted_to_opening), `account_openings` (provisioning / active / dormant / closed), `banking_kyc_reviews` (queued / in_review / flagged / cleared / escalated / closed), `banking_cases` (open / triaged / investigating / escalated / resolved / closed), `wire_transfers` (initiated / screening / approved / sent / settled / returned / rejected), `loan_disbursements` (scheduled / authorized / executed / reversed), `banking_transactions` (pending / posted / reconciled / disputed / reversed - though this may be config-shaped because most rows are append-only ledger entries).
 
@@ -132,7 +132,7 @@ Edge weights derived from `handoffs` (source = BANK-OPS) - inbound is zero. DMDO
 | --- | --- | --- | --- | --- |
 | GRC (15) | 3 (`banking_kyc_review.flagged`, `wire_transfer.sanctions_hit`, `banking_transaction.suspicious`) | 0 | 3 | yes |
 | CSM (30) | 2 (`account_opening.completed`, `banking_case.opened`) | 0 | 2 | summary only |
-| ERP-FIN (65) | 2 (`loan_disbursement.executed`, `wire_transfer.initiated`) | 0 | 2 | summary only |
+| FIN (65) | 2 (`loan_disbursement.executed`, `wire_transfer.initiated`) | 0 | 2 | summary only |
 
 ### Pass 4 - Pairwise reconciliation per neighbor (weight >= 3)
 
@@ -154,9 +154,9 @@ All four legs evaluated against GRC's catalog state at audit time. GRC has modul
 
 2 outbound (`account_opening.completed`, `banking_case.opened`). Mirror relationships rows 462 / 463 exist (`account_openings opens customer_cases`, `banking_cases opens customer_cases`) but the verb `opens` is suspect (see B1-S3). No null-FK fixes possible on source side until M1.
 
-#### BANK-OPS -> ERP-FIN (weight 2, summary)
+#### BANK-OPS -> FIN (weight 2, summary)
 
-2 outbound (`loan_disbursement.executed`, `wire_transfer.initiated`). No mirror relationships on BANK-OPS side; ERP-FIN B10b owes the target-module attribution.
+2 outbound (`loan_disbursement.executed`, `wire_transfer.initiated`). No mirror relationships on BANK-OPS side; FIN B10b owes the target-module attribution.
 
 ### Bucket 1 - In-scope confirmed gaps
 
@@ -186,7 +186,7 @@ These are not Phase 0 speculative because they are statute-mandated for any bank
 | --- | --- | --- |
 | B1-B1 | B6 - Zero intra-domain `data_object_relationships` among 8 masters. Author at minimum: `loan_applications spawns loan_disbursements` (1:1, required), `account_applications spawns account_openings` (1:1, required), `loan_applications requires banking_kyc_reviews` (many_to_one, required), `account_applications requires banking_kyc_reviews` (many_to_one, required), `wire_transfers logs banking_transactions` (1:M, required), `loan_disbursements logs banking_transactions` (1:1, required), `banking_cases references banking_transactions` (many_to_many, optional). | Author 7 edges. Loader pattern: focused .ts loader. |
 | B1-B2 | B7 - Zero `users` edges. Author 8 edges (one per master) per Rule #10. Edge verbs: loan_applications {originated_by, underwritten_by}, account_applications {opened_by, kyc_reviewed_by}, account_openings {provisioned_by, relationship_manager}, banking_kyc_reviews {reviewed_by, escalation_to}, banking_cases {assigned_to, escalated_to}, wire_transfers {initiated_by, approved_by}, loan_disbursements {funded_by}, banking_transactions {posted_by}. | Author 8 (or more, multi-actor) edges. Loader pattern: same as B1-B1. |
-| B1-B3 | B8 outbound - 5 cross-domain handoffs lack mirror `data_object_relationships` (886, 887, 888, 889, 892). Per Pass 4 deltas: 3 to GRC's compliance-alert master, 2 to ERP-FIN's journal / payment master. | Author 5 relationship rows; the GRC-side target master needs lookup (GRC has multiple compliance entities; pick the one DMDO consumed at GRC). |
+| B1-B3 | B8 outbound - 5 cross-domain handoffs lack mirror `data_object_relationships` (886, 887, 888, 889, 892). Per Pass 4 deltas: 3 to GRC's compliance-alert master, 2 to FIN's journal / payment master. | Author 5 relationship rows; the GRC-side target master needs lookup (GRC has multiple compliance entities; pick the one DMDO consumed at GRC). |
 | B1-B4 | B9 - 10 trigger_events have `event_category=""`. PATCH each row to the right enum: 8 are `state_change` (loan_application.submitted, .approved, account_application.submitted, account_opening.completed, banking_case.opened, wire_transfer.initiated, loan_disbursement.executed, banking_kyc_review.flagged), 2 are `signal` (banking_transaction.suspicious, wire_transfer.sanctions_hit). | PATCH-loop on `trigger_events`. |
 | B1-B5 | B11 - Zero aliases on non-self-explanatory masters. Author at minimum: banking_kyc_reviews (AML review, EDD review, CDD review, BSA review, due-diligence file), banking_cases (dispute case, bank dispute, complaint, regulatory case), wire_transfers (SWIFT, MT103, Fedwire, RTGS transfer), banking_transactions (posting, ledger entry, account movement). | Phase B aliases loader. |
 | B1-B6 | B12 - Zero lifecycle states. Author state machines for 7 workflow-bearing masters (banking_transactions is borderline config-shape; surface in Bucket 2). State-by-state shape proposed under B-band B12 above; load with `requires_permission=true` on workflow-gate states + `permission_verb_override` where the verb is non-obvious (e.g. wire_transfers.approved -> `approve_wire_transfer`). `domain_module_id` populated per the module split chosen in Bucket 2 #1. | Phase B lifecycle loader; depends on M1 modules existing. |
@@ -202,10 +202,10 @@ These are not Phase 0 speculative because they are statute-mandated for any bank
 | 886 | BANK-OPS -> GRC | banking_kyc_review.flagged | banking_kyc_reviews | Manage compliance | 70 | confident L2 |
 | 887 | BANK-OPS -> GRC | wire_transfer.sanctions_hit | wire_transfers | Manage compliance | 70 | confident L2 |
 | 888 | BANK-OPS -> GRC | banking_transaction.suspicious | banking_transactions | Manage financial fraud/dispute cases | 323 | confident L3 |
-| 889 | BANK-OPS -> ERP-FIN | loan_disbursement.executed | loan_disbursements | Process payments | 1438 | confident L4 |
+| 889 | BANK-OPS -> FIN | loan_disbursement.executed | loan_disbursements | Process payments | 1438 | confident L4 |
 | 890 | BANK-OPS -> CSM | account_opening.completed | account_openings | Manage customer service problems, requests, and inquiries | 196 | medium L3 (the trigger is account-provisioning, not service; alternative: punt to L1 customer-service for now and revisit) |
 | 891 | BANK-OPS -> CSM | banking_case.opened | banking_cases | Manage financial fraud/dispute cases | 323 | confident L3 |
-| 892 | BANK-OPS -> ERP-FIN | wire_transfer.initiated | wire_transfers | Process payments | 1438 | confident L4 (alternative: Authorize payment id 945) |
+| 892 | BANK-OPS -> FIN | wire_transfer.initiated | wire_transfers | Process payments | 1438 | confident L4 (alternative: Authorize payment id 945) |
 
 All 7 tagged in this pass. No defers (the PCF cross-industry framework covers all 7 handoff shapes). Author `proposal_source='agent_curated'`, `record_status='new'`. Composed key `(handoff_id, process_id)` prevents duplicates.
 
@@ -223,7 +223,7 @@ All 7 tagged in this pass. No defers (the PCF cross-industry framework covers al
 
 6. **Risk / Compliance C-band contributor.** C1 has Business Operations (owner) and Finance (contributor). The risk/compliance function (GRC owner) is clearly a co-contributor on BANK-OPS but doesn't appear. Add a third contributor row? Depends on the function spine naming; surface for user.
 
-7. **Pairwise reconciliation scope.** Only GRC crosses the weight-3 threshold. Decide: (a) defer GRC pairwise until M1 is cured (most legs are blocked on module attribution); (b) run lightweight GRC pairwise now to surface the GRC-side missing-handoff candidates; (c) run pairwise on CSM and ERP-FIN as well despite weight 2.
+7. **Pairwise reconciliation scope.** Only GRC crosses the weight-3 threshold. Decide: (a) defer GRC pairwise until M1 is cured (most legs are blocked on module attribution); (b) run lightweight GRC pairwise now to surface the GRC-side missing-handoff candidates; (c) run pairwise on CSM and FIN as well despite weight 2.
 
 ### Bucket 3 - Phase 0 pending (speculative; vendor-research vetting needed)
 
@@ -263,7 +263,7 @@ Universal-or-near-universal vendor entities surfaced by the analyst-side market 
 - **GRC B10b owes** target-module attribution on the 3 BANK-OPS -> GRC handoffs (886, 887, 888). The right GRC module is likely GRC-COMPLIANCE-OPS / GRC-COMPLIANCE-CASES (whichever currently masters the compliance-alert entity). Surfaces when GRC is next audited.
 - **GRC B8 inbound owes** consumer DMDO coverage on `banking_kyc_reviews`, `wire_transfers`, `banking_transactions` (so the 3 outbound handoffs have a target-side consumer to attach to). GRC's B10b sub-case-2 may trigger this.
 - **CSM B10b owes** target-module attribution on the 2 BANK-OPS -> CSM handoffs (890, 891). Likely CSM-CASE-MGMT or CSM-RETAIL-DESK.
-- **ERP-FIN B10b owes** target-module attribution on the 2 BANK-OPS -> ERP-FIN handoffs (889, 892). Likely ERP-FIN-AP-AR or ERP-FIN-LEDGER.
+- **FIN B10b owes** target-module attribution on the 2 BANK-OPS -> FIN handoffs (889, 892). Likely FIN-AP-AR or FIN-LEDGER.
 - **Inbound publishers BANK-OPS may be owed once modularized:** CRM (`customer.created` -> kicks `banking_kyc_reviews`), MDM (party master refresh -> KYC re-screen), HCM (`employee.terminated` -> close internal accounts), SECOPS (`incident.escalated` -> open banking_case for account compromise). Speculative until BANK-OPS is modularized.
 - **All 7 outbound `handoffs` rows carry NULL `source_domain_module_id`.** This is correctly NULL until M1 is cured, but the catalog-wide B10b sweep (mode b2) will flag them. After Phase M ships on BANK-OPS, re-run the backfill loader to resolve source-side module attribution.
 
@@ -283,7 +283,7 @@ Subagent applied the truly-technical subset of Bucket 1 via `.tmp_deploy/fix_ban
 - **B1-S1, B1-S2, B1-S3, B1-M1, B1-M2, B1-M3, B1-M4, B1-B6.** Each creates new entities (modules / capabilities / data_objects / lifecycle states / catalog_tagline / catalog_description). Outside technical scope; B1-S1 + B1-S2 + B1-S3 also gated on B2 #1 (module-split decision) and Rule #20 (user-review for tagline/description). B1-B6 also gated on B1-S1 (lifecycle states need realizing `domain_module_id`).
 - **B1-S4.** Skill rename gated on M1 (per-module skills do not exist yet); send_email -> notify_person channel swap is user judgment (B2 #4).
 - **B1-B1.** Intra-domain `data_object_relationships` (7 rows) pre-specified by audit but outside the task scope, which only licenses user-edges per Rule #10.
-- **B1-B3.** Cross-domain mirror relationships (5 rows): requires lookup of GRC's compliance-alert master and judgment on which ERP-FIN entity to mirror against; defer to user.
+- **B1-B3.** Cross-domain mirror relationships (5 rows): requires lookup of GRC's compliance-alert master and judgment on which FIN entity to mirror against; defer to user.
 - **B1-B7.** Pattern flag flips (`has_personal_content`, `has_submit_lock`, `has_single_approver`) explicitly deferred in task scope.
 - **B1-B8.** New `domain_aliases` for BANK-OPS explicitly deferred in task scope.
 
@@ -331,11 +331,11 @@ None. No JWT-audience errors.
 - B5 N/A.
 - B6 partial. 14 user-edges landed (Rule #10, B1-B2). Zero intra-domain edges among the 8 BANK-OPS masters still exist. The 7-edge intra-domain plan (loan_applications spawns loan_disbursements, account_applications spawns account_openings, etc.) is deterministic now (no module dependency, all edges are master-to-master); reclassified as b1a (B1A-B1).
 - B7 PASS (was FAIL). 14 `users` -> master edges via the 2026-05-31 Continuation cover all 8 masters with multi-actor verbs (originator + underwriter, opener + KYC reviewer, etc.).
-- B8 FAIL outbound (unchanged). 5 of 7 cross-domain handoffs still lack mirror `data_object_relationships`: 886 (banking_kyc_review.flagged -> GRC), 887 (wire_transfer.sanctions_hit -> GRC), 888 (banking_transaction.suspicious -> GRC), 889 (loan_disbursement.executed -> ERP-FIN), 892 (wire_transfer.initiated -> ERP-FIN). The 2 existing edges (462, 463) point at CSM customer_cases. B1-B3 deferred from prior pass; remains blocked on GRC compliance-alert-master + ERP-FIN journal-master lookups.
+- B8 FAIL outbound (unchanged). 5 of 7 cross-domain handoffs still lack mirror `data_object_relationships`: 886 (banking_kyc_review.flagged -> GRC), 887 (wire_transfer.sanctions_hit -> GRC), 888 (banking_transaction.suspicious -> GRC), 889 (loan_disbursement.executed -> FIN), 892 (wire_transfer.initiated -> FIN). The 2 existing edges (462, 463) point at CSM customer_cases. B1-B3 deferred from prior pass; remains blocked on GRC compliance-alert-master + FIN journal-master lookups.
 - B9 PASS (was FAIL). All 10 trigger_events carry `event_category` (8 `state_change` + 2 `signal`) per the 2026-05-31 Continuation B1-B4 patch.
 - B9b N/A. No modules.
 - B10 (inbound, report-only). Zero inbound handoffs. Speculative until M1.
-- B10b. All 7 outbound handoffs still NULL on both `source_domain_module_id` (legitimate, awaits M1) and `target_domain_module_id` (target B10b owes attribution; GRC, ERP-FIN, CSM each owe per-module FK on their inbound side).
+- B10b. All 7 outbound handoffs still NULL on both `source_domain_module_id` (legitimate, awaits M1) and `target_domain_module_id` (target B10b owes attribution; GRC, FIN, CSM each owe per-module FK on their inbound side).
 - B11 PASS (was FAIL). 16 aliases on the 4 non-self-explanatory masters per the 2026-05-31 Continuation B1-B5 patch.
 - B12 FAIL (unchanged). Zero `data_object_lifecycle_states` rows for any master. Workflow-bearing masters (loan_applications, account_applications, account_openings, banking_kyc_reviews, banking_cases, wire_transfers, loan_disbursements) need state machines; `banking_transactions` is borderline config-shape (Bucket 2 #3). B1-B6 from prior pass; remains b1b (lifecycle states need realizing `domain_module_id` which depends on Bucket 2 #1).
 
@@ -397,7 +397,7 @@ All 13 candidate entities from the 2026-05-30 pass remain open. No new B3 items.
 - **Bucket 2 #4 (channel pattern)** gates B1B-S4.
 - **Bucket 2 #8 (H1 approvals)** is independent.
 - **B1A-B1 (intra-domain edges)** is independent and immediately actionable.
-- **B1B-B3 (cross-domain B8 mirrors)** is independent of M1 in principle but depends on GRC compliance-alert-master and ERP-FIN journal-master lookups (b3-shaped sub-task), so it is parked as b1b with `blocked_by[]` pointing at catalog_addition triggers.
+- **B1B-B3 (cross-domain B8 mirrors)** is independent of M1 in principle but depends on GRC compliance-alert-master and FIN journal-master lookups (b3-shaped sub-task), so it is parked as b1b with `blocked_by[]` pointing at catalog_addition triggers.
 - **B3 (13 candidates)** is partly informed by Bucket 2 #1 (proposed module placements re-home if shape changes).
 
 ### Per-bucket prompts
@@ -411,7 +411,7 @@ All 13 candidate entities from the 2026-05-30 pass remain open. No new B3 items.
 - GRC B10b owes target-module attribution on 886, 887, 888.
 - GRC B8 inbound owes consumer DMDO coverage on banking_kyc_reviews, wire_transfers, banking_transactions.
 - CSM B10b owes target-module attribution on 890, 891.
-- ERP-FIN B10b owes target-module attribution on 889, 892.
+- FIN B10b owes target-module attribution on 889, 892.
 - Inbound publishers BANK-OPS may be owed (CRM / MDM / HCM / SECOPS) speculative until modularized.
 - All 7 outbound handoffs carry NULL `source_domain_module_id` (cured by re-running backfill loader after Phase M ships).
 
@@ -452,14 +452,14 @@ Notable correction vs the stale snapshot: C1 already had 2 business_function_dom
 - **B2-2 (banking_cases vs CSM customer_cases).** Rewrite the suspect 'opens' verb, demote banking_cases to embedded_master of customer_cases, or disambiguate. Options (a)/(b) overwrite/restructure existing rows (462/463) -> destructive, needs sign-off; not applied.
 - **B2-3 (banking_transactions lifecycle).** Now classified operational_record (states optional). Decide: full dispute/reverse machine, slim 3-state, or leave stateless.
 - **B2-5 (verb override wording).** Pick permission-code verbs for loan_applications.approved, wire_transfers.approved, banking_kyc_reviews.cleared, banking_cases.resolved (drives B1B-B6).
-- **B2-7 (GRC pairwise timing).** Defer until M1 cured, run lightweight GRC pairwise now, or run CSM + ERP-FIN too.
+- **B2-7 (GRC pairwise timing).** Defer until M1 cured, run lightweight GRC pairwise now, or run CSM + FIN too.
 - **B2-8 (H1 catalog-quality approvals), DESTRUCTIVE.** All 7 agent_curated handoff_processes rows (886/70, 887/70, 888/323, 889/1438, 890/196, 891/323, 892/1438) verified present at record_status='new'; coverage is complete. Stamping `approved` is a record_status flip the agent never does (Rule #1) -> user decision. Pair 890/196 carries a 'medium L3 confidence' note.
 - **Personas / RACI (Phase P).** DEFERRED: the domain is unbuilt (single-module-by-absence), so Phase P does not apply yet. No personas authored. Candidate personas once built and multi-module: Loan Officer, KYC/AML Analyst, Compliance Officer, Banking Operations Manager, Case Agent, Teller.
 
 ### Left (untouched)
 
 - **B1A-BUILD + b1b (B1B-S1, B1B-S2, B1B-M1..M4, B1B-B6, B1B-B7).** Blocked on the build / on B2-1 (module split). B1B-B6 also gated on B2-3 + B2-5; B1B-B7 gated on B1B-B6. Not scaffolded per the unbuilt-leave rule.
-- **B1B-B3 (5 cross-domain mirror relationships).** Blocked on GRC compliance-alert master + ERP-FIN payment/journal master lookups (owed by those domains' audits).
+- **B1B-B3 (5 cross-domain mirror relationships).** Blocked on GRC compliance-alert master + FIN payment/journal master lookups (owed by those domains' audits).
 - **Former B1B-S4 + B2-4 (send_email -> notify_person on bank-ops-system skill_tools; channel fan-out pattern).** RETIRED by the 2026-06-06 per-domain-skill supersession (skill_tools / per-module-skill model dropped). Reframed as a note in the state header; not acted on.
 - **b3 (13 candidate masters).** Backlog; vendor-research vetting still open.
 

@@ -45,18 +45,18 @@ b1a:
       The event_category half is EXECUTED (2026-06-07): 602 (audit_plan.updated) -> lifecycle,
       603 (control_test.executed) -> state_change, 605 (work_paper.completed) -> lifecycle. 228 and
       232 were already 'lifecycle'. Remaining open: the handoff-draft half. These 5 events publish
-      nothing today. 232 (audit_report.issued) fanning out to GRC, ERP-FIN, EPM (report distribution)
+      nothing today. 232 (audit_report.issued) fanning out to GRC, FIN, EPM (report distribution)
       is the most obvious miss; 228/602/603 likely publish to GRC; 605 is plausibly leaf.
       SURFACE-only: AUDIT is unbuilt (0 modules), so source_domain_module_id cannot be derived for
       any new handoff, and leaf-vs-publish per event is a Rule #1 judgment the user confirms.
     action: |
       Defer until B2-MOD-SHAPE resolves and the build lands (source FK derivation needs the module
       set). Then draft handoff rows or confirm leaf status per event. Default proposal:
-      228 -> GRC, 232 -> GRC + ERP-FIN + EPM (3-row fan-out), 602 -> GRC, 603 -> GRC, 605 keep leaf.
+      228 -> GRC, 232 -> GRC + FIN + EPM (3-row fan-out), 602 -> GRC, 603 -> GRC, 605 keep leaf.
       Surface drafts to user per Rule #1 before insert.
     affected_events:
       - {id: 228, event_name: audit_engagement.created, current_category: lifecycle, proposed_publish: GRC}
-      - {id: 232, event_name: audit_report.issued, current_category: lifecycle, proposed_publish: "GRC + ERP-FIN + EPM"}
+      - {id: 232, event_name: audit_report.issued, current_category: lifecycle, proposed_publish: "GRC + FIN + EPM"}
       - {id: 602, event_name: audit_plan.updated, current_category: lifecycle, proposed_publish: GRC}
       - {id: 603, event_name: control_test.executed, current_category: state_change, proposed_publish: GRC}
       - {id: 605, event_name: work_paper.completed, current_category: lifecycle, proposed_publish: "leaf (default)"}
@@ -129,9 +129,9 @@ b1b:
       - {handoff_id: 257, direction: outbound, source_domain: AUDIT, target_domain: ITSM, trigger_event: audit_engagement.completed, payload: service_incidents, null_field: source_domain_module_id}
       - {handoff_id: 258, direction: outbound, source_domain: AUDIT, target_domain: TPRM, trigger_event: finding.remediated, payload: audit_findings, null_field: source_domain_module_id}
       - {handoff_id: 592, direction: outbound, source_domain: AUDIT, target_domain: GRC, trigger_event: control_test.deficient, payload: control_tests, null_field: source_domain_module_id}
-      - {handoff_id: 593, direction: outbound, source_domain: AUDIT, target_domain: ERP-FIN, trigger_event: control_test.deficient, payload: control_tests, null_field: source_domain_module_id}
+      - {handoff_id: 593, direction: outbound, source_domain: AUDIT, target_domain: FIN, trigger_event: control_test.deficient, payload: control_tests, null_field: source_domain_module_id}
       - {handoff_id: 594, direction: outbound, source_domain: AUDIT, target_domain: GRC, trigger_event: audit_plan.approved, payload: audit_plans, null_field: source_domain_module_id}
-      - {handoff_id: 595, direction: outbound, source_domain: AUDIT, target_domain: ERP-FIN, trigger_event: work_paper.signed_off, payload: work_papers, null_field: source_domain_module_id}
+      - {handoff_id: 595, direction: outbound, source_domain: AUDIT, target_domain: FIN, trigger_event: work_paper.signed_off, payload: work_papers, null_field: source_domain_module_id}
 
   - id: B1B-B10b-IN
     summary: "31 inbound handoffs missing target_domain_module_id. Backfill after MOD1."
@@ -199,9 +199,9 @@ b2:
     why: "Verb non-obvious, row invisible to downstream tooling. Both options are destructive (DELETE or verb overwrite); never run unapproved."
 
   - id: B2-PAIRWISE
-    summary: "Defer pairwise reconciliation for 5 heavy neighbors (GRC, ERP-FIN, EPM, ESG, LSD) or run inline?"
-    question: "Run full 5-section diff for all 5 heavy neighbors now, defer to follow-up, or only GRC + ERP-FIN?"
-    options: ["Run all 5 inline now", "Defer all (default; blocked by MOD1)", "Only GRC + ERP-FIN inline"]
+    summary: "Defer pairwise reconciliation for 5 heavy neighbors (GRC, FIN, EPM, ESG, LSD) or run inline?"
+    question: "Run full 5-section diff for all 5 heavy neighbors now, defer to follow-up, or only GRC + FIN?"
+    options: ["Run all 5 inline now", "Defer all (default; blocked by MOD1)", "Only GRC + FIN inline"]
     why: "Without modules, cross-module attribution can't run; the diff is mostly null-FK noise."
 
   - id: B2-DOMAIN-PEER

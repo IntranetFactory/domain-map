@@ -76,7 +76,7 @@ a7:
 
 ---
 
-q8: The seven cross-domain handoff process tags (to ITSM, CSM, and ERP-FIN) are authored and awaiting reviewer approval. Should they be promoted to approved? (yes/no)
+q8: The seven cross-domain handoff process tags (to ITSM, CSM, and FIN) are authored and awaiting reviewer approval. Should they be promoted to approved? (yes/no)
 
 Recommended: yes, if you agree the process mappings are correct. Promotion to approved is a per-row sign-off step, so it is never applied automatically.
 

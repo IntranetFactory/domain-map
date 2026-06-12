@@ -73,25 +73,25 @@ b1b:
     extra_band: F2
 
   - id: B1B-RPT-ERPFIN-MASTER
-    summary: "Report-only. ERP-FIN owes a module-layer role=master DMDO row on legal_entities (197)."
-    finding: "BEN-PLAN-DESIGN (71) and BEN-ACA-COMPLIANCE (74) both consume legal_entities (197) as consumer + required. Catalog-wide query /domain_module_data_objects?data_object_id=eq.197&role=eq.master returns []. The blueprint emitter cannot resolve the canonical owning module at deploy time. BEN-ADMIN's own consumer rows are correctly authored; the missing master row is an ERP-FIN obligation."
-    action: "Schedule b1 audit on ERP-FIN; ERP-FIN audit authors the master row on the relevant ERP-FIN module. No action by BEN-ADMIN."
+    summary: "Report-only. FIN owes a module-layer role=master DMDO row on legal_entities (197)."
+    finding: "BEN-PLAN-DESIGN (71) and BEN-ACA-COMPLIANCE (74) both consume legal_entities (197) as consumer + required. Catalog-wide query /domain_module_data_objects?data_object_id=eq.197&role=eq.master returns []. The blueprint emitter cannot resolve the canonical owning module at deploy time. BEN-ADMIN's own consumer rows are correctly authored; the missing master row is an FIN obligation."
+    action: "Schedule b1 audit on FIN; FIN audit authors the master row on the relevant FIN module. No action by BEN-ADMIN."
     blocked_by:
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: legal_entities_master_row}
+      - {type: domain_audit, blocking_domain: FIN, milestone: legal_entities_master_row}
     affected_entities:
       - domain_module_data_objects
     extra_band: B5
 
   - id: B1B-RPT-B10B-NULL
     summary: "Report-only. Three outbound cross-domain handoffs still carry NULL target_domain_module_id, owed by target domains."
-    finding: "BEN-ADMIN outbound handoffs 109 (BEN-ENROLLMENT to ERP-FIN, enrollment.changed / payroll_journal_entries), 418 (BEN-ENROLLMENT to HCM, life_event.approved / life_events), 419 (BEN-CARRIER-INTEG to ERP-FIN, carrier_feed.transmitted / carrier_feeds) carry NULL target_domain_module_id. Per the B10b asymmetry rule, target-domain attribution is the receiving side's responsibility. PAYROLL has already taken its 4 owings (108, 110, 188, 417 now populate target_module 90 or 92)."
-    action: "Schedule b1 audits on ERP-FIN (owes 109, 419) and HCM (owes 418). Each target domain patches its receiving end. No action by BEN-ADMIN."
+    finding: "BEN-ADMIN outbound handoffs 109 (BEN-ENROLLMENT to FIN, enrollment.changed / payroll_journal_entries), 418 (BEN-ENROLLMENT to HCM, life_event.approved / life_events), 419 (BEN-CARRIER-INTEG to FIN, carrier_feed.transmitted / carrier_feeds) carry NULL target_domain_module_id. Per the B10b asymmetry rule, target-domain attribution is the receiving side's responsibility. PAYROLL has already taken its 4 owings (108, 110, 188, 417 now populate target_module 90 or 92)."
+    action: "Schedule b1 audits on FIN (owes 109, 419) and HCM (owes 418). Each target domain patches its receiving end. No action by BEN-ADMIN."
     affected_handoffs:
-      - {handoff_id: 109, direction: outbound, source_domain: BEN-ADMIN, target_domain: ERP-FIN, trigger_event: "enrollment.changed", payload: payroll_journal_entries, null_field: target_domain_module_id}
+      - {handoff_id: 109, direction: outbound, source_domain: BEN-ADMIN, target_domain: FIN, trigger_event: "enrollment.changed", payload: payroll_journal_entries, null_field: target_domain_module_id}
       - {handoff_id: 418, direction: outbound, source_domain: BEN-ADMIN, target_domain: HCM, trigger_event: "life_event.approved", payload: life_events, null_field: target_domain_module_id}
-      - {handoff_id: 419, direction: outbound, source_domain: BEN-ADMIN, target_domain: ERP-FIN, trigger_event: "carrier_feed.transmitted", payload: carrier_feeds, null_field: target_domain_module_id}
+      - {handoff_id: 419, direction: outbound, source_domain: BEN-ADMIN, target_domain: FIN, trigger_event: "carrier_feed.transmitted", payload: carrier_feeds, null_field: target_domain_module_id}
     blocked_by:
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: b10b_target_module_backfill}
+      - {type: domain_audit, blocking_domain: FIN, milestone: b10b_target_module_backfill}
       - {type: domain_audit, blocking_domain: HCM, milestone: b10b_target_module_backfill}
     extra_band: B10b
 

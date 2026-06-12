@@ -63,7 +63,7 @@ b1b:
     summary: "Author 4 cross-domain handoffs for the 2 untagged asset events (industrial_asset.commissioned, industrial_asset.retired); defer equipment_pm_schedule.updated as intra-domain B9b once modules ship."
     finding: "B9 partial. 3 of 6 EAM trigger_events have no handoffs row: 962 industrial_asset.commissioned, 963 industrial_asset.retired, 966 equipment_pm_schedule.updated."
     blocked_by:
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: "confirm fixed_assets is the inbound payload mastered by ERP-FIN-FA module."}
+      - {type: domain_audit, blocking_domain: FIN, milestone: "confirm fixed_assets is the inbound payload mastered by FIN-FA module."}
       - {type: catalog_addition, scope: solutions, trigger: "confirm GRC compliance_obligations is the right inbound target for asset retirement."}
     affected_events:
       - {id: 962, event_name: industrial_asset.commissioned, current_category: "", proposed_category: lifecycle}
@@ -124,9 +124,9 @@ b2:
 
   - id: B2-FIXED-ASSETS
     summary: "fixed_assets embedding direction."
-    question: "Should EAM-ASSETS embedded_master fixed_assets (so a smaller deployment can capitalize without ERP-FIN), or stay decoupled (ERP-FIN hard dependency)?"
-    options: ["embedded_master in EAM-ASSETS", "consumer of ERP-FIN fixed_assets", "two separate entities with relationship"]
-    why: "The same physical asset has an operational view (EAM) and a financial view (ERP-FIN). Modeling decision is one entity with two roles vs two entities with a relationship. Catalog-wide; safe to defer."
+    question: "Should EAM-ASSETS embedded_master fixed_assets (so a smaller deployment can capitalize without FIN), or stay decoupled (FIN hard dependency)?"
+    options: ["embedded_master in EAM-ASSETS", "consumer of FIN fixed_assets", "two separate entities with relationship"]
+    why: "The same physical asset has an operational view (EAM) and a financial view (FIN). Modeling decision is one entity with two roles vs two entities with a relationship. Catalog-wide; safe to defer."
 
   - id: B2-DOMAIN-CANDIDATES
     summary: "Three queued candidate domains: promote vs fold."

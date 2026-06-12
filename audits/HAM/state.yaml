@@ -63,7 +63,7 @@ b1a:
   - id: B1A-PHASE-P
     summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED."
     finding: "Live triage: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Per the 2026-06-07 batch instruction, personas/RACI are DEFERRED (not authored)."
-    action: "DEFERRED. When resumed: author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. Depends on B1A-S1 (lifecycle states / permissions). ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: IT-ITAM-ASSET-MANAGER (169+170), IT-ITAM-DISPOSAL-COORDINATOR (170+GRC/ERP-FIN), PROCUREMENT-HARDWARE-BUYER (170+S2P), FINANCE-FIXED-ASSET-ACCOUNTANT (170+ERP-FIN)."
+    action: "DEFERRED. When resumed: author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. Depends on B1A-S1 (lifecycle states / permissions). ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: IT-ITAM-ASSET-MANAGER (169+170), IT-ITAM-DISPOSAL-COORDINATOR (170+GRC/FIN), PROCUREMENT-HARDWARE-BUYER (170+S2P), FINANCE-FIXED-ASSET-ACCOUNTANT (170+FIN)."
     status: deferred
     extra_phase_p_triage: "2026-06-02"
 

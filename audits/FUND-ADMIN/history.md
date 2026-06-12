@@ -146,8 +146,8 @@ Candidate entities surfaced from flagship vendors but not yet confirmed by full 
 Five candidate domains were surfaced and queued in `audits/_missing-domains.md` via the helper:
 
 - **AIFMD-DEPOSITARY**, Fund Depositary Services. Evidence: BNY Mellon AIS, State Street AIS, Citco Depositary, IQ-EQ Depositary, Apex Group. Adjacency: FUND-ADMIN, BANK-OPS.
-- **PRIV-CREDIT-LOAN-ADMIN**, Private Credit Loan Administration. Evidence: Allvue Loan Admin, SS&C Precision LM, Cloudmargin, Black Mountain BMS-WSO, Solvas. Adjacency: FUND-ADMIN, ERP-FIN.
-- **MGMT-CO-ACCT**, Management Company GP Accounting. Evidence: Carta GP Books, Allvue GP Admin, AlterDomus, SS&C GlobeOp. Adjacency: FUND-ADMIN, ERP-FIN.
+- **PRIV-CREDIT-LOAN-ADMIN**, Private Credit Loan Administration. Evidence: Allvue Loan Admin, SS&C Precision LM, Cloudmargin, Black Mountain BMS-WSO, Solvas. Adjacency: FUND-ADMIN, FIN.
+- **MGMT-CO-ACCT**, Management Company GP Accounting. Evidence: Carta GP Books, Allvue GP Admin, AlterDomus, SS&C GlobeOp. Adjacency: FUND-ADMIN, FIN.
 - **REG-FUND-RPT**, Private Capital Regulatory Reporting. Evidence: Confluence Unity, Vermilion Reporting Suite, DiligentRegtek, ComplySci, AlterDomus, Pregin Pro Reporting. Adjacency: FUND-ADMIN, GRC.
 - **K1-TAX-DOCS**, K-1 Partnership Tax Document Generation. Evidence: K-1 Navigator, PwC K-1 Plus, Deloitte iPartner, RSM K-1 Workflow, EisnerAmper K-1. Adjacency: FUND-ADMIN, TAX-PROVISION.
 

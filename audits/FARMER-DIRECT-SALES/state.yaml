@@ -39,16 +39,16 @@ b1a:
 
 b1b:
   - id: B1B-S1
-    summary: 4 outbound FDS handoffs carry NULL target_domain_module_id; owed by ERP-FIN and FOOD-TRACE b1 audits.
+    summary: 4 outbound FDS handoffs carry NULL target_domain_module_id; owed by FIN and FOOD-TRACE b1 audits.
     finding: >-
-      B10b report-only. 4 outbound handoffs from FDS carry NULL target_domain_module_id: 364 (FDS-CSA-MGMT to ERP-FIN, csa_subscription.charged, payload csa_memberships, api_call, medium friction), 960 (FDS-MARKET-POS to ERP-FIN, farmers_market_sale.recorded, payload farmers_market_sales, batch_sync, low friction), 961 (FDS-WHOLESALE to ERP-FIN, wholesale_order.confirmed, payload wholesale_orders, event_stream, low friction), 963 (FDS-BUTCHER to FOOD-TRACE, butcher_order.ready, payload butcher_orders, event_stream, low friction). FDS cannot populate these; the receiving domain owns its module split.
+      B10b report-only. 4 outbound handoffs from FDS carry NULL target_domain_module_id: 364 (FDS-CSA-MGMT to FIN, csa_subscription.charged, payload csa_memberships, api_call, medium friction), 960 (FDS-MARKET-POS to FIN, farmers_market_sale.recorded, payload farmers_market_sales, batch_sync, low friction), 961 (FDS-WHOLESALE to FIN, wholesale_order.confirmed, payload wholesale_orders, event_stream, low friction), 963 (FDS-BUTCHER to FOOD-TRACE, butcher_order.ready, payload butcher_orders, event_stream, low friction). FDS cannot populate these; the receiving domain owns its module split.
     blocked_by:
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: revenue-AR-module-resolved}
+      - {type: domain_audit, blocking_domain: FIN, milestone: revenue-AR-module-resolved}
       - {type: domain_audit, blocking_domain: FOOD-TRACE, milestone: product-lot-tracking-module-resolved}
     affected_handoffs:
-      - {handoff_id: 364, direction: outbound, source_domain: FDS, target_domain: ERP-FIN, trigger_event: csa_subscription.charged, payload: csa_memberships, null_field: target_domain_module_id}
-      - {handoff_id: 960, direction: outbound, source_domain: FDS, target_domain: ERP-FIN, trigger_event: farmers_market_sale.recorded, payload: farmers_market_sales, null_field: target_domain_module_id}
-      - {handoff_id: 961, direction: outbound, source_domain: FDS, target_domain: ERP-FIN, trigger_event: wholesale_order.confirmed, payload: wholesale_orders, null_field: target_domain_module_id}
+      - {handoff_id: 364, direction: outbound, source_domain: FDS, target_domain: FIN, trigger_event: csa_subscription.charged, payload: csa_memberships, null_field: target_domain_module_id}
+      - {handoff_id: 960, direction: outbound, source_domain: FDS, target_domain: FIN, trigger_event: farmers_market_sale.recorded, payload: farmers_market_sales, null_field: target_domain_module_id}
+      - {handoff_id: 961, direction: outbound, source_domain: FDS, target_domain: FIN, trigger_event: wholesale_order.confirmed, payload: wholesale_orders, null_field: target_domain_module_id}
       - {handoff_id: 963, direction: outbound, source_domain: FDS, target_domain: FOOD-TRACE, trigger_event: butcher_order.ready, payload: butcher_orders, null_field: target_domain_module_id}
 
   - id: B1B-S2

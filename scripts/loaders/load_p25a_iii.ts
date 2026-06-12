@@ -115,7 +115,7 @@ const CATEGORY: Record<string, Category> = {
   "FSM": "field_service",
 
   // Finance / payments-heavy (+email)
-  "ERP-FIN": "finance_email",
+  "FIN": "finance_email",
 
   // Real-estate / fleet (+email +sign)
   "RE-CRE": "re_fleet", "RE-BROKERAGE": "re_fleet", "RE-INVEST": "re_fleet", "RE-PROP-MGMT": "re_fleet",

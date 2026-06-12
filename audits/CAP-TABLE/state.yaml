@@ -293,7 +293,7 @@ b3:
     candidate: handoff_asc718_expense_period_closed_to_gl_journal_entries
     rationale: >-
       Carta and Pulley both push monthly stock-based-comp expense to the general ledger;
-      absent from current handoff set. Implied outbound CAP-TABLE -> ERP-FIN handoff on
+      absent from current handoff set. Implied outbound CAP-TABLE -> FIN handoff on
       asc718_expense_period.closed (the asc718_expense_periods 'closed' lifecycle state now
       exists as of 2026-06-07, so the source-side anchor is present).
     vendor_evidence: [Carta, Pulley]
@@ -347,7 +347,7 @@ b3:
   - id: B3-MOD-02
     candidate: CAP-TABLE-TAX-REPORTING module
     rationale: >-
-      B3-CAND-04 tax_form_records + B3-CAND-08 ASC 718 -> ERP-FIN handoff belong together;
+      B3-CAND-04 tax_form_records + B3-CAND-08 ASC 718 -> FIN handoff belong together;
       pair with CAP-TABLE-VALUATIONS as a sibling.
     vendor_evidence: [Carta, Shareworks, Pulley]
 

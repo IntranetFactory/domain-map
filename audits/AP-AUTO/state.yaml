@@ -132,14 +132,14 @@ b1b:
       - {type: prerequisite_entity, ref: B1B-S1}
 
   - id: B1B-B1
-    summary: BOUNDARY mirror cross-rels on AP-AUTO outbound to ERP-FIN (gated on M1).
+    summary: BOUNDARY mirror cross-rels on AP-AUTO outbound to FIN (gated on M1).
     finding: >-
-      Outbound handoffs 125, 126, 542, 191, 192 to ERP-FIN lack data_object_relationships
+      Outbound handoffs 125, 126, 542, 191, 192 to FIN lack data_object_relationships
       rows mirroring them on the AP-AUTO master side. Example: payment_runs posts_journal_to
       journal_entries.
     blocked_by:
       - {type: prerequisite_entity, ref: B1B-S1}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: M1}
+      - {type: domain_audit, blocking_domain: FIN, milestone: M1}
 
   - id: B1B-B2
     summary: BOUNDARY mirror cross-rel on AP-AUTO outbound to S2P (gated on M1).

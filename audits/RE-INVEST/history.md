@@ -42,7 +42,7 @@ Auto-derived from `handoffs` (source / target) and cross-domain DMDO references.
 
 | Neighbor | Handoffs out | Handoffs in | DMDO refs | Edge weight | Notes |
 |---|---|---|---|---|---|
-| ERP-FIN (65) | 3 | 0 | 0 | 3 | Financial GL handoffs (capital calls issued, distributions declared, asset fee charged). |
+| FIN (65) | 3 | 0 | 0 | 3 | Financial GL handoffs (capital calls issued, distributions declared, asset fee charged). |
 | REAL-EST (141) | 0 | 1 | 0 | 1 | `property.updated` inbound on `real_estate_properties` (RE-INVEST does not declare a DMDO consumer row). |
 | RE-CRE (145) | 0 | 2 | 1 | 3 | Inbound `commercial_lease.executed`, `tenant_credit.assessed`; RE-INVEST consumes `commercial_leases`. |
 | RE-PROP-MGMT (144) | 0 | 1 | 1 | 2 | Inbound `rent_payment.received` on `rental_leases`; consumer DMDO present. |
@@ -53,7 +53,7 @@ Auto-derived from `handoffs` (source / target) and cross-domain DMDO references.
 | INV-CRM (159) | 0 | 0 | 0 | 0 (structural) | Masters `vc_deals` which references `capital_calls` (rel 874). RE / VC adjacency. |
 | CAP-TABLE (162) | 0 | 0 | 0 | 0 (structural) | Masters `exit_scenarios` which references `fund_distributions` (rel 875). |
 
-Deep-dive (Pass 4) below covers FUND-ADMIN, ERP-FIN, RE-CRE. The remaining neighbors get one-line summaries.
+Deep-dive (Pass 4) below covers FUND-ADMIN, FIN, RE-CRE. The remaining neighbors get one-line summaries.
 
 ### Bucket 1, In-scope confirmed gaps
 
@@ -95,11 +95,11 @@ Deep-dive (Pass 4) below covers FUND-ADMIN, ERP-FIN, RE-CRE. The remaining neigh
 
 The full per-leg diff per neighbor below. All four legs of the cross-domain handoff contract (producer master + lifecycle state, trigger event, handoff with both module FKs, consumer DMDO) are evaluated.
 
-##### Boundary findings: RE-INVEST ↔ ERP-FIN (edge weight 3)
+##### Boundary findings: RE-INVEST ↔ FIN (edge weight 3)
 
 | ID | Finding | Fix surface | Evidence |
 |---|---|---|---|
-| B1-PR-EF-1 | Three outbound handoffs to ERP-FIN (306 `fund_distribution.declared`, 307 `capital_call.issued`, 863 `asset_fee.charged`) all have `source_domain_module_id=NULL` and `target_domain_module_id=NULL`. RE-INVEST has zero modules so the source side is legitimately NULL until B1-M1 is cured. The target side: ERP-FIN has modules and these payloads belong on `ERP-FIN-GL-JOURNAL` (or equivalent receivables module). | After B1-M1, backfill source FKs via the canonical derivation in B10b. Target FKs depend on ERP-FIN's module shape; defer to RE-INVEST's next pass after B1-M1 lands. | Three rows from outbound query. |
+| B1-PR-EF-1 | Three outbound handoffs to FIN (306 `fund_distribution.declared`, 307 `capital_call.issued`, 863 `asset_fee.charged`) all have `source_domain_module_id=NULL` and `target_domain_module_id=NULL`. RE-INVEST has zero modules so the source side is legitimately NULL until B1-M1 is cured. The target side: FIN has modules and these payloads belong on `FIN-GL-JOURNAL` (or equivalent receivables module). | After B1-M1, backfill source FKs via the canonical derivation in B10b. Target FKs depend on FIN's module shape; defer to RE-INVEST's next pass after B1-M1 lands. | Three rows from outbound query. |
 
 ##### Boundary findings: RE-INVEST ↔ FUND-ADMIN (edge weight 0 today, latent M7 conflict)
 
@@ -120,9 +120,9 @@ The full per-leg diff per neighbor below. All four legs of the cross-domain hand
 | ID | handoff_id | source → target | trigger_event | payload | Proposed PCF row | PCF id | external_id | confidence |
 |---|---|---|---|---|---|---|---|---|
 | B1-H1-a | 305 | RE-INVEST → FINOPS | property_valuation.refreshed | property_valuations | Process and record fixed-asset adjustments, enhancements, revaluations, and transfers | 1390 | 10831 | confident L4 (revaluation activity) |
-| B1-H1-b | 306 | RE-INVEST → ERP-FIN | fund_distribution.declared | fund_distributions | Process and distribute payments | 1422 | 10862 | confident L4 |
-| B1-H1-c | 307 | RE-INVEST → ERP-FIN | capital_call.issued | capital_calls | Manage and reconcile cash positions | 1461 | 10893 | medium L4 (alternative: 1717 Develop funding models if treated as planning) |
-| B1-H1-d | 863 | RE-INVEST → ERP-FIN | asset_fee.charged | asset_management_fees | Post AR activity to the general ledger | 1359 | 10803 | medium L4 (alternative: 1383 Reconcile general ledger accounts) |
+| B1-H1-b | 306 | RE-INVEST → FIN | fund_distribution.declared | fund_distributions | Process and distribute payments | 1422 | 10862 | confident L4 |
+| B1-H1-c | 307 | RE-INVEST → FIN | capital_call.issued | capital_calls | Manage and reconcile cash positions | 1461 | 10893 | medium L4 (alternative: 1717 Develop funding models if treated as planning) |
+| B1-H1-d | 863 | RE-INVEST → FIN | asset_fee.charged | asset_management_fees | Post AR activity to the general ledger | 1359 | 10803 | medium L4 (alternative: 1383 Reconcile general ledger accounts) |
 | B1-H1-e | 303 | RE-CRE → RE-INVEST | commercial_lease.executed | commercial_leases | Confirm alignment of property requirements with business strategy | 1511 | 10955 | medium L4 (lease execution feeds NOI rollup; alternative defer) |
 | B1-H1-f | 301 | RE-PROP-MGMT → RE-INVEST | rent_payment.received | rental_leases | Receive/Deposit customer payments | 1356 | 10800 | confident L4 |
 | B1-H1-g | 857 | REAL-EST → RE-INVEST | property.updated | real_estate_properties | Confirm alignment of property requirements with business strategy | 1511 | 10955 | medium (existing `discovery_substring` row 343 `Develop property strategy and long term vision` is too strategic; this L4 is the operational match) |
@@ -206,9 +206,9 @@ Candidates from market-surface knowledge that lack a vetted Phase 0 baseline. Re
 
 ### Report-only follow-ups (owed by other domains)
 
-- **FUND-ADMIN B10b (target module attribution).** Once RE-INVEST has modules, the four outbound handoffs to ERP-FIN need ERP-FIN B10b to derive `target_domain_module_id`. Tracked there.
+- **FUND-ADMIN B10b (target module attribution).** Once RE-INVEST has modules, the four outbound handoffs to FIN need FIN B10b to derive `target_domain_module_id`. Tracked there.
 - **FUND-ADMIN B8 outbound on `capital_calls`, `fund_distributions`, `funds`.** Per the M7 resolution: if (a), FUND-ADMIN owes outbound handoffs to RE-INVEST whenever a master row transitions state (capital call funded, distribution executed, fund closed). Add to FUND-ADMIN's next audit checklist.
-- **ERP-FIN B10b (target module attribution).** Three outbound handoffs from RE-INVEST (306, 307, 863) carry NULL `target_domain_module_id`. ERP-FIN's audit owes the backfill.
+- **FIN B10b (target module attribution).** Three outbound handoffs from RE-INVEST (306, 307, 863) carry NULL `target_domain_module_id`. FIN's audit owes the backfill.
 - **REAL-EST B9 outbound.** Inbound handoff 857 `property.updated` is owned by REAL-EST. The trigger event `property.updated` (data_object_id 344) is a real edge; REAL-EST is responsible for any module attribution on its source side.
 - **RE-CRE B9 outbound.** Inbound handoffs 303 `commercial_lease.executed`, 859 `tenant_credit.assessed` are owned by RE-CRE. RE-CRE audit owes the source-side module FKs.
 - **RE-PROP-MGMT B9 outbound.** Inbound handoff 301 `rent_payment.received` is owned by RE-PROP-MGMT (note: trigger event points at data_object 360 `rent_payments` but the handoff payload is 362 `rental_leases`; suggests a payload mismatch worth flagging on the RE-PROP-MGMT audit).
@@ -231,9 +231,9 @@ Applied the narrow technical slice of the 2026-05-30 audit that does not require
   - All `owner_side=target`, `relationship_type=one_to_many`, `relationship_kind=reference`, `record_status=new` (default), `notes=''` (default).
 - **B1-H1, six new `handoff_processes` agent_curated rows** (audit pre-specified each `handoff_id` + APQC PCF `external_id`; verified PCFs are live before insert):
   - id 755: handoff 305 (`property_valuation.refreshed` -> FINOPS) -> PCF 1390 (external 10831).
-  - id 756: handoff 306 (`fund_distribution.declared` -> ERP-FIN) -> PCF 1422 (external 10862).
-  - id 757: handoff 307 (`capital_call.issued` -> ERP-FIN) -> PCF 1461 (external 10893).
-  - id 758: handoff 863 (`asset_fee.charged` -> ERP-FIN) -> PCF 1359 (external 10803).
+  - id 756: handoff 306 (`fund_distribution.declared` -> FIN) -> PCF 1422 (external 10862).
+  - id 757: handoff 307 (`capital_call.issued` -> FIN) -> PCF 1461 (external 10893).
+  - id 758: handoff 863 (`asset_fee.charged` -> FIN) -> PCF 1359 (external 10803).
   - id 759: handoff 301 (`rent_payment.received` from RE-PROP-MGMT) -> PCF 1356 (external 10800).
   - id 760: handoff 857 (`property.updated` from REAL-EST) -> PCF 1511 (external 10955). Existing row 169 (`discovery_substring` -> PCF 343) is left in place; user can resolve which tag survives at review.
   - B1-H1-e (handoff 303 -> PCF 1511) skipped: already present as id 454 (`agent_curated`).
@@ -359,7 +359,7 @@ Verification path: Phase 0 vendor surface enumeration before any insert.
 Carried forward from 2026-05-30; no resolution. Plus one update:
 
 - FUND-ADMIN audit owes B8 outbound handoffs on `capital_calls`, `fund_distributions`, `funds` to RE-INVEST per the eventual M7 resolution.
-- ERP-FIN audit owes B10b backfill of `target_domain_module_id` on handoffs 306, 307, 863.
+- FIN audit owes B10b backfill of `target_domain_module_id` on handoffs 306, 307, 863.
 - REAL-EST audit owes B9 review of trigger event 939 (`property.updated`); the existing `discovery_substring` PCF tag on its inbound handoff into RE-INVEST is strategic-L3 where the operational-L4 sibling exists.
 - RE-CRE audit owes B9 review of trigger event 943 (`tenant_credit.assessed`); B-H1-i was deferred-to-Discover on the 2026-05-30 audit but the Continuation tagged it with PCF 1345 `Analyze credit scoring history` (id 455). Verify the tag is correct on RE-CRE's side.
 - RE-PROP-MGMT audit owes the payload-mismatch flag on handoff 301 (trigger 288 carries `data_object_id=360 rent_payments` but the handoff payload is `data_object_id=362 rental_leases`).
@@ -422,7 +422,7 @@ Now that modules exist, the following previously M1-gated items move from b1b to
 
 - **F1 / F7:** legacy domain-level skill `re-invest-system` (id 97, `domain_module_id=null`, 9 skill_tools incl. `send_email`) is now retireable, and each module needs exactly one `skill_type='system'` skill with >=1 `skill_tools` (Rule #17 -> F2 / F3). These are the new b1a items.
 - **M8:** all 3 modules have empty `catalog_tagline` / `catalog_description`; **A4:** domain 146 still empty on both. Rule #20 requires user-approved copy before write.
-- **B1B handoff backfills** (PR-EF-1, PR-RC-1) can now resolve source/target module FKs: portfolio-val (281) consumes the inbound RE-CRE / REAL-EST / RE-PROP-MGMT / RE-BROKERAGE payloads; fund-acct (279) sources the outbound ERP-FIN handoffs (306 fund_distributions, 307 capital_calls, 863 asset_management_fees); portfolio-val (281) sources 305 (property_valuations -> FINOPS).
+- **B1B handoff backfills** (PR-EF-1, PR-RC-1) can now resolve source/target module FKs: portfolio-val (281) consumes the inbound RE-CRE / REAL-EST / RE-PROP-MGMT / RE-BROKERAGE payloads; fund-acct (279) sources the outbound FIN handoffs (306 fund_distributions, 307 capital_calls, 863 asset_management_fees); portfolio-val (281) sources 305 (property_valuations -> FINOPS).
 - **B12 lifecycle** can now attach `domain_module_id` for the 5 RE-INVEST-mastered entities.
 
 ### Rule compliance
@@ -469,11 +469,11 @@ F1 verified clean (no `domain_id=146 & skill_type=system & domain_module_id is n
 
 B10b outbound. PATCHed `source_domain_module_id` (prior value NULL on all four):
 - handoff **305** (property_valuation.refreshed -> FINOPS): NULL -> **281**.
-- handoff **306** (fund_distribution.declared -> ERP-FIN): NULL -> **279**.
-- handoff **307** (capital_call.issued -> ERP-FIN): NULL -> **279**.
-- handoff **863** (asset_fee.charged -> ERP-FIN): NULL -> **279**.
+- handoff **306** (fund_distribution.declared -> FIN): NULL -> **279**.
+- handoff **307** (capital_call.issued -> FIN): NULL -> **279**.
+- handoff **863** (asset_fee.charged -> FIN): NULL -> **279**.
 
-For 306/307 the event's data_object (368/367) is `embedded_master` in both 279 and 280; the audit pre-resolved the tie to 279 (fund accounting) in the b1a `action`/`finding`, which this pass executed as directed. Target-side module FKs remain NULL (owed by ERP-FIN / FINOPS B10b).
+For 306/307 the event's data_object (368/367) is `embedded_master` in both 279 and 280; the audit pre-resolved the tie to 279 (fund accounting) in the b1a `action`/`finding`, which this pass executed as directed. Target-side module FKs remain NULL (owed by FIN / FINOPS B10b).
 
 ### B1A-PR-RC-1 - DONE
 

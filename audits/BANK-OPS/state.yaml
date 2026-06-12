@@ -123,17 +123,17 @@ b1b:
 
   - id: B1B-B3
     summary: "Author 5 cross-domain mirror data_object_relationships on BANK-OPS outbound handoffs (886, 887, 888, 889, 892)."
-    finding: "B8 outbound, 5 of 7 cross-domain handoffs lack mirror data_object_relationships. 3 GRC-targeted handoffs (886 banking_kyc_review.flagged, 887 wire_transfer.sanctions_hit, 888 banking_transaction.suspicious) need an edge to GRC's compliance-alert master; 2 ERP-FIN-targeted handoffs (889 loan_disbursement.executed, 892 wire_transfer.initiated) need an edge to ERP-FIN's journal / payment master."
-    action: "Focused loader, INSERT 5 rows on data_object_relationships. Requires lookup of GRC's compliance-alert master id and ERP-FIN's payment / journal master id (owed by those domains' state)."
+    finding: "B8 outbound, 5 of 7 cross-domain handoffs lack mirror data_object_relationships. 3 GRC-targeted handoffs (886 banking_kyc_review.flagged, 887 wire_transfer.sanctions_hit, 888 banking_transaction.suspicious) need an edge to GRC's compliance-alert master; 2 FIN-targeted handoffs (889 loan_disbursement.executed, 892 wire_transfer.initiated) need an edge to FIN's journal / payment master."
+    action: "Focused loader, INSERT 5 rows on data_object_relationships. Requires lookup of GRC's compliance-alert master id and FIN's payment / journal master id (owed by those domains' state)."
     affected_handoffs:
       - {handoff_id: 886, direction: outbound, target_domain: GRC, trigger_event: banking_kyc_review.flagged, payload: banking_kyc_reviews}
       - {handoff_id: 887, direction: outbound, target_domain: GRC, trigger_event: wire_transfer.sanctions_hit, payload: wire_transfers}
       - {handoff_id: 888, direction: outbound, target_domain: GRC, trigger_event: banking_transaction.suspicious, payload: banking_transactions}
-      - {handoff_id: 889, direction: outbound, target_domain: ERP-FIN, trigger_event: loan_disbursement.executed, payload: loan_disbursements}
-      - {handoff_id: 892, direction: outbound, target_domain: ERP-FIN, trigger_event: wire_transfer.initiated, payload: wire_transfers}
+      - {handoff_id: 889, direction: outbound, target_domain: FIN, trigger_event: loan_disbursement.executed, payload: loan_disbursements}
+      - {handoff_id: 892, direction: outbound, target_domain: FIN, trigger_event: wire_transfer.initiated, payload: wire_transfers}
     blocked_by:
       - {type: catalog_addition, scope: domains, trigger: "GRC compliance-alert master lookup (owed by GRC)"}
-      - {type: catalog_addition, scope: domains, trigger: "ERP-FIN payment/journal master lookup (owed by ERP-FIN)"}
+      - {type: catalog_addition, scope: domains, trigger: "FIN payment/journal master lookup (owed by FIN)"}
 
   - id: B1B-B6
     summary: "Author data_object_lifecycle_states for the 7 operational_workflow BANK-OPS masters."
@@ -193,7 +193,7 @@ b2:
 
   - id: B2-7
     summary: "GRC pairwise reconciliation timing."
-    question: "GRC clears weight-3 threshold for pairwise. (a) defer until M1 cured (most legs blocked on module attribution); (b) run lightweight GRC pairwise now to surface candidate missing handoffs from GRC side; (c) run CSM and ERP-FIN pairwise too despite weight 2."
+    question: "GRC clears weight-3 threshold for pairwise. (a) defer until M1 cured (most legs blocked on module attribution); (b) run lightweight GRC pairwise now to surface candidate missing handoffs from GRC side; (c) run CSM and FIN pairwise too despite weight 2."
     options: ["a-defer-until-m1", "b-lightweight-grc-now", "c-all-three"]
 
   - id: B2-8

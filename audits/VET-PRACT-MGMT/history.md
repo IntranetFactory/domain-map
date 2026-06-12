@@ -51,7 +51,7 @@ Every master is at zero states + zero aliases. Routes to B12 (lifecycle), B11 (a
 
 - **A1.** `domains` row has all 7 business-metadata fields populated. `crud_percentage=85`, `business_logic` non-empty (covers species/breed weight-based dosing, DEA Schedule II-V ledger reconciliation, reminder protocols, multi-pet visit consolidation, lab trending, boarding overlap), `min_org_size='10 xs <50'`, `cost_band='$$'`, `certification_required=false`, `usa_market_size_usd_m=600`, `market_size_source_year=2024`. PASS.
 - **A2.** 6 capabilities linked: VET-PATIENT-CARE, VET-APPT-SCHED, VET-INVOICING, VET-INVENTORY-RX, VET-LAB-INTEGRATION, VET-REMINDER-MGMT. PASS (>=3 floor).
-- **A3.** 9 solutions linked, all `coverage_level='primary'`. PASS. (Worth noting for the user: an all-`primary` distribution is unusual; secondaries/partials could be added for cross-market suites like ERP-FIN extensions, but not a structural fail.)
+- **A3.** 9 solutions linked, all `coverage_level='primary'`. PASS. (Worth noting for the user: an all-`primary` distribution is unusual; secondaries/partials could be added for cross-market suites like FIN extensions, but not a structural fail.)
 - **A4.** `catalog_tagline` and `catalog_description` are both empty. **FAIL** - Bucket 2 (Rule #20 requires user-approved buyer-voice wording before write).
 - **A5.** Skip per default (not requested).
 
@@ -70,7 +70,7 @@ Every master is at zero states + zero aliases. Routes to B12 (lifecycle), B11 (a
 - **B5.** No `embedded_master` rows for this domain. PASS (vacuously).
 - **B6.** Zero intra-domain `data_object_relationships`. **FAIL.** Workflow ties are absent: `pet_owners -> animal_patients` (owns), `animal_patients -> veterinary_vaccinations` (received), `animal_patients -> veterinary_lab_results` (sampled), `veterinary_vaccinations -> controlled_substance_ledger_entries` (drew_from, when controlled-substance anesthetics are involved), `animal_patients -> controlled_substance_ledger_entries` (administered_to). All five masters are intra-domain isolated. Two existing rows (animal_patients/veterinary_vaccinations `opens` `customer_cases`) point cross-domain to CSM and are correctly outbound, but the within-domain edges are missing. Bucket 1.
 - **B7.** Zero `users` edges. **FAIL.** Expected user-actor edges: `animal_patients.primary_veterinarian`, `veterinary_vaccinations.administered_by`, `veterinary_lab_results.ordered_by`, `controlled_substance_ledger_entries.dispensed_by` (DEA-attributed), `pet_owners.account_owner` (client-services rep). Bucket 1.
-- **B8.** 2 outbound cross-domain `data_object_relationships` exist (`animal_patients opens customer_cases`, `veterinary_vaccinations opens customer_cases`) but 6 outbound handoffs exist (see B9). Missing mirrors: `controlled_substance_ledger_entries -> GRC` payload (DEA reporting), `controlled_substance_ledger_entries -> SUP-LIFE` payload (supplier reorder trigger), `pet_owners -> ERP-FIN` payload (AR profile creation), `veterinary_lab_results -> GRC` payload (reportable-disease logs). Bucket 1.
+- **B8.** 2 outbound cross-domain `data_object_relationships` exist (`animal_patients opens customer_cases`, `veterinary_vaccinations opens customer_cases`) but 6 outbound handoffs exist (see B9). Missing mirrors: `controlled_substance_ledger_entries -> GRC` payload (DEA reporting), `controlled_substance_ledger_entries -> SUP-LIFE` payload (supplier reorder trigger), `pet_owners -> FIN` payload (AR profile creation), `veterinary_lab_results -> GRC` payload (reportable-disease logs). Bucket 1.
 - **B9.** 6 outbound `trigger_events` + 6 outbound `handoffs` rows. Every master has at least one event. Of the 6 events, 4 carry `event_category=''` (empty string). The valid enum values are `lifecycle`, `state_change`, `threshold`, `signal`. The two correctly categorized: `controlled_substance.dispensed` (`lifecycle`), `animal_patient.appointment_due` (`threshold`). The four to PATCH: `pet_owner.registered` (`lifecycle`), `veterinary_vaccination.administered` (`lifecycle`), `veterinary_vaccination.due` (`threshold`), `veterinary_lab_result.critical` (`signal`). Bucket 1.
 
   Note: trigger event `veterinary_vaccination.administered` (id=1088) has NO `handoffs` row. The event's own description says CSM schedules the next-dose reminder and GRC logs rabies-tag reporting. Bucket 1.
@@ -82,7 +82,7 @@ Every master is at zero states + zero aliases. Routes to B12 (lifecycle), B11 (a
   | 335 | `controlled_substance.dispensed` | `controlled_substance_ledger_entries` | GRC | batch_sync | medium | NULL | NULL |
   | 336 | `controlled_substance.dispensed` | `controlled_substance_ledger_entries` | SUP-LIFE | api_call | low | NULL | NULL |
   | 337 | `animal_patient.appointment_due` | `animal_patients` | CSM | api_call | low | NULL | NULL (CSM has modules) |
-  | 946 | `pet_owner.registered` | `pet_owners` | ERP-FIN | event_stream | low | NULL | NULL |
+  | 946 | `pet_owner.registered` | `pet_owners` | FIN | event_stream | low | NULL | NULL |
   | 947 | `veterinary_vaccination.due` | `veterinary_vaccinations` | CSM | api_call | medium | NULL | NULL (CSM has modules) |
   | 948 | `veterinary_lab_result.critical` | `veterinary_lab_results` | GRC | event_stream | medium | NULL | NULL |
 
@@ -90,7 +90,7 @@ Every master is at zero states + zero aliases. Routes to B12 (lifecycle), B11 (a
 - **B10.** Inbound report-only. Zero inbound handoff rows. The catalog suggests the following candidate inbound dependencies via the contributor row:
   - `supplier_invoices` (id=75, role=contributor, necessity=required) is mastered by S2P (id=27). S2P invoice-approval / drug-supplier lifecycle changes would be a natural inbound handoff but no such row is loaded. Report-only: S2P B9 owes outbound on `supplier_invoices` to VET-PRACT-MGMT (this domain's contributor + required) for AP-style finalization.
   - Implicit: lab-results integration suggests inbound from a clinical-lab-system domain (IDEXX VetConnect Plus, Antech Lab), but no such domain exists in the catalog today (see Pass 2 modularization commentary; lab connectors are typically integrations, not first-class domains).
-- **B10b.** Every handoff in B9 has `source_domain_module_id=NULL`; source side is owed by THIS domain once M1 is cured. Target side `target_domain_module_id=NULL` on all 6; for CSM-target rows (337, 947) the target side is owed by CSM B10b (CSM has 3 modules: CSM-CASE-MGMT, CSM-ENTITLEMENTS, CSM-KNOWLEDGE; the natural target module is CSM-CASE-MGMT). GRC, SUP-LIFE, ERP-FIN are all unmodularized today (M1 failures on each); their target-side fix lands when each is modularized. Bucket 1 (source side); Report-only (target side per each partner's B10b).
+- **B10b.** Every handoff in B9 has `source_domain_module_id=NULL`; source side is owed by THIS domain once M1 is cured. Target side `target_domain_module_id=NULL` on all 6; for CSM-target rows (337, 947) the target side is owed by CSM B10b (CSM has 3 modules: CSM-CASE-MGMT, CSM-ENTITLEMENTS, CSM-KNOWLEDGE; the natural target module is CSM-CASE-MGMT). GRC, SUP-LIFE, FIN are all unmodularized today (M1 failures on each); their target-side fix lands when each is modularized. Bucket 1 (source side); Report-only (target side per each partner's B10b).
 - **B11.** Zero aliases on any master. Expected cross-vendor / cross-industry synonyms: `animal_patients` <-> "patient", "pet patient", "animal" (vet-vernacular); `pet_owners` <-> "client" (the universal PIMS term: IDEXX/ezyVet/AVImark all call them "Client", not "Pet Owner"), "owner"; `veterinary_vaccinations` <-> "vaccine record", "immunization"; `veterinary_lab_results` <-> "diagnostics result", "lab test", "in-house cytology"; `controlled_substance_ledger_entries` <-> "DEA log entry", "Schedule drug log", "C2-5 ledger". The "Client" alias for `pet_owners` is a near-universal IDEXX/AVImark term and is the most load-bearing. Bucket 1.
 - **B12.** Zero `data_object_lifecycle_states` across all 5 masters. **FAIL.** Most have observable state machines:
   - `animal_patients`: active / inactive / deceased / transferred (clinic-to-clinic transfer is a real workflow).
@@ -179,7 +179,7 @@ Edge weights derived from outbound `handoffs` (B9 table) and the `supplier_invoi
 | CSM | 2 | `animal_patient.appointment_due`, `veterinary_vaccination.due` | 0 | - | reminder outreach + case opens |
 | GRC | 2 | `controlled_substance.dispensed`, `veterinary_lab_result.critical` | 0 | - | DEA reporting + reportable-disease logs |
 | SUP-LIFE | 1 | `controlled_substance.dispensed` | 0 | - | drug-supplier reorder loop |
-| ERP-FIN | 1 | `pet_owner.registered` | 0 | - | AR profile creation |
+| FIN | 1 | `pet_owner.registered` | 0 | - | AR profile creation |
 | S2P | 1 | - | (implied) | `supplier_invoices` contributor | drug-supplier invoice approval |
 
 No neighbor reaches edge weight >=3. Per the audit recipe, each neighbor gets a one-line summary instead of the full 5-section diff. Note: CSM is the only neighbor with modules loaded (3); the other four are M1-failing partner domains.
@@ -198,9 +198,9 @@ Two outbound handoffs (335 `controlled_substance.dispensed` -> GRC, 948 `veterin
 
 One outbound (336 `controlled_substance.dispensed` -> SUP-LIFE) for reorder loop. NULL source + target module FKs. SUP-LIFE has 0 modules; target-side fix waits. Plus inbound dependency via S2P-mastered `supplier_invoices` row (id=75, contributor + required) but no inbound handoff loaded. Report-only (SUP-LIFE B9 owes outbound on drug-supplier reorder confirmation; S2P B9 owes outbound on `supplier_invoices.approved` to VET-PRACT-MGMT).
 
-#### ERP-FIN (edge weight 1) - one-line summary
+#### FIN (edge weight 1) - one-line summary
 
-One outbound (946 `pet_owner.registered` -> ERP-FIN) creating AR profile. NULL module FKs both sides. ERP-FIN has 0 modules; target-side fix waits. No mirror relationship row for `pet_owners -> erp-fin-payload` (likely `customers` or `ar_accounts`). Bucket 1 source-side B8 + B10b.
+One outbound (946 `pet_owner.registered` -> FIN) creating AR profile. NULL module FKs both sides. FIN has 0 modules; target-side fix waits. No mirror relationship row for `pet_owners -> erp-fin-payload` (likely `customers` or `ar_accounts`). Bucket 1 source-side B8 + B10b.
 
 #### S2P (dependency-only, edge weight 1) - report-only
 
@@ -238,7 +238,7 @@ One outbound (946 `pet_owner.registered` -> ERP-FIN) creating AR profile. NULL m
 | B1-B1 | B10b (outbound) | All 6 outbound handoffs have `source_domain_module_id=NULL` | Backfill once VET-PRACT-MGMT modules exist: route each event to its master's module (pet_owner.registered -> VET-PRACT-MGMT-PATIENT-CARE or INVOICING per the Bucket 2 module split; controlled_substance.* -> VET-PRACT-MGMT-INVENTORY-RX; animal_patient.appointment_due -> VET-PRACT-MGMT-APPOINTMENTS; vaccination.* -> VET-PRACT-MGMT-PATIENT-CARE; lab_result.* -> VET-PRACT-MGMT-LAB-INTEGRATION). |
 | B1-B2 | B8 (GRC mirrors) | No outbound `data_object_relationships` mirrors for `controlled_substance_ledger_entries -> GRC` payload (DEA reporting) and `veterinary_lab_results -> GRC` payload (adverse-event reporting for reportable diseases) | Author cross-domain relationship rows once GRC's payload masters are known (likely `compliance_obligations` or `adverse_events`). |
 | B1-B3 | B8 (SUP-LIFE mirror) | No outbound `data_object_relationships` for `controlled_substance_ledger_entries -> SUP-LIFE` reorder payload | Author edge once SUP-LIFE's `supplier_orders` / `replenishment_orders` master is identified. |
-| B1-B4 | B8 (ERP-FIN mirror) + F7 (channel-vs-capability) | (B8) No outbound `data_object_relationships` for `pet_owners -> ERP-FIN` payload (likely `customers` or `ar_accounts`). PLUS (F7) the legacy skill's `send_email` link is generic notification flavor (vaccination-due, appointment-due, lab-result-critical reminders are substitutable-channel); when modules are authored and the legacy skill retired, the per-module reminder workflow should link `notify_person` not `send_email` per the channel-vs-capability authoring rule. | Add the relationship row + when authoring Phase-S tools for the PATIENT-CARE / APPOINTMENTS modules, link `notify_person` (not `send_email`) for generic reminder outreach. |
+| B1-B4 | B8 (FIN mirror) + F7 (channel-vs-capability) | (B8) No outbound `data_object_relationships` for `pet_owners -> FIN` payload (likely `customers` or `ar_accounts`). PLUS (F7) the legacy skill's `send_email` link is generic notification flavor (vaccination-due, appointment-due, lab-result-critical reminders are substitutable-channel); when modules are authored and the legacy skill retired, the per-module reminder workflow should link `notify_person` not `send_email` per the channel-vs-capability authoring rule. | Add the relationship row + when authoring Phase-S tools for the PATIENT-CARE / APPOINTMENTS modules, link `notify_person` (not `send_email`) for generic reminder outreach. |
 
 #### APQC TAGGING
 
@@ -260,7 +260,7 @@ One outbound (946 `pet_owner.registered` -> ERP-FIN) creating AR profile. NULL m
 | handoff_id | source -> target | trigger_event | payload | deferral reason |
 | --- | --- | --- | --- | --- |
 | 336 | VET-PRACT-MGMT -> SUP-LIFE | `controlled_substance.dispensed` | `controlled_substance_ledger_entries` | Reorder/replenishment trigger from a clinical-dispense event has no clean APQC L3/L4 in cross-industry PCF (closest: "Manage raw material inventory" id=826 L4 but the noun doesn't fit veterinary controlled-substance reorder; "Process accounts payable" is too far). Defer to custom process authoring (industry-specific veterinary-supply reorder workflow). |
-| 946 | VET-PRACT-MGMT -> ERP-FIN | `pet_owner.registered` | `pet_owners` | New-client AR profile creation. "Process accounts receivable (AR)" (id=303, L3) is the closest parent but the trigger is *registration*, not invoicing-or-collection. "Collect and maintain account information" (id=736, L4) fits the substrate but mis-frames the trigger. Defer to custom process authoring. |
+| 946 | VET-PRACT-MGMT -> FIN | `pet_owner.registered` | `pet_owners` | New-client AR profile creation. "Process accounts receivable (AR)" (id=303, L3) is the closest parent but the trigger is *registration*, not invoicing-or-collection. "Collect and maintain account information" (id=736, L4) fits the substrate but mis-frames the trigger. Defer to custom process authoring. |
 
 ### Bucket 2 - Surface-for-user (judgment calls)
 
@@ -278,7 +278,7 @@ Vendor-knowledge-based candidates from Pass 2 MISSING entities, not yet anchored
 1. **`veterinary_appointments`** (IDEXX Cornerstone appointment book, ezyVet calendar, AVImark scheduler, Vetspire Calendar). Vendor-universal; effectively required for the APPT-SCHED capability to land in any module. Phase 0 verification: confirm appointment as first-class entity vs. derived from exam_notes. Recommended cluster: VET-PRACT-MGMT-APPOINTMENTS (or PATIENT-CARE if module split merges).
 2. **`veterinary_exam_notes` + `vaccination_reminder_protocols`** (IDEXX SOAP, ezyVet clinical-records, AAHA/AVMA reminder rules). Phase 0: SOAP-note model varies vendor-by-vendor (Subjective/Objective/Assessment/Plan structured fields vs. unstructured rich text). Recommended cluster: VET-PRACT-MGMT-PATIENT-CARE.
 3. **`veterinary_prescriptions` + `vet_drug_inventory_items` + `dea_reports`** (IDEXX Inventory Pro, Cubex narcotic cabinets, DEA Form 41 / 222). Phase 0: confirm prescription as separate master from ledger-entry; DEA reports are aggregations (derived?) vs. submitted-documents (master with workflow). Recommended cluster: VET-PRACT-MGMT-INVENTORY-RX.
-4. **`vet_invoices` + `vet_payment_transactions`** (IDEXX integrated POS, ezyVet Stripe/Square, Provet payments). Phase 0: invoice/payment is universal but the entity could partly belong to ERP-FIN; veterinary POS is in-clinic and PCI-DSS-bounded. Recommended cluster: VET-PRACT-MGMT-INVOICING.
+4. **`vet_invoices` + `vet_payment_transactions`** (IDEXX integrated POS, ezyVet Stripe/Square, Provet payments). Phase 0: invoice/payment is universal but the entity could partly belong to FIN; veterinary POS is in-clinic and PCI-DSS-bounded. Recommended cluster: VET-PRACT-MGMT-INVOICING.
 5. **`boarding_reservations`** (AVImark boarding, Cornerstone boarding, Provet boarding module). Phase 0: boarding is an optional capability NOT in the current 6-capability list; many clinics outsource boarding. Decision is whether to add the capability + module at all. Recommended cluster: VET-PRACT-MGMT-BOARDING (optional module).
 6. **`lab_test_orders` + `vet_species_breeds`** (IDEXX VetLab / VetConnect Plus, Antech Lab, AAHA species/breed config). Phase 0: lab-test-orders are typically distinct from lab_results (orders go out, results come back asynchronously, often days later). vet_species_breeds is a config table that drives weight-based dose calc + breed-specific reminder protocols. Recommended cluster: VET-PRACT-MGMT-LAB-INTEGRATION (for orders) + VET-PRACT-MGMT-PATIENT-CARE (for species/breeds).
 
@@ -307,9 +307,9 @@ Vendor-knowledge-based candidates from Pass 2 MISSING entities, not yet anchored
 - **SUP-LIFE B10b owes target-side module FK** on handoff 336 (`controlled_substance.dispensed` reorder). SUP-LIFE has 0 modules per spot-check.
 - **SUP-LIFE B9** owes outbound on drug-supplier-reorder confirmation / supplier lifecycle changes affecting clinic drug inventory (back to VET-PRACT-MGMT once VET-PRACT-MGMT is modularized).
 - **S2P B9** owes outbound on `supplier_invoices.approved` / `.paid` / `.received` to VET-PRACT-MGMT (this domain's contributor + required dependency on id=75).
-- **ERP-FIN B10b owes target-side module FK** on handoff 946 (`pet_owner.registered`). ERP-FIN has 0 modules per spot-check.
-- **ERP-FIN B8** owes inbound `data_object_relationships` for the AR-profile-create payload (likely `customers` or `ar_accounts`).
-- **Partner-domain module sparsity (informational):** spot-checks of GRC, SUP-LIFE, S2P, ERP-FIN returned zero `domain_modules` for each. M-band hard fail on all four partners; auditing them would be a high-leverage follow-up given VET-PRACT-MGMT depends on all four for outbound handoff target-module FKs. CSM is the only modularized neighbor.
+- **FIN B10b owes target-side module FK** on handoff 946 (`pet_owner.registered`). FIN has 0 modules per spot-check.
+- **FIN B8** owes inbound `data_object_relationships` for the AR-profile-create payload (likely `customers` or `ar_accounts`).
+- **Partner-domain module sparsity (informational):** spot-checks of GRC, SUP-LIFE, S2P, FIN returned zero `domain_modules` for each. M-band hard fail on all four partners; auditing them would be a high-leverage follow-up given VET-PRACT-MGMT depends on all four for outbound handoff target-module FKs. CSM is the only modularized neighbor.
 
 ## 2026-05-31, Continuation: B1 technical fixes
 
@@ -325,7 +325,7 @@ Applied only the truly-technical, audit-pre-specified slice of Bucket 1. Deferre
   - id=1700: `animal_patients` (395) `administered` `controlled_substance_ledger_entries` (399), one_to_many, reference, source-owned.
   - **Deferred:** `veterinary_vaccinations drew_from controlled_substance_ledger_entries` (conditional "only for controlled anesthetic doses" qualifier; not a deterministic structural edge for every vaccination row, so it is a judgment call).
 - **B1-S4 (users edges, Rule #10):** INSERTed 5 user-actor edges, all targeting the platform built-in `users` (id=748), target-owned, reference, one_to_many: id=1701 `animal_patients.primary_veterinarian`; id=1702 `veterinary_vaccinations.administered_by`; id=1703 `veterinary_lab_results.ordered_by`; id=1704 `controlled_substance_ledger_entries.dispensed_by`; id=1705 `pet_owners.account_owner`.
-- **B1-H1 (APQC tagging):** INSERTed 4 `handoff_processes` rows with `proposal_source='agent_curated'`, `role='implements'`, record_status defaulting to `new`. PCF external_id -> process_id resolution: 12840 -> 199 ("Report incidents and risks to regulatory bodies"); 11793 -> 734 ("Manage notification outcome"). Pairs: id=494 (handoff=335, process=199); id=495 (handoff=337, process=734); id=496 (handoff=947, process=734); id=497 (handoff=948, process=199). 2 handoffs (336 SUP-LIFE reorder, 946 ERP-FIN AR-profile-create) remain deferred to Discover Pass 3 per the original audit.
+- **B1-H1 (APQC tagging):** INSERTed 4 `handoff_processes` rows with `proposal_source='agent_curated'`, `role='implements'`, record_status defaulting to `new`. PCF external_id -> process_id resolution: 12840 -> 199 ("Report incidents and risks to regulatory bodies"); 11793 -> 734 ("Manage notification outcome"). Pairs: id=494 (handoff=335, process=199); id=495 (handoff=337, process=734); id=496 (handoff=947, process=734); id=497 (handoff=948, process=199). 2 handoffs (336 SUP-LIFE reorder, 946 FIN AR-profile-create) remain deferred to Discover Pass 3 per the original audit.
 
 ### Deferred
 
@@ -336,7 +336,7 @@ Applied only the truly-technical, audit-pre-specified slice of Bucket 1. Deferre
 - **B1-S8 (lifecycle states for 5 masters):** deferred. Bucket 2 item 5 still wants explicit user confirmation that no master qualifies for the config-shape exemption (Rule #12), and the state-machine drafts in B12 are draft-shaped not insert-shaped.
 - **B1-S9 (retire legacy skill + new tools):** gated on module authoring (B1-S1).
 - **B1-B1 (source_domain_module_id backfill on 6 outbound handoffs):** gated on B1-S1 (no VET-PRACT-MGMT modules exist yet).
-- **B1-B2 / B1-B3 / B1-B4 (cross-domain `data_object_relationships` mirrors to GRC / SUP-LIFE / ERP-FIN payloads):** gated on partner-domain module + master authoring (each has 0 modules per the original audit's neighbor pass).
+- **B1-B2 / B1-B3 / B1-B4 (cross-domain `data_object_relationships` mirrors to GRC / SUP-LIFE / FIN payloads):** gated on partner-domain module + master authoring (each has 0 modules per the original audit's neighbor pass).
 
 ### Loader
 
@@ -352,7 +352,7 @@ Validate b1 structural pass (re-run after the morning Continuation load). Scope:
 - Bucket 1 (in-scope, agent fixable, post-Continuation): 11 items still PENDING.
 - Bucket 2 (surface-for-user, judgment): 6 items still PENDING.
 - Bucket 3 (Phase 0 pending, speculative): 6 items still PENDING.
-- Cross-domain handoff count (N): 6 outbound + 0 inbound. APQC coverage now: 5 tagged (`agent_curated`, `record_status='new'`), 1 untagged (handoff 946 ERP-FIN `pet_owner.registered`). Catalog-quality headline: 0 of 6 `approved` (0%). Process-health side-bar: 5 `agent_curated`.
+- Cross-domain handoff count (N): 6 outbound + 0 inbound. APQC coverage now: 5 tagged (`agent_curated`, `record_status='new'`), 1 untagged (handoff 946 FIN `pet_owner.registered`). Catalog-quality headline: 0 of 6 `approved` (0%). Process-health side-bar: 5 `agent_curated`.
 - Structural gate state: M1 HARD FAIL persists (zero `domain_modules`). Every downstream module-touching fix is still gated behind module authoring (Bucket 2 item 1).
 
 ### Pass 1 - Structural (per-domain completeness checklist)
@@ -410,7 +410,7 @@ Every master remains at 0 states + 0 aliases. Routes to B12 (lifecycle) + B11 (a
 - **B5.** Zero `embedded_master` rows. PASS vacuously. Rule #11 cannot fail.
 - **B6.** 4 intra-domain `data_object_relationships` now loaded (ids 1697-1700). Coverage: `pet_owners owns animal_patients`, `animal_patients receives veterinary_vaccinations`, `animal_patients undergoes veterinary_lab_results`, `animal_patients administered controlled_substance_ledger_entries`. Missing (Continuation deferral): `veterinary_vaccinations drew_from controlled_substance_ledger_entries` (conditional on controlled-anesthetic doses, judgment call). PASS structurally for the 4 deterministic edges; the conditional edge is a Bucket 2 follow-up.
 - **B7.** 5 `users` edges loaded (ids 1701-1705) covering primary_veterinarian, administered_by, ordered_by, dispensed_by, account_owner. PASS.
-- **B8.** Outbound cross-domain edges: 2 rows (ids 474, 475) `animal_patients opens customer_cases` (id 103), `veterinary_vaccinations opens customer_cases`. Missing mirrors for the 4 non-CSM outbound handoffs (controlled_substance_ledger_entries -> GRC, -> SUP-LIFE; veterinary_lab_results -> GRC; pet_owners -> ERP-FIN). FAIL. Each is gated on the partner-domain master being identified (Bucket 1, partner-master-prerequisite).
+- **B8.** Outbound cross-domain edges: 2 rows (ids 474, 475) `animal_patients opens customer_cases` (id 103), `veterinary_vaccinations opens customer_cases`. Missing mirrors for the 4 non-CSM outbound handoffs (controlled_substance_ledger_entries -> GRC, -> SUP-LIFE; veterinary_lab_results -> GRC; pet_owners -> FIN). FAIL. Each is gated on the partner-domain master being identified (Bucket 1, partner-master-prerequisite).
 - **B9.** 6 outbound events (id 329, 330, 1087, 1088, 1089, 1090), all `event_category` non-empty. 6 handoff rows cover events 329, 330, 1087, 1089, 1090. Event 1088 `veterinary_vaccination.administered` still has zero `handoffs` rows. FAIL on event 1088. Bucket 1 STRUCTURAL.
 
   Outbound handoff table (post-Continuation):
@@ -420,7 +420,7 @@ Every master remains at 0 states + 0 aliases. Routes to B12 (lifecycle) + B11 (a
   | 335 | `controlled_substance.dispensed` | 399 | GRC (15) | batch_sync | medium | NULL | NULL |
   | 336 | `controlled_substance.dispensed` | 399 | SUP-LIFE (28) | api_call | low | NULL | NULL |
   | 337 | `animal_patient.appointment_due` | 395 | CSM (30) | api_call | low | NULL | NULL (CSM has 3 modules) |
-  | 946 | `pet_owner.registered` | 396 | ERP-FIN (65) | event_stream | low | NULL | NULL |
+  | 946 | `pet_owner.registered` | 396 | FIN (65) | event_stream | low | NULL | NULL |
   | 947 | `veterinary_vaccination.due` | 397 | CSM (30) | api_call | medium | NULL | NULL (CSM has 3 modules) |
   | 948 | `veterinary_lab_result.critical` | 398 | GRC (15) | event_stream | medium | NULL | NULL |
 
@@ -432,7 +432,7 @@ Every master remains at 0 states + 0 aliases. Routes to B12 (lifecycle) + B11 (a
   - 337, 947 -> CSM: target-side deterministically resolvable to CSM-CASE-MGMT (id 112). REPORT-ONLY follow-up for CSM B10b on its own audit.
   - 335, 948 -> GRC: target has 0 modules. Waits on GRC M1.
   - 336 -> SUP-LIFE: target has 0 modules. Waits on SUP-LIFE M1.
-  - 946 -> ERP-FIN: target has 0 modules. Waits on ERP-FIN M1.
+  - 946 -> FIN: target has 0 modules. Waits on FIN M1.
   Source-side fix (all 6 rows) is owed by VET-PRACT-MGMT once M1 is cured. Bucket 1 (source-side, gated on M1).
 - **B11.** Zero aliases on any master. Expected synonyms unchanged from prior audit: most load-bearing is `pet_owners` <-> "Client" (universal PIMS term across IDEXX / ezyVet / AVImark). FAIL. Bucket 1 STRUCTURAL.
 - **B12.** Zero `data_object_lifecycle_states` across all 5 masters. FAIL. Bucket 1 STRUCTURAL. Bucket 2.5 still wants explicit user confirmation that none qualify for the Rule #12 config-shape exemption.
@@ -467,7 +467,7 @@ Every master remains at 0 states + 0 aliases. Routes to B12 (lifecycle) + B11 (a
   - 337 (APPOINTMENT_DUE -> CSM) -> process 734 "Manage notification outcome" (PCF L4, external_id 11793).
   - 947 (VACCINATION_DUE -> CSM) -> process 734 "Manage notification outcome".
   - 948 (LAB_CRITICAL -> GRC) -> process 199 "Report incidents and risks to regulatory bodies".
-  - Untagged: 946 (PET_OWNER_REGISTERED -> ERP-FIN). Closest PCF activities: 303 "Process accounts receivable (AR)" (L3, but mis-frames the trigger which is registration, not invoicing); 736 "Collect and maintain account information" (L4, fits the substrate). Bucket 1 APQC TAGGING for the single remaining row; classify-or-defer call.
+  - Untagged: 946 (PET_OWNER_REGISTERED -> FIN). Closest PCF activities: 303 "Process accounts receivable (AR)" (L3, but mis-frames the trigger which is registration, not invoicing); 736 "Collect and maintain account information" (L4, fits the substrate). Bucket 1 APQC TAGGING for the single remaining row; classify-or-defer call.
   - Catalog-quality headline: 0 of 6 `approved` (0%). Process-health: 5 of 6 `agent_curated`.
 
 ### Pass 2 - Market audit (semantic)
@@ -476,14 +476,14 @@ No re-spawn of a market-surface subagent this run; the prior audit's MISSING / W
 
 ### Pass 3 - Neighbor discovery
 
-Edge weights unchanged (no new handoffs since the prior audit). CSM (weight 2), GRC (weight 2), SUP-LIFE (weight 1), ERP-FIN (weight 1), S2P (dep-only weight 1). No neighbor reaches >=3 -> one-line-per-neighbor in Pass 4.
+Edge weights unchanged (no new handoffs since the prior audit). CSM (weight 2), GRC (weight 2), SUP-LIFE (weight 1), FIN (weight 1), S2P (dep-only weight 1). No neighbor reaches >=3 -> one-line-per-neighbor in Pass 4.
 
 ### Pass 4 - Pairwise reconciliation per neighbor
 
 - **CSM (weight 2).** 2 outbound (337, 947) with NULL source + target module FKs. CSM has 3 modules; deterministic target -> CSM-CASE-MGMT (id 112). 2 existing relationship rows (474, 475) on `customer_cases` mirror the handoffs correctly. Source-side B10b owed by VET-PRACT-MGMT (gated on M1). Target-side B10b owed by CSM B10b (actionable today on CSM's audit).
 - **GRC (weight 2).** 2 outbound (335, 948) with NULL FKs. GRC has 0 modules; target-side waits on GRC M1. No `data_object_relationships` mirrors for either payload (DEA dispense report, adverse-event report). Bucket 1 B8 mirror is blocked on GRC mastering the payload.
 - **SUP-LIFE (weight 1).** 1 outbound (336) reorder loop, NULL FKs. SUP-LIFE has 0 modules; waits on SUP-LIFE M1. No `data_object_relationships` mirror.
-- **ERP-FIN (weight 1).** 1 outbound (946) AR-profile-create, NULL FKs. ERP-FIN has 0 modules; waits on ERP-FIN M1. No `data_object_relationships` mirror for `pet_owners -> erp-fin-payload`.
+- **FIN (weight 1).** 1 outbound (946) AR-profile-create, NULL FKs. FIN has 0 modules; waits on FIN M1. No `data_object_relationships` mirror for `pet_owners -> erp-fin-payload`.
 - **S2P (dep-only, weight 1).** `supplier_invoices` (id 75) consumed as contributor + required. No inbound handoff loaded. Report-only: S2P B9 owes outbound on `supplier_invoices.received` / `.approved`.
 
 ### Bucket 1 - In-scope confirmed gaps (post-Continuation, 11 PENDING)
@@ -513,13 +513,13 @@ Edge weights unchanged (no new handoffs since the prior audit). CSM (weight 2), 
 | B1-B1 | B10b (outbound source FK) | All 6 outbound handoffs have `source_domain_module_id=NULL` | Backfill source_domain_module_id from VET-PRACT-MGMT's modules once authored. | M1 |
 | B1-B2 | B8 (GRC mirrors) | No outbound `data_object_relationships` for `controlled_substance_ledger_entries -> GRC` payload and `veterinary_lab_results -> GRC` payload | Author edges once GRC's payload masters exist (likely `compliance_obligations` / `adverse_events`). | GRC M1 + GRC Phase B |
 | B1-B3 | B8 (SUP-LIFE mirror) | No `data_object_relationships` for `controlled_substance_ledger_entries -> SUP-LIFE` reorder payload | Author edge once SUP-LIFE masters `supplier_orders` / `replenishment_orders`. | SUP-LIFE M1 + Phase B |
-| B1-B4 | B8 (ERP-FIN mirror) | No `data_object_relationships` for `pet_owners -> ERP-FIN` payload (likely `customers` or `ar_accounts`) | Author edge once ERP-FIN masters the payload. | ERP-FIN M1 + Phase B |
+| B1-B4 | B8 (FIN mirror) | No `data_object_relationships` for `pet_owners -> FIN` payload (likely `customers` or `ar_accounts`) | Author edge once FIN masters the payload. | FIN M1 + Phase B |
 
 #### APQC TAGGING (PENDING)
 
 | # | id | finding | proposed fix |
 | --- | --- | --- | --- |
-| B1-H1 | H1 | Handoff 946 (`pet_owner.registered` -> ERP-FIN) untagged | Classify or defer. Candidate processes: 303 "Process accounts receivable (AR)" (L3, mis-frames trigger); 736 "Collect and maintain account information" (L4, substrate fits). Recommend: defer to Discover Pass 3 custom-process authoring (the trigger is registration, not AR/AP), unless the user wants 736 as the best-available match. |
+| B1-H1 | H1 | Handoff 946 (`pet_owner.registered` -> FIN) untagged | Classify or defer. Candidate processes: 303 "Process accounts receivable (AR)" (L3, mis-frames trigger); 736 "Collect and maintain account information" (L4, substrate fits). Recommend: defer to Discover Pass 3 custom-process authoring (the trigger is registration, not AR/AP), unless the user wants 736 as the best-available match. |
 
 ### Bucket 2 - Surface-for-user (judgment, 6 PENDING)
 
@@ -547,9 +547,9 @@ Unchanged from prior audit (no vendor-surface re-spawn this run):
 - **CSM B8** could carry inbound `data_object_relationships` mirrors (`customer_cases triggered_by animal_patient.appointment_due` / `veterinary_vaccination.due`) but the existing 474 / 475 outbound rows already cover the substrate from this side.
 - **GRC B10b + GRC B9** owe target FKs on 335 + 948 plus the GRC-side payload masters for DEA dispense and adverse-event reports. Gated on GRC M1.
 - **SUP-LIFE B10b + B9** owe target FK on 336 + the SUP-LIFE side reorder payload master. Gated on SUP-LIFE M1.
-- **ERP-FIN B10b + B9** owe target FK on 946 + the ERP-FIN AR-profile payload master. Gated on ERP-FIN M1.
+- **FIN B10b + B9** owe target FK on 946 + the FIN AR-profile payload master. Gated on FIN M1.
 - **S2P B9** owes outbound on `supplier_invoices.*` events to VET-PRACT-MGMT (this domain's contributor + required dependency on id 75).
-- **Partner-module sparsity (informational):** GRC, SUP-LIFE, ERP-FIN remain M1-failing; auditing them is the highest-leverage follow-up for VET-PRACT-MGMT's B-band tail.
+- **Partner-module sparsity (informational):** GRC, SUP-LIFE, FIN remain M1-failing; auditing them is the highest-leverage follow-up for VET-PRACT-MGMT's B-band tail.
 
 ### Classification recap (b1a / b1b / b2 / b3)
 
@@ -649,7 +649,7 @@ None. Both b1a items fully resolved. (The b1b items remain blocked on their `use
 
 ### next_action_by (post-execution)
 
-`user` - b1a is now empty; b2 carries open user-decision items (config-shape confirmation, Client alias posture, vaccination-admin pattern, ERP-FIN APQC, pet-owner PII / submit-lock flags, module reshape). next_action_by = user.
+`user` - b1a is now empty; b2 carries open user-decision items (config-shape confirmation, Client alias posture, vaccination-admin pattern, FIN APQC, pet-owner PII / submit-lock flags, module reshape). next_action_by = user.
 
 ---
 

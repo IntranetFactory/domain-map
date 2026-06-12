@@ -1,4 +1,4 @@
-# Core ERP Financial Management (ERP-FIN): questions waiting for you
+# Core ERP Financial Management (FIN): questions waiting for you
 
 ## What this domain is
 
@@ -9,9 +9,9 @@ The accounting system of record: the ledger that every other part of the busines
 q1: (answer this first) The build shipped 4 modules (GL and Close, Fixed Assets, Cash and Banking, Revenue Recognition), leaving out standalone Accounts Receivable and Accounts Payable modules because customer invoicing is owned by your CRM / order / subscription domains and supplier invoicing by your AP automation domain. Keep it at 4 modules, or add the two extra AR / AP modules?
 
 - a) Keep 4 modules. No module owns a master it does not actually hold, and the AR and AP capabilities stay anchored to Cash and Banking.
-- b) Add an AR Billing module and an AP Disbursement module as borrowed-master / consumer modules, and move the AR and AP capabilities there. Only do this if you want ERP-FIN to hold its own receivable / payable sub-ledger detail (open-item management, dunning, payment runs) rather than just consuming the downstream masters.
+- b) Add an AR Billing module and an AP Disbursement module as borrowed-master / consumer modules, and move the AR and AP capabilities there. Only do this if you want FIN to hold its own receivable / payable sub-ledger detail (open-item management, dunning, payment runs) rather than just consuming the downstream masters.
 
-Recommended: a. Neither AR nor AP masters any ERP-FIN data object today, so keeping 4 modules avoids an empty module or a promoted borrowed master. This choice drives the downstream skill, persona, and handoff fan-out, so it unlocks the rest of the build.
+Recommended: a. Neither AR nor AP masters any FIN data object today, so keeping 4 modules avoids an empty module or a promoted borrowed master. This choice drives the downstream skill, persona, and handoff fan-out, so it unlocks the rest of the build.
 
 a1:
 
@@ -97,7 +97,7 @@ a10:
 
 ## Optional (will not hold up the build)
 
-q11: Flagship ERPs model several deeper financial masters that ERP-FIN does not have yet: chart-of-accounts segments, journal-entry lines, currencies and exchange rates, allocations and allocation rules, FX revaluation runs, consolidation units and elimination entries, revenue contracts and performance obligations, and tax codes and jurisdictions. Should I research and add the ones that hold up across the vendor set? (yes/no)
+q11: Flagship ERPs model several deeper financial masters that FIN does not have yet: chart-of-accounts segments, journal-entry lines, currencies and exchange rates, allocations and allocation rules, FX revaluation runs, consolidation units and elimination entries, revenue contracts and performance obligations, and tax codes and jurisdictions. Should I research and add the ones that hold up across the vendor set? (yes/no)
 
 Recommended: yes, but additive and can happen after the modules exist. Several are common across the flagship vendors, though each still wants a verification pass first.
 
@@ -105,9 +105,9 @@ a11:
 
 ---
 
-q12: Three regulations could be surfaced on ERP-FIN as financial-impact touchpoints: the EU Corporate Sustainability Reporting Directive, OECD Pillar Two global minimum tax, and explicit ASC 842 / IFRS 16 lease-accounting rows. Should I research and add the ones that fit? (yes/no)
+q12: Three regulations could be surfaced on FIN as financial-impact touchpoints: the EU Corporate Sustainability Reporting Directive, OECD Pillar Two global minimum tax, and explicit ASC 842 / IFRS 16 lease-accounting rows. Should I research and add the ones that fit? (yes/no)
 
-Recommended: yes, but additive and non-blocking. All three shape ERP-FIN disclosures or consolidation, though they overlap with the ESG and tax domains and want a scoping check.
+Recommended: yes, but additive and non-blocking. All three shape FIN disclosures or consolidation, though they overlap with the ESG and tax domains and want a scoping check.
 
 a12:
 

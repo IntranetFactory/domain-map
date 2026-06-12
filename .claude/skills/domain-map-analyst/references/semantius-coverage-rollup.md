@@ -102,7 +102,7 @@ For the value-stream processes, substitute `process_tools` keyed on `processes.i
 ## Interpreting results
 
 - **100% pure-Semantius cluster:** platform/infra/security/content/pure-CRUD domains (APIM, IPAAS, KUBE-PLAT, DCIM, NPMD, UEM, VSDP, ITAM/HAM/SAM, IGA, BPA, PSA, WORK-MGMT, etc). With no required externals every tool is `query` or `mutate`.
-- **+email cluster (~80-92%):** operational domains where notifications are a workflow requirement (CRM, CSM, HRSD, ERP-FIN, OMS, etc).
+- **+email cluster (~80-92%):** operational domains where notifications are a workflow requirement (CRM, CSM, HRSD, FIN, OMS, etc).
 - **+email +sign cluster (~67-86%):** talent/contract/real-estate/supplier domains where document signing is integral.
 - **+email +chat cluster (~67-80%):** IT-ops/ChatOps domains (AIOPS, ITOM, OBS, RMM, MSP-PSA, WSC).
 - **Specialty low scores:** CONV-AI (compute externals), CCAAS (voice+SMS+audio+sentiment).

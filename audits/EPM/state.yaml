@@ -103,20 +103,20 @@ b1b:
         reason: "PATCH source flip is a judgment call per Rule #1"
     affected_handoffs:
       - {handoff_id: 199, direction: outbound, source_domain: EPM, target_domain: AUDIT, trigger_event: financial_forecast.refreshed, payload: financial_forecasts, null_field: proposal_source_flip_pending}
-      - {handoff_id: 540, direction: inbound, source_domain: ERP-FIN, target_domain: EPM, trigger_event: depreciation.posted, payload: asset_depreciation_schedules, null_field: proposal_source_flip_pending}
-      - {handoff_id: 563, direction: outbound, source_domain: EPM, target_domain: ERP-FIN, trigger_event: variance_analysis.material_variance, payload: variance_analyses, null_field: proposal_source_flip_pending}
+      - {handoff_id: 540, direction: inbound, source_domain: FIN, target_domain: EPM, trigger_event: depreciation.posted, payload: asset_depreciation_schedules, null_field: proposal_source_flip_pending}
+      - {handoff_id: 563, direction: outbound, source_domain: EPM, target_domain: FIN, trigger_event: variance_analysis.material_variance, payload: variance_analyses, null_field: proposal_source_flip_pending}
       - {handoff_id: 564, direction: outbound, source_domain: EPM, target_domain: AUDIT, trigger_event: variance_analysis.material_variance, payload: variance_analyses, null_field: proposal_source_flip_pending}
 
   - id: B1B-H1-mediums
     summary: "APQC TAGGING, 4 medium-confidence handoffs need per-item user pick."
-    finding: "handoff 256 (AUDIT recommendation.accepted -> EPM) carries a discovery_substring row pointing at PCF 16817 warranty-related recommendations (wrong fit); audit proposes 20136 variance analysis or defer to Discover. handoff 534 (ERP-FIN gl_account.mapping_changed -> EPM), no row yet, choose PCF 1379 Process journal entries or 10728 Perform planning and management accounting. handoff 777 (VSDP value_stream_metric.threshold_breached -> EPM), no row yet, defer to VSDP custom process candidate. handoffs 792, 795 (SPM benefits_tracking_record.realized / at_risk -> EPM), no rows yet, possible SPM-specific process, defer to Discover."
+    finding: "handoff 256 (AUDIT recommendation.accepted -> EPM) carries a discovery_substring row pointing at PCF 16817 warranty-related recommendations (wrong fit); audit proposes 20136 variance analysis or defer to Discover. handoff 534 (FIN gl_account.mapping_changed -> EPM), no row yet, choose PCF 1379 Process journal entries or 10728 Perform planning and management accounting. handoff 777 (VSDP value_stream_metric.threshold_breached -> EPM), no row yet, defer to VSDP custom process candidate. handoffs 792, 795 (SPM benefits_tracking_record.realized / at_risk -> EPM), no rows yet, possible SPM-specific process, defer to Discover."
     blocked_by:
       - type: user_decision
         ref: B1-H1-mediums-pick
         reason: "per-item PCF selection requires user pick or defer to Discover"
     affected_handoffs:
       - {handoff_id: 256, direction: inbound, source_domain: AUDIT, target_domain: EPM, trigger_event: recommendation.accepted, payload: audit_recommendations, null_field: pcf_replace_16817_with_20136_or_defer}
-      - {handoff_id: 534, direction: inbound, source_domain: ERP-FIN, target_domain: EPM, trigger_event: gl_account.mapping_changed, payload: general_ledger_accounts, null_field: pcf_pick_1379_or_10728}
+      - {handoff_id: 534, direction: inbound, source_domain: FIN, target_domain: EPM, trigger_event: gl_account.mapping_changed, payload: general_ledger_accounts, null_field: pcf_pick_1379_or_10728}
       - {handoff_id: 777, direction: inbound, source_domain: VSDP, target_domain: EPM, trigger_event: value_stream_metric.threshold_breached, payload: value_stream_metrics, null_field: defer_to_vsdp_custom_process}
       - {handoff_id: 792, direction: inbound, source_domain: SPM, target_domain: EPM, trigger_event: benefits_tracking_record.realized, payload: benefits_tracking_records, null_field: defer_to_spm_specific}
       - {handoff_id: 795, direction: inbound, source_domain: SPM, target_domain: EPM, trigger_event: benefits_tracking_record.at_risk, payload: benefits_tracking_records, null_field: defer_to_spm_specific}
@@ -154,7 +154,7 @@ b2:
 
   - id: B2-S4
     summary: "Rule #15 notes pollution on 2 surviving EPM-owned domain_data_objects rows."
-    question: "Were notes on row id=54 (org_units contributor; 'Cost-center alignment slice. EPM contributes the financial mapping...') and row id=335 (journal_entries consumer; 'EPM consumes period-actuals from ERP-FIN for variance reporting against budgets / forecasts.') explicitly user-approved at load time, or auto-populated by the loader?"
+    question: "Were notes on row id=54 (org_units contributor; 'Cost-center alignment slice. EPM contributes the financial mapping...') and row id=335 (journal_entries consumer; 'EPM consumes period-actuals from FIN for variance reporting against budgets / forecasts.') explicitly user-approved at load time, or auto-populated by the loader?"
     options:
       - "(a) Approved at load time, leave both in place"
       - "(b) Auto-populated, PATCH both to empty string and append a Rule #15 incident entry to references/skill-changelog.md"

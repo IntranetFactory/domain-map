@@ -82,13 +82,13 @@ b1b:
     affected_handoffs:
       - {handoff_id: 884, direction: outbound, target_domain: FLEET-MGMT, payload: service_work_orders, null_field: target_domain_module_id}
 
-  - id: B1B-ERP-FIN-PAIRWISE
-    summary: "ERP-FIN-side report-only: B10b target FK on outbound 885 + consumer DMDO on service_work_orders."
-    finding: "Outbound 885 (service_work_order.completed, service_work_orders) carries NULL target_domain_module_id on the ERP-FIN side; ERP-FIN has no consumer DMDO on service_work_orders (740). Fix belongs to the ERP-FIN audit."
+  - id: B1B-FIN-PAIRWISE
+    summary: "FIN-side report-only: B10b target FK on outbound 885 + consumer DMDO on service_work_orders."
+    finding: "Outbound 885 (service_work_order.completed, service_work_orders) carries NULL target_domain_module_id on the FIN side; FIN has no consumer DMDO on service_work_orders (740). Fix belongs to the FIN audit."
     blocked_by:
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: b1-target-fk-and-consumer-dmdo}
+      - {type: domain_audit, blocking_domain: FIN, milestone: b1-target-fk-and-consumer-dmdo}
     affected_handoffs:
-      - {handoff_id: 885, direction: outbound, target_domain: ERP-FIN, payload: service_work_orders, null_field: target_domain_module_id}
+      - {handoff_id: 885, direction: outbound, target_domain: FIN, payload: service_work_orders, null_field: target_domain_module_id}
 
   - id: B1B-EAM-PAIRWISE
     summary: "EAM-side report-only: B10b target FK on outbound 1260 + consumer DMDO on installed_equipment."
@@ -168,10 +168,10 @@ b2:
     why: "Modularization design call; pairs with B3-V2 entity placement."
 
   - id: B2-STARTER-HOST-SCOPE
-    summary: "HVAC-SVC-MGMT starter cross-domain host metadata: add CRM / CPQ / ERP-FIN, or keep FSM-only?"
-    question: "HVAC-SVC-MGMT (171) embeds shells from CRM (customers, crm_contacts), CPQ (sales_quotes), and ERP-FIN (customer_invoices) but lists FSM only via domain_module_host_domains. Add host rows for CRM / CPQ / ERP-FIN so the catalog reflects cross-domain reach?"
+    summary: "HVAC-SVC-MGMT starter cross-domain host metadata: add CRM / CPQ / FIN, or keep FSM-only?"
+    question: "HVAC-SVC-MGMT (171) embeds shells from CRM (customers, crm_contacts), CPQ (sales_quotes), and FIN (customer_invoices) but lists FSM only via domain_module_host_domains. Add host rows for CRM / CPQ / FIN so the catalog reflects cross-domain reach?"
     options:
-      - "(a) Add host_domain rows for CRM / CPQ / ERP-FIN."
+      - "(a) Add host_domain rows for CRM / CPQ / FIN."
       - "(b) Keep FSM-only since the home-services workflow centers there."
     why: "Editorial / host-junction discipline question."
 

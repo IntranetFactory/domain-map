@@ -64,7 +64,7 @@ A high-rank bucket means: **a process orchestration with many cross-function han
 
 Worked examples:
 - `employee` (rank 437): the cross-cutting JML orchestration — HCM → IGA → Payroll → Onboarding → ITSM → Talent-Mgmt. The most expensive cross-function workflow in any enterprise; obvious top candidate.
-- `opportunity` (rank 190): lead-to-cash orchestration — CRM → SALES-ENG → CPQ → CLM → ERP-FIN. The classic revenue motion.
+- `opportunity` (rank 190): lead-to-cash orchestration — CRM → SALES-ENG → CPQ → CLM → FIN. The classic revenue motion.
 - `task` (rank 180): cross-tool work coordination — WORK-MGMT → ITSM/PSA/CSM/HRSD. Lower handoff count but high function spread (work routes everywhere).
 
 The rank-score formula deliberately weights *friction × function-spread*: a process that's already cleanly integrated (low friction) but spans many functions ranks lower than one with comparable spread plus painful integration gaps. The agent skill removes friction, so friction is the prize.

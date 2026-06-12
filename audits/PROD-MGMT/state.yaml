@@ -33,7 +33,7 @@ b1b:
       - {type: domain_audit, blocking_domain: CSM, milestone: "B10b backfill on inbound from PROD-MGMT"}
       - {type: domain_audit, blocking_domain: CDP, milestone: "B10b backfill on inbound from PROD-MGMT"}
       - {type: domain_audit, blocking_domain: DXP, milestone: "B10b backfill on inbound from PROD-MGMT"}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: "B10b backfill on inbound from PROD-MGMT"}
+      - {type: domain_audit, blocking_domain: FIN, milestone: "B10b backfill on inbound from PROD-MGMT"}
     affected_handoffs:
       - {handoff_id: 996, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "beta_program.launched", payload: "beta_programs", null_field: target_domain_module_id}
       - {handoff_id: 997, direction: outbound, source_domain: PROD-MGMT, target_domain: CDP, trigger_event: "beta_program.launched", payload: "beta_programs", null_field: target_domain_module_id}
@@ -41,7 +41,7 @@ b1b:
       - {handoff_id: 1001, direction: outbound, source_domain: PROD-MGMT, target_domain: DXP, trigger_event: "product_feature.released", payload: "product_features", null_field: target_domain_module_id}
       - {handoff_id: 1003, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "product_feature.deprecated", payload: "product_features", null_field: target_domain_module_id}
       - {handoff_id: 1004, direction: outbound, source_domain: PROD-MGMT, target_domain: CDP, trigger_event: "product_feature.adoption_threshold_reached", payload: "product_features", null_field: target_domain_module_id}
-      - {handoff_id: 1006, direction: outbound, source_domain: PROD-MGMT, target_domain: ERP-FIN, trigger_event: "product_line.launched", payload: "product_lines", null_field: target_domain_module_id}
+      - {handoff_id: 1006, direction: outbound, source_domain: PROD-MGMT, target_domain: FIN, trigger_event: "product_line.launched", payload: "product_lines", null_field: target_domain_module_id}
       - {handoff_id: 1007, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "product_metric.threshold_breached", payload: "product_metrics", null_field: target_domain_module_id}
       - {handoff_id: 1009, direction: outbound, source_domain: PROD-MGMT, target_domain: DXP, trigger_event: "product_release.shipped", payload: "product_releases", null_field: target_domain_module_id}
       - {handoff_id: 1010, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "product_release.rolled_back", payload: "product_releases", null_field: target_domain_module_id}
@@ -66,12 +66,12 @@ b1b:
 
   - id: B1B-DOWNSTREAM-CONSUMER-DMDOS
     summary: "Report-only: 4 downstream domains lack consumer DMDOs on PROD-MGMT masters their inbound handoffs carry as payloads"
-    finding: "CSM, CDP, DXP, ERP-FIN receive PROD-MGMT outbounds with masters (beta_programs, customer_feedback_items, product_features, product_metrics, product_releases, product_roadmaps, product_lines) as payloads, but none of the receiving domains declare consumer DMDOs on these data_objects. Fix belongs in those domains' b1 audits."
+    finding: "CSM, CDP, DXP, FIN receive PROD-MGMT outbounds with masters (beta_programs, customer_feedback_items, product_features, product_metrics, product_releases, product_roadmaps, product_lines) as payloads, but none of the receiving domains declare consumer DMDOs on these data_objects. Fix belongs in those domains' b1 audits."
     blocked_by:
       - {type: domain_audit, blocking_domain: CSM, milestone: "add consumer DMDOs on beta_programs, customer_feedback_items, product_features, product_metrics, product_releases"}
       - {type: domain_audit, blocking_domain: CDP, milestone: "add consumer DMDOs on beta_programs, product_features"}
       - {type: domain_audit, blocking_domain: DXP, milestone: "add consumer DMDOs on product_features, product_releases, product_roadmaps"}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: "add consumer DMDOs on product_lines"}
+      - {type: domain_audit, blocking_domain: FIN, milestone: "add consumer DMDOs on product_lines"}
     affected_entities: ["beta_programs", "customer_feedback_items", "product_features", "product_metrics", "product_releases", "product_roadmaps", "product_lines"]
 
 b2:

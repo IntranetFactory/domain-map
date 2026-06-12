@@ -357,6 +357,21 @@
       "personas": []
     },
     {
+      "key": "develop_manage_sales_proposals",
+      "code": "3.5.3",
+      "name": "Develop and manage sales proposals, bids, and quotes",
+      "external_id": "11779",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
       "key": "develop_salary_compensation",
       "code": "7.5.1.1",
       "name": "Develop salary/compensation structure and plan",
@@ -431,6 +446,52 @@
           "raci": "responsible"
         }
       ]
+    },
+    {
+      "key": "evaluate_enterprise_regulatory",
+      "code": "8.3.3.1",
+      "name": "Evaluate enterprise regulatory and compliance obligations",
+      "external_id": "20722",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "CONTRACT-OPS-MANAGER",
+          "name": "Contract Operations Manager",
+          "raci": "accountable"
+        },
+        {
+          "code": "CONTRACT-OPS-SPECIALIST",
+          "name": "Contract Operations Specialist",
+          "raci": "responsible"
+        },
+        {
+          "code": "LEGAL-COUNSEL",
+          "name": "Legal Counsel",
+          "raci": "informed"
+        }
+      ]
+    },
+    {
+      "key": "evaluate_manage_financial",
+      "code": "9.1.5",
+      "name": "Evaluate and manage financial performance",
+      "external_id": "10741",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
     },
     {
       "key": "evaluate_training_effectiveness",
@@ -611,6 +672,67 @@
       "name": "Manage certifications and skills",
       "external_id": "20020",
       "hierarchy_level": 5,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_contracts",
+      "code": "4.2.3.4",
+      "name": "Manage contracts",
+      "external_id": "10291",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "CONTRACT-OPS-MANAGER",
+          "name": "Contract Operations Manager",
+          "raci": "accountable"
+        },
+        {
+          "code": "CONTRACT-OPS-SPECIALIST",
+          "name": "Contract Operations Specialist",
+          "raci": "responsible"
+        },
+        {
+          "code": "LEGAL-COUNSEL",
+          "name": "Legal Counsel",
+          "raci": "consulted"
+        }
+      ]
+    },
+    {
+      "key": "manage_customers_accounts",
+      "code": "3.5.2",
+      "name": "Manage customers and accounts",
+      "external_id": "10183",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "manage_demand_products",
+      "code": "4.1.2",
+      "name": "Manage demand for products",
+      "external_id": "10222",
+      "hierarchy_level": 3,
       "source_framework": "apqc_pcf_cross_industry",
       "usage": {
         "gate": false,
@@ -861,6 +983,21 @@
       ]
     },
     {
+      "key": "manage_legal_ethical_issues",
+      "code": "12.4",
+      "name": "Manage legal and ethical issues",
+      "external_id": "11013",
+      "hierarchy_level": 2,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
       "key": "manage_maintain_employee_data",
       "code": "7.7.3",
       "name": "Manage and maintain employee data",
@@ -926,6 +1063,21 @@
           "raci": "accountable"
         }
       ]
+    },
+    {
+      "key": "manage_operate_service_delivery",
+      "code": "5.3",
+      "name": "Manage and Operate Service Delivery System",
+      "external_id": "21634",
+      "hierarchy_level": 2,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
     },
     {
       "key": "manage_regulatory_compliance",
@@ -1020,6 +1172,21 @@
       ]
     },
     {
+      "key": "market_sell_products_services",
+      "code": "3.0",
+      "name": "Market and Sell Products and Services",
+      "external_id": "10004",
+      "hierarchy_level": 1,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
       "key": "monitor_evaluate_learning",
       "code": "7.3.4.7",
       "name": "Monitor and evaluate learning programs",
@@ -1042,6 +1209,42 @@
           "code": "LD-LEARNING-ADMIN",
           "name": "Learning Administrator",
           "raci": "accountable"
+        }
+      ]
+    },
+    {
+      "key": "negotiate_document_agreements",
+      "code": "12.4.9",
+      "name": "Negotiate and document agreements/contracts",
+      "external_id": "11052",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": true,
+        "raci": true,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": [
+        {
+          "code": "CONTRACT-OPS-MANAGER",
+          "name": "Contract Operations Manager",
+          "raci": "accountable"
+        },
+        {
+          "code": "CONTRACT-OPS-SPECIALIST",
+          "name": "Contract Operations Specialist",
+          "raci": "informed"
+        },
+        {
+          "code": "LEGAL-COUNSEL",
+          "name": "Legal Counsel",
+          "raci": "responsible"
+        },
+        {
+          "code": "PROCUREMENT-CONTRACT-LIAISON",
+          "name": "Procurement Contract Liaison",
+          "raci": "consulted"
         }
       ]
     },
@@ -1132,6 +1335,21 @@
       "personas": []
     },
     {
+      "key": "prepare_periodic_financial",
+      "code": "9.1.2.4",
+      "name": "Prepare periodic financial forecasts",
+      "external_id": "10773",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
       "key": "provide_it_resolution",
       "code": "8.7.8.2",
       "name": "Provide IT resolution capabilities",
@@ -1176,6 +1394,21 @@
           "raci": "responsible"
         }
       ]
+    },
+    {
+      "key": "provide_sourcing_governance",
+      "code": "4.2.1",
+      "name": "Provide sourcing governance",
+      "external_id": "10277",
+      "hierarchy_level": 3,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
     },
     {
       "key": "provide_workspace_facilities",
@@ -1265,6 +1498,21 @@
       ]
     },
     {
+      "key": "resolve_customer_problems",
+      "code": "6.2.2.3",
+      "name": "Resolve customer problems, requests, and inquiries",
+      "external_id": "10395",
+      "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
       "key": "respond_employee_payroll",
       "code": "9.5.2.8",
       "name": "Respond to employee payroll inquiries",
@@ -1285,6 +1533,21 @@
       "name": "Review compensation plan",
       "external_id": "10511",
       "hierarchy_level": 4,
+      "source_framework": "apqc_pcf_cross_industry",
+      "usage": {
+        "gate": false,
+        "raci": false,
+        "handoff": true,
+        "tool": false
+      },
+      "personas": []
+    },
+    {
+      "key": "service_products",
+      "code": "6.3.4",
+      "name": "Service products",
+      "external_id": "10218",
+      "hierarchy_level": 3,
       "source_framework": "apqc_pcf_cross_industry",
       "usage": {
         "gate": false,

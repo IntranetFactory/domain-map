@@ -70,21 +70,21 @@ b1b:
     affected_entities: [msp_clients]
 
   - id: B1B-S3
-    summary: B10b outbound NULL target_domain_module_id on 5 handoffs (HAM, CSM x2, ERP-FIN x2)
+    summary: B10b outbound NULL target_domain_module_id on 5 handoffs (HAM, CSM x2, FIN x2)
     finding: >-
-      Handoffs 161 (HAM), 523 (CSM), 524 (ERP-FIN), 525 (CSM), 526 (ERP-FIN) carry NULL
+      Handoffs 161 (HAM), 523 (CSM), 524 (FIN), 525 (CSM), 526 (FIN) carry NULL
       target_domain_module_id. Per B10b asymmetry, target-side FK population is the
       target-domain's audit work. MSP-PSA source side is populated on every outbound row.
     blocked_by:
       - {type: domain_audit, blocking_domain: HAM, milestone: b10b_target_fk}
       - {type: domain_audit, blocking_domain: CSM, milestone: b10b_target_fk}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: b10b_target_fk}
+      - {type: domain_audit, blocking_domain: FIN, milestone: b10b_target_fk}
     affected_handoffs:
       - {handoff_id: 161, direction: outbound, source_domain: MSP-PSA, target_domain: HAM, trigger_event: ticket.created, payload: hardware_assets, null_field: target_domain_module_id}
       - {handoff_id: 523, direction: outbound, source_domain: MSP-PSA, target_domain: CSM, trigger_event: msp_ticket.escalated, payload: msp_tickets, null_field: target_domain_module_id}
-      - {handoff_id: 524, direction: outbound, source_domain: MSP-PSA, target_domain: ERP-FIN, trigger_event: msp_invoice.issued, payload: msp_invoices, null_field: target_domain_module_id}
+      - {handoff_id: 524, direction: outbound, source_domain: MSP-PSA, target_domain: FIN, trigger_event: msp_invoice.issued, payload: msp_invoices, null_field: target_domain_module_id}
       - {handoff_id: 525, direction: outbound, source_domain: MSP-PSA, target_domain: CSM, trigger_event: msp_contract.renewal_due, payload: msp_contracts, null_field: target_domain_module_id}
-      - {handoff_id: 526, direction: outbound, source_domain: MSP-PSA, target_domain: ERP-FIN, trigger_event: msp_contract.activated, payload: msp_contracts, null_field: target_domain_module_id}
+      - {handoff_id: 526, direction: outbound, source_domain: MSP-PSA, target_domain: FIN, trigger_event: msp_contract.activated, payload: msp_contracts, null_field: target_domain_module_id}
 
   - id: B1B-S4
     summary: B10b inbound NULL source_domain_module_id on 4 handoffs (RMM, REMOTE-ACCESS x2, + 160 target NULL owed by REMOTE-ACCESS)
@@ -102,15 +102,15 @@ b1b:
       - {handoff_id: 160, direction: outbound, source_domain: MSP-PSA, target_domain: REMOTE-ACCESS, trigger_event: msp_ticket.escalated, payload: msp_tickets, null_field: target_domain_module_id}
 
   - id: B1B-S5
-    summary: Pairwise consumer DMDOs missing on CSM, ERP-FIN, HAM target modules
+    summary: Pairwise consumer DMDOs missing on CSM, FIN, HAM target modules
     finding: >-
       Several MSP-PSA-targeted outbound handoffs imply consumer DMDOs on the target side
       that do not exist: CSM consumes msp_tickets (233) via 523 and msp_contracts (234)
-      via 525; ERP-FIN consumes msp_invoices (236) via 524 and msp_contracts (234) via
+      via 525; FIN consumes msp_invoices (236) via 524 and msp_contracts (234) via
       526; HAM target side is mastering, not MSP-PSA's owe. Not MSP-PSA's fix.
     blocked_by:
       - {type: domain_audit, blocking_domain: CSM, milestone: consumer_dmdo_on_msp_psa_masters}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: consumer_dmdo_on_msp_psa_masters}
+      - {type: domain_audit, blocking_domain: FIN, milestone: consumer_dmdo_on_msp_psa_masters}
     affected_masters:
       - {data_object_id: 233, name: msp_tickets, target_module_id: null, workflow: ticket_escalation_to_csm}
       - {data_object_id: 234, name: msp_contracts, target_module_id: null, workflow: contract_renewal_to_csm_and_activation_to_erp_fin}

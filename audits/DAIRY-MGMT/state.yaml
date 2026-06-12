@@ -113,18 +113,18 @@ b1b:
       - {handoff_id: 355, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FSQM, trigger_event: cow_health_event.treatment_administered, payload: cow_health_events, null_field: cross_domain_relationship_mirror}
 
   - id: B1B-B4
-    summary: B8 ERP-FIN outbound `data_object_relationships` mirror rows
+    summary: B8 FIN outbound `data_object_relationships` mirror rows
     finding: >-
-      Three outbound handoffs now target ERP-FIN (956, 958, and the new 1403
-      dairy_cow.lifecycle_changed authored 2026-06-07). ERP-FIN-side payload
+      Three outbound handoffs now target FIN (956, 958, and the new 1403
+      dairy_cow.lifecycle_changed authored 2026-06-07). FIN-side payload
       masters (fixed_assets for dairy_cows as productive assets,
-      cost_centers or similar) need identification on ERP-FIN's own audit.
+      cost_centers or similar) need identification on FIN's own audit.
     blocked_by:
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: payload_masters_identified}
+      - {type: domain_audit, blocking_domain: FIN, milestone: payload_masters_identified}
     affected_handoffs:
-      - {handoff_id: 956, direction: outbound, source_domain: DAIRY-MGMT, target_domain: ERP-FIN, trigger_event: lactation_record.opened, payload: lactation_records, null_field: cross_domain_relationship_mirror}
-      - {handoff_id: 958, direction: outbound, source_domain: DAIRY-MGMT, target_domain: ERP-FIN, trigger_event: feed_ration.changed, payload: feed_rations, null_field: cross_domain_relationship_mirror}
-      - {handoff_id: 1403, direction: outbound, source_domain: DAIRY-MGMT, target_domain: ERP-FIN, trigger_event: dairy_cow.lifecycle_changed, payload: dairy_cows, null_field: cross_domain_relationship_mirror}
+      - {handoff_id: 956, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FIN, trigger_event: lactation_record.opened, payload: lactation_records, null_field: cross_domain_relationship_mirror}
+      - {handoff_id: 958, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FIN, trigger_event: feed_ration.changed, payload: feed_rations, null_field: cross_domain_relationship_mirror}
+      - {handoff_id: 1403, direction: outbound, source_domain: DAIRY-MGMT, target_domain: FIN, trigger_event: dairy_cow.lifecycle_changed, payload: dairy_cows, null_field: cross_domain_relationship_mirror}
 
   - id: B1B-B5
     summary: B8 GRC outbound `data_object_relationships` mirror row
@@ -144,7 +144,7 @@ b1b:
       959. None have been reviewed and approved. Catalog-quality headline is
       0 of 9 approved (0%); process-health side-bar is 6 of 9 agent_curated.
       Path from 0% quality to approved is reviewer approval, which is a user
-      judgment per Rule #1. (The 2 ERP-FIN handoffs 956/958 plus the new 1403
+      judgment per Rule #1. (The 2 FIN handoffs 956/958 plus the new 1403
       have no clean PCF tag yet; see b3 B3-7/B3-8 + custom-process authoring.)
     blocked_by:
       - {type: user_decision, ref: B2-8}
@@ -269,7 +269,7 @@ b3:
   - id: B3-7
     candidate: lactation_record_opened_to_erp_fin_apqc_custom_process
     rationale: >-
-      handoff_id=956 (lactation_record.opened -> ERP-FIN) has no clean
+      handoff_id=956 (lactation_record.opened -> FIN) has no clean
       cross-industry PCF match; closest is "Manage fixed-asset master data
       files" (PCF id=1388) but operational not master-data. Industry-specific
       dairy KPI rollup; needs custom-process authoring in Discover Pass 3.
@@ -280,10 +280,10 @@ b3:
   - id: B3-8
     candidate: feed_ration_changed_to_erp_fin_apqc_custom_process
     rationale: >-
-      handoff_id=958 (feed_ration.changed -> ERP-FIN) has no clean
+      handoff_id=958 (feed_ration.changed -> FIN) has no clean
       cross-industry PCF match. Feed-cost-per-litre is a dairy-specific KPI;
       custom-process authoring in Discover Pass 3. The new dairy_cow.lifecycle_changed
-      -> ERP-FIN handoff (1403, authored 2026-06-07) shares the same
+      -> FIN handoff (1403, authored 2026-06-07) shares the same
       no-clean-PCF profile and rolls into this custom-process bundle.
     vendor_evidence:
       - {vendor: DairyComp 305, evidence: 1st_class}

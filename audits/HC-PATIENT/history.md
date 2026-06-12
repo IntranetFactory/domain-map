@@ -45,7 +45,7 @@ The surface deliberately scopes out: ancillary departmental systems (LIS, RIS, P
 | B1-S4 | B4 | Pattern flags `has_personal_content`, `has_submit_lock`, `has_single_approver` are all `false` on every master. Every master in this domain holds PHI (HIPAA scope is identified on the domain), so `has_personal_content=true` is correct on all 6 masters. `clinical_notes` and `clinical_orders` are both submit-lock candidates (signed notes are immutable; placed orders cannot be retroactively edited). `clinical_notes` has a single-approver shape (the responsible provider signs). | PATCH the flags. Recommended values: all 6 masters get `has_personal_content=true`; `clinical_notes` and `clinical_orders` get `has_submit_lock=true`; `clinical_notes` gets `has_single_approver=true`. |
 | B1-S5 | B6 | Zero intra-domain `data_object_relationships` among the 6 masters. The current workflow chain is implicit: `patient_appointments` -> `clinical_encounters` -> `clinical_orders` + `clinical_notes`; `patient_referrals` -> `clinical_encounters`; `care_plans` references multiple encounters. | Author at least 6 edges: `patient_appointments produces clinical_encounters`, `clinical_encounters produces clinical_orders`, `clinical_encounters produces clinical_notes`, `patient_referrals triggers clinical_encounters`, `care_plans guides clinical_encounters`, `clinical_orders informs clinical_notes`. Each row carries `relationship_verb`, `inverse_verb`, cardinality, `is_required`, `owner_side`. |
 | B1-S6 | B7 | Zero `data_object_relationships` edges between any HC-PATIENT master and the platform built-in `users` (id 748). Per Rule #10 every master with a user-typed actor needs this edge. | Author 6 edges per Rule #10 (each master has at least one user role: appointment scheduler, encountering provider, ordering clinician, signing provider, care coordinator, referring provider). Load as `data_object_relationships` rows pointing at `users` (id 748). |
-| B1-S7 | B8 | Five outbound handoffs (ids 899, 900, 901, 902, 903) but zero corresponding outbound cross-domain `data_object_relationships` rows from HC-PATIENT masters to the target domains' masters. | Author 4 outbound relationship rows for the clean payload-target mappings: `patient_appointments triggers customer_cases` (handoff 899 to CSM), `clinical_encounters informs invoices` or equivalent ERP-FIN row (handoff 900), `patient_referrals creates customer_cases` (handoff 902), `clinical_notes informs invoices` (handoff 903). Handoff 901 (`clinical_order.placed` -> ITSM `service_incidents`) is semantically suspect: routed to Bucket 2 (B2-3). |
+| B1-S7 | B8 | Five outbound handoffs (ids 899, 900, 901, 902, 903) but zero corresponding outbound cross-domain `data_object_relationships` rows from HC-PATIENT masters to the target domains' masters. | Author 4 outbound relationship rows for the clean payload-target mappings: `patient_appointments triggers customer_cases` (handoff 899 to CSM), `clinical_encounters informs invoices` or equivalent FIN row (handoff 900), `patient_referrals creates customer_cases` (handoff 902), `clinical_notes informs invoices` (handoff 903). Handoff 901 (`clinical_order.placed` -> ITSM `service_incidents`) is semantically suspect: routed to Bucket 2 (B2-3). |
 | B1-S8 | B9 | Trigger event 1022 `patient_appointment.scheduled` has zero `handoffs` rows. The scheduling event is the canonical signal for downstream patient-communication, calendar holds, payer eligibility checks, and care-team notifications; loading the event without any subscriber leaves the publish leg orphaned. | Author at least 1 outbound handoff per published event. Candidates: HC-PATIENT-SCHED -> CSM (case create for prep), HC-PATIENT-SCHED -> TELEHEALTH (virtual-visit setup, blocked on Phase 0 candidate). Minimum: a no-target stub is not acceptable; resolve B1-S8 by either loading the missing handoff or removing the event row. |
 | B1-S9 | B9 (enum) | All 7 `trigger_events` rows for HC-PATIENT masters carry `event_category=""` (empty). The enum requires one of `lifecycle`, `state_change`, `threshold`, `signal` per Rule #13. | PATCH each event: `patient_appointment.scheduled` = `lifecycle`; `patient_appointment.no_show` = `state_change`; `clinical_encounter.completed` = `state_change`; `clinical_order.placed` = `lifecycle`; `patient_referral.created` = `lifecycle`; `clinical_note.signed` = `state_change`; `care_plan.activated` = `state_change`. |
 | B1-S10 | B10b outbound | All 5 outbound handoffs (ids 899, 900, 901, 902, 903) have `source_domain_module_id=null`. The source side cannot be backfilled until B1-S1 ships modules; once it does, the derivation in `backfill_ats_handoff_modules_2026_05_23.ts` applies. | After B1-S1 lands, run the standard backfill: pick the source module that masters the event's `data_object_id`. Expected wiring: 899/1023 -> HC-PATIENT-SCHED (patient_appointments); 900/1024 -> HC-PATIENT-CLINICAL (clinical_encounters); 901/1025 -> HC-PATIENT-CLINICAL (clinical_orders); 902/1026 -> HC-PATIENT-SCHED (patient_referrals); 903/1027 -> HC-PATIENT-CLINICAL (clinical_notes). |
@@ -63,10 +63,10 @@ The surface deliberately scopes out: ancillary departmental systems (LIS, RIS, P
 | ID | handoff_id | source -> target | trigger_event | payload | Proposed PCF row | hierarchy_level | confidence |
 |---|---|---|---|---|---|---|---|
 | B1-H1.1 | 899 | HC-PATIENT -> CSM | patient_appointment.no_show | patient_appointments | Manage customer service requests / inquiries (candidate; verify against `/processes` lookup at fix-load time) | L3-L4 candidate | medium |
-| B1-H1.2 | 900 | HC-PATIENT -> ERP-FIN | clinical_encounter.completed | clinical_encounters | Process accounts receivable (AR) / Manage revenue accounting (candidate; the encounter completion is the charge-capture trigger) | L2-L3 candidate | medium |
+| B1-H1.2 | 900 | HC-PATIENT -> FIN | clinical_encounter.completed | clinical_encounters | Process accounts receivable (AR) / Manage revenue accounting (candidate; the encounter completion is the charge-capture trigger) | L2-L3 candidate | medium |
 | B1-H1.3 | 901 | HC-PATIENT -> ITSM | clinical_order.placed | service_incidents (foreign payload) | DEFER, semantically suspect handoff modeling (see B2-3); APQC tagging would lock in a wrong shape | n/a | defer |
 | B1-H1.4 | 902 | HC-PATIENT -> CSM | patient_referral.created | patient_referrals | Manage customer inquiries / Track and route customer cases (candidate) | L3 candidate | medium |
-| B1-H1.5 | 903 | HC-PATIENT -> ERP-FIN | clinical_note.signed | clinical_notes | Capture and process financial transactions (charge capture lock on signature; candidate) | L2-L3 candidate | medium |
+| B1-H1.5 | 903 | HC-PATIENT -> FIN | clinical_note.signed | clinical_notes | Capture and process financial transactions (charge capture lock on signature; candidate) | L2-L3 candidate | medium |
 | B1-H1.6 | 896 | CLIN-DEV -> HC-PATIENT | device_recall.issued | device_recalls | Manage patient safety / Manage product safety and recalls (candidate; PCF cross-industry has product safety; healthcare-specific recall may need custom) | L3 or custom | low |
 | B1-H1.7 | 897 | CLIN-DEV -> HC-PATIENT | sterilization_cycle.failed | sterilization_cycles | DEFER, no clean PCF match (sterile-processing failure is industry-specific; Discover Pass 3 likely routes to custom process) | n/a | defer |
 
@@ -154,25 +154,25 @@ Auto-discovered neighbors from `handoffs` (outbound + inbound) and DMDO cross-re
 | Neighbor | Outbound edges | Inbound edges | Total edge weight | Pass-4 deep dive? |
 |---|---|---|---|---|
 | CSM (id 30) | 2 (handoffs 899, 902) | 0 | 2 | No (below threshold >=3) |
-| ERP-FIN (id 65) | 2 (handoffs 900, 903) | 0 | 2 | No |
+| FIN (id 65) | 2 (handoffs 900, 903) | 0 | 2 | No |
 | ITSM (id 1) | 1 (handoff 901, semantically suspect) | 0 | 1 | No |
 | CLIN-DEV (id 50) | 0 | 2 (handoffs 896, 897) | 2 | No |
 
 No neighbor reaches the weight-3 threshold for the full 5-section pairwise diff. Light summaries:
 
 - **HC-PATIENT <-> CSM (weight 2):** Both outbound handoffs target CSM's `customer_cases` (id 103) as payload. Healthcare patient-engagement via CRM is a valid pattern (Salesforce Health Cloud) but degraded compared to a dedicated patient-engagement domain. Inbound CSM coverage is zero, expected for one-way reporting flow. No B5 integrity gap surfaced (CSM masters `customer_cases`).
-- **HC-PATIENT <-> ERP-FIN (weight 2):** Both outbound handoffs are charge-capture / billing triggers. The payload mismatch (`clinical_encounters`, `clinical_notes` as payload while ERP-FIN does not master either) is acceptable if ERP-FIN consumes them via a downstream RCM-style flow. Once HC-RCM is loaded (Phase 0 candidate), these handoffs should route to HC-RCM as the intermediate domain, not directly to ERP-FIN.
+- **HC-PATIENT <-> FIN (weight 2):** Both outbound handoffs are charge-capture / billing triggers. The payload mismatch (`clinical_encounters`, `clinical_notes` as payload while FIN does not master either) is acceptable if FIN consumes them via a downstream RCM-style flow. Once HC-RCM is loaded (Phase 0 candidate), these handoffs should route to HC-RCM as the intermediate domain, not directly to FIN.
 - **HC-PATIENT <-> ITSM (weight 1):** Single outbound handoff (901) with semantically suspect modeling. See Bucket 2 B2-3.
 - **HC-PATIENT <-> CLIN-DEV (weight 2):** Two inbound handoffs (device_recall.issued, sterilization_cycle.failed) from CLIN-DEV. B10b cannot fix target_domain_module_id until HC-PATIENT modularizes (B1-S11). HC-PATIENT also lacks consumer DMDO rows for `device_recalls` (612) and `sterilization_cycles` (616): loading those is the upstream fix.
 
 ### Pass 4, Pairwise reconciliation per neighbor (edge weight >= 3)
 
-No neighbor reached the threshold. Skipped. If user later requests deep pairwise reconciliation on CSM or ERP-FIN (the two weight-2 neighbors closest to the threshold), run the 5-section diff on demand.
+No neighbor reached the threshold. Skipped. If user later requests deep pairwise reconciliation on CSM or FIN (the two weight-2 neighbors closest to the threshold), run the 5-section diff on demand.
 
 ### Report-only follow-ups (owed by other domains)
 
 - **CSM B8 owes inbound on `customer_cases` <- HC-PATIENT (handoffs 899 + 902).** CSM's next b1 audit should surface `customer_cases received_from patient_appointment.no_show` and `customer_cases received_from patient_referral.created` as inbound relationship rows. Not a fix for HC-PATIENT.
-- **ERP-FIN B10b inbound module attribution.** Once HC-PATIENT modularizes (B1-S1), ERP-FIN's next b1 audit will need to set `target_domain_module_id` on handoffs 900 and 903 (the inbound side from ERP-FIN's perspective). Not a fix for HC-PATIENT.
+- **FIN B10b inbound module attribution.** Once HC-PATIENT modularizes (B1-S1), FIN's next b1 audit will need to set `target_domain_module_id` on handoffs 900 and 903 (the inbound side from FIN's perspective). Not a fix for HC-PATIENT.
 - **CLIN-DEV B10b outbound module attribution.** Handoffs 896 + 897 carry `source_domain_module_id=null` (the source side, which is CLIN-DEV's responsibility). CLIN-DEV b1 audit needs to backfill once its modules are confirmed. Not a fix for HC-PATIENT.
 - **CSM B10b inbound module attribution.** Once HC-PATIENT modularizes, CSM needs to set `target_domain_module_id` on 899 + 902.
 - **ITSM B10b inbound module attribution.** Handoff 901 has `target_domain_module_id=38` already set but `source_domain_module_id=null`. ITSM is not the side that owes the source FK; HC-PATIENT owes it (covered under B1-S10). But the semantic correctness of the handoff itself (B2-3) is a joint concern: ITSM's next audit should also surface this as a potentially-orphan inbound.
@@ -209,7 +209,7 @@ Loader: `.tmp_deploy/fix_hc_patient_b1_technical_2026_05_31.ts`, run from projec
 | B1-S3 | `catalog_tagline` / `catalog_description` need user-approved wording per Rule #20. |
 | B1-S4 | Pattern flag flips (out of scope for the technical pass). |
 | B1-S6 | User-edges per Rule #10: audit lists actor roles per master but not concrete verb / inverse_verb tuples. Same defer pattern as CLIN-DEV. Surface to user before insert. |
-| B1-S7 | Cross-domain payload rels: handoffs 899 / 902 already covered by existing rows 466 (`patient_appointments opens customer_cases`) and 467 (`patient_referrals opens customer_cases`); 900 / 903 target ERP-FIN with no `invoices` data_object and no pre-specified target; 901 (ITSM) is routed to Bucket 2 (B2-3) as semantically suspect. |
+| B1-S7 | Cross-domain payload rels: handoffs 899 / 902 already covered by existing rows 466 (`patient_appointments opens customer_cases`) and 467 (`patient_referrals opens customer_cases`); 900 / 903 target FIN with no `invoices` data_object and no pre-specified target; 901 (ITSM) is routed to Bucket 2 (B2-3) as semantically suspect. |
 | B1-S8 | New outbound handoff for event 1022: audit candidates blocked on Phase 0 (TELEHEALTH). |
 | B1-S10, B1-S11 | B10b FK PATCHes require modules to exist first (gated on B1-S1). |
 | B1-S12 | Bulk `data_object_aliases`: audit does not pre-specify exact tuples; calls for "Author 2-3 aliases per master". |
@@ -250,7 +250,7 @@ Re-read confirmed: all 7 trigger_events now carry the target enum value; all 6 i
 | B5 | vacuous pass | 0 embedded_master rows. |
 | B6 | pass (newly) | 6 intra-domain edges loaded 2026-05-31 (ids 1857-1862). All 6 masters now participate. |
 | B7 | fail | 0 user edges between any HC-PATIENT master and `users` (id 748). Unchanged. |
-| B8 | partial | Of the 5 outbound handoffs: 899 (no_show -> CSM) covered by row 466 (`patient_appointments opens customer_cases`); 902 (referral.created -> CSM) covered by row 467 (`patient_referrals opens customer_cases`). Handoffs 900 (encounter.completed -> ERP-FIN), 901 (order.placed -> ITSM service_incidents), and 903 (note.signed -> ERP-FIN) still have no payload-target relationship row. Handoff 901 is semantically suspect (B2-3). |
+| B8 | partial | Of the 5 outbound handoffs: 899 (no_show -> CSM) covered by row 466 (`patient_appointments opens customer_cases`); 902 (referral.created -> CSM) covered by row 467 (`patient_referrals opens customer_cases`). Handoffs 900 (encounter.completed -> FIN), 901 (order.placed -> ITSM service_incidents), and 903 (note.signed -> FIN) still have no payload-target relationship row. Handoff 901 is semantically suspect (B2-3). |
 | B9 | partial fail | All 7 trigger_events now carry valid `event_category` (post-2026-05-31 backfill). Event 1022 (`patient_appointment.scheduled`) still has zero handoffs rows; the publish leg is orphaned. |
 | B9b | n/a | Single module count (0); skipped. |
 | B10b | fail | All 5 outbound rows have `source_domain_module_id=null`; 4 of 5 also have `target_domain_module_id=null` (handoff 901 has target=38 set). Both inbound rows (896, 897) have NULL on both FKs (the source NULL is CLIN-DEV's responsibility per report-only). Cannot cure without M1. |
@@ -291,7 +291,7 @@ Unchanged from 2026-05-30. Critical gates: B2-1 -> B1-S1, B1-S10, B1-S11, B1-S14
 
 Unchanged from 2026-05-30:
 - CSM B8 owes inbound on `customer_cases` from HC-PATIENT (handoffs 899, 902).
-- ERP-FIN B10b inbound module attribution on handoffs 900, 903 (once HC-PATIENT modularizes).
+- FIN B10b inbound module attribution on handoffs 900, 903 (once HC-PATIENT modularizes).
 - CLIN-DEV B10b outbound module attribution on handoffs 896, 897.
 - CSM B10b inbound module attribution on handoffs 899, 902 (once HC-PATIENT modularizes).
 - ITSM: handoff 901's source module attribution is HC-PATIENT's (B1-S10); semantic correctness (B2-3) is a joint concern.
@@ -334,7 +334,7 @@ Loader: `.tmp_deploy/fix_hc_patient_state_driven_2026_06_07.ts`, run from projec
 - **B1A-B4-PATTERN-FLAGS.** Recommended deterministic flips surfaced (overwrite of an existing boolean value, not an empty fill): all 6 masters `has_personal_content=true`; clinical_orders (621) + clinical_notes (622) `has_submit_lock=true`; clinical_notes (622) `has_single_approver=true`. Consistent with the 2026-05-31 pass deferring B1-S4.
 - **B2-1 through B2-7.** All seven judgment calls remain open; B2-1 (module split) is the critical gate.
 - **B1A-B9-ORPHAN-EVENT.** Event 1022 (patient_appointment.scheduled) still has zero handoffs (confirmed live). Fix = author a target handoff (blocked on Phase 0 TELEHEALTH/EHR) OR DELETE the event row (destructive, needs sign-off).
-- **B1A-B8-CROSS-DOMAIN-RELS.** Handoffs 900/903 payload-target rows still need a named ERP-FIN / HC-RCM target master (blocked); 901 deferred to B2-3.
+- **B1A-B8-CROSS-DOMAIN-RELS.** Handoffs 900/903 payload-target rows still need a named FIN / HC-RCM target master (blocked); 901 deferred to B2-3.
 
 ### Left (untouched)
 

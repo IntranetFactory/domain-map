@@ -1,6 +1,104 @@
 {
   "business_functions": [
     {
+      "name": "Contract Operations",
+      "description": "Contract authoring, redlining, approval routing, signature, repository, obligation tracking. The operational side of legal contract management.",
+      "parent": "Legal",
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 2,
+      "domains": [
+        {
+          "code": "CLM",
+          "responsibility": "owner"
+        }
+      ],
+      "personas": ["CONTRACT-OPS-MANAGER", "CONTRACT-OPS-SPECIALIST"],
+      "actor_personas": ["CONTRACT-OPS-MANAGER", "CONTRACT-OPS-SPECIALIST"],
+      "raci": [
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-MANAGER",
+          "persona_via": "own",
+          "process_code": "8.3.3.1",
+          "process_key": "evaluate_enterprise_regulatory",
+          "process_name": "Evaluate enterprise regulatory and compliance obligations",
+          "raci": "accountable"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-SPECIALIST",
+          "persona_via": "own",
+          "process_code": "8.3.3.1",
+          "process_key": "evaluate_enterprise_regulatory",
+          "process_name": "Evaluate enterprise regulatory and compliance obligations",
+          "raci": "responsible"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-MANAGER",
+          "persona_via": "own",
+          "process_code": "4.2.3.4",
+          "process_key": "manage_contracts",
+          "process_name": "Manage contracts",
+          "raci": "accountable"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-SPECIALIST",
+          "persona_via": "own",
+          "process_code": "4.2.3.4",
+          "process_key": "manage_contracts",
+          "process_name": "Manage contracts",
+          "raci": "responsible"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-MANAGER",
+          "persona_via": "own",
+          "process_code": "12.4.9",
+          "process_key": "negotiate_document_agreements",
+          "process_name": "Negotiate and document agreements/contracts",
+          "raci": "accountable"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-SPECIALIST",
+          "persona_via": "own",
+          "process_code": "12.4.9",
+          "process_key": "negotiate_document_agreements",
+          "process_name": "Negotiate and document agreements/contracts",
+          "raci": "informed"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-MANAGER",
+          "persona_via": "own",
+          "process_code": "12.4.8",
+          "process_key": "provide_legal_advice_counseling",
+          "process_name": "Provide legal advice/counseling",
+          "raci": "accountable"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-SPECIALIST",
+          "persona_via": "own",
+          "process_code": "12.4.8",
+          "process_key": "provide_legal_advice_counseling",
+          "process_name": "Provide legal advice/counseling",
+          "raci": "informed"
+        }
+      ]
+    },
+    {
       "name": "Executive",
       "description": "CEO office, corporate strategy, business development, mergers and acquisitions, and corporate communications.",
       "parent": null,
@@ -1105,7 +1203,7 @@
       "parent": null,
       "record_status": "new",
       "domain_count": 3,
-      "persona_count": 1,
+      "persona_count": 2,
       "domains": [
         {
           "code": "ATS",
@@ -1120,8 +1218,8 @@
           "responsibility": "contributor"
         }
       ],
-      "personas": ["LEGAL-COMPLIANCE-SPECIALIST"],
-      "actor_personas": ["LEGAL-COMPLIANCE-SPECIALIST"],
+      "personas": ["LEGAL-COMPLIANCE-SPECIALIST", "LEGAL-COUNSEL"],
+      "actor_personas": ["CONTRACT-OPS-MANAGER", "CONTRACT-OPS-SPECIALIST", "LEGAL-COMPLIANCE-SPECIALIST", "LEGAL-COUNSEL"],
       "raci": [
         {
           "domain": "ATS",
@@ -1142,6 +1240,126 @@
           "process_key": "manage_new_hire_re_hire",
           "process_name": "Manage new hire/re-hire",
           "raci": "responsible"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-MANAGER",
+          "persona_via": "descendant",
+          "process_code": "8.3.3.1",
+          "process_key": "evaluate_enterprise_regulatory",
+          "process_name": "Evaluate enterprise regulatory and compliance obligations",
+          "raci": "accountable"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-SPECIALIST",
+          "persona_via": "descendant",
+          "process_code": "8.3.3.1",
+          "process_key": "evaluate_enterprise_regulatory",
+          "process_name": "Evaluate enterprise regulatory and compliance obligations",
+          "raci": "responsible"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "LEGAL-COUNSEL",
+          "persona_via": "own",
+          "process_code": "8.3.3.1",
+          "process_key": "evaluate_enterprise_regulatory",
+          "process_name": "Evaluate enterprise regulatory and compliance obligations",
+          "raci": "informed"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-MANAGER",
+          "persona_via": "descendant",
+          "process_code": "4.2.3.4",
+          "process_key": "manage_contracts",
+          "process_name": "Manage contracts",
+          "raci": "accountable"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-SPECIALIST",
+          "persona_via": "descendant",
+          "process_code": "4.2.3.4",
+          "process_key": "manage_contracts",
+          "process_name": "Manage contracts",
+          "raci": "responsible"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "LEGAL-COUNSEL",
+          "persona_via": "own",
+          "process_code": "4.2.3.4",
+          "process_key": "manage_contracts",
+          "process_name": "Manage contracts",
+          "raci": "consulted"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-MANAGER",
+          "persona_via": "descendant",
+          "process_code": "12.4.9",
+          "process_key": "negotiate_document_agreements",
+          "process_name": "Negotiate and document agreements/contracts",
+          "raci": "accountable"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "LEGAL-COUNSEL",
+          "persona_via": "own",
+          "process_code": "12.4.9",
+          "process_key": "negotiate_document_agreements",
+          "process_name": "Negotiate and document agreements/contracts",
+          "raci": "responsible"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-SPECIALIST",
+          "persona_via": "descendant",
+          "process_code": "12.4.9",
+          "process_key": "negotiate_document_agreements",
+          "process_name": "Negotiate and document agreements/contracts",
+          "raci": "informed"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-MANAGER",
+          "persona_via": "descendant",
+          "process_code": "12.4.8",
+          "process_key": "provide_legal_advice_counseling",
+          "process_name": "Provide legal advice/counseling",
+          "raci": "accountable"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "LEGAL-COUNSEL",
+          "persona_via": "own",
+          "process_code": "12.4.8",
+          "process_key": "provide_legal_advice_counseling",
+          "process_name": "Provide legal advice/counseling",
+          "raci": "responsible"
+        },
+        {
+          "domain": "CLM",
+          "responsibility": "owner",
+          "persona": "CONTRACT-OPS-SPECIALIST",
+          "persona_via": "descendant",
+          "process_code": "12.4.8",
+          "process_key": "provide_legal_advice_counseling",
+          "process_name": "Provide legal advice/counseling",
+          "raci": "informed"
         },
         {
           "domain": "LMS",
@@ -1188,6 +1406,34 @@
       "personas": [],
       "actor_personas": [],
       "raci": []
+    },
+    {
+      "name": "Procurement",
+      "description": "Sub-function inside Finance (or independent in some orgs) that runs sourcing, supplier management, and purchase orders.",
+      "parent": null,
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 1,
+      "domains": [
+        {
+          "code": "CLM",
+          "responsibility": "contributor"
+        }
+      ],
+      "personas": ["PROCUREMENT-CONTRACT-LIAISON"],
+      "actor_personas": ["PROCUREMENT-CONTRACT-LIAISON"],
+      "raci": [
+        {
+          "domain": "CLM",
+          "responsibility": "contributor",
+          "persona": "PROCUREMENT-CONTRACT-LIAISON",
+          "persona_via": "own",
+          "process_code": "12.4.9",
+          "process_key": "negotiate_document_agreements",
+          "process_name": "Negotiate and document agreements/contracts",
+          "raci": "consulted"
+        }
+      ]
     },
     {
       "name": "Recruiting",
@@ -1422,9 +1668,13 @@
       "description": "Pipeline ownership, account management, quota-carrying revenue generation, and sales operations support across direct and channel motions.",
       "parent": null,
       "record_status": "new",
-      "domain_count": 1,
+      "domain_count": 2,
       "persona_count": 0,
       "domains": [
+        {
+          "code": "CLM",
+          "responsibility": "contributor"
+        },
         {
           "code": "LMS",
           "responsibility": "consumer"

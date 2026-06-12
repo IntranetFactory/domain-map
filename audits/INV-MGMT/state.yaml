@@ -55,11 +55,11 @@ b1b:
       - inventory_locations
   - id: B1B-S4-B10b
     summary: "10 outbound INV handoffs carry target_domain_module_id=NULL; backfill is owed by each target domain per B10b asymmetry."
-    finding: "Outbound handoffs 1050 (S2P), 1051 + 1052 (OMS), 1053 + 1054 (ERP-FIN), 1055 + 1056 + 1058 (CSM), 1057 (GRC), 1059 (B2C-COMM) all have target_domain_module_id=NULL. source_domain_module_id is populated on every row. No INV-MGMT write; tracked here for coordination."
+    finding: "Outbound handoffs 1050 (S2P), 1051 + 1052 (OMS), 1053 + 1054 (FIN), 1055 + 1056 + 1058 (CSM), 1057 (GRC), 1059 (B2C-COMM) all have target_domain_module_id=NULL. source_domain_module_id is populated on every row. No INV-MGMT write; tracked here for coordination."
     blocked_by:
       - {type: domain_audit, blocking_domain: S2P, milestone: B10b-backfill-1050}
       - {type: domain_audit, blocking_domain: OMS, milestone: B10b-backfill-1051-1052}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: B10b-backfill-1053-1054}
+      - {type: domain_audit, blocking_domain: FIN, milestone: B10b-backfill-1053-1054}
       - {type: domain_audit, blocking_domain: CSM, milestone: B10b-backfill-1055-1056-1058}
       - {type: domain_audit, blocking_domain: GRC, milestone: B10b-backfill-1057}
       - {type: domain_audit, blocking_domain: B2C-COMM, milestone: B10b-backfill-1059}
@@ -67,8 +67,8 @@ b1b:
       - {handoff_id: 1050, direction: outbound, source_domain: INV-MGMT, target_domain: S2P, trigger_event: "inv_stock_item.below_reorder_point", payload: "purchase_orders", null_field: target_domain_module_id}
       - {handoff_id: 1051, direction: outbound, source_domain: INV-MGMT, target_domain: OMS, trigger_event: "inv_stock_balance.on_hand_changed", payload: "order_allocations", null_field: target_domain_module_id}
       - {handoff_id: 1052, direction: outbound, source_domain: INV-MGMT, target_domain: OMS, trigger_event: "inv_stock_balance.allocated", payload: "order_allocations", null_field: target_domain_module_id}
-      - {handoff_id: 1053, direction: outbound, source_domain: INV-MGMT, target_domain: ERP-FIN, trigger_event: "inv_cycle_count.variance_posted", payload: "inv_cycle_counts", null_field: target_domain_module_id}
-      - {handoff_id: 1054, direction: outbound, source_domain: INV-MGMT, target_domain: ERP-FIN, trigger_event: "inv_stock_transfer.received", payload: "inv_stock_transfers", null_field: target_domain_module_id}
+      - {handoff_id: 1053, direction: outbound, source_domain: INV-MGMT, target_domain: FIN, trigger_event: "inv_cycle_count.variance_posted", payload: "inv_cycle_counts", null_field: target_domain_module_id}
+      - {handoff_id: 1054, direction: outbound, source_domain: INV-MGMT, target_domain: FIN, trigger_event: "inv_stock_transfer.received", payload: "inv_stock_transfers", null_field: target_domain_module_id}
       - {handoff_id: 1055, direction: outbound, source_domain: INV-MGMT, target_domain: CSM, trigger_event: "inv_inventory_lot.expiry_warning", payload: "inv_inventory_lots", null_field: target_domain_module_id}
       - {handoff_id: 1056, direction: outbound, source_domain: INV-MGMT, target_domain: CSM, trigger_event: "inv_inventory_lot.recall_initiated", payload: "inv_inventory_lots", null_field: target_domain_module_id}
       - {handoff_id: 1057, direction: outbound, source_domain: INV-MGMT, target_domain: GRC, trigger_event: "inv_inventory_lot.recall_initiated", payload: "inv_inventory_lots", null_field: target_domain_module_id}

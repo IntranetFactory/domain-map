@@ -28,13 +28,13 @@
 
 ## Orchestration shape
 
-The classic lead-to-cash motion. CRM owns opportunity lifecycle; multiple downstream domains react to stage changes. The high-friction concentration is at `opportunity.closed_won` — fan-out to CPQ (quote → contract), CLM (contract draft), ERP-FIN (revenue recognition), PSA (project provisioning if services), CSM (account handoff), and REV-INTEL/SALES-PERF (forecast actuals).
+The classic lead-to-cash motion. CRM owns opportunity lifecycle; multiple downstream domains react to stage changes. The high-friction concentration is at `opportunity.closed_won` — fan-out to CPQ (quote → contract), CLM (contract draft), FIN (revenue recognition), PSA (project provisioning if services), CSM (account handoff), and REV-INTEL/SALES-PERF (forecast actuals).
 
 Three sub-flows:
 
 1. **Lead → Opportunity** (`opportunity.created`, `opportunity.qualified`): CDP / MA enriches → SALES-ENG starts cadence → CRM creates record → REV-INTEL updates pipeline forecast.
 2. **Opportunity → Quote/Contract** (`opportunity.requires_quote`, `opportunity.stage_changed`): CRM → CPQ generates quote → CLM drafts contract → ESIGN delivers for signature.
-3. **Closed-won → Provisioning** (`opportunity.closed_won`): CRM → SUB-MGMT activates subscription → CSM accepts account → PSA scopes project → ERP-FIN posts revenue recognition → SALES-PERF books commission → AGENCY-MGMT (when sold through agency) seeds external engagement.
+3. **Closed-won → Provisioning** (`opportunity.closed_won`): CRM → SUB-MGMT activates subscription → CSM accepts account → PSA scopes project → FIN posts revenue recognition → SALES-PERF books commission → AGENCY-MGMT (when sold through agency) seeds external engagement.
 
 ## Why this build
 

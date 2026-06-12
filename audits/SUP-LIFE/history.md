@@ -18,7 +18,7 @@
 | AP-AUTO (29) | 4 | 1 | 0 | 2 (suppliers propagates bank change to payment_runs; invoice_matches signals supplier_scorecards) | 7 | Pairwise (full) |
 | GRC (15) | 2 | 0 | 0 | 2 (escalates_to audit_issues from scorecards and risk assessments) | 4 | Pairwise (full) |
 | AUDIT (16) | 1 | 0 | 0 | 2 (audit_findings updates suppliers; audit_engagements samples supplier_risk_assessments) | 3 | Pairwise (full) |
-| ERP-FIN (65) | 1 | 0 | 0 | 1 (supplier_onboardings creates_vendor_master_in bank_accounts) | 2 | Lightweight |
+| FIN (65) | 1 | 0 | 0 | 1 (supplier_onboardings creates_vendor_master_in bank_accounts) | 2 | Lightweight |
 | MDM (87) | 0 | 1 | 0 | 1 (supplier_golden_records resolves to suppliers) | 2 | Lightweight |
 | ESG (21) | 0 | 1 | 0 | 1 (supplier_esg_assessments updates suppliers) | 2 | Lightweight |
 | FOOD-TRACE (155) | 0 | 1 | 0 | 0 | 1 | Lightweight |
@@ -59,7 +59,7 @@ SUP-LIFE Semantius score (strict, today): **uncomputable** (F5 hard-fail because
 |---|---|---|---|---|---|---|
 | 127 | SUP-LIFE → S2P | `supplier.approved` | `suppliers` | Certify and validate suppliers | 805 | confident L4 (more specific than existing PCF 167) |
 | 128 | SUP-LIFE → AP-AUTO | `supplier.bank_changed` | `suppliers` | Monitor/Manage supplier information | 815 | confident L4 (more specific than existing PCF 167) |
-| 213 | SUP-LIFE → ERP-FIN | `supplier.onboarded` | `supplier_onboardings` | Monitor/Manage supplier information | 815 | confident L4 |
+| 213 | SUP-LIFE → FIN | `supplier.onboarded` | `supplier_onboardings` | Monitor/Manage supplier information | 815 | confident L4 |
 | 214 | SUP-LIFE → GRC | `supplier.risk_elevated` | `supplier_scorecards` | Prepare/Analyze procurement and supplier performance | 816 | confident L4 |
 | 546 | SUP-LIFE → S2P | `supplier_qualification.approved` | `supplier_qualifications` | Certify and validate suppliers | 805 | confident L4 |
 | 547 | SUP-LIFE → AP-AUTO | `supplier_qualification.approved` | `supplier_qualifications` | Certify and validate suppliers | 805 | confident L4 |
@@ -101,7 +101,7 @@ For the heavy neighbors (edge weight at least 3) the 5-section pairwise diff pro
 
 **Lighter neighbors (weight 1 to 2, one-line summaries):**
 
-- **ERP-FIN (weight 2).** 1 outbound (213, supplier.onboarded), creates ERP vendor master. Cross-relationship `supplier_onboardings creates_vendor_master_in bank_accounts` (567) exists. NULL on both module FKs.
+- **FIN (weight 2).** 1 outbound (213, supplier.onboarded), creates ERP vendor master. Cross-relationship `supplier_onboardings creates_vendor_master_in bank_accounts` (567) exists. NULL on both module FKs.
 - **MDM (weight 2).** 1 inbound (273, supplier_golden_record.updated). Cross-relationship `supplier_golden_records resolves_to suppliers` (568) exists. NULL on both module FKs.
 - **ESG (weight 2).** 1 inbound (277, supplier_esg_assessment.score_updated). Cross-relationship 327 (supplier_esg_assessments updates suppliers, owner_side target) exists. NULL on both module FKs.
 - **VMS (weight 2).** 1 inbound (591, staffing_supplier.activated). Cross-relationship `suppliers reconciles staffing_suppliers` (542) exists. NULL on both module FKs.
@@ -200,7 +200,7 @@ These are findings the SUP-LIFE audit surfaced but which sit on other domains; r
 | AP-AUTO (29) | B10b | source_domain_module_id NULL on 543 (`invoice_match.exception_raised`); target_domain_module_id NULL on 128, 547, 596 once SUP-LIFE has modules |
 | GRC (15) | B10b | target_domain_module_id NULL on 214, 549 once SUP-LIFE has modules |
 | AUDIT (16) | B10b | target_domain_module_id NULL on 550 once SUP-LIFE has modules |
-| ERP-FIN (65) | B10b | target_domain_module_id NULL on 213 once SUP-LIFE has modules |
+| FIN (65) | B10b | target_domain_module_id NULL on 213 once SUP-LIFE has modules |
 | MDM (87) | B10b | source_domain_module_id NULL on 273 (`supplier_golden_record.updated`) |
 | ESG (21) | B10b | source_domain_module_id NULL on 277 (`supplier_esg_assessment.score_updated`) |
 | VMS (64) | B10b | source_domain_module_id NULL on 591 (`staffing_supplier.activated`) |
@@ -327,7 +327,7 @@ Plus 1 modularization candidate (promote SUP-LIFE-COMPLIANCE if B2-S1=c or if B3
 
 ### Report-only follow-ups (owed by other domains)
 
-Unchanged from 2026-05-30 audit. Routed to S2P (27), AP-AUTO (29), GRC (15), AUDIT (16), ERP-FIN (65), MDM (87), ESG (21), VMS (64), FOOD-TRACE (155), VET-PRACT-MGMT (151), TPRM (19), FSQM, PIM (110). All blocked on SUP-LIFE B1-S1 landing first (B10b counterparty-side backfill).
+Unchanged from 2026-05-30 audit. Routed to S2P (27), AP-AUTO (29), GRC (15), AUDIT (16), FIN (65), MDM (87), ESG (21), VMS (64), FOOD-TRACE (155), VET-PRACT-MGMT (151), TPRM (19), FSQM, PIM (110). All blocked on SUP-LIFE B1-S1 landing first (B10b counterparty-side backfill).
 
 ### JWT errors
 

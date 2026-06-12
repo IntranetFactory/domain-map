@@ -48,7 +48,7 @@ Semantius score: uncomputable (F5 rollup) because F2 cannot pass without `domain
 | B1-S8 | C2 | Zero `business_function_capabilities` rows for any AUDIT capability. Once capabilities load under B1-S1, every capability whose owning function diverges from Internal Audit (likely `AUDIT-CONTROLS-TESTING` and `AUDIT-REPORTING-COMMITTEE`, both share with Finance / Risk & Compliance) needs an override row. | Author overrides when capabilities load. |
 | B1-S9 | regulations | PCAOB AS 2201 (Audit of Internal Control Over Financial Reporting) and IIA Standards (International Standards for the Professional Practice of Internal Auditing) are absent from `regulations` despite being the defining frameworks for external SOX audits and internal-audit practice respectively. | Add 2 `regulations` rows + 2 `domain_regulations` links (mandatory). |
 | B1-S10 | B6 | `data_object_relationships` row 294 to 294 with verb `imports` is a self-loop on `audit_findings` whose verb is non-obvious. Likely intent: "finding imports from prior finding" or merge / consolidate. The verb does not match any documented pattern and the row is invisible to all downstream tooling. | Surface the row to user; default is DELETE unless a specific intent (carry-forward findings across engagements) is documented and reauthored with a clearer verb. |
-| B1-S11 | B9 | Trigger event 605 (`work_paper.completed`) has zero `handoffs` rows. Either it is a leaf (work-paper completion is internal-only, audit progresses to signed-off via event 606) or it owes a subscriber (ERP-FIN, GRC for evidence locking). Likely a leaf, but the audit must positively justify it. | Confirm leaf status; if confirmed, no fix. If subscriber needed, author handoff row. Default classification: leaf. |
+| B1-S11 | B9 | Trigger event 605 (`work_paper.completed`) has zero `handoffs` rows. Either it is a leaf (work-paper completion is internal-only, audit progresses to signed-off via event 606) or it owes a subscriber (FIN, GRC for evidence locking). Likely a leaf, but the audit must positively justify it. | Confirm leaf status; if confirmed, no fix. If subscriber needed, author handoff row. Default classification: leaf. |
 | B1-S12 | B9 | Duplicate trigger events on data_object 294 (`audit_findings`): id 230 `finding.created` and id 349 `audit_finding.created`. Both exist; both fire to GRC (handoffs 254 and 357 respectively). One is canonical, the other is drift from a cluster load. | Surface to user; default is to keep id 230 (matches the unprefixed verb pattern used by 229 `audit_engagement.completed`, 232 `audit_report.issued`), DELETE event 349 after re-pointing handoff 357 to event 230. |
 
 #### B10b BOUNDARY, per-module attribution on handoffs
@@ -71,11 +71,11 @@ Semantius score: uncomputable (F5 rollup) because F2 cannot pass without `domain
 | 1 | 255 | AUDIT to GRC | follow_up_action.closed | follow_up_actions | Remediate control deficiencies | 1496 | confident L4 |
 | 2 | 257 | AUDIT to ITSM | audit_engagement.completed | service_incidents | Report audit findings | 389 | confident L3 |
 | 3 | 592 | AUDIT to GRC | control_test.deficient | control_tests | Manage internal controls | 61 | confident L2 |
-| 4 | 593 | AUDIT to ERP-FIN | control_test.deficient | control_tests | Operate controls and monitor compliance with internal controls policies and procedures | 325 | confident L3 |
+| 4 | 593 | AUDIT to FIN | control_test.deficient | control_tests | Operate controls and monitor compliance with internal controls policies and procedures | 325 | confident L3 |
 | 5 | 594 | AUDIT to GRC | audit_plan.approved | audit_plans | Manage internal audits | 1598 | confident L4 |
-| 6 | 595 | AUDIT to ERP-FIN | work_paper.signed_off | work_papers | Support external audits and reports | 1187 | confident L4 |
+| 6 | 595 | AUDIT to FIN | work_paper.signed_off | work_papers | Support external audits and reports | 1187 | confident L4 |
 | 7 | 247 | GRC to AUDIT | audit_issue.created | audit_issues | Report on internal controls compliance | 326 | confident L3 |
-| 8 | 539 | ERP-FIN to AUDIT | fixed_asset.disposed | fixed_assets | Audit invoices and key data in AP system | 1433 | confident L4 |
+| 8 | 539 | FIN to AUDIT | fixed_asset.disposed | fixed_assets | Audit invoices and key data in AP system | 1433 | confident L4 |
 | 9 | 544 | AP-AUTO to AUDIT | invoice_match.manual_override | invoice_matches | Audit invoices and key data in AP system | 1433 | confident L4 |
 | 10 | 554 | EXPENSE to AUDIT | expense_line.policy_violation | expense_lines | Audit invoices and key data in AP system | 1433 | likely L4 |
 | 11 | 550 | SUP-LIFE to AUDIT | supplier_risk_assessment.completed | supplier_risk_assessments | Manage business unit and function risk | 367 | likely L3 |
@@ -110,7 +110,7 @@ These 10 handoffs already carry a `discovery_substring` proposal. Per Rule #1, n
 5. **Discovery-substring tag corrections (per APQC TAGGING anti-pattern note).** Handoffs 256 and 825 carry substring-derived tags that look semantically wrong (`Provide warranty-related recommendations` on an audit recommendation, `Document trade` on records retention). Options: (a) DELETE the bad tags and surface to Discover Pass 3 for re-tagging, (b) leave them at `record_status='new'` and let a human reviewer reject during the review pass. Default (a). Independent of Bucket 3.
 6. **Pattern flags on `audit_engagements`.** Vendor surface is split: AuditBoard models engagements as edit-lockable post-completion (`has_submit_lock=true`), TeamMate+ allows ongoing edits to engagement metadata. Decide intent. Default: `has_submit_lock=true` aligned with `work_papers` and `audit_findings` lock semantics. Independent of Bucket 3.
 7. **Self-loop on `audit_findings` (B1-S10).** The `imports` self-loop is undocumented. Options: (a) DELETE (default), (b) keep as a carry-forward concept and PATCH the verb to `carries_forward_from` or similar. Independent of Bucket 3.
-8. **Pairwise reconciliation scope.** AUDIT has 5 neighbors at edge weight 3 or higher: GRC (8), ERP-FIN (8), EPM (3), ESG (3), LSD (3). Plus 11 lighter neighbors (weight 1 to 2). Decide: run the 5-section pairwise diff for all five heavy neighbors inline now, defer pairwise to a follow-up audit, or only run for the two heaviest (GRC, ERP-FIN). Default: defer pairwise to a follow-up audit, ship the structural-and-market findings now. Independent of Bucket 3.
+8. **Pairwise reconciliation scope.** AUDIT has 5 neighbors at edge weight 3 or higher: GRC (8), FIN (8), EPM (3), ESG (3), LSD (3). Plus 11 lighter neighbors (weight 1 to 2). Decide: run the 5-section pairwise diff for all five heavy neighbors inline now, defer pairwise to a follow-up audit, or only run for the two heaviest (GRC, FIN). Default: defer pairwise to a follow-up audit, ship the structural-and-market findings now. Independent of Bucket 3.
 9. **AUDIT as a domain at all.** Audit Management is sometimes folded under GRC as a "sub-module" rather than a peer domain (Archer, ServiceNow IRM treat it that way). The pure-plays (AuditBoard, TeamMate+, Workiva) keep it as a first-class market. Current catalog treats it as a separate domain, which is correct per Rule #2 (3+ independent point-solution vendors). Decide: confirm AUDIT stays as a peer domain (default, recommended) or fold into GRC. Independent of Bucket 3.
 
 ### Bucket 3, Phase 0 pending (speculative; vendor-research vetting needed)
@@ -146,17 +146,17 @@ Universal-or-near-universal vendor entities surfaced by AuditBoard / Workiva / T
 
 ### Pass 3, Neighbor discovery
 
-Cross-domain handoff and DMDO edges to other domains, ranked by edge weight. AUDIT's outbound DMDO consumers (`journal_entries` from ERP-FIN, `financial_forecasts` from EPM, `audit_issues` from GRC, `employees` from HCM, `org_units` from HCM, `locations` from IWMS) add edge weight per direct dependency.
+Cross-domain handoff and DMDO edges to other domains, ranked by edge weight. AUDIT's outbound DMDO consumers (`journal_entries` from FIN, `financial_forecasts` from EPM, `audit_issues` from GRC, `employees` from HCM, `org_units` from HCM, `locations` from IWMS) add edge weight per direct dependency.
 
 | Neighbor | Handoff edges | DMDO edges | Total weight | Pairwise depth (recommended) |
 |---|---|---|---|---|
 | GRC | 8 (5 out + 3 in) | 1 (consumer of `audit_issues`) | 9 | Full 5-section diff |
-| ERP-FIN | 8 (2 out + 6 in) | 1 (consumer of `journal_entries`) | 9 | Full 5-section diff |
+| FIN | 8 (2 out + 6 in) | 1 (consumer of `journal_entries`) | 9 | Full 5-section diff |
 | EPM | 3 (1 out + 2 in) | 1 (consumer of `financial_forecasts`) | 4 | Full 5-section diff |
 | ESG | 3 (3 in) | 0 | 3 | Full 5-section diff |
 | LSD | 3 (3 in) | 0 | 3 | Full 5-section diff |
 | HCM | 0 handoffs | 2 (consumer of `employees`, embedded master of `org_units`) | 2 | 1-line summary |
-| ERP-FIN, FOOD-TRACE, FSQM, AP-AUTO, EXPENSE, SUP-LIFE, SPEND-MGMT, DCG, RPA, DSPM, RE-CRE, ITSM, TPRM, ECM, LEGAL-PRACT-MGMT, IWMS | 1 or 2 each | varies | 1 to 2 | 1-line summary |
+| FIN, FOOD-TRACE, FSQM, AP-AUTO, EXPENSE, SUP-LIFE, SPEND-MGMT, DCG, RPA, DSPM, RE-CRE, ITSM, TPRM, ECM, LEGAL-PRACT-MGMT, IWMS | 1 or 2 each | varies | 1 to 2 | 1-line summary |
 
 Per Bucket 2 item 8, the pairwise reconciliation for heavy neighbors is **deferred to a follow-up audit run**. Below is the 1-line summary for lighter neighbors and the indicative shape for heavy neighbors.
 
@@ -167,7 +167,7 @@ Per Bucket 2 item 8 the deep pairwise diff is deferred to a follow-up audit (no 
 | Pair | null_fk on this side | Missing handoffs (catalog implies) | Boundary integrity | Cross-domain rel mirror |
 |---|---|---|---|---|
 | AUDIT <-> GRC | All 8 (blocked by M1) | None obvious; the audit-to-GRC publish set is dense | OK (B5 passes for `audit_issues` since GRC masters it) | 5 rels present (`audit_findings` to `audit_issues`, `audit_recommendations` to `financial_scenarios`, `control_tests` to `audit_issues`, `audit_plans` to `compliance_controls`, `follow_up_actions` to `audit_issues`). Likely complete. |
-| AUDIT <-> ERP-FIN | All 8 (blocked by M1) | None | OK | 9 outbound rels from `audit_findings` to ERP-FIN entities (`journal_entries`, `legal_entities`, `fixed_assets`, `cash_transactions`, `intercompany_transactions`, `invoice_matches`, `accounting_periods`). Complete. |
+| AUDIT <-> FIN | All 8 (blocked by M1) | None | OK | 9 outbound rels from `audit_findings` to FIN entities (`journal_entries`, `legal_entities`, `fixed_assets`, `cash_transactions`, `intercompany_transactions`, `invoice_matches`, `accounting_periods`). Complete. |
 | AUDIT <-> EPM | All 3 (blocked by M1) | None | OK | 2 outbound rels (`audit_recommendations` to `financial_scenarios`, `audit_findings` to `variance_analyses`, `audit_findings` to `financial_forecasts`). Complete. |
 | AUDIT <-> ESG | All 3 (blocked by M1) | None | Inbound payloads not modeled as DMDO (Bucket 2 item 3) | 2 outbound rels (`audit_engagements` to `esg_disclosures`, `audit_plans` to `esg_initiatives`). Complete on outbound side. |
 | AUDIT <-> LSD | All 3 (blocked by M1) | None | Inbound payloads not modeled as DMDO (Bucket 2 item 3) | 0 outbound rels (none expected; LSD is publisher) |
@@ -179,8 +179,8 @@ Lighter neighbors (weight 1 to 2): all have null_fk on the AUDIT side blocked by
 These items the audit identifies but other domains own. They route to those domains' future audits, never to AUDIT's Bucket 1.
 
 - **GRC B10b owes target-side module attribution** on handoffs 247, 251, 840 (AUDIT publishes / receives, GRC is the other side). Once GRC modules are stable, GRC's B10b backfill sets `target_domain_module_id` on these.
-- **ERP-FIN B10b owes target-side module attribution** on handoffs 539, 531, 536, 538, 541 (ERP-FIN publishes to AUDIT).
-- **ERP-FIN B10b owes source-side module attribution** on handoffs 593, 595 (AUDIT publishes to ERP-FIN; the source side is AUDIT's responsibility, will be fixed in B1-B1 once AUDIT has modules; ERP-FIN owes the `target_domain_module_id`).
+- **FIN B10b owes target-side module attribution** on handoffs 539, 531, 536, 538, 541 (FIN publishes to AUDIT).
+- **FIN B10b owes source-side module attribution** on handoffs 593, 595 (AUDIT publishes to FIN; the source side is AUDIT's responsibility, will be fixed in B1-B1 once AUDIT has modules; FIN owes the `target_domain_module_id`).
 - **EPM B9 candidate**: `financial_forecast.refreshed` (handoff 199) already exists, but the symmetric pair `forecast.refreshed` -> AUDIT for variance-review work-paper trigger is not modeled. Surface when EPM is next audited.
 - **GRC B8 owes outbound `data_object_relationships` mirrors** on `audit_issues` -> `follow_up_actions` (close direction) and `audit_issues` -> `control_tests` (open direction). The AUDIT side has the 4 owner_side=target rels (B1 already shows them). GRC's B8 owes the `audit_issues` to AUDIT-master mirrors when it's next validated.
 - **ESG B10b owes source-side module attribution** on handoffs 275, 276, 852 (ESG publishes to AUDIT). AUDIT side will be fixed in B1-B2 once AUDIT has modules.
@@ -263,7 +263,7 @@ No JWT errors. No `notes` writes. Frontmatter unchanged (still `feedback_needed`
 
 Structural Validate b1 re-audit after the 2026-05-30 narrative and the residual 2026-05-31 H1 partial. Footprint unchanged: 8 masters (`audit_plans`, `audit_engagements`, `audit_findings`, `work_papers`, `control_tests`, `audit_recommendations`, `audit_reports`, `follow_up_actions`), 4 consumers (`journal_entries`, `financial_forecasts`, `audit_issues`, `employees`), 2 embedded masters (`org_units`, `locations`). Zero `domain_modules`, zero `capability_domains`. 13 trigger events (228-234 plus 601-606; 349 + 357 confirmed already absent). 9 outbound + 31 inbound = 40 cross-domain handoffs (handoff 1029 still present; 1 prior inbound count drift). 7 solutions (3 primary), 3 regulations, 1 legacy domain-level `audit-system` skill (id 9) with 18 `skill_tools`.
 
-H1 coverage advanced from 24% (10/41) on 2026-05-30 to 90% (36/40) post-residual: 27 `agent_curated` plus 9 `discovery_substring`, all `record_status='new'`. 4 inbound handoffs from ERP-FIN remain untagged: 189 (`journal_entry.posted`), 531 (`accounting_period.closed`), 536 (`legal_entity.created`), 538 (`cash_transaction.unmatched`).
+H1 coverage advanced from 24% (10/41) on 2026-05-30 to 90% (36/40) post-residual: 27 `agent_curated` plus 9 `discovery_substring`, all `record_status='new'`. 4 inbound handoffs from FIN remain untagged: 189 (`journal_entry.posted`), 531 (`accounting_period.closed`), 536 (`legal_entity.created`), 538 (`cash_transaction.unmatched`).
 
 - Bucket 1 (in-scope, agent fixable): 7 items.
 - Bucket 2 (surface-for-user, judgment): 9 items (Bucket 2 items from prior audit still pending user input).
@@ -282,7 +282,7 @@ H1 coverage advanced from 24% (10/41) on 2026-05-30 to 90% (36/40) post-residual
 | ID | Band | Finding | Fix |
 |---|---|---|---|
 | B1A-A2 | A2 | Zero `capability_domains` rows. Eight masters and vendor-confirmed multi-pillar surface. | Author 5-8 capabilities (proposed: `AUDIT-UNIVERSE-MGMT`, `AUDIT-PLAN-RISK-ASSESS`, `AUDIT-FIELDWORK-EXEC`, `AUDIT-EVIDENCE-MGMT`, `AUDIT-CONTROLS-TESTING`, `AUDIT-FINDINGS-MGMT`, `AUDIT-RECOMMENDATIONS-FOLLOWUP`, `AUDIT-REPORTING-COMMITTEE`) and link via `capability_domains`. Author after B1A-MOD1 lands so each links to a realizing module per M4. |
-| B1A-B9 | B9 | 5 trigger events have zero `handoffs` rows: 228 (`audit_engagement.created`), 232 (`audit_report.issued`), 602 (`audit_plan.updated`), 603 (`control_test.executed`), 605 (`work_paper.completed`). 232 publishing to ERP-FIN / GRC / EPM is the most obvious miss (final report distribution is the closing handoff of the audit cycle). 605 plausibly leaf (work-paper completion is engagement-internal). | Author handoff rows or positively confirm leaf status per event. Default: 232 publishes to GRC + ERP-FIN, 228 publishes to GRC (engagement opening), 602 publishes to GRC, 603 publishes to GRC. 605 remains leaf. Surface for confirmation. |
+| B1A-B9 | B9 | 5 trigger events have zero `handoffs` rows: 228 (`audit_engagement.created`), 232 (`audit_report.issued`), 602 (`audit_plan.updated`), 603 (`control_test.executed`), 605 (`work_paper.completed`). 232 publishing to FIN / GRC / EPM is the most obvious miss (final report distribution is the closing handoff of the audit cycle). 605 plausibly leaf (work-paper completion is engagement-internal). | Author handoff rows or positively confirm leaf status per event. Default: 232 publishes to GRC + FIN, 228 publishes to GRC (engagement opening), 602 publishes to GRC, 603 publishes to GRC. 605 remains leaf. Surface for confirmation. |
 | B1A-B12 | B12 | Zero `data_object_lifecycle_states` rows across all 8 masters. Rule #12 requires loaded states for `master + required` masters with a real workflow, OR the config-shape exemption surfaced to user (do NOT auto-populate `notes` per Rule #15). Every AUDIT master has a real workflow (plan -> engage -> work paper -> control test -> finding -> recommendation -> report -> follow-up); none are config-shaped. | Draft state machines for all 8 masters with `requires_permission=true` on workflow gates and `domain_module_id` set per the module the state belongs to (so blocked on B1A-MOD1). Load via a focused loader after B1A-MOD1. |
 | B1A-USR-EDGE | B7 sub | `users` edge for `work_papers` recorded as relationship 322 (`authored`) which already exists. PASS confirmed; not a gap. No action. | (informational only) |
 
@@ -297,7 +297,7 @@ H1 coverage advanced from 24% (10/41) on 2026-05-30 to 90% (36/40) post-residual
 
 | ID | Finding | Fix |
 |---|---|---|
-| B1A-H1 | 4 inbound handoffs from ERP-FIN remain untagged: 189 (`journal_entry.posted` -> `journal_entries`), 531 (`accounting_period.closed` -> `accounting_periods`), 536 (`legal_entity.created` -> `legal_entities`), 538 (`cash_transaction.unmatched` -> `cash_transactions`). Each is auditable-event-shaped; clean PCF anchors exist. Coverage improves from 36/40 (90%) to 40/40 (100%) on completion. | Author 4 `handoff_processes` rows with `proposal_source='agent_curated'`, `record_status='new'`. Proposed pairings: 189 -> 1433 (Audit invoices and key data in AP system) or 326 (Report on internal controls compliance); 531 -> 1187 (Support external audits and reports); 536 -> 326; 538 -> 1433 or 367 (Manage business unit and function risk). Surface drafts to user before insert. |
+| B1A-H1 | 4 inbound handoffs from FIN remain untagged: 189 (`journal_entry.posted` -> `journal_entries`), 531 (`accounting_period.closed` -> `accounting_periods`), 536 (`legal_entity.created` -> `legal_entities`), 538 (`cash_transaction.unmatched` -> `cash_transactions`). Each is auditable-event-shaped; clean PCF anchors exist. Coverage improves from 36/40 (90%) to 40/40 (100%) on completion. | Author 4 `handoff_processes` rows with `proposal_source='agent_curated'`, `record_status='new'`. Proposed pairings: 189 -> 1433 (Audit invoices and key data in AP system) or 326 (Report on internal controls compliance); 531 -> 1187 (Support external audits and reports); 536 -> 326; 538 -> 1433 or 367 (Manage business unit and function risk). Surface drafts to user before insert. |
 
 ### Bucket 2, Surface-for-user (judgment calls)
 
@@ -362,7 +362,7 @@ re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-
 
 State-driven Validate pass over the open items in `state.yaml` (Rule #21), not a fresh from-scratch audit. Live re-confirmed AUDIT (domain id 16, parent_domain_id 15 under GRC) is still UNBUILT: 0 `domain_modules`, 0 `capability_domains`. Per the unbuilt rule the build cascade is left untouched (no scaffold). Executed the three additive/corrective items that are independent of the build: `entity_type` classification on the 8 masters, `event_category` backfill on 3 trigger events, and the domain-grain catalog UX copy (A4). Loader: [.tmp_deploy/fix_audit_state_driven_2026_06_07.ts](../../.tmp_deploy/fix_audit_state_driven_2026_06_07.ts). All writes verified at `record_status='new'`; no `notes` writes, no em-dashes, American English.
 
-Two prior open items were found ALREADY DONE on live (snapshot stale) and dropped: B1A-H1 (all 4 ERP-FIN inbound handoffs 189/531/536/538 already carry `agent_curated` `handoff_processes` rows, all `record_status='new'`, so H1 sits at 40/40 = 100%; the rows point at different `process_id`s than the state proposal, but re-pointing an existing agent-curated tag would be a destructive REPLACE, so left as-is) and C1 (`business_function_domains` already has an `owner` row on function 46 Internal Audit + a `contributor` row on function 4 Finance). B11 aliases also already cover all 8 masters; not an open item, no write.
+Two prior open items were found ALREADY DONE on live (snapshot stale) and dropped: B1A-H1 (all 4 FIN inbound handoffs 189/531/536/538 already carry `agent_curated` `handoff_processes` rows, all `record_status='new'`, so H1 sits at 40/40 = 100%; the rows point at different `process_id`s than the state proposal, but re-pointing an existing agent-curated tag would be a destructive REPLACE, so left as-is) and C1 (`business_function_domains` already has an `owner` row on function 46 Internal Audit + a `contributor` row on function 4 Finance). B11 aliases also already cover all 8 masters; not an open item, no write.
 
 ### Executed
 
@@ -372,7 +372,7 @@ Two prior open items were found ALREADY DONE on live (snapshot stale) and droppe
 
 ### Surfaced (no write; user decision or destructive)
 
-- **B1A-B9 handoff-draft half:** 5 events publish nothing (228, 232, 602, 603, 605). 232 -> GRC + ERP-FIN + EPM fan-out is the obvious miss; deferred because source_domain_module_id cannot be derived on an unbuilt domain and leaf-vs-publish is a Rule #1 judgment.
+- **B1A-B9 handoff-draft half:** 5 events publish nothing (228, 232, 602, 603, 605). 232 -> GRC + FIN + EPM fan-out is the obvious miss; deferred because source_domain_module_id cannot be derived on an unbuilt domain and leaf-vs-publish is a Rule #1 judgment.
 - **b2 (8 open):** B2-MOD-SHAPE (2 vs 3 modules, gates the whole build), B2-AUDIT-VS-GRC (entity placement), B2-NOROLE-PAYLOADS (13 consumer DMDOs vs signal), B2-B3-NAMING (work_papers/control_tests canonical-claim vs rename), B2-PATTERN-FLAGS (flag positive-consideration, now mandatory since all 8 are operational_workflow), B2-DOMAIN-PEER (peer vs sub-domain of GRC).
 - **Destructive (recommended only, never applied):** B2-BAD-TAGS (DELETE substring tags on handoffs 256, 825), B2-SELF-LOOP (DELETE or verb-overwrite on data_object_relationships id 356).
 - **Personas / RACI (Phase P):** N/A — domain unbuilt; deferred with the build. No candidate personas authored.

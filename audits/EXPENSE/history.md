@@ -16,7 +16,7 @@
 |---|---|---|---|---|---|---|
 | SPEND-MGMT | 3 | 3 | 0 (no DMDO data because no modules) | 4 (`spend_policies` flags `expense_lines`, `travel_bookings`; `spend_policies` syncs_to `expense_policies`; `card_authorizations` upstream of `card_transactions`) | 10 | Pairwise (full) |
 | PAYROLL | 1 | 2 | 0 | 1 (`expense_lines` enters `pay_slips`; `pay_runs` disburses `expense_reports` reimbursement) | 4 | Pairwise (full) |
-| ERP-FIN | 2 | 0 | 0 | 2 (`expense_reports` posts_to `gl_journal_entries`; `expense_lines` posts_to `gl_journal_entries`) | 4 | Pairwise (full) |
+| FIN | 2 | 0 | 0 | 2 (`expense_reports` posts_to `gl_journal_entries`; `expense_lines` posts_to `gl_journal_entries`) | 4 | Pairwise (full) |
 | AP-AUTO | 2 | 0 | 1 (consumer on `supplier_invoices`) | 1 (`expense_reports` becomes `supplier_invoices`) | 4 | Pairwise (full) |
 | PSA | 1 | 0 | 0 | 1 (`projects` project T&E rollup from `expense_reports`) | 2 | Pairwise (full) |
 | AUDIT | 1 | 0 | 0 | 1 (sample-based audit on `expense_lines` via `compliance_samples`) | 2 | Lightweight |
@@ -55,7 +55,7 @@ EXPENSE Semantius score (strict): **NOT COMPUTABLE** without modules. The struct
 | ID | Finding | Routing |
 |---|---|---|
 | B1-S6 | **Outbound NULL `source_domain_module_id` on 11 of 11 outbound handoffs** (38, 129, 130, 139, 171, 551, 552, 553, 554, 555, 599). EXPENSE's own side. Cannot fix until B1-S1 lands modules. | In-scope but blocked on B1-S1. Backfill in the same load that creates modules. |
-| B1-S7 | **Outbound NULL `target_domain_module_id` on 9 of 11 outbound handoffs** (129, 130, 171, 551, 552, 553, 554, 555, 599). Per B10b asymmetry rule the target module is the target domain's audit work. The 2 outbound rows with target_domain_module_id populated are 38 (SMP module 30) and 139 (PSA module 88). | Report-only routing to ERP-FIN, AP-AUTO, SPEND-MGMT, AUDIT, PAYROLL b1 audits. |
+| B1-S7 | **Outbound NULL `target_domain_module_id` on 9 of 11 outbound handoffs** (129, 130, 171, 551, 552, 553, 554, 555, 599). Per B10b asymmetry rule the target module is the target domain's audit work. The 2 outbound rows with target_domain_module_id populated are 38 (SMP module 30) and 139 (PSA module 88). | Report-only routing to FIN, AP-AUTO, SPEND-MGMT, AUDIT, PAYROLL b1 audits. |
 | B1-S8 | **Inbound NULL `source_domain_module_id` on 4 of 6 inbound handoffs** (165 SPEND-MGMT, 559 SPEND-MGMT, 600 SPEND-MGMT, 1157 PAYROLL has source_domain_module_id=90, scratch 1157; 165, 559, 600 with NULL source, plus 468 HCM has source_domain_module_id=54 populated; 101 PAYROLL has source_domain_module_id=93 populated). Re-count: 3 inbounds with NULL source FK (165, 559, 600). All from SPEND-MGMT. | Report-only routing to SPEND-MGMT b1. |
 | B1-S9 | **Inbound NULL `target_domain_module_id` on 6 of 6 inbound handoffs** (101, 165, 468, 559, 600, 1157). EXPENSE's own side. Cannot fix until B1-S1. | In-scope but blocked on B1-S1. Backfill in the same load that creates modules. |
 
@@ -66,11 +66,11 @@ Volume expectation per H1: with N=17 cross-domain handoffs, 9 to 14 `agent_curat
 | handoff_id | source → target | trigger_event | payload | Proposed PCF row | PCF id | Confidence |
 |---|---|---|---|---|---|---|
 | 38 | EXPENSE → SMP | `card.saas_charge_detected` | `shadow_it_apps` | Manage corporate credit cards (20929 L3, existing substring tag) → REPLACE with "Manage IT asset deployment" or "Manage IT supplier and contract performance" (`apqc_pcf_cross_industry`) | 317 (existing, propose REPLACE) | medium |
-| 129 | EXPENSE → ERP-FIN | `expense_report.approved` | `expense_reports` | Process accounts payable (10733 L3 child) or "Process journal entries" (10773.x) | needs PCF lookup | confident L3 |
+| 129 | EXPENSE → FIN | `expense_report.approved` | `expense_reports` | Process accounts payable (10733 L3 child) or "Process journal entries" (10773.x) | needs PCF lookup | confident L3 |
 | 130 | EXPENSE → AP-AUTO | `expense_report.approved` | `expense_reports` | Process accounts payable and expense reimbursements (10733 L2) | 59 | confident L2 |
 | 139 | EXPENSE → PSA | `expense.approved` | `expense_reports` | Manage project finances (10773 L3) → REPLACE existing tag (process_id 59 currently points at AP, the project flow is project-finance) | needs PCF lookup | medium |
 | 171 | EXPENSE → SPEND-MGMT | `expense_policy.updated` | `expense_policies` | Establish policies and procedures (10743 or child) or "Manage policies and procedures" | needs PCF lookup | medium |
-| 551 | EXPENSE → ERP-FIN | `expense_line.posted_to_gl` | `expense_lines` | Process journal entries (10773 L3 child) | needs PCF lookup | confident L3 |
+| 551 | EXPENSE → FIN | `expense_line.posted_to_gl` | `expense_lines` | Process journal entries (10773 L3 child) | needs PCF lookup | confident L3 |
 | 552 | EXPENSE → SPEND-MGMT | `expense_line.policy_violation` | `expense_lines` | Manage business unit ethics and compliance (16437 L3) or "Monitor compliance" (10743.x) | needs PCF lookup | medium |
 | 553 | EXPENSE → AP-AUTO | `expense_line.approved` | `expense_lines` | Process accounts payable (10733 L2 or L3 child) | needs PCF lookup | confident L3 |
 | 554 | EXPENSE → AUDIT | `expense_line.policy_violation` | `expense_lines` | Manage internal controls (10744 L3) or "Audit financial transactions" | needs PCF lookup | confident L3 |
@@ -114,7 +114,7 @@ Volume expectation per H1: with N=17 cross-domain handoffs, 9 to 14 `agent_curat
 
 **PAYROLL ↔ EXPENSE (weight 4).** Wired pairs: 3 (out 599; in 101, 1157). Section 2: 599 has NULL target_domain_module_id (PAYROLL's B10b); 101 / 1157 have NULL target on EXPENSE side (blocked on B1-S1). Section 3: clean (the in-pay-reimbursement and post-pay-reimbursement paths are both wired). Section 4: clean. Section 5: `expense_lines enters pay_slips` (726) exists. The `pay_runs disburses expense_reports` relationship is implicit via handoff 1157 but no cross-rel row.
 
-**ERP-FIN ↔ EXPENSE (weight 4).** Wired pairs: 2 (out 129, 551). Section 2: both have NULL target (ERP-FIN's B10b). Section 3: missing inbound from ERP-FIN to EXPENSE on `gl_period.closed` if EXPENSE should freeze open reports at period close. Section 4: clean. Section 5: `expense_reports posts_to gl_journal_entries` (728), `expense_lines posts_to gl_journal_entries` (729) exist.
+**FIN ↔ EXPENSE (weight 4).** Wired pairs: 2 (out 129, 551). Section 2: both have NULL target (FIN's B10b). Section 3: missing inbound from FIN to EXPENSE on `gl_period.closed` if EXPENSE should freeze open reports at period close. Section 4: clean. Section 5: `expense_reports posts_to gl_journal_entries` (728), `expense_lines posts_to gl_journal_entries` (729) exist.
 
 **AP-AUTO ↔ EXPENSE (weight 4).** Wired pairs: 2 (out 130, 553). Section 2: both have NULL target (AP-AUTO's B10b). Section 3: missing inbound from AP-AUTO if reimbursement-payment-cleared events should ping EXPENSE; this depends on whether EXPENSE holds the reimbursement record or AP-AUTO does (Bucket 2 question B2-S6). Section 4: the consumer DDO on `supplier_invoices` (75) declares EXPENSE depends on AP-AUTO for reimbursement-as-invoice; the `expense_reports becomes supplier_invoices` (725) cross-rel confirms. Section 5: 725 present.
 
@@ -180,7 +180,7 @@ Recount: 5 regulation candidates (IRS 463, HMRC P11D, FCPA, GDPR, PCI-DSS). The 
 This audit surfaced 3 entries for `audits/_missing-domains.md`:
 
 - **TRAVEL-MGMT** (bumped, mention_count 1 → 2): Navan, Egencia, SAP Concur Travel, TripActions, Spotnana, AmTrav. Adjacency EXPENSE, SPEND-MGMT, HCM.
-- **CORP-CARD-PROGRAM** (bumped, mention_count 1 → 2): Marqeta, Stripe Issuing, Highnote, Lithic, Brex Card, Ramp Card. Adjacency EXPENSE, SPEND-MGMT, ERP-FIN, AP-AUTO.
+- **CORP-CARD-PROGRAM** (bumped, mention_count 1 → 2): Marqeta, Stripe Issuing, Highnote, Lithic, Brex Card, Ramp Card. Adjacency EXPENSE, SPEND-MGMT, FIN, AP-AUTO.
 - **RECEIPT-CAPTURE-OCR** (new, mention_count 1): Veryfi, Taggun, Rossum, Klippa, AWS Textract, Google Document AI. Adjacency EXPENSE, AP-AUTO, RPA-OCR. This is the OCR / extraction layer vendors that the receipts master could consume; may also rejected as a feature rather than a domain at triage (see Rule #2 point-solution test).
 
 #### Bucket 3 count summary
@@ -234,7 +234,7 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 |---|---|
 | SPEND-MGMT | B10b: populate `target_domain_module_id` on inbound handoffs 171, 552, 555 (EXPENSE outbound, SPEND-MGMT receiving); populate `source_domain_module_id` on inbound handoffs 165, 559, 600 (SPEND-MGMT outbound, EXPENSE receiving). Decide policy-mastering shape per B2-S5 in concert with EXPENSE. Confirm `card_authorizations` cross-rel needs a new row to `card_transactions`. |
 | PAYROLL | B10b: populate `target_domain_module_id` on outbound 599 (EXPENSE → PAYROLL `expense_line.approved`). Confirm `pay_runs disburses expense_reports` warrants a cross-rel row to complement handoff 1157. |
-| ERP-FIN | B10b: populate `target_domain_module_id` on 129, 551 (EXPENSE → ERP-FIN). Consider authoring inbound `gl_period.closed` → EXPENSE for period-close enforcement. |
+| FIN | B10b: populate `target_domain_module_id` on 129, 551 (EXPENSE → FIN). Consider authoring inbound `gl_period.closed` → EXPENSE for period-close enforcement. |
 | AP-AUTO | B10b: populate `target_domain_module_id` on 130, 553 (EXPENSE → AP-AUTO). Decide reimbursement-vs-disbursement boundary per B2-S6. |
 | PSA | Confirm 139 target_domain_module_id=88 is the intended PSA module. Consider authoring inbound `project.closed` → EXPENSE to freeze T&E rollups. |
 | AUDIT | B10b: populate `target_domain_module_id` on 554 (EXPENSE → AUDIT `expense_line.policy_violation`). |
@@ -272,7 +272,7 @@ Subagent pass on truly-technical Bucket-1 fixes for EXPENSE. Inventory of 6 B1 i
 - **B1-S5 (6 pattern flag flips on data_objects).** Gated on B2-S4 per-flag user confirmation. Prompt rules: "pattern flag flips" explicitly deferred.
 - **B1-H1 (17 APQC handoff_processes tags).** 13 of the 17 candidates carry "needs PCF lookup" in the audit, no resolvable PCF id pre-specified. The 4 with pre-specified ids (38->317, 130->59, 101->59, 468->41) are REPLACE / CONFIRM operations against existing `discovery_*` rows, not pure INSERTs. Prompt rule allows INSERT `handoff_processes` only when the audit pre-specifies `handoff_id` + a resolvable PCF; REPLACE / PATCH semantics for `handoff_processes` are out of scope for this continuation.
 - **B1-S6, B1-S9 (EXPENSE-side B10b NULL FK backfills).** Audit explicitly marks both as "blocked on B1-S1" because the modules to point at do not exist yet.
-- **B1-S7, B1-S8 (neighbor-owed NULL FK backfills).** Report-only; routed to SPEND-MGMT, ERP-FIN, AP-AUTO, PAYROLL, AUDIT, SMP, HCM audits. Not in scope here.
+- **B1-S7, B1-S8 (neighbor-owed NULL FK backfills).** Report-only; routed to SPEND-MGMT, FIN, AP-AUTO, PAYROLL, AUDIT, SMP, HCM audits. Not in scope here.
 
 ### Counts
 

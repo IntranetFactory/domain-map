@@ -30,7 +30,7 @@ links existing capabilities (`domain_module_capabilities`), and assigns existing
 **Remaining (38) — rolling out in batches of 7:**
 
 - Batch 1: ACCT-PRACT-MGMT, AGENCY-MGMT, B2C-COMM, BPA, CDP, DAIRY-MGMT, DATA-AI-PLAT
-- Batch 2: DLP, DSPM, DXP, ECM, EPM, ERP-FIN, FLEET-MAINT
+- Batch 2: DLP, DSPM, DXP, ECM, EPM, FIN, FLEET-MAINT
 - Batch 3: FMIS, FOOD-TRACE, FSQM, HCMS, ITOM, KGP, LCAP
 - Batch 4: LOYALTY, METRICS-LAYER, NCDB, RE-CRE, RE-INVEST, RE-PROP-MGMT, REAL-EST
 - Batch 5: REMOTE-ACCESS, RMM, SALES-ENG, SMM, SPEND-MGMT, TELEMATICS, UEM

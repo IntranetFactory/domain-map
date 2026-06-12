@@ -65,23 +65,23 @@ b1b:
       Zero rows in data_object_relationships where data_object_id is an FMIS master and
       related_data_object_id is outside FMIS. 10 outbound handoffs imply at least 6 payload-target
       mappings worth recording as relationships, but the target-side masters in FOOD-TRACE, FSQM,
-      TELEMATICS, ERP-FIN are unverified (those domains have zero modules) so the target data_object
+      TELEMATICS, FIN are unverified (those domains have zero modules) so the target data_object
       rows may not exist as canonical masters yet.
     blocked_by:
       - {type: domain_audit, blocking_domain: FOOD-TRACE, milestone: M1-plus-Phase-B-masters}
       - {type: domain_audit, blocking_domain: FSQM, milestone: M1-plus-Phase-B-masters}
       - {type: domain_audit, blocking_domain: TELEMATICS, milestone: M1-plus-Phase-B-masters}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: M1-plus-procurement-Phase-B}
+      - {type: domain_audit, blocking_domain: FIN, milestone: M1-plus-procurement-Phase-B}
     affected_handoffs:
       - {handoff_id: 349, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: harvest_record.created, payload: harvest_records, null_field: target_domain_module_id}
       - {handoff_id: 351, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: field_application.recorded, payload: field_applications, null_field: target_domain_module_id}
       - {handoff_id: 352, direction: outbound, source_domain: FMIS, target_domain: FSQM, trigger_event: field_application.recorded, payload: field_applications, null_field: target_domain_module_id}
       - {handoff_id: 965, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: planting_record.completed, payload: planting_records, null_field: target_domain_module_id}
       - {handoff_id: 966, direction: outbound, source_domain: FMIS, target_domain: TELEMATICS, trigger_event: variable_rate_prescription.published, payload: variable_rate_prescriptions, null_field: target_domain_module_id}
-      - {handoff_id: 967, direction: outbound, source_domain: FMIS, target_domain: ERP-FIN, trigger_event: ag_input_inventory.low, payload: ag_input_inventory, null_field: target_domain_module_id}
+      - {handoff_id: 967, direction: outbound, source_domain: FMIS, target_domain: FIN, trigger_event: ag_input_inventory.low, payload: ag_input_inventory, null_field: target_domain_module_id}
       - {handoff_id: 968, direction: outbound, source_domain: FMIS, target_domain: TELEMATICS, trigger_event: machinery_telemetry_record.captured, payload: machinery_telemetry_records, null_field: target_domain_module_id}
       - {handoff_id: 969, direction: outbound, source_domain: FMIS, target_domain: FOOD-TRACE, trigger_event: farm_field.boundary_updated, payload: farm_fields, null_field: target_domain_module_id}
-      - {handoff_id: 970, direction: outbound, source_domain: FMIS, target_domain: ERP-FIN, trigger_event: crop_plan.committed, payload: crop_plans, null_field: target_domain_module_id}
+      - {handoff_id: 970, direction: outbound, source_domain: FMIS, target_domain: FIN, trigger_event: crop_plan.committed, payload: crop_plans, null_field: target_domain_module_id}
 
 b2:
   - id: B2-S1

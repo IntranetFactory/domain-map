@@ -63,9 +63,9 @@ b1b:
 
   - id: B1B-S7
     summary: "Author 4 outbound cross-domain data_object_relationships (B1-X1 to X4)."
-    finding: "Only 1 outbound cross-domain rel exists (470 into CSM). The 7 outbound handoffs imply payload-to-target rels: utility_bills posts_as revenue (ERP-FIN, needs entity confirmation); utility_service_orders triggers field-work-orders (FSM, needs master confirmation); utility_assets escalates_to service_incidents (ITSM); outage_events opens customer_cases (CSM, already row 470). Two targets need receiving-domain entity confirmation."
+    finding: "Only 1 outbound cross-domain rel exists (470 into CSM). The 7 outbound handoffs imply payload-to-target rels: utility_bills posts_as revenue (FIN, needs entity confirmation); utility_service_orders triggers field-work-orders (FSM, needs master confirmation); utility_assets escalates_to service_incidents (ITSM); outage_events opens customer_cases (CSM, already row 470). Two targets need receiving-domain entity confirmation."
     blocked_by:
-      - {type: catalog_addition, scope: domains, trigger: "ERP-FIN entity confirmation, FSM master confirmation"}
+      - {type: catalog_addition, scope: domains, trigger: "FIN entity confirmation, FSM master confirmation"}
       - {type: prerequisite_entity, ref: B1B-S1}
 
   - id: B1B-S8
@@ -76,16 +76,16 @@ b1b:
 
   - id: B1B-S9
     summary: "PATCH source_domain_module_id on all 7 outbound handoffs once modules exist."
-    finding: "All 7 outbound handoffs carry NULL on source_domain_module_id (B10b source-side fail). Target-side (live): 940 + 941 + 945 attribute target_domain_module_id=161 (FSM-DISPATCH-OPS), 943 attributes 38 (ITSM-INCIDENT-MGMT); 939 + 944 + 942 are target-NULL (report-only on ERP-FIN and CSM)."
+    finding: "All 7 outbound handoffs carry NULL on source_domain_module_id (B10b source-side fail). Target-side (live): 940 + 941 + 945 attribute target_domain_module_id=161 (FSM-DISPATCH-OPS), 943 attributes 38 (ITSM-INCIDENT-MGMT); 939 + 944 + 942 are target-NULL (report-only on FIN and CSM)."
     blocked_by:
       - {type: depends_on, ref: B1B-S1}
     affected_handoffs:
-      - {handoff_id: 939, target_domain: ERP-FIN, trigger_event: "utility_bill.issued", payload: "utility_bills", null_field: source_domain_module_id}
+      - {handoff_id: 939, target_domain: FIN, trigger_event: "utility_bill.issued", payload: "utility_bills", null_field: source_domain_module_id}
       - {handoff_id: 940, target_domain: FSM, trigger_event: "utility_service_order.dispatched", payload: "utility_service_orders", null_field: source_domain_module_id}
       - {handoff_id: 941, target_domain: FSM, trigger_event: "utility_asset.failed", payload: "utility_assets", null_field: source_domain_module_id}
       - {handoff_id: 942, target_domain: CSM, trigger_event: "outage_event.declared", payload: "outage_events", null_field: source_domain_module_id}
       - {handoff_id: 943, target_domain: ITSM, trigger_event: "utility_asset.failed", payload: "service_incidents", null_field: source_domain_module_id}
-      - {handoff_id: 944, target_domain: ERP-FIN, trigger_event: "meter_read.captured", payload: "meter_reads", null_field: source_domain_module_id}
+      - {handoff_id: 944, target_domain: FIN, trigger_event: "meter_read.captured", payload: "meter_reads", null_field: source_domain_module_id}
       - {handoff_id: 945, target_domain: FSM, trigger_event: "meter_read.anomalous", payload: "meter_reads", null_field: source_domain_module_id}
 
   - id: B1B-S11
@@ -129,8 +129,8 @@ b2:
       - "(c) author a second handoff so both shapes coexist"
 
   - id: B2-3
-    summary: "Does UTIL-OPS publish raw meter reads to ERP-FIN (handoff 944), or only billed amounts (handoff 939)?"
-    question: "Handoff 944 implies raw AMI data goes to finance, which contradicts flagship architectures where raw reads flow into the MDM layer + billing engine and ERP-FIN receives only the posted bill."
+    summary: "Does UTIL-OPS publish raw meter reads to FIN (handoff 944), or only billed amounts (handoff 939)?"
+    question: "Handoff 944 implies raw AMI data goes to finance, which contradicts flagship architectures where raw reads flow into the MDM layer + billing engine and FIN receives only the posted bill."
     options:
       - "(a) DELETE handoff 944 (DESTRUCTIVE; surfaced, not executed)"
       - "(b) repoint target to a future UTIL-AMI-MDMS domain when promoted from the queue"

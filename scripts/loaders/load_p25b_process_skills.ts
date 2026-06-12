@@ -58,8 +58,8 @@ const SKILLS: ProcessSkill[] = [
   {
     skill_name: "opportunity-l2c-process",
     description: "Lead-to-Cash process skill — orchestrates opportunity lifecycle across CRM, SALES-ENG, CDP, CPQ, CSM, PSA, REV-INTEL, SALES-PERF, AGENCY-MGMT, WORK-MGMT. APQC PCF L3 10182 'Manage leads/opportunities'. Triggered by opportunity.{created,qualified,requires_quote,stage_changed,closed_won,closed_lost}.",
-    query_domains: ["CRM", "SALES-ENG", "CDP", "CPQ", "CSM", "PSA", "REV-INTEL", "SALES-PERF", "AGENCY-MGMT", "WORK-MGMT", "CLM", "SUB-MGMT", "ERP-FIN"],
-    mutate_domains: ["CRM", "CPQ", "CLM", "CSM", "SUB-MGMT", "PSA", "ERP-FIN"],
+    query_domains: ["CRM", "SALES-ENG", "CDP", "CPQ", "CSM", "PSA", "REV-INTEL", "SALES-PERF", "AGENCY-MGMT", "WORK-MGMT", "CLM", "SUB-MGMT", "FIN"],
+    mutate_domains: ["CRM", "CPQ", "CLM", "CSM", "SUB-MGMT", "PSA", "FIN"],
     externals: ["send_email", "sign_document"],
   },
   {

@@ -78,7 +78,7 @@ b1b:
   - id: B1B-B10b-SOURCE-MODULE-FK
     summary: All 6 outbound handoffs carry source_domain_module_id=NULL; source module now resolvable post-M1.
     finding: |
-      handoffs 335 (-> GRC), 336 (-> SUP-LIFE), 337 (-> CSM), 946 (-> ERP-FIN), 947 (-> CSM), 948
+      handoffs 335 (-> GRC), 336 (-> SUP-LIFE), 337 (-> CSM), 946 (-> FIN), 947 (-> CSM), 948
       (-> GRC) each have source_domain_module_id=NULL. The M1 prerequisite is now cleared, so the
       source side is deterministic: controlled_substance.* (335, 336) -> PHARMACY-RX (323);
       animal_patient.appointment_due (337) -> FRONT-OFFICE (322, scheduling lives there);
@@ -88,16 +88,16 @@ b1b:
     action: |
       Backfill source_domain_module_id on all 6 handoffs per the mapping above. Target-side FKs:
       CSM targets (337, 947) resolvable to CSM-CASE-MGMT (id 112) on CSM's own B10b; GRC, SUP-LIFE,
-      ERP-FIN targets wait on those partner-domain M1 cures.
+      FIN targets wait on those partner-domain M1 cures.
     blocked_by:
       - {type: domain_audit, blocking_domain: GRC, milestone: M1-modules-authored}
       - {type: domain_audit, blocking_domain: SUP-LIFE, milestone: M1-modules-authored}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: M1-modules-authored}
+      - {type: domain_audit, blocking_domain: FIN, milestone: M1-modules-authored}
     affected_handoffs:
       - {handoff_id: 335, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: GRC, trigger_event: controlled_substance.dispensed, payload: controlled_substance_ledger_entries, null_field: source_domain_module_id+target_domain_module_id}
       - {handoff_id: 336, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: SUP-LIFE, trigger_event: controlled_substance.dispensed, payload: controlled_substance_ledger_entries, null_field: source_domain_module_id+target_domain_module_id}
       - {handoff_id: 337, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: CSM, trigger_event: animal_patient.appointment_due, payload: animal_patients, null_field: source_domain_module_id+target_domain_module_id}
-      - {handoff_id: 946, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: ERP-FIN, trigger_event: pet_owner.registered, payload: pet_owners, null_field: source_domain_module_id+target_domain_module_id}
+      - {handoff_id: 946, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: FIN, trigger_event: pet_owner.registered, payload: pet_owners, null_field: source_domain_module_id+target_domain_module_id}
       - {handoff_id: 947, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: CSM, trigger_event: veterinary_vaccination.due, payload: veterinary_vaccinations, null_field: source_domain_module_id+target_domain_module_id}
       - {handoff_id: 948, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: GRC, trigger_event: veterinary_lab_result.critical, payload: veterinary_lab_results, null_field: source_domain_module_id+target_domain_module_id}
 
@@ -150,21 +150,21 @@ b1b:
     affected_handoffs:
       - {handoff_id: 336, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: SUP-LIFE, trigger_event: controlled_substance.dispensed, payload: controlled_substance_ledger_entries, null_field: cross-domain-mirror-edge}
 
-  - id: B1B-B8-ERP-FIN-MIRROR
-    summary: No outbound data_object_relationships mirror handoff 946 (-> ERP-FIN); blocked on ERP-FIN AR payload master.
+  - id: B1B-B8-FIN-MIRROR
+    summary: No outbound data_object_relationships mirror handoff 946 (-> FIN); blocked on FIN AR payload master.
     finding: |
-      handoff 946 (pet_owner.registered -> ERP-FIN) creates the AR profile; ERP-FIN has 0 modules and
+      handoff 946 (pet_owner.registered -> FIN) creates the AR profile; FIN has 0 modules and
       no candidate payload master (customers / ar_accounts) loaded for this domain to point at.
     action: |
-      Wait for ERP-FIN M1 + Phase B. Then author one cross-domain data_object_relationships row from
-      pet_owners (396) to the ERP-FIN AR master.
+      Wait for FIN M1 + Phase B. Then author one cross-domain data_object_relationships row from
+      pet_owners (396) to the FIN AR master.
     blocked_by:
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: M1-modules-and-AR-master}
+      - {type: domain_audit, blocking_domain: FIN, milestone: M1-modules-and-AR-master}
     affected_handoffs:
-      - {handoff_id: 946, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: ERP-FIN, trigger_event: pet_owner.registered, payload: pet_owners, null_field: cross-domain-mirror-edge}
+      - {handoff_id: 946, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: FIN, trigger_event: pet_owner.registered, payload: pet_owners, null_field: cross-domain-mirror-edge}
 
-  - id: B1B-H1-ERP-FIN-APQC
-    summary: Handoff 946 (pet_owner.registered -> ERP-FIN) is the only outbound without a handoff_processes row.
+  - id: B1B-H1-FIN-APQC
+    summary: Handoff 946 (pet_owner.registered -> FIN) is the only outbound without a handoff_processes row.
     finding: |
       handoff_processes coverage on the 6 outbound handoffs: 5 carry agent_curated tags (335 -> 199,
       336 -> 815, 337 -> 734, 947 -> 734, 948 -> 199). Handoff 946 remains untagged. Closest
@@ -175,9 +175,9 @@ b1b:
       'agent_curated') as best-available, OR (b) defer to Discover Pass 3 custom-process authoring.
       User picks which.
     blocked_by:
-      - {type: user_decision, ref: B2-ERP-FIN-APQC, reason: classify-or-defer choice}
+      - {type: user_decision, ref: B2-FIN-APQC, reason: classify-or-defer choice}
     affected_handoffs:
-      - {handoff_id: 946, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: ERP-FIN, trigger_event: pet_owner.registered, payload: pet_owners, null_field: handoff_processes-row}
+      - {handoff_id: 946, direction: outbound, source_domain: VET-PRACT-MGMT, target_domain: FIN, trigger_event: pet_owner.registered, payload: pet_owners, null_field: handoff_processes-row}
 
 b2:
   - id: B2-MODULE-RESHAPE-ON-B3
@@ -294,8 +294,8 @@ b2:
       Universal PIMS UI label across IDEXX, ezyVet, AVImark; not flipping the alias means
       search/triggering misses the term. Unblocks B1B-B11-ALIASES.
 
-  - id: B2-ERP-FIN-APQC
-    summary: Classify or defer the only untagged outbound handoff (946 -> ERP-FIN).
+  - id: B2-FIN-APQC
+    summary: Classify or defer the only untagged outbound handoff (946 -> FIN).
     question: |
       Best-available cross-industry PCF candidate is 736 "Collect and maintain account information"
       (L4). The trigger (pet_owner.registered) is registration, not AR collection, so the match is
@@ -306,7 +306,7 @@ b2:
       - defer-to-discover
     why: |
       H1 coverage on the domain is otherwise 5 of 6; clean closure or explicit deferral keeps the audit
-      honest. Unblocks B1B-H1-ERP-FIN-APQC.
+      honest. Unblocks B1B-H1-FIN-APQC.
 
 b3:
   - id: B3-VETERINARY-APPOINTMENTS
@@ -331,7 +331,7 @@ b3:
       master; it currently borrows supplier_invoices (AP-side, id 75) as a contributor, which is the
       wrong direction (that is vendor-billing, not client-billing). In-clinic POS + client invoicing
       (IDEXX integrated POS via Worldpay, ezyVet Stripe/Square, Provet payments) is a real client-side
-      master gap. Phase 0: invoice/payment may partly belong to ERP-FIN; veterinary POS is in-clinic
+      master gap. Phase 0: invoice/payment may partly belong to FIN; veterinary POS is in-clinic
       and PCI-DSS-bounded so a domain-owned master makes sense.
     vendor_evidence:
       - IDEXX integrated POS

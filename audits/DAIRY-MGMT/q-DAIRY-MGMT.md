@@ -80,7 +80,7 @@ a7:
 
 ---
 
-q8: Two ERP-FIN handoffs (lactation-record opened, feed-ration changed) plus the newer cow-lifecycle-changed handoff have no clean cross-industry process match and need custom dairy-specific process authoring (feed-cost-per-liter and dairy KPI rollups). Should I author those custom process mappings in a later research pass? (yes/no)
+q8: Two FIN handoffs (lactation-record opened, feed-ration changed) plus the newer cow-lifecycle-changed handoff have no clean cross-industry process match and need custom dairy-specific process authoring (feed-cost-per-liter and dairy KPI rollups). Should I author those custom process mappings in a later research pass? (yes/no)
 
 Recommended: yes, but additive and non-blocking; these are dairy-specific KPIs with no off-the-shelf classification, so they wait for a dedicated authoring pass.
 

@@ -45,7 +45,7 @@ b1b:
       deterministic THIS-domain backfill, so this stays user/neighbor-gated.
       Edges still wanted (verb/inverse/type/kind/is_required/owner_side each):
       (1) library_acquisition_orders (833) -> AP invoice master on invoiced;
-      (2) library_acquisition_orders (833) -> ERP-FIN encumbrance master on ordered/received (no encumbrance master exists in catalog today);
+      (2) library_acquisition_orders (833) -> FIN encumbrance master on ordered/received (no encumbrance master exists in catalog today);
       (3) library_serial_subscriptions (835) -> AP invoice master on renewal;
       (4) library_eresource_licenses (836) -> CLM contract master on activation/renewal/termination;
       (5) library_patrons (831) -> IGA identity master for SSO-backed registration;
@@ -63,7 +63,7 @@ b1b:
       source_domain_module_id, target_domain_module_id, data_object_id (payload), integration_pattern,
       friction_level. Pairs:
       (a) library_acquisition_order.invoiced LIB-ACQUISITIONS -> AP-AUTO;
-      (b) library_acquisition_order.submitted LIB-ACQUISITIONS -> ERP-FIN encumbrance;
+      (b) library_acquisition_order.submitted LIB-ACQUISITIONS -> FIN encumbrance;
       (c) library_serial_subscription.renewed LIB-ACQUISITIONS -> AP-AUTO;
       (d) library_eresource_license.activated / .renewed / .terminated LIB-ACQUISITIONS -> CLM (3 handoffs);
       (e) library_patron.activated LIB-PATRON -> IGA.
@@ -94,7 +94,7 @@ b1b:
       record_status omitted (defaults new). Provisional PCF candidates (confirm process_id at load
       time via /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry):
       (i) library_acquisition_order.invoiced -> AP-AUTO ~ "Process accounts payable (AP)" (10750);
-      (ii) library_acquisition_order.submitted -> ERP-FIN ~ "Manage and process budget" (10737);
+      (ii) library_acquisition_order.submitted -> FIN ~ "Manage and process budget" (10737);
       (iii) library_serial_subscription.renewed -> AP-AUTO ~ same as (i);
       (iv) library_eresource_license.activated/.renewed/.terminated -> CLM ~ "Manage contracts" (10421);
       (v) library_patron.activated -> IGA ~ "Manage IT user identity and authorization" (20756).

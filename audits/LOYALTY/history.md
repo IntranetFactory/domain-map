@@ -24,7 +24,7 @@ Auto-derived from `handoffs` (source = LOYALTY or target = LOYALTY) plus contrib
 | CRM | 1 (`tier.upgraded`) | 0 (LOYALTY is contributor on `customers`) | 2 | no, light summary |
 | CDP | 0 | 1 (`segment.activated`) | 1 | no, light summary |
 | MA | 1 (`member.lapsed`) | 0 | 1 | no, light summary |
-| ERP-FIN | 1 (`loyalty_transaction.posted`) | 0 | 1 | no, light summary |
+| FIN | 1 (`loyalty_transaction.posted`) | 0 | 1 | no, light summary |
 
 Deep-dive is gated on LOYALTY first acquiring modules (M1). Until then, every cross-domain edge sits with NULL `source_domain_module_id` (outbound) and the four-leg analysis cannot resolve `producer master + lifecycle state` (LOYALTY has no lifecycle states authored). Pass 4 deep-dives for B2C-COMM are queued as Bucket 1 follow-up after M1 cures.
 
@@ -41,7 +41,7 @@ Deep-dive is gated on LOYALTY first acquiring modules (M1). Until then, every cr
 | B1-S5 | B11 | Zero `data_object_aliases` rows. Cross-vendor synonyms: `loyalty_members` ↔ `program_members` / `loyalty_program_subscribers`, `loyalty_transactions` ↔ `point_transactions` / `accrual_events`, `loyalty_tiers` ↔ `member_tiers` / `program_levels`, `redemption_rewards` ↔ `reward_catalog_items` / `redeemables`, `redemption_transactions` ↔ `reward_redemptions` / `burns`. | Phase-B loader: author 2 to 3 alias rows per master (cluster-drafts pattern). |
 | B1-S6 | B6 | Zero intra-domain `data_object_relationships`. Expected edges: `loyalty_members has loyalty_transactions`, `loyalty_members belongs_to loyalty_tiers`, `loyalty_transactions accrues_to loyalty_members`, `redemption_transactions consumes loyalty_transactions`, `redemption_transactions redeems redemption_rewards`, `redemption_transactions issued_to loyalty_members`. | Phase-B loader, cluster-drafts pattern. Verb + inverse_verb + cardinality + owner_side per Rule #10. |
 | B1-S7 | B7 / Rule #10 | Zero `users` edges. Expected actors: `loyalty_members` (account_manager when B2B2C), `loyalty_tiers` (config_author), `redemption_rewards` (catalog_owner), `loyalty_transactions` (adjustment_author for manual point adjustments), `redemption_transactions` (fulfillment_owner). | Phase-B loader: author 5 `data_object_relationships` rows against `data_objects.id=748` (`users` built-in). |
-| B1-S8 | B8 outbound / Rule #10 | Zero cross-domain `data_object_relationships` rows for the 4 outbound handoffs. Each outbound handoff needs a mirror relationship row from LOYALTY's master to the target's master / payload. | Phase-B loader, four edges to author: (`loyalty_tiers signals CRM.customers`) for tier.upgraded; (`loyalty_members triggers_winback_on MA.audience_segments` or similar) for member.lapsed; (`loyalty_transactions accrues_to ERP-FIN.gl_journal_entries` or similar) for loyalty_transaction.posted; (`redemption_transactions fulfills_via B2C-COMM.commerce_orders`) for redemption_transaction.completed. Final verbs reviewed by user during loader draft. |
+| B1-S8 | B8 outbound / Rule #10 | Zero cross-domain `data_object_relationships` rows for the 4 outbound handoffs. Each outbound handoff needs a mirror relationship row from LOYALTY's master to the target's master / payload. | Phase-B loader, four edges to author: (`loyalty_tiers signals CRM.customers`) for tier.upgraded; (`loyalty_members triggers_winback_on MA.audience_segments` or similar) for member.lapsed; (`loyalty_transactions accrues_to FIN.gl_journal_entries` or similar) for loyalty_transaction.posted; (`redemption_transactions fulfills_via B2C-COMM.commerce_orders`) for redemption_transaction.completed. Final verbs reviewed by user during loader draft. |
 | B1-S9 | B10b outbound | All 4 outbound handoffs (ids 231, 232, 497, 498) have `source_domain_module_id = NULL`. Per the B10b derivation rule the missing module is the LOYALTY module that masters each event's `data_object_id`, which today is undefined because LOYALTY has zero modules. Resolves automatically AFTER B1-S1 cures. | Re-run B10b backfill (`backfill_*_handoff_modules` loader pattern) AFTER M1 lands. |
 | B1-S10 | A4 / Rule #20 | `catalog_tagline` and `catalog_description` are both empty strings. Buyer-shaped fields are required by Rule #20 for the catalog UI. | Draft in buyer voice (workflow + value), surface to user for approval per Rule #20 (see Bucket 2 item 2 for proposed wording). |
 | B1-S11 | C2 | LOYALTY business function ownership is Marketing (owner) + Customer Success (contributor). Two capabilities likely diverge: `LOY-MEMBER-PORTAL` (Customer Success owner more natural than Marketing) and `LOY-POINTS-LEDGER` (Finance ownership for accrual liability accounting). | Add 2 `business_function_capabilities` rows where capability ownership differs from domain RACI. User reviews proposed function assignments. |
@@ -65,7 +65,7 @@ Deep-dive is gated on LOYALTY first acquiring modules (M1). Until then, every cr
 | handoff_id | source → target | trigger_event | payload | Proposed PCF row | PCF id (external_id) | confidence |
 |---|---|---|---|---|---|---|
 | 231 | LOYALTY → CRM | tier.upgraded | loyalty_tiers | Build engagement and relationship with members | 642 (18926) | confident L4 |
-| 497 | LOYALTY → ERP-FIN | loyalty_transaction.posted | loyalty_transactions | Monitor customer loyalty program benefits to the enterprise and the customer | 643 (16633) | confident L4 |
+| 497 | LOYALTY → FIN | loyalty_transaction.posted | loyalty_transactions | Monitor customer loyalty program benefits to the enterprise and the customer | 643 (16633) | confident L4 |
 | 498 | LOYALTY → B2C-COMM | redemption_transaction.completed | redemption_transactions | Optimize loyalty program value to both the enterprise and the customer | 644 (18927) | confident L4 |
 | 324 | B2C-COMM → LOYALTY | commerce_order.placed | commerce_orders | Acquire members to customer loyalty program | 641 (18925) | confident L4 (members earn on orders; acquisition / engagement trigger) |
 
@@ -86,7 +86,7 @@ No handoffs are deferred to Discover Pass 3 for custom processes; APQC PCF "Mana
 | CRM | 2 | LOYALTY contributes to CRM-mastered `customers`. tier.upgraded outbound exists. Once LOYALTY modules exist, ensure CRM-ACCT-MGT (which already carries `loyalty_tiers` as consumer per DMDO row in module 46) gets an explicit `data_object_relationships` mirror per Pass-4 Section 5. |
 | CDP | 1 | Light summary: inbound segment.activated arrives with no LOYALTY-side consumer DMDO. After M1, declare LOYALTY-MEMBER-MGT as a `consumer` on `audience_segments` (or `embedded_master` if LOYALTY local-masters the segment shell). |
 | MA | 1 | Light summary: outbound member.lapsed delivers to MA. After M1, MA-side B10b should resolve target_domain_module_id to the lifecycle / win-back module. |
-| ERP-FIN | 1 | Light summary: outbound loyalty_transaction.posted carries the liability journal signal. ERP-FIN owes a consumer DMDO on `loyalty_transactions` or an embedded payload pattern. Reported only; not LOYALTY's audit. |
+| FIN | 1 | Light summary: outbound loyalty_transaction.posted carries the liability journal signal. FIN owes a consumer DMDO on `loyalty_transactions` or an embedded payload pattern. Reported only; not LOYALTY's audit. |
 
 ### Bucket 2 - Surface-for-user (judgment calls)
 
@@ -136,7 +136,7 @@ No handoffs are deferred to Discover Pass 3 for custom processes; APQC PCF "Mana
 - **CDP B9 ownership on inbound `segment.activated` (478) into LOYALTY:** same NULL target_domain_module_id pattern. Resolves after B1-S1.
 - **CRM Pass-4 mirror relationship:** when CRM-ACCT-MGT is re-audited, verify it carries a `data_object_relationships` row mirroring the LOYALTY `tier.upgraded` outbound (CRM consumes `loyalty_tiers` via DMDO 46 already, but the relationship row is missing on both sides).
 - **MA B10b inbound target_module_id resolution** on `member.lapsed` (232) handoff. Currently target_domain_module_id is NULL; resolves on MA's next audit.
-- **ERP-FIN consumer DMDO** on `loyalty_transactions` (264): no ERP-FIN module declares `consumer` / `contributor` on this data_object today, yet handoff 497 (`loyalty_transaction.posted` → ERP-FIN) implies one. Route to ERP-FIN's next audit for B10b inbound resolution.
+- **FIN consumer DMDO** on `loyalty_transactions` (264): no FIN module declares `consumer` / `contributor` on this data_object today, yet handoff 497 (`loyalty_transaction.posted` → FIN) implies one. Route to FIN's next audit for B10b inbound resolution.
 
 ### Candidate domains queued
 
@@ -158,7 +158,7 @@ Applied truly-technical B1 fixes only (audit-pre-specified tuples that do not re
 | Action | Row | Status |
 |---|---|---|
 | INSERT `handoff_processes` | handoff 231 (LOYALTY tier.upgraded -> CRM) -> process 642 (PCF 18926, "Build engagement and relationship with members"), proposal_source=agent_curated | new (hp.id=563) |
-| INSERT `handoff_processes` | handoff 497 (LOYALTY loyalty_transaction.posted -> ERP-FIN) -> process 643 (PCF 16633, "Monitor customer loyalty program benefits ...") | new (hp.id=564) |
+| INSERT `handoff_processes` | handoff 497 (LOYALTY loyalty_transaction.posted -> FIN) -> process 643 (PCF 16633, "Monitor customer loyalty program benefits ...") | new (hp.id=564) |
 
 ### Deferred (16 items)
 
@@ -239,7 +239,7 @@ The 2026-05-30 audit Bucket 2 item 5 claimed `customers` (data_object 97) has 5 
 | B9 | Outbound `trigger_events` + `handoffs` | PARTIAL. 5 events / 5 masters present, but events 497/498/499 have `event_category=''` (FAIL Rule #13 catalog enum check; only event 204 and 205 carry `lifecycle`). 4 outbound handoffs present. |
 | B9b | Intra-domain cross-module handoffs | Vacuous (0 modules). |
 | B10 | Inbound coverage (report-only) | 3 inbound from B2C-COMM (324, 505) and CDP (478). Coverage as-is. |
-| B10b | Per-module attribution on handoffs | FAIL on all 7. Every handoff touching LOYALTY has at least one NULL among `source_domain_module_id` / `target_domain_module_id`. Outbound 4 have NULL source (gated on M1). Inbound 3 have NULL target (gated on M1). Outbound 231 has target=46 (CRM-ACCT-MGT set); outbound 232, 497, 498 have NULL targets owed by MA, ERP-FIN, B2C-COMM respectively. |
+| B10b | Per-module attribution on handoffs | FAIL on all 7. Every handoff touching LOYALTY has at least one NULL among `source_domain_module_id` / `target_domain_module_id`. Outbound 4 have NULL source (gated on M1). Inbound 3 have NULL target (gated on M1). Outbound 231 has target=46 (CRM-ACCT-MGT set); outbound 232, 497, 498 have NULL targets owed by MA, FIN, B2C-COMM respectively. |
 | B11 | `data_object_aliases` | FAIL. 0 alias rows on any of 5 masters. |
 | B12 | Lifecycle states + pattern flags (Rule #12) | FAIL. 0 states on any master. `loyalty_tiers` is the only config-shape exemption candidate (Bucket 2 item 3). |
 | C1 | `business_function_domains` owner | PASS. Marketing owner + Customer Success contributor. |
@@ -264,7 +264,7 @@ Auto-derived from `handoffs` (source = LOYALTY or target = LOYALTY).
 | CRM (69) | 1 (`tier.upgraded`) | 0 | 2 | no, light |
 | CDP (72) | 0 | 1 (`segment.activated`) | 1 | no, light |
 | MA (70) | 1 (`member.lapsed`) | 0 | 1 | no, light |
-| ERP-FIN (65) | 1 (`loyalty_transaction.posted`) | 0 | 1 | no, light |
+| FIN (65) | 1 (`loyalty_transaction.posted`) | 0 | 1 | no, light |
 
 Pass 4 deep-dives for B2C-COMM remain queued as Bucket 1 follow-up after M1 cures.
 
@@ -281,7 +281,7 @@ Pass 4 deep-dives for B2C-COMM remain queued as Bucket 1 follow-up after M1 cure
 | B1-S5 | B11 | Zero `data_object_aliases`. | Phase-B loader, 2-3 alias rows per master (cluster-drafts pattern). Tuples not pre-specified in this audit; surface to user for cluster-drafts draft. |
 | B1-S6 | B6 | Zero intra-domain `data_object_relationships`. Expected edges enumerated in `extra_expected_edges`. | Phase-B loader, cluster-drafts pattern. Verb + inverse_verb + cardinality + owner_side per Rule #10. Tuples pending user-side cluster draft. |
 | B1-S7 | B7 / Rule #10 | Zero `users` edges. Expected actors enumerated in `extra_expected_actors`. | Phase-B loader: author 5 `data_object_relationships` rows against `data_objects.id` for `users` (built-in). Tuples pending user-side cluster draft. |
-| B1-S8 | B8 outbound / Rule #10 | Zero cross-domain `data_object_relationships` for the 4 outbound handoffs (231 to CRM, 232 to MA, 497 to ERP-FIN, 498 to B2C-COMM). | Phase-B loader: author 4 mirror edges. Final verbs reviewed by user. Gated on B1-S1. |
+| B1-S8 | B8 outbound / Rule #10 | Zero cross-domain `data_object_relationships` for the 4 outbound handoffs (231 to CRM, 232 to MA, 497 to FIN, 498 to B2C-COMM). | Phase-B loader: author 4 mirror edges. Final verbs reviewed by user. Gated on B1-S1. |
 | B1-S9 | B10b outbound | All 4 outbound handoffs (231, 232, 497, 498) have `source_domain_module_id = NULL`. | Re-run B10b backfill AFTER M1 lands. |
 | B1-S10 | A4 / Rule #20 | `catalog_tagline` and `catalog_description` both empty. | Draft per Rule #20 wording; gated on Bucket 2 item 2 user approval. |
 | B1-S11 | C2 | Two capability ownership overrides expected: `LOY-MEMBER-PORTAL` to Customer Success, `LOY-POINTS-LEDGER` to Finance. | Add 2 `business_function_capabilities` rows. Gated on Bucket 2 item 4. |
@@ -312,7 +312,7 @@ H1 PASSES by volume (7 of 7 handoffs tagged). No new `agent_curated` rows propos
 | CRM (69) | 2 | Outbound 231 target=46 (CRM-ACCT-MGT) already wired. Once LOYALTY modules exist, source FK backfill + mirror `data_object_relationships` row on the CRM side. |
 | CDP (72) | 1 | Inbound 478 arrives with no LOYALTY-side consumer DMDO. After M1, declare LOYALTY-MEMBER-MGT as `consumer` on `audience_segments` or `embedded_master` if LOYALTY ships a local shell. |
 | MA (70) | 1 | Outbound 232 NULL target. Resolves on MA's next audit. |
-| ERP-FIN (65) | 1 | Outbound 497 NULL target. ERP-FIN owes a consumer DMDO on `loyalty_transactions`. Reported only. |
+| FIN (65) | 1 | Outbound 497 NULL target. FIN owes a consumer DMDO on `loyalty_transactions`. Reported only. |
 
 ### Bucket 2 - Surface-for-user (judgment calls)
 
@@ -345,7 +345,7 @@ H1 PASSES by volume (7 of 7 handoffs tagged). No new `agent_curated` rows propos
 - B2C-COMM B9 ownership on inbound `fulfillment.delivered` (505) and `commerce_order.placed` (324) into LOYALTY: NULL `target_domain_module_id` resolves on LOYALTY's side after B1-S1; source side `source_domain_module_id` likewise NULL, owed by B2C-COMM B10b.
 - CDP B9 ownership on inbound `segment.activated` (478) into LOYALTY: same pattern.
 - MA B10b on `member.lapsed` (232) outbound: `target_domain_module_id=NULL` on MA's side.
-- ERP-FIN B10b on `loyalty_transaction.posted` (497): no ERP-FIN module declares `consumer` / `contributor` on `loyalty_transactions` today; ERP-FIN owes the inbound coverage row.
+- FIN B10b on `loyalty_transaction.posted` (497): no FIN module declares `consumer` / `contributor` on `loyalty_transactions` today; FIN owes the inbound coverage row.
 - CRM Pass-4 mirror relationship for `tier.upgraded`: CRM-ACCT-MGT consumes `loyalty_tiers` via DMDO 46 already, but the `data_object_relationships` row is missing on both sides.
 
 ### Per-bucket prompts
@@ -433,7 +433,7 @@ B10b backfill on the 4 outbound LOYALTY handoffs. Derivation: source module = th
 | 497 | loyalty_transaction.posted (497) | loyalty_transactions (264) | NULL | 273 |
 | 498 | redemption_transaction.completed (499) | redemption_transactions (718) | NULL | 273 |
 
-`target_domain_module_id` remains NULL on handoffs 497 (ERP-FIN) and 498 (B2C-COMM); those are the target domains' B10b (report-only, owed by ERP-FIN and B2C-COMM), not LOYALTY's to resolve. Handoffs 231 (target 46 CRM-ACCT-MGT) and 232 (target 198 MA) already carried target module FKs.
+`target_domain_module_id` remains NULL on handoffs 497 (FIN) and 498 (B2C-COMM); those are the target domains' B10b (report-only, owed by FIN and B2C-COMM), not LOYALTY's to resolve. Handoffs 231 (target 46 CRM-ACCT-MGT) and 232 (target 198 MA) already carried target module FKs.
 
 ### B1A-SYSTEM-SKILLS - DONE (skills + skill_tools inserts, legacy DELETE)
 

@@ -75,7 +75,7 @@ b2:
   - id: B2-CONFIRM-N-FIXES
     summary: "DESTRUCTIVE: wipe forbidden Rule #15 notes strings on 12 handoff rows (8 cross-domain + 4 intra-domain). Surfaced, not executed (overwrite of non-empty values)."
     question: |
-      Approve wiping handoffs.notes='' on the 12 rows below? All 12 still carry forbidden Rule #15 content (8 cross-domain "source/target NULL until X is modularized" annotations; 4 intra-domain schema-restatements). The prior audit named these exact ids and Rule #15 rescinds the write-time license that authored them, but PATCH notes='' overwrites a non-empty value, which is destructive (Rule #21), so it needs your sign-off. The unmodularized counter-parties (GRC, ERP-FIN, HAM, IGA, RMM, KUBE-PLAT, APM) live in this audit's history report-only follow-ups, not in the notes column.
+      Approve wiping handoffs.notes='' on the 12 rows below? All 12 still carry forbidden Rule #15 content (8 cross-domain "source/target NULL until X is modularized" annotations; 4 intra-domain schema-restatements). The prior audit named these exact ids and Rule #15 rescinds the write-time license that authored them, but PATCH notes='' overwrites a non-empty value, which is destructive (Rule #21), so it needs your sign-off. The unmodularized counter-parties (GRC, FIN, HAM, IGA, RMM, KUBE-PLAT, APM) live in this audit's history report-only follow-ups, not in the notes column.
     options:
       - "(a) Single loader, all 12 rows; surgical idempotent PATCH notes='' (recommended)."
       - "(b) Split: 8 cross-domain wipes first, 4 intra-domain second."

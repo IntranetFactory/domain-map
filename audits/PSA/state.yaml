@@ -85,9 +85,9 @@ b1a_destructive_awaiting_approval:
 b1b:
   - id: B1B-S5
     summary: "Report-only: 9 outbound PSA handoffs with NULL target_domain_module_id (carry from 2026-05-30 B1-S5)."
-    finding: "Owed by ERP-FIN (131, 1127, 1128, 1025, 1019), PA (1130), HCM (1016, 1022, 1026), S2P (132), EPM (1021). Not PSA's local fix; resolved when each receiving domain runs its B10b."
+    finding: "Owed by FIN (131, 1127, 1128, 1025, 1019), PA (1130), HCM (1016, 1022, 1026), S2P (132), EPM (1021). Not PSA's local fix; resolved when each receiving domain runs its B10b."
     blocked_by:
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: "B10b on outbound from PSA"}
+      - {type: domain_audit, blocking_domain: FIN, milestone: "B10b on outbound from PSA"}
       - {type: domain_audit, blocking_domain: PA, milestone: "B10b on outbound from PSA"}
       - {type: domain_audit, blocking_domain: HCM, milestone: "B10b on outbound from PSA"}
       - {type: domain_audit, blocking_domain: S2P, milestone: "B10b on outbound from PSA"}
@@ -186,7 +186,7 @@ b3:
 
   - id: B3-project_invoices
     candidate: "project_invoices (staged)"
-    rationale: "Staged PSA-side invoice record before push to ERP-FIN's AR module. ERP-FIN masters invoices canonically; PSA may need an embedded_master or boundary project_invoices."
+    rationale: "Staged PSA-side invoice record before push to FIN's AR module. FIN masters invoices canonically; PSA may need an embedded_master or boundary project_invoices."
     proposed_module: "PSA-PROJECT-FINANCIALS"
 
   - id: B3-staffing_requests

@@ -77,42 +77,42 @@ b1b:
 
   - id: B1B-B8-CROSS-DOMAIN-RELATIONSHIPS
     summary: "B8 partial: 4 outbound cross-domain handoffs lack mirror data_object_relationships rows. Gated on target-master research (GRC entity to be confirmed via GRC b1)."
-    finding: "Of 7 outbound LEGAL handoffs, 4 lack data_object_relationships rows: 334 (legal_matters to KMS, payload legal_matters); 917 (client_invoices to ERP-FIN, payload client_invoices); 918 (client_invoices to ERP-FIN, payload client_invoices); 333 (trust_accounts to GRC, payload trust_accounts). The 3 covered are 332 (engagement_letters flows_into legal_contracts, rel 520), 919 (content_documents archives external_court_filings, rel 597 reverse), 920 (audit_findings tracks external_court_filings, rel 353 reverse). Proposed verb shapes per payload to target: legal_matter contributes_lessons_to knowledge-article-master (KMS); client_invoice posts_to general_ledger_entries (ERP-FIN); trust_account triggers_compliance_review to a GRC-mastered exception or compliance-issue entity."
+    finding: "Of 7 outbound LEGAL handoffs, 4 lack data_object_relationships rows: 334 (legal_matters to KMS, payload legal_matters); 917 (client_invoices to FIN, payload client_invoices); 918 (client_invoices to FIN, payload client_invoices); 333 (trust_accounts to GRC, payload trust_accounts). The 3 covered are 332 (engagement_letters flows_into legal_contracts, rel 520), 919 (content_documents archives external_court_filings, rel 597 reverse), 920 (audit_findings tracks external_court_filings, rel 353 reverse). Proposed verb shapes per payload to target: legal_matter contributes_lessons_to knowledge-article-master (KMS); client_invoice posts_to general_ledger_entries (FIN); trust_account triggers_compliance_review to a GRC-mastered exception or compliance-issue entity."
     blocked_by:
       - {type: domain_audit, blocking_domain: KMS, milestone: confirm-knowledge-article-master}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: confirm-general-ledger-master}
+      - {type: domain_audit, blocking_domain: FIN, milestone: confirm-general-ledger-master}
       - {type: domain_audit, blocking_domain: GRC, milestone: confirm-compliance-issue-master}
     affected_handoffs:
       - {handoff_id: 334, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: KMS, trigger_event: legal_matter.closed, payload: legal_matters, null_field: data_object_relationships}
-      - {handoff_id: 917, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: ERP-FIN, trigger_event: client_invoice.issued, payload: client_invoices, null_field: data_object_relationships}
-      - {handoff_id: 918, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: ERP-FIN, trigger_event: client_invoice.paid, payload: client_invoices, null_field: data_object_relationships}
+      - {handoff_id: 917, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: FIN, trigger_event: client_invoice.issued, payload: client_invoices, null_field: data_object_relationships}
+      - {handoff_id: 918, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: FIN, trigger_event: client_invoice.paid, payload: client_invoices, null_field: data_object_relationships}
       - {handoff_id: 333, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: GRC, trigger_event: trust_account.exception, payload: trust_accounts, null_field: data_object_relationships}
 
   - id: B1B-B10B-NULL-TARGET-MODULE-FK
     summary: "B10b report-only: 6 outbound handoffs carry NULL target_domain_module_id. Per asymmetry rule, the NULL is the target domain's B10b, not LEGAL-PRACT-MGMT's."
-    finding: "Handoffs 333 (target GRC), 334 (target KMS), 917 (target ERP-FIN), 918 (target ERP-FIN), 919 (target ECM), 920 (target AUDIT) all carry source_domain_module_id but NULL target_domain_module_id. LEGAL's source side is fully populated on every outbound row. Handoff 332 (target CLM) is the only fully-wired outbound."
+    finding: "Handoffs 333 (target GRC), 334 (target KMS), 917 (target FIN), 918 (target FIN), 919 (target ECM), 920 (target AUDIT) all carry source_domain_module_id but NULL target_domain_module_id. LEGAL's source side is fully populated on every outbound row. Handoff 332 (target CLM) is the only fully-wired outbound."
     blocked_by:
       - {type: domain_audit, blocking_domain: GRC, milestone: b1-audit-with-b10b-backfill}
       - {type: domain_audit, blocking_domain: KMS, milestone: b1-audit-with-b10b-backfill}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: b1-audit-with-b10b-backfill}
+      - {type: domain_audit, blocking_domain: FIN, milestone: b1-audit-with-b10b-backfill}
       - {type: domain_audit, blocking_domain: ECM, milestone: b1-audit-with-b10b-backfill}
       - {type: domain_audit, blocking_domain: AUDIT, milestone: b1-audit-with-b10b-backfill}
     affected_handoffs:
       - {handoff_id: 333, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: GRC, trigger_event: trust_account.exception, payload: trust_accounts, null_field: target_domain_module_id}
       - {handoff_id: 334, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: KMS, trigger_event: legal_matter.closed, payload: legal_matters, null_field: target_domain_module_id}
-      - {handoff_id: 917, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: ERP-FIN, trigger_event: client_invoice.issued, payload: client_invoices, null_field: target_domain_module_id}
-      - {handoff_id: 918, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: ERP-FIN, trigger_event: client_invoice.paid, payload: client_invoices, null_field: target_domain_module_id}
+      - {handoff_id: 917, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: FIN, trigger_event: client_invoice.issued, payload: client_invoices, null_field: target_domain_module_id}
+      - {handoff_id: 918, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: FIN, trigger_event: client_invoice.paid, payload: client_invoices, null_field: target_domain_module_id}
       - {handoff_id: 919, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: ECM, trigger_event: court_filing.submitted, payload: external_court_filings, null_field: target_domain_module_id}
       - {handoff_id: 920, direction: outbound, source_domain: LEGAL-PRACT-MGMT, target_domain: AUDIT, trigger_event: court_filing.served, payload: external_court_filings, null_field: target_domain_module_id}
 
   - id: B1B-PAIRWISE-CONSUMER-DMDO
     summary: "Pairwise report-only: zero non-LEGAL modules declare consumer/contributor/embedded_master on any of the 6 LEGAL masters. Each target domain owes a consumer DMDO on the relevant LEGAL master."
-    finding: "Cross-domain DMDO query returns zero rows where any non-LEGAL module declares consumer/contributor/embedded_master on data_object_id in (391, 392, 393, 394, 738, 739). Every target domain (CLM, GRC, KMS, ERP-FIN, ECM, AUDIT) implicitly depends on a LEGAL master but does not declare the dependency at the module layer. Section-4 finding from pairwise reconciliation."
+    finding: "Cross-domain DMDO query returns zero rows where any non-LEGAL module declares consumer/contributor/embedded_master on data_object_id in (391, 392, 393, 394, 738, 739). Every target domain (CLM, GRC, KMS, FIN, ECM, AUDIT) implicitly depends on a LEGAL master but does not declare the dependency at the module layer. Section-4 finding from pairwise reconciliation."
     blocked_by:
       - {type: domain_audit, blocking_domain: CLM, milestone: consumer-dmdo-on-engagement-letters}
       - {type: domain_audit, blocking_domain: GRC, milestone: consumer-dmdo-on-trust-accounts}
       - {type: domain_audit, blocking_domain: KMS, milestone: consumer-dmdo-on-legal-matters}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: consumer-dmdo-on-client-invoices}
+      - {type: domain_audit, blocking_domain: FIN, milestone: consumer-dmdo-on-client-invoices}
       - {type: domain_audit, blocking_domain: ECM, milestone: consumer-dmdo-on-external-court-filings}
       - {type: domain_audit, blocking_domain: AUDIT, milestone: consumer-dmdo-on-external-court-filings}
     affected_masters:

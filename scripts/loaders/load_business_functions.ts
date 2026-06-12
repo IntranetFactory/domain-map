@@ -230,7 +230,7 @@ const RACI: Record<string, DomainRACI> = {
   VMS:          { owner: "Human Resources", contributors: ["Procurement"] },
 
   // Finance cluster
-  "ERP-FIN":    { owner: "Finance" },
+  "FIN":    { owner: "Finance" },
   EPM:          { owner: "Finance" },
   BI:           { owner: "Data and Analytics", contributors: ["Finance"] },
   "AP-AUTO":    { owner: "Finance" },

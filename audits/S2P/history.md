@@ -77,7 +77,7 @@ S2P has 29 cross-domain handoffs total (12 outbound + 17 inbound). 11 already ca
 | 565 | S2P to SUP-LIFE | sourcing_event.awarded | sourcing_events | Select suppliers and develop/maintain contracts | 165 | 3 | confident L3 |
 | 583 | S2P to AP-AUTO | purchase_order.changed | purchase_orders | Create/Distribute purchase orders | 811 | 4 | confident L4 |
 | 584 | S2P to AP-AUTO | goods_receipt.posted | goods_receipts | Process accounts payable (AP) | 315 | 3 | confident L3 |
-| 585 | S2P to ERP-FIN | goods_receipt.posted | goods_receipts | Process accounts payable (AP) | 315 | 3 | confident L3 |
+| 585 | S2P to FIN | goods_receipt.posted | goods_receipts | Process accounts payable (AP) | 315 | 3 | confident L3 |
 | 586 | S2P to SUP-LIFE | goods_receipt.quantity_variance | goods_receipts | Manage suppliers | 167 | 3 | confident L3 |
 | 117 | MWO inbound to S2P | pm_work_order.invoiced | contingent_invoices | Process accounts payable (AP) | 315 | 3 | confident L3 |
 | 198 | FINOPS inbound to S2P | cloud_spend.threshold_breached | supplier_invoices | Process accounts payable (AP) | 315 | 3 | confident L3 |
@@ -113,7 +113,7 @@ S2P's edge weights to neighbors (outbound + inbound count):
 | Neighbor | Code | Outbound | Inbound | Total |
 |---|---|---|---|---|
 | AP-AUTO | 29 | 3 | 1 | 4 |
-| ERP-FIN | 65 | 2 | 0 | 2 |
+| FIN | 65 | 2 | 0 | 2 |
 | SUP-LIFE | 28 | 2 | 3 | 5 |
 | CLM | 26 | 2 | 2 | 4 |
 | SMP | 85 | 1 | 2 | 3 |

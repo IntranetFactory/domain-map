@@ -200,19 +200,19 @@ b3:
 
   - id: B3-D-SALES-TAX
     candidate: "SALES-TAX (new domain)"
-    rationale: "Avalara, Vertex, Sovos, TaxJar, Anrok, Stripe Tax form a real-time tax determination + nexus tracking + filing market. Adjacent to SUB-MGMT, ERP-FIN, B2C-COMM, CPQ. Queued via audits/_missing-domains.md."
+    rationale: "Avalara, Vertex, Sovos, TaxJar, Anrok, Stripe Tax form a real-time tax determination + nexus tracking + filing market. Adjacent to SUB-MGMT, FIN, B2C-COMM, CPQ. Queued via audits/_missing-domains.md."
     vendor_evidence: ["Avalara", "Vertex", "Sovos", "TaxJar", "Anrok", "Stripe Tax"]
     proposed_module: "n/a (new domain)"
 
   - id: B3-D-PAYMENT-PROCESSING
     candidate: "PAYMENT-PROCESSING (new domain)"
-    rationale: "Stripe Payments, Adyen, Braintree, Worldpay, Spreedly, Primer form a card vaulting + payment orchestration + chargeback management market distinct from billing. Adjacent to SUB-MGMT, B2C-COMM, ERP-FIN, AP-AUTO. Queued via audits/_missing-domains.md."
+    rationale: "Stripe Payments, Adyen, Braintree, Worldpay, Spreedly, Primer form a card vaulting + payment orchestration + chargeback management market distinct from billing. Adjacent to SUB-MGMT, B2C-COMM, FIN, AP-AUTO. Queued via audits/_missing-domains.md."
     vendor_evidence: ["Stripe Payments", "Adyen", "Braintree", "Worldpay", "Spreedly", "Primer"]
     proposed_module: "n/a (new domain)"
 
   - id: B3-D-REV-REC
     candidate: "REV-REC (new domain)"
-    rationale: "Maxio SaaSOptics, Sage Intacct ARC, Zuora RevPro (Leeyo), RightRev, Trullion form an ASC 606 performance-obligation modeling + deferred revenue waterfall + RevRec audit-trail market. Adjacent to SUB-MGMT, ERP-FIN, CPQ, AUDIT. Queued via audits/_missing-domains.md."
+    rationale: "Maxio SaaSOptics, Sage Intacct ARC, Zuora RevPro (Leeyo), RightRev, Trullion form an ASC 606 performance-obligation modeling + deferred revenue waterfall + RevRec audit-trail market. Adjacent to SUB-MGMT, FIN, CPQ, AUDIT. Queued via audits/_missing-domains.md."
     vendor_evidence: ["Maxio SaaSOptics", "Sage Intacct ARC", "Zuora RevPro", "RightRev", "Trullion"]
     proposed_module: "n/a (new domain)"
 

@@ -24,7 +24,7 @@
 | AGENCY-MGMT | 1 | 1 | 0 | 1 (seeds agency_jobs; estimate.approved → legal_contracts) | 3 | Pairwise (full) |
 | ESIGN | 0 | 1 | 0 | 1 (envelope → signature_record) | 2 | Lightweight |
 | GRC | 1 | 0 | 0 | 1 (breaches_into audit_issues) | 2 | Lightweight |
-| ERP-FIN | 1 | 0 | 0 | 0 | 1 | Lightweight |
+| FIN | 1 | 0 | 0 | 0 | 1 | Lightweight |
 | AP-AUTO | 1 | 0 | 0 | 1 (propagates_terms_to invoice_matches) | 2 | Lightweight |
 | LEGAL-PRACT-MGMT | 0 | 1 | 0 | 1 (engagement_letters → legal_contracts) | 2 | Lightweight |
 | ACCT-PRACT-MGMT | 0 | 1 | 0 | 1 (engagement_letters → legal_contracts) | 2 | Lightweight |
@@ -46,10 +46,10 @@ CLM Semantius score (strict, CLM proper): approximately **90%** (approximately 4
 | B1-S2 | **B9 missing event_category** | 5 trigger_events carry empty `event_category` (Rule #13 enum must be one of `lifecycle / state_change / threshold / signal`): 531 `contract_obligation.due`, 532 `contract_obligation.breached`, 533 `contract_clause.flagged`, 534 `contract_template.published`, 535 `signature_record.completed`. | PATCH: 531 → `lifecycle` (due is a recurring lifecycle stage on the obligation), 532 → `state_change`, 533 → `state_change`, 534 → `state_change`, 535 → `state_change`. |
 | B1-S3 | **B9b (partial fail), missing intra-domain cross-module handoffs** | A 5-module domain has only 2 intra-domain handoffs loaded (1209 NEGOTIATION → REPOSITORY on `signature_record.completed`; 1210 NEGOTIATION → AUTHORING on `contract_clause.flagged`). Expected from the master relationship graph and the lifecycle state machine on `legal_contracts`: (a) AUTHORING → NEGOTIATION on contract draft → in_review (verb `contract.in_review`, no event row yet, see B1-S6), (b) NEGOTIATION → REPOSITORY on `legal_contract.approved` (state 40, `domain_module_id=126` realizes, but the contract then activates in REPOSITORY context), (c) REPOSITORY → OBLIGATION-MGMT on `legal_contract.signed` (38) so obligations are auto-extracted into module 128, (d) REPOSITORY → RENEWAL on `legal_contract.active` (state 70, anchor for renewal countdown), (e) RENEWAL → REPOSITORY on `legal_contract.renewed` (37) feeding the repository with the renewal record, (f) RENEWAL → AUTHORING on `renewal.30_day_warning` if the renewal kicks off a new draft from the existing template. | Author 5 intra-domain handoff rows with `source_domain_id=target_domain_id=26`, `integration_pattern='lifecycle_progression'`, `friction_level='low'`. Three of the five lean on the existing `legal_contract.signed` (38), `legal_contract.renewed` (37), `renewal.30_day_warning` (104) events; the AUTHORING → NEGOTIATION and NEGOTIATION → REPOSITORY pairs need new state-change events (`legal_contract.submitted_for_review` and `legal_contract.approved` respectively, see B1-S6). |
 | B1-S4 | **B9, missing trigger_events for workflow-gate states** | 4 lifecycle states have `requires_permission=true` and realize on a specific module but no matching `trigger_events` row exists: `legal_contract.approved` (state 40, module 126), `legal_contract.amended` (state 75, module 127 - existing event 176 covers this), `legal_contract.terminated` (state 90, module 127), `contract_clause.approved` (state 30, module 125, existing event 533 is `flagged` not approved), `contract_clause.deprecated` (state 50, module 125), `contract_template.approved` (state 30, module 125), `contract_template.deprecated` (state 50, module 125), `contract_obligation.satisfied` (state 40, module 128), `contract_obligation.waived` (state 60, module 128), `signature_record.voided` (state 60, module 127). 9 missing events confirmed; the existing `legal_contract.amended` (176) covers state 75. | Insert 9 `trigger_events` rows, each `event_category='state_change'`, `data_object_id` pointing at the publishing master. Use the new `legal_contract.approved` event as the trigger for B1-S3's NEGOTIATION → REPOSITORY intra-domain handoff. |
-| B1-S5 | **B10b report-only (outbound NULLs owed by other domains)** | 9 outbound handoffs carry NULL `target_domain_module_id`: 63 (SUB-MGMT), 342 (AGENCY-MGMT), 517 (CPQ), 518 (ERP-FIN), 519 (SUB-MGMT), 520 (CSM), 521 (GRC), 41 (S2P), 215 (S2P), 216 (AP-AUTO). Per B10b's asymmetry rule the target module is the target domain's audit work. CLM's own side (`source_domain_module_id`) is populated on every outbound row. | Schedule b1 audits for SUB-MGMT, AGENCY-MGMT, CPQ, ERP-FIN, CSM, GRC, S2P, AP-AUTO to derive their `target_domain_module_id` per the standard B10b backfill procedure. |
+| B1-S5 | **B10b report-only (outbound NULLs owed by other domains)** | 9 outbound handoffs carry NULL `target_domain_module_id`: 63 (SUB-MGMT), 342 (AGENCY-MGMT), 517 (CPQ), 518 (FIN), 519 (SUB-MGMT), 520 (CSM), 521 (GRC), 41 (S2P), 215 (S2P), 216 (AP-AUTO). Per B10b's asymmetry rule the target module is the target domain's audit work. CLM's own side (`source_domain_module_id`) is populated on every outbound row. | Schedule b1 audits for SUB-MGMT, AGENCY-MGMT, CPQ, FIN, CSM, GRC, S2P, AP-AUTO to derive their `target_domain_module_id` per the standard B10b backfill procedure. |
 | B1-S6 | **B10b report-only (inbound NULLs owed by source domains)** | 9 inbound handoffs carry NULL `source_domain_module_id`: 62 (CPQ), 217 (ESIGN), 309 (RE-CRE), 339 (ACCT-PRACT-MGMT), 343 (AGENCY-MGMT), 602 (S2P), 40 (S2P), 469 (CRM, source_domain_module_id IS populated to 48, scratch this one), 482 (CPQ), 1014 (CPQ). Re-counting: 62, 217, 309, 339, 343, 602, 40, 482, 1014, 9 inbounds with NULL source FK; CLM's `target_domain_module_id` is populated on every one. | Schedule b1 audits for CPQ, ESIGN, RE-CRE, ACCT-PRACT-MGMT, AGENCY-MGMT, S2P to populate their `source_domain_module_id` on the relevant handoffs. |
 | B1-S7 | **E2 advisory, duplicate role_modules row** | `SALES-TRANSACTION-COORDINATOR` (10100) has 2 identical rows on CLM-REPOSITORY (127), both `interaction_level='secondary'`. Likely a duplicate insert during the RE-BROKERAGE starter load. | DELETE one of the two duplicate rows. The fix is mechanical, surgical CLI is sufficient. |
-| B1-S8 | **Pairwise, missing consumer DMDOs on downstream domains** | Several CLM-targeted handoffs imply consumer DMDOs on the target side that do not exist: SUB-MGMT consumes `legal_contracts` (handoffs 63, 519) but no SUB-MGMT module declares the dependency; AGENCY-MGMT consumes `legal_contracts` (342) but no AGENCY-MGMT module declares; CPQ consumes `contract_templates` (517) but no CPQ module declares; ERP-FIN consumes `legal_contracts` (518) but no ERP-FIN module declares; CSM consumes `contract_obligations` (520) but no CSM module declares; GRC consumes `contract_obligations` (521) but no GRC module declares; AP-AUTO consumes `legal_contracts` (216) but no AP-AUTO module declares. | Each target domain's b1 audit adds a `consumer` DMDO row on the relevant CLM master in the receiving module. Not CLM's fix to make; surface in this audit so the target audits can pick it up. |
+| B1-S8 | **Pairwise, missing consumer DMDOs on downstream domains** | Several CLM-targeted handoffs imply consumer DMDOs on the target side that do not exist: SUB-MGMT consumes `legal_contracts` (handoffs 63, 519) but no SUB-MGMT module declares the dependency; AGENCY-MGMT consumes `legal_contracts` (342) but no AGENCY-MGMT module declares; CPQ consumes `contract_templates` (517) but no CPQ module declares; FIN consumes `legal_contracts` (518) but no FIN module declares; CSM consumes `contract_obligations` (520) but no CSM module declares; GRC consumes `contract_obligations` (521) but no GRC module declares; AP-AUTO consumes `legal_contracts` (216) but no AP-AUTO module declares. | Each target domain's b1 audit adds a `consumer` DMDO row on the relevant CLM master in the receiving module. Not CLM's fix to make; surface in this audit so the target audits can pick it up. |
 
 #### APQC TAGGING (matches the SKILL anti-pattern: prior CLM phase shipped structural and tooling fixes but zero APQC tagging)
 
@@ -62,7 +62,7 @@ Only 3 of 26 cross-domain handoffs carry `handoff_processes` rows. **All 3 are `
 | 215 | CLM-REPOSITORY → S2P | `legal_contract.expired` | `legal_contracts` | Manage suppliers (10222) - contract expiry resync | needs PCF lookup | confident L3 |
 | 216 | CLM-REPOSITORY → AP-AUTO | `legal_contract.amended` | `legal_contracts` | Process accounts payable (10744 or child) | needs PCF lookup | confident L3 |
 | 517 | CLM-AUTHORING → CPQ | `contract_template.published` | `contract_templates` | Develop and manage sales proposals (10395 or child) | needs PCF lookup | confident L3 |
-| 518 | CLM-REPOSITORY → ERP-FIN | `legal_contract.signed` | `legal_contracts` | Process revenue accounting (10796 or child) | needs PCF lookup | confident L3 |
+| 518 | CLM-REPOSITORY → FIN | `legal_contract.signed` | `legal_contracts` | Process revenue accounting (10796 or child) | needs PCF lookup | confident L3 |
 | 519 | CLM-REPOSITORY → SUB-MGMT | `legal_contract.signed` | `legal_contracts` | Manage subscriptions / Order materials | needs PCF lookup | confident L3 |
 | 520 | CLM-OBLIGATION-MGMT → CSM | `contract_obligation.due` | `contract_obligations` | Manage customer service requests / Service quality (10408) | needs PCF lookup | confident L3 |
 | 521 | CLM-OBLIGATION-MGMT → GRC | `contract_obligation.breached` | `contract_obligations` | Manage business unit ethics and compliance (16437) | needs PCF lookup | confident L3 |
@@ -121,7 +121,7 @@ For each of the 8 heavy neighbors (edge weight ≥3) the 5-section pairwise diff
 
 - **ESIGN ↔ CLM (weight 2).** Inbound 217 has NULL source_domain_module_id (ESIGN's B10b). Cross-relationship `envelopes yields signature_records` (518) exists.
 - **GRC ↔ CLM (weight 2).** Outbound 521 has NULL target_domain_module_id (GRC's B10b). Cross-relationship `contract_obligations breaches_into audit_issues` (509) exists.
-- **ERP-FIN ↔ CLM (weight 1).** Outbound 518 has NULL target. Cross-relationship `legal_contracts feeds_revrec_in revenue_recognition_records` (505) exists.
+- **FIN ↔ CLM (weight 1).** Outbound 518 has NULL target. Cross-relationship `legal_contracts feeds_revrec_in revenue_recognition_records` (505) exists.
 - **AP-AUTO ↔ CLM (weight 2).** Outbound 216 has NULL target. Cross-relationship `legal_contracts propagates_terms_to invoice_matches` (504) exists.
 - **LEGAL-PRACT-MGMT ↔ CLM (weight 2).** Inbound 332 fully populated. Cross-relationship `engagement_letters flows into legal_contracts` (520) exists.
 - **ACCT-PRACT-MGMT ↔ CLM (weight 2).** Inbound 339 has NULL on both FKs. Cross-relationship absent for ACCT-PRACT-MGMT specifically (the 520 row points at LEGAL-PRACT-MGMT engagement_letters; ACCT-PRACT-MGMT may share data_object 394 since both source the same trigger_event 328); confirm at fix time.
@@ -141,7 +141,7 @@ For each of the 8 heavy neighbors (edge weight ≥3) the 5-section pairwise diff
 | B1-S2 | PATCH 5 trigger_events to set `event_category` |
 | B1-S3 | Author 5 new intra-domain cross-module handoff rows |
 | B1-S4 | Insert 9 missing `trigger_events` for workflow-gate states |
-| B1-S5 | Report-only, 9 outbound NULL target_module_id, schedule audits on SUB-MGMT / AGENCY-MGMT / CPQ / ERP-FIN / CSM / GRC / S2P / AP-AUTO |
+| B1-S5 | Report-only, 9 outbound NULL target_module_id, schedule audits on SUB-MGMT / AGENCY-MGMT / CPQ / FIN / CSM / GRC / S2P / AP-AUTO |
 | B1-S6 | Report-only, 9 inbound NULL source_module_id, schedule audits on CPQ / ESIGN / RE-CRE / ACCT-PRACT-MGMT / AGENCY-MGMT / S2P |
 | B1-S7 | DELETE duplicate role_modules row for SALES-TRANSACTION-COORDINATOR on CLM-REPOSITORY |
 | B1-S8 | Report-only, 7 downstream domains need consumer DMDOs on CLM masters, schedule those audits |
@@ -240,7 +240,7 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 | SUB-MGMT | B10b: populate `target_domain_module_id` on inbound handoffs 63, 519 (both `legal_contract.signed` → SUB-MGMT). Add `consumer + required` DMDO on `legal_contracts` (66) in whichever SUB-MGMT module subscribes. |
 | AGENCY-MGMT | B10b: populate `target_domain_module_id` on 342 (legal_contract.signed → agency_jobs) and `source_domain_module_id` on 343 (estimate.approved → legal_contracts). Add `consumer` DMDO on `legal_contracts` if AGENCY-MGMT subscribes. |
 | CPQ | B10b: populate `source_domain_module_id` on inbound 62, 482, 1014; populate `target_domain_module_id` on outbound 517. Add `consumer` DMDO on `contract_templates` (69) on the receiving CPQ module. |
-| ERP-FIN | B10b: populate `target_domain_module_id` on 518. Add `consumer` DMDO on `legal_contracts`. |
+| FIN | B10b: populate `target_domain_module_id` on 518. Add `consumer` DMDO on `legal_contracts`. |
 | CSM | B10b: populate `target_domain_module_id` on 520. Add `consumer` DMDO on `contract_obligations` (67). |
 | GRC | B10b: populate `target_domain_module_id` on 521. Add `consumer` DMDO on `contract_obligations`. |
 | S2P | B10b: populate `target_domain_module_id` on 41, 215; populate `source_domain_module_id` on 40, 602. |
@@ -278,7 +278,7 @@ Loader: [.tmp_deploy/fix_clm_2026_05_30.ts](../.tmp_deploy/fix_clm_2026_05_30.ts
 
 **Bucket 1 (D8 decision recorded — schedules other-domain audit waves):**
 
-- **D8 (B1-S5 + B1-S6 + B1-S8):** RECORDED. Decision: schedule b1 audits on 11 other domains to fix their NULL FKs on CLM-touching handoffs and missing consumer DMDOs on CLM masters. **Queued domains:** SUB-MGMT, AGENCY-MGMT, CPQ, ERP-FIN, CSM, GRC, S2P, AP-AUTO, ESIGN, RE-CRE, ACCT-PRACT-MGMT. Spawn cadence: 3 waves of 4-4-3 parallel subagents using [.claude/skills/domain-map-analyst/references/mass-audit-subagent-prompt.md](../.claude/skills/domain-map-analyst/references/mass-audit-subagent-prompt.md). Each wave produces audit files in `feedback_needed`. Not CLM's load; this is wave kickoff.
+- **D8 (B1-S5 + B1-S6 + B1-S8):** RECORDED. Decision: schedule b1 audits on 11 other domains to fix their NULL FKs on CLM-touching handoffs and missing consumer DMDOs on CLM masters. **Queued domains:** SUB-MGMT, AGENCY-MGMT, CPQ, FIN, CSM, GRC, S2P, AP-AUTO, ESIGN, RE-CRE, ACCT-PRACT-MGMT. Spawn cadence: 3 waves of 4-4-3 parallel subagents using [.claude/skills/domain-map-analyst/references/mass-audit-subagent-prompt.md](../.claude/skills/domain-map-analyst/references/mass-audit-subagent-prompt.md). Each wave produces audit files in `feedback_needed`. Not CLM's load; this is wave kickoff.
 
 **D7 follow-up (B1-H1 closed):** APPLIED. 4 previously-failed handoffs tagged via substring-first PCF matcher:
 
@@ -309,7 +309,7 @@ All 11 Bucket 1 items in scope for CLM are already resolved. No new technical wr
 - **B1-S7 (duplicate role_modules, D2):** verified. Single row id=294 for role_id=10100 x domain_module_id=127 remains.
 - **B1-S9 (handoff 1020 target, D3):** verified. `target_domain_module_id=128`.
 - **B1-H1 (APQC tagging, D7 + follow-up):** verified. All 26 CLM-touching handoffs carry `handoff_processes` rows with `proposal_source='agent_curated'` and `record_status='new'`.
-- **B1-S5, B1-S6, B1-S8:** report-only by B10b asymmetry rule; scheduled via D8 for downstream domain audits (SUB-MGMT, AGENCY-MGMT, CPQ, ERP-FIN, CSM, GRC, S2P, AP-AUTO, ESIGN, RE-CRE, ACCT-PRACT-MGMT).
+- **B1-S5, B1-S6, B1-S8:** report-only by B10b asymmetry rule; scheduled via D8 for downstream domain audits (SUB-MGMT, AGENCY-MGMT, CPQ, FIN, CSM, GRC, S2P, AP-AUTO, ESIGN, RE-CRE, ACCT-PRACT-MGMT).
 
 ### Deferred (out of technical scope)
 
@@ -364,7 +364,7 @@ Fresh structural Validate b1 pass against live state. CLM-proper footprint: 5 fu
 
 #### B10b report-only carry-over
 
-8 outbound CLM handoffs still carry NULL `target_domain_module_id` (owed by target domains' B10b passes): 41 (S2P), 215 (S2P), 216 (AP-AUTO), 342 (AGENCY-MGMT), 518 (ERP-FIN), 519 (SUB-MGMT), 520 (CSM), 521 (GRC). 4 inbound CLM handoffs still carry NULL `source_domain_module_id` (owed by source domains' B10b passes): 217 (ESIGN), 309 (RE-CRE, also NULL on target side), 469 (CRM, target side NULL), 1014 (CPQ). Handoff 339 (ACCT-PRACT-MGMT) carries NULL `source_domain_module_id`. Handoff 339 has populated `target_domain_module_id=127`; 309 carries NULL on both FKs (RE-CRE source + CLM target wasn't populated by this audit because RE-CRE's source-module is unknown until that audit runs). All 12 backfills are scheduled via D8 (b1b carry-over).
+8 outbound CLM handoffs still carry NULL `target_domain_module_id` (owed by target domains' B10b passes): 41 (S2P), 215 (S2P), 216 (AP-AUTO), 342 (AGENCY-MGMT), 518 (FIN), 519 (SUB-MGMT), 520 (CSM), 521 (GRC). 4 inbound CLM handoffs still carry NULL `source_domain_module_id` (owed by source domains' B10b passes): 217 (ESIGN), 309 (RE-CRE, also NULL on target side), 469 (CRM, target side NULL), 1014 (CPQ). Handoff 339 (ACCT-PRACT-MGMT) carries NULL `source_domain_module_id`. Handoff 339 has populated `target_domain_module_id=127`; 309 carries NULL on both FKs (RE-CRE source + CLM target wasn't populated by this audit because RE-CRE's source-module is unknown until that audit runs). All 12 backfills are scheduled via D8 (b1b carry-over).
 
 #### Bucket 1 count summary
 
@@ -553,7 +553,7 @@ Verdicts: RESOLVED 3, ORPHAN 6, REFERENCE-READ 1, RE-TAG 1, MIS-TAG 12, UNOWNED 
   document agreements/contracts"; contract_obligations -> 8.3.3.1 "Evaluate enterprise regulatory and
   compliance obligations", both persona-backed since 2026-06-06). All 8 rows are `record_status='new'`.
   Re-point recommended; delete is the alternative. Rows: 138 (PSA, "Develop project plans"), 215 (S2P,
-  "Manage demand for products"), 216 (AP-AUTO, "Process accounts receivable"), 518 (ERP-FIN, "Transmit
+  "Manage demand for products"), 216 (AP-AUTO, "Process accounts receivable"), 518 (FIN, "Transmit
   billing data to customers"), 519 (SUB-MGMT, "Order materials and services"), 520 (CSM, "Manage customer
   service problems"), 521 (GRC, "Manage Enterprise Risk, Compliance"), 522 (CRM, "Measure customer
   satisfaction"). Destructive overwrite -> q-CLM.md, awaiting approval (Rule #21 / Rule #1).

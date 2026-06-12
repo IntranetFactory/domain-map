@@ -84,16 +84,16 @@ Every master is at zero states + zero aliases. Routes to B12 (lifecycle), B11 (a
   | `cow_health_event.treatment_administered` | `cow_health_events` | FSQM | batch_sync | medium | NULL | NULL |
   | `bulk_milk_shipment.dispatched` | `bulk_milk_shipments` | FOOD-TRACE | api_call | high | NULL | NULL |
   | `milking.completed` | `milkings` | FOOD-TRACE | event_stream | low | NULL | NULL |
-  | `lactation_record.opened` | `lactation_records` | ERP-FIN | batch_sync | low | NULL | NULL |
+  | `lactation_record.opened` | `lactation_records` | FIN | batch_sync | low | NULL | NULL |
   | `breeding_event.recorded` | `breeding_events` | GRC | batch_sync | low | NULL | NULL |
-  | `feed_ration.changed` | `feed_rations` | ERP-FIN | api_call | low | NULL | NULL |
+  | `feed_ration.changed` | `feed_rations` | FIN | api_call | low | NULL | NULL |
   | `feed_ration.changed` | `feed_rations` | FOOD-TRACE | event_stream | low | NULL | NULL |
 
-  Missing event: `dairy_cow.lifecycle_changed` (id=1099) has NO `handoffs` row. ERP-FIN fixed-asset valuation depends on cow lifecycle transitions per the event's own description. Bucket 1.
+  Missing event: `dairy_cow.lifecycle_changed` (id=1099) has NO `handoffs` row. FIN fixed-asset valuation depends on cow lifecycle transitions per the event's own description. Bucket 1.
 
 - **B9b.** Skipped (no modules; <2 module floor). When modules are authored, intra-domain cross-module handoffs need to be drafted.
 - **B10.** Inbound report-only. The catalog suggests at minimum one inbound dependency: DAIRY-MGMT consumes `suppliers` (id=206; `role=consumer`, `necessity=required`). Canonical `suppliers` master is split across SUP-LIFE (id=28) and MDM (id=87) - a separate M7 catalog-wide finding owned by neither DAIRY-MGMT's audit. Inbound handoffs from SUP-LIFE on supplier lifecycle changes would land naturally on DAIRY-MGMT's feed/genetics supplier records once a target module exists. Report-only.
-- **B10b.** Every handoff in B9 has `source_domain_module_id=NULL` AND `target_domain_module_id=NULL`. Source side is owed by THIS domain once M1 is cured; target side is owed by FOOD-TRACE / FSQM / ERP-FIN / GRC (all also unmodularized today per spot-check). Bucket 1 (source side); Report-only (target side per each partner's B10b).
+- **B10b.** Every handoff in B9 has `source_domain_module_id=NULL` AND `target_domain_module_id=NULL`. Source side is owed by THIS domain once M1 is cured; target side is owed by FOOD-TRACE / FSQM / FIN / GRC (all also unmodularized today per spot-check). Bucket 1 (source side); Report-only (target side per each partner's B10b).
 - **B11.** Zero aliases. Several masters likely need cross-vendor synonyms (`dairy_cows` <-> "cow", "animal"; `milkings` <-> "parlor session", "milk event"; `milk_quality_tests` <-> "DHIA test", "lab result"; `lactation_records` <-> "lactation cycle"; `bulk_milk_shipments` <-> "milk pickup", "tanker load"). Bucket 1.
 - **B12.** Zero `data_object_lifecycle_states` across all 8 masters. **FAIL.** Most have observable state machines: `dairy_cows` (heifer / pregnant / lactating / dry / culled), `lactation_records` (open / peak / declining / closed), `milkings` (in-progress / completed / reconciled), `milk_quality_tests` (sampled / submitted / pass / fail / appealed), `breeding_events` (inseminated / confirmed / failed), `cow_health_events` (treatment-administered / withdrawal-active / cleared), `bulk_milk_shipments` (scheduled / loaded / dispatched / accepted / rejected). `feed_rations` is config-shaped (formulated / active / superseded) and may qualify for the config-shape exemption (surface to user under Rule #12 / Rule #15). Bucket 1.
 
@@ -171,12 +171,12 @@ Edge weights derived from outbound `handoffs` (B9 table) and `suppliers` consume
 | --- | --- | --- | --- | --- | --- |
 | FOOD-TRACE | 3 | `milking.completed`, `bulk_milk_shipment.dispatched`, `feed_ration.changed` | 0 | - | traceability layer for milk + ingredients |
 | FSQM | 2 | `milk_quality_test.failed`, `cow_health_event.treatment_administered` | 0 | - | food-safety incidents from quality + withdrawal |
-| ERP-FIN | 2 | `lactation_record.opened`, `feed_ration.changed` | 0 | - | herd KPIs and feed-cost-per-litre |
+| FIN | 2 | `lactation_record.opened`, `feed_ration.changed` | 0 | - | herd KPIs and feed-cost-per-litre |
 | GRC | 1 | `breeding_event.recorded` | 0 | - | traceability obligation |
 | SUP-LIFE | 1 | - | (implied) | `suppliers` consumer | feed / semen / vet-drug suppliers |
 | MDM | 0 | - | - | `suppliers` co-master (catalog-wide M7) | report-only |
 
-Edge weights >=3 trigger the full 5-section diff (FOOD-TRACE only); FSQM (2) and ERP-FIN (2) get the one-line summary per recipe.
+Edge weights >=3 trigger the full 5-section diff (FOOD-TRACE only); FSQM (2) and FIN (2) get the one-line summary per recipe.
 
 ### Pass 4 - Pairwise reconciliation per neighbor
 
@@ -184,7 +184,7 @@ Edge weights >=3 trigger the full 5-section diff (FOOD-TRACE only); FSQM (2) and
 
 1. **Existing handoffs, fully wired:** 0. Three handoffs exist (ids 353, 955, 959), but all have `source_domain_module_id=NULL` AND `target_domain_module_id=NULL` (neither side modularized).
 2. **Existing handoffs with NULL module FK:** 3 (ids 353, 955, 959). Source-side fix is owed by DAIRY-MGMT once M1 is cured (B10b). Target-side fix is owed by FOOD-TRACE's own B10b.
-3. **Missing handoffs the catalog implies should exist:** `dairy_cow.lifecycle_changed` (id=1099) has no FOOD-TRACE subscription, but cow-lifecycle transitions are not naturally a FOOD-TRACE concern (more ERP-FIN fixed-asset). No FOOD-TRACE miss.
+3. **Missing handoffs the catalog implies should exist:** `dairy_cow.lifecycle_changed` (id=1099) has no FOOD-TRACE subscription, but cow-lifecycle transitions are not naturally a FOOD-TRACE concern (more FIN fixed-asset). No FOOD-TRACE miss.
 4. **Boundary integrity gaps (B5):** none on DAIRY-MGMT side (no embedded_master rows here).
 5. **Cross-domain `data_object_relationships` mirror check:** none of the three handoffs has a corresponding `data_object_relationships` row. Expected mirrors:
    - `milkings rolls_into bulk_milk_shipments` (intra-domain - covered by B6 fix above), then `bulk_milk_shipments creates_lot_in food_trace_lots` (cross-domain - owed by DAIRY-MGMT B8).
@@ -196,9 +196,9 @@ Boundary findings -> Bucket 1 under "boundary findings per neighbor" (in the sou
 
 Two outbound handoffs, both with NULL module FKs. No B8 mirror rows. FSQM is FOOD-SAFETY-AND-QUALITY-MGMT (id=157); `incidents` and `food_safety_incidents` masters expected on FSQM side as handoff payloads (verify on FSQM's own audit). Source-side fix owed by DAIRY-MGMT (Bucket 1 B10b once modules exist).
 
-#### ERP-FIN (edge weight 2) - one-line summary
+#### FIN (edge weight 2) - one-line summary
 
-Two outbound handoffs (`lactation_record.opened`, `feed_ration.changed`), both with NULL module FKs. ERP-FIN is the consumer of herd-economic signals (fixed-asset valuation on dairy cows, feed-cost-per-litre rollups). Expected ERP-FIN-side payload masters: `fixed_assets` (for dairy_cows as productive assets), `cost_centers` or similar. Bucket 1 source-side B10b.
+Two outbound handoffs (`lactation_record.opened`, `feed_ration.changed`), both with NULL module FKs. FIN is the consumer of herd-economic signals (fixed-asset valuation on dairy cows, feed-cost-per-litre rollups). Expected FIN-side payload masters: `fixed_assets` (for dairy_cows as productive assets), `cost_centers` or similar. Bucket 1 source-side B10b.
 
 #### GRC (edge weight 1) - lighter neighbor
 
@@ -228,7 +228,7 @@ One outbound (`breeding_event.recorded`). GRC traceability obligation per the ev
 | B1-S3 | B6 | Zero intra-domain `data_object_relationships` | Draft ~8 edges: dairy_cows<->lactation_records, lactation_records->milkings, milkings->bulk_milk_shipments, milkings->milk_quality_tests, dairy_cows->breeding_events, dairy_cows->cow_health_events, feed_rations->dairy_cows (via group), breeding_events->lactation_records. Load via cluster-drafts pattern. |
 | B1-S4 | B7 | Zero `users` edges | Draft ~7 edges: dairy_cows.assigned_herdsman, milkings.recorded_by, milk_quality_tests.sampled_by, breeding_events.technician, cow_health_events.veterinarian, feed_rations.formulated_by, bulk_milk_shipments.dispatched_by. |
 | B1-S5 | B9 (events with empty category) | 5 of 8 `trigger_events` have `event_category=''` (empty string, not a valid enum) | PATCH event_category: dairy_cow.lifecycle_changed -> `lifecycle`; lactation_record.opened -> `lifecycle`; milking.completed -> `lifecycle`; breeding_event.recorded -> `lifecycle`; feed_ration.changed -> `lifecycle` (or `state_change` per author). |
-| B1-S6 | B9 (missing handoff) | `dairy_cow.lifecycle_changed` (id=1099) has zero `handoffs` rows | Add handoff dairy_cow.lifecycle_changed -> ERP-FIN (fixed-asset valuation on culling / new-lactating). |
+| B1-S6 | B9 (missing handoff) | `dairy_cow.lifecycle_changed` (id=1099) has zero `handoffs` rows | Add handoff dairy_cow.lifecycle_changed -> FIN (fixed-asset valuation on culling / new-lactating). |
 | B1-S7 | B11 | Zero aliases on any master | Draft ~10-15 alias rows: dairy_cows<->cow / animal / head; milkings<->parlor session / milk event; lactation_records<->lactation cycle / DIM record; milk_quality_tests<->DHIA test / lab result; bulk_milk_shipments<->milk pickup / tanker load; breeding_events<->insemination / service. |
 | B1-S8 | B12 | Zero `data_object_lifecycle_states` across all 8 masters | Author state machines per masters list above. Feed_rations may qualify for config-shape exemption (Bucket 2 confirms). |
 | B1-S9 | F1 | Legacy `dairy-mgmt-system` skill (id=43, `domain_module_id=null`) | Retire (DELETE) once module-level skills are authored under Phase S. |
@@ -241,9 +241,9 @@ One outbound (`breeding_event.recorded`). GRC traceability obligation per the ev
 | B1-B1 | B10b (outbound) | All 8 outbound handoffs have `source_domain_module_id=NULL` | Backfill once DAIRY-MGMT modules exist: route each event to its master's module (parlor events -> DAIRY-MGMT-PARLOR; milk-quality events -> DAIRY-MGMT-MILK-QUALITY; cow / lactation / breeding / cow-health events -> DAIRY-MGMT-HERD; feed-ration events -> DAIRY-MGMT-FEED). |
 | B1-B2 | B8 (FOOD-TRACE mirror) | No outbound `data_object_relationships` for `milkings -> FOOD-TRACE`, `bulk_milk_shipments -> FOOD-TRACE`, `feed_rations -> FOOD-TRACE` payloads | Author cross-domain relationship rows once FOOD-TRACE's payload masters are identified. |
 | B1-B3 | B8 (FSQM mirror) | No outbound `data_object_relationships` for `milk_quality_tests -> FSQM`, `cow_health_events -> FSQM` payloads | Same pattern as B1-B2. |
-| B1-B4 | B8 (ERP-FIN mirror) | No outbound `data_object_relationships` for `lactation_records -> ERP-FIN`, `feed_rations -> ERP-FIN`, `dairy_cows -> ERP-FIN` payloads | ERP-FIN fixed-asset and herd-KPI mirrors. |
+| B1-B4 | B8 (FIN mirror) | No outbound `data_object_relationships` for `lactation_records -> FIN`, `feed_rations -> FIN`, `dairy_cows -> FIN` payloads | FIN fixed-asset and herd-KPI mirrors. |
 | B1-B5 | B8 (GRC mirror) | No outbound `data_object_relationships` for `breeding_events -> GRC` | Single edge for traceability obligation. |
-| B1-B6 | B9 (cross-cutting feed-ration handoff) | `feed_ration.changed` (id=1103) fans out to ERP-FIN AND FOOD-TRACE (two handoff rows, ids 958+959) - structurally correct (one event, many subscribers) but worth a positive callout that the fan-out is intentional | No fix; positive structural finding. |
+| B1-B6 | B9 (cross-cutting feed-ration handoff) | `feed_ration.changed` (id=1103) fans out to FIN AND FOOD-TRACE (two handoff rows, ids 958+959) - structurally correct (one event, many subscribers) but worth a positive callout that the fan-out is intentional | No fix; positive structural finding. |
 
 #### APQC TAGGING
 
@@ -266,8 +266,8 @@ One outbound (`breeding_event.recorded`). GRC traceability obligation per the ev
 
 | handoff_id | source -> target | trigger_event | payload | deferral reason |
 | --- | --- | --- | --- | --- |
-| 956 | DAIRY-MGMT -> ERP-FIN | lactation_record.opened | lactation_records | "Manage fixed-asset master data files" (id=1388) is the closest PCF L4 but lactation-record opening is operational, not master-data maintenance. Industry-specific dairy KPI rollup; route to custom process. |
-| 958 | DAIRY-MGMT -> ERP-FIN | feed_ration.changed | feed_rations | Same: feed-cost-per-litre is a dairy-specific KPI without a clean APQC L3/L4 match. Defer to custom process authoring. |
+| 956 | DAIRY-MGMT -> FIN | lactation_record.opened | lactation_records | "Manage fixed-asset master data files" (id=1388) is the closest PCF L4 but lactation-record opening is operational, not master-data maintenance. Industry-specific dairy KPI rollup; route to custom process. |
+| 958 | DAIRY-MGMT -> FIN | feed_ration.changed | feed_rations | Same: feed-cost-per-litre is a dairy-specific KPI without a clean APQC L3/L4 match. Defer to custom process authoring. |
 
 ### Bucket 2 - Surface-for-user (judgment calls)
 
@@ -310,14 +310,14 @@ Vendor-knowledge-based candidates from Pass 2 MISSING entities, not yet anchored
 
 - **FOOD-TRACE B10b owes target-side module FK** on handoffs 353, 955, 959 (`bulk_milk_shipment.dispatched`, `milking.completed`, `feed_ration.changed`). FOOD-TRACE has zero modules per spot-check; the fix lands when FOOD-TRACE is modularized.
 - **FSQM B10b owes target-side module FK** on handoffs 354, 355 (`milk_quality_test.failed`, `cow_health_event.treatment_administered`). FSQM has zero modules per spot-check.
-- **ERP-FIN B10b owes target-side module FK** on handoffs 956, 958 (`lactation_record.opened`, `feed_ration.changed`).
+- **FIN B10b owes target-side module FK** on handoffs 956, 958 (`lactation_record.opened`, `feed_ration.changed`).
 - **GRC B10b owes target-side module FK** on handoff 957 (`breeding_event.recorded`).
 - **FOOD-TRACE B8** owes inbound `data_object_relationships` rows mirroring the three DAIRY-MGMT outbound handoffs (`milkings -> food_trace_lots`, `bulk_milk_shipments -> food_trace_lots`, `feed_rations -> ingredient_lots` once that master exists).
 - **FSQM B8** owes inbound `data_object_relationships` rows mirroring `milk_quality_test.failed -> food_safety_incidents` and `cow_health_event.treatment_administered -> withdrawal_holds` (or analogous FSQM payload).
-- **ERP-FIN B8** owes inbound mirrors for fixed-asset and herd-KPI handoffs.
+- **FIN B8** owes inbound mirrors for fixed-asset and herd-KPI handoffs.
 - **GRC B8** owes inbound mirror for `breeding_event.recorded` traceability.
 - **Catalog-wide M7 hard fail (suppliers, id=206):** `suppliers` has `role='master'` in BOTH SUP-LIFE (id=28) AND MDM (id=87). One owner must demote to `embedded_master` (preserving standalone-deploy story) or `consumer`. Decision is which domain canonically masters suppliers; both partners would consume DAIRY-MGMT's `suppliers` linkage. Owed by SUP-LIFE / MDM audit.
-- **Partner-domain module sparsity (informational):** spot-checks of FOOD-TRACE, FSQM, ERP-FIN, GRC returned zero `domain_modules` for each. M-band hard fail on all four partners; auditing them would be a high-leverage follow-up given DAIRY-MGMT depends on all four for outbound handoff target-module FKs.
+- **Partner-domain module sparsity (informational):** spot-checks of FOOD-TRACE, FSQM, FIN, GRC returned zero `domain_modules` for each. M-band hard fail on all four partners; auditing them would be a high-leverage follow-up given DAIRY-MGMT depends on all four for outbound handoff target-module FKs.
 
 ## 2026-05-31, Continuation: B1 technical fixes
 
@@ -327,7 +327,7 @@ Applied the truly-technical subset of Bucket 1 via loader `c:/dev/domain-map/.tm
 
 - **B1-S5 (PATCH event_category, 5 rows).** trigger_events ids 1099, 1100, 1101, 1102, 1103 each backfilled from `""` to `"lifecycle"`. The fifth (`feed_ration.changed`) could plausibly be `state_change` per the audit's parenthetical; pick the conservative `lifecycle` and surface the alternative for user revision if needed.
 - **B1-S4 (INSERT 7 user-edges, Rule #10).** All seven masters now carry a many_to_many `reference` edge to `users` (id=748). New `data_object_relationships` ids 1775-1781. `record_status` defaults to `new`; `notes` left empty per Rule #15.
-- **B1-H1 (INSERT 6 handoff_processes, agent_curated).** Pre-flight verified each `(handoff_id, process_id)` pair: source_domain_id = 156, process external_id matches audit cell. New `handoff_processes` ids 573-578. `record_status` defaults to `new`; `proposal_source = 'agent_curated'`. The two deferred rows (handoff_id 956 and 958, lactation_record.opened + feed_ration.changed -> ERP-FIN) were NOT inserted per the audit's deferral.
+- **B1-H1 (INSERT 6 handoff_processes, agent_curated).** Pre-flight verified each `(handoff_id, process_id)` pair: source_domain_id = 156, process external_id matches audit cell. New `handoff_processes` ids 573-578. `record_status` defaults to `new`; `proposal_source = 'agent_curated'`. The two deferred rows (handoff_id 956 and 958, lactation_record.opened + feed_ration.changed -> FIN) were NOT inserted per the audit's deferral.
 
 ### Deferred (still owed)
 
@@ -360,7 +360,7 @@ Applied the truly-technical subset of Bucket 1 via loader `c:/dev/domain-map/.tm
 - **Newly surfaced this audit:** B1-S11 (`lactation_records` lacks `users` edge despite 2026-05-31 continuation backfilling 7 others), B1-H2 (zero `approved` APQC tags; catalog-quality headline is 0%).
 - **Bucket 1 (in-scope, agent fixable, pending):** 13 items.
 - **Bucket 2 (surface-for-user, judgment):** 7 items (carry-over).
-- **Bucket 3 (Phase 0 pending, speculative):** 8 items (6 carry-over MISSING entity candidates + 2 reclassified ERP-FIN APQC handoffs from prior continuation).
+- **Bucket 3 (Phase 0 pending, speculative):** 8 items (6 carry-over MISSING entity candidates + 2 reclassified FIN APQC handoffs from prior continuation).
 
 ### Pass 1, Structural (per-domain completeness checklist)
 
@@ -389,7 +389,7 @@ Applied the truly-technical subset of Bucket 1 via loader `c:/dev/domain-map/.tm
 - **B9 (missing handoff).** `dairy_cow.lifecycle_changed` (id=1099) still has NO `handoffs` row. Carry-over B1-S6.
 - **B9b.** Vacuous (no modules).
 - **B10.** Inbound report-only; carry-over (catalog-wide `suppliers` M7 unresolved, not owned by this domain).
-- **B10b.** All 8 outbound handoffs have `source_domain_module_id=NULL` AND `target_domain_module_id=NULL`. Source side carry-over B1-B1; target side owed by FOOD-TRACE / FSQM / ERP-FIN / GRC.
+- **B10b.** All 8 outbound handoffs have `source_domain_module_id=NULL` AND `target_domain_module_id=NULL`. Source side carry-over B1-B1; target side owed by FOOD-TRACE / FSQM / FIN / GRC.
 - **B11.** Zero aliases. Carry-over B1-S7.
 - **B12.** Zero lifecycle states across all 8 masters. **FAIL**. Carry-over B1-S8.
 
@@ -437,7 +437,7 @@ Carry-over from 2026-05-30 (all still pending, all unchanged in scope):
 | B1-S1 | M1 zero modules — author 4 or 5 or 6 module set per Bucket 2.1 | B2-1 module shape |
 | B1-S2 | A4 catalog UX wording empty | Rule #20 user wording |
 | B1-S3 | B6 zero intra-domain `data_object_relationships` | B2-1 module shape (target_module routing) |
-| B1-S6 | `dairy_cow.lifecycle_changed` (id=1099) has no `handoffs` row to ERP-FIN | B2-1 module shape (source_module FK) |
+| B1-S6 | `dairy_cow.lifecycle_changed` (id=1099) has no `handoffs` row to FIN | B2-1 module shape (source_module FK) |
 | B1-S7 | B11 zero aliases | none (executable now once tuples drafted) |
 | B1-S8 | B12 zero lifecycle states | B2-5 (`feed_rations` config-shape decision) |
 | B1-S9 | F1 legacy `dairy-mgmt-system` skill retire | B1-S1 (need replacement skills first) |
@@ -445,7 +445,7 @@ Carry-over from 2026-05-30 (all still pending, all unchanged in scope):
 | B1-B1 | B10b source_module_id NULL on all 8 outbound handoffs | B1-S1 |
 | B1-B2 | B8 FOOD-TRACE outbound mirror rows | FOOD-TRACE payload masters not identified |
 | B1-B3 | B8 FSQM outbound mirror rows | FSQM payload masters not identified |
-| B1-B4 | B8 ERP-FIN outbound mirror rows | ERP-FIN payload masters not identified |
+| B1-B4 | B8 FIN outbound mirror rows | FIN payload masters not identified |
 | B1-B5 | B8 GRC outbound mirror row | GRC payload masters not identified |
 
 Newly surfaced this audit:
@@ -477,8 +477,8 @@ Carry-over MISSING-entity candidates (6 items from 2026-05-30): `cow_groups`, `h
 
 Reclassified from B1-H1 (per 2026-05-31 continuation's defer):
 
-7. **`lactation_record.opened` → ERP-FIN (handoff_id=956) APQC mapping.** No clean cross-industry PCF match; closest is "Manage fixed-asset master data files" (PCF id=1388) but operational not master-data. Custom-process authoring in Discover Pass 3.
-8. **`feed_ration.changed` → ERP-FIN (handoff_id=958) APQC mapping.** Feed-cost-per-litre is a dairy-specific KPI. Custom-process authoring in Discover Pass 3.
+7. **`lactation_record.opened` → FIN (handoff_id=956) APQC mapping.** No clean cross-industry PCF match; closest is "Manage fixed-asset master data files" (PCF id=1388) but operational not master-data. Custom-process authoring in Discover Pass 3.
+8. **`feed_ration.changed` → FIN (handoff_id=958) APQC mapping.** Feed-cost-per-litre is a dairy-specific KPI. Custom-process authoring in Discover Pass 3.
 
 ### Cross-bucket dependencies
 
@@ -493,7 +493,7 @@ Reclassified from B1-H1 (per 2026-05-31 continuation's defer):
 
 - FOOD-TRACE B10b target-side module FK on handoffs 353, 955, 959; FOOD-TRACE B8 inbound mirrors.
 - FSQM B10b target-side module FK on handoffs 354, 355; FSQM B8 inbound mirrors.
-- ERP-FIN B10b target-side module FK on handoffs 956, 958; ERP-FIN B8 inbound mirrors.
+- FIN B10b target-side module FK on handoffs 956, 958; FIN B8 inbound mirrors.
 - GRC B10b target-side module FK on handoff 957; GRC B8 inbound mirror.
 - Catalog-wide M7 hard fail on `suppliers` (id=206): co-mastered in SUP-LIFE (id=28) AND MDM (id=87). Owed by SUP-LIFE / MDM audit.
 
@@ -583,7 +583,7 @@ PATCHed `source_domain_module_id` on all 8 outbound handoffs. Prior value on eve
 - 957 (breeding_event.recorded, event do_id=503): NULL -> 227 (HERD).
 - 958 (feed_ration.changed, event do_id=505): NULL -> 230 (FEED).
 - 959 (feed_ration.changed, event do_id=505): NULL -> 230 (FEED).
-- `target_domain_module_id` left NULL on all 8 (owed by each neighbor's B10b - FOOD-TRACE / FSQM / ERP-FIN / GRC - not this domain's scope). No `handoffs.notes` written. Verify: `/handoffs?source_domain_id=eq.156&source_domain_module_id=is.null` returns zero rows.
+- `target_domain_module_id` left NULL on all 8 (owed by each neighbor's B10b - FOOD-TRACE / FSQM / FIN / GRC - not this domain's scope). No `handoffs.notes` written. Verify: `/handoffs?source_domain_id=eq.156&source_domain_module_id=is.null` returns zero rows.
 
 ### B1A-S7 - DONE
 
@@ -649,9 +649,9 @@ Loader: `.tmp_deploy/2026-06-07_dairy_mgmt_state_driven_execute.ts` (gitignored)
   prior B1B-S2 / A4 / M8 gap.
 - **B1B-S6 missing handoff (1 INSERT).** `dairy_cow.lifecycle_changed` (trigger_event 1099,
   data_object 499) had zero `handoffs` rows despite the event's own description mandating an
-  ERP-FIN fixed-asset-valuation dependency. Inserted handoff id=1403: source 156 / module 227
-  (HERD), target 65 (ERP-FIN), integration_pattern=batch_sync, friction_level=low (mirrors
-  sibling lifecycle handoff 956). target_domain_module_id left NULL (owed by ERP-FIN's B10b).
+  FIN fixed-asset-valuation dependency. Inserted handoff id=1403: source 156 / module 227
+  (HERD), target 65 (FIN), integration_pattern=batch_sync, friction_level=low (mirrors
+  sibling lifecycle handoff 956). target_domain_module_id left NULL (owed by FIN's B10b).
   DAIRY-MGMT now has 9 outbound handoffs; every one carries source_domain_module_id.
 
 ### Surfaced (user decisions / non-empty-value or approval judgments; not written)
@@ -676,9 +676,9 @@ Loader: `.tmp_deploy/2026-06-07_dairy_mgmt_state_driven_execute.ts` (gitignored)
   (initial/terminal/order + gates), not in the execute allow-list. feed_rations is now exempt
   (entity_type=catalog).
 - **B1B-B2..B5** cross-domain `data_object_relationships` mirrors: blocked on each neighbor's
-  payload-master identification (FOOD-TRACE, FSQM, ERP-FIN, GRC). The new handoff 1403 adds a
-  third ERP-FIN mirror owed under B1B-B4.
-- **b3 backlog** (B3-1..B3-8): Phase-0 missing-master candidates + 2 ERP-FIN custom-process APQC
+  payload-master identification (FOOD-TRACE, FSQM, FIN, GRC). The new handoff 1403 adds a
+  third FIN mirror owed under B1B-B4.
+- **b3 backlog** (B3-1..B3-8): Phase-0 missing-master candidates + 2 FIN custom-process APQC
   items (now joined by the new 1403, same no-clean-PCF profile).
 - **Superseded per-module skill-grain / skill_tools items**: retired per the 2026-06-06
   supersession header; not reworked.

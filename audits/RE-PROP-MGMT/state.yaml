@@ -79,7 +79,7 @@ b1b:
     summary: "Outbound handoff target_domain_module_id values blocked on partner-domain modularization."
     finding: >
       Source side is now filled (2026-06-06). target_domain_module_id stays null on rows whose partner domain
-      has no consuming module: AP-AUTO (29), LSD (25), GRC (15), ERP-FIN (65) each have zero domain_modules;
+      has no consuming module: AP-AUTO (29), LSD (25), GRC (15), FIN (65) each have zero domain_modules;
       CSM (modules 112-114) exists but does not yet hold the rental_units payload via domain_module_data_objects.
       Handoff 299 (FSM, target_domain_module_id=161) and 301 (RE-INVEST, target_domain_module_id=280) were set
       pre-audit and remain.
@@ -87,13 +87,13 @@ b1b:
       - {type: domain_audit, blocking_domain: AP-AUTO, milestone: any-modules}
       - {type: domain_audit, blocking_domain: LSD, milestone: any-modules}
       - {type: domain_audit, blocking_domain: GRC, milestone: any-modules}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: any-modules}
+      - {type: domain_audit, blocking_domain: FIN, milestone: any-modules}
       - {type: domain_audit, blocking_domain: CSM, milestone: payload-consumer-dmdo}
     affected_handoffs:
       - {handoff_id: 298, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: AP-AUTO, trigger_event: rent_payment.received, payload: rent_payments, null_field: target_domain_module_id}
       - {handoff_id: 300, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: LSD, trigger_event: property_tenant.evicted, payload: property_tenants, null_field: target_domain_module_id}
       - {handoff_id: 310, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: GRC, trigger_event: rental_application.approved, payload: property_tenants, null_field: target_domain_module_id}
-      - {handoff_id: 864, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: ERP-FIN, trigger_event: rent_payment.received, payload: rental_leases, null_field: target_domain_module_id}
+      - {handoff_id: 864, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: FIN, trigger_event: rent_payment.received, payload: rental_leases, null_field: target_domain_module_id}
       - {handoff_id: 865, direction: outbound, source_domain: RE-PROP-MGMT, target_domain: CSM, trigger_event: rental_unit.vacant, payload: rental_units, null_field: target_domain_module_id}
 
   - id: B1B-APQC-310

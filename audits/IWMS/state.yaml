@@ -28,7 +28,7 @@ b1a:
     classification: destructive_surface  # overwrites a non-empty notes value; recommended fix only, needs user sign-off
     finding: |
       handoffs.notes on row 1165 carries "target NULL until IGA is modularized" and row 1166 carries
-      "target NULL until ERP-FIN is modularized" (both confirmed still present live 2026-06-07). Both
+      "target NULL until FIN is modularized" (both confirmed still present live 2026-06-07). Both
       match the rescinded "until X is modularized" pattern explicitly listed as forbidden in Rule #15.
       Reverting a non-empty notes value is a destructive write under the Rule #21 contract, so it is
       surfaced for user approval rather than executed.
@@ -37,7 +37,7 @@ b1a:
       {"notes":""}. Two surgical CLI calls; no loader needed.
     affected_handoffs:
       - {handoff_id: 1165, direction: outbound, source_domain: IWMS, target_domain: IGA, trigger_event: desk_booking.checked_in, payload: desk_bookings, null_field: none}
-      - {handoff_id: 1166, direction: outbound, source_domain: IWMS, target_domain: ERP-FIN, trigger_event: workplace_service_request.resolved, payload: workplace_service_requests, null_field: target_domain_module_id}
+      - {handoff_id: 1166, direction: outbound, source_domain: IWMS, target_domain: FIN, trigger_event: workplace_service_request.resolved, payload: workplace_service_requests, null_field: target_domain_module_id}
 
   - id: B1A-M6
     summary: INSERT domain_module_capabilities (100, 374) to cure M6 capability-orphan on IWMS-ROOM-RESERVATION
@@ -103,22 +103,22 @@ b1a:
 
 b1b:
   - id: B1B-B10b-OUT
-    summary: 3 outbound IWMS handoffs carry NULL target_domain_module_id; owed by HCM, REAL-EST, ERP-FIN audits
+    summary: 3 outbound IWMS handoffs carry NULL target_domain_module_id; owed by HCM, REAL-EST, FIN audits
     finding: |
       Handoff 869 (DESK -> HCM, workplace_feedback.submitted, payload workplace_experience_feedback)
       has target_domain_module_id NULL. Handoff 870 (ANALYTICS -> REAL-EST, space_utilization.measured,
       payload space_utilization_reports) has target_domain_module_id NULL. Handoff 1166
-      (WSD -> ERP-FIN, workplace_service_request.resolved, payload workplace_service_requests) has
+      (WSD -> FIN, workplace_service_request.resolved, payload workplace_service_requests) has
       target_domain_module_id NULL. The target FK is the receiving domain's audit responsibility per
       B10b asymmetry. IWMS side (source_domain_module_id) is populated on every outbound row.
     blocked_by:
       - {type: domain_audit, blocking_domain: HCM, milestone: identify_workplace_feedback_consumer_module}
       - {type: domain_audit, blocking_domain: REAL-EST, milestone: identify_space_utilization_consumer_module}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: identify_workplace_chargeback_consumer_module}
+      - {type: domain_audit, blocking_domain: FIN, milestone: identify_workplace_chargeback_consumer_module}
     affected_handoffs:
       - {handoff_id: 869, direction: outbound, source_domain: IWMS, target_domain: HCM, trigger_event: workplace_feedback.submitted, payload: workplace_experience_feedback, null_field: target_domain_module_id}
       - {handoff_id: 870, direction: outbound, source_domain: IWMS, target_domain: REAL-EST, trigger_event: space_utilization.measured, payload: space_utilization_reports, null_field: target_domain_module_id}
-      - {handoff_id: 1166, direction: outbound, source_domain: IWMS, target_domain: ERP-FIN, trigger_event: workplace_service_request.resolved, payload: workplace_service_requests, null_field: target_domain_module_id}
+      - {handoff_id: 1166, direction: outbound, source_domain: IWMS, target_domain: FIN, trigger_event: workplace_service_request.resolved, payload: workplace_service_requests, null_field: target_domain_module_id}
 
   - id: B1B-B10b-IN
     summary: 1 inbound IWMS handoff carries NULL source_domain_module_id; owed by REAL-EST audit
@@ -135,18 +135,18 @@ b1b:
     finding: |
       Each outbound handoff implies a consumer DMDO row on the receiving module that does not
       yet exist: HCM consumes workplace_experience_feedback (594) per handoff 869; REAL-EST
-      consumes space_utilization_reports (593) per handoff 870; ERP-FIN consumes
+      consumes space_utilization_reports (593) per handoff 870; FIN consumes
       workplace_service_requests (592) per handoff 1166; IGA-AUTO-PROVISIONING (148) consumes
       desk_bookings (590) per handoff 1165 (target module known but no consumer DMDO).
     blocked_by:
       - {type: domain_audit, blocking_domain: HCM, milestone: add_consumer_DMDO_workplace_experience_feedback}
       - {type: domain_audit, blocking_domain: REAL-EST, milestone: add_consumer_DMDO_space_utilization_reports}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: add_consumer_DMDO_workplace_service_requests}
+      - {type: domain_audit, blocking_domain: FIN, milestone: add_consumer_DMDO_workplace_service_requests}
       - {type: domain_audit, blocking_domain: IGA, milestone: add_consumer_DMDO_desk_bookings_on_module_148}
     affected_masters:
       - {data_object_id: 594, name: workplace_experience_feedback, target_module_id: null, workflow: HCM_consumer_module_pending}
       - {data_object_id: 593, name: space_utilization_reports, target_module_id: null, workflow: REAL-EST_consumer_module_pending}
-      - {data_object_id: 592, name: workplace_service_requests, target_module_id: null, workflow: ERP-FIN_consumer_module_pending}
+      - {data_object_id: 592, name: workplace_service_requests, target_module_id: null, workflow: FIN_consumer_module_pending}
       - {data_object_id: 590, name: desk_bookings, target_module_id: 148, workflow: IGA_consumer_DMDO_pending}
 
   - id: B1B-B8
@@ -154,7 +154,7 @@ b1b:
     finding: |
       B8 outbound check: workplace_experience_feedback flows_into <HCM master> (handoff 869);
       space_utilization_reports signals <REAL-EST master> (handoff 870); workplace_service_requests
-      chargebacks_to <ERP-FIN master> (handoff 1166); desk_bookings provisions <IGA master>
+      chargebacks_to <FIN master> (handoff 1166); desk_bookings provisions <IGA master>
       (handoff 1165). All four require the target-master id which lives in the neighbor catalog;
       not authorable until neighbor audits identify the receiving master.
     blocked_by:
@@ -162,7 +162,7 @@ b1b:
     affected_handoffs:
       - {handoff_id: 869, direction: outbound, source_domain: IWMS, target_domain: HCM, trigger_event: workplace_feedback.submitted, payload: workplace_experience_feedback, null_field: data_object_relationship}
       - {handoff_id: 870, direction: outbound, source_domain: IWMS, target_domain: REAL-EST, trigger_event: space_utilization.measured, payload: space_utilization_reports, null_field: data_object_relationship}
-      - {handoff_id: 1166, direction: outbound, source_domain: IWMS, target_domain: ERP-FIN, trigger_event: workplace_service_request.resolved, payload: workplace_service_requests, null_field: data_object_relationship}
+      - {handoff_id: 1166, direction: outbound, source_domain: IWMS, target_domain: FIN, trigger_event: workplace_service_request.resolved, payload: workplace_service_requests, null_field: data_object_relationship}
       - {handoff_id: 1165, direction: outbound, source_domain: IWMS, target_domain: IGA, trigger_event: desk_booking.checked_in, payload: desk_bookings, null_field: data_object_relationship}
 
   - id: B1B-B9b

@@ -23,7 +23,7 @@ q2: If you chose the integrated path above, which inbound feeds should the next 
 - b) Queue all 6 until the source-domain audits land, for tighter coordination.
 - c) Author the 2 ready now AND schedule a follow-up SEM audit for the other 4 once the source audits return.
 
-Recommended: a. The 2 ready feeds are clean (their source events already exist and they point at SEM modules); the other 4 need EPM, ERP-FIN, and talent audits to land first. Skip this question if you chose write-mostly in q1.
+Recommended: a. The 2 ready feeds are clean (their source events already exist and they point at SEM modules); the other 4 need EPM, FIN, and talent audits to land first. Skip this question if you chose write-mostly in q1.
 
 a2:
 

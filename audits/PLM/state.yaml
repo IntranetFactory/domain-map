@@ -45,17 +45,17 @@ b1b:
       target side is the receiving domain's audit to fix.
     blocked_by:
       - {type: domain_audit, blocking_domain: MFG-OPS, milestone: "M1 modules + B10b backfill for handoffs 1087, 1091, 1092"}
-      - {type: domain_audit, blocking_domain: ERP-FIN, milestone: "M1 modules + B10b backfill for handoffs 1088, 1090, 1093"}
+      - {type: domain_audit, blocking_domain: FIN, milestone: "M1 modules + B10b backfill for handoffs 1088, 1090, 1093"}
       - {type: domain_audit, blocking_domain: S2P, milestone: "M1 modules + B10b backfill for handoff 1089"}
       - {type: domain_audit, blocking_domain: FSM, milestone: "M1 modules + B10b backfill for handoff 1094 (boundary may be reassigned)"}
     affected_handoffs:
       - {handoff_id: 1087, direction: outbound, source_domain: PLM, target_domain: MFG-OPS, trigger_event: "engineering_change_order.released", payload: manufacturing_boms, null_field: target_domain_module_id}
-      - {handoff_id: 1088, direction: outbound, source_domain: PLM, target_domain: ERP-FIN, trigger_event: "engineering_change_order.released", payload: engineering_parts, null_field: target_domain_module_id}
+      - {handoff_id: 1088, direction: outbound, source_domain: PLM, target_domain: FIN, trigger_event: "engineering_change_order.released", payload: engineering_parts, null_field: target_domain_module_id}
       - {handoff_id: 1089, direction: outbound, source_domain: PLM, target_domain: S2P, trigger_event: "engineering_change_order.released", payload: engineering_parts, null_field: target_domain_module_id}
-      - {handoff_id: 1090, direction: outbound, source_domain: PLM, target_domain: ERP-FIN, trigger_event: "engineering_part.released", payload: engineering_parts, null_field: target_domain_module_id}
+      - {handoff_id: 1090, direction: outbound, source_domain: PLM, target_domain: FIN, trigger_event: "engineering_part.released", payload: engineering_parts, null_field: target_domain_module_id}
       - {handoff_id: 1091, direction: outbound, source_domain: PLM, target_domain: MFG-OPS, trigger_event: "manufacturing_bom.released", payload: manufacturing_boms, null_field: target_domain_module_id}
       - {handoff_id: 1092, direction: outbound, source_domain: PLM, target_domain: MFG-OPS, trigger_event: "manufacturing_routing.released", payload: manufacturing_routings, null_field: target_domain_module_id}
-      - {handoff_id: 1093, direction: outbound, source_domain: PLM, target_domain: ERP-FIN, trigger_event: "product_compliance_declaration.approved", payload: engineering_parts, null_field: target_domain_module_id}
+      - {handoff_id: 1093, direction: outbound, source_domain: PLM, target_domain: FIN, trigger_event: "product_compliance_declaration.approved", payload: engineering_parts, null_field: target_domain_module_id}
       - {handoff_id: 1094, direction: outbound, source_domain: PLM, target_domain: FSM, trigger_event: "cad_drawing.released", payload: cad_drawings, null_field: target_domain_module_id}
 
   - id: B1B-SUPPLIERS-UNOWNED-MASTER
@@ -156,12 +156,12 @@ b2:
       sign-off. The audit cannot self-approve.
     affected_handoffs:
       - {handoff_id: 1087, source_domain: PLM, target_domain: MFG-OPS, trigger_event: "engineering_change_order.released", payload: manufacturing_boms}
-      - {handoff_id: 1088, source_domain: PLM, target_domain: ERP-FIN, trigger_event: "engineering_change_order.released", payload: engineering_parts}
+      - {handoff_id: 1088, source_domain: PLM, target_domain: FIN, trigger_event: "engineering_change_order.released", payload: engineering_parts}
       - {handoff_id: 1089, source_domain: PLM, target_domain: S2P, trigger_event: "engineering_change_order.released", payload: engineering_parts}
-      - {handoff_id: 1090, source_domain: PLM, target_domain: ERP-FIN, trigger_event: "engineering_part.released", payload: engineering_parts}
+      - {handoff_id: 1090, source_domain: PLM, target_domain: FIN, trigger_event: "engineering_part.released", payload: engineering_parts}
       - {handoff_id: 1091, source_domain: PLM, target_domain: MFG-OPS, trigger_event: "manufacturing_bom.released", payload: manufacturing_boms}
       - {handoff_id: 1092, source_domain: PLM, target_domain: MFG-OPS, trigger_event: "manufacturing_routing.released", payload: manufacturing_routings}
-      - {handoff_id: 1093, source_domain: PLM, target_domain: ERP-FIN, trigger_event: "product_compliance_declaration.approved", payload: engineering_parts}
+      - {handoff_id: 1093, source_domain: PLM, target_domain: FIN, trigger_event: "product_compliance_declaration.approved", payload: engineering_parts}
       - {handoff_id: 1094, source_domain: PLM, target_domain: FSM, trigger_event: "cad_drawing.released", payload: cad_drawings}
       - {handoff_id: 1241, source_domain: PLM, target_domain: PIM, trigger_event: "engineering_change_order.released", payload: pim_products}
       - {handoff_id: 1242, source_domain: PLM, target_domain: PIM, trigger_event: "engineering_part.released", payload: pim_products}

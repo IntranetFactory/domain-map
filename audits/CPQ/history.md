@@ -16,7 +16,7 @@
 |---|---|---|---|---|---|---|
 | CLM | 3 (62, 482, 1014) | 1 (517) | 0 | 4 (sales_quotes drafts legal_contracts, contract_drafts drafts legal_contracts, quote_discounts flows into legal_contracts, contract_templates published_to contract_drafts) | 8 | Pairwise (full) |
 | CRM | 3 (204, 483, 1013) | 2 (61, 527) | 1 (legacy DDO consumer on crm_opportunities) | 0 (no DOR rows; coupling lives at handoff level) | 6 | Pairwise (full) |
-| ERP-FIN | 2 (484, 1015) | 0 | 0 | 0 | 2 | Lightweight |
+| FIN | 2 (484, 1015) | 0 | 0 | 0 | 2 | Lightweight |
 | PIM | 0 | 1 (1236) | 0 | 1 (pim_products configured_as product_configurations) | 2 | Lightweight |
 | SUB-MGMT | 1 (485) | 0 | 0 | 0 | 1 | Lightweight |
 
@@ -39,10 +39,10 @@
 | B1-S3 | **E2 + E3 hard fail, no roles or permissions on full modules** | 0 CPQ-named roles, 0 `role_modules` linking any role to 164 / 165 / 166, 0 permissions on `domain_module_id IN (164, 165, 166)`. Baseline of 3 permissions per full module (Rule #14 module-permission derivation) requires 9 rows minimum: `cpq-product-catalog:read`, `:manage`, `:admin`; `cpq-quote-builder:read`, `:manage`, `:admin`; `cpq-approvals-contracts:read`, `:manage`, `:admin`. Workflow-gate permissions derive from the 4 lifecycle states with `requires_permission=true` (sales_quote.submitted_for_approval, sales_quote.approved, quote_discount.approved, discount_approval.approved). | Phase E load: insert 9 baseline permissions + 4 workflow-gate permissions, 3-5 CPQ roles (e.g. SALES-REP, DEAL-DESK-ANALYST, PRICING-MANAGER, CPQ-ADMIN), and the corresponding `role_modules` + `role_permissions` rows. Standard module scaffolding from the semantic-model-deployer skill. |
 | B1-S4 | **B11 missing aliases on every CPQ master** | 0 `data_object_aliases` rows exist for any of the 8 CPQ masters. Market terminology that should be aliased: `sales_quotes` ↔ `proposals` (HubSpot, DealHub), `sales_quotes` ↔ `bids` (Tacton, IBM Sterling), `quote_lines` ↔ `quote_items` (Salesforce CPQ), `quote_lines` ↔ `line_items` (Conga CPQ), `pricing_rules` ↔ `discount_schedules` (Salesforce CPQ), `pricing_rules` ↔ `price_books` (Salesforce, Oracle CPQ), `product_bundles` ↔ `bundle_offers` (DealHub), `product_configurations` ↔ `configured_products` (Tacton, Cincom), `discount_approvals` ↔ `approval_steps` (Salesforce CPQ), `contract_drafts` ↔ `quote_contracts` (Salesforce CPQ), `quote_discounts` ↔ `discount_lines` (Conga). | Phase B alias load: insert approximately 12-15 alias rows. Per Rule #18, vendor synonyms belong on `data_object_aliases` (commerce-shaped). |
 | B1-S5 | **C1 partial, missing lifecycle states on 4 masters** | Only 4 of 8 masters carry `data_object_lifecycle_states`: `sales_quotes` (7 states), `quote_discounts` (5), `discount_approvals` (3), `contract_drafts` (6). Missing on `quote_lines` (417), `product_configurations` (418), `pricing_rules` (419), `product_bundles` (422). Per Rule #12, every `master + required` data_object needs lifecycle states unless explicitly exempted as config-shape. `pricing_rules` and `product_bundles` plausibly qualify for the config-shape exemption (publish / deprecate is the only workflow); `product_configurations` and `quote_lines` carry observable workflow (configuration validated, line locked when parent quote is locked) and should have states. | Phase B lifecycle load: author state machines for `product_configurations` (draft → validating → valid → invalid) and `quote_lines` (draft → locked → cancelled). Surface the `pricing_rules` and `product_bundles` config-shape exemption claim to the user as B2-S5 below. |
-| B1-S6 | **B10b own-side, NULL source_domain_module_id on every outbound** | All 9 outbound cross-domain handoffs carry NULL `source_domain_module_id`: 62 (→ CLM-REPOSITORY on quote.accepted), 204 (→ CRM-PIPELINE-MGT on quote.expired), 482 (→ CLM-AUTHORING on contract_draft.generated), 483 (→ CRM-PIPELINE-MGT on sales_quote.accepted_by_buyer), 484 (→ ERP-FIN on sales_quote.approved), 485 (→ SUB-MGMT on sales_quote.accepted_by_buyer), 1013 (→ CRM-PIPELINE-MGT on quote_discount.applied), 1014 (→ CLM on quote_discount.approved), 1015 (→ ERP-FIN on quote_discount.threshold_exceeded). This is CPQ's own fix per B10b asymmetry. | PATCH 9 rows with `source_domain_module_id` derived from the publishing master's owning module: 62 / 483 / 478-related → 165 (CPQ-QUOTE-BUILDER); 482 / 486 → 166 (CPQ-APPROVALS-CONTRACTS); 1013 / 1014 / 1015 → 165 (publishing master `quote_discounts` lives in CPQ-QUOTE-BUILDER); 484 / 485 / 204 → 165 (publishing master `sales_quotes` lives in CPQ-QUOTE-BUILDER). |
+| B1-S6 | **B10b own-side, NULL source_domain_module_id on every outbound** | All 9 outbound cross-domain handoffs carry NULL `source_domain_module_id`: 62 (→ CLM-REPOSITORY on quote.accepted), 204 (→ CRM-PIPELINE-MGT on quote.expired), 482 (→ CLM-AUTHORING on contract_draft.generated), 483 (→ CRM-PIPELINE-MGT on sales_quote.accepted_by_buyer), 484 (→ FIN on sales_quote.approved), 485 (→ SUB-MGMT on sales_quote.accepted_by_buyer), 1013 (→ CRM-PIPELINE-MGT on quote_discount.applied), 1014 (→ CLM on quote_discount.approved), 1015 (→ FIN on quote_discount.threshold_exceeded). This is CPQ's own fix per B10b asymmetry. | PATCH 9 rows with `source_domain_module_id` derived from the publishing master's owning module: 62 / 483 / 478-related → 165 (CPQ-QUOTE-BUILDER); 482 / 486 → 166 (CPQ-APPROVALS-CONTRACTS); 1013 / 1014 / 1015 → 165 (publishing master `quote_discounts` lives in CPQ-QUOTE-BUILDER); 484 / 485 / 204 → 165 (publishing master `sales_quotes` lives in CPQ-QUOTE-BUILDER). |
 | B1-S7 | **B10b own-side, NULL target_domain_module_id on inbound 527 and 1236** | 2 inbound rows carry NULL `target_domain_module_id` where the CPQ-side receiving module is deterministic: 527 (CRM-ACCT-MGT 46 → CPQ on `account.tier_changed` carrying `customers`) targets pricing logic that lives in CPQ-PRODUCT-CATALOG (164), and 1236 (PIM 143 → CPQ on `pim_product.published` carrying `product_configurations` 418) deterministically lands on CPQ-PRODUCT-CATALOG (164) since 164 masters `product_configurations`. Inbound 61 (CRM 48 → CPQ on `crm_opportunity.requires_quote`) targets CPQ-QUOTE-BUILDER (165) since the workflow surfaces a quote. Inbound 517 (CLM-AUTHORING 125 → CPQ on `contract_template.published`) targets CPQ-APPROVALS-CONTRACTS (166) where contract_drafts live. | PATCH 4 rows: 527 → 164, 1236 → 164, 61 → 165, 517 → 166. |
 | B1-S8 | **B10b report-only, NULL source_module on inbound (owed by source domains)** | Inbound rows are otherwise populated on the CPQ side; the source-side NULLs are owed by the source domain audits. Source-side `source_domain_module_id` NULLs already populated on every inbound (61=48, 517=125, 527=46, 1236=143). Clean. No report-only items in this direction. | None for CPQ. |
-| B1-S9 | **B10b report-only, NULL target_module on outbound (owed by target domains)** | 4 outbound rows carry NULL `target_domain_module_id` and the target-side module is the target domain's audit work: 484 (ERP-FIN, no modules yet per cross-domain b2 baseline), 485 (SUB-MGMT, target module unknown), 1014 (CLM, candidate CLM-REPOSITORY 127 or CLM-AUTHORING 125), 1015 (ERP-FIN, no modules yet). | Schedule b1 audits for ERP-FIN, SUB-MGMT, CLM (CLM's already ran 2026-05-30, can be re-resolved against the new event_category and the existing tags). Outbound 62 / 204 / 482 / 483 / 1013 already populated. |
+| B1-S9 | **B10b report-only, NULL target_module on outbound (owed by target domains)** | 4 outbound rows carry NULL `target_domain_module_id` and the target-side module is the target domain's audit work: 484 (FIN, no modules yet per cross-domain b2 baseline), 485 (SUB-MGMT, target module unknown), 1014 (CLM, candidate CLM-REPOSITORY 127 or CLM-AUTHORING 125), 1015 (FIN, no modules yet). | Schedule b1 audits for FIN, SUB-MGMT, CLM (CLM's already ran 2026-05-30, can be re-resolved against the new event_category and the existing tags). Outbound 62 / 204 / 482 / 483 / 1013 already populated. |
 
 #### APQC TAGGING
 
@@ -57,10 +57,10 @@
 | H-05 | 204 | CPQ-QUOTE-BUILDER → CRM-PIPELINE-MGT | `quote.expired` (164) | `crm_opportunities` | Develop and manage sales proposals, bids, and quotes (11779 L3) | confident | REPLACE: existing row is `discovery_substring` pointed at the same PCF row 149, propose confirm as `agent_curated` |
 | H-06 | 527 | CRM-ACCT-MGT → CPQ | `account.tier_changed` (163) | `customers` | Existing tag "Perform planning and management accounting" (10728 L2) is wrong-domain. Better: Manage sales partners and alliances (10402 L3) or Manage sales orders (10399 L3 child price-list-update). | medium | REPLACE proposed |
 | H-07 | 483 | CPQ-QUOTE-BUILDER → CRM-PIPELINE-MGT | `sales_quote.accepted_by_buyer` (478) | `sales_quotes` | Develop and manage sales proposals, bids, and quotes (11779 L3) | confident | INSERT |
-| H-08 | 484 | CPQ-QUOTE-BUILDER → ERP-FIN | `sales_quote.approved` (476) | `sales_quotes` | Develop and manage sales proposals, bids, and quotes (11779 L3) | confident | INSERT |
+| H-08 | 484 | CPQ-QUOTE-BUILDER → FIN | `sales_quote.approved` (476) | `sales_quotes` | Develop and manage sales proposals, bids, and quotes (11779 L3) | confident | INSERT |
 | H-09 | 485 | CPQ-QUOTE-BUILDER → SUB-MGMT | `sales_quote.accepted_by_buyer` (478) | `sales_quotes` | Develop and manage sales proposals, bids, and quotes (11779 L3) | confident | INSERT |
 | H-10 | 1013 | CPQ-QUOTE-BUILDER → CRM-PIPELINE-MGT | `quote_discount.applied` (1158) | `quote_discounts` | Develop and manage sales proposals, bids, and quotes (11779 L3) | confident | INSERT |
-| H-11 | 1015 | CPQ-QUOTE-BUILDER → ERP-FIN | `quote_discount.threshold_exceeded` (1160) | `quote_discounts` | Develop and manage sales proposals, bids, and quotes (11779 L3, deal-desk threshold review) or Manage pricing (10286 L2 child) | confident | INSERT |
+| H-11 | 1015 | CPQ-QUOTE-BUILDER → FIN | `quote_discount.threshold_exceeded` (1160) | `quote_discounts` | Develop and manage sales proposals, bids, and quotes (11779 L3, deal-desk threshold review) or Manage pricing (10286 L2 child) | confident | INSERT |
 | H-12 | 61 | CRM-PIPELINE-MGT → CPQ-QUOTE-BUILDER | `crm_opportunity.requires_quote` (85) | `crm_opportunities` | Develop and manage sales proposals, bids, and quotes (11779 L3) | confident | INSERT |
 | H-13 | 1236 | PIM → CPQ-PRODUCT-CATALOG | `pim_product.published` (1274) | `product_configurations` | Manage product master data (10283 L3) or Manage marketing assets (10410.x) | confident | INSERT |
 
@@ -89,7 +89,7 @@ For the 2 heavy neighbors (edge weight ≥3) the 5-section pairwise diff produce
 
 **Lighter neighbors (one-line summaries):**
 
-- **ERP-FIN ↔ CPQ (weight 2).** Outbound 484 / 1015 both NULL on both FKs. CPQ side patched in B1-S6 (source → 165). ERP-FIN side awaits ERP-FIN's b1 (and per the cross-domain baseline, ERP-FIN has 0 DMDOs and needs Phase B). No DOR cross-rels.
+- **FIN ↔ CPQ (weight 2).** Outbound 484 / 1015 both NULL on both FKs. CPQ side patched in B1-S6 (source → 165). FIN side awaits FIN's b1 (and per the cross-domain baseline, FIN has 0 DMDOs and needs Phase B). No DOR cross-rels.
 - **PIM ↔ CPQ (weight 2).** Inbound 1236 has NULL target FK; CPQ side patched in B1-S7 (target → 164). Cross-relationship `pim_products configured_as product_configurations` (1127) exists.
 - **SUB-MGMT ↔ CPQ (weight 1).** Outbound 485 has NULL on both FKs. CPQ side patched in B1-S6 (source → 165). SUB-MGMT side awaits SUB-MGMT b1.
 
@@ -133,8 +133,8 @@ The subagent recipe was not spawned (this is a single-pass audit per orchestrato
 
 This audit surfaced 2 domain-tier candidates and queued them in [audits/_missing-domains.md](_missing-domains.md):
 
-- **PRICING-OPTIM** (Pricing Optimization). Vendor evidence: Pricefx, PROS Pricing, Vendavo Pricing, Zilliant, Competera. These vendors compete in price-optimization independent of full CPQ stacks; PROS and Vendavo offer pricing-only SKUs separate from their CPQ products. Adjacency: CPQ, ERP-FIN, PIM, REV-INTEL.
-- **B2B-COMMERCE** (B2B Commerce). Vendor evidence: Salesforce B2B Commerce Cloud, Adobe Commerce, BigCommerce B2B, OroCommerce, SAP Commerce Cloud. Buyer self-serve quote-to-order distinct from seller-facing CPQ. Adjacency: CPQ, OMS, PIM, ERP-FIN, SUB-MGMT.
+- **PRICING-OPTIM** (Pricing Optimization). Vendor evidence: Pricefx, PROS Pricing, Vendavo Pricing, Zilliant, Competera. These vendors compete in price-optimization independent of full CPQ stacks; PROS and Vendavo offer pricing-only SKUs separate from their CPQ products. Adjacency: CPQ, FIN, PIM, REV-INTEL.
+- **B2B-COMMERCE** (B2B Commerce). Vendor evidence: Salesforce B2B Commerce Cloud, Adobe Commerce, BigCommerce B2B, OroCommerce, SAP Commerce Cloud. Buyer self-serve quote-to-order distinct from seller-facing CPQ. Adjacency: CPQ, OMS, PIM, FIN, SUB-MGMT.
 
 **Bucket 3 verification path:** vet via formal Phase 0 vendor research (which produces a Phase 0 markdown at `c:/tmp/CPQ-phase0-<date>.md` confirming per-entity vendor coverage) or eyeball-mode (user names which candidates to treat as confirmed and we proceed via Phase B inserts).
 
@@ -161,7 +161,7 @@ This audit surfaced 2 domain-tier candidates and queued them in [audits/_missing
 - **S6 (B10b own-side source_module PATCHes on 9 outbounds)** is mechanical.
 - **S7 (B10b own-side target_module PATCHes on 4 inbounds)** is mechanical.
 - **S8 (no work for CPQ)**.
-- **S9 (B10b report-only target_module on 4 outbounds, schedule audits on ERP-FIN, SUB-MGMT, CLM)** is not CPQ's load.
+- **S9 (B10b report-only target_module on 4 outbounds, schedule audits on FIN, SUB-MGMT, CLM)** is not CPQ's load.
 - **H1 (APQC tagging, 10 row touches)** load now or in a follow-up batch?
 
 **Bucket 2, what's your call on each?** I'll wait for per-item decisions before acting.
@@ -181,7 +181,7 @@ These items are surfaced in this audit but the fix belongs to another domain's b
 
 | Owing domain | Owed work |
 |---|---|
-| ERP-FIN | B10b: populate `target_domain_module_id` on outbound CPQ handoffs 484 (`sales_quote.approved` → ERP-FIN) and 1015 (`quote_discount.threshold_exceeded` → ERP-FIN). Cross-domain baseline notes ERP-FIN has 0 DMDOs (Phase B never run); ERP-FIN's b1 first needs Phase B. Add `consumer + required` DMDO on `sales_quotes` (416) and `quote_discounts` (420) in whichever ERP-FIN module subscribes (presumably revenue-recognition / order-management). |
+| FIN | B10b: populate `target_domain_module_id` on outbound CPQ handoffs 484 (`sales_quote.approved` → FIN) and 1015 (`quote_discount.threshold_exceeded` → FIN). Cross-domain baseline notes FIN has 0 DMDOs (Phase B never run); FIN's b1 first needs Phase B. Add `consumer + required` DMDO on `sales_quotes` (416) and `quote_discounts` (420) in whichever FIN module subscribes (presumably revenue-recognition / order-management). |
 | SUB-MGMT | B10b: populate `target_domain_module_id` on outbound 485 (`sales_quote.accepted_by_buyer` → SUB-MGMT). Add `consumer + required` DMDO on `sales_quotes` (416) in the SUB-MGMT subscription-creation module. |
 | CLM | B10b: populate `target_domain_module_id` on outbound 1014 (`quote_discount.approved` → CLM); candidate target is CLM-REPOSITORY (127) or CLM-AUTHORING (125). CLM's b1 (2026-05-30) can be re-resolved against this. |
 
@@ -213,7 +213,7 @@ Total writes: 29 PATCH + 6 INSERT = 35.
 | B1-S4 (B11 aliases, ~12-15 rows on 8 CPQ masters) | New `data_object_aliases` rows; not in the orchestrator's technical apply list. |
 | B1-S5 (C1 lifecycle states on `product_configurations`, `quote_lines`) | New `data_object_lifecycle_states` authoring; not in apply list. Partially gated on B2-S5 (config-shape exemption for `pricing_rules` / `product_bundles`). |
 | B1-S8 | No work owed for CPQ. |
-| B1-S9 (4 NULL target_module on outbounds to ERP-FIN / SUB-MGMT / CLM) | Report-only; owed by target-domain audits, not CPQ. |
+| B1-S9 (4 NULL target_module on outbounds to FIN / SUB-MGMT / CLM) | Report-only; owed by target-domain audits, not CPQ. |
 | B1-H1 H-04 (517 REPLACE) | Medium-confidence PCF re-target; defer to user. |
 | B1-H1 H-05 (204 confirm `discovery_substring` -> `agent_curated`) | Orchestrator licenses INSERT only on `handoff_processes`; PATCH/REPLACE on existing row is out of scope. |
 | B1-H1 H-06 (527 REPLACE) | Medium-confidence PCF re-target; defer to user. |
@@ -249,7 +249,7 @@ None.
 - **B9 PASS.** All 16 CPQ trigger_events now carry valid `event_category` per Rule #13 (verified). Continuation B1-S1 closed.
 - **B9b advisory unchanged.** 0 intra-domain cross-module handoffs on a 3-module domain. Lifecycle progression CPQ-QUOTE-BUILDER -> CPQ-APPROVALS-CONTRACTS on `sales_quote.submitted_for_approval` and `quote_discount.threshold_exceeded` remains implied but unmodelled. Carry forward.
 - **B10b own-side PASS.** All 9 outbound handoffs have non-NULL `source_domain_module_id`. 4 inbound handoffs have non-NULL `target_domain_module_id` (61, 517, 527, 1236). Continuation B1-S6 and B1-S7 closed.
-- **B10b report-only OPEN.** 4 outbound rows still carry NULL `target_domain_module_id`: 484 (ERP-FIN), 485 (SUB-MGMT), 1014 (CLM), 1015 (ERP-FIN). Owed by target-domain audits.
+- **B10b report-only OPEN.** 4 outbound rows still carry NULL `target_domain_module_id`: 484 (FIN), 485 (SUB-MGMT), 1014 (CLM), 1015 (FIN). Owed by target-domain audits.
 - **B11 hard-fail unchanged.** 0 `data_object_aliases` rows for any of the 8 CPQ masters (verified empty).
 - **B12 N/A** (no module hierarchy splits owed).
 - **C1 partial unchanged.** 4 of 8 masters carry lifecycle states (`sales_quotes` 416 = 7 states, `quote_discounts` 420 = 5 states, `discount_approvals` 421 = 3 states, `contract_drafts` 423 = 6 states). Missing on `quote_lines` 417, `product_configurations` 418, `pricing_rules` 419, `product_bundles` 422 (verified empty). C1 carries forward; pricing_rules and product_bundles are config-shape exemption candidates pending B2-S5.
@@ -269,7 +269,7 @@ None.
 | B1-S3 | **E2 + E3 + E4 + E5 hard fail** | 0 permissions on full modules, 0 role_modules, 0 CPQ-named roles. | Phase E load: 9 baseline permissions (`cpq-product-catalog:read/manage/admin`, `cpq-quote-builder:read/manage/admin`, `cpq-approvals-contracts:read/manage/admin`), 4 workflow-gate permissions (from the 4 `requires_permission=true` lifecycle states), 3-5 CPQ roles (SALES-REP, DEAL-DESK-ANALYST, PRICING-MANAGER, CPQ-ADMIN), plus role_modules and role_permissions junctions. Gated on B2-S1. |
 | B1-S4 | **B11 hard fail** | 0 `data_object_aliases` rows on any of the 8 CPQ masters. Market terminology unmodelled. | Phase B alias load: approximately 12-15 alias rows per the 2026-05-30 list (proposals/bids for sales_quotes, quote_items/line_items for quote_lines, discount_schedules/price_books for pricing_rules, bundle_offers for product_bundles, configured_products for product_configurations, approval_steps for discount_approvals, quote_contracts for contract_drafts, discount_lines for quote_discounts). Independent. |
 | B1-S5 | **C1 partial** | Missing lifecycle states on `product_configurations` (418) and `quote_lines` (417). `pricing_rules` (419) and `product_bundles` (422) plausibly exempt; gated on B2-S5. | Phase B lifecycle load: author state machines for `product_configurations` (draft -> validating -> valid -> invalid) and `quote_lines` (draft -> locked -> cancelled). Defer 419/422 to B2-S5 outcome. |
-| B1-S9 | **B10b report-only** | 4 outbound rows still carry NULL `target_domain_module_id`: 484 (ERP-FIN), 485 (SUB-MGMT), 1014 (CLM), 1015 (ERP-FIN). | Report-only; resolved by target-domain audits. Schedule b1 on ERP-FIN, SUB-MGMT; re-resolve CLM against the new event_category values. |
+| B1-S9 | **B10b report-only** | 4 outbound rows still carry NULL `target_domain_module_id`: 484 (FIN), 485 (SUB-MGMT), 1014 (CLM), 1015 (FIN). | Report-only; resolved by target-domain audits. Schedule b1 on FIN, SUB-MGMT; re-resolve CLM against the new event_category values. |
 | B1-H1r | **APQC tagging residue** | Continuation closed 6 INSERTs at process 149. 2 `discovery_substring` rows remain (204 -> 149 correct PCF; 527 -> 54 likely wrong-domain). 1 medium-confidence agent_curated row (517 -> 927) flagged for review. 1 inserted at a fallback PCF (1236 -> 115 instead of audit-proposed 10283/10410.x). | Mixed: PATCH 204 `proposal_source` to `agent_curated` (PCF correct); PATCH 527 `process_id` to a sales-cycle PCF and switch source to `agent_curated`; review 517 retarget call; review 1236 retarget. The 204 promotion is the only mechanical agent fix; the others surface to user. |
 
 ### Bucket 1 count summary
@@ -383,7 +383,7 @@ C1 business_function_domains: no write owed. Domain 73 already carries owner = S
 
 ### Left
 
-- **B1B-S9** report-only; 4 outbound handoffs (484, 485, 1014, 1015) NULL target_domain_module_id, owed by ERP-FIN / SUB-MGMT / CLM audits.
+- **B1B-S9** report-only; 4 outbound handoffs (484, 485, 1014, 1015) NULL target_domain_module_id, owed by FIN / SUB-MGMT / CLM audits.
 - **B1A-S2 / B1A-S3** CANCELED by the 2026-06-06 per-domain-skill supersession (per-module system skills + skill_tools, and the per-module/_core RBAC model are RETIRED). Re-authoring tracked in audits/_modularization-backlog.md; reframed as a note in state.yaml.
 - **B3-E1..E4** speculative entity candidates (guided_selling_questionnaires, proposal_templates, price_books, deal_scoring_records); Phase 0 pending. (price_books now also carried as a synonym alias on pricing_rules.)
 

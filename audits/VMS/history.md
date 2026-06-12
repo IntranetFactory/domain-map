@@ -73,7 +73,7 @@ Every master has 0 lifecycle states. Routes to B12 on all 6 masters.
 | B1-S8 | B4 | All 6 masters have `has_personal_content=false`, `has_submit_lock=false`, `has_single_approver=false`. Re-evaluate each: `contingent_workers` PII (SSN, tax classification, I-9 / IR35 status) suggests `has_personal_content=true`; `rate_cards` and SOW (entity 187 if confirmed as SOW) plausibly have a single approver. | PATCH per data_object after user confirms which flags should flip (record decision in the audit; no `notes` writes per Rule #15). |
 | B1-S9 | B6 | Intra-domain relationships: 8 edges loaded (verified above). Two issues: (a) row `contingent_workers 186 executes pm_work_orders 187` makes no sense if 187 really is preventive maintenance work orders (you don't have contingent workers execute PMs); blocks on Bucket 2 #B2-1. (b) row `contingent_invoices 191 rolls_up pm_work_orders 187` (`is_required=false`) is also semantically suspect for the same reason. | If user confirms 187 is mis-named (Bucket 2 #B2-1 = a), rename the entity to `staffing_work_orders` or `sow_work_orders` and fix the aliases + description in the same loader. If 187 truly is preventive-maintenance (b), DELETE both relationship rows and the DMDO master row on 187, and route 187 to EAM as a separate concern. |
 | B1-S10 | B7 | Verified: all 6 masters have at least one `users` edge (verbs `sponsors`, `owns`, `manages`, `approves`, `dispatches`). | No fix needed; recorded for completeness. |
-| B1-S11 | B9 | `rate_card.published` (event 596) has zero `handoffs` rows. The event description says PSA aligns project bill rates, ERP-FIN refreshes cost accruals, so two handoff subscribers are implied. | INSERT 2 `handoffs` rows: VMS to PSA on `rate_cards` (`integration_pattern: batch_sync` typical for rate refreshes), VMS to ERP-FIN on `rate_cards` (`integration_pattern: batch_sync`). |
+| B1-S11 | B9 | `rate_card.published` (event 596) has zero `handoffs` rows. The event description says PSA aligns project bill rates, FIN refreshes cost accruals, so two handoff subscribers are implied. | INSERT 2 `handoffs` rows: VMS to PSA on `rate_cards` (`integration_pattern: batch_sync` typical for rate refreshes), VMS to FIN on `rate_cards` (`integration_pattern: batch_sync`). |
 | B1-S12 | B9b | N/A: VMS will have 2 modules after B1-S1 lands, but no current intra-domain handoffs. Once modules land, the chain `staffing_supplier.activated -> rate_card.published -> contingent_timesheet.approved -> contingent_invoice.received -> contingent_invoice.matched` likely crosses the VMS-WORKER-SOURCING to VMS-TIME-INVOICING boundary on at least `contingent_timesheet.approved` (sourcing produces the request, time-invoicing executes). Surface as a follow-up after B1-S1. | Re-run B9b derivation after B1-S1 lands; INSERT intra-domain `handoffs` rows with `integration_pattern: lifecycle_progression`. |
 | B1-S13 | B10b | Every cross-domain outbound handoff (7 rows: 117, 118, 587, 588, 589, 590, 591) has `source_domain_module_id IS NULL` because VMS has no modules. Sub-case 1: upstream M1 gap. PATCH after B1-S1 lands. | Backfill loader (sibling shape to `backfill_ats_handoff_modules_2026_05_23.ts`). For each outbound row, set `source_domain_module_id` to the module that masters the trigger event's `data_object_id`. After B1-S1: events 147 (worker.tenure_threshold) and 146 (pm_work_order.invoiced) attribute to VMS-WORKER-SOURCING; 596 / 597 / 598 / 599 / 600 attribute to VMS-TIME-INVOICING; 595 (staffing_supplier.activated) attribute to VMS-WORKER-SOURCING. |
 | B1-S14 | B11 | All 6 masters carry aliases (3 / 2 / 2 / 2 / 2 / 1). Pass. | No fix. |
@@ -99,7 +99,7 @@ Per-handoff candidate PCF activities (sourced via `/processes?process_name=ilike
 | 118 | VMS > HCM | `worker.tenure_threshold` (147) | `contingent_workers` | Manage new hire/re-hire | 222 (10443) | confident L3 (tenure threshold typically converts contractor to employee) |
 | 587 | VMS > PSA | `contingent_timesheet.approved` (597) | `contingent_timesheets` | Track workforce utilization | 923 (10392) | confident L4 (PSA captures project actuals from approved timesheets) |
 | 588 | VMS > AP-AUTO | `contingent_invoice.received` (599) | `contingent_invoices` | Process accounts payable (AP) | 315 (10756) | confident L3 |
-| 589 | VMS > ERP-FIN | `contingent_invoice.matched` (600) | `contingent_invoices` | Process accounts payable (AP) | 315 (10756) | confident L3 (post liability after match) |
+| 589 | VMS > FIN | `contingent_invoice.matched` (600) | `contingent_invoices` | Process accounts payable (AP) | 315 (10756) | confident L3 (post liability after match) |
 | 590 | VMS > PAYROLL | `contingent_timesheet.approved` (597) | `contingent_timesheets` | Enter employee time worked into payroll system | 1418 (10858) | confident L4 (contingent workers paid via payroll-adjacent flows when worker is W-2 from staffing supplier) |
 | 591 | VMS > SUP-LIFE | `staffing_supplier.activated` (595) | `staffing_suppliers` | Manage suppliers | 167 (10280) | confident L3 |
 
@@ -163,7 +163,7 @@ Cross-edges via outbound `handoffs` (target_domain_id) for VMS:
 | S2P | 1 (117 pm_work_order.invoiced) | 0 | 0 | 1 | light (and gated on Bucket 2 #B2-1) |
 | PSA | 1 (587 contingent_timesheet.approved) | 0 | 1 (PSA-TIME-EXPENSE consumes `contingent_timesheets`) | 2 | light |
 | AP-AUTO | 1 (588 contingent_invoice.received) | 0 | 0 | 1 | light |
-| ERP-FIN | 1 (589 contingent_invoice.matched) | 0 | 0 | 1 | light |
+| FIN | 1 (589 contingent_invoice.matched) | 0 | 0 | 1 | light |
 | PAYROLL | 1 (590 contingent_timesheet.approved) | 0 | 0 | 1 | light |
 | SUP-LIFE | 1 (591 staffing_supplier.activated) | 0 | 0 | 1 | light |
 
@@ -215,7 +215,7 @@ Eyeball recommendation: all 3 ring true on the regulated-VMS market shape; user 
 - **HCM B8 owes:** `data_object_relationships` row `employees (31) <- contingent_workers (186)` already exists in the wrong direction (`employees 31 reviewed_against contingent_workers 186`, owner_side=target). The forward conversion relationship `contingent_workers converts_to employees` (or similar verb) is missing; it would be VMS-side (covered by B1-B2), but the inverse / mirror row from HCM's perspective `employees converted_from contingent_workers` is HCM's call. Surfaces when HCM is next validated.
 - **S2P B10 (inbound side):** handoff 117 (VMS to S2P on `pm_work_order.invoiced`) targets S2P with payload `contingent_invoices`, but S2P's modules do not declare a consumer DMDO row on `contingent_invoices` (191). The target_domain_module_id is NULL on the row. Once VMS resolves Bucket 2 #B2-1 and re-attributes the handoff payload (or VMS's modules land), S2P will need to add the consumer row.
 - **AP-AUTO B10:** handoff 588 (VMS to AP-AUTO on `contingent_invoice.received`) targets AP-AUTO; AP-AUTO does not declare a consumer DMDO row on `contingent_invoices` (191). Surface for AP-AUTO's B10 / Phase B pass.
-- **ERP-FIN B10:** handoff 589 (VMS to ERP-FIN on `contingent_invoice.matched`) similarly lacks an ERP-FIN consumer DMDO row on `contingent_invoices`.
+- **FIN B10:** handoff 589 (VMS to FIN on `contingent_invoice.matched`) similarly lacks an FIN consumer DMDO row on `contingent_invoices`.
 - **PAYROLL B10:** handoff 590 (VMS to PAYROLL on `contingent_timesheet.approved`) lacks a PAYROLL consumer DMDO row on `contingent_timesheets` (190).
 - **SUP-LIFE B10:** handoff 591 (VMS to SUP-LIFE on `staffing_supplier.activated`) lacks a SUP-LIFE consumer DMDO row on `staffing_suppliers` (188). SUP-LIFE may legitimately keep its own master `suppliers` and treat `staffing_suppliers` as a specialization; if so, the inbound side could be a master / embedded_master cross-reference rather than a consumer.
 
@@ -318,7 +318,7 @@ Same enumeration as 2026-05-30 (Workday VNDLY, SAP Fieldglass, Beeline, Magnit, 
 |---|---|---|
 | B5 | fail | 6 of 8 `trigger_events` carry `event_category=""`: ids 595 (`staffing_supplier.activated`), 596 (`rate_card.published`), 597 (`contingent_timesheet.approved`), 598 (`contingent_timesheet.rejected`), 599 (`contingent_invoice.received`), 600 (`contingent_invoice.matched`). All 6 are `state_change` per the SKILL.md enum (lifecycle / state_change / threshold / signal); each is a master transitioning. Carries to Bucket 1 #B1-B5. ids 146 (`pm_work_order.invoiced`, `state_change`) and 147 (`worker.tenure_threshold`, `threshold`) are correctly populated. |
 | B7 | pass | All 6 masters have at least one `users` (data_object 748, `kind='platform_builtin'`) edge: sponsors+manages on 186, owns on 188, dispatches on 187, approves on 189, approves on 190, approves on 191. Rule #10 satisfied. |
-| B9 | fail | `rate_card.published` (event 596) has zero `handoffs` rows downstream. Event description implies a PSA-side bill-rate refresh and an ERP-FIN-side cost accrual; 2 outbound handoffs missing. Carries to Bucket 1 #B1-B9. |
+| B9 | fail | `rate_card.published` (event 596) has zero `handoffs` rows downstream. Event description implies a PSA-side bill-rate refresh and an FIN-side cost accrual; 2 outbound handoffs missing. Carries to Bucket 1 #B1-B9. |
 | B9b | n/a | Intra-domain handoffs cannot be evaluated, VMS has 0 modules. Re-derive after M1 lands. Carries to Bucket 1 #B1-B9b (deferred until B1-M1). |
 | B10b | fail | All 7 outbound handoffs (117, 118, 587, 588, 589, 590, 591) have `source_domain_module_id IS NULL` because VMS has no modules. Sub-case 1: upstream M1 gap. Backfill after B1-M1 lands. Carries to Bucket 1 #B1-B10b. |
 | B11 | pass | 12 aliases across 6 masters (3 / 2 / 2 / 2 / 2 / 1). Pass. |
@@ -362,7 +362,7 @@ All 7 outbound handoffs are now `agent_curated`-tagged via `handoff_processes` (
 | 118 | VMS → HCM | worker.tenure_threshold | contingent_workers | Manage new hire/re-hire, 10443 | 656 | confident L3 |
 | 587 | VMS → PSA | contingent_timesheet.approved | contingent_timesheets | Track workforce utilization, 10392 | 657 | confident L4 |
 | 588 | VMS → AP-AUTO | contingent_invoice.received | contingent_invoices | Process accounts payable (AP), 10756 | 658 | confident L3 |
-| 589 | VMS → ERP-FIN | contingent_invoice.matched | contingent_invoices | Process accounts payable (AP), 10756 | 659 | confident L3 |
+| 589 | VMS → FIN | contingent_invoice.matched | contingent_invoices | Process accounts payable (AP), 10756 | 659 | confident L3 |
 | 590 | VMS → PAYROLL | contingent_timesheet.approved | contingent_timesheets | Enter employee time worked into payroll system, 10858 | 660 | confident L4 |
 | 591 | VMS → SUP-LIFE | staffing_supplier.activated | staffing_suppliers | Manage suppliers, 10280 | 661 | confident L3 |
 
@@ -374,7 +374,7 @@ No fresh subagent spawn (this audit IS the structural Validate). Market diff fro
 
 ### Pass 3, Neighbor discovery
 
-Edge weights unchanged from 2026-05-30: HCM, S2P, PSA, AP-AUTO, ERP-FIN, PAYROLL, SUP-LIFE all at weight 1, except PSA at weight 2 (PSA-TIME-EXPENSE consumes `contingent_timesheets`). No edge weight >= 3, Pass 4 vacuous.
+Edge weights unchanged from 2026-05-30: HCM, S2P, PSA, AP-AUTO, FIN, PAYROLL, SUP-LIFE all at weight 1, except PSA at weight 2 (PSA-TIME-EXPENSE consumes `contingent_timesheets`). No edge weight >= 3, Pass 4 vacuous.
 
 ### Pass 4, Pairwise reconciliation
 
@@ -390,7 +390,7 @@ Vacuous (no neighbor at edge weight >= 3).
 | B1-A4 | A4 | `catalog_tagline=""`, `catalog_description=""`. Rule #20 violation. | Draft in buyer voice, surface to user BEFORE PATCH (Rule #20, no `catalog_tagline` / `catalog_description` without approval). Carries to Bucket 2 #B2-2 for the user-approved wording. |
 | B1-A5 | A5 | `business_logic=""` with `crud_percentage=92` (<95). Rule #8 requires non-empty `business_logic` whenever `crud_percentage < 95`. | Draft 1-2 sentences naming the non-JsonLogic slice (e.g., rate-card refresh recomputes accrued cost across active timesheets; classification engine cross-applies IR35 / AB5 / EU PWD precedence rules). Carries to Bucket 2 #B2-5. |
 | B1-B5 | B5 | 6 trigger events with empty `event_category`: 595, 596, 597, 598, 599, 600. All 6 are `state_change`. | Direct PATCH on each row, `event_category='state_change'`. Safe, deterministic, no gating. |
-| B1-B9 | B9 | `rate_card.published` (event 596) has no `handoffs` rows. PSA + ERP-FIN subscribers are implied by the rate-card refresh cycle. | INSERT 2 `handoffs` rows after B1-M1 lands (so `source_domain_module_id` is populatable): VMS to PSA on `rate_cards` (`integration_pattern: batch_sync`), VMS to ERP-FIN on `rate_cards` (`integration_pattern: batch_sync`). |
+| B1-B9 | B9 | `rate_card.published` (event 596) has no `handoffs` rows. PSA + FIN subscribers are implied by the rate-card refresh cycle. | INSERT 2 `handoffs` rows after B1-M1 lands (so `source_domain_module_id` is populatable): VMS to PSA on `rate_cards` (`integration_pattern: batch_sync`), VMS to FIN on `rate_cards` (`integration_pattern: batch_sync`). |
 | B1-B9b | B9b | Intra-domain progression `staffing_supplier.activated -> rate_card.published -> contingent_timesheet.approved -> contingent_invoice.received -> contingent_invoice.matched` likely crosses the WORKER-SOURCING to TIME-INVOICING module boundary on `contingent_timesheet.approved`. | Re-derive after B1-M1 lands; INSERT intra-domain `handoffs` rows with `integration_pattern: lifecycle_progression`. Cascades from B1-M1. |
 | B1-B10b | B10b | 7 outbound handoffs (117, 118, 587, 588, 589, 590, 591) have `source_domain_module_id IS NULL`. Sub-case 1 (upstream M1 gap). | Backfill loader after B1-M1; PATCH each row with the module that masters the trigger event's `data_object_id`. |
 | B1-B12 | B12 | 0 lifecycle states on the 6 masters. None qualify for the config-shape exemption. | Phase B loader after B1-M1: INSERT states per master, `requires_permission=true` on workflow gates (approve, activate, publish, dispute). Cascades from B1-M1. Lifecycle authoring for entity 187 specifically gated on Bucket 2 #B2-1. |
@@ -476,7 +476,7 @@ User picks (a) vetted route (formal Phase 0 also checks `interview_slots` and `s
 - **HCM B8:** Forward conversion relationship `employees converted_from contingent_workers` is HCM's mirror of B1-B2.
 - **S2P B10:** Handoff 117 lacks a S2P consumer DMDO row on `contingent_invoices` (191). Gated on B2-1.
 - **AP-AUTO B10:** Handoff 588 lacks an AP-AUTO consumer DMDO row on `contingent_invoices`.
-- **ERP-FIN B10:** Handoff 589 lacks an ERP-FIN consumer DMDO row on `contingent_invoices`.
+- **FIN B10:** Handoff 589 lacks an FIN consumer DMDO row on `contingent_invoices`.
 - **PAYROLL B10:** Handoff 590 lacks a PAYROLL consumer DMDO row on `contingent_timesheets`.
 - **SUP-LIFE B10:** Handoff 591 lacks a SUP-LIFE consumer DMDO row on `staffing_suppliers`. SUP-LIFE may keep its own `suppliers` master and cross-reference via `embedded_master`; resolution is SUP-LIFE's call.
 
@@ -572,9 +572,9 @@ Note: handoff 590 carries a pre-existing Rule-#15-violating `notes` annotation (
 
 INSERT 2 handoffs on rate_card.published (event 596, payload rate_cards do189, source_domain_module_id=315, batch_sync, friction medium):
 - id **1361** VMS -> PSA (target 68), target_domain_module_id NULL.
-- id **1362** VMS -> ERP-FIN (target 65), target_domain_module_id NULL.
+- id **1362** VMS -> FIN (target 65), target_domain_module_id NULL.
 
-`target_domain_module_id` left NULL on both because no PSA or ERP-FIN module declares any role on the payload `rate_cards` (189). Both target domains ARE modularized but do not model rate_cards (the B10b "no-role row" sub-case). Authoring a consumer DMDO row on a PSA/ERP-FIN module is out of VMS scope. Surfaced as a report-only follow-up (PSA / ERP-FIN owe a consumer row on rate_cards if they want module-grain attribution).
+`target_domain_module_id` left NULL on both because no PSA or FIN module declares any role on the payload `rate_cards` (189). Both target domains ARE modularized but do not model rate_cards (the B10b "no-role row" sub-case). Authoring a consumer DMDO row on a PSA/FIN module is out of VMS scope. Surfaced as a report-only follow-up (PSA / FIN owe a consumer row on rate_cards if they want module-grain attribution).
 
 ### B1A-B9b - DONE (handoffs INSERT, intra-domain)
 
@@ -631,7 +631,7 @@ Permission bundles NOT authored (DERIVED per Plan 3 / roles.md); reach only.
 
 ### Report-only follow-ups (owed by other domains)
 
-- PSA (68) and ERP-FIN (65): no module declares a role on `rate_cards` (189). To attribute the new handoffs 1361/1362 at module grain, those domains would each load a `consumer` DMDO row on rate_cards. Their B10b backfill leaves `target_domain_module_id` NULL until then.
+- PSA (68) and FIN (65): no module declares a role on `rate_cards` (189). To attribute the new handoffs 1361/1362 at module grain, those domains would each load a `consumer` DMDO row on rate_cards. Their B10b backfill leaves `target_domain_module_id` NULL until then.
 
 ### JWT / blockers
 

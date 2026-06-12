@@ -192,14 +192,14 @@ Legend: [H] human_curated  [A] agent_curated  [O] discovery_override  [S] discov
 ### 10505 L4 — Administer benefit enrollment (5)
 - [S] h=1098  BEN-ADMIN → BEN-ADMIN  `enrollment.changed`  payload=carrier_feeds
 - [S] h=1100  BEN-ADMIN → BEN-ADMIN  `enrollment.changed`  payload=benefit_enrollments
-- [S] h=109  BEN-ADMIN → ERP-FIN  `enrollment.changed`  payload=payroll_journal_entries
+- [S] h=109  BEN-ADMIN → FIN  `enrollment.changed`  payload=payroll_journal_entries
 - [S] h=108  BEN-ADMIN → PAYROLL  `enrollment.changed`  payload=benefit_enrollments
 - [S] h=188  BEN-ADMIN → PAYROLL  `enrollment.changed`  payload=payroll_journal_entries
 
 ### 10733 L2 — Process accounts payable and expense reimbursements (4)
 - [S] h=139  EXPENSE → PSA  `expense.approved`  payload=expense_reports
 - [S] h=101  PAYROLL → EXPENSE  `expense.reimbursable`  payload=pay_slips
-- [S] h=1128  PSA → ERP-FIN  `expense.approved`  payload=expense_reports
+- [S] h=1128  PSA → FIN  `expense.approved`  payload=expense_reports
 - [S] h=1133  PSA → PSA  `expense.approved`  payload=expense_reports
 
 ### 11779 L3 — Develop and manage sales proposals, bids, and quotes (4)
@@ -210,7 +210,7 @@ Legend: [H] human_curated  [A] agent_curated  [O] discovery_override  [S] discov
 
 ### 10280 L3 — Manage suppliers (4)
 - [O] h=128  SUP-LIFE → AP-AUTO  `supplier.bank_changed`  payload=suppliers
-- [O] h=213  SUP-LIFE → ERP-FIN  `supplier.onboarded`  payload=supplier_onboardings
+- [O] h=213  SUP-LIFE → FIN  `supplier.onboarded`  payload=supplier_onboardings
 - [O] h=214  SUP-LIFE → GRC  `supplier.risk_elevated`  payload=supplier_scorecards
 - [O] h=127  SUP-LIFE → S2P  `supplier.approved`  payload=suppliers
 
@@ -240,7 +240,7 @@ Legend: [H] human_curated  [A] agent_curated  [O] discovery_override  [S] discov
 
 ### 10862 L4 — Process and distribute payments (4)
 - [O] h=193  AP-AUTO → CSM  `payment.exception`  payload=payment_runs
-- [O] h=192  AP-AUTO → ERP-FIN  `payment.exception`  payload=payment_runs
+- [O] h=192  AP-AUTO → FIN  `payment.exception`  payload=payment_runs
 - [O] h=329  B2C-COMM → CRM  `payment.declined`  payload=payment_transactions
 - [O] h=72  SUB-MGMT → CSM  `payment.failed`  payload=customer_cases
 
@@ -278,7 +278,7 @@ Legend: [H] human_curated  [A] agent_curated  [O] discovery_override  [S] discov
 ### 10295 L4 — Create/Distribute purchase orders (3)
 - [S] h=581  S2P → AP-AUTO  `purchase_order.issued`  payload=purchase_orders
 - [S] h=583  S2P → AP-AUTO  `purchase_order.changed`  payload=purchase_orders
-- [S] h=582  S2P → ERP-FIN  `purchase_order.issued`  payload=purchase_orders
+- [S] h=582  S2P → FIN  `purchase_order.issued`  payload=purchase_orders
 
 ### 20903 L4 — Triage IT service delivery incidents (3)
 - [A] h=57  AIOPS → ITSM  `correlation.identified`  payload=service_incidents
@@ -320,8 +320,8 @@ Legend: [H] human_curated  [A] agent_curated  [O] discovery_override  [S] discov
 - [S] h=203  CRM → SALES-PERF  `account.tier_changed`  payload=customers
 
 ### 10729 L2 — Perform revenue accounting (2)
-- [S] h=131  PSA → ERP-FIN  `revenue.recognised`  payload=revenue_recognition_records
-- [S] h=197  SUB-MGMT → ERP-FIN  `revenue.recognised`  payload=revenue_recognition_records
+- [S] h=131  PSA → FIN  `revenue.recognised`  payload=revenue_recognition_records
+- [S] h=197  SUB-MGMT → FIN  `revenue.recognised`  payload=revenue_recognition_records
 
 ### 10735 L2 — Manage internal controls (2)
 - [S] h=840  GRC → AUDIT  `control.failed`  payload=compliance_controls
@@ -344,8 +344,8 @@ Legend: [H] human_curated  [A] agent_curated  [O] discovery_override  [S] discov
 - [S] h=252  GRC → OP-RES  `assessment.completed`  payload=risk_assessments
 
 ### 10760 L3 — Manage in-house bank accounts (2)
-- [S] h=537  ERP-FIN → AP-AUTO  `bank_account.added`  payload=bank_accounts
-- [S] h=597  ERP-FIN → AP-AUTO  `bank_account.statement_received`  payload=bank_accounts
+- [S] h=537  FIN → AP-AUTO  `bank_account.added`  payload=bank_accounts
+- [S] h=597  FIN → AP-AUTO  `bank_account.statement_received`  payload=bank_accounts
 
 ### 10941 L3 — Develop property strategy and long term vision (2)
 - [S] h=856  REAL-EST → RE-CRE  `property.listed`  payload=real_estate_properties
@@ -360,7 +360,7 @@ Legend: [H] human_curated  [A] agent_curated  [O] discovery_override  [S] discov
 - [S] h=13  PA → SWP  `attrition.forecast_updated`  payload=workforce_plans
 
 ### 10197 L4 — Determine fulfillment process (2)
-- [S] h=503  B2C-COMM → ERP-FIN  `fulfillment.delivered`  payload=fulfillments
+- [S] h=503  B2C-COMM → FIN  `fulfillment.delivered`  payload=fulfillments
 - [S] h=505  B2C-COMM → LOYALTY  `fulfillment.delivered`  payload=fulfillments
 
 ### 12046 L4 — Perform root cause analysis (2)
@@ -376,12 +376,12 @@ Legend: [H] human_curated  [A] agent_curated  [O] discovery_override  [S] discov
 - [A] h=142  RMM → ITSM  `patch_job.scheduled`  payload=service_changes
 
 ### 20893 L4 — Plan and budget IT license usage volumes (2)
-- [S] h=925  PS-LIC → ERP-FIN  `license.issued`  payload=license_records
+- [S] h=925  PS-LIC → FIN  `license.issued`  payload=license_records
 - [S] h=35  SAM → ITSM  `license.expiry_warning`  payload=service_requests
 
 ### 20136 L4 — Perform variance analysis against forecasts and budgets (2)
 - [S] h=564  EPM → AUDIT  `variance_analysis.material_variance`  payload=variance_analyses
-- [S] h=563  EPM → ERP-FIN  `variance_analysis.material_variance`  payload=variance_analyses
+- [S] h=563  EPM → FIN  `variance_analysis.material_variance`  payload=variance_analyses
 
 ### 10931 L4 — Prepare tax returns (2)
 - [S] h=340  ACCT-PRACT-MGMT → AP-AUTO  `tax_return.filed`  payload=supplier_invoices
@@ -478,7 +478,7 @@ Legend: [H] human_curated  [A] agent_curated  [O] discovery_override  [S] discov
 - [S] h=68  CDP → CRM  `profile.lifecycle_changed`  payload=customers
 
 ### 10308 L4 — Schedule production orders and create lots (1)
-- [S] h=950  MFG-OPS → ERP-FIN  `production_order.completed`  payload=production_orders
+- [S] h=950  MFG-OPS → FIN  `production_order.completed`  payload=production_orders
 
 ### 10315 L4 — Plan for preventive maintenance (1)
 - [S] h=312  TELEMATICS → FLEET-MAINT  `preventive_maintenance.due`  payload=preventive_maintenance_schedules
@@ -514,13 +514,13 @@ Legend: [H] human_curated  [A] agent_curated  [O] discovery_override  [S] discov
 - [A] h=309  RE-CRE → CLM  `commercial_lease.executed`  payload=commercial_leases
 
 ### 10796 L4 — Transmit billing data to customers (1)
-- [A] h=518  CLM → ERP-FIN  `legal_contract.signed`  payload=legal_contracts
+- [A] h=518  CLM → FIN  `legal_contract.signed`  payload=legal_contracts
 
 ### 10823 L4 — Post and reconcile intercompany transactions (1)
-- [S] h=541  ERP-FIN → AUDIT  `intercompany.mismatch_detected`  payload=intercompany_transactions
+- [S] h=541  FIN → AUDIT  `intercompany.mismatch_detected`  payload=intercompany_transactions
 
 ### 10833 L4 — Calculate and record depreciation expense (1)
-- [S] h=540  ERP-FIN → EPM  `depreciation.posted`  payload=asset_depreciation_schedules
+- [S] h=540  FIN → EPM  `depreciation.posted`  payload=asset_depreciation_schedules
 
 ### 12878 L4 — Plan and manage meetings (1)
 - [S] h=206  SALES-ENG → CRM  `meeting.no_show`  payload=sales_activities

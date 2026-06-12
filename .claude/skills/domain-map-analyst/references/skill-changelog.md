@@ -496,6 +496,20 @@ The two changes are paired, not independent: Phase 0 prevents the failure at loa
 
 ---
 
+## 2026-06-11 - B15 (pattern flag on catalog/junction/computed): clear the flag, never reclassify
+
+**Context.** A new audit band B15 was added to catch the emitter's M6 contradiction: a `has_personal_content` / `has_submit_lock` / `has_single_approver` flag set on a `catalog` / `junction` / `computed` master. Its first-drafted Fix said "if the entity has a lifecycle it was mis-classified, reclass to `operational_workflow`." That contradicted Rule #12, whose lifecycle table names `offer_letter_templates` (catalog) and `talent_pool_memberships` (junction) as legitimate examples of those classes carrying a lifecycle. A catalog-wide sweep found 14 violating rows across 8 domains.
+
+**Decision.** The fix for a B15 violation is ALWAYS: clear the offending pattern flag(s) and keep `entity_type` unchanged. Never reclassify. A pattern flag is an operational-write override with no meaning on `catalog` / `junction` / `computed` (the emitter already suppresses it via M6), so on those classes the flag is a stray setting, not a signal about the class. Carrying a lifecycle does NOT promote an entity to `operational_workflow`: per Rule #12, config/definition entities (catalog) and qualifier-carrying links (junction) legitimately have lifecycles, and the approval gate is emitted from the lifecycle regardless of class.
+
+**Reasoning.** User's call (decision A over reclassify-B). These 14 are configuration data: an offer-letter form, a contract-clause library, a skill taxonomy, a certification definition. They legitimately have an approval workflow (draft to approved to published), and that workflow is preserved either way because the approve/retire gate is emitted from the lifecycle, not from the class. The class controls only base-write tier (`catalog` = `:admin`) and whether the pattern-flag overrides are allowed. For configuration data, admin-only base editing is correct, and who approves is handled by the lifecycle gate + RACI (the `single_approver` flag was a redundant second copy of RACI's single Accountable). Reclassifying would have flipped base writes `:admin` to `:manage`, handing managers edit rights on config data, and would have contradicted Rule #12. The 14 violations existed because the flags predate `entity_type` and were set before M6 / B13 / B15 existed.
+
+**Scope.** Catalog-wide. SKILL.md B15 Fix rewritten to drop the reclass case. 14 rows fixed via [.tmp_deploy/clear_b15_pattern_flags_2026_06_11.ts](../../../.tmp_deploy/clear_b15_pattern_flags_2026_06_11.ts); the catalog-wide B15 predicate now returns zero. Rule #12 is unchanged (this decision affirms it). Also wired B15, and the previously-unwired B14, into both audit manifests: SKILL.md in-scope list (`B11-B15`) and references/mass-audit-subagent-prompt.md (`B1-B15`).
+
+**Status.** active.
+
+---
+
 # Incidents
 
 Append one entry per occurrence. Used by SKILL.md Rule #15 — the agent MUST log here when notes have been written without user approval, AND revert the writes, AND propose a SKILL.md edit that removes whatever passage rationalized the violation.

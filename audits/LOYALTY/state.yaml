@@ -115,7 +115,7 @@ b1b:
       Zero outbound relationship rows mirroring the 4 outbound handoffs.
       Edges to author: loyalty_tiers <verb> CRM payload (handoff 231);
       loyalty_members <verb> MA payload (handoff 232); loyalty_transactions
-      <verb> ERP-FIN payload (handoff 497); redemption_transactions <verb>
+      <verb> FIN payload (handoff 497); redemption_transactions <verb>
       B2C-COMM payload (handoff 498). Final verbs reviewed by user.
     action: Phase-B loader, 4 edges, same shape as B1B-S6.
     blocked_by:
@@ -123,7 +123,7 @@ b1b:
     affected_handoffs:
       - {handoff_id: 231, direction: outbound, source_domain: LOYALTY, target_domain: CRM, trigger_event: "tier.upgraded", payload: loyalty_tiers, null_field: null}
       - {handoff_id: 232, direction: outbound, source_domain: LOYALTY, target_domain: MA, trigger_event: "member.lapsed", payload: loyalty_members, null_field: null}
-      - {handoff_id: 497, direction: outbound, source_domain: LOYALTY, target_domain: ERP-FIN, trigger_event: "loyalty_transaction.posted", payload: loyalty_transactions, null_field: null}
+      - {handoff_id: 497, direction: outbound, source_domain: LOYALTY, target_domain: FIN, trigger_event: "loyalty_transaction.posted", payload: loyalty_transactions, null_field: null}
       - {handoff_id: 498, direction: outbound, source_domain: LOYALTY, target_domain: B2C-COMM, trigger_event: "redemption_transaction.completed", payload: redemption_transactions, null_field: null}
 
   - id: B1B-S11

@@ -58,13 +58,13 @@ First catalog-wide b2 run after the mode was defined. Run via [scripts/analytics
 |---|---|---|
 | B10b.1 — NULL source_domain_module_id (source has modules) | 51 | 9 domains; SUB-MGMT (14), CSM (10), CPQ (9), HAM (6), RE-BROKERAGE (6) |
 | B10b.2 — NULL target_domain_module_id (target has modules) | 211 | 19 domains; ITSM (55), CSM (53), HCM (30), SUB-MGMT (14), PAYROLL (10), PA (8), FSM (7) |
-| B9 — trigger_event data_object not publishable from source | 702 | 106 domains; B2C-COMM (18), ERP-FIN (16), OMS (15), SPEND-MGMT (14), OBS (14), DCG (14) |
-| B8-rev — payload not touched by target | 838 | 102 domains; ERP-FIN (97), GRC (60), ITSM (58), CSM (46), HCM (35), AUDIT (32), AP-AUTO (20), EPM (20), S2P (17) |
+| B9 — trigger_event data_object not publishable from source | 702 | 106 domains; B2C-COMM (18), FIN (16), OMS (15), SPEND-MGMT (14), OBS (14), DCG (14) |
+| B8-rev — payload not touched by target | 838 | 102 domains; FIN (97), GRC (60), ITSM (58), CSM (46), HCM (35), AUDIT (32), AP-AUTO (20), EPM (20), S2P (17) |
 | Orphaned trigger_events | 273 | spread across data_objects with no lifecycle_state authored |
 
 ### Headline finding — Phase B never run on multiple domains
 
-Spot-check of ERP-FIN's 97 B8-rev defects revealed the underlying pattern: **ERP-FIN has 0 `domain_module_data_objects` rows** — Phase B was never run on it despite it being a heavy handoff target. Same pattern confirmed on **GRC (0 DMDO), AUDIT (0), AP-AUTO (0), EPM (0), S2P (0)** — 246 of the 838 B8-rev defects come from 6 domains where Phase B never landed at all. These are not 246 individual modeling gaps; they're 6 missing Phase B loads.
+Spot-check of FIN's 97 B8-rev defects revealed the underlying pattern: **FIN has 0 `domain_module_data_objects` rows** — Phase B was never run on it despite it being a heavy handoff target. Same pattern confirmed on **GRC (0 DMDO), AUDIT (0), AP-AUTO (0), EPM (0), S2P (0)** — 246 of the 838 B8-rev defects come from 6 domains where Phase B never landed at all. These are not 246 individual modeling gaps; they're 6 missing Phase B loads.
 
 Domains with partial DMDO data (ITSM 29, CSM 14, HCM 24) produce more granular per-handoff defects that are actionable as targeted fixes.
 
@@ -82,7 +82,7 @@ Untagged cross-domain handoffs: **1,005 / 1,164 (86%)**. Zero conflicts. Zero ap
 
 | Domain | B10b.1 | B10b.2 | B9 | B8-rev | Total | Recommended next |
 |---|---|---|---|---|---|---|
-| ERP-FIN | 0 | 0 | 16 | 97 | 113 | **Phase B (no DMDO data exists)** |
+| FIN | 0 | 0 | 16 | 97 | 113 | **Phase B (no DMDO data exists)** |
 | GRC | 0 | 0 | — | 60 | ≥60 | **Phase B (no DMDO data exists)** |
 | ITSM | 2 | 55 | — | 58 | ≥115 | b1 Validate (cleanup + extend) |
 | CSM | 10 | 53 | — | 46 | ≥109 | b1 Validate (cleanup + extend) |
@@ -98,13 +98,13 @@ Untagged cross-domain handoffs: **1,005 / 1,164 (86%)**. Zero conflicts. Zero ap
 ### User decisions
 
 - Queued for b1 Validate (per § "b1 sweep schedule" below): ITSM, CSM, HCM, SUB-MGMT, PAYROLL, CPQ
-- Queued for Phase B (Phase B never run): ERP-FIN, GRC, AUDIT, EPM, AP-AUTO, S2P
+- Queued for Phase B (Phase B never run): FIN, GRC, AUDIT, EPM, AP-AUTO, S2P
 - Deferred: B9 defects on remaining 100 domains pending sampling (likely a mix of real gaps and modeling-discipline drift)
 - Deferred: 273 orphaned trigger_events pending a cleanup-pass design (separate concern from b1)
 
 ### Defect-count sanity caveats
 
-- **B8-rev (838) and B9 (702) are heavily inflated by the no-DMDO domains.** ERP-FIN alone accounts for 97 of B8-rev. The "per-handoff" framing implies individual fixes; the truth is closer to "6 Phase B loads close 246 defects in one batch."
+- **B8-rev (838) and B9 (702) are heavily inflated by the no-DMDO domains.** FIN alone accounts for 97 of B8-rev. The "per-handoff" framing implies individual fixes; the truth is closer to "6 Phase B loads close 246 defects in one batch."
 - **B10b counts (262) are reliable.** Each is one mechanical PATCH via the [backfill_ats_handoff_modules_2026_05_23.ts](../scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts) pattern.
 - **Orphaned trigger_events (273) need a query-quality second pass** before treating as actionable. The relaxed v2 check still surfaces trigger_events whose data_objects are config-shaped (no workflow → no lifecycle_state, by Rule #12 exemption) — those are likely false positives.
 

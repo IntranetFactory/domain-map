@@ -33,7 +33,7 @@ These domains appear as heavy handoff targets but have **zero** `domain_module_d
 
 | # | Domain | B8-rev defects | Why Phase B never landed | Notes |
 |---|---|---|---|---|
-| 7 | ERP-FIN | 97 | Modules exist, no Phase B loaded against them | Heavy inbound from PLM, ITAM, OMS, PAYROLL, AP-AUTO, EXPENSE, SPEND-MGMT |
+| 7 | FIN | 97 | Modules exist, no Phase B loaded against them | Heavy inbound from PLM, ITAM, OMS, PAYROLL, AP-AUTO, EXPENSE, SPEND-MGMT |
 | 8 | GRC | 60 | — | Heavy inbound from regulators / risk events |
 | 9 | AUDIT | 32 | — | Closely coupled to GRC; load together |
 | 10 | EPM | 20 | Leadership-tier-style but with masters expected | See SKILL.md leadership-tier exemption test |
@@ -46,7 +46,7 @@ Expected combined closure: **~246 of the 838 B8-rev defects** plus the new outbo
 
 Run Queue A first (operations: known shape, fast).
 Run Queue B second, in clusters to amortize Phase 0 vendor research:
-- Cluster 1: ERP-FIN + EPM (Finance core)
+- Cluster 1: FIN + EPM (Finance core)
 - Cluster 2: GRC + AUDIT (compliance pair)
 - Cluster 3: AP-AUTO + S2P (procure-to-pay pair)
 

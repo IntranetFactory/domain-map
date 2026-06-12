@@ -130,7 +130,7 @@ b2:
     options:
       - "(a) Keep + reframe semantics: AP-side payable creation for IRS tax-filing fee or e-file vendor"
       - "(b) Rewire to a different trigger event such as a future tax_invoice.issued on acct_invoices (Bucket 3 entity)"
-      - "(c) Retarget from AP-AUTO to ERP-FIN if the intent is AR profile creation"
+      - "(c) Retarget from AP-AUTO to FIN if the intent is AR profile creation"
       - "(d) DELETE handoff 340 (mis-model, no legitimate consumer)"
     why: "Mis-modeled handoff payload; choice gates the right PCF cluster for B1B-APQC-WRONG-FIT row 340 (currently process 315 'Process accounts payable (AP)')."
     extra_dependent_findings: ["B1B-APQC-WRONG-FIT", "B1B-B10B-SOURCE-MODULES handoff 340 source-side", "B1B-B10B-TARGET-GRC-APAUTO handoff 340 target-side"]

@@ -38,8 +38,8 @@ Agent-curated proposals (load with `proposal_source='agent_curated'`, `record_st
 | ID | Handoff | Source -> Target | Trigger event | Payload | Proposed PCF | PCF id | Confidence |
 |---|---|---|---|---|---|---|---|
 | B1-H1 | 634 | ITAM-CONTRACTS -> GRC | `asset_contract.expired` | `asset_contracts` | Manage contracts | 807 (10291) | high |
-| B1-H2 | 635 | ITAM-CONTRACTS -> ERP-FIN | `asset_contract.renewed` | `asset_contracts` | Manage contracts | 807 (10291) | high |
-| B1-H3 | 632 | ITAM-LIFECYCLE -> ERP-FIN | `asset_lifecycle_event.recorded` | `asset_lifecycle_events` | Process and record fixed-asset adjustments, enhancements, revaluations, and transfers | 1390 (10831) | medium |
+| B1-H2 | 635 | ITAM-CONTRACTS -> FIN | `asset_contract.renewed` | `asset_contracts` | Manage contracts | 807 (10291) | high |
+| B1-H3 | 632 | ITAM-LIFECYCLE -> FIN | `asset_lifecycle_event.recorded` | `asset_lifecycle_events` | Process and record fixed-asset adjustments, enhancements, revaluations, and transfers | 1390 (10831) | medium |
 | B1-H4 | 633 (existing `discovery_substring` already proposed) | ITAM-LIFECYCLE -> HAM | `asset.retired_for_disposal` | `asset_lifecycle_events` | Process and record fixed-asset additions and retires | 1389 (10830) | high (more specific than the existing PCF 10) |
 | B1-H5 | 853 | APM -> ITAM-NORMALIZATION-CATALOG | `technology_platform.registered` | `technology_platforms` | Maintain IT asset records | 1312 (20918) | high |
 | B1-H6 | 462 | IGA -> ITAM-LIFECYCLE | `iga_provisioning_event.completed` | `iga_provisioning_events` | Manage asset resource deployment and utilization | 1335 (10781) | medium |
@@ -61,7 +61,7 @@ Deferred to Discover Pass 3 (no confident PCF match):
 5. **Permission verb override coverage.** Lifecycle states 277 (active) and 280 (terminated) on `asset_contracts` carry overrides `activate_contract` and `terminate_contract`. Both are clear. No question here for `asset_contracts`. But `asset_lifecycle_events` has zero lifecycle states (config-shape exemption). The B12 exemption is recorded only in `data_objects.notes` (B1-S3 already flags the notes issue). Question: do we positively confirm the config-shape exemption in this audit file (acceptable) instead of in `data_objects.notes` (Rule #15 violation)? Recommended answer: yes, exemption stands and lives in this audit going forward.
 6. **GDPR conditional applicability.** `domain_regulations` row marks GDPR conditional on ITAM. Asset records sometimes contain personal data (assigned-employee names, employee IDs, location of personal device). Question: is "conditional" the right value, or should the team upgrade to "mandatory" given that the typical EU deployment will trigger GDPR coverage on the embedded `users` edges and `hcm_positions` references? Tradeoff: tightening this propagates compliance signals through the catalog.
 7. **Cross-cutting capability candidates.** ITAM's 5 capabilities are all domain-prefixed (`ITAM-NORMALIZATION`, `ITAM-CONTRACT-MGMT`, `ITAM-LIFECYCLE-LOG`, `ITAM-TCO-REPORTING`, `ITAM-RECONCILIATION`). Two of these likely span >=3 sub-domains (HAM + SAM + SMP + FINOPS + EAM): `ITAM-NORMALIZATION` and `ITAM-RECONCILIATION` describe substrate behaviors the sub-domains share. Question: rename to domain-neutral `ASSET-NORMALIZATION` / `ASSET-RECONCILIATION` per the cross-cutting capability convention, and add `capability_domains` rows linking them to HAM, SAM, SMP, FINOPS, EAM?
-8. **Pairwise reconciliation scope.** ITAM has 9 cross-domain neighbors total, each at edge weight 1 or 2 (no neighbor reaches the >=3 threshold for deep dive). The pairwise pass below uses the one-line summary format. Question: does the user want a deep pairwise pass on any specific boundary anyway (`ITAM <-> ERP-FIN` for fixed-asset ledger, `ITAM <-> HAM` for the disposal handoff, `ITAM <-> ITSM` for incident-driven failure events)?
+8. **Pairwise reconciliation scope.** ITAM has 9 cross-domain neighbors total, each at edge weight 1 or 2 (no neighbor reaches the >=3 threshold for deep dive). The pairwise pass below uses the one-line summary format. Question: does the user want a deep pairwise pass on any specific boundary anyway (`ITAM <-> FIN` for fixed-asset ledger, `ITAM <-> HAM` for the disposal handoff, `ITAM <-> ITSM` for incident-driven failure events)?
 
 ### Bucket 3 Phase 0 pending (speculative)
 
@@ -96,7 +96,7 @@ Auto-derived from `handoffs` plus cross-domain `domain_module_data_objects` refe
 
 | Neighbor | Outbound handoffs | Inbound handoffs | DMDO cross-refs (consumer/embedded on neighbor's masters) | Edge weight |
 |---|---|---|---|---|
-| ERP-FIN | 2 (`asset_contract.renewed`, `asset_lifecycle_event.recorded`) | 0 | 0 | 2 |
+| FIN | 2 (`asset_contract.renewed`, `asset_lifecycle_event.recorded`) | 0 | 0 | 2 |
 | GRC | 1 (`asset_contract.expired`) | 0 | 0 | 1 |
 | HAM | 1 (`asset.retired_for_disposal`) | 0 | 0 | 1 |
 | KUBE-PLAT | 0 | 1 (`kubernetes_cluster.provisioned`) | 0 | 1 |
@@ -113,7 +113,7 @@ No neighbor reaches edge weight >=3. Per the per-domain audit recipe, lighter ne
 
 ### Pass 4 Pairwise reconciliation (abbreviated, edge weight < 3 for every neighbor)
 
-- **ITAM <-> ERP-FIN (weight 2):** Two outbound handoffs (renewals, lifecycle events). Both fully wired (`target_domain_module_id` populated). No consumer DMDO on ERP-FIN side declaring `asset_contracts` or `asset_lifecycle_events` (ERP-FIN consumes the events as ledger inputs; consumer DMDO rows on ERP-FIN's `fixed_asset_register` module would be the symmetric coverage). Report-only: **ERP-FIN B8 owed** on `asset_contracts -> ?_asset_register` and `asset_lifecycle_events -> ?_asset_register`.
+- **ITAM <-> FIN (weight 2):** Two outbound handoffs (renewals, lifecycle events). Both fully wired (`target_domain_module_id` populated). No consumer DMDO on FIN side declaring `asset_contracts` or `asset_lifecycle_events` (FIN consumes the events as ledger inputs; consumer DMDO rows on FIN's `fixed_asset_register` module would be the symmetric coverage). Report-only: **FIN B8 owed** on `asset_contracts -> ?_asset_register` and `asset_lifecycle_events -> ?_asset_register`.
 - **ITAM <-> HCM (weight 2):** Inbound `employee.terminated` -> `asset_lifecycle_events` (handoff 34) is fully wired and already tagged (PCF 20599). ITAM embeds `org_units` from HCM (id 34, optional). No outbound. Clean.
 - **ITAM <-> GRC (weight 1):** Outbound `asset_contract.expired` to GRC (no `target_domain_module_id`, see B10b note in Pass 1 summary: B10b actually passes here because the GRC module FK is fully resolved). Report-only: **GRC B8 owed** for the relationship row mirror.
 - **ITAM <-> HAM (weight 1):** Outbound `asset.retired_for_disposal` carries already-tagged PCF 19207 (improvable to 10830 per B1-H4). HAM-side consumer DMDO on `asset_lifecycle_events` would close the symmetric leg. Report-only: **HAM B8 / B10 owed** on the consumer DMDO row.
@@ -128,7 +128,7 @@ No neighbor reaches edge weight >=3. Per the per-domain audit recipe, lighter ne
 
 ### Report-only follow-ups (owed by other domains)
 
-- **ERP-FIN B8 owed:** consumer DMDO + relationship-row mirror for `asset_contracts -> ?_asset_register` and `asset_lifecycle_events -> ?_asset_register`. Reflects the two outbound handoffs ITAM publishes into ERP-FIN.
+- **FIN B8 owed:** consumer DMDO + relationship-row mirror for `asset_contracts -> ?_asset_register` and `asset_lifecycle_events -> ?_asset_register`. Reflects the two outbound handoffs ITAM publishes into FIN.
 - **GRC B8 owed:** consumer DMDO + relationship-row mirror for `asset_contracts -> ?_compliance_evidence` (`asset_contract.expired` outbound).
 - **HAM B8 / B10 owed:** consumer DMDO on `asset_lifecycle_events` for the disposal route (`asset.retired_for_disposal` outbound).
 - **S2P B5 owed:** modularize `purchase_orders` master into a real `domain_module_data_objects` row. Until then, ITAM-LIFECYCLE's `consumer + required` row points at a data_object with no module-level canonical owner.
@@ -149,8 +149,8 @@ Applied the technical subset of the 2026-05-30 Bucket 1 inventory via [.tmp_depl
 | B1-S2 | PATCH skill_tools | `id=1370` (skill 149, required) and `id=1383` (skill 150, optional) re-pointed from `send_email` (tool 37) to `notify_person` (tool 913). No pre-existing 913 row on either skill, so no DELETE needed. |
 | B1-S3 | PATCH notes='' | `data_objects.id=54` (`asset_contracts`) and `data_objects.id=55` (`asset_lifecycle_events`) reverted to `''`. Audit named the row ids; Rule #15 permits the revert. Config-shape exemption for `asset_lifecycle_events` and the submit-lock pattern reasoning for `asset_contracts` continue to live in this audit file, not in `data_objects.notes`. |
 | B1-H1 | INSERT handoff_processes | handoff 634 (ITAM-CONTRACTS to GRC, `asset_contract.expired`) tagged process 807 (PCF 10291 `Manage contracts`), `agent_curated`. |
-| B1-H2 | INSERT handoff_processes | handoff 635 (ITAM-CONTRACTS to ERP-FIN, `asset_contract.renewed`) tagged process 807 (PCF 10291), `agent_curated`. |
-| B1-H3 | INSERT handoff_processes | handoff 632 (ITAM-LIFECYCLE to ERP-FIN, `asset_lifecycle_event.recorded`) tagged process 1390 (PCF 10831 `Process and record fixed-asset adjustments, enhancements, revaluations, and transfers`), `agent_curated`. |
+| B1-H2 | INSERT handoff_processes | handoff 635 (ITAM-CONTRACTS to FIN, `asset_contract.renewed`) tagged process 807 (PCF 10291), `agent_curated`. |
+| B1-H3 | INSERT handoff_processes | handoff 632 (ITAM-LIFECYCLE to FIN, `asset_lifecycle_event.recorded`) tagged process 1390 (PCF 10831 `Process and record fixed-asset adjustments, enhancements, revaluations, and transfers`), `agent_curated`. |
 | B1-H4 | INSERT handoff_processes | handoff 633 (ITAM-LIFECYCLE to HAM, `asset.retired_for_disposal`) tagged process 1389 (PCF 10830 `Process and record fixed-asset additions and retires`), `agent_curated`. Coexists with the prior discovery_substring row pointing at process 10 (PCF 19207); user reconciles during review. |
 | B1-H5 | INSERT handoff_processes | handoff 853 (APM to ITAM-NORMALIZATION-CATALOG, `technology_platform.registered`) tagged process 1312 (PCF 20918 `Maintain IT asset records`), `agent_curated`. |
 | B1-H6 | INSERT handoff_processes | handoff 462 (IGA to ITAM-LIFECYCLE, `iga_provisioning_event.completed`) tagged process 1335 (PCF 10781 `Manage asset resource deployment and utilization`), `agent_curated`. |
@@ -201,7 +201,7 @@ Unchanged from 2026-05-30 audit. ITAM remains positioned as the umbrella domain 
 
 | ID | Band | Finding | Fix |
 |---|---|---|---|
-| B1-N1 | Rule #15 (`handoffs.notes`) | 8 cross-domain handoff rows carry forbidden "source/target NULL until X is modularized" annotations: ids 462, 632, 633, 634, 635, 645, 799, 853. The prior write-time license is RESCINDED. | PATCH `notes=''` on each. Track unmodularized counter-parties (GRC, ERP-FIN, HAM, IGA, RMM, KUBE-PLAT, APM) in the report-only follow-ups section, not in notes. |
+| B1-N1 | Rule #15 (`handoffs.notes`) | 8 cross-domain handoff rows carry forbidden "source/target NULL until X is modularized" annotations: ids 462, 632, 633, 634, 635, 645, 799, 853. The prior write-time license is RESCINDED. | PATCH `notes=''` on each. Track unmodularized counter-parties (GRC, FIN, HAM, IGA, RMM, KUBE-PLAT, APM) in the report-only follow-ups section, not in notes. |
 | B1-N2 | Rule #15 (`handoffs.notes`) | 4 intra-domain handoff rows (ids 1083, 1084, 1085, 1086) carry restated-schema notes ("Renewal generates renewed lifecycle events...", "Expiry marks support_expired lifecycle events...", "Recorded lifecycle events feed the portfolio TCO rollup."). These restate the trigger event + payload + module pair already in structured columns. | PATCH `notes=''` on each. The semantics already live in `trigger_event.description` and the DMDO master pair. |
 | B1-E1 | `trigger_events.event_category` | Events 613, 614, 615, 616 carry `event_category=''` (empty); event 1209 carries `state_change`. Per Rule #13 the enum is `lifecycle, state_change, threshold, signal`. All five are state changes on their masters. | PATCH `event_category='state_change'` on 613, 614, 615, 616. |
 | B1-S4 | `domains.business_logic` em-dash + British spelling (carried) | ITAM row 3 `business_logic` still contains a U+2014 em-dash and "Normalisation" (British). Project rules forbid em-dashes and require American English. | PATCH to "Normalization tables (the same hardware/software model expressed inconsistently across feeds) are the small irreducible kernel, they require maintained reference data, not a runtime engine." Requires user OK on the exact wording before write. |
@@ -251,7 +251,7 @@ Carried verbatim from 2026-05-30. No new candidates this run. Rows 3 and 4 depen
 
 ### Report-only follow-ups (owed by other domains, carried)
 
-- ERP-FIN B8 owed: consumer DMDO + relationship mirror for `asset_contracts -> ?_asset_register` and `asset_lifecycle_events -> ?_asset_register`.
+- FIN B8 owed: consumer DMDO + relationship mirror for `asset_contracts -> ?_asset_register` and `asset_lifecycle_events -> ?_asset_register`.
 - GRC B8 owed: consumer DMDO + relationship mirror for `asset_contracts -> ?_compliance_evidence`.
 - HAM B8 + B10 owed: consumer DMDO on `asset_lifecycle_events` for the disposal route.
 - S2P B5 owed: modularize `purchase_orders` (73) master into a `domain_module_data_objects` row.
@@ -337,7 +337,7 @@ per-domain-skill model (skill_tools dropped, see 2026-06-06 supersession header)
 
 ### Report-only follow-ups (owed by other domains, carried)
 
-- ERP-FIN B8: consumer DMDO + relationship mirror for `asset_contracts` / `asset_lifecycle_events` into the fixed-asset register (reflects outbound handoffs 632, 635).
+- FIN B8: consumer DMDO + relationship mirror for `asset_contracts` / `asset_lifecycle_events` into the fixed-asset register (reflects outbound handoffs 632, 635).
 - GRC B8: consumer DMDO + relationship mirror for `asset_contracts` (outbound 634 `asset_contract.expired`).
 - HAM B8 / B10: consumer DMDO on `asset_lifecycle_events` for the disposal route (outbound 633).
 - S2P B5: modularize `purchase_orders` (73) master into a `domain_module_data_objects` row (B2-S2P-PO).

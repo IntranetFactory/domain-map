@@ -126,7 +126,7 @@ the bottom are the resolved history.
   - 2026-05-30 INV-MGMT audit 2026-05-30
   - 2026-05-30 OMS audit 2026-05-30
 - **Vendor evidence:** Manhattan WMS, Blue Yonder WMS, Korber One Warehouse, Softeon WMS, HighJump, Logiwa
-- **Adjacency:** INV-MGMT, OMS, SCP, ERP-FIN
+- **Adjacency:** INV-MGMT, OMS, SCP, FIN
 - **Candidate capabilities:** picking, packing, slotting, wave planning, RF / scanner workflows, location-grain stock movement, bin management
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -140,7 +140,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 INV-MGMT audit 2026-05-30
 - **Vendor evidence:** o9, Kinaxis, Anaplan SCP, Blue Yonder Demand, Logility, ToolsGroup
-- **Adjacency:** INV-MGMT, SUPPLY-CHAIN, MFG, ERP-FIN
+- **Adjacency:** INV-MGMT, SUPPLY-CHAIN, MFG, FIN
 - **Candidate capabilities:** demand forecasting, S&OP, MRP-light, inventory optimization, supply planning
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -170,7 +170,7 @@ the bottom are the resolved history.
   - 2026-05-30 SPEND-MGMT audit 2026-05-30
   - 2026-05-30 EXPENSE audit 2026-05-30
 - **Vendor evidence:** Marqeta, Stripe Issuing, Highnote, Lithic, Adyen Issuing
-- **Adjacency:** SPEND-MGMT, ERP-FIN, AP-AUTO
+- **Adjacency:** SPEND-MGMT, FIN, AP-AUTO
 - **Candidate capabilities:** card BIN sponsorship, KYB underwriting, card-program ledger, dispute and chargeback handling, statement generation, interchange revenue tracking
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -198,7 +198,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 SUB-MGMT audit 2026-05-30
 - **Vendor evidence:** Avalara, Vertex, Sovos, TaxJar, Anrok, Stripe Tax
-- **Adjacency:** SUB-MGMT, ERP-FIN, B2C-COMM, CPQ
+- **Adjacency:** SUB-MGMT, FIN, B2C-COMM, CPQ
 - **Candidate capabilities:** real-time tax determination, nexus tracking, tax exemption certificates, jurisdictional filing, VAT/GST registration, marketplace facilitator compliance
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -212,7 +212,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 SUB-MGMT audit 2026-05-30
 - **Vendor evidence:** Stripe Payments, Adyen, Braintree, Worldpay, Spreedly, Primer
-- **Adjacency:** SUB-MGMT, B2C-COMM, ERP-FIN, AP-AUTO
+- **Adjacency:** SUB-MGMT, B2C-COMM, FIN, AP-AUTO
 - **Candidate capabilities:** card vaulting and tokenization, payment method routing, 3DS authentication orchestration, dispute and chargeback management, alternative payment methods, smart routing
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -226,7 +226,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 CPQ audit 2026-05-30
 - **Vendor evidence:** Pricefx, PROS Pricing, Vendavo Pricing, Zilliant, Competera
-- **Adjacency:** CPQ, ERP-FIN, PIM, REV-INTEL
+- **Adjacency:** CPQ, FIN, PIM, REV-INTEL
 - **Candidate capabilities:** AI price optimization, price waterfall analysis, deal scoring, segmentation pricing, list-price management, margin analytics
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -240,7 +240,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 SUB-MGMT audit 2026-05-30
 - **Vendor evidence:** Maxio SaaSOptics, Sage Intacct ARC, Leeyo (Zuora RevPro), RightRev, Trullion
-- **Adjacency:** SUB-MGMT, ERP-FIN, CPQ, AUDIT
+- **Adjacency:** SUB-MGMT, FIN, CPQ, AUDIT
 - **Candidate capabilities:** performance obligation modeling, transaction price allocation, contract modification accounting, standalone selling price (SSP) estimation, deferred revenue waterfall, RevRec audit trails
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -254,7 +254,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 CPQ audit 2026-05-30
 - **Vendor evidence:** Salesforce B2B Commerce Cloud, Adobe Commerce, BigCommerce B2B, OroCommerce, SAP Commerce Cloud
-- **Adjacency:** CPQ, OMS, PIM, ERP-FIN, SUB-MGMT
+- **Adjacency:** CPQ, OMS, PIM, FIN, SUB-MGMT
 - **Candidate capabilities:** buyer self-serve catalog, customer-specific pricing storefronts, punchout catalogs, self-serve quote-to-order, account hierarchies in storefront
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -382,7 +382,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 MDM audit 2026-05-30
 - **Vendor evidence:** Semarchy xDM, TIBCO EBX, Stibo Reference Data, Collibra Reference Data, Informatica Reference Data Management
-- **Adjacency:** MDM, DCG, ERP-FIN, DATA-AI-PLAT
+- **Adjacency:** MDM, DCG, FIN, DATA-AI-PLAT
 - **Candidate capabilities:** code list management, hierarchy management, cross-reference mapping, jurisdictional code sets, controlled vocabularies, currency codes, country codes, GL accounts as reference data
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -396,7 +396,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 AGENCY-MGMT audit 2026-05-30
 - **Vendor evidence:** Mediaocean Spectra/Prisma, Smartly.io, Basis Technologies, AdSwerve, Centro Basis
-- **Adjacency:** AGENCY-MGMT, ADV-AD-TECH, ERP-FIN
+- **Adjacency:** AGENCY-MGMT, ADV-AD-TECH, FIN
 - **Candidate capabilities:** media plan authoring, insertion order issuance, broadcast and digital placement, commission and markup billing, reconciliation against vendor invoices, post-buy reporting
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -410,7 +410,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 FSM audit 2026-05-30
 - **Vendor evidence:** ServiceTitan, Housecall Pro, Workiz, Jobber, FieldEdge, BigChange
-- **Adjacency:** FSM, CRM, ERP-FIN
+- **Adjacency:** FSM, CRM, FIN
 - **Candidate capabilities:** vertical home-services workflows, residential dispatch, consumer-grade invoicing, membership programs, on-site payment capture, lead generation tie-ins
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -569,7 +569,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 RMM audit 2026-05-30
 - **Vendor evidence:** ConnectWise Manage Billing, Kaseya BMS, Autotask PSA Billing, SuperOps Billing, HaloPSA
-- **Adjacency:** RMM, MSP-PSA, SUB-MGMT, ERP-FIN
+- **Adjacency:** RMM, MSP-PSA, SUB-MGMT, FIN
 - **Candidate capabilities:** per-endpoint usage metering, multi-tenant customer billing, contract-anchored quoting, automated invoicing
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -773,7 +773,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 EPM audit 2026-05-30
 - **Vendor evidence:** BlackLine, FloQast, Trintech Cadency, Numeric, Numeral
-- **Adjacency:** ERP-FIN, EPM, AUDIT
+- **Adjacency:** FIN, EPM, AUDIT
 - **Candidate capabilities:** balance sheet reconciliation, journal entry workflow, close task management, intercompany matching, flux analysis, certifications and attestations
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -788,7 +788,7 @@ the bottom are the resolved history.
   - 2026-05-30 EPM audit 2026-05-30
   - 2026-05-30 AP-AUTO audit 2026-05-30
 - **Vendor evidence:** Kyriba, GTreasury, FIS Quantum, ION Treasury, Coupa Treasury
-- **Adjacency:** ERP-FIN, EPM, SPEND-MGMT, AP-AUTO
+- **Adjacency:** FIN, EPM, SPEND-MGMT, AP-AUTO
 - **Candidate capabilities:** cash positioning and forecasting, in-house banking, bank account management, payment factory, FX hedging, debt and investment management, intercompany netting
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -802,7 +802,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 EPM audit 2026-05-30
 - **Vendor evidence:** Thomson Reuters ONESOURCE Tax Provision, Vertex Tax Provision, Wolters Kluwer CCH Tagetik, Longview Tax, Bloomberg Tax Provision
-- **Adjacency:** ERP-FIN, EPM, AUDIT
+- **Adjacency:** FIN, EPM, AUDIT
 - **Candidate capabilities:** ASC 740 income tax provision, deferred tax calculation, effective tax rate analysis, return to provision reconciliation, multi-jurisdictional tax disclosures, transfer pricing documentation
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -816,7 +816,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 EPM audit 2026-05-30
 - **Vendor evidence:** OneStream Financial Close, Oracle FCCS, SAP Group Reporting, Wolters Kluwer CCH Tagetik Consolidation, BlackLine Smart Close
-- **Adjacency:** ERP-FIN, EPM, AUDIT, ESG
+- **Adjacency:** FIN, EPM, AUDIT, ESG
 - **Candidate capabilities:** multi-entity consolidation, intercompany elimination, currency translation, minority interest accounting, regulatory consolidated reporting, IFRS and GAAP reporting, segment reporting
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -1129,7 +1129,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 EPM audit 2026-05-30
 - **Vendor evidence:** Oracle PCMCS, SAP Profitability and Performance Management, OneStream PCM, Anaplan Profitability, IBM Cognos Cost Allocation
-- **Adjacency:** EPM, ERP-FIN, FINOPS
+- **Adjacency:** EPM, FIN, FINOPS
 - **Candidate capabilities:** activity-based costing, profitability allocation, cost driver modeling, customer and product profitability analysis, transfer pricing allocation, multi-step allocations
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -1143,7 +1143,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 EPM audit 2026-05-30
 - **Vendor evidence:** Workiva, CCH Tagetik Disclosure, Certent CDM, IRIS CARBON, Toppan Merrill DisclosureNet
-- **Adjacency:** EPM, ERP-FIN, AUDIT, ESG
+- **Adjacency:** EPM, FIN, AUDIT, ESG
 - **Candidate capabilities:** narrative report authoring, XBRL tagging, statutory filing preparation, ESEF iXBRL submission, board-pack assembly, controlled narrative versioning
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -1411,7 +1411,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 FUND-ADMIN audit 2026-05-30
 - **Vendor evidence:** Allvue Loan Admin, SS&C Precision LM, Cloudmargin, Black Mountain BMS-WSO, Solvas
-- **Adjacency:** FUND-ADMIN, ERP-FIN
+- **Adjacency:** FUND-ADMIN, FIN
 - **Candidate capabilities:** loan-level cash management, agent notices, covenant tracking, syndicated-loan position keeping, secondary trade settlement
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -1425,7 +1425,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 FUND-ADMIN audit 2026-05-30
 - **Vendor evidence:** Carta GP Books, Allvue GP Admin, AlterDomus, SS&C GlobeOp
-- **Adjacency:** FUND-ADMIN, ERP-FIN
+- **Adjacency:** FUND-ADMIN, FIN
 - **Candidate capabilities:** GP entity books, management-fee tracking, carry allocation between partners, employee profit-sharing, GP cap-table
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -1467,7 +1467,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 OMS audit 2026-05-30
 - **Vendor evidence:** Loop Returns, Happy Returns, Narvar Return and Exchange, AfterShip Returns, ReturnGO, Returnly
-- **Adjacency:** OMS, B2C-COMM, CSM, ERP-FIN
+- **Adjacency:** OMS, B2C-COMM, CSM, FIN
 - **Candidate capabilities:** self-serve return portal, return reason capture, exchange-first incentives, return label generation, in-store and 3PL drop-off network, refund and exchange orchestration, instant credit, return fraud scoring
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -1481,7 +1481,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 OMS audit 2026-05-30
 - **Vendor evidence:** ShipStation, ShipEngine, EasyPost, Shippo, Sendcloud, Stamps.com, ProShip, Logistyx, ShipperHQ
-- **Adjacency:** OMS, B2C-COMM, INV-MGMT, ERP-FIN
+- **Adjacency:** OMS, B2C-COMM, INV-MGMT, FIN
 - **Candidate capabilities:** multi-carrier rate-shop, label printing, manifesting, tracking number normalization, address validation, customs documentation, parcel insurance, branded tracking pages, carrier contract abstraction
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -1635,7 +1635,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 FLEET-MGMT audit 2026-05-30
 - **Vendor evidence:** Cass Information Systems, U.S. Bank Freight Payment, A3 Freight Payment, Trax Technologies, Transporeon
-- **Adjacency:** FLEET-MGMT, TMS, S2P, ERP-FIN
+- **Adjacency:** FLEET-MGMT, TMS, S2P, FIN
 - **Candidate capabilities:** invoice receipt and matching, carrier rate validation, payment processing, GL coding by lane, dispute management
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -1691,7 +1691,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 RE-PROP-MGMT audit 2026-05-30
 - **Vendor evidence:** FrontSteps, AppFolio Condo, CINC Systems, Buildium Association, PayHOA, Vantaca
-- **Adjacency:** RE-PROP-MGMT, ERP-FIN, LSD
+- **Adjacency:** RE-PROP-MGMT, FIN, LSD
 - **Candidate capabilities:** owner-roster management, board governance, architectural review, dues collection, reserve studies, violation tracking, community communications
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -1915,7 +1915,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 RE-INVEST audit 2026-05-30
 - **Vendor evidence:** Ryan, Avalara Property Tax, Crowdreason, PTMS, Rethink Solutions, Tax Compliance Inc
-- **Adjacency:** RE-INVEST, REAL-EST, RE-CRE, ERP-FIN
+- **Adjacency:** RE-INVEST, REAL-EST, RE-CRE, FIN
 - **Candidate capabilities:** tax assessment intake, appeal case management, jurisdictional filing, tax bill payment workflow, tax obligation forecasting, parcel-level tracking
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -1929,7 +1929,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 RE-INVEST audit 2026-05-30
 - **Vendor evidence:** Northspyre, Procore Financials, Yardi Construction, Rabbet, Built Technologies
-- **Adjacency:** RE-INVEST, REAL-EST, RE-CRE, CONSTR-MGMT, ERP-FIN
+- **Adjacency:** RE-INVEST, REAL-EST, RE-CRE, CONSTR-MGMT, FIN
 - **Candidate capabilities:** construction budget tracking, draw request workflow, lien waiver collection, change order accounting, lender disbursement reconciliation, development pro-forma management
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -1943,7 +1943,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 INS-CLAIMS audit 2026-05-30
 - **Vendor evidence:** Guidewire PolicyCenter, Duck Creek Policy, Sapiens IDIT Policy, Insurity, EIS Group
-- **Adjacency:** INS-CLAIMS, ERP-FIN, CSM
+- **Adjacency:** INS-CLAIMS, FIN, CSM
 - **Candidate capabilities:** policy issuance, endorsement processing, policy renewal, premium calculation, policy lifecycle workflow, agent/broker channel, party and producer management
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -1999,7 +1999,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 INS-CLAIMS audit 2026-05-30
 - **Vendor evidence:** Guidewire BillingCenter, Duck Creek Billing, Sapiens BillingPro, Majesco Billing, Insurity Billing
-- **Adjacency:** INS-POLICY-ADMIN, INS-CLAIMS, ERP-FIN
+- **Adjacency:** INS-POLICY-ADMIN, INS-CLAIMS, FIN
 - **Candidate capabilities:** premium invoicing, installment plans, lockbox processing, agency commission accounting, NSF and reinstatement handling, premium-trust accounting, cash application
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -2013,7 +2013,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 INS-CLAIMS audit 2026-05-30
 - **Vendor evidence:** Guidewire ReinsuranceManager, Sapiens ReinsurancePro, SAP Reinsurance Management, Verisk SequelDirect, Tigerlab
-- **Adjacency:** INS-CLAIMS, INS-UNDERWRITING, ERP-FIN
+- **Adjacency:** INS-CLAIMS, INS-UNDERWRITING, FIN
 - **Candidate capabilities:** treaty and facultative tracking, cession allocation, retrocession, reinsurance claims recovery, bordereau reporting, ceded premium accounting
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -2225,7 +2225,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 BANK-OPS audit 2026-05-30
 - **Vendor evidence:** Modern Treasury, Orum, Stripe Treasury, Treasury Prime, Sila, Volopa
-- **Adjacency:** BANK-OPS, S2P, ERP-FIN, ECOM
+- **Adjacency:** BANK-OPS, S2P, FIN, ECOM
 - **Candidate capabilities:** payment orchestration, ledger reconciliation, multi-rail routing, payment scheduling, beneficiary management
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -2295,7 +2295,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 BANK-OPS audit 2026-05-30
 - **Vendor evidence:** Mambu, Thought Machine, 10x Banking, Temenos, FIS Core, Finastra, Jack Henry, Fiserv DNA
-- **Adjacency:** BANK-OPS, ERP-FIN, PAYMENT-OPS
+- **Adjacency:** BANK-OPS, FIN, PAYMENT-OPS
 - **Candidate capabilities:** deposit ledger, loan ledger, product configuration, interest accrual, statement generation
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -2395,7 +2395,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 TELCO-BSS audit 2026-05-30
 - **Vendor evidence:** Subex HyperSense, Mobileum (WeDo), Araxxe, Neural Technologies
-- **Adjacency:** TELCO-BSS, ERP-FIN, GRC
+- **Adjacency:** TELCO-BSS, FIN, GRC
 - **Candidate capabilities:** revenue leakage detection, fraud case management, usage reconciliation, CDR audit, interconnect billing assurance
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -2423,7 +2423,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 UTIL-OPS audit 2026-05-30
 - **Vendor evidence:** Oracle Utilities Customer Care and Billing, SAP IS-U, Itineris UMAX, Gentrack Velocity, Hansen CC&B
-- **Adjacency:** UTIL-OPS, CRM, ERP-FIN
+- **Adjacency:** UTIL-OPS, CRM, FIN
 - **Candidate capabilities:** service activation, rate schedules, billing determinants, customer move-in move-out, payment posting, credit and collections, customer self-service portal
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -2521,7 +2521,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 PS-LIC audit 2026-05-30
 - **Vendor evidence:** Submittable, Fluxx, eCivis (Euna), SmartSimple, GrantHub
-- **Adjacency:** PS-LIC, ERP-FIN, GRC
+- **Adjacency:** PS-LIC, FIN, GRC
 - **Candidate capabilities:** grant solicitation, application intake, reviewer scoring, award disbursement, recipient compliance reporting, federal grant pass-through tracking
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -2888,7 +2888,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 HC-PATIENT audit 2026-05-30
 - **Vendor evidence:** Waystar, R1 RCM, Optum, Change Healthcare, Experian Health, FinThrive
-- **Adjacency:** HC-PATIENT, EHR, ERP-FIN, HC-PAYER
+- **Adjacency:** HC-PATIENT, EHR, FIN, HC-PAYER
 - **Candidate capabilities:** patient eligibility verification, prior authorization, charge capture, claims submission, denial management, patient billing, payment posting
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -2986,7 +2986,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 ITOM audit 2026-05-30
 - **Vendor evidence:** BMC Control-M, Broadcom AutoSys, Tidal, Stonebranch UAC, Redwood RunMyJobs, IBM Workload Scheduler
-- **Adjacency:** ITOM, ERP-FIN, DATA-AI-PLAT, S2P
+- **Adjacency:** ITOM, FIN, DATA-AI-PLAT, S2P
 - **Candidate capabilities:** job definition, calendar scheduling, cross-system orchestration, SLA-based job monitoring, batch dependency management
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
@@ -3252,7 +3252,7 @@ the bottom are the resolved history.
 - **Surfaced by:**
   - 2026-05-30 FINOPS audit 2026-05-30
 - **Vendor evidence:** ProsperOps, ZestyCloud, Spot by NetApp, Archera
-- **Adjacency:** FINOPS, ITAM, ERP-FIN
+- **Adjacency:** FINOPS, ITAM, FIN
 - **Candidate capabilities:** Reserved Instance management, Savings Plan optimization, algorithmic commitment ladder, commitment-savings attribution, autonomous commitment management
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review

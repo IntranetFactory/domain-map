@@ -133,7 +133,7 @@ a13:
 
 q14: Two cross-domain handoffs show up in the flagship set but are not wired: stock-based-comp expense pushed to the general ledger on asc718_expense_period.closed, and e-signature records flowing back for grant acceptance and board consents. Should I add them? (yes/no)
 
-Recommended: yes, pending a quick check of the partner domains (ERP-FIN and ESIGN). Additive and non-blocking.
+Recommended: yes, pending a quick check of the partner domains (FIN and ESIGN). Additive and non-blocking.
 
 a14:
 

@@ -55,10 +55,10 @@ b1b:
       - {handoff_id: 347, direction: outbound, source_domain: S2P, target_domain: AGENCY-MGMT, trigger_event: "vendor_invoice.received", payload: contingent_invoices, null_field: source_domain_module_id}
       - {handoff_id: 565, direction: outbound, source_domain: S2P, target_domain: SUP-LIFE, trigger_event: "sourcing_event.awarded", payload: sourcing_events, null_field: source_domain_module_id}
       - {handoff_id: 581, direction: outbound, source_domain: S2P, target_domain: AP-AUTO, trigger_event: "purchase_order.issued", payload: purchase_orders, null_field: source_domain_module_id}
-      - {handoff_id: 582, direction: outbound, source_domain: S2P, target_domain: ERP-FIN, trigger_event: "purchase_order.issued", payload: purchase_orders, null_field: source_domain_module_id}
+      - {handoff_id: 582, direction: outbound, source_domain: S2P, target_domain: FIN, trigger_event: "purchase_order.issued", payload: purchase_orders, null_field: source_domain_module_id}
       - {handoff_id: 583, direction: outbound, source_domain: S2P, target_domain: AP-AUTO, trigger_event: "purchase_order.changed", payload: purchase_orders, null_field: source_domain_module_id}
       - {handoff_id: 584, direction: outbound, source_domain: S2P, target_domain: AP-AUTO, trigger_event: "goods_receipt.posted", payload: goods_receipts, null_field: source_domain_module_id}
-      - {handoff_id: 585, direction: outbound, source_domain: S2P, target_domain: ERP-FIN, trigger_event: "goods_receipt.posted", payload: goods_receipts, null_field: source_domain_module_id}
+      - {handoff_id: 585, direction: outbound, source_domain: S2P, target_domain: FIN, trigger_event: "goods_receipt.posted", payload: goods_receipts, null_field: source_domain_module_id}
       - {handoff_id: 586, direction: outbound, source_domain: S2P, target_domain: SUP-LIFE, trigger_event: "goods_receipt.quantity_variance", payload: goods_receipts, null_field: source_domain_module_id}
       - {handoff_id: 602, direction: outbound, source_domain: S2P, target_domain: CLM, trigger_event: "sourcing_event.awarded", payload: sourcing_events, null_field: source_domain_module_id}
       - {handoff_id: 40, direction: outbound, source_domain: S2P, target_domain: CLM, trigger_event: "legal_contract.purchase_creation", payload: legal_contracts, null_field: source_domain_module_id}
