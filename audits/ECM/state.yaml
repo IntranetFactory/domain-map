@@ -11,92 +11,17 @@
 schema_version: 2
 domain: ECM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-06"
+next_action_by: user
+last_audit: "2026-06-13"
 
-# b1a fully cleared on 2026-06-06 (see history.md "2026-06-06 - b1a execution"):
-#   B1A-S9               DONE - 6 trigger_events.event_category "" -> state_change (895-899, 901).
-#   B1A-F2-SYSTEM-SKILLS DONE - 3 module system skills (389/390/391) + 7 mutate tools (1788-1794)
-#                               + 16 skill_tools; reused query tools 436-440 and notify_person 913.
-#   B1A-M8-MODULE-UX     DONE - catalog_tagline + catalog_description written on 242/243/244
-#                               (empty-guard; all 6 fields were empty).
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+# b1a fully cleared. See history.md for the 2026-06-06 and 2026-06-13 execution notes.
+# 2026-06-13 agent pass cleared: B1A-B9D-VERIFY (B9d run both directions via b9d_resolver),
+#   B1B-L1/L2/L5 (lifecycle states on 429/430/433), B1B-B1 (8 outbound source FKs),
+#   B1B-F1 (moot: per-module-skill grain retired; id 54 is the correct domain-grain skill),
+#   B2-CATALOG-UX (A4 written straight per Rule #20), B13 (entity_type on all 5 masters).
+b1a: []
 
 b1b:
-  - id: B1B-L1
-    summary: "Load `content_documents` lifecycle states (5 states + workflow gates) now that modules exist."
-    finding: >-
-      `/data_object_lifecycle_states?data_object_id=eq.429` returns zero rows. Per Rule #12
-      every `master + required` data_object with a real workflow loads its state machine. The
-      `requires_permission` states need a `domain_module_id`, which now exists:
-      `content_documents` is mastered by ECM-REPOSITORY (id 242). Out of scope for the
-      modules-only 2026-06-02 pass (creating lifecycle states); now unblocked for the next pass.
-    action: >-
-      INSERT lifecycle states for id 429: `draft` (initial),
-      `in_review` (`requires_permission`, override `review_content_document`),
-      `published` (`requires_permission`, `publish_content_document`),
-      `superseded` (terminal), `under_legal_hold` (branch from event 900),
-      `archived` (terminal). Set `domain_module_id=242` on the permission-gated states.
-    blocked_by:
-      - {type: depends_on, ref: "next audit pass", reason: "modules-only scope on 2026-06-02 did not author lifecycle states; modules now exist as FK target"}
-    affected_masters:
-      - {data_object_id: 429, name: content_documents, target_module_id: 242, workflow: "draft -> in_review -> published -> superseded; branch -> under_legal_hold; terminal -> archived"}
-
-  - id: B1B-L2
-    summary: "Load `document_versions` lifecycle states (2-state minimum)."
-    finding: >-
-      `/data_object_lifecycle_states?data_object_id=eq.430` returns zero rows.
-      `document_versions` is mastered by ECM-REPOSITORY (id 242).
-    action: >-
-      INSERT states for id 430: `draft` (initial), `published` (terminal). Optional
-      `withdrawn` (terminal) if a version-withdraw workflow is needed.
-    blocked_by:
-      - {type: depends_on, ref: "next audit pass", reason: "lifecycle states out of modules-only scope"}
-    affected_masters:
-      - {data_object_id: 430, name: document_versions, target_module_id: 242, workflow: "draft -> published; optional -> withdrawn"}
-
-  - id: B1B-L5
-    summary: "Load `records_retention_policies` lifecycle states (4-state minimum)."
-    finding: >-
-      `/data_object_lifecycle_states?data_object_id=eq.433` returns zero rows.
-      `records_retention_policies` is mastered by ECM-RECORDS-GOV (id 243).
-    action: >-
-      INSERT states for id 433: `draft` (initial), `under_review` (optional),
-      `active` (`requires_permission`, override `activate_retention_policy`),
-      `superseded` (terminal), `retired` (terminal). Set `domain_module_id=243` on the gate.
-    blocked_by:
-      - {type: depends_on, ref: "next audit pass", reason: "lifecycle states out of modules-only scope"}
-    affected_masters:
-      - {data_object_id: 433, name: records_retention_policies, target_module_id: 243, workflow: "draft -> under_review -> active -> superseded; terminal -> retired"}
-
-  - id: B1B-B1
-    summary: "Backfill `source_domain_module_id` on 8 outbound ECM handoffs now that modules exist."
-    finding: >-
-      All 8 outbound ECM handoffs (821, 822, 823, 839, 824, 825, 826, 827) have
-      `source_domain_module_id=null`. The source module is the ECM module that masters the
-      trigger event's `data_object_id`: documents / versions / folders / classifications ->
-      ECM-REPOSITORY (242); retention -> ECM-RECORDS-GOV (243). Out of scope for the
-      modules-only pass (PATCHes handoffs); now unblocked.
-    action: >-
-      PATCH each row to the realising ECM module per the master-resolution rule
-      (`master` > `embedded_master` > `contributor` > `consumer` > `derived`). Use the loader
-      pattern from `scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts`.
-    blocked_by:
-      - {type: depends_on, ref: "next audit pass", reason: "handoff backfill out of modules-only scope"}
-    affected_handoffs:
-      - {handoff_id: 821, direction: outbound, source_domain: ECM, target_domain: DLP, trigger_event: "content_document.uploaded", payload: content_documents, null_field: source_domain_module_id}
-      - {handoff_id: 822, direction: outbound, source_domain: ECM, target_domain: DLP, trigger_event: "document.classified", payload: document_classifications, null_field: source_domain_module_id}
-      - {handoff_id: 823, direction: outbound, source_domain: ECM, target_domain: IGA, trigger_event: "document_folder.permissions_changed", payload: document_folders, null_field: source_domain_module_id}
-      - {handoff_id: 839, direction: outbound, source_domain: ECM, target_domain: IGA, trigger_event: "document.classified", payload: content_documents, null_field: source_domain_module_id}
-      - {handoff_id: 824, direction: outbound, source_domain: ECM, target_domain: LSD, trigger_event: "content_document.legal_hold_applied", payload: content_documents, null_field: source_domain_module_id}
-      - {handoff_id: 825, direction: outbound, source_domain: ECM, target_domain: AUDIT, trigger_event: "document.retention_expired", payload: records_retention_policies, null_field: source_domain_module_id}
-      - {handoff_id: 826, direction: outbound, source_domain: ECM, target_domain: KMS, trigger_event: "document.version_published", payload: document_versions, null_field: source_domain_module_id}
-      - {handoff_id: 827, direction: outbound, source_domain: ECM, target_domain: GRC, trigger_event: "document.classified", payload: document_classifications, null_field: source_domain_module_id}
-
   - id: B1B-B3
     summary: "Backfill `target_domain_module_id` on 10 inbound ECM handoffs now that modules exist."
     finding: >-
@@ -106,11 +31,16 @@ b1b:
       `content_documents` (ECM-REPOSITORY, 242); retention / records context resolves against
       ECM-RECORDS-GOV (243). Out of scope for the modules-only pass; now unblocked.
     action: >-
-      PATCH each row per the consumer-DMDO resolution rule. Note the inbound payloads
-      (extracted_records, legal_holds, ediscovery_requests, etc.) are foreign-domain masters;
-      resolve to the ECM consumer/derived row that ingests them.
+      Each inbound payload is a FOREIGN-domain master that no ECM module declares any
+      `domain_module_data_objects` role on (verified live 2026-06-13: zero ECM DMDO rows for
+      data_objects 533/535/635/636/633/738/570/564/638). This is the B10b "No candidate /
+      no-role row" sub-case: the FK cannot be backfilled mechanically. To resolve, the user
+      decides per payload whether to (a) load a `consumer` DMDO row on the receiving ECM module
+      (ECM-REPOSITORY 242 for document/content payloads; ECM-RECORDS-GOV 243 for legal-hold /
+      records context), capturing the dependency in the catalog, or (b) accept the handoff as a
+      domain-level signal with no module owner. Then PATCH `target_domain_module_id`.
     blocked_by:
-      - {type: depends_on, ref: "next audit pass", reason: "handoff backfill out of modules-only scope"}
+      - {type: user_decision, ref: "per-payload consume-vs-domain-signal", reason: "no ECM module models any of the 10 inbound payloads; backfill needs a consumer-DMDO decision per payload, not a mechanical PATCH"}
     affected_handoffs:
       - {handoff_id: 732, direction: inbound, source_domain: IDP, target_domain: ECM, trigger_event: "extracted_record.completed", payload: extracted_records, null_field: target_domain_module_id}
       - {handoff_id: 735, direction: inbound, source_domain: IDP, target_domain: ECM, trigger_event: "document_classification_result.uncertain", payload: document_classification_results, null_field: target_domain_module_id}
@@ -124,39 +54,26 @@ b1b:
       - {handoff_id: 1031, direction: inbound, source_domain: LSD, target_domain: ECM, trigger_event: "legal_advice_record.issued", payload: legal_advice_records, null_field: target_domain_module_id}
 
   - id: B1B-B5
-    summary: "Author 4 intra-domain ECM handoffs now that the module split exists."
+    summary: "Author 2 remaining intra-domain ECM retention handoffs (need net-new trigger_events first)."
     finding: >-
-      With 3 modules live, 4 intra-domain handoffs derive from cross-module
-      `data_object_relationships`: classification -> repository (same module now, may be
-      n/a), retention -> repository (documents), retention -> repository (folders),
-      retention -> classification. The retention source is ECM-RECORDS-GOV (243); the targets
-      are ECM-REPOSITORY (242). Out of scope for the modules-only pass.
+      Of the 3 surviving cross-module retention edges (records 243 -> repository 242), the
+      retention-expiry -> content_documents handoff was authored 2026-06-13 (handoff 1439, on
+      existing event 899 `document.retention_expired`). The other two have NO trigger event yet:
+      `document_folder.retention_expired` (folders) and `retention_policy.applied_to_classification`
+      (classification). classification -> repository dropped out as intra-module (CLASSIFY folded
+      into ECM-REPOSITORY 242).
     action: >-
-      Re-derive the cross-module edges against the actual 3-module split (CLASSIFY folded into
-      ECM-REPOSITORY, so classification -> repository is now intra-module and drops out),
-      then INSERT the surviving intra-domain `handoffs` with
-      `source_domain_id=target_domain_id=91`, `integration_pattern='lifecycle_progression'`,
-      `friction_level='low'`, source module 243 -> target module 242.
+      Author the two missing `trigger_events` (folder retention-expiry on data_object 431;
+      retention-policy-applied on 432), then INSERT the matching intra-domain `handoffs`
+      (`source_domain_id=target_domain_id=91`, `integration_pattern='lifecycle_progression'`,
+      `friction_level='low'`, source module 243 -> target module 242). Held back this pass
+      because authoring net-new trigger-event vocabulary is a market-shape judgment surfaced as
+      B2-INTRA-RETENTION-EVENTS, not a mechanical backfill.
     blocked_by:
-      - {type: depends_on, ref: "next audit pass", reason: "intra-domain handoff authoring out of modules-only scope"}
+      - {type: user_decision, ref: B2-INTRA-RETENTION-EVENTS, reason: "the two missing edges need net-new trigger_events (new event vocabulary = market-shape decision); surfaced for the user before authoring"}
     affected_handoffs:
-      - {handoff_id: null, direction: intra-domain, source_domain: ECM, target_domain: ECM, trigger_event: "document.retention_expired", payload: content_documents, null_field: null, scope_note: "records module 243 -> repo module 242"}
-      - {handoff_id: null, direction: intra-domain, source_domain: ECM, target_domain: ECM, trigger_event: "document_folder.retention_expired", payload: document_folders, null_field: null, scope_note: "records module 243 -> repo module 242 (folders)"}
-      - {handoff_id: null, direction: intra-domain, source_domain: ECM, target_domain: ECM, trigger_event: "retention_policy.applied_to_classification", payload: document_classifications, null_field: null, scope_note: "records module 243 -> repo module 242 (classification now in repo)"}
-
-  - id: B1B-F1
-    summary: "Retire legacy domain-level system skill `ecm-system` (id 54) after module-level skills exist."
-    finding: >-
-      `/skills?domain_id=eq.91&skill_type=eq.system` returns id 54 with
-      `domain_module_id=null`. Per F1 this is acceptable only until a module-level system skill
-      exists for ECM. Once B1A-F2-SYSTEM-SKILLS lands, the legacy row is obsolete.
-    action: >-
-      After B1A-F2-SYSTEM-SKILLS lands, DELETE skill id 54 and its 5 `skill_tools` rows
-      (436-440) pointing at platform-covered query_* tools. The 5 tools stay in the catalog and
-      get re-linked from the new per-module skills.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1A-F2-SYSTEM-SKILLS}
-    affected_entities: [skills#54, skill_tools#436, skill_tools#437, skill_tools#438, skill_tools#439, skill_tools#440]
+      - {handoff_id: null, direction: intra-domain, source_domain: ECM, target_domain: ECM, trigger_event: "document_folder.retention_expired", payload: document_folders, null_field: null, scope_note: "records module 243 -> repo module 242 (folders); needs new trigger_event on 431"}
+      - {handoff_id: null, direction: intra-domain, source_domain: ECM, target_domain: ECM, trigger_event: "retention_policy.applied_to_classification", payload: document_classifications, null_field: null, scope_note: "records module 243 -> repo module 242; needs new trigger_event on 432"}
 
   - id: B1B-S4
     summary: "Add the 6 missing flagship ECM solutions + `solution_domains` rows."
@@ -219,20 +136,20 @@ b1b:
     affected_entities: [data_object_relationships#300, data_object_relationships#301, data_object_relationships#587, data_object_relationships#588]
 
 b2:
-  - id: B2-CATALOG-UX
-    summary: "Supply or approve exact `catalog_tagline` + `catalog_description` for ECM domain and the 3 new modules."
+  - id: B2-INTRA-RETENTION-EVENTS
+    summary: "Approve 2 net-new trigger_events for the remaining intra-domain retention handoffs (folders, classifications)."
     question: >-
-      A4 requires both domain-level fields populated in buyer voice; M8 requires the same on
-      each of the 3 new modules (ECM-REPOSITORY 242, ECM-RECORDS-GOV 243, ECM-WORKFLOW 244).
-      Rule #20 forbids any write without explicit user-approved exact text. Either supply the
-      text or approve a fresh draft. Sample domain tagline draft: "Store, classify, and retain
-      every document with built-in workflow and audit-ready compliance."
+      The retention-expiry -> content_documents intra-domain handoff was authored this pass
+      (handoff 1439 on existing event 899). The two remaining cross-module retention edges
+      (records 243 -> repository 242) need net-new `trigger_events` first:
+      `document_folder.retention_expired` on data_object 431, and
+      `retention_policy.applied_to_classification` on 432. Authoring new event vocabulary is a
+      market-shape decision, so it is surfaced rather than executed unilaterally.
     options:
-      - "Supply exact text for domain + 3 modules"
-      - "Approve agent's draft verbatim"
-      - "Approve revised wording"
-      - "Defer to a later audit"
-    why: "Rule #20 + Rule #15 forbid agent-side writes on these columns without per-row approval. Pairs with B1A-M8-MODULE-UX."
+      - "Author both new events + their 2 intra-domain handoffs (recommended)"
+      - "Author only the folder retention-expiry event + handoff"
+      - "Leave both out for now"
+    why: "New trigger-event names are net-new structure (Rule #21): surfaced in a q-file before any write. Gates B1B-B5."
 
   - id: B2-CONTENT-DOCUMENTS-RENAME
     summary: "Decide `content_documents` naming."
@@ -330,6 +247,56 @@ b2:
       - "Author a 2-state lifecycle (draft -> locked) if has_submit_lock flips true"
       - "Defer alongside B2-PATTERN-FLAGS"
     why: "Coupled to B2-PATTERN-FLAGS; the lifecycle shape depends on the flag decision."
+  - id: B2-B9D-RETAG-821
+    summary: "Re-point handoff 821 (ECM->DLP) tag from broad 13.6 \"Manage Content\" to specific 13.6.5 \"Develop and manage content\"."
+    question: |
+      Handoff 821 (ECM->DLP, payload content_documents) is tagged with the broad APQC process 13.6 "Manage Content". The more specific 13.6.5 "Develop and manage content" describes the same activity on the same entity and is realized work ECM already owns (ECM is the source side). Re-point the tag from 13.6 to 13.6.5?
+    options:
+      - "Re-point 821's handoff_processes tag 13.6 -> 13.6.5 (recommended)."
+      - "Keep the broad 13.6 tag."
+    why: |
+      Re-pointing edits an existing handoff_processes row (destructive overwrite, Rule #21), so it needs sign-off. This supersedes the prior B2-B9D-OWN-83 "no owner" framing: the B9d resolver reclassified pid 83 as RE-TAG, not ORPHAN -- ECM owns 13.6 via handoff 821, the tag is merely coarse. Surfaced as q-ECM.md q9.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-428
+    summary: "Enterprise Content Management: name an owner for \"Develop and manage content\" (no one is responsible for it today)"
+    question: |
+      Data Loss Prevention forwards document classification to Enterprise Content Management to develop and manage content, but Enterprise Content Management does not yet have anyone assigned to develop and manage content, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Enterprise Content Management owns, and assign a named owner once Enterprise Content Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Enterprise Content Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ECM.md q10.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-429
+    summary: "Enterprise Content Management: name an owner for \"Deliver approved content\" (no one is responsible for it today)"
+    question: |
+      Knowledge Management forwards document version to Enterprise Content Management to deliver approved content, but Enterprise Content Management does not yet have anyone assigned to deliver approved content, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Enterprise Content Management owns, and assign a named owner once Enterprise Content Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Enterprise Content Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ECM.md q11.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-430
+    summary: "Enterprise Content Management: name an owner for \"Control delivered content\" (no one is responsible for it today)"
+    question: |
+      Identity Governance and Administration forwards document folder to Enterprise Content Management to control delivered content, but Enterprise Content Management does not yet have anyone assigned to control delivered content, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Enterprise Content Management owns, and assign a named owner once Enterprise Content Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Enterprise Content Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ECM.md q12.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1440
+    summary: "Enterprise Content Management: name an owner for \"Retain records\" (no one is responsible for it today)"
+    question: |
+      Audit Management forwards records retention policy to Enterprise Content Management to retain records, but Enterprise Content Management does not yet have anyone assigned to retain records, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Enterprise Content Management owns, and assign a named owner once Enterprise Content Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Enterprise Content Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ECM.md q13.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-DOC-WORKFLOW

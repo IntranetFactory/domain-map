@@ -319,3 +319,30 @@ Aliases (B11): no work - all 5 masters already carry 2 synonym aliases each (10 
 - **b1b**: B1B-S1 (3 roles + role_modules + role_permissions) blocked on user role-design direction; B1B-S11-RES (handoff 1077 target module) blocked on PA audit declaring a consumer DMDO on action_plans.
 - **Superseded (per-domain-skill restoration 2026-06-06)**: original B1B-S2/S3/S4 (per-module system skill for module 65 + skill 55 rename/split + skill_tools) and B2-S6 (skill 55 rename/split) are CANCELED under the new ONE-domain-grain-system-skill model. Per-module tool re-authoring tracked in audits/_modularization-backlog.md. Kept only as supersession markers.
 - **b3 backlog**: B3-S1 through B3-S9 (survey_templates, engagement_themes, survey_invitations, sentiment_topics, manager_action_recommendations, 360_review_cycles, recognition_events, pulse_cohorts, engagement_score_snapshots). Strongest signals remain B3-S3 and B3-S9. B3-S7 depends on the PEER-RECOGNITION promote-vs-fold decision.
+
+## 2026-06-13 - Audit (B9d execution, state-driven)
+
+State-driven pass to close the one agent-executable open item, B1A-B9D-VERIFY (B9d had never run on this domain). Ran the committed resolver `scripts/analytics/b9d_resolver.ts EMP-EXP` in BOTH directions (`--dry-run` then `--write`). 13 boundary tags, 7 distinct (process, owner) findings: 4 ORPHAN, 2 RE-TAG (ROLL-UP), 1 MIS-TAG. No catalog writes; only local audit files touched. No JWT-audience errors.
+
+### Executed (additive owner-side, local audit files only)
+
+- **B1A-B9D-VERIFY resolved** and deleted from state.yaml (B9d has now run in both directions).
+- **4 ORPHAN findings routed to owners** via the resolver `--write` (the B9d cross-domain carve-out: writing a b2 + q into the OWNER domain's audit files):
+  - `B2-B9D-OWN-1048` "Review engagement and retention indicators" (owner EMP-EXP, unbuilt) - added to THIS domain's state.yaml b2 + q-EMP-EXP.md q15. Carried entities: action_plans, survey_responses, engagement_drivers (handoffs 1077/444/115 -> PA).
+  - `B2-B9D-OWN-224` "Manage employee onboarding" (owner ONBOARDING) - resolver found ONBOARDING already carried it (q9); no duplicate added. Payload onboarding_journeys (handoffs 1231/409).
+  - `B2-B9D-OWN-250` "Conduct employee engagement surveys" (owner PA) - added to audits/PA/state.yaml + q-PA.md q15. Payload engagement_surveys (handoff 1107).
+  - `B2-B9D-OWN-1046` "Administer compensation and rewards to employees" (owner COMP-MGMT) - resolver found COMP-MGMT already carried it (q15); no duplicate added. Payload compensation_statements (handoff 1136).
+
+### Surfaced (DESTRUCTIVE - sign-off required; new B2-B9D-RETAG item + q16)
+
+B9d found 3 EMP-EXP-authored handoff_processes tags pointing at a coarser/wrong PCF code than the realized work. Re-pointing overwrites process_id on existing rows (and the MIS-TAG option may delete a row), so all surfaced, not executed:
+
+- **RE-TAG (ROLL-UP)** handoff 443 (-> TALENT-MGMT, survey_responses): 7.3.3 "Manage employee career development" -> more specific 7.5.1.7 "Review engagement and retention indicators".
+- **RE-TAG (ROLL-UP)** handoffs 1078 (-> HCM), 445/1248 (-> WORK-MGMT), 442 (-> HCM) on action_plans/engagement_drivers: 7.5.3 "Manage employee assistance and retention" -> 7.5.1.7.
+- **MIS-TAG** handoff 116 (-> HCM, payload employees, HCM-mastered): 7.5.3 -> realized under 7.6.2 "Manage separation"; re-point or delete.
+
+### State after this pass
+
+No agent-executable work remains. status=feedback_needed, next_action_by=user. q-EMP-EXP.md refreshed (q15 ORPHAN owner, q16 RE-TAG/MIS-TAG sign-off added; footer agent-map updated). Open items are all user-gated: B1A-S7 (destructive re-point/delete), B1A-S13-RES (record_status approval, out of band per Rule #1), B1A-SELF-CONTAIN (M9 destructive rewrite), B2-S1/S2/S3/S4/S5 + B2-B9D-OWN-1048 + B2-B9D-RETAG (judgment/destructive); deferred: B1A-PHASE-P (personas); blocked-on-other-domain: B1B-S1 (role direction), B1B-S11-RES (PA owes consumer DMDO on action_plans); b3 backlog unchanged.
+
+Cross-domain files edited by the resolver (sanctioned B9d carve-out): audits/PA/state.yaml + q-PA.md, audits/ONBOARDING (already had the item), audits/COMP-MGMT (already had the item).

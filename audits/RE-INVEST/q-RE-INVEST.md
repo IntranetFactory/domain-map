@@ -93,6 +93,26 @@ a8:
 
 ---
 
+q11: Core Financial Management forwards asset management fee to Real Estate Investment Management to post AR activity to the general ledger, but Real Estate Investment Management does not yet have anyone assigned to post AR activity to the general ledger, so this step has no owner. How should it be handled?
+- a) Record it now as work Real Estate Investment Management owns, and assign a named owner once Real Estate Investment Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Real Estate Investment Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
+q12: Cloud Financial Operations forwards property valuation to Real Estate Investment Management to process and record fixed-asset adjustments, enhancements, revaluations, and transfers, but Real Estate Investment Management does not yet have anyone assigned to process and record fixed-asset adjustments, enhancements, revaluations, and transfers, so this step has no owner. How should it be handled?
+- a) Record it now as work Real Estate Investment Management owns, and assign a named owner once Real Estate Investment Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Real Estate Investment Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a12:
+
+---
+
 ## Optional (will not hold up the build)
 
 q9: Flagship real-estate-fund platforms model several entities RE-INVEST does not yet have (an acquisition pipeline of deals, rent rolls, NOI calculations, debt facilities, and tax lots for 1031 exchanges). Should I research and add the ones that hold up? (yes/no)
@@ -111,4 +131,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-LIMITED-PARTNERS-OWNER q2=B2-FEES-OWNER q3=B2-PATTERN-FLAGS.fundsapprover q4=B2-PATTERN-FLAGS.lppii q5=B2-LIFECYCLE-EXEMPT q6=B2-CATALOG-UX q7=B2-H1-301-DOUBLE q8=B2-H1-857-DOUBLE q9=B3-RE-ACQ-PIPELINE+B3-RENT-ROLLS+B3-NOI-CALCULATIONS+B3-DEBT-FACILITIES+B3-TAX-LOTS q10=B3-REGULATIONS | domain_id=146 -->
+<!-- agent map, ignore: q1=B2-LIMITED-PARTNERS-OWNER q2=B2-FEES-OWNER q3=B2-PATTERN-FLAGS.fundsapprover q4=B2-PATTERN-FLAGS.lppii q5=B2-LIFECYCLE-EXEMPT q6=B2-CATALOG-UX q7=B2-H1-301-DOUBLE q8=B2-H1-857-DOUBLE q9=B3-RE-ACQ-PIPELINE+B3-RENT-ROLLS+B3-NOI-CALCULATIONS+B3-DEBT-FACILITIES+B3-TAX-LOTS q10=B3-REGULATIONS q11=B2-B9D-OWN-1359 q12=B2-B9D-OWN-1390 | domain_id=146 -->

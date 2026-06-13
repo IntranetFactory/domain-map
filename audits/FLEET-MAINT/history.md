@@ -458,3 +458,37 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-13 - B9d band executed (B1A-B9D-VERIFY resolved)
+
+Ran `scripts/analytics/b9d_resolver.ts FLEET-MAINT --write` (both directions, every boundary). 9 boundary payload tags classified: 8 ORPHAN + 1 RE-TAG, 0 RESOLVED, 0 MIS-TAG.
+
+ORPHAN owner-routing (additive `b2` + q items, `record_status` untouched, no catalog writes):
+- FLEET-MAINT owns: pid 352 "Manage asset maintenance" (defect.reported -> FLEET-MGMT, handoff 877), pid 823 "Plan for preventive maintenance" (handoff 312), pid 1326 "Perform inventory accounting" (handoff 879), pid 1552 "Update work and asset records" (handoff 320). Added B2-B9D-OWN-352 (q17) and B2-B9D-OWN-823 (q18) to this domain's state.yaml + q-file; 1326 (q16) and 1552 (q15) already present from a prior pass.
+- FLEET-MGMT owns: pid 352 (inspection, handoff 313), pid 1389 (fleet_vehicles, handoff 875), pid 1543 (fleet_vehicles, handoff 881). Wrote B2-B9D-OWN-352 (q15) and B2-B9D-OWN-1543 (q16) into audits/FLEET-MGMT/ (state.yaml + q-file, hygiene carve-out (b)); 1389 already present.
+- ITSM owns: pid 1299 "Triage IT service delivery incidents" (service_incidents, handoff 878). Already present in audits/ITSM/ (q8); no change.
+
+Destructive RE-TAG SURFACED, NOT applied (needs user sign-off): handoff 316 (FLEET-MAINT -> AP-AUTO, vehicle_work_orders) is coarsely tagged 9.6.1 "Process accounts payable" (pid 315); a more specific same-entity tag 10.3.2.4 "Update work and asset records" (pid 1552) exists. Resolver proposes re-pointing handoff_processes pid 315 -> 1552. A handoff_processes re-point is a destructive source edit (Rule #21); left for the user.
+
+B1A-B9D-VERIFY removed from state.yaml (resolved). No agent-executable work remains; all open items are b1b (blocked on neighbor M1 / user decisions) and b2 (user decisions). Domain stays feedback_needed / next_action_by: user.
+
+## 2026-06-13 - B13 entity_type classification (corrective-additive)
+
+All 4 FLEET-MAINT masters were `entity_type='unclassified'` (B13 non-skippable transcript gate). Classified per the domain review context (Rule #21 corrective-additive; `record_status` untouched, no lifecycle states authored yet so the judgment is from the audit's documented state machines + vendor shape):
+
+- `vehicle_work_orders` (379) -> `operational_workflow` (documented state machine draft->assigned->in_progress->on_hold->completed->invoiced->closed->cancelled per B1-S11; trigger events fire on it).
+- `maintenance_defects` (703) -> `operational_workflow` (triage state machine reported->triaged->in_progress->resolved->deferred per B1B-S11; defect.reported/.resolved events exist). Overrode the b13_resolver low-confidence default of operational_record: the entity has a real workflow.
+- `preventive_maintenance_schedules` (380) -> `catalog` (per-vehicle-class PM template / config reference that generates work orders; config-shape signal, lifecycle permitted-not-required).
+- `vehicle_parts_inventory` (702) -> `operational_record` (config-shape on-hand stock count, quantitative field not a state machine).
+
+Catalog-wide unclassified predicate now returns zero for FLEET-MAINT. Downstream: the two operational_workflow masters make B12 lifecycle-states applicable, already tracked as blocked on B12-state-machine-approval (B1B-S11); no new gate introduced.
+
+## 2026-06-13 - B11 aliases authored (B1B-S10 resolved)
+
+Authored 17 `data_object_aliases` rows (all `record_status='new'`, `alias_type='synonym'`) from the established vendor lexicon the 2026-05-30 audit enumerated; these are standard industry synonyms, not user-supplied tuples (B11 corrective-additive, Rule #21):
+- vehicle_work_orders (379): Repair Order, RO, Service Order, Job Card, Shop Ticket
+- preventive_maintenance_schedules (380): Service Program, PM Plan, Maintenance Service, Service Task Template
+- vehicle_parts_inventory (702): Parts Stock, Parts Bin, Shop Parts, Stockroom Item
+- maintenance_defects (703): Fault, DVIR Item, Action Item, Non-Conformance ("Defect" omitted as it is the singular label, not a synonym)
+
+B1B-S10 removed from state.yaml (the prior `blocked_by: B11-alias-tuples` gate was a mis-scope; standard synonyms need no user tuples). B11 now passes for all 4 masters.

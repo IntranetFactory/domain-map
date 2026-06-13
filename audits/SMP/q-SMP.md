@@ -76,6 +76,50 @@ a9:
 
 ---
 
+q10: Discovery and Service Mapping hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage infrastructure resource administration, so that step currently has nobody responsible for it. Who should own it?
+- a) The a named owner runs it and approves it.
+- b) The a named owner runs it and the HR Business Partner approves.
+- c) Leave it unassigned for now.
+
+Recommended: a. SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
+
+a10:
+
+---
+
+q11: Expense Management hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage corporate credit cards, so that step currently has nobody responsible for it. Who should own it?
+- a) The a named owner runs it and approves it.
+- b) The a named owner runs it and the HR Business Partner approves.
+- c) Leave it unassigned for now.
+
+Recommended: a. SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
+
+a11:
+
+---
+
+q12: Cloud Financial Operations hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage IT portfolio strategy, so that step currently has nobody responsible for it. Who should own it?
+- a) The a named owner runs it and approves it.
+- b) The a named owner runs it and the HR Business Partner approves.
+- c) Leave it unassigned for now.
+
+Recommended: a. SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
+
+a12:
+
+---
+
+q13: Cloud Financial Operations hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to optimize IT resource allocation, so that step currently has nobody responsible for it. Who should own it?
+- a) The a named owner runs it and approves it.
+- b) The a named owner runs it and the HR Business Partner approves.
+- c) Leave it unassigned for now.
+
+Recommended: a. SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
+
+a13:
+
+---
+
 ## Optional (will not hold up the build)
 
 q7: Three compliance-flavored entities were deferred earlier as single-vendor surface (SaaS data-residency attestations, subprocessor disclosures, and per-user app exposures). Should I re-vet them against the current vendor set and add the ones that hold up? (yes/no)
@@ -94,4 +138,4 @@ a8:
 
 ---
 
-<!-- agent map, ignore: q1=B2-M9-SELFCONTAIN q2=B2-E4-RACI q3=B2-B4-SUBMITLOCK q4=B2-B6B-OWNERSIDE q5=B2-B8-XREL q6=B2-CAP-AUTOMATION q7=B3-DEFERRED-COMPLIANCE-ENTITIES q8=B3-MARKET-SURFACE-REFRESH q9=B2-B9D-OWN-156 | domain_id=85 -->
+<!-- agent map, ignore: q1=B2-M9-SELFCONTAIN q2=B2-E4-RACI q3=B2-B4-SUBMITLOCK q4=B2-B6B-OWNERSIDE q5=B2-B8-XREL q6=B2-CAP-AUTOMATION q7=B3-DEFERRED-COMPLIANCE-ENTITIES q8=B3-MARKET-SURFACE-REFRESH q9=B2-B9D-OWN-156 q10=B2-B9D-OWN-294 q11=B2-B9D-OWN-317 q12=B2-B9D-OWN-260 q13=B2-B9D-OWN-1134 | domain_id=85 -->

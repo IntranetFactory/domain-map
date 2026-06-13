@@ -11,7 +11,7 @@
 schema_version: 2
 domain: WFM
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 # 2026-06-02 modularization pass: WFM now has 3 full domain_modules
@@ -295,6 +295,16 @@ b2:
     why: >-
       Each replacement is a delete-and-replace; the existing row may already be the
       right call per a future reviewer.
+  - id: B2-B9D-OWN-1409
+    summary: "Workforce Management: name an owner for \"Record project-related transactions\" (no one is responsible for it today)"
+    question: |
+      Professional Services Automation forwards time entry to Workforce Management to record project-related transactions, but Workforce Management does not yet have anyone assigned to record project-related transactions, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Workforce Management owns, and assign a named owner once Workforce Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Workforce Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-WFM.md q9.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-S1

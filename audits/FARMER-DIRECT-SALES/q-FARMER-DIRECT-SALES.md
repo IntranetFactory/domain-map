@@ -79,6 +79,34 @@ a6:
 
 ---
 
+q10: Core Financial Management forwards farmers market sale to Farmer-Direct Sales Platform to perform revenue accounting, but Farmer-Direct Sales Platform does not yet have anyone assigned to perform revenue accounting, so this step has no owner. How should it be handled?
+- a) Record it now as work Farmer-Direct Sales Platform owns, and assign a named owner once Farmer-Direct Sales Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Farmer-Direct Sales Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a10:
+
+---
+
+q11: Core Financial Management forwards csa membership to Farmer-Direct Sales Platform to receive or Deposit customer payments, but Farmer-Direct Sales Platform does not yet have anyone assigned to receive or Deposit customer payments, so this step has no owner. How should it be handled?
+- a) Record it now as work Farmer-Direct Sales Platform owns, and assign a named owner once Farmer-Direct Sales Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Farmer-Direct Sales Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
+q12: Three customer handoffs on the CRM boundary (one outbound, two inbound, all carrying customers) are tagged with the broad process "Manage customers and accounts", but the work CRM actually does on those records is the narrower "Manage customer relationships". Should I re-point the tag to the narrower process? (yes/no)
+
+Recommended: yes. The narrower process is the one CRM realizes on these exact records, so the tag becomes more accurate. Note this overwrites the existing tag on three rows, which is why it needs your sign-off rather than being applied automatically.
+
+a12:
+
+---
+
 ## Optional (will not hold up the build)
 
 q7: Flagship vendors model several entities Farmer Direct Sales does not have yet: per-member share swaps and pauses (CSA), farmers-market day/event records, multi-farm producer payout splits, a partner-producer registry, and cottage-food / sales-tax disclosure records. Should I research and add the ones that hold up? (yes/no)
@@ -105,4 +133,4 @@ a9:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S3 q3=B2-S4 q4=B2-S5 q5=B2-S6 q6=B2-S7 q7=B3-share_swaps+B3-farmers_market_events+B3-producer_payouts+B3-producers+B3-cottage_food_disclosures q8=B3-fds_compliance_module q9=B3-regulations | domain_id=158 -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S3 q3=B2-S4 q4=B2-S5 q5=B2-S6 q6=B2-S7 q7=B3-share_swaps+B3-farmers_market_events+B3-producer_payouts+B3-producers+B3-cottage_food_disclosures q8=B3-fds_compliance_module q9=B3-regulations q10=B2-B9D-OWN-55 q11=B2-B9D-OWN-1356 q12=B2-B9D-RETAG-363 | domain_id=158 -->

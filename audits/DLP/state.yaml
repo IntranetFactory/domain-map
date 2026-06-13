@@ -11,22 +11,26 @@
 schema_version: 2
 domain: DLP
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-05"
+next_action_by: user
+last_audit: "2026-06-13"
 
-# next_action_by rationale: the 2026-06-05 b1a execution resolved every
-# agent-solvable item that was not gated on a user decision (per-module skills,
-# outbound handoff module-FK backfill, catalog UX copy, intra-domain B6 edges,
-# outbound B8 cross-domain edges). The b1a items that remain are ALL blocked on
-# a b2 user_decision (B2-S3 / B2-S4 / B2-S5) or on an upstream DMDO load (the
-# inbound half of B1A-S11). None can move without user input, so the ball is
-# with the user (answer B2-S3/S4/S5), not the agent.
+# next_action_by rationale: the 2026-06-13 pass ran the B9d resolver in BOTH
+# directions (B1A-B9D-VERIFY, now resolved -> history.md). It classified 11
+# boundary tags into 9 (process,owner) findings: 4 ORPHAN, 2 ROLL-UP/RE-TAG,
+# 2 MIS-TAG, 1 UNOWNED. The additive owner-side edits were applied: a new b2
+# item B2-B9D-OWN-1164 ("Analyze IT security threat impact") was written here
+# (q11) since DLP masters that payload, and three more were written into the
+# OWNER files of ECM (B2-B9D-OWN-83, B2-B9D-OWN-428) and WSC (B2-B9D-OWN-1179).
+# The 2 ROLL-UP re-points (handoffs 282, 283), 2 MIS-TAGs (DCG-owned, handoffs
+# 260/264/709), and 1 UNOWNED dependency (sink_connectors on 730) are
+# destructive / judgment and are surfaced for sign-off, NOT applied (Rule #21).
+# After this pass, every remaining b1a is blocked on a b2 user_decision
+# (B2-S3 / B2-S4 / B2-S5) or on an upstream DMDO load (inbound half of
+# B1A-S11). All open b2 items (including the new B2-B9D-OWN-1164) need user
+# input, so the ball is with the user, not the agent. q-DLP.md carries every
+# open question; status stays feedback_needed.
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-S6-B12-LIFECYCLE-STATES
     summary: "B12 hard fail; 0 data_object_lifecycle_states for any DLP master. Module-id realization column now resolvable (231/232 exist)."
     finding: "Per Rule #12 every workflow-bearing master needs a state machine; workflow-gate permissions materialize from gated states. Expected machines: dlp_incidents (detected -> triaged -> investigated -> remediated -> closed) realized on 232; dlp_policies (draft -> in_review -> approved -> active -> retired) realized on 231; dlp_quarantine_items (held -> reviewed -> released | destroyed) realized on 232; dlp_exceptions (requested -> approved | denied -> active -> expired) realized on 231. data_exfiltration_attempts and dlp_user_activity_logs may qualify for the config-shape exemption (B2-S3). NOTE: all 6 DLP masters are still entity_type=unclassified (B13) - classify entity_type before/with the lifecycle pass."
@@ -164,6 +168,16 @@ b2:
       - "dlp_user_activity_logs: user-under-monitor (e.g. is_monitored_by or generates) - direction is inverse from typical user-edge"
       - "data_exfiltration_attempts: actor (e.g. initiates or attempts)"
     why: "Multiple plausible verbs per actor; the dominant project convention is the verb-on-source-side pattern (e.g. users reviews dlp_incidents), but dlp_user_activity_logs reverses the typical direction since the activity log RECORDS user behavior."
+  - id: B2-B9D-OWN-1164
+    summary: "Data Loss Prevention: name an owner for \"Analyze IT security threat impact\" (no one is responsible for it today)"
+    question: |
+      Security Operations forwards dlp incident to Data Loss Prevention to analyze IT security threat impact, but Data Loss Prevention does not yet have anyone assigned to analyze IT security threat impact, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Data Loss Prevention owns, and assign a named owner once Data Loss Prevention sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Data Loss Prevention decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-DLP.md q11.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-MISSING-ENTITY-1

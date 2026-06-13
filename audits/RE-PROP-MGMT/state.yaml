@@ -1,7 +1,7 @@
 schema_version: 2
 domain: RE-PROP-MGMT
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 # next_action_by=user: both remaining b1a items are user-gated (B1A-REL-473 blocked_by
 # user_decision; B1A-HANDOFF-296-TARGET needs a consume-vs-react modeling call), and b2
@@ -180,6 +180,26 @@ b2:
       - "(a) yes, schedule for the next Validate pass"
       - "(b) defer until partner-domain audits also run"
     why: "The deep dive is now meaningful (modules exist on this side). Independent of the entity backlog."
+  - id: B2-B9D-OWN-1353
+    summary: "Residential Property Management: name an owner for \"Post receivable entries\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards rental lease to Residential Property Management to post receivable entries, but Residential Property Management does not yet have anyone assigned to post receivable entries, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Residential Property Management owns, and assign a named owner once Residential Property Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Residential Property Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-RE-PROP-MGMT.md q11.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-824
+    summary: "Residential Property Management: name an owner for \"Request unplanned maintenance\" (no one is responsible for it today)"
+    question: |
+      Field Service Management forwards tenant maintenance request to Residential Property Management to request unplanned maintenance, but Residential Property Management does not yet have anyone assigned to request unplanned maintenance, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Residential Property Management owns, and assign a named owner once Residential Property Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Residential Property Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-RE-PROP-MGMT.md q12.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-OWNER-DISTRIBUTIONS

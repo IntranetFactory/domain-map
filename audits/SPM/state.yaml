@@ -23,6 +23,26 @@ b2:
       - "(b) leave as-is (SPM keeps them as forwarded events; source_domain_module_id stays NULL)"
       - "(c) delete the 3 rows if SEM already publishes the same outbound edges (check for SEM duplicates first)"
     why: "Destructive overwrite of existing rows + adds rows attributed to a neighbor domain. Recommended (a): it matches the boundary the user just chose. Needs sign-off because it overwrites a non-empty FK and modifies SEM's outbound surface."
+  - id: B2-B9D-OWN-297
+    summary: "Strategic Portfolio Management: name an owner for \"Perform planning/budgeting/forecasting\" (no one is responsible for it today)"
+    question: |
+      Enterprise Performance Management forwards scenario plan to Strategic Portfolio Management to perform planning or budgeting or forecasting, but Strategic Portfolio Management does not yet have anyone assigned to perform planning or budgeting or forecasting, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Strategic Portfolio Management owns, and assign a named owner once Strategic Portfolio Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Strategic Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SPM.md q3.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1133
+    summary: "Strategic Portfolio Management: name an owner for \"Monitor and analyze IT value and benefits\" (no one is responsible for it today)"
+    question: |
+      Enterprise Performance Management forwards benefits tracking record to Strategic Portfolio Management to monitor and analyze IT value and benefits, but Strategic Portfolio Management does not yet have anyone assigned to monitor and analyze IT value and benefits, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Strategic Portfolio Management owns, and assign a named owner once Strategic Portfolio Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Strategic Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SPM.md q4.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   # Discretionary additive entities flagship vendors also model. Non-blocking; module landing now resolved.

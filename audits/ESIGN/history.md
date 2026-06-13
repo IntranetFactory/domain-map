@@ -420,3 +420,23 @@ None. No JWT-audience errors.
 ### Post-fix status
 
 `next_action_by: user` (B2-S2 module-shape decision unblocks the build; B2-S6 approval flip).
+
+## 2026-06-13, Audit (B9d verify pass)
+
+### Executed
+
+- **B1A-B9D-VERIFY (resolved, no writes).** Ran `scripts/analytics/b9d_resolver.ts ESIGN --dry-run`. ESIGN has exactly one boundary: outbound handoff 217 (ESIGN -> CLM-REPOSITORY 127 on `envelope.completed`, payload `envelopes` 251). Zero inbound boundaries. The resolver walked BOTH directions and classified the single payload **RESOLVED**: process 12.4.9 / pid 398 "Negotiate and document agreements/contracts" is realized. Verdicts `{RESOLVED:1}`, distinct (process,owner) findings 1, intended owner-file edits 0. No ROLL-UPs, no MIS-TAGs, no ORPHANs, so no `b2` / q-file items were owed into ESIGN or into CLM. Removed B1A-B9D-VERIFY from `state.yaml` b1a.
+
+### Live state confirmed (no change since 2026-06-07)
+
+- Build still absent: 0 `domain_modules`, 0 `capability_domains`, 0 `solution_domains` on domain 94.
+- Domain-grain catalog UX now populated (`catalog_tagline` + `catalog_description` live on row 94), so the former B2-S1 is resolved; q-ESIGN.md correctly omits it.
+- handoff 217 `source_domain_module_id` still NULL (B1A-S5, blocked on B1A-S1 -> B2-S2).
+
+### Re-classification
+
+- **B1A-BUILD moved from b1a to b1b** with `blocked_by: {type: user_decision, ref: B2-S2}`. The build is expansive net-new market structure (new modules / capabilities / solution_domains / masters); per Rule #21 it is surfaced in the q-file and written only after the user approves the module shape, never auto-executed. It was mis-filed as agent-executable.
+
+### Result
+
+No agent-executable work remains. Every open item is either the build cascade (b1b, all gated on B2-S2) or a user-judgment `b2` (B2-S2 module shape, B2-S4 lifecycle-gate scope, B2-S5 user-edge scope, B2-S6 APQC approval flip) plus the optional `b3` research candidates. q-ESIGN.md is current and covers all of these. `status: feedback_needed`, `next_action_by: user`.

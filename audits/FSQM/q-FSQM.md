@@ -79,6 +79,26 @@ a6:
 
 ---
 
+q10: Food Traceability and Provenance forwards critical control point to Food Safety and Quality Management to manage product recalls and regulatory audits, but Food Safety and Quality Management does not yet have anyone assigned to manage product recalls and regulatory audits, so this step has no owner. How should it be handled?
+- a) Record it now as work Food Safety and Quality Management owns, and assign a named owner once Food Safety and Quality Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Food Safety and Quality Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a10:
+
+---
+
+q11: Food Traceability and Provenance forwards environmental monitoring sample to Food Safety and Quality Management to monitor and audit recall effectiveness, but Food Safety and Quality Management does not yet have anyone assigned to monitor and audit recall effectiveness, so this step has no owner. How should it be handled?
+- a) Record it now as work Food Safety and Quality Management owns, and assign a named owner once Food Safety and Quality Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Food Safety and Quality Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
 ## Optional (will not hold up the build)
 
 q7: Four additive food-safety entities show up consistently across the flagship vendors: corrective action records (CARs that close out a CCP deviation or EMP positive), verification records (the SQF / BRC GS verification log distinct from monitoring), mock recalls (traceback-exercise records), and environmental monitoring programs (the EMP program shell above individual samples). Should I research and add the ones that hold up? (yes/no)
@@ -109,4 +129,4 @@ a9:
 
 ---
 
-<!-- agent map, ignore: q1=B2-GFSI-AUDITS-MASTERSHIP q2=B2-VACCP-TACCP+B3-VACCP-TACCP q3=B2-AUDIT-PREP-OVERRIDE q4=B2-PATTERN-FLAGS q5=B2-ALIAS-ARBITRATION q6=B2-APQC-APPROVAL q7=B3-CORRECTIVE-ACTION-RECORDS+B3-VERIFICATION-RECORDS+B3-MOCK-RECALLS+B3-EMP-PROGRAMS q8=B3-FOOD-SAFETY-PLANS q9=B3-COA-RECORDS | domain_id=157 -->
+<!-- agent map, ignore: q1=B2-GFSI-AUDITS-MASTERSHIP q2=B2-VACCP-TACCP+B3-VACCP-TACCP q3=B2-AUDIT-PREP-OVERRIDE q4=B2-PATTERN-FLAGS q5=B2-ALIAS-ARBITRATION q6=B2-APQC-APPROVAL q7=B3-CORRECTIVE-ACTION-RECORDS+B3-VERIFICATION-RECORDS+B3-MOCK-RECALLS+B3-EMP-PROGRAMS q8=B3-FOOD-SAFETY-PLANS q9=B3-COA-RECORDS q10=B2-B9D-OWN-37 q11=B2-B9D-OWN-208 | domain_id=157 -->

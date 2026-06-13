@@ -269,6 +269,26 @@ b2:
     why: |
       Recording it now means that the moment Strategic Workforce Planning decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SWP.md q10.
     extra_b9d_added: "2026-06-10"
+  - id: B2-B9D-OWN-1322
+    summary: "Strategic Workforce Planning: name an owner for \"Prepare periodic budgets and plans\" (no one is responsible for it today)"
+    question: |
+      Enterprise Performance Management forwards workforce plan to Strategic Workforce Planning to prepare periodic budgets, but Strategic Workforce Planning does not yet have anyone assigned to prepare periodic budgets, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Strategic Workforce Planning owns, and assign a named owner once Strategic Workforce Planning sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Strategic Workforce Planning decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SWP.md q11.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1324
+    summary: "Strategic Workforce Planning: name an owner for \"Prepare periodic financial forecasts\" (no one is responsible for it today)"
+    question: |
+      Enterprise Performance Management forwards workforce plan to Strategic Workforce Planning to prepare periodic financial forecasts, but Strategic Workforce Planning does not yet have anyone assigned to prepare periodic financial forecasts, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Strategic Workforce Planning owns, and assign a named owner once Strategic Workforce Planning sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Strategic Workforce Planning decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SWP.md q12.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-S1

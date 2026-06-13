@@ -1,16 +1,13 @@
 schema_version: 2
 domain: FOOD-TRACE
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-06"
+next_action_by: user
+last_audit: "2026-06-13"
 
-# b1a fully resolved on 2026-06-06 (all 5 items executed). See history.md
-# "## 2026-06-06 - b1a execution". Resolved items live only in history.md, not here.
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+# b1a fully resolved: 5 items on 2026-06-06, B1A-B9D-VERIFY on 2026-06-13.
+# See history.md "## 2026-06-13 - B9d execution". Resolved items live only in history.md.
+# No agent-executable b1a remains; all open items are user decisions (b2) or
+# blocked b1b (user_decision / neighbor modularization).
 
 b1b:
   - id: B1B-S3
@@ -65,7 +62,7 @@ b1b:
       `traceability_lots originates_from harvest_records` (target FMIS), `traceability_lots
       aggregates milkings` (target DAIRY-MGMT).
     blocked_by:
-      - {type: depends_on, ref: B1A-S5, reason: intra-domain DOR cluster lands first to anchor verb vocabulary}
+      - {type: user_decision, ref: B2-S7-payload-owner, reason: "B1A-S5 (intra-domain DOR anchor) resolved 2026-06-06; remaining blocker is per-neighbor payload-owner identification. 3 of 8 outbound targets have no clean master to point at: handoff 360 (FIN inventory_holds master does not exist), handoffs 361/971 (FSQM is contributor, no distinct FSQM master to mirror to), and the AUDIT pair 973/974 overlaps existing AUDIT-authored inbound rows 354/355. The 2 clean mirrors (recall_events->compliance_obligations id 287 for 359; critical_tracking_events->compliance_obligations for 972) plus owner_side/verb are judgment the user should confirm before load."}
     affected_handoffs:
       - {handoff_id: 359, direction: outbound, source_domain: FOOD-TRACE, target_domain: GRC, trigger_event: recall_event.initiated, payload: recall_events, null_field: null}
       - {handoff_id: 360, direction: outbound, source_domain: FOOD-TRACE, target_domain: FIN, trigger_event: recall_event.initiated, payload: recall_events, null_field: null}
@@ -206,6 +203,86 @@ b2:
       Cleanup blocks any further APQC tagging or B-band fix on the 349 / 351 pair from
       progressing without distortion. Already tagged in `handoff_processes`; cleanup must
       cascade through that row.
+  - id: B2-B9D-OWN-37
+    summary: "Food Traceability and Provenance: name an owner for \"Manage product recalls and regulatory audits\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards recall event to Food Traceability and Provenance to manage product recalls and regulatory audits, but Food Traceability and Provenance does not yet have anyone assigned to manage product recalls and regulatory audits, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FOOD-TRACE.md q12.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-204
+    summary: "Food Traceability and Provenance: name an owner for \"Initiate recall\" (no one is responsible for it today)"
+    question: |
+      Food Safety and Quality Management forwards recall event to Food Traceability and Provenance to initiate recall, but Food Traceability and Provenance does not yet have anyone assigned to initiate recall, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FOOD-TRACE.md q13.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-556
+    summary: "Food Traceability and Provenance: name an owner for \"Manage traceability data\" (no one is responsible for it today)"
+    question: |
+      Governance, Risk and Compliance forwards critical tracking event to Food Traceability and Provenance to manage traceability data, but Food Traceability and Provenance does not yet have anyone assigned to manage traceability data, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FOOD-TRACE.md q14.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-805
+    summary: "Food Traceability and Provenance: name an owner for \"Certify and validate suppliers\" (no one is responsible for it today)"
+    question: |
+      Food Safety and Quality Management forwards supplier certification to Food Traceability and Provenance to certify and validate suppliers, but Food Traceability and Provenance does not yet have anyone assigned to certify and validate suppliers, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FOOD-TRACE.md q15.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-815
+    summary: "Food Traceability and Provenance: name an owner for \"Monitor/Manage supplier information\" (no one is responsible for it today)"
+    question: |
+      Supplier Lifecycle Management forwards supplier certification to Food Traceability and Provenance to monitor or Manage supplier information, but Food Traceability and Provenance does not yet have anyone assigned to monitor or Manage supplier information, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FOOD-TRACE.md q16.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-818
+    summary: "Food Traceability and Provenance: name an owner for \"Monitor quality of product delivered\" (no one is responsible for it today)"
+    question: |
+      Food Safety and Quality Management forwards traceability lot to Food Traceability and Provenance to monitor quality of product delivered, but Food Traceability and Provenance does not yet have anyone assigned to monitor quality of product delivered, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FOOD-TRACE.md q17.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1570
+    summary: "Food Traceability and Provenance: name an owner for \"Manage compliance audits\" (no one is responsible for it today)"
+    question: |
+      Audit Management forwards critical tracking event to Food Traceability and Provenance to manage compliance audits, but Food Traceability and Provenance does not yet have anyone assigned to manage compliance audits, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FOOD-TRACE.md q18.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1830
+    summary: "Food Traceability and Provenance: name an owner for \"Maintain records for regulatory agencies\" (no one is responsible for it today)"
+    question: |
+      Audit Management forwards key data element to Food Traceability and Provenance to maintain records for regulatory agencies, but Food Traceability and Provenance does not yet have anyone assigned to maintain records for regulatory agencies, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FOOD-TRACE.md q19.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-M1-TRACEABILITY-QUERIES

@@ -1,5 +1,19 @@
 # FIN audit history
 
+## 2026-06-13, B9d run (both directions) via b9d_resolver.ts
+
+Ran `scripts/analytics/b9d_resolver.ts FIN --write` to execute the B9d band on every FIN boundary in BOTH directions (resolving open b1a item B1A-B9D-VERIFY). Boundary tags classified: 110; distinct (process, owner) findings: 85. Verdict mix: ORPHAN 48, UNOWNED 18, RESOLVED 11, REFERENCE-READ 3, MIS-TAG 3, RE-TAG 2.
+
+Additive owner-side edits applied by the resolver (`record_status` untouched; nothing written to the catalog/database):
+- FIN-owned ORPHANs newly recorded in FIN's own state.yaml + q-FIN.md: B2-B9D-OWN-320 (Manage in-house bank accounts, bank_accounts -> AP-AUTO boundary), -1379 (Process journal entries, journal_entries -> AUDIT/GRC), -1382 (Post and reconcile intercompany transactions), -1433 (Audit invoices and key data in AP system, fixed_assets -> AUDIT), -1461 (Manage and reconcile cash positions, cash_transactions -> AUDIT). The pre-existing FIN-owned items B2-B9D-OWN-307 / -1381 / -1392 were already present and left intact.
+- ORPHANs owned by neighbor domains were routed into each owner's audit files (state.yaml + q-file) per the state.yaml hygiene carve-out (b): AGENCY-MGMT, B2C-COMM, BEN-ADMIN, COMP-MGMT, CPQ, EPM, EXPENSE, FARMER-DIRECT-SALES, FLEET-MAINT, FLEET-MGMT, FMIS, FOOD-TRACE, FUND-ADMIN, HAM, INV-MGMT, ITAM, IWMS, LEGAL-PRACT-MGMT, LOYALTY, MSP-PSA, PAYROLL, PLM, RE-INVEST, RE-PROP-MGMT, SPEND-MGMT, SUB-MGMT, VMS, WFM (plus reference-read notes on INV-MGMT earning/location config data).
+
+Destructive / judgment items the resolver surfaced (NOT applied; awaiting sign-off):
+- RE-TAG (FIN-source, recorded as b2 B2-B9D-RETAG-9-3, q21): re-point handoff_processes rows 1010/1011/1013 on FIN-outbound handoffs 531/533/536 from coarse process 56 (9.3) to specific 1381 (9.3.2.4 "Process period end adjustments").
+- Cross-domain destructive proposals owned by other domains (left for those domains' sign-off): PLM RE-TAG 11.2.2 -> 2.1.4.2 (#1093); MIS-TAGs on HCM #390 (9.1.3 -> 1.2.5/delete), PROD-MGMT #1006 (9.1.3 -> 2.1.2.2/delete), PSA #1025 (9.4.2.2 -> 8.6/delete); ~18 UNOWNED-dependency findings (payloads with no master row anywhere) surfaced on their senders, not on FIN.
+
+Resolved this pass: B1A-B9D-VERIFY (B9d executed in both directions; removed from state.yaml). All remaining FIN b1a items carry `blocked_by: user_decision` (B1A-MASTER-MASTER-EDGES, B1A-S3, B1A-S4, B1A-HANDOFF-MODULE-FK-REMAINDER); no unblocked agent work remains. Domain stays `feedback_needed` / `next_action_by: user`.
+
 ## 2026-05-30, Validate b1 (full 4-pass)
 
 ### Summary

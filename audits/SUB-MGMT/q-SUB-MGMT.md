@@ -143,6 +143,16 @@ a17:
 
 ---
 
+q18: Professional Services Automation forwards revenue recognition record to Subscription and Revenue Lifecycle Management to perform revenue accounting, but Subscription and Revenue Lifecycle Management does not yet have anyone assigned to perform revenue accounting, so this step has no owner. How should it be handled?
+- a) Record it now as work Subscription and Revenue Lifecycle Management owns, and assign a named owner once Subscription and Revenue Lifecycle Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Subscription and Revenue Lifecycle Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a18:
+
+---
+
 ## Optional (will not hold up the build)
 
 q14: Five extra records show up across the flagship billing vendors (a plan catalog, payment methods, aggregated rated-usage charges, tax calculations, and proration credits). Should I research and add the ones that hold up? (yes/no)
@@ -169,4 +179,4 @@ a16:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S5 q2=B2-S1 q3=B2-S2.invoicelock q4=B2-S2.invoicepii q5=B2-S2.subscriptionpii q6=B2-S2.revreclock q7=B2-S2.dunningpii q8=B2-S3 q9=B2-S4 q10=B2-S6 q11=B1A-S9 q12=B1B-H1-RESIDUAL.replace q13=B1B-H1-RESIDUAL.confirm q14=B3-E-SUBSCRIPTION-PLANS+B3-E-PAYMENT-METHODS+B3-E-RATED-USAGE-CHARGES+B3-E-TAX-CALCULATIONS+B3-E-PRORATION-CREDITS q15=B3-M-SPLIT-LIFECYCLE-USAGE+B3-M-SPLIT-LIFECYCLE-REVREC+B3-M-ANALYTICS-MODULE q16=B3-D-USAGE-METERING+B3-D-SALES-TAX+B3-D-PAYMENT-PROCESSING+B3-D-REV-REC q17=B2-B9D-OWN-148 | domain_id=97 -->
+<!-- agent map, ignore: q1=B2-S5 q2=B2-S1 q3=B2-S2.invoicelock q4=B2-S2.invoicepii q5=B2-S2.subscriptionpii q6=B2-S2.revreclock q7=B2-S2.dunningpii q8=B2-S3 q9=B2-S4 q10=B2-S6 q11=B1A-S9 q12=B1B-H1-RESIDUAL.replace q13=B1B-H1-RESIDUAL.confirm q14=B3-E-SUBSCRIPTION-PLANS+B3-E-PAYMENT-METHODS+B3-E-RATED-USAGE-CHARGES+B3-E-TAX-CALCULATIONS+B3-E-PRORATION-CREDITS q15=B3-M-SPLIT-LIFECYCLE-USAGE+B3-M-SPLIT-LIFECYCLE-REVREC+B3-M-ANALYTICS-MODULE q16=B3-D-USAGE-METERING+B3-D-SALES-TAX+B3-D-PAYMENT-PROCESSING+B3-D-REV-REC q17=B2-B9D-OWN-148 q18=B2-B9D-OWN-55 | domain_id=97 -->

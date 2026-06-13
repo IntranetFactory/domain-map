@@ -96,6 +96,16 @@ a9:
 
 ---
 
+q11: Core Financial Management forwards asset lifecycle event to IT Asset Management to process and record fixed-asset adjustments, enhancements, revaluations, and transfers, but IT Asset Management does not yet have anyone assigned to process and record fixed-asset adjustments, enhancements, revaluations, and transfers, so this step has no owner. How should it be handled?
+- a) Record it now as work IT Asset Management owns, and assign a named owner once IT Asset Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment IT Asset Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
 ## Optional (will not hold up the build)
 
 q10: Beyond today's two substrate masters, flagship ITAM platforms model several more entities that could become masters here: current-holder asset assignments, periodic physical asset audits, cost allocations over asset spend, first-class contract renewal events, and software or SaaS usage metrics. Should I research and add the ones that hold up? (yes/no)
@@ -106,4 +116,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MOD57 q2=B2-MOD60 q3=B2-CONFIRM-N-FIXES q4=B1A-SELF-CONTAIN q5=B1B-S4 q6=B2-S2P-PO q7=B2-GDPR q8=B2-CROSS-CUT-CAPS q9=B2-LIFECYCLE-EXEMPT q10=B3-ASSET-ASSIGN+B3-ASSET-AUDITS+B3-COST-ALLOC+B3-CONTRACT-RENEWALS+B3-USAGE-METRICS | domain_id=3 -->
+<!-- agent map, ignore: q1=B2-MOD57 q2=B2-MOD60 q3=B2-CONFIRM-N-FIXES q4=B1A-SELF-CONTAIN q5=B1B-S4 q6=B2-S2P-PO q7=B2-GDPR q8=B2-CROSS-CUT-CAPS q9=B2-LIFECYCLE-EXEMPT q10=B3-ASSET-ASSIGN+B3-ASSET-AUDITS+B3-COST-ALLOC+B3-CONTRACT-RENEWALS+B3-USAGE-METRICS q11=B2-B9D-OWN-1390 | domain_id=3 -->

@@ -57,6 +57,16 @@ a5:
 
 ---
 
+q7: Enterprise Performance Management forwards strategic initiative to Strategy Execution Management to establish portfolio strategy, but Strategy Execution Management does not yet have anyone assigned to establish portfolio strategy, so this step has no owner. How should it be handled?
+- a) Record it now as work Strategy Execution Management owns, and assign a named owner once Strategy Execution Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Strategy Execution Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a7:
+
+---
+
 ## Optional (will not hold up the build)
 
 q6: Flagship strategy-office vendors (Spider Impact, ClearPoint, Quantive, Cascade, WorkBoard, i-nexus) model several first-class objects that SEM does not yet carry: a standalone KPI registry, strategic themes / Hoshin pillars (with a matching capability), period-level OKR check-in summaries, strategy health / drift signals, and benefits tracking (likely consumed from the portfolio domain). If the KPI and health-signal objects land, a fourth KPI-management module would also make sense. Should I research these and add the ones that hold up? (yes/no)
@@ -67,4 +77,4 @@ a6:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S5.path q2=B2-S2 q3=B2-S5.speclock q4=B2-S1 q5=B1A-S8 q6=B3-KPIS+B3-STRATEGIC-THEMES+B3-OKR-CHECKIN-SUMMARIES+B3-STRATEGY-HEALTH-SIGNALS+B3-BENEFITS-TRACKING-CONSUMER+B3-SEM-KPI-MGMT-MODULE+B3-HOSHIN-PILLARS-CAPABILITY | domain_id=166 -->
+<!-- agent map, ignore: q1=B2-S5.path q2=B2-S2 q3=B2-S5.speclock q4=B2-S1 q5=B1A-S8 q6=B3-KPIS+B3-STRATEGIC-THEMES+B3-OKR-CHECKIN-SUMMARIES+B3-STRATEGY-HEALTH-SIGNALS+B3-BENEFITS-TRACKING-CONSUMER+B3-SEM-KPI-MGMT-MODULE+B3-HOSHIN-PILLARS-CAPABILITY q7=B2-B9D-OWN-1652 | domain_id=166 -->

@@ -126,6 +126,39 @@ b2:
     why: |
       Digital Commerce already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-B2C-COMM.md q10.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-738
+    summary: "Digital Commerce: name an owner for \"Determine fulfillment process\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management hands work to Digital Commerce, but Digital Commerce has no one assigned to determine fulfillment process, so that step currently has nobody responsible for it. Who should own it?
+    options:
+      - "The a named owner runs it and approves it."
+      - "Someone else you name runs and approves it."
+      - "Leave it unassigned for now."
+    why: |
+      Digital Commerce already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-B2C-COMM.md q11.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1359
+    summary: "Digital Commerce: name an owner for \"Post AR activity to the general ledger\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management hands work to Digital Commerce, but Digital Commerce has no one assigned to post AR activity to the general ledger, so that step currently has nobody responsible for it. Who should own it?
+    options:
+      - "The a named owner runs it and approves it."
+      - "Someone else you name runs and approves it."
+      - "Leave it unassigned for now."
+    why: |
+      Digital Commerce already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-B2C-COMM.md q12.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1422
+    summary: "Digital Commerce: name an owner for \"Process and distribute payments\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management hands work to Digital Commerce, but Digital Commerce has no one assigned to process and distribute payments, so that step currently has nobody responsible for it. Who should own it?
+    options:
+      - "The a named owner runs it and approves it."
+      - "Someone else you name runs and approves it."
+      - "Leave it unassigned for now."
+    why: |
+      Digital Commerce already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-B2C-COMM.md q13.
+    extra_b9d_added: "2026-06-13"
 b3:
   - id: B3-S1
     candidate: catalog substrate cluster (product_variants, product_categories, catalog_attributes)

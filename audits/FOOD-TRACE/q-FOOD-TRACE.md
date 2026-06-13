@@ -93,6 +93,86 @@ a9:
 
 ---
 
+q12: Core Financial Management forwards recall event to Food Traceability and Provenance to manage product recalls and regulatory audits, but Food Traceability and Provenance does not yet have anyone assigned to manage product recalls and regulatory audits, so this step has no owner. How should it be handled?
+- a) Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a12:
+
+---
+
+q13: Food Safety and Quality Management forwards recall event to Food Traceability and Provenance to initiate recall, but Food Traceability and Provenance does not yet have anyone assigned to initiate recall, so this step has no owner. How should it be handled?
+- a) Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a13:
+
+---
+
+q14: Governance, Risk and Compliance forwards critical tracking event to Food Traceability and Provenance to manage traceability data, but Food Traceability and Provenance does not yet have anyone assigned to manage traceability data, so this step has no owner. How should it be handled?
+- a) Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a14:
+
+---
+
+q15: Food Safety and Quality Management forwards supplier certification to Food Traceability and Provenance to certify and validate suppliers, but Food Traceability and Provenance does not yet have anyone assigned to certify and validate suppliers, so this step has no owner. How should it be handled?
+- a) Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a15:
+
+---
+
+q16: Supplier Lifecycle Management forwards supplier certification to Food Traceability and Provenance to monitor or Manage supplier information, but Food Traceability and Provenance does not yet have anyone assigned to monitor or Manage supplier information, so this step has no owner. How should it be handled?
+- a) Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a16:
+
+---
+
+q17: Food Safety and Quality Management forwards traceability lot to Food Traceability and Provenance to monitor quality of product delivered, but Food Traceability and Provenance does not yet have anyone assigned to monitor quality of product delivered, so this step has no owner. How should it be handled?
+- a) Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a17:
+
+---
+
+q18: Audit Management forwards critical tracking event to Food Traceability and Provenance to manage compliance audits, but Food Traceability and Provenance does not yet have anyone assigned to manage compliance audits, so this step has no owner. How should it be handled?
+- a) Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a18:
+
+---
+
+q19: Audit Management forwards key data element to Food Traceability and Provenance to maintain records for regulatory agencies, but Food Traceability and Provenance does not yet have anyone assigned to maintain records for regulatory agencies, so this step has no owner. How should it be handled?
+- a) Record it now as work Food Traceability and Provenance owns, and assign a named owner once Food Traceability and Provenance sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Food Traceability and Provenance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a19:
+
+---
+
 ## Optional (will not hold up the build)
 
 q10: Six extra objects show up across the flagship Food Traceability vendors (trace-request queries, chain-of-custody records, provenance attestations, recall communications logs, regulatory filings, and traceback or mock-trace exercises). Should I research and add the ones that hold up? (yes/no)
@@ -111,4 +191,4 @@ a11:
 
 ---
 
-<!-- agent map, ignore: q1=B2-3 q2=B2-2 q3=B2-4 q4=B2-5 q5=B2-pattern-flag-review.recall_lock q6=B2-pattern-flag-review.recall_approver q7=B2-pattern-flag-review.lot_lock q8=B2-pattern-flag-review.cert_lock q9=B2-alias-tuple-binding q10=B3-M1-TRACEABILITY-QUERIES+B3-M2-CHAIN-OF-CUSTODY+B3-M3-PROVENANCE-ATTESTATIONS+B3-M4-RECALL-COMMUNICATIONS+B3-M5-REGULATORY-FILINGS+B3-M6-TRACEBACK-EXERCISES q11=B3-gs1-identifiers+B3-ftl-classifications+B3-provenance-certificates+B3-coa-records | domain_id=155 -->
+<!-- agent map, ignore: q1=B2-3 q2=B2-2 q3=B2-4 q4=B2-5 q5=B2-pattern-flag-review.recall_lock q6=B2-pattern-flag-review.recall_approver q7=B2-pattern-flag-review.lot_lock q8=B2-pattern-flag-review.cert_lock q9=B2-alias-tuple-binding q10=B3-M1-TRACEABILITY-QUERIES+B3-M2-CHAIN-OF-CUSTODY+B3-M3-PROVENANCE-ATTESTATIONS+B3-M4-RECALL-COMMUNICATIONS+B3-M5-REGULATORY-FILINGS+B3-M6-TRACEBACK-EXERCISES q11=B3-gs1-identifiers+B3-ftl-classifications+B3-provenance-certificates+B3-coa-records q12=B2-B9D-OWN-37 q13=B2-B9D-OWN-204 q14=B2-B9D-OWN-556 q15=B2-B9D-OWN-805 q16=B2-B9D-OWN-815 q17=B2-B9D-OWN-818 q18=B2-B9D-OWN-1570 q19=B2-B9D-OWN-1830 | domain_id=155 -->

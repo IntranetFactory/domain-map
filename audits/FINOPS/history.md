@@ -358,3 +358,62 @@ Vacuous (nothing to do):
 next_action_by: user (UNBUILT; the build is a b2 decision plus 5 other open b2 forks, one of
 which is destructive). No b1a item is currently agent-actionable: every one is blocked on
 B2-BUILD or another b2.
+
+## 2026-06-13 - Audit (B9d handoff-payload realization, both directions)
+
+### Summary
+
+State-driven Validate pass working the one open agent-executable item, B1A-B9D-VERIFY (B9d had
+never run on this domain). B9d was executed in BOTH directions via the committed resolver
+`scripts/analytics/b9d_resolver.ts FINOPS` (dry-run then --write). Live verification confirmed
+the snapshot: FINOPS (id 41) is UNBUILT (0 modules, 0 capability_domains, 0 master data_objects).
+
+Boundary classification across 10 payload tags on 8 neighbor boundaries (1 outbound to S2P,
+8 inbound): 9 distinct (process,owner) findings = 6 ORPHAN + 3 UNOWNED. No ROLL-UPs, no
+MIS-TAGs, so no destructive re-points and no handoff_processes deletions were proposed by the
+resolver. No FINOPS-side catalog write of any kind.
+
+### Executed (additive, owner-side audit files only; no catalog/DB writes)
+
+The 6 ORPHANs (real missing work: a realized process with no persona on the OWNER) were routed
+by owner (the domain that masters the carried entity) as additive `b2` items + plain-language q
+questions written into the OWNER domains' own `state.yaml` + `q-<OWNER>.md`, per the B9d band
+and the state.yaml hygiene carve-out (b). record_status untouched. No FINOPS file change beyond
+state.yaml/history.
+
+| ORPHAN process | pid | owner | carried entity | handoff | owner-side item |
+|---|---|---|---|---|---|
+| 8.2.2 Manage IT portfolio strategy | 260 | SMP (built) | saas_applications | 641 SMP->FINOPS | SMP B2-B9D-OWN-260 (q added) |
+| 8.2.5.4 Monitor and analyze IT financial performance | 1132 | EXPENSE (unbuilt) | card_transactions | 173 SPEND-MGMT->FINOPS | EXPENSE B2-B9D-OWN-1132 (q added) |
+| 8.2.5.4 Monitor and analyze IT financial performance | 1132 | APM (unbuilt) | application_costs | 1196 APM->FINOPS | APM B2-B9D-OWN-1132 (q existed) |
+| 8.2.5.6 Optimize IT resource allocation | 1134 | SAM (unbuilt) | software_licenses | 637 SAM->FINOPS | SAM B2-B9D-OWN-1134 (q added) |
+| 8.2.5.6 Optimize IT resource allocation | 1134 | SMP (built) | saas_usage_metrics | 643 SMP->FINOPS | SMP B2-B9D-OWN-1134 (q added) |
+| 9.3.3.4 Process/record fixed-asset adjustments | 1390 | RE-INVEST (unbuilt) | property_valuations | 305 RE-INVEST->FINOPS | RE-INVEST B2-B9D-OWN-1390 (q added) |
+
+Note: the 305/property_valuations ORPHAN routes its realization question to RE-INVEST (the owner).
+FINOPS retains the separate legitimacy/delete decision for handoff 305 as B2-HANDOFF-305 (the two
+do not conflict: one asks RE-INVEST who realizes it, the other asks the user whether FINOPS should
+receive it at all).
+
+### Report-only follow-ups (UNOWNED at DMDO grain; owner exists at legacy grain)
+
+3 payloads classified UNOWNED because no `master` row exists in `domain_module_data_objects` for
+the carried entity. Verified live: each DOES have a canonical master at the legacy
+`domain_data_objects` grain, the owner domain simply has not modularized that master into a DMDO
+master row yet. Not destructive, not FINOPS-actionable; surfaced (resolver held them for sign-off,
+did not auto-write). Owed by the owner domains as a DMDO-master backfill:
+
+| process | carried entity | handoff | canonical owner (legacy domain_data_objects) |
+|---|---|---|---|
+| 9.6.1 Process accounts payable | supplier_invoices (id 75) | 198 FINOPS->S2P (FINOPS is sender) | S2P (domain 27) |
+| 8.2.5.4 Monitor/analyze IT financial performance | bi_queries (id 693) | 691 BI->FINOPS | BI (domain 74) |
+| 13.10.2.3 Perform sustainability reporting | activity_data_records (id 323) | 851 ESG->FINOPS | ESG (domain 21) |
+
+### Post-fix status
+
+next_action_by: user. B1A-B9D-VERIFY resolved (B9d run both directions, moved out of state.yaml).
+With it gone, no agent-executable item remains: the entire b1a cascade (B1A-M1, B1A-A2,
+B1A-B-DMDO, B1A-DOMAIN-SKILL, B1A-B10B-OUTBOUND/INBOUND, B1A-PHASE-P) is blocked on B2-BUILD, and
+6 open b2 forks (one destructive: B2-HANDOFF-305) await the user. q-FINOPS.md is current and
+unchanged (no new FINOPS-side b2; all B9d ORPHANs route to neighbor q-files). No JWT errors, no
+record_status flips, no notes writes.

@@ -427,3 +427,55 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-13 - B9d handoff-payload realization (B1A-B9D-VERIFY resolved)
+
+Ran `scripts/analytics/b9d_resolver.ts DLP` in BOTH directions (the B9d band's per-domain
+entry point). B1A-B9D-VERIFY is RESOLVED and dropped from state.yaml. No catalog/database
+writes; only local audit files edited. No JWT errors.
+
+### Resolver output
+
+- 11 boundary tags -> 9 distinct (process, owner) findings.
+- Verdicts: 4 ORPHAN, 2 ROLL-UP/RE-TAG, 2 MIS-TAG, 1 UNOWNED.
+
+| Verdict | Process (pid) | Owner | Payload(s) | Handoff(s) |
+|---|---|---|---|---|
+| ORPHAN | 13.6 "Manage Content" (83) | ECM (unbuilt) | content_documents | 821 ECM->DLP |
+| ORPHAN | 13.6.5 "Develop and manage content" (428) | ECM (unbuilt) | document_classifications | 822 ECM->DLP |
+| ORPHAN | 8.3.3.2 "Analyze IT security threat impact" (1164) | DLP (unbuilt) | dlp_incidents, data_exfiltration_attempts | 280, 284 DLP->SECOPS |
+| ORPHAN | 8.3.5.4 "Review and monitor physical and logical IT data security measures" (1179) | WSC (unbuilt) | chat_messages | 832 WSC->DLP |
+| ROLL-UP | 8.3.3 "Control IT risk, compliance, and security" (268) | DLP | dlp_incidents | 282 DLP->SECOPS |
+| ROLL-UP | 8.3.5 "Develop and manage IT security, privacy, and data protection" (270) | DLP | dlp_incidents | 283 DLP->PRIV-MGMT |
+| MIS-TAG | 2.1.4.10 "Review and approve data access requests" (557) | DCG | data_access_policies | 264 DCG->DLP |
+| MIS-TAG | 8.4.1.2 "Establish data, information, and analytic governance" (1203) | DCG | data_assets, data_domains | 260, 709 DCG->DLP |
+| UNOWNED | 8.3.5 (270) | (no master) | sink_connectors | 730 DI->DLP |
+
+### Applied (additive, local audit files only; record_status untouched)
+
+- **DLP** (this domain masters the payload): new b2 item `B2-B9D-OWN-1164` ("Analyze IT
+  security threat impact") in state.yaml + q11 in q-DLP.md.
+- **ECM** (owner): `B2-B9D-OWN-83` + `B2-B9D-OWN-428` written into ECM's state.yaml + q-ECM.md
+  (state.yaml hygiene carve-out (b) - writing a b2 + q into the OWNER domain).
+- **WSC** (owner): `B2-B9D-OWN-1179` written into WSC's state.yaml + q-WSC.md.
+
+### Surfaced for sign-off (destructive / judgment; NOT applied, Rule #21)
+
+- ROLL-UP re-point (source DLP): 8.3.3 -> 8.3.3.2 on handoff 282; 8.3.5 -> 8.3.3.2 on
+  handoff 283. Both edit DLP-authored handoff_processes tags - need user sign-off.
+- MIS-TAG (sender DCG): 2.1.4.10 -> 8.4.4.4 (or delete) on 264; 8.4.1.2 -> 8.4.4.1 (or
+  delete) on 260/709. DCG authored these tags - surfaced for DCG-side arbitration.
+- UNOWNED dependency: 8.3.5 on handoff 730 (DI->DLP) carries `sink_connectors`, which has
+  no master row anywhere in the catalog. Surfaced on the sender (DI); not dropped.
+
+### Net state
+
+B1A-B9D-VERIFY resolved. The only new open item on DLP is `B2-B9D-OWN-1164` (a user
+decision, q11). All remaining b1a are still blocked on B2-S3 / B2-S4 / B2-S5 or the upstream
+DMDO load (inbound B1A-S11). Status remains feedback_needed; next_action_by stays user.
+
+### JWT errors
+
+None encountered during this run.

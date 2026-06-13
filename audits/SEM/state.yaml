@@ -11,7 +11,7 @@
 schema_version: 2
 domain: SEM
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-07"
 
 b1a:
@@ -188,6 +188,16 @@ b2:
   # PMO-led portfolio delivery). No SEM-vs-SPM merge surfaced in this pass (the SEM/SPM
   # edges are outbound handoffs 1205-1208, not a duplicate-master collision). If a merge
   # question is raised on the SPM side, resolve it there; do not resolve unilaterally here.
+  - id: B2-B9D-OWN-1652
+    summary: "Strategy Execution Management: name an owner for \"Establish portfolio strategy\" (no one is responsible for it today)"
+    question: |
+      Enterprise Performance Management forwards strategic initiative to Strategy Execution Management to establish portfolio strategy, but Strategy Execution Management does not yet have anyone assigned to establish portfolio strategy, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Strategy Execution Management owns, and assign a named owner once Strategy Execution Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Strategy Execution Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SEM.md q7.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-KPIS

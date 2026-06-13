@@ -360,6 +360,16 @@ b2:
     why: |
       Recording it now means that the moment Hardware Asset Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-HAM.md q14.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1393
+    summary: "Hardware Asset Management: name an owner for \"Reconcile fixed-asset ledger\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards hardware disposal record to Hardware Asset Management to reconcile fixed-asset ledger, but Hardware Asset Management does not yet have anyone assigned to reconcile fixed-asset ledger, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Hardware Asset Management owns, and assign a named owner once Hardware Asset Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Hardware Asset Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-HAM.md q15.
+    extra_b9d_added: "2026-06-13"
 b3:
   - id: B3-S1
     candidate: asset_categories

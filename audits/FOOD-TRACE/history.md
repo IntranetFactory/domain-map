@@ -614,3 +614,59 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-13 - B9d execution (resolves B1A-B9D-VERIFY)
+
+Ran `scripts/analytics/b9d_resolver.ts FOOD-TRACE` in both directions (the band runs the
+full boundary, this-domain-as-source AND this-domain-as-target). 19 boundary tags, 14
+distinct (process, owner) findings. Verdict mix: 11 ORPHAN, 1 REFERENCE-READ, 1 RE-TAG,
+1 UNOWNED. This resolves and removes b1a `B1A-B9D-VERIFY` (B9d had never run on this domain).
+
+### ORPHAN findings -> additive owner-side b2 + q items (record_status untouched)
+
+Each ORPHAN is a realized-nowhere process with no persona. Per the B9d band, each was
+routed to the OWNER (the domain that masters the carried entity) as a durable `b2`
+(`B2-B9D-OWN-<process_id>`) plus a plain-language q. The resolver applied these additive
+local audit-file edits (no catalog writes, no record_status changes):
+
+- FOOD-TRACE owns 7 (owner masters the carried entity): pid 204 "Initiate recall"
+  (recall_events), 556 "Manage traceability data" (critical_tracking_events), 805 "Certify
+  and validate suppliers" (supplier_certifications), 815 "Monitor/Manage supplier
+  information" (supplier_certifications), 818 "Monitor quality of product delivered"
+  (traceability_lots), 1570 "Manage compliance audits" (critical_tracking_events), 1830
+  "Maintain records for regulatory agencies" (key_data_elements). Added as b2
+  B2-B9D-OWN-204/556/805/815/818/1570/1830; surfaced as q-FOOD-TRACE.md q13-q19. The
+  pre-existing B2-B9D-OWN-37 (q12) remains.
+- FSQM owns 2: pid 37 "Manage product recalls and regulatory audits" (critical_control_points,
+  handoff 976) and pid 208 "Monitor and audit recall effectiveness"
+  (environmental_monitoring_samples, handoff 978). Written into audits/FSQM/state.yaml +
+  q-FSQM.md (cross-domain ORPHAN carve-out, state.yaml hygiene (b)).
+- FMIS owns pid 171 "Maintain production records and manage lot traceability"
+  (field_applications / harvest_records / planting_records / farm_fields). Item already
+  existed in audits/FMIS (B2-B9D-OWN-171); no duplicate added.
+- DAIRY-MGMT owns pid 171 (bulk_milk_shipments / milkings). Item already existed in
+  audits/DAIRY-MGMT (B2-B9D-OWN-171); no duplicate added.
+
+### REFERENCE-READ (no action)
+
+pid 556 "Manage traceability data" carrying `feed_rations` (handoff 959, DAIRY-MGMT->FOOD-TRACE):
+feed_rations is DAIRY-MGMT reference/config data, ownable work only if DAIRY-MGMT later runs a
+workflow on it. Resolver added a one-line non-question note to audits/DAIRY-MGMT/state.yaml.
+
+### Surfaced for user sign-off (NOT applied - destructive / judgment)
+
+- RE-TAG (source edit, FOOD-TRACE-owned): handoff 360 (FOOD-TRACE->FIN) is tagged coarsely
+  with pid 37 "Manage product recalls and regulatory audits" (6.4); a more specific tag pid
+  204 "Initiate recall" (6.4.1) exists on the same entity (recall_events). Proposed re-point
+  6.4 -> 6.4.1. Re-pointing edits an existing handoff_processes row, so it needs sign-off.
+- UNOWNED dependency: handoff 954 (MFG-OPS->FOOD-TRACE) carries `produced_units` tagged pid
+  171; `produced_units` has no master row anywhere in the catalog. Surfaced on the sender
+  (MFG-OPS) as an unowned dependency, not dropped.
+
+### Notes
+
+- Rule #1: no record_status touched; all additive q/b2 edits are local audit files only.
+- Rule #15: no `notes` columns populated.
+- next_action_by stays `user`: the new B9d owner items (q12-q19) plus the pre-existing b2
+  decisions (B2-2/B2-3/B2-4/B2-5, q1-q4) and pattern/alias b2 (q5-q9) are all user calls.
+  No agent-executable work remains on FOOD-TRACE.

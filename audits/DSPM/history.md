@@ -1,5 +1,32 @@
 # DSPM audit history
 
+## 2026-06-13, Validate b1 (B9d band + handoff backfill execution pass)
+
+Executed the outstanding agent-doable work; left only user decisions and one destructive re-point pending.
+
+**Executed (all catalog writes at `record_status='new'`):**
+
+- **B1A-B9D-VERIFY (resolved, removed from `b1a`).** Ran `scripts/analytics/b9d_resolver.ts DSPM --write` (both directions). Boundary tags: 9; distinct (process,owner) findings: 7. Verdicts: RESOLVED x2 (846 -> 8.4.2 pid 275, 285 -> 8.4.2 pid 275), RE-TAG x1, MIS-TAG x1, UNOWNED x1, ORPHAN x2.
+  - The 2 ORPHANs both own to DSPM itself (DSPM masters `iam_access_policies` 340 and `sensitive_data_incidents` 341, but has 0 personas, so the work is unrealized). Resolver wrote additive owner-side `b2` items `B2-B9D-OWN-273` ("Manage IT user identity and authorization", pid 273, via handoffs 286/289 from IGA) and `B2-B9D-OWN-1164` ("Analyze IT security threat impact", pid 1164, via handoff 287 from SECOPS) to DSPM's own `state.yaml` + `q-DSPM.md` (q12/q13). These are owner decisions DSPM cannot self-answer (it has no persona pool yet), so they stay open as `b2`.
+- **B1B-S7 (mostly resolved, narrowed).** Back-filled `source_domain_module_id` on 8 of 10 outbound handoffs via `.tmp_deploy/fix_dspm_b9d_additive_2026_06_13.ts`, derived from each handoff's trigger_event data_object (B10b rule): 287/290/286 -> 235, 289 -> 234, 846/847/848/849 -> 233. Only 285 + 288 remain (direction-contested, gated on B2-S3 / B2-S4); item narrowed to those two.
+- **B1B-H1-RESIDUAL (mostly resolved, narrowed).** Tagged handoffs 847/848/849 with `handoff_processes` -> pid 275 (8.4.2 "Define and maintain business information architecture"), consistent with sibling 846 (same cloud-store discovery/inventory shape). 286 and 289 were already tagged (8.3.8 pid 273) since the prior pass. 12 of 13 cross-domain handoffs now carry a tag; only 288 remains untagged, gated on B2-S4. Item narrowed to 288.
+
+**Removed as resolved/superseded (hygiene):**
+
+- **B1A-B9D-VERIFY** — executed (above).
+- **B2-SKILL-ORPHAN** — superseded by the per-domain-skill restoration (note at top of `state.yaml`) AND moot in live state: orphan skill id=51 no longer exists, and DSPM now carries exactly one domain-grain system skill (id=437 `dspm-system`, domain_id=140, domain_module_id=NULL), which satisfies Rule #17 F2.
+
+**Surfaced for sign-off (destructive / decisions, now in `q-DSPM.md`):**
+
+- **B2-B9D-RETAG-290 (new, destructive re-point).** Resolver RE-TAG: handoff 290's tag sits at coarse parent 8.3.3 (pid 268); a more specific realized child 8.3.3.2 (pid 1164, the code sibling 287 uses) exists. Recommend re-point 290 -> 8.3.3.2; needs sign-off (overwrites an existing handoff_processes row). Surfaced as q14.
+
+**Report-only follow-ups (owned by other domains, not DSPM's to fix):**
+
+- **MIS-TAG owed by DCG.** Inbound handoffs 712 (DCG->DSPM, payload data_usage_metrics) and 261 (DCG->DSPM, payload data_assets) carry tag 8.4.1.2 "Establish data, information, and analytic governance" (pid 1203), but the carried entity is realized under 8.4.4.1 "Monitor and control business information". DCG (the sender) should re-point 8.4.1.2 -> 8.4.4.1 or delete the tag on its own audit pass.
+- **UNOWNED dependency owed by DI.** Inbound handoff 729 (DI->DSPM) carries payload `source_connectors`, tagged 8.3.5 (pid 270); `source_connectors` has no `master` row anywhere in the catalog. Surface on DI (the sender): either DI masters `source_connectors`, or the dependency is unowned.
+
+**Final status:** `feedback_needed` / `next_action_by: user`. No agent-executable work remains: every outstanding item is either a `b2` user decision (module split, lifecycle/pattern-flag shape, handoff direction, business-function ownership, regulations, the two B9d ORPHAN owner assignments) or a destructive step awaiting sign-off (handoff 285/288 resolution, 290 re-point). `b3` ideas (4 missing-master candidates + 5 regulations) remain non-blocking.
+
 ## 2026-05-30, Validate b1 (full 4-pass)
 
 ### Summary

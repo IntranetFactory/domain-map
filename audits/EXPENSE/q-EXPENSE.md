@@ -130,6 +130,78 @@ a13:
 
 ---
 
+q16: Core Financial Management forwards expense line to Expense Management to process journal entries, but Expense Management does not yet have anyone assigned to process journal entries, so this step has no owner. How should it be handled?
+- a) Record it now as work Expense Management owns, and assign a named owner once Expense Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Expense Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a16:
+
+---
+
+q17: Audit Management forwards expense line to Expense Management to audit invoices and key data in AP system, but Expense Management does not yet have anyone assigned to audit invoices and key data in AP system, so this step has no owner. How should it be handled?
+- a) Record it now as work Expense Management owns, and assign a named owner once Expense Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Expense Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a17:
+
+---
+
+q18: Accounts Payable Automation forwards expense report to Expense Management to process reimbursements and advances, but Expense Management does not yet have anyone assigned to process reimbursements and advances, so this step has no owner. How should it be handled?
+- a) Record it now as work Expense Management owns, and assign a named owner once Expense Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Expense Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a18:
+
+---
+
+q19: Five handoffs name a payload that no Expense Management module currently models, so their module link is left empty: shadow IT apps (out to SaaS management), pay slips (in from payroll), employees (in from HR), spend policies (in from spend management), and card authorizations (in from spend management). Should Expense Management add a thin consumer record for each so the link is attributed, or leave them as domain-level signals?
+
+- a) Add a consumer record on the receiving module for each (attributes the link and captures the dependency).
+- b) Leave them as domain-level signals with no module owner (acceptable per the handoff-attribution rules).
+- c) Per-handoff mix (tell me which to model and which to leave).
+
+Recommended: b. None of these payloads is owned by Expense Management, and the attribution rules explicitly allow a handoff to stay a domain-level signal, so leaving them is the honest low-noise default; pick (a) or (c) only if you want the dependency captured as catalog rows.
+
+a19:
+
+---
+
+q20: Core Financial Management forwards expense report to Expense Management to process accounts payable and expense reimbursements, but Expense Management does not yet have anyone assigned to process accounts payable and expense reimbursements, so this step has no owner. How should it be handled?
+- a) Record it now as work Expense Management owns, and assign a named owner once Expense Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Expense Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a20:
+
+---
+
+q21: Corporate Spend Management forwards card transaction to Expense Management to process accounts payable (AP), but Expense Management does not yet have anyone assigned to process accounts payable (AP), so this step has no owner. How should it be handled?
+- a) Record it now as work Expense Management owns, and assign a named owner once Expense Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Expense Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a21:
+
+---
+
+q22: Corporate Spend Management forwards card transaction to Expense Management to monitor and analyze IT financial performance, but Expense Management does not yet have anyone assigned to monitor and analyze IT financial performance, so this step has no owner. How should it be handled?
+- a) Record it now as work Expense Management owns, and assign a named owner once Expense Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Expense Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a22:
+
+---
+
 ## Optional (will not hold up the build)
 
 q14: Flagship expense vendors model ten extra first-class records that the current shape folds in or omits (receipts, mileage logs, per-diem rates, cash advances, expense categories, traveler profiles, policy violations, delegate authorizations, VAT tax records, audit-trail records). Should I research and add the ones that hold up? (yes/no)
@@ -148,4 +220,4 @@ a15:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S2 q2=B2-S3 q3=B2-S5 q4=B2-S6 q5=B2-S4.reportpii q6=B2-S4.reportlock q7=B2-S4.linelock q8=B2-S4.travelpii q9=B2-S4.cardtxnpii q10=B2-S4.cardapprover q11=B2-S4.reportapprover q12=B2-S4.policylock q13=B2-EM q14=B3-RECEIPTS+B3-MILEAGE-LOGS+B3-PER-DIEM-RATES+B3-CASH-ADVANCES+B3-EXPENSE-CATEGORIES+B3-TRAVELER-PROFILES+B3-POLICY-VIOLATIONS+B3-DELEGATE-AUTHORIZATIONS+B3-VAT-TAX-RECORDS+B3-AUDIT-TRAIL-RECORDS q15=B3-REG-IRS-463+B3-REG-HMRC-P11D+B3-REG-FCPA+B3-REG-GDPR+B3-REG-PCI-DSS | domain_id=67 -->
+<!-- agent map, ignore: q1=B2-S2 q2=B2-S3 q3=B2-S5 q4=B2-S6 q5=B2-S4.reportpii q6=B2-S4.reportlock q7=B2-S4.linelock q8=B2-S4.travelpii q9=B2-S4.cardtxnpii q10=B2-S4.cardapprover q11=B2-S4.reportapprover q12=B2-S4.policylock q13=B2-EM q14=B3-RECEIPTS+B3-MILEAGE-LOGS+B3-PER-DIEM-RATES+B3-CASH-ADVANCES+B3-EXPENSE-CATEGORIES+B3-TRAVELER-PROFILES+B3-POLICY-VIOLATIONS+B3-DELEGATE-AUTHORIZATIONS+B3-VAT-TAX-RECORDS+B3-AUDIT-TRAIL-RECORDS q15=B3-REG-IRS-463+B3-REG-HMRC-P11D+B3-REG-FCPA+B3-REG-GDPR+B3-REG-PCI-DSS q16=B2-B9D-OWN-1379 q17=B2-B9D-OWN-1433 q18=B2-B9D-OWN-1445 q19=B2-CONSUMER-DMDO q20=B2-B9D-OWN-59 q21=B2-B9D-OWN-315 q22=B2-B9D-OWN-1132 | domain_id=67 -->

@@ -388,3 +388,45 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-13 - b1a execution + B9d + corrective backfill
+
+Executed every agent-doable item this pass; the domain stays `feedback_needed` (only b2 user decisions and partner-domain-gated b1b items remain).
+
+### B9d (handoff payload realization, BOTH directions) - DONE
+Ran `scripts/analytics/b9d_resolver.ts FLEET-MGMT --write`. 11 boundary payload tags, 7 distinct (process, owner) findings, all ORPHAN (no ROLL-UP, no MIS-TAG, so no destructive work). Additive owner-side b2 + q edits applied to whichever side owns each payload (Rule #1, all `record_status='new'`, no catalog writes):
+- FLEET-MGMT: confirmed pre-existing B2-B9D-OWN-315 (q13, "Process accounts payable (AP)"), B2-B9D-OWN-352 (q15, "Manage asset maintenance"), B2-B9D-OWN-1389 (q14, "fixed-asset additions and retires"); **added new B2-B9D-OWN-862** (q17, "Manage transportation fleet", owner FLEET-MGMT masters fleet_assignments + fleet_vehicles).
+- Neighbor files written (cross-domain B9d carve-out): FLEET-MAINT (B2-B9D-OWN-352), TELEMATICS (B2-B9D-OWN-862), FSM (B2-B9D-OWN-862).
+- B2-B9D-OWN-1543 ("Analyze assets and predict maintenance requirements", pid 1543) is NOT surfaced by the FLEET-MGMT boundary walk because its handoff (881) is TELEMATICS->FLEET-MAINT and does not touch FLEET-MGMT; it is correctly owned by FLEET-MGMT (masters the `fleet_vehicles` payload) and was pre-seeded by the earlier FLEET-MAINT pass. Left in place as a valid open b2.
+- This resolves the former b1a-B9D-VERIFY (deleted from state.yaml).
+
+### B13 entity_type classification - DONE
+All 5 masters were `unclassified` (B13 fail). Classified grounded in the domain review: fleet_vehicles 370, fleet_drivers 371, fleet_assignments 373, vehicle_inspections 374 -> `operational_workflow`; fuel_transactions 372 -> `operational_record` (config-shape, the Rule #12 lifecycle exemption is now structural via entity_type, not a notes write). Additive PATCH, record_status untouched. Loader `.tmp_deploy/fleet_mgmt_entity_type_2026_06_13.ts`.
+
+### B1B-HANDOFF-MODULE-FKS (FLEET-MGMT side) - DONE for the 6 resolvable rows
+Backfilled the FLEET-MGMT-side module FK where the FLEET-MGMT-side data_object resolves to a single mastering module (loader `.tmp_deploy/fleet_mgmt_handoff_module_fks_2026_06_13.ts`): outbound `source_domain_module_id` 313->205, 317->206, 874/875/876->204; inbound `target_domain_module_id` 318->205. Remaining NULLs are NOT FLEET-MGMT-side agent work: partner-side stays NULL until TELEMATICS / FLEET-MAINT / FIN modularize (report-only on their audits), and the 5 foreign-payload inbounds (319 driver_behavior_events, 321 vehicle_trips, 877 maintenance_defects, 880 driver_safety_scorecards, 884 service_work_orders) have no FLEET-MGMT module candidate because FLEET-MGMT declares no DMDO role on those payloads - filling them needs a consumer-DMDO modeling decision entangled with B2-VEHICLE-INSPECTIONS-DVIR, so the item stays open (re-scoped, not removed).
+
+### B1B-LIFECYCLE-STATES - DONE for the 2 unentangled workflow masters
+Authored lifecycle states (loader `.tmp_deploy/fleet_mgmt_lifecycle_states_2026_06_13.ts`):
+- fleet_vehicles (370, module 204): acquired (initial) -> in_service -> assigned -> maintenance -> retired (gate `retire_vehicle`) -> sold (terminal, gate `sell_vehicle`).
+- fleet_assignments (373, module 205): scheduled (initial) -> active -> completed (terminal) -> cancelled (terminal).
+Both well-formed (one initial, >=1 terminal, monotonic unique state_order, record_status=new). fleet_drivers (371) and vehicle_inspections (374) lifecycle states stay deferred - each is gated on an open b2 that relocates / reshapes its state machine (B2-DRIVERS-VS-EMPLOYEES + B2-HCM-DRIVER-LIFECYCLE for the driver machine; B2-VEHICLE-INSPECTIONS-DVIR for the inspection machine). The item is re-scoped to those two masters with the gating b2s recorded.
+
+### B6 intra-domain relationships - DONE (8 baseline edges)
+Authored the R1-R8 baseline from the 2026-05-30 audit (loader `.tmp_deploy/fleet_mgmt_intra_rels_2026_06_13.ts`), all one_to_many / owner_side=source / relationship_kind=reference, active/passive verb convention: fleet_vehicles->fleet_assignments, fleet_drivers->fleet_assignments, fleet_assignments->vehicle_inspections, fleet_vehicles->vehicle_inspections, fleet_drivers->vehicle_inspections, fleet_vehicles->fuel_transactions, fleet_drivers->fuel_transactions, fleet_assignments->fuel_transactions. Combined with the 2026-05-31 users-edges, B6 + B7 now populated.
+
+### Superseded items removed from state.yaml (Rule #22 hygiene)
+The per-module `<module>_agent` system-skill grain is RETIRED (per the supersession note at the head of state.yaml / `plans/per-domain-skill-restoration.md`). The three skill-layer items framed around it are superseded and deleted from state.yaml; the real remaining work (author `domain_module_tools` onto modules 204/205/206, retire legacy skill 60, derive the one domain-grain system skill) is catalog-backlog-tracked in `audits/_modularization-backlog.md` (FLEET-MGMT is enrolled there as one of the "12 un-authored multi-module domains"), not as per-domain state:
+- B1A-SYSTEM-SKILLS (author 3 per-module skills) - superseded.
+- B1B-LEGACY-SKILL (retire skill 60 after per-module skills land) - superseded.
+- B1B-CHANNEL-PRIMITIVE (send_email -> notify_person on a per-module skill) - superseded.
+
+### Still open (waiting on user / other domains)
+- b2: 17 questions in q-FLEET-MGMT.md (q1 drivers-vs-employees gate; q2 pattern flags; q3 DVIR scope; q4 event categories; q5 sign_document; q6 HCM driver-lifecycle; q7 motor pool; q8 regulation scope; q9 catalog copy approval; q10 aliases; q13-q17 B9d owner assignments). Plus optional b3 q11/q12.
+- b1b: B1B-HANDOFF-MODULE-FKS (partner-side NULLs + consumer-DMDO decision), B1B-LIFECYCLE-STATES (driver + inspection machines, b2-gated), B1B-REGULATIONS-UPSTREAM (upstream transportation-regulations seed + B2-REGULATION-SCOPE).
+
+### Fixes applied
+- B9d: additive owner b2 + q edits in audit files only (no catalog writes).
+- Catalog: 5 entity_type PATCH, 6 handoff module-FK PATCH, 10 lifecycle states inserted, 8 intra-domain relationships inserted. All `record_status='new'`. No deletions, no overwrites of non-empty values, no record_status flips.
+
+`next_action_by`: user. No agent-executable work remains; everything open is a b2 user decision or a b1b blocked on another domain / upstream seed.

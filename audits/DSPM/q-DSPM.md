@@ -109,6 +109,34 @@ a10:
 
 ---
 
+q12: Identity Governance and Administration forwards iam access policy to Data Security Posture Management to manage IT user identity and authorization, but Data Security Posture Management does not yet have anyone assigned to manage IT user identity and authorization, so this step has no owner. How should it be handled?
+- a) Record it now as work Data Security Posture Management owns, and assign a named owner once Data Security Posture Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Data Security Posture Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a12:
+
+---
+
+q13: Security Operations forwards sensitive data incident to Data Security Posture Management to analyze IT security threat impact, but Data Security Posture Management does not yet have anyone assigned to analyze IT security threat impact, so this step has no owner. How should it be handled?
+- a) Record it now as work Data Security Posture Management owns, and assign a named owner once Data Security Posture Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Data Security Posture Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a13:
+
+---
+
+q14: Handoff 290 (DSPM to Security Operations, on the "sensitive data incident resolved" event) is currently tagged with a broad parent process, "Control IT risk, compliance, and security". A more specific child process, "Analyze IT security threat impact" (the same one the related detection handoff 287 already uses), describes the incident-resolution work more precisely. Should I re-point 290's process tag to the more specific child? (yes/no)
+
+Recommended: yes. Matching the grain of sibling handoff 287 keeps the two incident handoffs consistent. This overwrites an existing process tag, so it needs your sign-off.
+
+a14:
+
+---
+
 ## Optional (will not hold up the build)
 
 q11: Flagship DSPM vendors surface four extra first-class masters beyond what is modeled today: data access paths (identity to role to permission to resource, surfaced by Cyera, Wiz, Sentra), remediation playbooks (parameterized fix recipes, surfaced by Cyera, Securiti, Wiz), toxic combinations (multi-factor risk patterns like PII plus public exposure plus over-permissive IAM, surfaced by Wiz), and data perimeters (the union of stores under a single policy or regulation, surfaced by BigID, Securiti, Concentric AI). Should I research and add the ones that hold up? (yes/no)
@@ -119,4 +147,4 @@ a11:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MODULE-SPLIT-NOTE q2=B2-S2 q3=B2-S3 q4=B2-S4 q5=B2-S5.incidentpii q6=B2-S5.policysubmitlock q7=B2-S5.shadowpii q8=B2-S5.policysingleapprover q9=B2-S6 q10=B2-S7 q11=B3-DATA-ACCESS-PATHS+B3-REMEDIATION-PLAYBOOKS+B3-TOXIC-COMBINATIONS+B3-DATA-PERIMETERS | domain_id=140 -->
+<!-- agent map, ignore: q1=B2-MODULE-SPLIT-NOTE q2=B2-S2 q3=B2-S3 q4=B2-S4 q5=B2-S5.incidentpii q6=B2-S5.policysubmitlock q7=B2-S5.shadowpii q8=B2-S5.policysingleapprover q9=B2-S6 q10=B2-S7 q11=B3-DATA-ACCESS-PATHS+B3-REMEDIATION-PLAYBOOKS+B3-TOXIC-COMBINATIONS+B3-DATA-PERIMETERS q12=B2-B9D-OWN-273 q13=B2-B9D-OWN-1164 q14=B2-B9D-RETAG-290 | domain_id=140 -->

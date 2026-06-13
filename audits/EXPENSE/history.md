@@ -485,3 +485,84 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-13 - B9d run (resolves B1A-B9D-VERIFY)
+
+Ran the B9d handoff-payload realization band via `scripts/analytics/b9d_resolver.ts EXPENSE --write` in
+BOTH directions across every boundary. This clears the only open `b1a` item (B1A-B9D-VERIFY), which is
+deleted from `state.yaml` in the same pass.
+
+### Classification (8 distinct (process, owner) findings over 10 boundary tags)
+
+- **RESOLVED (1):** pid 239 "Manage separation" (7.6.2), owner HCM, payload `employees` (handoff 468 HCM->EXPENSE). Already realized with a persona; no action.
+- **ROLL-UP / RE-TAG (2, destructive, NOT applied -- surfaced for sign-off):**
+  - 9.6 -> 9.6.2.4 "Process reimbursements and advances" on handoffs 129 (EXPENSE->FIN) and 139 (EXPENSE->PSA). Source = EXPENSE.
+  - 9.6.2 -> 9.6.2.4 on handoff 1157 (PAYROLL->EXPENSE). Source = PAYROLL.
+  - Both are `handoff_processes.process_id` re-points to a more specific same-entity tag; held back because re-pointing an existing row is a destructive edit needing user sign-off (Rule #21 / Rule #1).
+- **ORPHAN (5), routed to the OWNER on whichever side masters the carried entity, written as additive b2 + q items at record_status-neutral (no catalog writes):**
+  - pid 1379 "Process journal entries", owner EXPENSE (masters `expense_lines`), handoff 551 EXPENSE->FIN -> B2-B9D-OWN-1379 / q-EXPENSE q16.
+  - pid 1433 "Audit invoices and key data in AP system", owner EXPENSE (`expense_lines`), handoff 554 EXPENSE->AUDIT -> B2-B9D-OWN-1433 / q-EXPENSE q17.
+  - pid 1445 "Process reimbursements and advances", owner EXPENSE (`expense_reports`/`expense_lines`), handoffs 130 + 553 EXPENSE->AP-AUTO -> B2-B9D-OWN-1445 / q-EXPENSE q18.
+  - pid 59 "Process accounts payable and expense reimbursements", owner PAYROLL (`pay_slips`), handoff 101 PAYROLL->EXPENSE -> B2-B9D-OWN-59 written into audits/PAYROLL/ (state.yaml + q-PAYROLL).
+  - pid 317 "Manage corporate credit cards", owner SMP (`shadow_it_apps`), handoff 38 EXPENSE->SMP -> B2-B9D-OWN-317 written into audits/SMP/ (state.yaml + q-SMP).
+
+### Outcome
+
+- EXPENSE stays `feedback_needed` / `next_action_by: user`: the 3 EXPENSE-owned B9d ORPHANs join the
+  pre-existing b2 queue (B2-S2/S3/S4/S5/S6/EM). No agent-executable work remains on EXPENSE.
+- The 2 ROLL-UP re-points and any future mis-tag fixes are the only destructive steps; they await user
+  sign-off and were intentionally not applied.
+- No catalog/database writes (additive owner-file edits only). No `record_status` changes (Rule #1).
+- Cross-domain carve-out (Rule #22 (b)): owner items for PAYROLL and SMP were written into those domains'
+  own audit files, which is the prescribed routing for B9d ORPHANs owned by a neighbor.
+
+### JWT errors
+
+None.
+
+## 2026-06-13 - Agent-executable b1b/B13 execution (same pass)
+
+With B1A-S4 (modules + system skills) long satisfied, the previously-"blocked" b1b items whose only
+gate was that prerequisite became agent-executable. Executed in this pass:
+
+### B13 - entity_type classified on all 6 masters (was a silent unclassified backlog)
+
+All 6 EXPENSE masters were `entity_type='unclassified'` (a non-skippable B13 failure that the pre-B13
+audits never ran). Classified from the domain-review context (the documented state machines):
+expense_reports (210), expense_lines (211), corporate_cards (212), card_transactions (213),
+travel_bookings (215) -> `operational_workflow`; expense_policies (214) -> `catalog` (draft/active/
+deprecated is a config-versioning publishing flow). PATCH guarded to only touch rows still
+`unclassified`; `record_status` untouched (Rule #1).
+
+### B1B-S3 - 6 master state machines authored (33 lifecycle-state rows, Rule #12)
+
+Loader: .tmp_deploy-equivalent one-off (c:/tmp). 0 existing -> 33 inserted, all `record_status='new'`,
+`notes` empty (Rule #15). Per-master counts: 210=8, 211=7, 212=4, 213=5, 214=3, 215=6. Shape validated
+(exactly one is_initial, >=1 is_terminal, unique monotonic state_order per master). Workflow-gate states
+carry requires_permission=true + a verb override + the realizing module_id (210/211/214->191, 212/213->192,
+215->193): submit/approve/post/reject_expense_report, submit/approve/flag_..._expense_line,
+issue/suspend/cancel_corporate_card, match/reconcile/dispute_card_transaction, activate/deprecate_expense_policy,
+confirm/ticket/cancel_travel_booking.
+
+### B1B-S6 - EXPENSE-side handoff module FK backfill (B10b), deterministic
+
+Patched 10 outbound source_domain_module_id (129/130/139/171/551/552/553/554/599 -> 191, 555 -> 193) and
+2 inbound target_domain_module_id (165 -> 192, 1157 -> 191), derived per B10b (source = module holding the
+trigger_event data_object; target = module holding the payload data_object; strongest role). Guarded to
+only patch NULL FKs. Five rows have no EXPENSE module modeling the data_object and stay NULL by design
+(38 shadow_it_apps; 101 pay_slips; 468 employees; 559 spend_policies; 600 card_authorizations) -> carried
+as B1B-S6-RESIDUAL gated on the new B2-CONSUMER-DMDO q-file decision (q19).
+
+### B1B-H1 - net-new APQC tags authored (handoff_processes), 14 of 17 now tagged
+
+Authored 4 fresh agent_curated tags (171 -> 1442, 599 -> 1445, 165 -> 317, 600 -> 317), record_status='new'.
+Residual: 552/555/559 deferred (no clean PCF, policy-monitoring shape -> Discover Pass 3 custom-process
+triage) and 4 REPLACE candidates + 2 B9d ROLL-UP re-points are destructive tag edits awaiting sign-off
+(B2-EM). Carried as B1B-H1-RESIDUAL.
+
+### Outcome
+
+EXPENSE remains `feedback_needed` / `next_action_by: user`. No agent-executable work remains: every open
+item is a user decision (b2: B2-S2/S3/S4/S5/S6/EM, the 3 B9d owner items, B2-CONSUMER-DMDO), a destructive
+step awaiting sign-off (B1B-H1-RESIDUAL REPLACE/re-point), a defer with no clean PCF, or a non-blocking
+b3 idea. No `record_status` flips (Rule #1). JWT errors: none.

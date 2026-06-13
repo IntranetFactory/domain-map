@@ -82,6 +82,16 @@ a7:
 
 ---
 
+q10: Fleet Management forwards driver behavior event to Vehicle Telematics to manage transportation fleet, but Vehicle Telematics does not yet have anyone assigned to manage transportation fleet, so this step has no owner. How should it be handled?
+- a) Record it now as work Vehicle Telematics owns, and assign a named owner once Vehicle Telematics sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Vehicle Telematics decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a10:
+
+---
+
 ## Optional (will not hold up the build)
 
 q8: Five compliance and FMCSA-mandated entities are missing and are first-class across all flagship vendors: DVIR inspections, HOS certifications, driver-coaching sessions (all on Compliance and Safety), plus IFTA jurisdiction summaries and engine fault codes (on Fleet Tracking). Should I add the ones that hold up once the DVIR ownership call in q1 lands? (yes/no)
@@ -100,4 +110,4 @@ a9:
 
 ---
 
-<!-- agent map, ignore: q1=B2-DVIR-OWNERSHIP q2=B2-PERSONAL-CONTENT-SCOPE q3=B2-LIFECYCLE-EXEMPTIONS q4=B2-EVENT-CATEGORY-CONFIRMATION q5=B2-NOTIFY-TEAM-COVERAGE-TIER q6=B2-FMIS-INBOUND-ROUTING+B3-AG-TELEMATICS q7=B2-HANDOFF-312-FATE q8=B1B-M1-MISSING-ENTITIES+B3-IFTA-JURISDICTION-SUMMARIES+B3-FAULT-CODES+B3-DRIVER-COACHING-SESSIONS+B3-HOS-CERTIFICATIONS q9=B3-DRIVER-MESSAGES+B3-VEHICLE-ENV-SENSORS+B3-ROUTE-EXECUTIONS | domain_id=148 -->
+<!-- agent map, ignore: q1=B2-DVIR-OWNERSHIP q2=B2-PERSONAL-CONTENT-SCOPE q3=B2-LIFECYCLE-EXEMPTIONS q4=B2-EVENT-CATEGORY-CONFIRMATION q5=B2-NOTIFY-TEAM-COVERAGE-TIER q6=B2-FMIS-INBOUND-ROUTING+B3-AG-TELEMATICS q7=B2-HANDOFF-312-FATE q8=B1B-M1-MISSING-ENTITIES+B3-IFTA-JURISDICTION-SUMMARIES+B3-FAULT-CODES+B3-DRIVER-COACHING-SESSIONS+B3-HOS-CERTIFICATIONS q9=B3-DRIVER-MESSAGES+B3-VEHICLE-ENV-SENSORS+B3-ROUTE-EXECUTIONS q10=B2-B9D-OWN-862 | domain_id=148 -->

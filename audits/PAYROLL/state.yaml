@@ -243,6 +243,46 @@ b2:
     why: |
       Recording it now means that the moment Payroll Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PAYROLL.md q15.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1379
+    summary: "Payroll Management: name an owner for \"Process journal entries\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards payroll journal entry to Payroll Management to process journal entries, but Payroll Management does not yet have anyone assigned to process journal entries, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Payroll Management owns, and assign a named owner once Payroll Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Payroll Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PAYROLL.md q16.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-59
+    summary: "Payroll Management: name an owner for \"Process accounts payable and expense reimbursements\" (no one is responsible for it today)"
+    question: |
+      Expense Management forwards pay slip to Payroll Management to process accounts payable and expense reimbursements, but Payroll Management does not yet have anyone assigned to process accounts payable and expense reimbursements, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Payroll Management owns, and assign a named owner once Payroll Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Payroll Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PAYROLL.md q17.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1052
+    summary: "Payroll Management: name an owner for \"Administer benefit enrollment\" (no one is responsible for it today)"
+    question: |
+      Benefits Administration forwards payroll journal entry to Payroll Management to administer benefit enrollment, but Payroll Management does not yet have anyone assigned to administer benefit enrollment, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Payroll Management owns, and assign a named owner once Payroll Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Payroll Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PAYROLL.md q18.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1438
+    summary: "Payroll Management: name an owner for \"Process payments\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards payroll journal entry to Payroll Management to process payments, but Payroll Management does not yet have anyone assigned to process payments, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Payroll Management owns, and assign a named owner once Payroll Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Payroll Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PAYROLL.md q19.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-YEAR-END-STATEMENTS

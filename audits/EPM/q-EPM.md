@@ -100,6 +100,56 @@ a10:
 
 ---
 
+q13: Strategic Portfolio Management forwards financial scenario to Enterprise Performance Management to perform planning or budgeting or forecasting, but Enterprise Performance Management does not yet have anyone assigned to perform planning or budgeting or forecasting, so this step has no owner. How should it be handled?
+- a) Record it now as work Enterprise Performance Management owns, and assign a named owner once Enterprise Performance Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Enterprise Performance Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a13:
+
+---
+
+q14: Human Capital Management forwards financial plan to Enterprise Performance Management to prepare periodic budgets, but Enterprise Performance Management does not yet have anyone assigned to prepare periodic budgets, so this step has no owner. How should it be handled?
+- a) Record it now as work Enterprise Performance Management owns, and assign a named owner once Enterprise Performance Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Enterprise Performance Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a14:
+
+---
+
+q15: Core Financial Management forwards financial plan to Enterprise Performance Management to operationalize and implement plans to achieve budget, but Enterprise Performance Management does not yet have anyone assigned to operationalize and implement plans to achieve budget, so this step has no owner. How should it be handled?
+- a) Record it now as work Enterprise Performance Management owns, and assign a named owner once Enterprise Performance Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Enterprise Performance Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a15:
+
+---
+
+q16: Audit Management forwards forecast to Enterprise Performance Management to prepare periodic financial forecasts, but Enterprise Performance Management does not yet have anyone assigned to prepare periodic financial forecasts, so this step has no owner. How should it be handled?
+- a) Record it now as work Enterprise Performance Management owns, and assign a named owner once Enterprise Performance Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Enterprise Performance Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a16:
+
+---
+
+q17: Core Financial Management forwards variance analysis to Enterprise Performance Management to perform variance analysis against forecasts and budgets, but Enterprise Performance Management does not yet have anyone assigned to perform variance analysis against forecasts and budgets, so this step has no owner. How should it be handled?
+- a) Record it now as work Enterprise Performance Management owns, and assign a named owner once Enterprise Performance Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Enterprise Performance Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a17:
+
+---
+
 ## Optional (will not hold up the build)
 
 q11: Two master entities that every flagship EPM platform ships are absent today: an allocation engine (allocation rule definitions plus their per-period runs) and a headcount/position-level plan separate from the dollar plan. Should I research and add the ones that hold up? (yes/no)
@@ -118,4 +168,4 @@ a12:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S7b q3=B2-S4 q4=B2-S2 q5=B2-S3.plansubmitlock q6=B2-S3.plansingleapprover q7=B2-S3.budgetsubmitlock q8=B2-S3.forecastsubmitlock q9=B2-S3.variancesingleapprover q10=B1A-S10b q11=B3-S1+B3-S2 q12=B3-S3 | domain_id=66 -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S7b q3=B2-S4 q4=B2-S2 q5=B2-S3.plansubmitlock q6=B2-S3.plansingleapprover q7=B2-S3.budgetsubmitlock q8=B2-S3.forecastsubmitlock q9=B2-S3.variancesingleapprover q10=B1A-S10b q11=B3-S1+B3-S2 q12=B3-S3 q13=B2-B9D-OWN-297 q14=B2-B9D-OWN-1322 q15=B2-B9D-OWN-1323 q16=B2-B9D-OWN-1324 q17=B2-B9D-OWN-1325 | domain_id=66 -->

@@ -1,7 +1,7 @@
 schema_version: 2
 domain: RE-INVEST
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 # b1a fully executed 2026-06-06 (all 5 items resolved). See history.md
@@ -226,6 +226,26 @@ b2:
       - "(b) Approve 169, reject 760. Strategic framing intended."
       - "(c) Approve both; legitimate dual classification."
     why: "Independent of all other items. Recommend (a)."
+  - id: B2-B9D-OWN-1359
+    summary: "Real Estate Investment Management: name an owner for \"Post AR activity to the general ledger\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards asset management fee to Real Estate Investment Management to post AR activity to the general ledger, but Real Estate Investment Management does not yet have anyone assigned to post AR activity to the general ledger, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Real Estate Investment Management owns, and assign a named owner once Real Estate Investment Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Real Estate Investment Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-RE-INVEST.md q11.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1390
+    summary: "Real Estate Investment Management: name an owner for \"Process and record fixed-asset adjustments, enhancements, revaluations, and transfers\" (no one is responsible for it today)"
+    question: |
+      Cloud Financial Operations forwards property valuation to Real Estate Investment Management to process and record fixed-asset adjustments, enhancements, revaluations, and transfers, but Real Estate Investment Management does not yet have anyone assigned to process and record fixed-asset adjustments, enhancements, revaluations, and transfers, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Real Estate Investment Management owns, and assign a named owner once Real Estate Investment Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Real Estate Investment Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-RE-INVEST.md q12.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-RE-ACQ-PIPELINE

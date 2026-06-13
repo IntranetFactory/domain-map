@@ -366,3 +366,55 @@ None.
 - https://tests.semantius.app/domain_map/data_objects?id=in.(475,476,477)
 - https://tests.semantius.app/domain_map/domains?id=eq.53
 - https://tests.semantius.app/domain_map/handoff_processes?handoff_id=eq.953
+
+## 2026-06-13 - Audit (B9d realization, state-driven execute)
+
+### Summary
+
+State-driven Validate pass over `audits/EAM/state.yaml`. EAM remains UNBUILT (live re-confirmed 2026-06-13: 0 `domain_modules`, 0 `capability_domains` for domain_id=53). The single agent-executable open item, B1A-B9D-VERIFY (B9d handoff-payload realization, never run on this domain), was executed in BOTH directions via `scripts/analytics/b9d_resolver.ts EAM --write`. The remainder of the worklist (B1A-BUILD and the entire b1b band) stays cascade-blocked on the user decision B2-MODSPLIT (2-module vs 3-module shape); per the Validate contract an unbuilt 0-module/0-capability domain is surfaced, not scaffolded.
+
+### B9d resolver output (both directions, 13 boundary tags)
+
+verdicts: 5 ORPHAN, 1 RE-TAG, 7 UNOWNED.
+
+ORPHANs routed to OWNER domains' audit files (additive `b2` + q-file question, `record_status` untouched, no catalog writes; the cross-domain B9d carve-out, state.yaml hygiene (b)):
+
+| process | pid | owner | handoff | owner-file item |
+|---|---|---|---|---|
+| Perform asset maintenance | 353 | FSM (unbuilt) | 1260 FSM->EAM | B2-B9D-OWN-353 |
+| Decommission productive assets | 355 | FSM (unbuilt) | 1260 FSM->EAM | B2-B9D-OWN-355 |
+| Measure financial returns on completed capital projects | 1412 | REAL-EST (unbuilt) | 294 REAL-EST->EAM | B2-B9D-OWN-1412 |
+| Update work and asset records | 1552 | FLEET-MAINT (unbuilt) | 320 FLEET-MAINT->EAM | B2-B9D-OWN-1552 |
+| Perform corrective asset maintenance and repairs | 1558 | ITSM (unbuilt) | 866 EAM->ITSM | B2-B9D-OWN-1558 |
+
+Each owner got a durable `b2` item in its `state.yaml` plus a plain-language blocking question in its `q-<OWNER>.md`. No EAM-side write was needed for these (the realization lands on the owner).
+
+RE-TAG (destructive source re-point, surfaced for sign-off, NOT applied): REAL-EST tagged handoff 294 coarsely with 9.4.2 "Perform capital project accounting"; the more specific 9.4.2.5 exists on the same entity. Re-point is a SOURCE edit owned by REAL-EST; surfaced for that domain's sign-off.
+
+UNOWNED dependencies (carried entity has no master row anywhere; surfaced on the sender, not dropped): 7 found, spanning MFG-OPS <-> EAM (`production_schedules`, `production_downtime_events`, `eam_work_orders`) and EAM->GRC (`equipment_pm_schedules`). These reflect EAM being unbuilt (its masters have no `domain_module_data_objects` master row, only legacy `domain_data_objects`), so they resolve when EAM modularizes (B1A-BUILD / B1B-S1). No fix applied; surfaced for the senders.
+
+### Executed (local audit files only; no catalog writes)
+
+| Item | Action | Result |
+|---|---|---|
+| B1A-B9D-VERIFY | Ran b9d_resolver EAM --write (both directions) | 5 ORPHAN owner-file edits applied to FSM / REAL-EST / FLEET-MAINT / ITSM; RE-TAG + 7 UNOWNED surfaced. Item RESOLVED, removed from state.yaml. |
+
+### Surfaced / left (unchanged, cascade-blocked)
+
+- B1A-BUILD + b1b band (B1B-S1, S2, S4, S6, S7-events, S7-users, B1, B2): blocked on M1 (0 modules) and/or a b2 decision. Surfaced, not scaffolded.
+- b2 decisions (all carried, open): B2-MODSPLIT (load-bearing), B2-M7-ESCALATES, B2-WORK-ORDERS-BARE, B2-FIXED-ASSETS, B2-DOMAIN-CANDIDATES, B2-REG-SCOPE, B2-USERS-EDGES.
+- B1A-PHASE-P (personas/RACI): deferred, no modules to anchor to.
+- B3-MARKET-ENTITIES: Phase 0 backlog, unchanged.
+
+### Result
+
+next_action_by flips to `user`: no agent-executable work remains. Every open item is a b2 user decision (gated by B2-MODSPLIT) or cascade-blocked on it. A fresh q-EAM.md is generated for the open b2 set.
+
+### JWT errors
+
+None.
+
+### UI
+
+- https://tests.semantius.app/domain_map/handoffs?source_domain_id=eq.53
+- https://tests.semantius.app/domain_map/handoff_processes

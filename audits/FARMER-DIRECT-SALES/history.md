@@ -383,3 +383,28 @@ UI:
 - **B1B-H1**: 365/962/964 gated on B2-S5; 963 has no clean PCF cross-industry match (defer to Discover Pass 3). Verified live 2026-06-07 that all 4 still carry 0 handoff_processes rows and no clean independent match exists while CRM-target is open.
 - **b3 backlog** (7 items): share_swaps, farmers_market_events, producer_payouts, producers, cottage_food_disclosures, FDS-COMPLIANCE module, domain_regulations seed. Untouched.
 - **Former B1B-S4 / B2-S2** (skill_tools.notes Rule #15 revert): RETIRED / moot. `skill_tools` table dropped (PGRST205 live); per-module system skills retired by the 2026-06-06 supersession. Closed.
+
+## 2026-06-13, B9d band (handoff payload realization, both directions)
+
+Ran `scripts/analytics/b9d_resolver.ts FARMER-DIRECT-SALES` in both directions (10 boundary payload tags, 6 distinct (process, owner) findings). Resolves the only open `next_action_by: agent` item, B1A-B9D-VERIFY (now dropped from `b1a`).
+
+Verdicts: 1 RESOLVED, 1 RE-TAG (ROLL-UP), 4 ORPHAN.
+
+- **RESOLVED (no action):** 9.2.2 "Invoice customer" (pid 302) on wholesale_orders, handoff 961 (FDS->FIN). Exact code is realized with RACI on the FDS side.
+- **RE-TAG / ROLL-UP (destructive, surfaced for sign-off, NOT applied):** 3.5.2 "Manage customers and accounts" (pid 148) on customers, handoffs 363 (FDS->CRM), 1214, 1215 (CRM->FDS). The realized work is the narrower descendant 3.5.2.4 "Manage customer relationships" (pid 718). Re-pointing `handoff_processes.process_id` 148 -> 718 overwrites a non-empty FK on 3 existing rows, so it is held as new b2 item B2-B9D-RETAG-363 and surfaced as q-FARMER-DIRECT-SALES.md q12. Not applied (Rule #21 / Rule #1).
+- **ORPHAN -> owner FARMER-DIRECT-SALES (this domain), additive owner-side b2 + q written this pass:**
+  - pid 55 "Perform revenue accounting" on farmers_market_sales (handoff 960, FDS->FIN) -> B2-B9D-OWN-55 / q10.
+  - pid 1356 "Receive/Deposit customer payments" on csa_memberships (handoff 364, FDS->FIN) -> B2-B9D-OWN-1356 / q11.
+  Both owners are unbuilt (FDS has 0 personas, Phase-P deferred), so the persona itself is part of the question; recorded now per the B9d owner-routing rule so the work is not rediscovered later.
+- **ORPHAN -> owner CRM (cross-domain carve-out, written into CRM's audit files this pass):** pid 718 "Manage customer relationships" on customers (handoffs 1213, 1216, 1217, CRM->FDS) -> CRM B2-B9D-OWN-718 + q-CRM.md.
+- **ORPHAN -> owner FMIS (cross-domain carve-out, written into FMIS's audit files this pass):** pid 171 "Maintain production records and manage lot traceability" on harvest_records (handoff 350, FMIS->FDS) -> FMIS B2-B9D-OWN-171 + q-FMIS.md.
+
+No catalog/database writes. All edits are to local audit files (FDS, CRM, FMIS state.yaml + q-files). No `record_status` touched (Rule #1). On answer of q10/q11/q12, the additive realization rows land `record_status='new'`; the q12 re-point is the only destructive step and needs explicit sign-off.
+
+### Net state after this pass
+
+- `next_action_by: user`, `status: feedback_needed`. No agent-executable work remains.
+- Open `b1a`: B1A-PHASE-P only (personas/RACI, `status: deferred` under the Phase-P contract; not authored in a bulk execute pass).
+- Open `b2`: B2-S1, B2-S3..S7 (pre-existing) + B2-B9D-OWN-55, B2-B9D-OWN-1356, B2-B9D-RETAG-363 (new this pass).
+- Open `b1b`: B1B-S1, B1B-S2, B1B-S5, B1B-H1 (unchanged; blocked on FIN / FOOD-TRACE / FMIS / CRM audits or user decisions).
+- Open `b3`: 7 items (unchanged).

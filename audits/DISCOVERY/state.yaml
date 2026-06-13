@@ -11,8 +11,8 @@
 schema_version: 2
 domain: DISCOVERY
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-08"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # DISCOVERY is UNBUILT: 0 domain_modules (M1 hard fail), 0 capability_domains, 0 DMDO.
 # The 2026-06-07 state-driven pass executed every additive/corrective item that does NOT
@@ -39,12 +39,17 @@ last_audit: "2026-06-08"
 # B2-SVC-MAPS recommendation UNCHANGED at (b) CMDB-mastered (vendors market the service-map
 # RESULT as a CMDB asset even when the mapping engine ships on the Discovery line).
 # q-DISCOVERY.md regenerated with inline vendor evidence. Still feedback_needed; awaiting a-file.
+#
+# 2026-06-13: B9d (handoff payload realization) ran via scripts/analytics/b9d_resolver.ts in BOTH
+# directions (--write). Resolved B1A-B9D-VERIFY (removed). 6 ORPHANs routed additive b2+q into the
+# OWNER domains' audit files (SMP/SAM/ITOM/ITSM newly added; CMDB/HAM idempotent no-op). Zero
+# ROLL-UP, zero MIS-TAG. 2 UNOWNED dependencies surfaced (DISCOVERY's own masters 81/82/83 have no
+# DMDO master row because the domain is unbuilt) - they reclassify when B1B-MODULES + B1B-DMDO-MIGRATE
+# run; already covered by the existing b1b items, no new item invented. No catalog/DB writes.
+# next_action_by now USER: no agent-executable work remains; everything left needs B2-MOD-SHAPE.
+# See history.md 2026-06-13. q-DISCOVERY.md is current (B9d added no DISCOVERY-side question).
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-CAPS
     summary: "Author 5-7 capabilities for DISCOVERY and link via capability_domains (A2 fail; 0 rows today). Part of the build; runs with the Phase A/M load once B2-MOD-SHAPE is chosen."
     finding: "A2 hard fail. capability_domains for domain_id=5 returns 0 rows. Domain has no defined capabilities, so M4/M6 cannot be evaluated. Capability count drives the Rule #14 M2 module threshold, so this is part of the unbuilt-domain build, not a standalone additive fix."

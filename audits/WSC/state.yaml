@@ -110,10 +110,6 @@ b2:
       - "Leave 'End-User Computing' as a deliberate finer-grained sub-function."
     why: "Reframed as a note rather than an executed fix: the row is non-empty and changing the owning function FK is a destructive overwrite the agent must not apply unapproved (Rule #21). C1's pass criterion (>=1 owner row) is already met."
 
-b2_superseded:
-  - id: B2-S3
-    summary: "SUPERSEDED 2026-06-06 (per-domain-skill restoration). Rule #15 notes-pollution on 6 skill_tools rows across WSC system skills 174/175/176."
-    note: "skill_tools is DROPPED under the per-domain-skill restoration (see supersession header). The notes-pollution question on skill_tools rows is moot: the table is retired and per-module tool requirements move to domain_module_tools. No action; retained for provenance only. Tool re-authoring is tracked in audits/_modularization-backlog.md."
   - id: B2-B9D-OWN-928
     summary: "Workstream Collaboration: name an owner for \"Respond to customer problems, requests, and inquiries\" (no one is responsible for it today)"
     question: |
@@ -133,6 +129,41 @@ b2_superseded:
       - "Leave it off the list for now."
     why: |
       Recording it now means that the moment Workstream Collaboration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-WSC.md q12.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1179
+    summary: "Workstream Collaboration: name an owner for \"Review and monitor physical and logical IT data security measures\" (no one is responsible for it today)"
+    question: |
+      Data Loss Prevention forwards chat message to Workstream Collaboration to review and monitor physical and logical IT data security measures, but Workstream Collaboration does not yet have anyone assigned to review and monitor physical and logical IT data security measures, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Workstream Collaboration owns, and assign a named owner once Workstream Collaboration sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Workstream Collaboration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-WSC.md q13.
+    extra_b9d_added: "2026-06-13"
+
+b2_superseded:
+  - id: B2-S3
+    summary: "SUPERSEDED 2026-06-06 (per-domain-skill restoration). Rule #15 notes-pollution on 6 skill_tools rows across WSC system skills 174/175/176."
+    note: "skill_tools is DROPPED under the per-domain-skill restoration (see supersession header). The notes-pollution question on skill_tools rows is moot: the table is retired and per-module tool requirements move to domain_module_tools. No action; retained for provenance only. Tool re-authoring is tracked in audits/_modularization-backlog.md."
+  - id: B2-B9D-OWN-428
+    summary: "Workstream Collaboration: name an owner for \"Develop and manage content\" (no one is responsible for it today)"
+    question: |
+      Enterprise Content Management forwards chat message attachment to Workstream Collaboration to develop and manage content, but Workstream Collaboration does not yet have anyone assigned to develop and manage content, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Workstream Collaboration owns, and assign a named owner once Workstream Collaboration sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Workstream Collaboration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-WSC.md q14.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1440
+    summary: "Workstream Collaboration: name an owner for \"Retain records\" (no one is responsible for it today)"
+    question: |
+      Enterprise Content Management forwards chat channel to Workstream Collaboration to retain records, but Workstream Collaboration does not yet have anyone assigned to retain records, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Workstream Collaboration owns, and assign a named owner once Workstream Collaboration sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Workstream Collaboration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-WSC.md q15.
     extra_b9d_added: "2026-06-13"
 
 b3:

@@ -55,6 +55,16 @@ a4:
 
 ---
 
+q6: Core Financial Management forwards loyalty transaction to Customer Loyalty Management to monitor customer loyalty program benefits to the enterprise and the customer, but Customer Loyalty Management does not yet have anyone assigned to monitor customer loyalty program benefits to the enterprise and the customer, so this step has no owner. How should it be handled?
+- a) Record it now as work Customer Loyalty Management owns, and assign a named owner once Customer Loyalty Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Customer Loyalty Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a6:
+
+---
+
 ## Optional (will not hold up the build)
 
 q5: Six extra masters show up across the flagship loyalty vendors (promotion campaigns, partner programs, member referrals, tier-qualification periods, gamification badges, point-expiration policies), several of which would give the engagement module its own in-domain master. Should I research and add the ones that hold up? (yes/no)
@@ -65,4 +75,4 @@ a5:
 
 ---
 
-<!-- agent map, ignore: q1=B2-CLUSTER-DRAFTS q2=B2-CATALOG-UX q3=B2-LIFECYCLE-EXEMPT q4=B2-CAP-OWNERSHIP q5=B3-PROMOTION-CAMPAIGNS+B3-PARTNER-PROGRAMS+B3-MEMBER-REFERRALS+B3-TIER-QUAL-PERIODS+B3-GAMIFICATION-BADGES+B3-POINT-EXPIRATION-POLICIES | domain_id=78 -->
+<!-- agent map, ignore: q1=B2-CLUSTER-DRAFTS q2=B2-CATALOG-UX q3=B2-LIFECYCLE-EXEMPT q4=B2-CAP-OWNERSHIP q5=B3-PROMOTION-CAMPAIGNS+B3-PARTNER-PROGRAMS+B3-MEMBER-REFERRALS+B3-TIER-QUAL-PERIODS+B3-GAMIFICATION-BADGES+B3-POINT-EXPIRATION-POLICIES q6=B2-B9D-OWN-643 | domain_id=78 -->

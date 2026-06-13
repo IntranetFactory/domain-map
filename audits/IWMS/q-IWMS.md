@@ -73,6 +73,16 @@ a7:
 
 ---
 
+q11: Core Financial Management forwards workplace service request to Workplace and Space Management to prepare chargeback invoices, but Workplace and Space Management does not yet have anyone assigned to prepare chargeback invoices, so this step has no owner. How should it be handled?
+- a) Record it now as work Workplace and Space Management owns, and assign a named owner once Workplace and Space Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Workplace and Space Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
 ## Optional (will not hold up the build)
 
 q8: Flagship workplace platforms model several extra workplace objects that this domain does not yet capture (employee or team move and relocation orders, parking-spot reservations, wayfinding and signage routing records, and raw occupancy-sensor readings). Should I research and add the ones that hold up? (yes/no)
@@ -99,4 +109,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-SPLIT q2=B2-CAP q3=B2-FLAGS.deskbooking q4=B2-FLAGS.roomreservation q5=B2-FLAGS.servicerequest q6=B1A-N15 q7=B2-FLOOR q8=B3-MOVE-ORDERS+B3-PARKING+B3-WAYFINDING+B3-OCC-SENSORS+B3-MODULAR q9=B3-COMPLIANCE q10=B3-BMS | domain_id=23 -->
+<!-- agent map, ignore: q1=B2-SPLIT q2=B2-CAP q3=B2-FLAGS.deskbooking q4=B2-FLAGS.roomreservation q5=B2-FLAGS.servicerequest q6=B1A-N15 q7=B2-FLOOR q8=B3-MOVE-ORDERS+B3-PARKING+B3-WAYFINDING+B3-OCC-SENSORS+B3-MODULAR q9=B3-COMPLIANCE q10=B3-BMS q11=B2-B9D-OWN-1371 | domain_id=23 -->

@@ -52,14 +52,25 @@ a4:
 
 ---
 
-## Optional (will not hold up the build)
+q5: One outbound handoff from Data Quality to Data Catalog and Governance (when a profile result updates, passing the affected data assets) is currently labeled with the wrong standard-process tag ("Maintain master data"). That work is actually handled under a different process, "Monitor and control business information", which the catalog already knows about. How should the mislabel be fixed?
 
-q5: Three additional entity candidates show up in the vendor surface (data_contracts, a bilateral producer-to-consumer contract adjacent to SLAs; survivorship_rules, for golden-record formation; merge_decisions, the dedup workflow). Should I research and add the ones that hold up, given that survivorship and merge may belong to MDM rather than Data Quality? (yes/no)
+- a) Re-label the handoff to point at "Monitor and control business information" (the process that really handles this).
+- b) Remove the label entirely and leave the handoff untagged for now.
 
-Recommended: yes, but additive and only after the modules exist. data_contracts is the strongest fit; survivorship_rules and merge_decisions need a vetting pass to settle the MDM-versus-DQ home.
+Recommended: a. The work is real and already realized under "Monitor and control business information", so re-labeling keeps the handoff tied to the right process rather than dropping it back to an untagged guess. (This edits an existing tag, so it needs your sign-off before I change it.)
 
 a5:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MOD-SPLIT q2=B2-ANOMALY-OWNER q3=B2-XCUT-CAP q4=B2-COVERAGE q5=B3-DATA-CONTRACTS+B3-SURVIVORSHIP-RULES+B3-MERGE-DECISIONS | domain_id=90 -->
+## Optional (will not hold up the build)
+
+q6: Three additional entity candidates show up in the vendor surface (data_contracts, a bilateral producer-to-consumer contract adjacent to SLAs; survivorship_rules, for golden-record formation; merge_decisions, the dedup workflow). Should I research and add the ones that hold up, given that survivorship and merge may belong to MDM rather than Data Quality? (yes/no)
+
+Recommended: yes, but additive and only after the modules exist. data_contracts is the strongest fit; survivorship_rules and merge_decisions need a vetting pass to settle the MDM-versus-DQ home.
+
+a6:
+
+---
+
+<!-- agent map, ignore: q1=B2-MOD-SPLIT q2=B2-ANOMALY-OWNER q3=B2-XCUT-CAP q4=B2-COVERAGE q5=B2-B9D-MISTAG-268 q6=B3-DATA-CONTRACTS+B3-SURVIVORSHIP-RULES+B3-MERGE-DECISIONS | domain_id=90 -->

@@ -105,6 +105,16 @@ a10:
 
 ---
 
+q15: Core Financial Management forwards cycle count to Inventory Management to perform inventory accounting, but Inventory Management does not yet have anyone assigned to perform inventory accounting, so this step has no owner. How should it be handled?
+- a) Record it now as work Inventory Management owns, and assign a named owner once Inventory Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Inventory Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a15:
+
+---
+
 ## Optional (will not hold up the build)
 
 q11: Three extra stock objects show up across the flagship inventory vendors: lightweight demand forecasts (rolling item-level demand from sales history), landed costs (freight, duty, insurance, handling rolled into valuation), and consignment stock (supplier-owned or customer-held ownership distinctions). Should I research and add the ones that hold up? (yes/no)
@@ -139,4 +149,4 @@ a14:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S6 q2=B2-S1 q3=B2-S2.transferlock q4=B2-S2.lotlock q5=B2-S2.serialscraplock q6=B2-S2.serialpii q7=B2-S3 q8=B2-S4 q9=B2-S5 q10=B1B-H1 q11=B3-MISSING-DEMAND-FORECASTS+B3-MISSING-LANDED-COSTS+B3-MISSING-CONSIGNMENT-STOCK q12=B3-COMPLIANCE-CANDIDATES q13=B3-MODULARIZATION-CANDIDATES q14=B3-CANDIDATE-DOMAINS | domain_id=164 -->
+<!-- agent map, ignore: q1=B2-S6 q2=B2-S1 q3=B2-S2.transferlock q4=B2-S2.lotlock q5=B2-S2.serialscraplock q6=B2-S2.serialpii q7=B2-S3 q8=B2-S4 q9=B2-S5 q10=B1B-H1 q11=B3-MISSING-DEMAND-FORECASTS+B3-MISSING-LANDED-COSTS+B3-MISSING-CONSIGNMENT-STOCK q12=B3-COMPLIANCE-CANDIDATES q13=B3-MODULARIZATION-CANDIDATES q14=B3-CANDIDATE-DOMAINS q15=B2-B9D-OWN-1326 | domain_id=164 -->

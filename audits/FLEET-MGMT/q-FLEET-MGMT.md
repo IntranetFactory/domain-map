@@ -122,6 +122,56 @@ a10:
 
 ---
 
+q13: Core Financial Management forwards fuel transaction to Fleet Management to process accounts payable (AP), but Fleet Management does not yet have anyone assigned to process accounts payable (AP), so this step has no owner. How should it be handled?
+- a) Record it now as work Fleet Management owns, and assign a named owner once Fleet Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Fleet Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a13:
+
+---
+
+q14: Core Financial Management forwards vehicle to Fleet Management to process and record fixed-asset additions and retires, but Fleet Management does not yet have anyone assigned to process and record fixed-asset additions and retires, so this step has no owner. How should it be handled?
+- a) Record it now as work Fleet Management owns, and assign a named owner once Fleet Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Fleet Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a14:
+
+---
+
+q15: Fleet Maintenance Management forwards vehicle inspection to Fleet Management to manage asset maintenance, but Fleet Management does not yet have anyone assigned to manage asset maintenance, so this step has no owner. How should it be handled?
+- a) Record it now as work Fleet Management owns, and assign a named owner once Fleet Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Fleet Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a15:
+
+---
+
+q16: Vehicle Telematics forwards vehicle to Fleet Management to analyze assets and predict maintenance requirements, but Fleet Management does not yet have anyone assigned to analyze assets and predict maintenance requirements, so this step has no owner. How should it be handled?
+- a) Record it now as work Fleet Management owns, and assign a named owner once Fleet Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Fleet Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a16:
+
+---
+
+q17: Field Service Management forwards fleet assignment to Fleet Management to manage transportation fleet, but Fleet Management does not yet have anyone assigned to manage transportation fleet, so this step has no owner. How should it be handled?
+- a) Record it now as work Fleet Management owns, and assign a named owner once Fleet Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Fleet Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a17:
+
+---
+
 ## Optional (will not hold up the build)
 
 q11: Several deeper fleet records show up across the flagship vendors but are not modeled yet (driver qualification files, FMCSA clearinghouse queries, vehicle registrations, IFTA quarterly returns, vehicle insurance policies, fuel cards, vehicle telematics devices, parking and toll citations, vehicle lease agreements, driver-app messaging, accident and incident reports). Should I research these and add the ones that hold up? (yes/no)
@@ -140,4 +190,4 @@ a12:
 
 ---
 
-<!-- agent map, ignore: q1=B2-DRIVERS-VS-EMPLOYEES q2=B2-PATTERN-FLAGS q3=B2-VEHICLE-INSPECTIONS-DVIR q4=B2-EVENT-CATEGORIES q5=B2-SIGN-DOCUMENT q6=B2-HCM-DRIVER-LIFECYCLE q7=B2-MOTOR-POOL q8=B2-REGULATION-SCOPE q9=B2-CATALOG-COPY q10=B2-ALIASES q11=B3-DRIVER-QUALIFICATION-FILES+B3-DRIVER-CLEARINGHOUSE-QUERIES+B3-VEHICLE-REGISTRATIONS+B3-IFTA-QUARTERLY-RETURNS+B3-VEHICLE-INSURANCE-POLICIES+B3-FUEL-CARDS+B3-VEHICLE-TELEMATICS-DEVICES-OWNERSHIP+B3-PARKING-TOLL-ASSIGNMENTS+B3-VEHICLE-LEASE-AGREEMENTS+B3-DRIVER-MESSAGES+B3-ACCIDENTS q12=B3-TMS+B3-EV-CHARGING-MGMT+B3-FREIGHT-AUDIT | domain_id=147 -->
+<!-- agent map, ignore: q1=B2-DRIVERS-VS-EMPLOYEES q2=B2-PATTERN-FLAGS q3=B2-VEHICLE-INSPECTIONS-DVIR q4=B2-EVENT-CATEGORIES q5=B2-SIGN-DOCUMENT q6=B2-HCM-DRIVER-LIFECYCLE q7=B2-MOTOR-POOL q8=B2-REGULATION-SCOPE q9=B2-CATALOG-COPY q10=B2-ALIASES q11=B3-DRIVER-QUALIFICATION-FILES+B3-DRIVER-CLEARINGHOUSE-QUERIES+B3-VEHICLE-REGISTRATIONS+B3-IFTA-QUARTERLY-RETURNS+B3-VEHICLE-INSURANCE-POLICIES+B3-FUEL-CARDS+B3-VEHICLE-TELEMATICS-DEVICES-OWNERSHIP+B3-PARKING-TOLL-ASSIGNMENTS+B3-VEHICLE-LEASE-AGREEMENTS+B3-DRIVER-MESSAGES+B3-ACCIDENTS q12=B3-TMS+B3-EV-CHARGING-MGMT+B3-FREIGHT-AUDIT q13=B2-B9D-OWN-315 q14=B2-B9D-OWN-1389 q15=B2-B9D-OWN-352 q16=B2-B9D-OWN-1543 q17=B2-B9D-OWN-862 | domain_id=147 -->

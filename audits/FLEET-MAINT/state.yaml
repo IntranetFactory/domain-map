@@ -11,7 +11,7 @@
 schema_version: 2
 domain: FLEET-MAINT
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 # b1a empty as of the 2026-06-06 b1a execution pass:
@@ -27,11 +27,7 @@ last_audit: "2026-06-06"
 #     B1A-SYSTEM-SKILLS satisfied; remaining gate is B2-6 only). F1 transitional
 #     condition (legacy domain-level skill 59 coexists with module skills) clears
 #     when B2-6 lands and skill 59 is deleted.
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+b1a: []
 
 b1b:
   - id: B1B-S3
@@ -85,17 +81,6 @@ b1b:
       - {handoff_id: 320, direction: outbound, source_domain: FLEET-MAINT, target_domain: EAM, trigger_event: vehicle_work_order.completed, payload: vehicle_work_orders, null_field: target_module_fk}
       - {handoff_id: 879, direction: outbound, source_domain: FLEET-MAINT, target_domain: FIN, trigger_event: parts_inventory.adjusted, payload: vehicle_parts_inventory, null_field: target_module_fk}
       - {handoff_id: 878, direction: outbound, source_domain: FLEET-MAINT, target_domain: ITSM, trigger_event: maintenance_defect.reported, payload: service_incidents, null_field: source_module_fk}
-  - id: B1B-S10
-    summary: Author data_object_aliases for FLEET-MAINT masters (vendor lexicon hints) after user supplies exact tuples.
-    finding: |
-      Zero data_object_aliases rows. 2026-05-30 audit gave vendor lexicon hints (vehicle_work_orders -> Repair Order / RO / Service Order / Job Card / Shop Ticket; preventive_maintenance_schedules -> Service Program / PM Plan / Maintenance Service; vehicle_parts_inventory -> Parts Stock / Parts Bin / Shop Parts; maintenance_defects -> Defect / Fault / DVIR Item / Action Item / Non-Conformance) but not exact tuples for bulk insert.
-    blocked_by:
-      - {type: user_decision, ref: B11-alias-tuples}
-    affected_entities:
-      - vehicle_work_orders
-      - preventive_maintenance_schedules
-      - vehicle_parts_inventory
-      - maintenance_defects
   - id: B1B-S11
     summary: Author data_object_lifecycle_states for vehicle_work_orders and maintenance_defects with domain_module_id set; surface vehicle_parts_inventory config-shape exemption without writing notes (Rule #15).
     finding: |
@@ -281,6 +266,59 @@ b2:
       - accept the written copy as-is (mark records approved in the UI when reviewed)
       - request a specific rewrite per row ("rewrite catalog_tagline for <row> to <text>")
     why: Rule #20 (revised) directs empty-field backfill without a pre-write gate; the write is DONE (B1A-CATALOG-UX-COPY resolved). This entry is now a review pointer, not a blocker.
+  - id: B2-B9D-OWN-1552
+    summary: "Fleet Maintenance Management: name an owner for \"Update work and asset records\" (no one is responsible for it today)"
+    question: |
+      Enterprise Asset Management forwards vehicle work order to Fleet Maintenance Management to update work and asset records, but Fleet Maintenance Management does not yet have anyone assigned to update work and asset records, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Fleet Maintenance Management owns, and assign a named owner once Fleet Maintenance Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Fleet Maintenance Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FLEET-MAINT.md q15.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1326
+    summary: "Fleet Maintenance Management: name an owner for \"Perform inventory accounting\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards vehicle parts inventory item to Fleet Maintenance Management to perform inventory accounting, but Fleet Maintenance Management does not yet have anyone assigned to perform inventory accounting, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Fleet Maintenance Management owns, and assign a named owner once Fleet Maintenance Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Fleet Maintenance Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FLEET-MAINT.md q16.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-352
+    summary: "Fleet Maintenance Management: name an owner for \"Manage asset maintenance\" (no one is responsible for it today)"
+    question: |
+      Fleet Management forwards maintenance defect to Fleet Maintenance Management to manage asset maintenance, but Fleet Maintenance Management does not yet have anyone assigned to manage asset maintenance, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Fleet Maintenance Management owns, and assign a named owner once Fleet Maintenance Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Fleet Maintenance Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FLEET-MAINT.md q17.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-823
+    summary: "Fleet Maintenance Management: name an owner for \"Plan for preventive maintenance\" (no one is responsible for it today)"
+    question: |
+      Vehicle Telematics forwards preventive maintenance schedule to Fleet Maintenance Management to plan for preventive maintenance, but Fleet Maintenance Management does not yet have anyone assigned to plan for preventive maintenance, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Fleet Maintenance Management owns, and assign a named owner once Fleet Maintenance Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Fleet Maintenance Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FLEET-MAINT.md q18.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-RETAG-316
+    summary: "Re-point handoff 316 (work-order completed -> AP-AUTO) from a coarse to a more specific process tag (destructive, needs sign-off)"
+    question: |
+      The completed-work-order handoff to accounts payable is currently labeled with the broad process "Process accounts payable" (9.6.1), but a more specific process for the same work-order entity, "Update work and asset records" (10.3.2.4), already exists in the catalog. Should the existing tag be re-pointed to the more specific one?
+    options:
+      - "Re-point the tag to the more specific process (deletes-and-replaces the existing tag link)."
+      - "Leave the broad tag as it is."
+    why: |
+      B9d RE-TAG: handoff 316 is tagged at a coarser grain than the realized work. Re-pointing the handoff_processes link is a destructive edit (overwrites an existing tag), so it needs explicit sign-off (Rule #21). Surfaced as q-FLEET-MAINT.md q19.
+    extra_b9d_added: "2026-06-13"
+    extra_handoff_id: 316
+    extra_retag_from_process_id: 315
+    extra_retag_to_process_id: 1552
 
 b3:
   - id: B3-M1

@@ -97,6 +97,26 @@ a10:
 
 ---
 
+q11: Enterprise Performance Management forwards workforce plan to Strategic Workforce Planning to prepare periodic budgets, but Strategic Workforce Planning does not yet have anyone assigned to prepare periodic budgets, so this step has no owner. How should it be handled?
+- a) Record it now as work Strategic Workforce Planning owns, and assign a named owner once Strategic Workforce Planning sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Strategic Workforce Planning decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
+q12: Enterprise Performance Management forwards workforce plan to Strategic Workforce Planning to prepare periodic financial forecasts, but Strategic Workforce Planning does not yet have anyone assigned to prepare periodic financial forecasts, so this step has no owner. How should it be handled?
+- a) Record it now as work Strategic Workforce Planning owns, and assign a named owner once Strategic Workforce Planning sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Strategic Workforce Planning decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a12:
+
+---
+
 ## Optional (will not hold up the build)
 
 q8: Three supply-side planning inputs show up across the flagship vendors (workforce segments, succession plans, and internal-mobility intents). Should I research and add the ones that hold up, as consumer records on the supply-planning module? (yes/no)
@@ -115,4 +135,4 @@ a9:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S5 q2=B2-S1 q3=B2-S2 q4=B2-S3 q5=B2-S4 q6=B2-S6 q7=B1A-SELF-CONTAIN q8=B3-S1+B3-S2+B3-S3 q9=B3-S4 q10=B2-B9D-OWN-980 | domain_id=100 -->
+<!-- agent map, ignore: q1=B2-S5 q2=B2-S1 q3=B2-S2 q4=B2-S3 q5=B2-S4 q6=B2-S6 q7=B1A-SELF-CONTAIN q8=B3-S1+B3-S2+B3-S3 q9=B3-S4 q10=B2-B9D-OWN-980 q11=B2-B9D-OWN-1322 q12=B2-B9D-OWN-1324 | domain_id=100 -->

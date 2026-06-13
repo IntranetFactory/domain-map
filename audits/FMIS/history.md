@@ -420,3 +420,55 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-13 - b1a execution (B9d verify + B11 aliases)
+
+Cleared both open `b1a` items; domain returns to `next_action_by: user` (only `b2` / `b3` remain).
+
+### B1A-B9D-VERIFY - DONE (resolved)
+
+Ran `scripts/analytics/b9d_resolver.ts FMIS` (dry-run then `--write`), both directions. The
+resolver reconciled all 8 payload tags across FMIS's boundaries (FOOD-TRACE, FSQM, TELEMATICS,
+FIN, FARMER-DIRECT-SALES) and produced 3 distinct `(process, owner)` ORPHAN findings, every one
+owned by FMIS itself (FMIS masters the carried entities):
+
+- pid 157 "Create materials plan" (crop_plans) <- handoff 970 FMIS->FIN
+- pid 166 "Order materials and services" (ag_input_inventory) <- handoff 967 FMIS->FIN
+- pid 171 "Maintain production records and manage lot traceability"
+  (field_applications, harvest_records, planting_records, farm_fields)
+  <- handoffs 351/350/352/349/965/969
+
+No ROLL-UP, no MIS-TAG, no unowned dependency. All three owner-side `b2` items
+(B2-B9D-OWN-157 / -166 / -171) plus their q-FMIS.md questions (q10 / q11 / q9) were already
+present from the prior FARMER-DIRECT-SALES + FIN boundary passes; the resolver confirmed them
+`state.yaml:exists` / `q-file:exists` and made no duplicate writes (idempotent no-op). FMIS owner
+is unbuilt (0 personas), so each item correctly asks the user to record the owned work now and
+name a persona later. No catalog writes, no `record_status` touched. B1A-B9D-VERIFY removed from
+state.yaml `b1a`.
+
+### B1A-S4 / B11 aliases - DONE (resolved)
+
+Loaded 18 `data_object_aliases` rows (alias_type `synonym`, no FK) across the 8 FMIS masters via
+`.tmp_deploy/load_fmis_aliases_2026_06_13.ts` (idempotent; 0 pre-existing, 18 inserted). One
+preferred synonym + secondaries per master, drawn from the audit's alternate-synonym list:
+farm_fields (Paddock*, Plot, Block); crop_plans (Rotation Plan*, Season Plan); planting_records
+(As-Planted Record*, Seeding Pass); field_applications (Spray Record*, Application Pass);
+harvest_records (Yield Record*, As-Harvested Record); ag_input_inventory (Input Stock*, Farm Bin
+Inventory); variable_rate_prescriptions (Prescription File*, VR Map, Rx Map);
+machinery_telemetry_records (Task Data*, ISOXML Record). All `record_status='new'` (DB default,
+Rule #1), empty notes (Rule #15). Per the revised Rule #21, B11 corrective gap-fill on
+already-scoped masters runs without a pre-write chat gate; the review signal lives on the records.
+B1A-S4 removed from state.yaml `b1a`; B11 hard-fail is cured.
+
+### Still open (all user-gated)
+
+- `b1b`: B1B-S5 (B12 lifecycle states, gated on B2-S4 pattern-flag call) and B1B-S9
+  (B8 cross-domain relationships, gated on FOOD-TRACE / FSQM / TELEMATICS / FIN modularization).
+- `b2`: B2-S1 / B2-S2 (Rule #15 notes), B2-S3 (Rule #18 vendor prose), B2-S4 (pattern flags),
+  B2-B9D-OWN-157 / -166 / -171 (B9d owner assignment).
+- `b3`: soil-zones, weather-observations, agronomy module, livestock scope (all additive,
+  non-blocking).
+
+No agent-executable work remains.

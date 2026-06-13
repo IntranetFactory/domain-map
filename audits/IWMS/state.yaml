@@ -11,7 +11,7 @@
 schema_version: 2
 domain: IWMS
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-07"
 
 # Open b1a items remaining are all gated on a user decision or are destructive; surfaced, not
@@ -229,6 +229,16 @@ b2:
     why: |
       No PATCH required either way; purely a tracking decision so future audits know which audit
       owns event lifecycle for floor_plans-emitted events.
+  - id: B2-B9D-OWN-1371
+    summary: "Workplace and Space Management: name an owner for \"Prepare chargeback invoices\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards workplace service request to Workplace and Space Management to prepare chargeback invoices, but Workplace and Space Management does not yet have anyone assigned to prepare chargeback invoices, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Workplace and Space Management owns, and assign a named owner once Workplace and Space Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Workplace and Space Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-IWMS.md q11.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-MOVE-ORDERS

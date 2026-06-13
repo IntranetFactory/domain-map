@@ -1,37 +1,8 @@
 schema_version: 2
 domain: FMIS
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
-
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
-  - id: B1A-S4
-    summary: "B11 hard fail: 0 data_object_aliases on 8 FMIS masters; needs alias drafts + user approval before insert."
-    finding: >-
-      0 rows in data_object_aliases for FMIS masters (data_object_ids 486-493).
-      Audit lists alternate synonyms per master (farm_fields: paddock / plot / block;
-      crop_plans: rotation plan / season plan; planting_records: seeding pass / as-planted record;
-      field_applications: spray record / application pass; harvest_records: yield record / as-harvested record;
-      ag_input_inventory: farm bin inventory / input stock; variable_rate_prescriptions: VR map / prescription file / Rx map;
-      machinery_telemetry_records: task data / ISOXML record) but the exact alias_name and alias_type tuples are not yet drafted.
-    action: >-
-      Draft per-master alias rows (alias_name + alias_type), surface to user for approval per Rule #1,
-      then load via cluster-drafts loader. Independent of remaining bands; loadable now.
-    blocked_by:
-      - {type: user_decision, ref: alias-wording-approval}
-    affected_masters:
-      - {data_object_id: 486, name: farm_fields, target_module_id: 252, workflow: aliases-only}
-      - {data_object_id: 487, name: crop_plans, target_module_id: 252, workflow: aliases-only}
-      - {data_object_id: 488, name: planting_records, target_module_id: 253, workflow: aliases-only}
-      - {data_object_id: 489, name: field_applications, target_module_id: 253, workflow: aliases-only}
-      - {data_object_id: 490, name: harvest_records, target_module_id: 253, workflow: aliases-only}
-      - {data_object_id: 491, name: ag_input_inventory, target_module_id: 255, workflow: aliases-only}
-      - {data_object_id: 492, name: variable_rate_prescriptions, target_module_id: 254, workflow: aliases-only}
-      - {data_object_id: 493, name: machinery_telemetry_records, target_module_id: 254, workflow: aliases-only}
 
 b1b:
   - id: B1B-S5
@@ -136,6 +107,36 @@ b2:
       - "(a) flip all 3 proposed (field_applications submit-lock, harvest_records submit-lock, crop_plans single-approver)"
       - "(b) flip a subset, user picks which"
       - "(c) leave all flags false; record the consideration outside notes (gap report)"
+  - id: B2-B9D-OWN-171
+    summary: "Farm Management Information System: name an owner for \"Maintain production records and manage lot traceability\" (no one is responsible for it today)"
+    question: |
+      Farmer-Direct Sales Platform forwards harvest record to Farm Management Information System to maintain production records and manage lot traceability, but Farm Management Information System does not yet have anyone assigned to maintain production records and manage lot traceability, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Farm Management Information System owns, and assign a named owner once Farm Management Information System sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Farm Management Information System decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FMIS.md q9.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-157
+    summary: "Farm Management Information System: name an owner for \"Create materials plan\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards crop plan to Farm Management Information System to create materials plan, but Farm Management Information System does not yet have anyone assigned to create materials plan, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Farm Management Information System owns, and assign a named owner once Farm Management Information System sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Farm Management Information System decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FMIS.md q10.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-166
+    summary: "Farm Management Information System: name an owner for \"Order materials and services\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards ag input inventory to Farm Management Information System to order materials and services, but Farm Management Information System does not yet have anyone assigned to order materials and services, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Farm Management Information System owns, and assign a named owner once Farm Management Information System sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Farm Management Information System decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FMIS.md q11.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-MASTER-SOIL-ZONES

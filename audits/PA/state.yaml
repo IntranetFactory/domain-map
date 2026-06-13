@@ -176,6 +176,26 @@ b2:
     why: |
       Recording it now means that the moment People Analytics decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PA.md q14.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-250
+    summary: "People Analytics: name an owner for \"Conduct employee engagement surveys\" (no one is responsible for it today)"
+    question: |
+      Employee Experience and Engagement forwards engagement survey to People Analytics to conduct employee engagement surveys, but People Analytics does not yet have anyone assigned to conduct employee engagement surveys, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work People Analytics owns, and assign a named owner once People Analytics sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment People Analytics decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PA.md q15.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-247
+    summary: "People Analytics: name an owner for \"Develop workforce analytics\" (no one is responsible for it today)"
+    question: |
+      Enterprise Performance Management sends People Analytics an automatically calculated people kpi that feeds develop workforce analytics, but People Analytics does not yet have anyone assigned to that work, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work People Analytics owns, and assign a named owner once People Analytics sets up who does this work."
+      - "Treat it as an automatically calculated figure with no one to own, and leave it off the list."
+    why: |
+      Recording it now means that the moment People Analytics decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PA.md q16.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-PAY-EQUITY-ANALYSES

@@ -74,6 +74,16 @@ a7:
 
 ---
 
+q9: Professional Services Automation forwards time entry to Workforce Management to record project-related transactions, but Workforce Management does not yet have anyone assigned to record project-related transactions, so this step has no owner. How should it be handled?
+- a) Record it now as work Workforce Management owns, and assign a named owner once Workforce Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Workforce Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a9:
+
+---
+
 ## Optional (will not hold up the build)
 
 q8: Eight extra market-surface objects show up across the flagship WFM vendors (time clocks, clock-punch corrections, labor demand forecasts, shift-swap offers, availability preferences, predictive-schedule notices, accrual and carryover ledger events, and a labor-law jurisdiction rule library). Should I research and add the ones that hold up? (yes/no)
@@ -84,4 +94,4 @@ a8:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S3 q2=B2-S2 q3=B2-S4 q4=B2-S6 q5=B2-S7.h134 q6=B2-S7.h429 q7=B2-S7.h934 q8=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5+B3-S6+B3-S7+B3-S8 | domain_id=59 -->
+<!-- agent map, ignore: q1=B2-S3 q2=B2-S2 q3=B2-S4 q4=B2-S6 q5=B2-S7.h134 q6=B2-S7.h429 q7=B2-S7.h934 q8=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5+B3-S6+B3-S7+B3-S8 q9=B2-B9D-OWN-1409 | domain_id=59 -->

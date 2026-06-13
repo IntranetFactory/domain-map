@@ -1,7 +1,7 @@
 schema_version: 2
 domain: ITOM
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-08"
 phase0_report: ".tmp_deploy/ITOM-phase0-2026-06-08.md"
 phase0_note: >
@@ -237,6 +237,16 @@ b2:
       - "(b) Approve a named subset; leave the rest at new pending B2-S6 PCF ratification"
       - "(c) Defer entirely until B2-S6 resolves the divergent mappings"
     why: "Rule #1 requires explicit user confirmation before PATCH record_status='approved'."
+  - id: B2-B9D-OWN-1301
+    summary: "IT Operations Management: name an owner for \"Operate and monitor online systems\" (no one is responsible for it today)"
+    question: |
+      Discovery and Service Mapping forwards monitoring policy to IT Operations Management to operate and monitor online systems, but IT Operations Management does not yet have anyone assigned to operate and monitor online systems, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work IT Operations Management owns, and assign a named owner once IT Operations Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment IT Operations Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITOM.md q11.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-S1

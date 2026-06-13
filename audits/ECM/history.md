@@ -663,3 +663,57 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-13 - Agent pass: B9d + lifecycle + FK backfill + entity_type
+
+Continued the audit from `state.yaml` (was `next_action_by: agent` at HEAD). Executed every agent-doable item; the domain ends `feedback_needed` (all remaining items are b2 user decisions or destructive approvals).
+
+### B1A-B9D-VERIFY (resolved)
+
+Ran `scripts/analytics/b9d_resolver.ts ECM` in both directions. Boundary tags: 18; distinct (process, owner) findings: 12. Verdicts: 7 ORPHAN, 1 RE-TAG, 3 UNOWNED, 1 RESOLVED. Applied the additive owner-side edits (`--write`):
+- ECM-owned ORPHANs surfaced as b2 + q items: B2-B9D-OWN-428 (Develop and manage content), -429 (Deliver approved content), -430 (Control delivered content), -1440 (Retain records).
+- Neighbor-owned ORPHANs routed into their files (cross-domain carve-out): WSC (B2-B9D-OWN-428, -1440), LEGAL-PRACT-MGMT (B2-B9D-OWN-429).
+- The prior B2-B9D-OWN-83 "no owner for Manage Content" item was reclassified by the resolver as a RE-TAG, not an ORPHAN: ECM owns 13.6 via handoff 821, the tag is merely coarse. Replaced B2-B9D-OWN-83 with B2-B9D-RETAG-821 (re-point handoff 821's tag 13.6 -> 13.6.5; destructive, awaiting sign-off, q9).
+- Surfaced for sign-off (NOT applied, destructive/judgment): the 821 re-point; 3 UNOWNED dependencies (legal_holds / in_house_legal_matters / ediscovery_requests / extracted_records / document_classification_results carry no master row anywhere; report-only on the senders LSD / IDP).
+
+### B13 - entity_type (all 5 masters were `unclassified`)
+
+Classified, grounded in ECM's review context: 429 content_documents, 430 document_versions, 433 records_retention_policies -> `operational_workflow`; 431 document_folders, 432 document_classifications -> `catalog` (config-shape, which structurally confirms the q6/q7 exemptions). Additive PATCH, record_status untouched.
+
+### B1B-L1 / L2 / L5 - lifecycle states (loaded)
+
+Authored state machines on the 3 operational_workflow masters:
+- 429 content_documents: draft -> in_review (gate, mod 242) -> published (gate, mod 242) -> superseded (terminal); under_legal_hold branch (mod 243); archived (terminal).
+- 430 document_versions: draft -> published (terminal).
+- 433 records_retention_policies: draft -> under_review -> active (gate, mod 243) -> superseded (terminal) -> retired (terminal).
+All record_status=new. Two stray rows from isolated-test inserts (430.draft id 2250, 430.published id 2251) were folded into the canonical set (2251 description corrected).
+
+### B1B-B1 - outbound source_domain_module_id (backfilled)
+
+PATCHed all 8 outbound ECM handoffs to the module mastering the trigger event's data_object: 821/822/823/824/826/827/839 -> ECM-REPOSITORY (242); 825 -> ECM-RECORDS-GOV (243).
+
+### B1B-B5 - intra-domain retention handoffs (partial)
+
+Authored the 1 of 3 that rides an existing event: handoff 1439 (records 243 -> repository 242 on event 899 `document.retention_expired`, payload content_documents, lifecycle_progression, low). The other two (folders, classifications) need net-new trigger_events; surfaced as B2-INTRA-RETENTION-EVENTS (q8) since new event vocabulary is a market-shape decision (Rule #21). B1B-B5 trimmed to the 2 remaining, gated on that b2.
+
+### B1B-B3 - inbound target_domain_module_id (re-blocked accurately)
+
+Verified live: no ECM module declares any DMDO role on the 10 inbound payloads (533/535/635/636/633/738/570/564/638). This is the B10b "no candidate" sub-case; the FK can't be backfilled mechanically. Re-blocked on a per-payload consume-vs-domain-signal user decision.
+
+### B1B-F1 - retire legacy ecm-system skill (moot, removed)
+
+Premise inverted by the per-domain-skill supersession. Live state: ECM has exactly one system skill, id 54 `ecm-system`, domain_id=91, domain_module_id=null - the CORRECT domain-grain shape (F2 passes). The 3 module-anchored skills the prerequisite referenced do not exist. Nothing to delete; item removed.
+
+### B2-CATALOG-UX -> A4 (executed straight, item removed)
+
+Per Rule #20, wrote the empty domain `catalog_tagline` + `catalog_description` straight into the record (buyer voice, record_status carries the review signal). Removed the b2 question; the user reviews the copy in-record.
+
+### Infra note
+
+Mid-pass the PostgREST schema cache went down server-side (PGRST205 across all tables). Recovered with one `semantius call crud refresh_schema_cache '{}'`. The batch array-body POST also hit PGRST102 on Windows stdin; switched lifecycle inserts to per-row POSTs (the proven single-row stdin shape).
+
+### Still open (all user-side; domain stays feedback_needed)
+
+b2 decisions: B2-PATTERN-FLAGS, B2-CONTENT-DOCUMENTS-RENAME, B2-DEDUPE-WSC-RELATIONSHIPS, B2-LSD-RETAG, B2-VENDOR-NAMING, B2-FOLDER-EXEMPTION, B2-CLASSIFICATION-EXEMPTION, B2-INTRA-RETENTION-EVENTS, B2-B9D-RETAG-821, B2-B9D-OWN-428/429/430/1440. Gated b1b: B1B-S4, B1B-H1a, B1B-B6, B1B-B3, B1B-B5. b3 ideas unchanged. q-ECM.md regenerated with 13 sequential questions.

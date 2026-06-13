@@ -132,6 +132,57 @@ a11:
 
 ---
 
+q15: Enterprise Asset Management forwards vehicle work order to Fleet Maintenance Management to update work and asset records, but Fleet Maintenance Management does not yet have anyone assigned to update work and asset records, so this step has no owner. How should it be handled?
+- a) Record it now as work Fleet Maintenance Management owns, and assign a named owner once Fleet Maintenance Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Fleet Maintenance Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a15:
+
+---
+
+q16: Core Financial Management forwards vehicle parts inventory item to Fleet Maintenance Management to perform inventory accounting, but Fleet Maintenance Management does not yet have anyone assigned to perform inventory accounting, so this step has no owner. How should it be handled?
+- a) Record it now as work Fleet Maintenance Management owns, and assign a named owner once Fleet Maintenance Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Fleet Maintenance Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a16:
+
+---
+
+q17: Fleet Management forwards maintenance defect to Fleet Maintenance Management to manage asset maintenance, but Fleet Maintenance Management does not yet have anyone assigned to manage asset maintenance, so this step has no owner. How should it be handled?
+- a) Record it now as work Fleet Maintenance Management owns, and assign a named owner once Fleet Maintenance Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Fleet Maintenance Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a17:
+
+---
+
+q18: Vehicle Telematics forwards preventive maintenance schedule to Fleet Maintenance Management to plan for preventive maintenance, but Fleet Maintenance Management does not yet have anyone assigned to plan for preventive maintenance, so this step has no owner. How should it be handled?
+- a) Record it now as work Fleet Maintenance Management owns, and assign a named owner once Fleet Maintenance Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Fleet Maintenance Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a18:
+
+---
+
+q19: The completed-work-order handoff to accounts payable is currently labeled with the broad process "process accounts payable", but a more specific process for the same work order, "update work and asset records", already exists. Should the label be moved to the more specific one?
+
+- a) Re-point it to the more specific process (this replaces the existing label).
+- b) Leave the broad label as it is.
+
+Recommended: a. The more specific process matches what the handoff actually does. This replaces an existing label (a destructive edit), so it needs your sign-off.
+
+a19:
+
+---
+
 ## Optional (will not hold up the build)
 
 q12: Beyond the four masters modeled today, the flagship vendors expose several deeper maintenance master entities. Should I research and add the ones that hold up (vendor parts orders, OEM warranty claims, per-mechanic labor entries, a service-task catalog with parts and labor defaults, mechanic certifications, and meter readings)? (yes/no)
@@ -158,4 +209,4 @@ a14:
 
 ---
 
-<!-- agent map, ignore: q1=B2-3 q2=B2-2.submitlock q3=B2-2.pii q4=B2-4 q5=B2-5 q6=B2-6 q7=B2-7 q8=B2-8 q9=B2-9 q10=B2-10 q11=B2-CATALOG-COPY q12=B3-M1+B3-M2+B3-M4+B3-M5+B3-M6+B3-M8+B3-4+B3-6 q13=B3-1+B3-2+B3-3 q14=B3-5+B3-7+B3-8 | domain_id=149 -->
+<!-- agent map, ignore: q1=B2-3 q2=B2-2.submitlock q3=B2-2.pii q4=B2-4 q5=B2-5 q6=B2-6 q7=B2-7 q8=B2-8 q9=B2-9 q10=B2-10 q11=B2-CATALOG-COPY q12=B3-M1+B3-M2+B3-M4+B3-M5+B3-M6+B3-M8+B3-4+B3-6 q13=B3-1+B3-2+B3-3 q14=B3-5+B3-7+B3-8 q15=B2-B9D-OWN-1552 q16=B2-B9D-OWN-1326 q17=B2-B9D-OWN-352 q18=B2-B9D-OWN-823 q19=B2-B9D-RETAG-316 | domain_id=149 -->

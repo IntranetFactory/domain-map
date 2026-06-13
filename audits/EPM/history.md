@@ -415,3 +415,34 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-13 - B9d pass (B1A-B9D-VERIFY executed)
+
+Scope: ran the one agent-executable item still open on EPM, B1A-B9D-VERIFY (handoff payload realization, both directions). No catalog/database writes; only additive owner-side edits to local audit files. Tenant confirmed ma@adenin.com before any read.
+
+### Pre-check (no other agent work outstanding)
+
+- Skill / tool layer (F1-F5) is already correct after the per-domain-skill restoration: exactly one domain-grain `system` skill (id 411, `epm-system`, `domain_module_id` null) and `domain_module_tools` populated on all three modules (239: query_financial_plans, query_budgets, update_budget, generate_text; 240: query_forecasts, query_financial_scenarios, update_forecast, generate_text; 241: query_variance_analyses, query_journal_entries, generate_text). The 2026-06-06 per-module skills (302/303/304) are gone; F4 invariant holds; Semantius score computable. The supersession note at the top of state.yaml is satisfied; nothing to do there.
+- Every other open item (B1A-S7b, B1A-S10b, B1B-S3/S4/S5/S6/H1-flip/H1-mediums) is blocked on a user decision (B2-S3, B2-S7b, B2-aliases, B2-user-edges, B2-intra-rels, H1 picks). None is agent-executable this pass.
+
+### B9d resolver (scripts/analytics/b9d_resolver.ts EPM --write)
+
+Classified 28 boundary tags across both directions into 24 distinct (process, owner) findings: 18 ORPHAN, 1 RESOLVED, 1 REFERENCE-READ, 1 RE-TAG, 1 MIS-TAG, 2 UNOWNED.
+
+- **5 EPM-owned ORPHANs** (real missing work this domain owns): pid 297 Perform planning/budgeting/forecasting (financial_scenarios, #562), pid 1322 Prepare periodic budgets and plans (financial_plans, #601), pid 1323 Operationalize and implement plans to achieve budget (financial_plans, #561), pid 1324 Prepare periodic financial forecasts (financial_forecasts, #199), pid 1325 Perform variance analysis against forecasts and budgets (variance_analyses, #563/#564). Each written as a durable `B2-B9D-OWN-<pid>` item into EPM's own state.yaml + q-EPM.md (q13-q17). EPM has zero personas today (cold-start), so the persona is itself part of each question.
+- **Neighbor-owned ORPHANs** routed (cross-domain carve-out (b)) into each owner's state.yaml + q-file: PA (247), SPM (297, 1133), FIN (307, 1381, 1392), SWP (980, 1322, 1324 - SWP already had a q-file/state item for some), APM (1132 - already present), SPEND-MGMT (1323), PAYROLL (1379), SEM (1652). Additive only; no neighbor data overwritten, no record_status touched.
+- **RESOLVED**: pid 98 Develop and set organizational objectives (okr_objectives, #1208, owner WORK-MGMT). No action.
+- **REFERENCE-READ**: pid 54 on cost_centers (#535, FIN) - reference/config data; one-line note added to FIN state.yaml.
+
+### Surfaced for sign-off (NOT applied; destructive / judgment)
+
+- RE-TAG (source SPM): handoff #245 tagged coarsely at PCF 1.3.6; a more specific 13.2.1.1 exists on the same entity. Re-point on SPM's sign-off.
+- MIS-TAG (source PSA): handoff #1021 tagged 9.1.2.5; carried entity already realized under 9.2.2. Re-point or delete on PSA's sign-off.
+- UNOWNED dependencies: #777 (value_stream_metrics, no master anywhere - surface on VSDP) and #256 (audit_recommendations, no master anywhere - surface on AUDIT).
+
+### state.yaml hygiene
+
+- Deleted resolved item B1A-B9D-VERIFY from b1a (B9d has now run; this one-line note records it).
+- `next_action_by` flipped to `user`: every remaining open item is a user decision (the pre-existing B2 set plus the 5 new B2-B9D-OWN items). No agent-executable work remains on EPM.

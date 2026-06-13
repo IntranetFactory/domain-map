@@ -64,6 +64,26 @@ a5:
 
 ---
 
+q7: Core Financial Management forwards engineering part to Product Lifecycle Management to manage bills of material, but Product Lifecycle Management does not yet have anyone assigned to manage bills of material, so this step has no owner. How should it be handled?
+- a) Record it now as work Product Lifecycle Management owns, and assign a named owner once Product Lifecycle Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Product Lifecycle Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a7:
+
+---
+
+q8: Field Service Management forwards cad drawing to Product Lifecycle Management to manage drawings, but Product Lifecycle Management does not yet have anyone assigned to manage drawings, so this step has no owner. How should it be handled?
+- a) Record it now as work Product Lifecycle Management owns, and assign a named owner once Product Lifecycle Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Product Lifecycle Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a8:
+
+---
+
 ## Optional (will not hold up the build)
 
 q6: Every major PLM vendor ships a program and portfolio surface above engineering core (engineering projects, deliverables, program milestones), which PLM does not have today. Should I research and add a 6th module for this program / portfolio surface? (yes/no)
@@ -74,4 +94,4 @@ a6:
 
 ---
 
-<!-- agent map, ignore: q1=B2-LIFECYCLE-STATES-6-MASTERS.cad_drawings q2=B2-LIFECYCLE-STATES-6-MASTERS.cad_models q3=B2-LIFECYCLE-STATES-6-MASTERS.manufacturing_routings q4=B2-E6-RBAC-CONVENTION q5=B2-H1-APPROVE-TAGS q6=B3-PLM-PORTFOLIO | domain_id=165 -->
+<!-- agent map, ignore: q1=B2-LIFECYCLE-STATES-6-MASTERS.cad_drawings q2=B2-LIFECYCLE-STATES-6-MASTERS.cad_models q3=B2-LIFECYCLE-STATES-6-MASTERS.manufacturing_routings q4=B2-E6-RBAC-CONVENTION q5=B2-H1-APPROVE-TAGS q6=B3-PLM-PORTFOLIO q7=B2-B9D-OWN-549 q8=B2-B9D-OWN-552 | domain_id=165 -->

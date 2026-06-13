@@ -11,7 +11,7 @@
 schema_version: 2
 domain: FSQM
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 b1a:
@@ -158,6 +158,26 @@ b2:
       - "Approve duplicate layer (683/684) and DELETE original on 975/979"
       - "Mark all rejected, re-curate later"
     why: "Rule #1 record_status default is new; flipping to approved requires explicit per-load user sign-off."
+  - id: B2-B9D-OWN-37
+    summary: "Food Safety and Quality Management: name an owner for \"Manage product recalls and regulatory audits\" (no one is responsible for it today)"
+    question: |
+      Food Traceability and Provenance forwards critical control point to Food Safety and Quality Management to manage product recalls and regulatory audits, but Food Safety and Quality Management does not yet have anyone assigned to manage product recalls and regulatory audits, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Food Safety and Quality Management owns, and assign a named owner once Food Safety and Quality Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Food Safety and Quality Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSQM.md q10.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-208
+    summary: "Food Safety and Quality Management: name an owner for \"Monitor and audit recall effectiveness\" (no one is responsible for it today)"
+    question: |
+      Food Traceability and Provenance forwards environmental monitoring sample to Food Safety and Quality Management to monitor and audit recall effectiveness, but Food Safety and Quality Management does not yet have anyone assigned to monitor and audit recall effectiveness, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Food Safety and Quality Management owns, and assign a named owner once Food Safety and Quality Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Food Safety and Quality Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSQM.md q11.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-CORRECTIVE-ACTION-RECORDS

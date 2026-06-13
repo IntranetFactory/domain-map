@@ -100,6 +100,16 @@ a8:
 
 ---
 
+q11: Discovery and Service Mapping forwards monitoring policy to IT Operations Management to operate and monitor online systems, but IT Operations Management does not yet have anyone assigned to operate and monitor online systems, so this step has no owner. How should it be handled?
+- a) Record it now as work IT Operations Management owns, and assign a named owner once IT Operations Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment IT Operations Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
 ## Optional (will not hold up the build)
 
 q9: Several candidate master entities show up across the flagship ITOM vendors but are not yet created: runbook definitions and runbook executions (if runbook stays in ITOM per q1, these become the Ops Automation module's real masters, mastered by ServiceNow and BMC Helix), maintenance windows (every flagship vendor ships them), deterministic event-correlation rules (per q6), ML baselines, infrastructure health scores, metric collectors, alert routing rules, and first-class capacity forecasts. Should I research and add the ones that hold up against the vendor surface? (yes/no)
@@ -118,4 +128,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S5 q2=B2-S1 q3=B2-S2.submitlock q4=B2-S3 q5=B2-S3a q6=B2-S4 q7=B2-S6 q8=B2-S7-APQC-APPROVAL q9=B3-S1+B3-S2+B3-S3+B3-S5+B3-MISSING-ENTITIES q10=B3-S4 | domain_id=2 -->
+<!-- agent map, ignore: q1=B2-S5 q2=B2-S1 q3=B2-S2.submitlock q4=B2-S3 q5=B2-S3a q6=B2-S4 q7=B2-S6 q8=B2-S7-APQC-APPROVAL q9=B3-S1+B3-S2+B3-S3+B3-S5+B3-MISSING-ENTITIES q10=B3-S4 q11=B2-B9D-OWN-1301 | domain_id=2 -->

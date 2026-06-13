@@ -130,6 +130,16 @@ a14:
 
 ---
 
+q15: Core Financial Management forwards hardware disposal record to Hardware Asset Management to reconcile fixed-asset ledger, but Hardware Asset Management does not yet have anyone assigned to reconcile fixed-asset ledger, so this step has no owner. How should it be handled?
+- a) Record it now as work Hardware Asset Management owns, and assign a named owner once Hardware Asset Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Hardware Asset Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a15:
+
+---
+
 ## Optional (will not hold up the build)
 
 q12: Flagship hardware-asset platforms all model extra masters this domain does not have yet (asset categories, time-bounded assignments, movement and chain-of-custody logs, stockrooms, depreciation schedules, consumables, physical inventory audits, refresh plans, and data-sanitization certificates). Should I research and add the ones that hold up? (yes/no)
@@ -148,4 +158,4 @@ a13:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B2-S4+B1B-S11 q5=B2-S5 q6=B2-S6 q7=B2-S7 q8=B1A-S6 q9=B1A-S9 q10=B1A-S12 q11=B1A-H1-RESIDUAL q12=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5+B3-S6+B3-S7+B3-S8+B3-S9+B3-S10 q13=B3-S11 q14=B2-B9D-OWN-1312 | domain_id=51 -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B2-S4+B1B-S11 q5=B2-S5 q6=B2-S6 q7=B2-S7 q8=B1A-S6 q9=B1A-S9 q10=B1A-S12 q11=B1A-H1-RESIDUAL q12=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5+B3-S6+B3-S7+B3-S8+B3-S9+B3-S10 q13=B3-S11 q14=B2-B9D-OWN-1312 q15=B2-B9D-OWN-1393 | domain_id=51 -->

@@ -106,6 +106,16 @@ a16:
 
 ---
 
+q17: Core Financial Management forwards carrier feed to Benefits Administration to process accounts payable and expense reimbursements, but Benefits Administration does not yet have anyone assigned to process accounts payable and expense reimbursements, so this step has no owner. How should it be handled?
+- a) Record it now as work Benefits Administration owns, and assign a named owner once Benefits Administration sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Benefits Administration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a17:
+
+---
+
 ## Optional (will not hold up the build)
 
 q10: Should I research and add COBRA qualifying-event records (with their own notice / election-period / elected / waived / expired lifecycle), which the pure-play and TPA vendors model as a distinct record set from life events? (yes/no)
@@ -156,4 +166,4 @@ a15:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S4 q2=B2-S1 q3=B1A-SELF-CONTAIN q4=B1A-RULE15-598 q5=B2-S5 q6=B2-S2.single_approver q7=B2-S2.submit_lock q8=B2-S3 q9=B2-S6 q10=B3-COBRA-EVENTS q11=B3-DEP-ELIG-VERIF q12=B3-EOI-REQUESTS q13=B3-SPENDING-CLAIMS q14=B3-VOLUNTARY-ELECTIONS q15=B3-QDIA-DESIGNATIONS q16=B2-B9D-OWN-1052 | domain_id=61 -->
+<!-- agent map, ignore: q1=B2-S4 q2=B2-S1 q3=B1A-SELF-CONTAIN q4=B1A-RULE15-598 q5=B2-S5 q6=B2-S2.single_approver q7=B2-S2.submit_lock q8=B2-S3 q9=B2-S6 q10=B3-COBRA-EVENTS q11=B3-DEP-ELIG-VERIF q12=B3-EOI-REQUESTS q13=B3-SPENDING-CLAIMS q14=B3-VOLUNTARY-ELECTIONS q15=B3-QDIA-DESIGNATIONS q16=B2-B9D-OWN-1052 q17=B2-B9D-OWN-59 | domain_id=61 -->

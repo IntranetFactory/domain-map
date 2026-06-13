@@ -164,6 +164,46 @@ b2:
     why: |
       Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q11.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1301
+    summary: "IT Service Management: name an owner for \"Operate and monitor online systems\" (no one is responsible for it today)"
+    question: |
+      Discovery and Service Mapping forwards incident to IT Service Management to operate and monitor online systems, but IT Service Management does not yet have anyone assigned to operate and monitor online systems, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q12.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1103
+    summary: "IT Service Management: name an owner for \"Triage SLA compliance issues\" (no one is responsible for it today)"
+    question: |
+      Data Quality forwards incident to IT Service Management to triage SLA compliance issues, but IT Service Management does not yet have anyone assigned to triage SLA compliance issues, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q13.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1319
+    summary: "IT Service Management: name an owner for \"Resolve IT issues/requests\" (no one is responsible for it today)"
+    question: |
+      Data Quality forwards incident to IT Service Management to resolve IT issues or requests, but IT Service Management does not yet have anyone assigned to resolve IT issues or requests, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q14.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1558
+    summary: "IT Service Management: name an owner for \"Perform corrective asset maintenance and repairs\" (no one is responsible for it today)"
+    question: |
+      Enterprise Asset Management forwards incident to IT Service Management to perform corrective asset maintenance and repairs, but IT Service Management does not yet have anyone assigned to perform corrective asset maintenance and repairs, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q15.
+    extra_b9d_added: "2026-06-13"
 b3:
   - id: B3-SERVICE-OUTAGES
     candidate: service_outages

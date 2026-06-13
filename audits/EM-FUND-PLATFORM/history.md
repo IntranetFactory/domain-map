@@ -347,3 +347,33 @@ UI: https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.163
 UI: https://tests.semantius.app/domain_map/data_object_relationships
 UI: https://tests.semantius.app/domain_map/handoffs?source_domain_id=eq.163
 UI: https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(781,783)
+
+## 2026-06-13, Audit (state-driven execute)
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in `state.yaml`.
+Executed every agent-doable item; the remainder is genuinely blocked on user b2 decisions
+(all already surfaced in the live `q-EM-FUND-PLATFORM.md`) or is the research / Discover
+carve-out. Domain 163, 4 FULL modules (26/27/28/29).
+
+### Executed / resolved
+
+| State item | Disposition | Detail |
+|---|---|---|
+| B1A-B9D-VERIFY | RESOLVED (no-op) | Ran the committed `scripts/analytics/b9d_resolver.ts EM-FUND-PLATFORM` bidirectionally. Result: 0 boundary tags, 0 (process,owner) findings, no owner-file edits. Verified live: the only cross-domain handoff on this domain is outbound 1046 -> FUND-ADMIN (payload `funds`=755), which carries zero `handoff_processes` rows (intentionally untagged, B1B-H1a Discover-Pass-3 deferral); no inbound cross-domain handoffs exist; intra-domain handoffs 1423/1424/1425 are not cross-domain. B9d authors no `handoff_processes` tags, so there is nothing to classify (no RESOLVED/ROLL-UP/MIS-TAG/ORPHAN). B9d band satisfied in both directions. |
+| B1A-W3 | RESOLVED (executed) | Inserted `lp_kyc_records` (1022) DMDO row on EM-FUND-OPS-LITE (module 28): role=embedded_master, necessity=optional, notes='', record_status defaulted to `new` (Rule #1). Rule #11 pre-flight satisfied: canonical master row 1575 exists in FUND-ADMIN-LP-COMMITMENTS (module 13, domain 160). New DMDO row id=1735. This is corrective-additive footprint gap-fill on an already-scoped module (matches the 4 existing embedded_master+optional shells on module 28), not net-new market structure, so it executes without a q-file. |
+| B1B-S5-residual | RESOLVED (routed) | `capital_calls` (367) alias gap. Verified live: capital_calls is canonically mastered by FUND-ADMIN (module 14, FUND-ADMIN-CAPITAL-CALLS, domain 160) and is only an embedded shell here. Per B11 / Rule #21, aliases belong with the canonical master's domain. Resolved-by-routing: the alias gap is owed by FUND-ADMIN, not by EM-FUND-PLATFORM; removed from this state.yaml. Exact (alias_name, alias_type) tuples remain a user pick on the FUND-ADMIN side. |
+
+### Hygiene
+
+- Removed B2-1 (catalog UX copy direction) from `state.yaml`: it was a resolved tombstone (`resolved: 2026-06-07`, "no longer blocking", catalog UX written 2026-06-07). Per the state.yaml OPEN-items-only rule, resolved items live only in history. The live q-file never listed it; removing it keeps state.yaml and the q-file consistent. The user may still request a Rule-#20 rewrite of the written copy at any time; that is a standing option, not an open gate.
+
+### Left (all blocked on user or research carve-out -- next_action_by: user)
+
+- **b2 decisions (in q-file q1-q7):** B2-2 collapse EM-FUND-CAPTABLE-LITE into EM-FUND-FORMATION; B2-3 promote 3 of 4 modules to module_kind='starter'; B2-4 pattern-flag confirmations (has_submit_lock / has_single_approver on spv_subscriptions, fund_formations, spvs); B2-5 pairwise reconciliation depth for FUND-ADMIN + CAP-TABLE.
+- **b1a research carve-out (Rule #21):** B1A-W1 entity_filings, B1A-W2 banking_onboardings, B1A-W4 spv_kyc_records, B1A-W5 templated_documents (W5 also blocked on B2-2). Net-new master data_objects = market-shape decisions surfaced in q-file q7 ("research and add the ones that hold up"); never written before the a-file answers.
+- **b1b blocked:** B1B-L1/L2/L3 (lifecycle events + states) gated on B2-3; B1B-S6 (domain-grain system skill + domain_module_tools) gated on B2-3 + L1/L2/L3; B1B-S7 / B1A-PHASE-P (personas + RACI) deferred + gated on B2-3 + lifecycle; B1B-S2 (pattern-flag flips) gated on B2-4; B1B-S3 (user-verb edges + W2/W4 entities) user pick + entity-gated; B1A-B9b-residual (4th intra-domain handoff on spv.active) gated on B1B-L2; B1B-H1a (cross-domain handoff 1046 PCF tag) intentional Discover Pass 3 deferral.
+- **b3 backlog (q7):** rolling_fund_periods, gp_management_fees, spv_carry_distributions, lp_communication_log, regulatory_filings, fund_class_terms.
+
+The existing `q-EM-FUND-PLATFORM.md` already covers every open b2 (q1-q6) and the b3 ideas (q7); it remains current and was not regenerated. Domain stays `feedback_needed` / `next_action_by: user`.
+
+UI: https://tests.semantius.app/domain_map/domain_module_data_objects?domain_module_id=eq.28

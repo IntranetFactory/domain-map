@@ -20,6 +20,26 @@ a1:
 
 ---
 
+q3: Enterprise Performance Management forwards scenario plan to Strategic Portfolio Management to perform planning or budgeting or forecasting, but Strategic Portfolio Management does not yet have anyone assigned to perform planning or budgeting or forecasting, so this step has no owner. How should it be handled?
+- a) Record it now as work Strategic Portfolio Management owns, and assign a named owner once Strategic Portfolio Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Strategic Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a3:
+
+---
+
+q4: Enterprise Performance Management forwards benefits tracking record to Strategic Portfolio Management to monitor and analyze IT value and benefits, but Strategic Portfolio Management does not yet have anyone assigned to monitor and analyze IT value and benefits, so this step has no owner. How should it be handled?
+- a) Record it now as work Strategic Portfolio Management owns, and assign a named owner once Strategic Portfolio Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Strategic Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a4:
+
+---
+
 ## Optional (will not hold up the build)
 
 q2: Flagship SPM vendors model several entities SPM does not yet carry, now that the modules exist. Should I research these and add the ones that hold up? Program increments (SAFe cadence), investment categories (Clarity funding hierarchy), capacity/resource pools, portfolio funding decisions, portfolio milestones, a risk-registers consumer link (GRC), and a value-streams consumer link (VSDP). (yes/no)
@@ -30,4 +50,4 @@ a2:
 
 ---
 
-<!-- agent map, ignore: q1=B2-HANDOFF-REATTRIB q2=B3-PROGRAM-INCREMENTS+B3-INVESTMENT-CATEGORIES+B3-CAPACITY-POOLS+B3-PORTFOLIO-FUNDING-DECISIONS+B3-PORTFOLIO-MILESTONES+B3-RISK-REGISTERS+B3-VALUE-STREAMS-CONSUMER | domain_id=9 -->
+<!-- agent map, ignore: q1=B2-HANDOFF-REATTRIB q2=B3-PROGRAM-INCREMENTS+B3-INVESTMENT-CATEGORIES+B3-CAPACITY-POOLS+B3-PORTFOLIO-FUNDING-DECISIONS+B3-PORTFOLIO-MILESTONES+B3-RISK-REGISTERS+B3-VALUE-STREAMS-CONSUMER q3=B2-B9D-OWN-297 q4=B2-B9D-OWN-1133 | domain_id=9 -->

@@ -110,6 +110,50 @@ b2:
     why: |
       SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-SMP.md q9.
     extra_b9d_added: "2026-06-11"
+  - id: B2-B9D-OWN-294
+    summary: "SaaS Management Platforms: name an owner for \"Manage infrastructure resource administration\" (no one is responsible for it today)"
+    question: |
+      Discovery and Service Mapping hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage infrastructure resource administration, so that step currently has nobody responsible for it. Who should own it?
+    options:
+      - "The a named owner runs it and approves it."
+      - "The a named owner runs it and the HR Business Partner approves."
+      - "Leave it unassigned for now."
+    why: |
+      SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-SMP.md q10.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-317
+    summary: "SaaS Management Platforms: name an owner for \"Manage corporate credit cards\" (no one is responsible for it today)"
+    question: |
+      Expense Management hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage corporate credit cards, so that step currently has nobody responsible for it. Who should own it?
+    options:
+      - "The a named owner runs it and approves it."
+      - "The a named owner runs it and the HR Business Partner approves."
+      - "Leave it unassigned for now."
+    why: |
+      SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-SMP.md q11.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-260
+    summary: "SaaS Management Platforms: name an owner for \"Manage IT portfolio strategy\" (no one is responsible for it today)"
+    question: |
+      Cloud Financial Operations hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage IT portfolio strategy, so that step currently has nobody responsible for it. Who should own it?
+    options:
+      - "The a named owner runs it and approves it."
+      - "The a named owner runs it and the HR Business Partner approves."
+      - "Leave it unassigned for now."
+    why: |
+      SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-SMP.md q12.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1134
+    summary: "SaaS Management Platforms: name an owner for \"Optimize IT resource allocation\" (no one is responsible for it today)"
+    question: |
+      Cloud Financial Operations hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to optimize IT resource allocation, so that step currently has nobody responsible for it. Who should own it?
+    options:
+      - "The a named owner runs it and approves it."
+      - "The a named owner runs it and the HR Business Partner approves."
+      - "Leave it unassigned for now."
+    why: |
+      SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-SMP.md q13.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-DEFERRED-COMPLIANCE-ENTITIES

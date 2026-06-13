@@ -11,14 +11,10 @@
 schema_version: 2
 domain: EMP-EXP
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-S7
     summary: DESTRUCTIVE - re-point handoffs 442 and 115 from wrong-attribution trigger_event 134 to the new survey_campaign.closed event (id 1551); then DELETE or rename event 134. Surfaced, not executed.
     finding: trigger_events id 134 'survey.cycle_closed' is keyed at engagement_drivers (id 183) but the event semantic is about the survey campaign closing, not a state on a computed driver. Handoffs 442 (EMP-EXP-CONTINUOUS-LISTEN -> HCM) and 115 (EMP-EXP-CONTINUOUS-LISTEN -> PA) both ride this mis-attributed event. The correct event survey_campaign.closed now exists (trigger_events id 1551, created 2026-06-07).
@@ -111,6 +107,28 @@ b2:
   - id: B2-S6
     summary: "SUPERSEDED 2026-06-06 (per-domain-skill restoration). Skill 55 rename / per-module split is moot under the new domain-grain skill model. Retained only as a marker; no per-module skill rename/split."
     note: "The per-module system-skill grain is RETIRED. Any skill rename/split decision is governed by the new ONE-domain-grain-system-skill model, not a per-module split."
+  - id: B2-B9D-OWN-1048
+    summary: "Employee Experience and Engagement: name an owner for \"Review engagement and retention indicators\" (no one is responsible for it today)"
+    question: |
+      People Analytics forwards engagement action plan to Employee Experience and Engagement to review engagement and retention indicators, but Employee Experience and Engagement does not yet have anyone assigned to review engagement and retention indicators, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Employee Experience and Engagement owns, and assign a named owner once Employee Experience and Engagement sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Employee Experience and Engagement decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-EMP-EXP.md q15.
+    extra_b9d_added: "2026-06-13"
+
+  - id: B2-B9D-RETAG
+    summary: "DESTRUCTIVE - B9d found 2 ROLL-UP re-tags and 1 MIS-TAG on EMP-EXP-authored handoff_processes rows. Re-point or delete needs sign-off. Surfaced, not executed."
+    question: |
+      B9d classification (2026-06-13, both directions) found three handoff_processes tags EMP-EXP authored that point at a coarser or wrong PCF code than the realized work:
+      RE-TAG (ROLL-UP) - handoff 443 (-> TALENT-MGMT) tagged 7.3.3 "Manage employee career development"; a more specific realized tag 7.5.1.7 "Review engagement and retention indicators" exists on the same entity (survey_responses). Re-point 7.3.3 -> 7.5.1.7.
+      RE-TAG (ROLL-UP) - handoffs 1078 (-> HCM), 445 / 1248 (-> WORK-MGMT), 442 (-> HCM) tagged 7.5.3 "Manage employee assistance and retention"; the more specific 7.5.1.7 exists on the same entities (action_plans, engagement_drivers). Re-point 7.5.3 -> 7.5.1.7.
+      MIS-TAG - handoff 116 (-> HCM, payload employees, HCM-mastered) tagged 7.5.3; the carried entity is realized under 7.6.2 "Manage separation". Re-point 7.5.3 -> 7.6.2 or delete the tag.
+    options: [re-point-all-three-as-recommended, re-point-some, leave-as-is]
+    why: |
+      Re-pointing overwrites process_id on existing handoff_processes rows and the MIS-TAG option includes a possible row delete - both destructive (Rule #21), so surfaced for sign-off. Re-pointed rows land record_status='new' (Rule #1); the agent never flips record_status.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-S1

@@ -85,6 +85,16 @@ a8:
 
 ---
 
+q11: Security Operations forwards dlp incident to Data Loss Prevention to analyze IT security threat impact, but Data Loss Prevention does not yet have anyone assigned to analyze IT security threat impact, so this step has no owner. How should it be handled?
+- a) Record it now as work Data Loss Prevention owns, and assign a named owner once Data Loss Prevention sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Data Loss Prevention decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
 ## Optional (will not hold up the build)
 
 q9: Ten extra objects show up as first-class entities across the flagship DLP vendors (sensitive data types, content fingerprints, sensitivity labels, dictionaries, egress channels, breach notifications on the policy side; policy violations, enforcement actions, forensic evidence, alerts on the runtime side). Should I research and add the ones that hold up? (yes/no)
@@ -103,4 +113,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S4 q2=B2-S3 q3=B2-S2.incidents_pii q4=B2-S2.activitylog_pii q5=B2-S2.policy_submitlock q6=B2-S2.exception_single_approver q7=B2-S6 q8=B2-S5 q9=B3-MISSING-ENTITY-1+B3-MISSING-ENTITY-2+B3-MISSING-ENTITY-3+B3-MISSING-ENTITY-4+B3-MISSING-ENTITY-5+B3-MISSING-ENTITY-6+B3-MISSING-ENTITY-7+B3-MISSING-ENTITY-8+B3-MISSING-ENTITY-9+B3-MISSING-ENTITY-10 q10=B3-REG-GDPR+B3-REG-HIPAA+B3-REG-PCI-DSS | domain_id=139 -->
+<!-- agent map, ignore: q1=B2-S4 q2=B2-S3 q3=B2-S2.incidents_pii q4=B2-S2.activitylog_pii q5=B2-S2.policy_submitlock q6=B2-S2.exception_single_approver q7=B2-S6 q8=B2-S5 q9=B3-MISSING-ENTITY-1+B3-MISSING-ENTITY-2+B3-MISSING-ENTITY-3+B3-MISSING-ENTITY-4+B3-MISSING-ENTITY-5+B3-MISSING-ENTITY-6+B3-MISSING-ENTITY-7+B3-MISSING-ENTITY-8+B3-MISSING-ENTITY-9+B3-MISSING-ENTITY-10 q10=B3-REG-GDPR+B3-REG-HIPAA+B3-REG-PCI-DSS q11=B2-B9D-OWN-1164 | domain_id=139 -->

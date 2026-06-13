@@ -11,26 +11,24 @@
 schema_version: 2
 domain: ESIGN
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
-# ESIGN is UNBUILT: 0 domain_modules, 0 capabilities, 0 solution_domains (live 2026-06-07).
-# The data-object-grain and domain-grain mechanical items are executed (see history.md
-# 2026-06-07). What remains is the BUILD itself plus its dependent cascade (left, not
-# scaffolded) and the user-judgment b2 questions. Resolving B2-S2 (module shape) unblocks
-# the whole b1b chain.
-
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
-  - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capability_domains, 0 solution_domains awaiting a build."
-    finding: "Live 2026-06-07: ESIGN has 0 domain_modules (M1 fail), 0 capability_domains (A2 fail), 0 solution_domains (A3 fail). The domains row is fully populated (Rule #8 metadata, em-dash now stripped, catalog UX authored) and the single master (envelopes 251, now entity_type=operational_workflow) carries 8 lifecycle states + 2 gates + 3 aliases, but the domain is not deployable. It must be built before any module/capability/permission/skill/persona work applies."
-    action: "Run Phase A then M then B then S to author the module set, capabilities, solution links, and the ONE domain-grain system skill (domain_id=94, domain_module_id=null) deriving its toolset from domain_module_tools. Module shape is gated on B2-S2. If multi-module, run Phase P afterward. The whole cascade below (b1b) lands as part of this build."
+# ESIGN is UNBUILT: 0 domain_modules, 0 capabilities, 0 solution_domains (live 2026-06-13).
+# B9d ran clean on 2026-06-13 (1 boundary, payload `envelopes` -> CLM, RESOLVED; no edits).
+# All agent-executable mechanical items are now done. What remains is the BUILD itself plus
+# its dependent cascade, which is EXPANSIVE net-new structure (new modules / capabilities /
+# solution_domains): per Rule #21 that is surfaced in the q-file and written only after
+# approval, and the whole chain is gated on the user-judgment B2-S2 (module shape). No
+# agent-executable work remains; next_action_by=user.
 
 b1b:
+  - id: B1A-BUILD
+    summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capability_domains, 0 solution_domains awaiting a build."
+    finding: "Live 2026-06-13: ESIGN has 0 domain_modules (M1 fail), 0 capability_domains (A2 fail), 0 solution_domains (A3 fail). The domains row is fully populated (Rule #8 metadata, em-dash now stripped, catalog UX authored on the domain grain) and the single master (envelopes 251, entity_type=operational_workflow) carries 8 lifecycle states + 2 gates + 3 aliases, but the domain is not deployable. The build is expansive net-new market structure (Rule #21), so it is surfaced in q-ESIGN.md and written only after the user approves the module shape; it must not be auto-executed."
+    blocked_by:
+      - {type: user_decision, ref: B2-S2}
+    action: "Once B2-S2 resolves: run Phase A then M then B then S to author the module set, capabilities, solution links, and the ONE domain-grain system skill (domain_id=94, domain_module_id=null) deriving its toolset from domain_module_tools. If multi-module, run Phase P afterward. The whole cascade below lands as part of this build."
   - id: B1A-S1
     summary: "Author ESIGN module(s) + master DMDO (M1 cure)"
     finding: "M1 hard fail: ESIGN has 0 domain_modules rows. Domain exists with full metadata but is not deployable."

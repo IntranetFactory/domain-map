@@ -11,8 +11,8 @@
 schema_version: 2
 domain: FSM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # NOTE (2026-06-07 execute pass): the following prior open items were EXECUTED and dropped:
 #   - B1A-ENTITY-TYPE: 7 masters PATCHed entity_type='operational_workflow' (all carried real
@@ -29,10 +29,6 @@ last_audit: "2026-06-07"
 #     nothing to do. Dropped as obsolete.
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-V4
     summary: "DESTRUCTIVE REPLACE on handoff 230: DELETE discovery_substring row -> process 777, INSERT agent_curated -> process 196. SURFACED, not executed."
     finding: "H1 fit gap. Handoff 230 (FSM-DISPATCH-OPS -> CSM via dispatch.failed, payload dispatch_records) still carries a discovery_substring handoff_processes row (id 128) pointing at process 777 'Calculate and optimize destination dispatch plan' (10258 L4). That activity is the FSM-side dispatch-planning verb; the CSM-side receives a service-failure signal it must escalate. Better PCF fit is process 196 'Manage customer service problems, requests, and inquiries' (10388 L3). This is a DESTRUCTIVE replace (DELETE a non-agent row + INSERT) and is never executed unapproved."
@@ -40,6 +36,17 @@ b1a:
     surfaced: "destructive"
     affected_handoffs:
       - {handoff_id: 230, direction: outbound, source_domain: FSM, target_domain: CSM, trigger_event: dispatch.failed, payload: dispatch_records}
+
+  - id: B1A-B9D-RETAG
+    summary: "B9d RE-TAG (re-point): 3 FSM-source handoff_processes rows carry a coarse PCF code with a more specific tag available on the same entity. DESTRUCTIVE source edit, surfaced not executed."
+    finding: "B9d resolver (run 2026-06-13, both directions) found 3 ROLL-UP/RE-TAG cases on FSM-source handoffs: (1) handoff 1261 (FSM->CRM, customers) tagged 3.5.2 'Manage customers and accounts' -> more specific 3.5.4.2 'Collect and maintain account information'; (2) handoffs 883 + 229 (FSM->CSM, service_work_orders / field_visits) tagged 6.2.2 -> 4.4.4.3 'Manage transportation fleet'; (3) handoff 292 (FSM->REAL-EST, facility_work_orders) tagged 10.3.3 'Perform asset maintenance' -> 4.3.1.6 'Request unplanned maintenance'. Each re-point edits an existing handoff_processes row (destructive)."
+    action: "On approval: re-point handoff_processes.process_id on the named rows (record_status='new'). Re-run scripts/analytics/b9d_resolver.ts FSM to apply once signed off. Recommended fix only; awaiting user sign-off."
+    surfaced: "destructive"
+    affected_handoffs:
+      - {handoff_id: 1261, direction: outbound, source_domain: FSM, target_domain: CRM, payload: customers, retag: "3.5.2 -> 3.5.4.2"}
+      - {handoff_id: 883, direction: outbound, source_domain: FSM, target_domain: CSM, payload: service_work_orders, retag: "6.2.2 -> 4.4.4.3"}
+      - {handoff_id: 229, direction: outbound, source_domain: FSM, target_domain: CSM, payload: field_visits, retag: "6.2.2 -> 4.4.4.3"}
+      - {handoff_id: 292, direction: outbound, source_domain: FSM, target_domain: REAL-EST, payload: facility_work_orders, retag: "10.3.3 -> 4.3.1.6"}
 
   - id: B1A-PHASE-P
     summary: "Multi-module (3 full modules + 1 starter) with 0 operational personas (E1): persona / RACI layer. DEFERRED (do not author)."
@@ -132,6 +139,16 @@ b1b:
       - {handoff_id: 941, direction: inbound, source_domain: UTIL-OPS, payload: utility_assets, null_field: source_domain_module_id}
       - {handoff_id: 945, direction: inbound, source_domain: UTIL-OPS, payload: meter_reads, null_field: source_domain_module_id}
 
+  - id: B1B-B9D-UNOWNED
+    summary: "B9d UNOWNED dependency: 3 UTIL-OPS->FSM inbound handoffs carry payloads with no master row anywhere in the catalog. Owed by the sender (UTIL-OPS)."
+    finding: "B9d resolver (run 2026-06-13, both directions) classified 2 inbound payload processes as UNOWNED (the carried entity has no master row in any domain): (1) process 828 'Report maintenance issues' carries utility_assets + meter_reads on handoffs 941, 945 (UTIL-OPS->FSM); (2) process 1898 'Schedule field service' carries utility_service_orders on handoff 940 (UTIL-OPS->FSM). These are unowned dependencies on the sender: the payloads must be mastered on the UTIL-OPS side before B9d can resolve them. Do not drop; surfaced for UTIL-OPS's audit."
+    blocked_by:
+      - {type: domain_audit, blocking_domain: UTIL-OPS, milestone: master-the-published-payload-entities}
+    affected_handoffs:
+      - {handoff_id: 941, direction: inbound, source_domain: UTIL-OPS, payload: utility_assets, process: 828}
+      - {handoff_id: 945, direction: inbound, source_domain: UTIL-OPS, payload: meter_reads, process: 828}
+      - {handoff_id: 940, direction: inbound, source_domain: UTIL-OPS, payload: utility_service_orders, process: 1898}
+
 b2:
   - id: B2-M7
     summary: "M7 architectural choice: DELETE 4 sibling consumer DMDOs (834, 835, 836, 837) or PROMOTE to embedded_master?"
@@ -188,6 +205,46 @@ b2:
 #   - B2-STARTER-SCOPE: scope of the starter system skill 236's skill_tools (self-sufficient vs
 #     delegate). skill_tools is DROPPED under the new model; per-module tool re-authoring is tracked
 #     in audits/_modularization-backlog.md as domain_module_tools work. No longer a live b2 decision.
+  - id: B2-B9D-OWN-353
+    summary: "Field Service Management: name an owner for \"Perform asset maintenance\" (no one is responsible for it today)"
+    question: |
+      Enterprise Asset Management forwards installed equipment unit to Field Service Management to perform asset maintenance, but Field Service Management does not yet have anyone assigned to perform asset maintenance, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Field Service Management owns, and assign a named owner once Field Service Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Field Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSM.md q16.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-355
+    summary: "Field Service Management: name an owner for \"Decommission productive assets\" (no one is responsible for it today)"
+    question: |
+      Enterprise Asset Management forwards installed equipment unit to Field Service Management to decommission productive assets, but Field Service Management does not yet have anyone assigned to decommission productive assets, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Field Service Management owns, and assign a named owner once Field Service Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Field Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSM.md q17.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-862
+    summary: "Field Service Management: name an owner for \"Manage transportation fleet\" (no one is responsible for it today)"
+    question: |
+      Fleet Management forwards service work order to Field Service Management to manage transportation fleet, but Field Service Management does not yet have anyone assigned to manage transportation fleet, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Field Service Management owns, and assign a named owner once Field Service Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Field Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSM.md q18.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-777
+    summary: "Field Service Management: name an owner for \"Calculate and optimize destination dispatch plan\" (no one is responsible for it today)"
+    question: |
+      Customer Service Management forwards dispatch record to Field Service Management to calculate and optimize destination dispatch plan, but Field Service Management does not yet have anyone assigned to calculate and optimize destination dispatch plan, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Field Service Management owns, and assign a named owner once Field Service Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Field Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSM.md q19.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-V1

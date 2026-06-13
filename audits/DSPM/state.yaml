@@ -11,14 +11,10 @@
 schema_version: 2
 domain: DSPM
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-05"
 
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+b1a: []
 
 b1b:
   - id: B1B-S3
@@ -64,36 +60,24 @@ b1b:
       - {handoff_id: 288, direction: outbound, source_domain: DSPM, target_domain: PRIV-MGMT, trigger_event: "data_classification.sensitivity_elevated", payload: data_assets, null_field: null}
 
   - id: B1B-S7
-    summary: "B10b: DSPM-owed source_domain_module_id NULL on all 10 outbound handoffs; the module prerequisite is now satisfied so this is unblocked for the next technical pass."
-    finding: "All 10 outbound DSPM handoffs (285, 286, 287, 288, 289, 290, 846, 847, 848, 849) have NULL source_domain_module_id. The B1B-S1 module prerequisite is now SATISFIED: DSPM modules 233 (DSPM-DISCOVERY-CLASSIFICATION), 234 (DSPM-ACCESS-RISK), 235 (DSPM-INCIDENT-REMEDIATION) exist, so each source FK is derivable per the master-to-module mapping. Handoffs 286 and 289 already carry target_domain_module_id=146 (IGA). Handoffs 285 and 288 are direction-contested (B1B-S5/B1B-S6); back-fill their source FK only after those editorial calls settle."
-    action: "PATCH source_domain_module_id on the 10 outbounds per payload-to-module mapping: 287 + 290 (sensitive_data_incidents) -> 235; 286 (sensitive_data_incident.detected, payload iam_access_policies) -> 235; 289 (iam_access_policies) -> 234; 846 (cloud_databases) + 847 (data_warehouses) + 848 (saas_app_instances) + 849 (cloud_databases) -> 233; 285 (data_assets, contributor in 233) -> 233 pending B2-S3; 288 -> 233 or 234 pending B2-S4 payload resolution."
+    summary: "B10b: source_domain_module_id back-filled on 8 of 10 outbound handoffs; only 285 + 288 remain, gated on their direction decisions (B2-S3 / B2-S4)."
+    finding: "8 outbound handoffs now carry source_domain_module_id (287/290/286 -> 235; 289 -> 234; 846/847/848/849 -> 233), derived from each handoff's trigger_event data_object per the B10b rule. The remaining two (285, 288) are direction-contested: their source module cannot be back-filled until the editorial direction call settles, because the event ownership may change (B2-S3 / B2-S4)."
+    action: "After B2-S3 settles: PATCH 285 source_domain_module_id=233 (or drop with the row on DELETE). After B2-S4 settles: PATCH 288 source_domain_module_id per the chosen event ownership (233 for a data_classifications/data_assets discovery event in 233, or per the new DSPM-owned event)."
     blocked_by:
       - {type: user_decision, ref: B2-S3}
       - {type: user_decision, ref: B2-S4}
     affected_handoffs:
       - {handoff_id: 285, direction: outbound, source_domain: DSPM, target_domain: DCG, trigger_event: "data_asset.classified", payload: data_assets, null_field: source_domain_module_id}
-      - {handoff_id: 286, direction: outbound, source_domain: DSPM, target_domain: IGA, trigger_event: "sensitive_data_incident.detected", payload: iam_access_policies, null_field: source_domain_module_id}
-      - {handoff_id: 287, direction: outbound, source_domain: DSPM, target_domain: SECOPS, trigger_event: "sensitive_data_incident.detected", payload: sensitive_data_incidents, null_field: source_domain_module_id}
       - {handoff_id: 288, direction: outbound, source_domain: DSPM, target_domain: PRIV-MGMT, trigger_event: "data_classification.sensitivity_elevated", payload: data_assets, null_field: source_domain_module_id}
-      - {handoff_id: 289, direction: outbound, source_domain: DSPM, target_domain: IGA, trigger_event: "iam_access_policy.permission_escalation_detected", payload: iam_access_policies, null_field: source_domain_module_id}
-      - {handoff_id: 290, direction: outbound, source_domain: DSPM, target_domain: SECOPS, trigger_event: "sensitive_data_incident.resolved", payload: sensitive_data_incidents, null_field: source_domain_module_id}
-      - {handoff_id: 846, direction: outbound, source_domain: DSPM, target_domain: DCG, trigger_event: "cloud_database.discovered", payload: cloud_databases, null_field: source_domain_module_id}
-      - {handoff_id: 847, direction: outbound, source_domain: DSPM, target_domain: DLP, trigger_event: "data_warehouse.classified", payload: data_warehouses, null_field: source_domain_module_id}
-      - {handoff_id: 848, direction: outbound, source_domain: DSPM, target_domain: GRC, trigger_event: "saas_app_instance.detected", payload: saas_app_instances, null_field: source_domain_module_id}
-      - {handoff_id: 849, direction: outbound, source_domain: DSPM, target_domain: AUDIT, trigger_event: "cloud_database.discovered", payload: cloud_databases, null_field: source_domain_module_id}
 
   - id: B1B-H1-RESIDUAL
-    summary: "H1: 6 of 13 cross-domain handoffs still untagged with handoff_processes; 5 immediately taggable, 288 gated on B2-S4."
-    finding: "7 of 13 DSPM cross-domain handoffs carry handoff_processes rows (261, 285, 287, 290, 712, 729, 846). 6 remain untagged: 286, 288, 289, 847, 848, 849. 5 of these (286, 289, 847, 848, 849) can be tagged immediately via PCF lookups; handoff 288 holds until B2-S4 resolves its event-payload mismatch."
-    action: "For each of handoffs 286, 289, 847, 848, 849, look up the implementing PCF activity (286 + 289 in 'Manage identities and access' / 'Manage entitlements'; 847 in 'Manage IT security, privacy, and data protection'; 848 in 'Manage compliance with regulations'; 849 in 'Manage internal audit') via /processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry, then INSERT one handoff_processes row per handoff: {handoff_id, process_id, proposal_source: agent_curated, record_status: new, role: implements}. Handoff 288 stays untagged until B2-S4 settles."
+    summary: "H1: only handoff 288 remains untagged with handoff_processes; gated on B2-S4 (its event-payload mismatch)."
+    finding: "12 of 13 DSPM cross-domain handoffs now carry handoff_processes rows (261, 285, 287, 290, 712, 729, 846 plus the newly-tagged 286, 289 and 847/848/849 -> pid 275 8.4.2, consistent with sibling 846). Only 288 stays untagged: its event (273 data_classification.sensitivity_elevated) and payload (data_assets) are incoherent, so the correct PCF tag depends on which way B2-S4 resolves the mismatch."
+    action: "After B2-S4 settles, tag 288 with the handoff_processes row matching the chosen event ownership (a data-governance/classification PCF activity, e.g. 8.4.x), proposal_source agent_curated, record_status new, role implements."
     blocked_by:
       - {type: user_decision, ref: B2-S4}
     affected_handoffs:
-      - {handoff_id: 286, direction: outbound, source_domain: DSPM, target_domain: IGA, trigger_event: "sensitive_data_incident.detected", payload: iam_access_policies, null_field: null}
-      - {handoff_id: 289, direction: outbound, source_domain: DSPM, target_domain: IGA, trigger_event: "iam_access_policy.permission_escalation_detected", payload: iam_access_policies, null_field: null}
-      - {handoff_id: 847, direction: outbound, source_domain: DSPM, target_domain: DLP, trigger_event: "data_warehouse.classified", payload: data_warehouses, null_field: null}
-      - {handoff_id: 848, direction: outbound, source_domain: DSPM, target_domain: GRC, trigger_event: "saas_app_instance.detected", payload: saas_app_instances, null_field: null}
-      - {handoff_id: 849, direction: outbound, source_domain: DSPM, target_domain: AUDIT, trigger_event: "cloud_database.discovered", payload: cloud_databases, null_field: null}
+      - {handoff_id: 288, direction: outbound, source_domain: DSPM, target_domain: PRIV-MGMT, trigger_event: "data_classification.sensitivity_elevated", payload: data_assets, null_field: null}
 
 b2:
   - id: B2-MODULE-SPLIT-NOTE
@@ -104,14 +88,6 @@ b2:
       - "(b) Re-split DSPM-DISCOVERY-CLASSIFICATION (233) into discovery-inventory + classification-lineage (back to 4 modules)"
       - "(c) Split DSPM-INCIDENT-REMEDIATION (235) into DSPM-INCIDENT + DSPM-REMEDIATION-PLAYBOOKS (to 4 or 5 modules, with B3-REMEDIATION-PLAYBOOKS)"
     why: "Architectural intent. The loader chose a defensible 3-module shape; a re-split is cheap now (skills/lifecycle not yet authored) and expensive later."
-
-  - id: B2-SKILL-ORPHAN
-    summary: "Orphan dspm-system skill (id=51) disposition now that 3 modules exist."
-    question: "How to handle the orphan system skill id=51 ('dspm-system', domain_module_id=NULL, 0 skill_tools) when authoring per-module system skills (B1A-SKILLS-PER-MODULE)?"
-    options:
-      - "(a) DELETE id=51 and author 3 fresh system skills (one per module 233/234/235)"
-      - "(b) Bind id=51 to one of the 3 modules (specify which) and author its skill_tools; author 2 fresh skills for the others"
-    why: "Rule #17 requires one system skill per module; the 3-module split makes a single cross-cutting skill incoherent. Recommendation: (a)."
 
   - id: B2-S2
     summary: "Static-shape exemption (Rule #12) for the 4 cloud-store masters."
@@ -169,6 +145,33 @@ b2:
       - "US state breach-notification laws - mandatory for any US-resident sensitive-data footprint"
       - "Per-regulation yes/no + applicability (mandatory / recommended / optional) per Rule #3"
     why: "Editorial scope; the audit cannot decide unilaterally which to load."
+  - id: B2-B9D-RETAG-290
+    summary: "Handoff 290 (DSPM -> SECOPS, sensitive_data_incident.resolved) is tagged with a coarse parent PCF code; re-point to the more specific child."
+    question: "Handoff 290's handoff_processes row points at 8.3.3 'Control IT risk, compliance, and security' (a parent process). A more specific realized child, 8.3.3.2 'Analyze IT security threat impact' (the same code handoff 287 already uses), better describes the incident-resolution work. Re-point 290's tag from 8.3.3 to 8.3.3.2?"
+    options:
+      - "(a) Re-point handoff 290's handoff_processes row from process 268 (8.3.3) to process 1164 (8.3.3.2)"
+      - "(b) Leave 290 tagged at the coarser parent 8.3.3"
+    why: "Editorial re-point (destructive overwrite of an existing handoff_processes row) surfaced by the B9d resolver; needs sign-off per Rule #21. Recommendation: (a) for grain consistency with sibling handoff 287."
+  - id: B2-B9D-OWN-273
+    summary: "Data Security Posture Management: name an owner for \"Manage IT user identity and authorization\" (no one is responsible for it today)"
+    question: |
+      Identity Governance and Administration forwards iam access policy to Data Security Posture Management to manage IT user identity and authorization, but Data Security Posture Management does not yet have anyone assigned to manage IT user identity and authorization, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Data Security Posture Management owns, and assign a named owner once Data Security Posture Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Data Security Posture Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-DSPM.md q12.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1164
+    summary: "Data Security Posture Management: name an owner for \"Analyze IT security threat impact\" (no one is responsible for it today)"
+    question: |
+      Security Operations forwards sensitive data incident to Data Security Posture Management to analyze IT security threat impact, but Data Security Posture Management does not yet have anyone assigned to analyze IT security threat impact, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Data Security Posture Management owns, and assign a named owner once Data Security Posture Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Data Security Posture Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-DSPM.md q13.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-DATA-ACCESS-PATHS

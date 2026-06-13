@@ -1,7 +1,7 @@
 schema_version: 2
 domain: TELEMATICS
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 b1a:
@@ -197,6 +197,16 @@ b2:
       - leave-with-debt-flag
     why: |
       Payload 380 (`preventive_maintenance_schedules`) is FLEET-MAINT-mastered; TELEMATICS does not model the entity. Likely modeling debt from a pre-modular load. Gates B1B-A5.
+  - id: B2-B9D-OWN-862
+    summary: "Vehicle Telematics: name an owner for \"Manage transportation fleet\" (no one is responsible for it today)"
+    question: |
+      Fleet Management forwards driver behavior event to Vehicle Telematics to manage transportation fleet, but Vehicle Telematics does not yet have anyone assigned to manage transportation fleet, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Vehicle Telematics owns, and assign a named owner once Vehicle Telematics sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Vehicle Telematics decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-TELEMATICS.md q10.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-IFTA-JURISDICTION-SUMMARIES

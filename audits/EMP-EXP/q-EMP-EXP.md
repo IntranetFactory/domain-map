@@ -130,6 +130,24 @@ a13:
 
 ---
 
+q15: People Analytics forwards engagement action plan to Employee Experience and Engagement to review engagement and retention indicators, but Employee Experience and Engagement does not yet have anyone assigned to review engagement and retention indicators, so this step has no owner. How should it be handled?
+- a) Record it now as work Employee Experience and Engagement owns, and assign a named owner once Employee Experience and Engagement sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Employee Experience and Engagement decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a15:
+
+---
+
+q16: I re-checked every cross-domain handoff payload against the work that is actually realized (both directions). Three process tags EMP-EXP authored point at a broader or wrong category than the realized work: handoff 443 to Talent Management and handoffs 442/445/1078/1248 to HCM/Work Management are tagged with a parent process when a more specific one ("Review engagement and retention indicators") already exists; and handoff 116 to HCM is tagged with a retention process when its payload (employees) actually realizes under "Manage separation". Should I re-point all three groups to the more specific process (the 116 one can be re-pointed or deleted)? (yes/no)
+
+Recommended: yes, re-point all three to the recommended targets (re-point handoff 116 rather than delete it). This makes each handoff point at the work that is really done. It overwrites an existing process tag (and possibly deletes one), so it needs your sign-off.
+
+a16:
+
+---
+
 ## Optional (will not hold up the build)
 
 q14: Nine extra entities show up across the flagship employee-experience vendors (survey templates, engagement themes, survey invitations, sentiment topics, manager action recommendations, 360 review cycles, recognition events, pulse cohorts, engagement score snapshots). Should I research and add the ones that hold up? (yes/no)
@@ -140,4 +158,4 @@ a14:
 
 ---
 
-<!-- agent map, ignore: q1=B1B-S1 q2=B1A-S7 q3=B1A-SELF-CONTAIN q4=B2-S4 q5=B2-S5 q6=B2-S2 q7=B2-S3 q8=B2-S1.engdrivers q9=B2-S1.pulsequestions q10=B2-S1.surveyresponses q11=B2-S1.actionplanpii q12=B2-S1.actionplanapprover q13=B1A-S13-RES q14=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5+B3-S6+B3-S7+B3-S8+B3-S9 | domain_id=62 -->
+<!-- agent map, ignore: q1=B1B-S1 q2=B1A-S7 q3=B1A-SELF-CONTAIN q4=B2-S4 q5=B2-S5 q6=B2-S2 q7=B2-S3 q8=B2-S1.engdrivers q9=B2-S1.pulsequestions q10=B2-S1.surveyresponses q11=B2-S1.actionplanpii q12=B2-S1.actionplanapprover q13=B1A-S13-RES q14=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5+B3-S6+B3-S7+B3-S8+B3-S9 q15=B2-B9D-OWN-1048 q16=B2-B9D-RETAG | domain_id=62 -->

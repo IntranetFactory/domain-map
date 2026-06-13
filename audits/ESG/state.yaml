@@ -11,8 +11,8 @@
 schema_version: 2
 domain: ESG
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # ESG is UNBUILT: 0 domain_modules, 0 capability_domains (verified live 2026-06-07).
 # Per the LEAVE rule for unbuilt domains, the build (B1A-BUILD) and its full cascade are
@@ -26,10 +26,6 @@ last_audit: "2026-06-07"
 # has a missing/ambiguous catalog target, or is a b3 backlog idea.
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-M1
     summary: "MISSING compliance entity assurance_engagements (CSRD Art. 14 / SEC Climate Rule)"
     finding: "Catalog has no `assurance_engagements` data_object. CSRD Article 14 and the SEC Climate Disclosure Rule mandate third-party assurance of sustainability statements; the engagement record (scope, period, assurance level limited/reasonable, assurance provider, sign-off) is universal across the flagship surface. Compliance-mandated; non-optional regardless of vendor coverage."

@@ -11,7 +11,7 @@
 schema_version: 2
 domain: REAL-EST
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 # b1a fully executed 2026-06-06 (see history.md "2026-06-06 - b1a execution"):
@@ -162,6 +162,36 @@ b2:
       (proposal_source -> agent_curated)? Substring rows coexist alongside the
       curated rows a prior continuation inserted; cleanup unblocks B1B-S9.
     options: ["all", "selective", "skip"]
+  - id: B2-B9D-OWN-1412
+    summary: "Real Estate and Workplace Management: name an owner for \"Measure financial returns on completed capital projects\" (no one is responsible for it today)"
+    question: |
+      Enterprise Asset Management forwards capital project to Real Estate and Workplace Management to measure financial returns on completed capital projects, but Real Estate and Workplace Management does not yet have anyone assigned to measure financial returns on completed capital projects, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Real Estate and Workplace Management owns, and assign a named owner once Real Estate and Workplace Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Real Estate and Workplace Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-REAL-EST.md q14.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1783
+    summary: "Real Estate and Workplace Management: name an owner for \"Evaluate environmental impact of products, services, and operations\" (no one is responsible for it today)"
+    question: |
+      ESG Management forwards utility meter reading to Real Estate and Workplace Management to evaluate environmental impact of products, services, and operations, but Real Estate and Workplace Management does not yet have anyone assigned to evaluate environmental impact of products, services, and operations, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Real Estate and Workplace Management owns, and assign a named owner once Real Estate and Workplace Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Real Estate and Workplace Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-REAL-EST.md q15.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-824
+    summary: "Real Estate and Workplace Management: name an owner for \"Request unplanned maintenance\" (no one is responsible for it today)"
+    question: |
+      Field Service Management forwards facility work order to Real Estate and Workplace Management to request unplanned maintenance, but Real Estate and Workplace Management does not yet have anyone assigned to request unplanned maintenance, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Real Estate and Workplace Management owns, and assign a named owner once Real Estate and Workplace Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Real Estate and Workplace Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-REAL-EST.md q16.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-S1

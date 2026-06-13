@@ -11,7 +11,7 @@
 schema_version: 2
 domain: PLM
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-07"
 
 # 2026-06-07 state-driven execute pass. EXECUTED this pass: B13 entity_type
@@ -176,6 +176,26 @@ b2:
 # The new model: PLM gets at most ONE domain-grain system skill that DERIVES its toolset;
 # per-module tool requirements move to domain_module_tools, tracked in
 # audits/_modularization-backlog.md. No per-module skill authoring is owed here.
+  - id: B2-B9D-OWN-549
+    summary: "Product Lifecycle Management: name an owner for \"Manage bills of material\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards engineering part to Product Lifecycle Management to manage bills of material, but Product Lifecycle Management does not yet have anyone assigned to manage bills of material, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Product Lifecycle Management owns, and assign a named owner once Product Lifecycle Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Product Lifecycle Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PLM.md q7.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-552
+    summary: "Product Lifecycle Management: name an owner for \"Manage drawings\" (no one is responsible for it today)"
+    question: |
+      Field Service Management forwards cad drawing to Product Lifecycle Management to manage drawings, but Product Lifecycle Management does not yet have anyone assigned to manage drawings, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Product Lifecycle Management owns, and assign a named owner once Product Lifecycle Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Product Lifecycle Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PLM.md q8.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-PLM-PORTFOLIO

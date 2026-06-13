@@ -1,14 +1,11 @@
 schema_version: 2
 domain: FIN
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-06"
+next_action_by: user
+last_audit: "2026-06-13"
+# B9d reference-read (2026-06-13): "Cost Center" is reference/config data of FIN; it becomes ownable work only if FIN later runs a workflow on it.
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-MASTER-MASTER-EDGES
     summary: "B6/B8 master-to-master data_object_relationships still missing (~9-10 edges)."
     finding: >
@@ -161,6 +158,101 @@ b2:
       - "review in the UI and bulk-approve the agent_curated tags you trust"
       - "leave at new pending a closer review pass"
     why: "Rule #1: record_status flips to approved are user-only; the agent authored the tags but cannot approve them."
+  - id: B2-B9D-OWN-307
+    summary: "Core Financial Management: name an owner for \"Perform general accounting\" (no one is responsible for it today)"
+    question: |
+      Enterprise Performance Management forwards gl account to Core Financial Management to perform general accounting, but Core Financial Management does not yet have anyone assigned to perform general accounting, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Core Financial Management owns, and assign a named owner once Core Financial Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Core Financial Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FIN.md q13.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1381
+    summary: "Core Financial Management: name an owner for \"Process period end adjustments\" (no one is responsible for it today)"
+    question: |
+      Enterprise Performance Management forwards journal entry to Core Financial Management to process period end adjustments, but Core Financial Management does not yet have anyone assigned to process period end adjustments, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Core Financial Management owns, and assign a named owner once Core Financial Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Core Financial Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FIN.md q14.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1392
+    summary: "Core Financial Management: name an owner for \"Calculate and record depreciation expense\" (no one is responsible for it today)"
+    question: |
+      Enterprise Performance Management forwards depreciation schedule to Core Financial Management to calculate and record depreciation expense, but Core Financial Management does not yet have anyone assigned to calculate and record depreciation expense, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Core Financial Management owns, and assign a named owner once Core Financial Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Core Financial Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FIN.md q15.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-320
+    summary: "Core Financial Management: name an owner for \"Manage in-house bank accounts\" (no one is responsible for it today)"
+    question: |
+      Accounts Payable Automation forwards bank account to Core Financial Management to manage in-house bank accounts, but Core Financial Management does not yet have anyone assigned to manage in-house bank accounts, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Core Financial Management owns, and assign a named owner once Core Financial Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Core Financial Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FIN.md q16.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1379
+    summary: "Core Financial Management: name an owner for \"Process journal entries\" (no one is responsible for it today)"
+    question: |
+      Audit Management forwards journal entry to Core Financial Management to process journal entries, but Core Financial Management does not yet have anyone assigned to process journal entries, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Core Financial Management owns, and assign a named owner once Core Financial Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Core Financial Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FIN.md q17.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1382
+    summary: "Core Financial Management: name an owner for \"Post and reconcile intercompany transactions\" (no one is responsible for it today)"
+    question: |
+      Audit Management forwards intercompany transaction to Core Financial Management to post and reconcile intercompany transactions, but Core Financial Management does not yet have anyone assigned to post and reconcile intercompany transactions, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Core Financial Management owns, and assign a named owner once Core Financial Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Core Financial Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FIN.md q18.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1433
+    summary: "Core Financial Management: name an owner for \"Audit invoices and key data in AP system\" (no one is responsible for it today)"
+    question: |
+      Audit Management forwards fixed asset to Core Financial Management to audit invoices and key data in AP system, but Core Financial Management does not yet have anyone assigned to audit invoices and key data in AP system, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Core Financial Management owns, and assign a named owner once Core Financial Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Core Financial Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FIN.md q19.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1461
+    summary: "Core Financial Management: name an owner for \"Manage and reconcile cash positions\" (no one is responsible for it today)"
+    question: |
+      Audit Management forwards cash transaction to Core Financial Management to manage and reconcile cash positions, but Core Financial Management does not yet have anyone assigned to manage and reconcile cash positions, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Core Financial Management owns, and assign a named owner once Core Financial Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Core Financial Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FIN.md q20.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-RETAG-9-3
+    summary: "B9d ROLL-UP re-point on 3 FIN-outbound handoff tags (coarse 9.3 -> specific 9.3.2.4); destructive, needs sign-off."
+    question: |
+      The 2026-06-06 pass tagged three FIN-outbound handoffs (531 to Audit on accounting_period.closed,
+      533 to GRC on accounting_period.reopened, 536 to Audit on legal_entity.created) with the coarse
+      APQC parent process 9.3 "Perform general accounting and reporting" (process_id 56). The B9d run
+      found a more specific realized child on the same entity, 9.3.2.4 "Process period end adjustments"
+      (process_id 1381). Re-point these three handoff_processes rows (1010, 1011, 1013) from 56 to 1381?
+    options:
+      - "Re-point all three to 9.3.2.4 (process_id 1381)."
+      - "Leave them on the coarse 9.3 tag."
+    why: |
+      Overwriting a non-empty process_id on an existing handoff_processes row is a destructive edit
+      (Rule #21) that needs explicit sign-off. The tags stay record_status='new' either way. Surfaced as q-FIN.md q21.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-CHART-OF-ACCOUNTS-SEGMENTS

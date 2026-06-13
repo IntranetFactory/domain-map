@@ -125,6 +125,58 @@ a12:
 
 ---
 
+q16: Enterprise Asset Management forwards installed equipment unit to Field Service Management to perform asset maintenance, but Field Service Management does not yet have anyone assigned to perform asset maintenance, so this step has no owner. How should it be handled?
+- a) Record it now as work Field Service Management owns, and assign a named owner once Field Service Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Field Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a16:
+
+---
+
+q17: Enterprise Asset Management forwards installed equipment unit to Field Service Management to decommission productive assets, but Field Service Management does not yet have anyone assigned to decommission productive assets, so this step has no owner. How should it be handled?
+- a) Record it now as work Field Service Management owns, and assign a named owner once Field Service Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Field Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a17:
+
+---
+
+q18: Fleet Management forwards service work order to Field Service Management to manage transportation fleet, but Field Service Management does not yet have anyone assigned to manage transportation fleet, so this step has no owner. How should it be handled?
+- a) Record it now as work Field Service Management owns, and assign a named owner once Field Service Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Field Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a18:
+
+---
+
+q19: Customer Service Management forwards dispatch record to Field Service Management to calculate and optimize destination dispatch plan, but Field Service Management does not yet have anyone assigned to calculate and optimize destination dispatch plan, so this step has no owner. How should it be handled?
+- a) Record it now as work Field Service Management owns, and assign a named owner once Field Service Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Field Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a19:
+
+---
+
+q20: Three outbound process tags are coarse and a more precise process exists for the same record. Should they be re-pointed to the better-fit process? This replaces existing tags.
+
+- a) Re-point all three: the customer-record handoff to "Collect and maintain account information", the two customer-service handoffs to "Manage transportation fleet", and the facility-work-order handoff to "Request unplanned maintenance".
+- b) Keep the existing tags.
+- c) Decide per handoff.
+
+Recommended: a. Each target process describes the same record at a finer grain than the current coarse tag. This deletes and rewrites existing tags, so it needs your approval.
+
+a20:
+
+---
+
 ## Optional (will not hold up the build)
 
 q13: Five entity clusters show up across the flagship field-service vendors that FSM has no home for today: technician time tracking (time entries, timesheets, labor rates), proof-of-completion artifacts (signatures, service photos, mobile devices), regulated safety (safety inspections, checklists), equipment warranties and claims (today conflated with service contracts), and pre-work pricing (rate cards, pricing books, service quotes). Should I research and add the ones that hold up? (yes/no)
@@ -151,4 +203,4 @@ a15:
 
 ---
 
-<!-- agent map, ignore: q1=B2-M7 q2=B1A-V4 q3=H1-review q4=B2-MOBILE-TECH-SPLIT q5=B2-CROSS-DOMAIN-ROLE q6=B2-STARTER-HOST-SCOPE q7=B2-FLAGS.swolock q8=B2-FLAGS.fvpii q9=B2-FLAGS.drlock q10=B2-FLAGS.iepii q11=B2-FLAGS.sclock q12=B2-FLAGS.pmlock q13=B3-V1+B3-V2+B3-V3+B3-V4+B3-V5+B3-V7 q14=B3-V8+B3-V9 q15=B3-V10 | domain_id=31 -->
+<!-- agent map, ignore: q1=B2-M7 q2=B1A-V4 q3=H1-review q4=B2-MOBILE-TECH-SPLIT q5=B2-CROSS-DOMAIN-ROLE q6=B2-STARTER-HOST-SCOPE q7=B2-FLAGS.swolock q8=B2-FLAGS.fvpii q9=B2-FLAGS.drlock q10=B2-FLAGS.iepii q11=B2-FLAGS.sclock q12=B2-FLAGS.pmlock q13=B3-V1+B3-V2+B3-V3+B3-V4+B3-V5+B3-V7 q14=B3-V8+B3-V9 q15=B3-V10 q16=B2-B9D-OWN-353 q17=B2-B9D-OWN-355 q18=B2-B9D-OWN-862 q19=B2-B9D-OWN-777 q20=B1A-B9D-RETAG | domain_id=31 -->

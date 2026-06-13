@@ -11,20 +11,22 @@
 schema_version: 2
 domain: FINOPS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
-# UNBUILT (live 2026-06-07): 0 domain_modules, 0 capability_domains, 0 master data_objects.
+# UNBUILT (live 2026-06-13): 0 domain_modules, 0 capability_domains, 0 master data_objects.
 # Per Rule #21 / SKILL.md line 1498 an UNBUILT domain is NOT scaffolded by an audit pass: the
 # build is a user decision (b2). The entire module + capability + master + DMDO + skill + FK
 # cascade below stays surfaced and clears automatically once the build lands. The only
 # cascade-independent agent-doable item (A4 catalog UX) was executed 2026-06-07.
+# B9d (handoff payload realization) was run in BOTH directions 2026-06-13: 6 ORPHANs routed to
+# owner domains (SMP, EXPENSE, APM, SAM, RE-INVEST) as additive b2 + q items in THEIR audit
+# files; 3 UNOWNED-at-DMDO-grain dependencies surfaced as report-only (owners exist at legacy
+# domain_data_objects grain). No ROLL-UPs, no MIS-TAGs, no FINOPS-side catalog write. With
+# B1A-B9D-VERIFY resolved, no agent-executable item remains: the whole b1a cascade is blocked
+# on B2-BUILD.
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   # All b1a items below are BLOCKED on the build decision (B2-BUILD). They are agent-doable
   # ONLY after the user decides the module shape. They are retained as the post-build work plan,
   # not as currently-actionable items. None gate "finished" until B2-BUILD is resolved.

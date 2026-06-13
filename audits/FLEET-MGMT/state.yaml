@@ -11,151 +11,75 @@
 schema_version: 2
 domain: FLEET-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-06"
-
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
-  - id: B1A-SYSTEM-SKILLS
-    summary: "3 new modules each need a <module_code_lower>_agent system skill; legacy domain-scoped skill 60 must retire (Rule #17 -> F2/F3). BLOCKED: the DELETE-skill-60 tail is gated on B2-SIGN-DOCUMENT (user_decision)."
-    finding: >-
-      The 2026-06-02 modularization created 3 full modules
-      (FLEET-MGMT-VEHICLE-LIFECYCLE id 204, FLEET-MGMT-DRIVER-OPS id 205,
-      FLEET-MGMT-FUEL-COMPLIANCE id 206) with zero module-scoped system skills.
-      Rule #17 (F2) requires exactly one <module_code_lower>_agent system skill
-      per module; F3 requires >=1 skill_tools row each. Legacy domain-scoped
-      skill fleet-mgmt-system (id 60, domain_id=147, domain_module_id=NULL)
-      remains and carries 7 skill_tools (5 query_* covering all 5 masters, plus
-      send_email and sign_document). The module-split prerequisite that
-      previously blocked this (B1B-MODULES-PENDING) is now satisfied. The 2026-06-06
-      b1a pass HELD this item: its action is an atomic sequence ending in
-      "DELETE skill 60", and that DELETE is gated on resolving sign_document per
-      B2-SIGN-DOCUMENT, a user_decision. Executing only the head (author 3 skills,
-      redistribute query_* tools, substitute send_email -> notify_person) while
-      leaving skill 60 undeleted would create a worse transient state (two parallel
-      system-skill sets, F1 + F2 failing in new ways, orphaned sign_document link),
-      so the whole item is held until the user decides sign_document's disposition.
-    action: >-
-      Author 3 system skills (fleet_mgmt_vehicle_lifecycle_agent on 204,
-      fleet_mgmt_driver_ops_agent on 205, fleet_mgmt_fuel_compliance_agent on
-      206). Redistribute the 5 query_* tools by mastered entity (vehicle ->
-      204; drivers/assignments/inspections -> 205; fuel -> 206). Resolve
-      send_email per B1B-CHANNEL-PRIMITIVE (substitute notify_person) and
-      sign_document per B2-SIGN-DOCUMENT, then DELETE skill 60.
-    blocked_by:
-      - {type: user_decision, ref: B2-SIGN-DOCUMENT, reason: "the DELETE-skill-60 tail requires sign_document's disposition (keep on which module's skill vs drop as vestigial); cannot retire skill 60 or fully redistribute its tools until decided"}
-    affected_modules: [204, 205, 206]
+next_action_by: user
+last_audit: "2026-06-13"
 
 b1b:
   - id: B1B-HANDOFF-MODULE-FKS
-    summary: 11 cross-domain handoffs touching FLEET-MGMT still NULL on the FLEET-MGMT-side module FK; the FLEET-MGMT-side gate is now cleared and can be PATCHed.
+    summary: FLEET-MGMT-side module FKs are now backfilled on the 6 resolvable handoffs; only partner-side NULLs and a consumer-DMDO modeling decision on 5 foreign-payload inbounds remain.
     finding: >-
-      Every cross-domain handoff touching FLEET-MGMT carries
-      target_domain_module_id=NULL (inbound) or source_domain_module_id=NULL
-      (outbound) on the FLEET-MGMT side. As of 2026-06-02 the FLEET-MGMT modules
-      exist (204/205/206) so the FLEET-MGMT-side FK can now be filled per the
-      master->module mapping: fleet_vehicles events -> 204; fleet_assignments /
-      vehicle_inspections / fleet_driver events -> 205; fuel_transactions events
-      -> 206. Partner-side NULLs persist: TELEMATICS (148) has zero modules so 4
-      cross-edges stay NULL on TELEMATICS side; FLEET-MAINT (149) has zero
-      modules so 3 cross-edges stay NULL on FLEET-MAINT side; FSM (31) partially
-      populated (handoffs 318, 884 carry source_domain_module_id=161); FIN
-      (65) module shape not verified.
+      The FLEET-MGMT-side module FK on the 6 handoffs whose FLEET-MGMT-side
+      data_object resolves to a single mastering module was backfilled
+      2026-06-13: outbound source_domain_module_id 313 -> 205, 317 -> 206,
+      874/875/876 -> 204; inbound target_domain_module_id 318 -> 205. What
+      remains is NOT FLEET-MGMT-side agent work: (1) partner-side NULLs persist
+      because TELEMATICS (148) and FLEET-MAINT (149) have zero modules and FIN
+      (65) module shape is unverified, so the TELEMATICS / FLEET-MAINT / FIN
+      side of the cross-edges stays NULL until those domains modularize; (2) the
+      5 inbound handoffs whose payload is foreign-mastered (319
+      driver_behavior_events, 321 vehicle_trips, 877 maintenance_defects, 880
+      driver_safety_scorecards, 884 service_work_orders) have NO FLEET-MGMT
+      module candidate because FLEET-MGMT declares no domain_module_data_objects
+      role on any of those payloads. Filling their FLEET-MGMT-side
+      target_domain_module_id requires first DECIDING whether FLEET-MGMT
+      consumes each payload (a consumer DMDO), which is a modeling judgment that
+      interacts with the open DVIR / telematics-overlap question
+      (B2-VEHICLE-INSPECTIONS-DVIR), not a mechanical backfill.
     action: >-
-      PATCH the FLEET-MGMT-side module FK on all 11 rows per the mapping above
-      (875/313/874/876 vehicle -> 204 source; 317 fuel -> 206 source; 318/884
-      assignment -> 205 target; 319/880 driver -> 205 target; 321 trip -> 205
-      target; 877 maintenance_defect -> 205 target). This is now agent-solvable
-      on the FLEET-MGMT side but is a separate Phase-B handoff-FK pass, not part
-      of the modularization scope. Partner-side NULLs remain report-only until
-      TELEMATICS, FLEET-MAINT, and FIN modularize.
+      No FLEET-MGMT-side agent backfill remains. Partner-side NULLs clear when
+      TELEMATICS, FLEET-MAINT, and FIN modularize (report-only on their audits).
+      The 5 foreign-payload inbounds need a user/modeling decision on whether to
+      author a consumer domain_module_data_objects row (preferred per B10b
+      sub-case 2) or accept them as domain-level signals with no module owner;
+      surface alongside the consumer-footprint b2 questions rather than
+      auto-inventing consumer rows.
     blocked_by:
       - {type: domain_audit, blocking_domain: TELEMATICS, milestone: modules-authored}
       - {type: domain_audit, blocking_domain: FLEET-MAINT, milestone: modules-authored}
       - {type: domain_audit, blocking_domain: FIN, milestone: module-shape-confirmed}
-    affected_handoffs:
-      - {handoff_id: 874, direction: outbound, source_domain: FLEET-MGMT, target_domain: TELEMATICS, trigger_event: fleet_vehicle.assigned, payload: fleet_vehicles, null_field: both}
-      - {handoff_id: 875, direction: outbound, source_domain: FLEET-MGMT, target_domain: FLEET-MAINT, trigger_event: fleet_vehicle.acquired, payload: fleet_vehicles, null_field: both}
-      - {handoff_id: 313, direction: outbound, source_domain: FLEET-MGMT, target_domain: FLEET-MAINT, trigger_event: vehicle_inspection.failed, payload: vehicle_inspections, null_field: both}
-      - {handoff_id: 317, direction: outbound, source_domain: FLEET-MGMT, target_domain: FIN, trigger_event: fuel_transaction.posted, payload: fuel_transactions, null_field: both}
-      - {handoff_id: 876, direction: outbound, source_domain: FLEET-MGMT, target_domain: FIN, trigger_event: fleet_vehicle.retired, payload: fleet_vehicles, null_field: both}
-      - {handoff_id: 318, direction: inbound, source_domain: FSM, target_domain: FLEET-MGMT, trigger_event: vehicle.dispatched, payload: fleet_assignments, null_field: target_only}
-      - {handoff_id: 319, direction: inbound, source_domain: TELEMATICS, target_domain: FLEET-MGMT, trigger_event: driver_behavior_event.triggered, payload: driver_behavior_events, null_field: both}
-      - {handoff_id: 321, direction: inbound, source_domain: TELEMATICS, target_domain: FLEET-MGMT, trigger_event: vehicle_trip.completed, payload: vehicle_trips, null_field: both}
-      - {handoff_id: 877, direction: inbound, source_domain: FLEET-MAINT, target_domain: FLEET-MGMT, trigger_event: maintenance_defect.reported, payload: maintenance_defects, null_field: both}
-      - {handoff_id: 880, direction: inbound, source_domain: TELEMATICS, target_domain: FLEET-MGMT, trigger_event: safety_scorecard.updated, payload: driver_safety_scorecards, null_field: both}
-      - {handoff_id: 884, direction: inbound, source_domain: FSM, target_domain: FLEET-MGMT, trigger_event: service_work_order.assigned, payload: service_work_orders, null_field: target_only}
+      - {type: user_decision, ref: B2-VEHICLE-INSPECTIONS-DVIR, reason: "the 5 foreign-payload inbound module FKs depend on whether FLEET-MGMT consumes those telematics / maintenance / FSM payloads, a modeling call entangled with the DVIR / telematics-overlap decision"}
 
   - id: B1B-LIFECYCLE-STATES
-    summary: Zero data_object_lifecycle_states on 4 workflow-bearing FLEET-MGMT masters; module split now provides the domain_module_id scope (Rule #14).
+    summary: Lifecycle states authored for fleet_vehicles + fleet_assignments; the two remaining workflow masters (fleet_drivers, vehicle_inspections) are each gated on an open b2 that shapes / relocates their state machine.
     finding: >-
-      data_object_lifecycle_states is empty for all 5 FLEET-MGMT masters.
-      fleet_vehicles, fleet_drivers, fleet_assignments, vehicle_inspections each
-      carry workflow-bearing state (vehicle: acquired -> in_service -> assigned
-      -> maintenance -> retired -> sold; driver: applicant -> qualified ->
-      active -> on_leave -> separated; assignment: scheduled -> active ->
-      completed -> cancelled; inspection: scheduled -> in_progress -> passed |
-      failed -> repair_completed). fuel_transactions qualifies for the
-      config-shape exemption (append-only telemetry, Rule #12). The hire /
-      separate states on fleet_drivers need requires_permission=true plus
-      permission_verb_override (active -> activate_driver, separated ->
-      separate_driver). As of 2026-06-02 the modules exist so the required
-      domain_module_id is now available: fleet_vehicles -> 204; fleet_drivers,
-      fleet_assignments, vehicle_inspections -> 205.
+      2026-06-13: lifecycle states authored for the two workflow masters whose
+      state machine is NOT entangled with an open decision. fleet_vehicles (370,
+      module 204): acquired (initial) -> in_service -> assigned -> maintenance ->
+      retired (gate retire_vehicle) -> sold (terminal, gate sell_vehicle).
+      fleet_assignments (373, module 205): scheduled (initial) -> active ->
+      completed (terminal) -> cancelled (terminal). All record_status=new.
+      fuel_transactions (372) is entity_type=operational_record (config-shape
+      exempt per Rule #12, no lifecycle, structural not notes). The two remaining
+      workflow masters are gated: fleet_drivers (371) on B2-DRIVERS-VS-EMPLOYEES
+      (whether FLEET-MGMT masters drivers at all, which moves the whole machine
+      to an HCM-embedded shell under pattern a) plus B2-HCM-DRIVER-LIFECYCLE (the
+      hire / separate gate verbs); vehicle_inspections (374) on
+      B2-VEHICLE-INSPECTIONS-DVIR (unified DVIR+PMI with a kind discriminator vs
+      split to TELEMATICS, which changes / relocates the machine).
     action: >-
-      Author lifecycle states per master with domain_module_id set (370 -> 204;
-      371, 373, 374 -> 205), then deploy permission_verb_override on the driver
-      hire / separate states. Surface the fuel_transactions config-shape
-      exemption to the user in chat without writing data_objects.notes (Rule
-      #15). Separate Phase-B pass, not part of modularization scope.
+      Author lifecycle states for fleet_drivers (371 -> 205: applicant ->
+      qualified -> active -> on_leave -> separated, with requires_permission +
+      permission_verb_override on the activate / separate transitions) once
+      B2-DRIVERS-VS-EMPLOYEES + B2-HCM-DRIVER-LIFECYCLE resolve, and for
+      vehicle_inspections (374 -> 205: scheduled -> in_progress -> passed |
+      failed -> repair_completed) once B2-VEHICLE-INSPECTIONS-DVIR resolves.
     blocked_by:
-      - {type: depends_on, ref: B1A-SYSTEM-SKILLS, reason: "sequence lifecycle-state permission scoping after module-scoped skills land; not a hard gate"}
+      - {type: user_decision, ref: B2-DRIVERS-VS-EMPLOYEES, reason: "fleet_drivers state machine relocates to an HCM-embedded shell under pattern a; cannot author it until the master pattern is decided"}
+      - {type: user_decision, ref: B2-HCM-DRIVER-LIFECYCLE, reason: "the driver hire / separate gate verbs depend on whether the HCM->FLEET-MGMT driver-lifecycle handoffs are modeled"}
+      - {type: user_decision, ref: B2-VEHICLE-INSPECTIONS-DVIR, reason: "the vehicle_inspections state machine changes / relocates depending on the DVIR vs PMI scope decision"}
     affected_masters:
-      - {data_object_id: 370, name: fleet_vehicles, target_module_id: 204, workflow: acquired in_service assigned maintenance retired sold}
-      - {data_object_id: 371, name: fleet_drivers, target_module_id: 205, workflow: "applicant qualified active on_leave separated, with verb override on active and separated"}
-      - {data_object_id: 372, name: fuel_transactions, target_module_id: 206, workflow: "config-shape exempt, surface to user"}
-      - {data_object_id: 373, name: fleet_assignments, target_module_id: 205, workflow: scheduled active completed cancelled}
+      - {data_object_id: 371, name: fleet_drivers, target_module_id: 205, workflow: "applicant qualified active on_leave separated, with verb override on activate and separate"}
       - {data_object_id: 374, name: vehicle_inspections, target_module_id: 205, workflow: scheduled in_progress passed failed repair_completed}
-
-  - id: B1B-LEGACY-SKILL
-    summary: Legacy domain-scoped fleet-mgmt-system skill (id 60) must be retired once module-scoped skills exist; modules now exist so retirement is unblocked.
-    finding: >-
-      skills row id 60 (name fleet-mgmt-system, skill_type=system, domain_id=147,
-      domain_module_id=NULL) is the legacy pre-modularization shape. Per F1 it
-      must be retired once module-scoped <module_code_lower>_agent skills exist.
-      It carries 7 skill_tools rows: 5 query_* (covering all 5 masters), plus
-      send_email (channel primitive flagged separately, see
-      B1B-CHANNEL-PRIMITIVE) and sign_document (external side_effect, see
-      B2-SIGN-DOCUMENT for workflow rationale). The module-split prerequisite is
-      cleared as of 2026-06-02.
-    action: >-
-      Folded into B1A-SYSTEM-SKILLS: after the 3 module-scoped system skills are
-      authored, redistribute the 5 query_* tools by mastered entity, resolve
-      sign_document per B2-SIGN-DOCUMENT, substitute send_email per
-      B1B-CHANNEL-PRIMITIVE, then DELETE skill 60.
-    blocked_by:
-      - {type: prerequisite_entity, ref: B1A-SYSTEM-SKILLS}
-
-  - id: B1B-CHANNEL-PRIMITIVE
-    summary: send_email channel primitive linked to legacy skill 60 without per-skill workflow rationale; substitute with notify_person.
-    finding: >-
-      skill_tools row 553 links send_email (operation_kind=side_effect,
-      coverage_tier=platform, data_object_id=NULL) to legacy skill 60 with no
-      workflow-specific justification. Per F7 the workflow default is
-      notify_person / notify_team so the deployment can substitute the channel
-      without a per-skill rewrite. FLEET-MGMT email use is generic operational
-      notification (inspection-due reminders, license-expiry alerts,
-      fuel-exception alerts), not channel-bound.
-    action: >-
-      During the B1A-SYSTEM-SKILLS / F1 restructure, PATCH the skill_tools row
-      pointing at send_email to point at notify_person on whichever new
-      module-scoped skill owns the notification workflow, OR DELETE the row if
-      the new skill already links notify_person.
-    blocked_by:
-      - {type: depends_on, ref: B1B-LEGACY-SKILL, reason: substitution rides along with the legacy skill retirement}
 
   - id: B1B-REGULATIONS-UPSTREAM
     summary: 5 floor regulations missing from the regulations table, blocks domain_regulations authoring.
@@ -350,6 +274,56 @@ b2:
     why: >-
       Bulk alias loads need user picks per option per master to avoid
       cataloging vendor synonyms the user does not want canonicalized.
+  - id: B2-B9D-OWN-315
+    summary: "Fleet Management: name an owner for \"Process accounts payable (AP)\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards fuel transaction to Fleet Management to process accounts payable (AP), but Fleet Management does not yet have anyone assigned to process accounts payable (AP), so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Fleet Management owns, and assign a named owner once Fleet Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Fleet Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FLEET-MGMT.md q13.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1389
+    summary: "Fleet Management: name an owner for \"Process and record fixed-asset additions and retires\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards vehicle to Fleet Management to process and record fixed-asset additions and retires, but Fleet Management does not yet have anyone assigned to process and record fixed-asset additions and retires, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Fleet Management owns, and assign a named owner once Fleet Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Fleet Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FLEET-MGMT.md q14.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-352
+    summary: "Fleet Management: name an owner for \"Manage asset maintenance\" (no one is responsible for it today)"
+    question: |
+      Fleet Maintenance Management forwards vehicle inspection to Fleet Management to manage asset maintenance, but Fleet Management does not yet have anyone assigned to manage asset maintenance, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Fleet Management owns, and assign a named owner once Fleet Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Fleet Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FLEET-MGMT.md q15.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1543
+    summary: "Fleet Management: name an owner for \"Analyze assets and predict maintenance requirements\" (no one is responsible for it today)"
+    question: |
+      Vehicle Telematics forwards vehicle to Fleet Management to analyze assets and predict maintenance requirements, but Fleet Management does not yet have anyone assigned to analyze assets and predict maintenance requirements, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Fleet Management owns, and assign a named owner once Fleet Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Fleet Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FLEET-MGMT.md q16.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-862
+    summary: "Fleet Management: name an owner for \"Manage transportation fleet\" (no one is responsible for it today)"
+    question: |
+      Field Service Management forwards fleet assignment to Fleet Management to manage transportation fleet, but Fleet Management does not yet have anyone assigned to manage transportation fleet, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Fleet Management owns, and assign a named owner once Fleet Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Fleet Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FLEET-MGMT.md q17.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-TMS

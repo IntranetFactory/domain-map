@@ -543,3 +543,19 @@ Loader: [.tmp_deploy/2026-06-07_esg_state_driven_execute.ts](../../.tmp_deploy/2
 ### JWT errors
 
 None.
+
+## 2026-06-13 - B9d verify executed (B1A-B9D-VERIFY resolved)
+
+NOTE ON THE PRIOR ENTRY: an earlier 2026-06-13 attempt appended a "BLOCKED on tenant misconfiguration" note here, concluding the environment was pointed at the wrong tenant. That conclusion was WRONG and the note has been replaced by this accurate record. The `adenin` org / `adenin.semantius.ai` baseurl IS correct and DOES carry the domain_map catalog: `getCurrentUser` shows module `Domain Map` (id 1001) with `domain_map:read` + `domain_map:manage`, and live reads of `/domains?id=eq.21` (ESG) and the ESG masters all succeeded. The `PGRST205 "could not find the table ... in the schema cache"` errors the prior attempt hit were a transient schema-cache drop, not a wrong-tenant condition; `semantius call crud refresh_schema_cache` clears them. No `.env` change was needed.
+
+Ran the single open agent-executable item, B1A-B9D-VERIFY, via `bun run scripts/analytics/b9d_resolver.ts ESG` (dry-run then `--write`). Resolver output (both directions, all boundaries):
+
+- boundary tags: 10 | distinct (process, owner) findings: 6 | verdicts: 1 ORPHAN, 5 UNOWNED.
+- **ORPHAN -> REAL-EST (additively routed, owner-side carve-out (b)):** PCF `13.9.1.1` "Evaluate environmental impact of products, services, and operations" (pid 1783), carried by `utility_meter_readings` on the inbound handoff `293: REAL-EST -> ESG`. Owner is REAL-EST (it masters `utility_meter_readings`, data_object 350), currently unbuilt. The resolver wrote an additive `B2-B9D-OWN-1783` item into `audits/REAL-EST/state.yaml` and appended question q15 (token `B2-B9D-OWN-1783`) to `audits/REAL-EST/q-REAL-EST.md`. Additive only; no REAL-EST data overwritten, no `record_status` touched. REAL-EST already carried a prior B9d ORPHAN (q14 = B2-B9D-OWN-1412); the new one appended as q15.
+- **5 UNOWNED (surfaced on ESG as sender; NOT a new gap):** PCF 167, 232, 815, 1802, 2016 carry ESG's own entities (`supplier_esg_assessments`, `emission_factors`, `emissions_records`, `esg_disclosures`, `esg_targets`, `activity_data_records`, `esg_initiatives`). These read as "no master row anywhere" ONLY because ESG is unbuilt (0 `domain_modules`, hence 0 `domain_module_data_objects`); the masters exist in legacy `domain_data_objects`, which the resolver does not read for ownership. All five resolve to RESOLVED/owned automatically once ESG is built (gated on the B2-4 module-shape decision in q-ESG.md). They are a symptom of the already-surfaced build blocker, not a separate agent-executable item, and are left for the build. No destructive re-point or mis-tag was proposed.
+
+B1A-B9D-VERIFY is now resolved and removed from `state.yaml`. ESG's remaining open work (the whole build and its cascade: B1A-M1..M5, B1A-U1..U4, B1A-S7/S8/BUILD, all b1b, all b2, b3) is gated on the B2-4 module-shape user decision in the current `q-ESG.md`; nothing else is agent-executable. ESG goes to `next_action_by: user` (the build cannot proceed until B2-4 is answered). The `q-ESG.md` is current and unchanged.
+
+### JWT errors
+
+None.

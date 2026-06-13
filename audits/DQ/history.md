@@ -1,5 +1,40 @@
 # DQ audit history
 
+## 2026-06-13 - B9d handoff-payload realization (both directions)
+
+Ran `scripts/analytics/b9d_resolver.ts DQ` in both directions over all 9 boundary
+payload tags. Resolved B1A-B9D-VERIFY: 9 distinct (process, owner) findings classified as
+3 ORPHAN, 2 MIS-TAG, 2 UNOWNED, 2 RESOLVED.
+
+- RESOLVED (no action): 8.4.2.4 data_certifications (708 DCG->DQ, owner DCG); 8.4.4.1
+  lakehouse_tables (156 DATA-AI-PLAT->DQ, owner DATA-AI-PLAT).
+- ORPHAN (3) -> all owner=ITSM (unbuilt), payload service_incidents, on DQ->ITSM handoffs:
+  8.1.7.2 "Triage SLA compliance issues" (pid 1103, hd 714); 8.7.5.9 "Triage IT service
+  delivery incidents" (pid 1299, hd 266); 8.7.8.5 "Resolve IT issues/requests" (pid 1319,
+  hd 267). Owner is the neighbor; routed via `--write` into ITSM's owner files as durable b2
+  items B2-B9D-OWN-1103 / -1319 (B2-B9D-OWN-1299 already existed) plus matching q-ITSM.md
+  questions (q13 / q14). Additive, record_status untouched; no catalog writes. The ITSM
+  persona pool is cold-start (unbuilt), so each item makes the owner-assignment part of the
+  question per the B9d cold-start rule.
+- MIS-TAG #268 (DQ->DCG, payload data_assets): DQ tagged 4.1.5.1 "Maintain master data" but
+  data_assets is realized under 8.4.4.1 "Monitor and control business information". DQ is the
+  sender, so DQ owns the fix. Destructive (re-point or delete handoff_processes row), so
+  surfaced as new b2 item B2-B9D-MISTAG-268 in DQ's own state.yaml + q-DQ.md for sign-off,
+  NOT auto-applied.
+- MIS-TAG #262 (DCG->DQ): DCG is the sender and owns that tag edit; surfaced by the resolver
+  for the DCG side, not actioned here (report-only for DCG's next audit).
+- UNOWNED (2): #728 (DI->DQ, pipeline_runs) and #713 (DQ->DCG, dq_dimensions). For #713,
+  dq_dimensions (312) IS a DQ master on the legacy domain_data_objects layer but has no
+  master row on the domain_module_data_objects layer (only a consumer row from module 337)
+  because DQ is unbuilt. This UNOWNED finding is purely a build artifact: it clears to
+  RESOLVED/owned once DQ modularizes (subsumed by B1A-BUILD), so no separate decision was
+  created. #728 (pipeline_runs) has no master anywhere; report-only for the DI sender.
+
+State changes: removed b1a B1A-B9D-VERIFY (resolved); added b2 B2-B9D-MISTAG-268 (sign-off);
+set next_action_by=user (no agent-executable work remains; B1A-BUILD and all b1b items stay
+gated on B2-MOD-SPLIT / B2-ANOMALY-OWNER). Regenerated q-DQ.md to add the MIS-TAG question.
+No JWT errors.
+
 ## 2026-05-30 - Validate b1 (full 4-pass)
 
 ### Summary

@@ -64,6 +64,36 @@ a6:
 
 ---
 
+q9: Farmer-Direct Sales Platform forwards harvest record to Farm Management Information System to maintain production records and manage lot traceability, but Farm Management Information System does not yet have anyone assigned to maintain production records and manage lot traceability, so this step has no owner. How should it be handled?
+- a) Record it now as work Farm Management Information System owns, and assign a named owner once Farm Management Information System sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Farm Management Information System decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a9:
+
+---
+
+q10: Core Financial Management forwards crop plan to Farm Management Information System to create materials plan, but Farm Management Information System does not yet have anyone assigned to create materials plan, so this step has no owner. How should it be handled?
+- a) Record it now as work Farm Management Information System owns, and assign a named owner once Farm Management Information System sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Farm Management Information System decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a10:
+
+---
+
+q11: Core Financial Management forwards ag input inventory to Farm Management Information System to order materials and services, but Farm Management Information System does not yet have anyone assigned to order materials and services, so this step has no owner. How should it be handled?
+- a) Record it now as work Farm Management Information System owns, and assign a named owner once Farm Management Information System sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Farm Management Information System decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
 ## Optional (will not hold up the build)
 
 q7: Three missing data layers show up across the precision-ag and agronomy flagships: soil zones and soil-test results, field-level weather observations, and agronomic recommendations (planting-window, spray-window, and soil-zone advice). Should I research and add the ones that hold up? (yes/no)
@@ -86,4 +116,4 @@ a8:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S4.fieldapps_submitlock q2=B2-S4.harvest_submitlock q3=B2-S4.cropplans_approver q4=B2-S1 q5=B2-S2 q6=B2-S3 q7=B3-MASTER-SOIL-ZONES+B3-MASTER-WEATHER-OBS+B3-S2 q8=B3-S3 | domain_id=154 -->
+<!-- agent map, ignore: q1=B2-S4.fieldapps_submitlock q2=B2-S4.harvest_submitlock q3=B2-S4.cropplans_approver q4=B2-S1 q5=B2-S2 q6=B2-S3 q7=B3-MASTER-SOIL-ZONES+B3-MASTER-WEATHER-OBS+B3-S2 q8=B3-S3 q9=B2-B9D-OWN-171 q10=B2-B9D-OWN-157 q11=B2-B9D-OWN-166 | domain_id=154 -->

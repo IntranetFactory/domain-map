@@ -105,6 +105,26 @@ a9:
 
 ---
 
+q11: Discovery and Service Mapping forwards software installation to Software Asset Management to confirm hardware or software operational status, but Software Asset Management does not yet have anyone assigned to confirm hardware or software operational status, so this step has no owner. How should it be handled?
+- a) Record it now as work Software Asset Management owns, and assign a named owner once Software Asset Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Software Asset Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
+q12: Cloud Financial Operations forwards software license to Software Asset Management to optimize IT resource allocation, but Software Asset Management does not yet have anyone assigned to optimize IT resource allocation, so this step has no owner. How should it be handled?
+- a) Record it now as work Software Asset Management owns, and assign a named owner once Software Asset Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Software Asset Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a12:
+
+---
+
 ## Optional (will not hold up the build)
 
 q10: The four master objects modeled today are the headline set. Should I research and add the deeper vendor-surface substrate (38 net-new masters seen across Flexera, Snow, USU, ServiceNow SAM Pro, Anglepoint, Certero, and Eracent), covering catalog and discovery detail (editions, versions, publishers, normalization rules, EOL calendars, discovery runs, SWID tags), entitlement depth (license contracts, terms, metrics, keys, entitlement pools, use rights), metering and compliance positions (usage metering, reclamation, effective license positions, Oracle and SAP and IBM exotica), audit evidence and findings, and renewals? Loading these is what would trigger the re-split to 6 modules in q1. (yes/no)
@@ -115,4 +135,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2.submitlock q3=B2-S2.singleapprover q4=B2-S3 q5=B2-S4 q6=B2-S5 q7=B2-S6 q8=B2-S7 q9=B2-S8 q10=B3-S1 | domain_id=52 -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2.submitlock q3=B2-S2.singleapprover q4=B2-S3 q5=B2-S4 q6=B2-S5 q7=B2-S6 q8=B2-S7 q9=B2-S8 q10=B3-S1 q11=B2-B9D-OWN-1258 q12=B2-B9D-OWN-1134 | domain_id=52 -->

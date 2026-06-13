@@ -1,7 +1,7 @@
 schema_version: 2
 domain: VMS
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 b1a:
@@ -118,6 +118,17 @@ b2:
       - "Rewrite, supply exact wording."
       - "Defer."
     why: Business_logic is a domain-level field; safer to elicit user wording than to PATCH a 1-2 sentence summary that anchors downstream analysis.
+  - id: B2-B9D-OWN-315
+    summary: "Vendor Management System: name an owner for \"Process accounts payable (AP)\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management hands work to Vendor Management System, but Vendor Management System has no one assigned to process accounts payable (AP), so that step currently has nobody responsible for it. Who should own it?
+    options:
+      - "The a named owner runs it and approves it."
+      - "Someone else you name runs and approves it."
+      - "Leave it unassigned for now."
+    why: |
+      Vendor Management System already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-VMS.md q11.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-CANDIDATE-SUBMISSIONS

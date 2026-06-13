@@ -11,7 +11,7 @@
 schema_version: 2
 domain: EXPENSE
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 # b1a fully cleared on 2026-06-06 (see history.md "## 2026-06-06 - b1a execution"):
@@ -19,65 +19,35 @@ last_audit: "2026-06-06"
 #                skills 312/313 for modules 192/193; 7 skill_tools redistributed (3 deleted, 5 inserted).
 #   B1A-M8 DONE: catalog_tagline + catalog_description written into the empty fields on modules 191/192/193.
 #   B1A-A4 DONE: catalog_tagline + catalog_description written into the empty fields on domain 67.
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
-
+# B1A-B9D-VERIFY resolved 2026-06-13 (see history.md "## 2026-06-13 - B9d run"): the B9d resolver
+#   classified all 10 boundary payload tags both directions (1 RESOLVED, 2 ROLL-UP re-points surfaced
+#   for sign-off, 5 ORPHANs routed to owners). EXPENSE owns 3 ORPHANs (pid 1379/1433/1445) now recorded
+#   as b2 items B2-B9D-OWN-* with q16/q17/q18; PAYROLL (pid 59) and SMP (pid 317) got owner items
+#   written into their own audit files.
 b1b:
-  - id: B1B-S3
-    summary: "Author 6 master state machines (data_object_lifecycle_states); now unblocked by the module split, gated only on Phase-S sequencing."
+  - id: B1B-S6-RESIDUAL
+    summary: "5 EXPENSE handoffs still carry a NULL module FK because their data_object is not modeled in any EXPENSE module; resolving needs a new consumer DMDO row (expansive structure -> q-file)."
     finding: |
-      0 `data_object_lifecycle_states` rows across the 6 `master + required` data_objects (210 expense_reports, 211 expense_lines, 212 corporate_cards, 213 card_transactions, 214 expense_policies, 215 travel_bookings). Rule #12 is unconditional for workflow-bearing masters. Modularization on 2026-06-02 created the modules each state row needs for its `domain_module_id`: states for 210/211/214 carry module 191, states for 212/213 carry module 192, states for 215 carry module 193. Proposed machines per the 2026-05-30 audit: expense_reports (draft -> submitted -> in_review -> approved -> posted_to_gl -> reimbursed -> closed, rejected branch), expense_lines (entered -> matched_to_receipt -> policy_check -> submitted -> approved -> posted, violation branch), corporate_cards (issued -> active -> suspended -> cancelled), card_transactions (posted -> matched -> expense_line_created -> reconciled, disputed branch), expense_policies (draft -> active -> deprecated), travel_bookings (shopped -> reserved -> confirmed -> ticketed -> completed -> cancelled).
+      The deterministic B10b backfill (2026-06-13) patched 10 outbound source FKs (129/130/139/171/551/552/553/554/599 -> 191, 555 -> 193) and 2 inbound target FKs (165 -> 192, 1157 -> 191). Five rows have no EXPENSE module modeling the relevant data_object, so the FK stays NULL by design rather than by oversight: outbound 38 fires on `shadow_it_apps` (65, event data_object not modeled in EXPENSE); inbound 101 carries `pay_slips` (139), 468 carries `employees` (31), 559 carries `spend_policies` (747), 600 carries `card_authorizations` (745). Per B10b sub-case 2 (no-role), the fix is to either load a `consumer` DMDO row on the receiving EXPENSE module or accept the handoff as a domain-level signal.
     action: |
-      Author ~28-34 lifecycle-state rows (one batch per master), each carrying the correct `domain_module_id` (191/192/193) per Rule #12 permission materialization. Workflow-gate states with `requires_permission=true` materialize into `<domain_module_code>:<verb>_<entity>` permissions.
+      Loading a new `consumer` `domain_module_data_objects` row is net-new market structure (Rule #21 expansive addition) and is gated behind a q-file decision, so it is NOT done unprompted. Surface to the user: for 101/559/600 (and 468) decide whether the inbound payload warrants a consumer row on module 191/192, or stays a domain-level signal. For 38 the event data_object is `shadow_it_apps` (SMP-owned); decide whether EXPENSE should model a consumer shell or leave the source FK NULL.
     blocked_by:
-      - {type: prerequisite_entity, ref: B1A-S4}
-    affected_masters:
-      - {data_object_id: 210, name: expense_reports, target_module_id: 191, workflow: full_state_machine}
-      - {data_object_id: 211, name: expense_lines, target_module_id: 191, workflow: full_state_machine}
-      - {data_object_id: 212, name: corporate_cards, target_module_id: 192, workflow: full_state_machine}
-      - {data_object_id: 213, name: card_transactions, target_module_id: 192, workflow: full_state_machine}
-      - {data_object_id: 214, name: expense_policies, target_module_id: 191, workflow: config_versioned}
-      - {data_object_id: 215, name: travel_bookings, target_module_id: 193, workflow: full_state_machine}
+      - {type: user_decision, ref: B2-CONSUMER-DMDO, reason: "modeling consumer DMDO rows for the inbound payloads is expansive structure, needs a q-file go-ahead"}
+    affected_handoffs: [38, 101, 468, 559, 600]
 
-  - id: B1B-S6
-    summary: "Backfill EXPENSE-side B10b NULL FKs (outbound source_domain_module_id, inbound target_domain_module_id) now that modules exist."
+  - id: B1B-H1-RESIDUAL
+    summary: "APQC tagging: net-new agent_curated tags authored (14 of 17 handoffs now tagged); residual = 3 no-clean-PCF defers + 4 REPLACE candidates over discovery_* rows (destructive, blocked on B2-EM/sign-off)."
     finding: |
-      All 11 outbound cross-domain handoffs carried NULL `source_domain_module_id` and all 6 inbound carried NULL `target_domain_module_id` because EXPENSE had no modules. The 3 modules created 2026-06-02 (191/192/193) are now the targets. Routing by payload: expense_reports / expense_lines / expense_policies handoffs -> 191; card_transactions / card_authorizations handoffs -> 192; travel_bookings handoffs -> 193. Example outbound: 129 (expense_report.approved) -> source 191, 165 inbound (card_transaction.posted) -> target 192, 555 outbound (travel_booking.out_of_policy) -> source 193.
+      On 2026-06-13 the net-new actionable APQC slice was authored: 4 fresh `agent_curated` `handoff_processes` rows (171 -> 1442 establish/communicate expense policies, 599 -> 1445 process reimbursements and advances, 165 -> 317 manage corporate credit cards, 600 -> 317 manage corporate credit cards), all `record_status='new'`. Combined with the agent_curated tags that landed during the B9d era (129, 130, 139, 468, 551, 553, 554, 1157), 14 of 17 cross-domain handoffs now carry a `handoff_processes` row. Two residual classes remain. (1) DEFER (no clean PCF, policy-monitoring shape): 552 (expense_line.policy_violation -> SPEND-MGMT), 555 (travel_booking.out_of_policy -> SPEND-MGMT), 559 (spend_policy.updated inbound from SPEND-MGMT) -- these match the H1 untagged-deferred carve-out and become custom-process candidates in Discover Pass 3. (2) REPLACE candidates: 4 prior `discovery_*` rows (38 -> 317, 101 -> 59, 139 -> 59, 468 -> 239) where a more specific or more correct PCF exists; re-pointing/replacing an existing tag is a destructive overwrite (Rule #21) needing user sign-off. H1 quality headline (`record_status='approved'`) is still 0 by design (Rule #1; never auto-approved).
     action: |
-      PATCH `source_domain_module_id` on the 11 outbound handoffs (38, 129, 130, 139, 171, 551, 552, 553, 554, 555, 599) and `target_domain_module_id` on the 6 inbound handoffs (101, 165, 468, 559, 600, 1157) to the correct EXPENSE module per payload master. Neighbor-side FKs (target on outbound, source on inbound) remain report-only to those domains.
+      (1) Defer 552/555/559 to Discover Pass 3 custom-process triage (no clean PCF). (2) The 4 REPLACE candidates plus the 2 B9d ROLL-UP re-points (9.6 -> 9.6.2.4 on 129/139; 9.6.2 -> 9.6.2.4 on 1157) are destructive tag edits surfaced for explicit user sign-off; not executed unprompted.
     blocked_by:
-      - {type: depends_on, ref: B1B-S3, reason: "sequence after lifecycle states so handoff FKs and state-machine module attribution are authored together"}
-    affected_modules: [191, 192, 193]
-
-  - id: B1B-H1
-    summary: "APQC tagging: 7 net-new agent_curated handoff_processes proposals plus 4 REPLACE candidates against existing discovery_* rows; several need PCF lookups deferred to fix time."
-    finding: |
-      10 of 17 cross-domain handoffs remain untagged (129 to FIN, 171 to SPEND-MGMT, 551 to FIN, 552 to SPEND-MGMT, 555 to SPEND-MGMT, 599 to PAYROLL, 165 from SPEND-MGMT, 559 from SPEND-MGMT, 600 from SPEND-MGMT, 1157 from PAYROLL). 4 prior `discovery_*` rows (38 to PCF 317, 101 to 59, 139 to 59, 468 to 41) are REPLACE / CONFIRM candidates. 3 net-new `agent_curated` rows shipped between 2026-05-30 and 2026-05-31 (130, 553, 554) remain `record_status='new'`; H1 quality headline (`record_status='approved'`) is still 0. Independent of the module split.
-    action: |
-      Author a chunked POST of `handoff_processes` rows for the net-new untagged handoffs where the PCF id is resolvable (599 to PCF 1445, 1157 to PCF 1445 / 58 / 316, 129 to PCF 1379, 551 to PCF 1379, 171 to PCF 1442). Defer the remaining (552, 555, 165, 559, 600) and the 4 REPLACE candidates to a separate pass once the user approves REPLACE semantics (B2-EM-adjacent). All rows ship `record_status='new'` (R1).
-    blocked_by:
-      - {type: user_decision, ref: B2-EM, reason: "optional; REPLACE semantics on existing discovery_* rows is a Bucket 2 conversation"}
-    affected_handoffs:
-      - {handoff_id: 129, direction: outbound, source_domain: EXPENSE, target_domain: FIN, trigger_event: expense_report.approved, payload: expense_reports, null_field: handoff_processes_row}
-      - {handoff_id: 171, direction: outbound, source_domain: EXPENSE, target_domain: SPEND-MGMT, trigger_event: expense_policy.updated, payload: expense_policies, null_field: handoff_processes_row}
-      - {handoff_id: 551, direction: outbound, source_domain: EXPENSE, target_domain: FIN, trigger_event: expense_line.posted_to_gl, payload: expense_lines, null_field: handoff_processes_row}
-      - {handoff_id: 552, direction: outbound, source_domain: EXPENSE, target_domain: SPEND-MGMT, trigger_event: expense_line.policy_violation, payload: expense_lines, null_field: handoff_processes_row}
-      - {handoff_id: 555, direction: outbound, source_domain: EXPENSE, target_domain: SPEND-MGMT, trigger_event: travel_booking.out_of_policy, payload: travel_bookings, null_field: handoff_processes_row}
-      - {handoff_id: 599, direction: outbound, source_domain: EXPENSE, target_domain: PAYROLL, trigger_event: expense_line.approved, payload: expense_lines, null_field: handoff_processes_row}
-      - {handoff_id: 165, direction: inbound, source_domain: SPEND-MGMT, target_domain: EXPENSE, trigger_event: card_transaction.posted, payload: card_transactions, null_field: handoff_processes_row}
-      - {handoff_id: 559, direction: inbound, source_domain: SPEND-MGMT, target_domain: EXPENSE, trigger_event: spend_policy.updated, payload: spend_policies, null_field: handoff_processes_row}
-      - {handoff_id: 600, direction: inbound, source_domain: SPEND-MGMT, target_domain: EXPENSE, trigger_event: card_authorization.declined, payload: card_authorizations, null_field: handoff_processes_row}
-      - {handoff_id: 1157, direction: inbound, source_domain: PAYROLL, target_domain: EXPENSE, trigger_event: pay_run.disbursed, payload: expense_reports, null_field: handoff_processes_row}
-      - {handoff_id: 38, direction: outbound, source_domain: EXPENSE, target_domain: SMP, trigger_event: card.saas_charge_detected, payload: shadow_it_apps, null_field: replace_existing_discovery_substring}
-      - {handoff_id: 101, direction: inbound, source_domain: PAYROLL, target_domain: EXPENSE, trigger_event: expense.reimbursable, payload: pay_slips, null_field: replace_existing_discovery_substring}
-      - {handoff_id: 139, direction: outbound, source_domain: EXPENSE, target_domain: PSA, trigger_event: expense.approved, payload: expense_reports, null_field: replace_existing_discovery_substring}
-      - {handoff_id: 468, direction: inbound, source_domain: HCM, target_domain: EXPENSE, trigger_event: employee.terminated, payload: employees, null_field: replace_existing_discovery_override}
-    extra_existing_tag_count: 7
-    extra_net_new_count: 7
-    extra_replace_candidate_count: 4
+      - {type: user_decision, ref: B2-EM, reason: "REPLACE/re-point semantics over existing discovery_*/coarse tags is a destructive Bucket 2 conversation; 552/555/559 are no-PCF defers, not blockers"}
+    extra_tagged_now: 14
+    extra_total_cross_domain: 17
+    extra_defer_no_pcf: [552, 555, 559]
+    extra_replace_candidates: [38, 101, 139, 468]
+    extra_b9d_rollup_repoints: [129, 139, 1157]
 
   - id: B1B-S5
     summary: "PATCH 8 pattern-flag flips on 6 data_objects rows, blocked on B2-S4 per-flag user confirmation."
@@ -169,6 +139,75 @@ b2:
       - "c, rewrite (user supplies wording)"
       - "d, defer"
     why: "Rewriting prose is editorial. Rule #15 covers notes columns only; the project-wide em-dash rule applies catalog-wide."
+  - id: B2-B9D-OWN-1379
+    summary: "Expense Management: name an owner for \"Process journal entries\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards expense line to Expense Management to process journal entries, but Expense Management does not yet have anyone assigned to process journal entries, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Expense Management owns, and assign a named owner once Expense Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Expense Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-EXPENSE.md q16.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1433
+    summary: "Expense Management: name an owner for \"Audit invoices and key data in AP system\" (no one is responsible for it today)"
+    question: |
+      Audit Management forwards expense line to Expense Management to audit invoices and key data in AP system, but Expense Management does not yet have anyone assigned to audit invoices and key data in AP system, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Expense Management owns, and assign a named owner once Expense Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Expense Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-EXPENSE.md q17.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1445
+    summary: "Expense Management: name an owner for \"Process reimbursements and advances\" (no one is responsible for it today)"
+    question: |
+      Accounts Payable Automation forwards expense report to Expense Management to process reimbursements and advances, but Expense Management does not yet have anyone assigned to process reimbursements and advances, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Expense Management owns, and assign a named owner once Expense Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Expense Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-EXPENSE.md q18.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-CONSUMER-DMDO
+    summary: "Five EXPENSE handoffs carry a payload EXPENSE does not model; model each as a consumer DMDO row, or leave it as a domain-level signal with a NULL module FK?"
+    question: |
+      Five cross-domain handoffs name a payload that no Expense Management module currently models, so the module-attribution FK is left empty: 38 (shadow IT apps, outbound to SaaS-management), 101 (pay slips, inbound from payroll), 468 (employees, inbound from HR), 559 (spend policies, inbound from spend-management), 600 (card authorizations, inbound from spend-management). Should Expense Management add a thin consumer record for each so the link is module-attributed, or keep them as domain-level signals with no module owner?
+    options:
+      - "a, add a consumer record on the receiving module for each (attributes the link, captures the dependency in the catalog)"
+      - "b, leave them as domain-level signals with a NULL module FK (the B10b 'accept as domain-level signal' path)"
+      - "c, per-handoff mix (specify which to model and which to leave)"
+    why: "Adding a consumer domain_module_data_objects row is net-new market structure (Rule #21 expansive addition), so it needs a go-ahead before the agent writes it. Non-blocking for the build."
+  - id: B2-B9D-OWN-59
+    summary: "Expense Management: name an owner for \"Process accounts payable and expense reimbursements\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards expense report to Expense Management to process accounts payable and expense reimbursements, but Expense Management does not yet have anyone assigned to process accounts payable and expense reimbursements, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Expense Management owns, and assign a named owner once Expense Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Expense Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-EXPENSE.md q20.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-315
+    summary: "Expense Management: name an owner for \"Process accounts payable (AP)\" (no one is responsible for it today)"
+    question: |
+      Corporate Spend Management forwards card transaction to Expense Management to process accounts payable (AP), but Expense Management does not yet have anyone assigned to process accounts payable (AP), so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Expense Management owns, and assign a named owner once Expense Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Expense Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-EXPENSE.md q21.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1132
+    summary: "Expense Management: name an owner for \"Monitor and analyze IT financial performance\" (no one is responsible for it today)"
+    question: |
+      Corporate Spend Management forwards card transaction to Expense Management to monitor and analyze IT financial performance, but Expense Management does not yet have anyone assigned to monitor and analyze IT financial performance, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Expense Management owns, and assign a named owner once Expense Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Expense Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-EXPENSE.md q22.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-RECEIPTS

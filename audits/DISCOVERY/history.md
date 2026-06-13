@@ -289,3 +289,46 @@ State-driven Validate pass (SKILL.md Rule #21). Worked only the open state.yaml 
 ### JWT errors
 
 None.
+
+## 2026-06-13 - Audit (state-driven execute: B9d run)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21). Executed the one open agent item that did not depend on the B2-MOD-SHAPE user decision: B1A-B9D-VERIFY (handoff payload realization, B9d band). Ran `scripts/analytics/b9d_resolver.ts DISCOVERY` in BOTH directions via `--write`. No catalog/database writes (B9d edits only local audit files). DISCOVERY remains UNBUILT (0 domain_modules, 0 capability_domains, 0 DMDO); the rest of the build stays gated on B2-MOD-SHAPE. No JWT errors.
+
+### B9d executed (additive owner-side edits to other domains' audit files; the cross-domain carve-out)
+
+Resolver classified 14 boundary tags into 8 distinct (process, owner) findings: 6 ORPHAN, 2 UNOWNED. Zero ROLL-UP, zero MIS-TAG, so no destructive re-points or tag deletions were needed. For each ORPHAN the resolver wrote a durable `b2` item (id `B2-B9D-OWN-<pid>`) plus a plain-language question into the OWNER domain's `state.yaml` + `q-<OWNER>.md`:
+
+- SMP   <- B2-B9D-OWN-294  (shadow_it_apps; "Manage infrastructure resource administration"; handoff 47). q-file q10, state added.
+- SAM   <- B2-B9D-OWN-1258 (software_installations; "Confirm hardware/software operational status"; handoff 33). q-file q11, state added.
+- ITOM  <- B2-B9D-OWN-1301 (monitoring_policies; "Operate and monitor online systems"; handoff 50). q-file q11, state added.
+- ITSM  <- B2-B9D-OWN-1301 (service_incidents; "Operate and monitor online systems"; handoffs 624, 626). q-file q12, state added.
+- CMDB  <- B2-B9D-OWN-1309 (configuration_items, ci_relationships, ci_classes; "Manage infrastructure configuration"; handoffs 48, 49, 1199). Already present (q14) from a prior B9d run; idempotent no-op.
+- HAM   <- B2-B9D-OWN-1312 (hardware_assets; "Maintain IT asset records"; handoff 32). Already present (q14); idempotent no-op.
+
+### UNOWNED dependencies surfaced (not applied; resolve automatically with the gated build)
+
+Two payload sets have NO master row anywhere because DISCOVERY is unbuilt (no modules => no DMDO master rows on its own masters):
+
+- 8.7.7.1 (pid 1309) on handoffs 147 (RMM->DISCOVERY), 621, 625 (DISCOVERY->CMDB): carries discovered_devices, discovery_scans, discovery_sources.
+- 8.7.7.4 (pid 1312) on handoffs 622, 623 (DISCOVERY->HAM/SAM): carries discovery_scans.
+
+These are DISCOVERY's own three masters (ids 81/82/83). They get `role=master` DMDO rows once B1B-MODULES + B1B-DMDO-MIGRATE run (both gated on B2-MOD-SHAPE), at which point the UNOWNED findings reclassify. No new state item invented; already covered by the existing b1b build items. No fabricated masters (Rule #21 anti-pattern avoided).
+
+### state.yaml change
+
+- Resolved and removed **B1A-B9D-VERIFY** (B9d has now run in both directions). Moved here per state.yaml hygiene (open items only).
+
+### Left (unchanged, all gated on B2-MOD-SHAPE user decision)
+
+- b1a build items (B1A-CAPS, B1A-SOLS, B1A-BUILD): gated.
+- b1b (8 items): all blocked on B1B-MODULES, itself blocked on B2-MOD-SHAPE.
+- b2 (4 decisions): B2-MOD-SHAPE, B2-MON-POLICIES, B2-SVC-MAPS, B2-SHADOW-IT. q-DISCOVERY.md (current, Phase-0-grounded) carries all four plus the B1A-BUILD go-ahead and the b3 bundle. B9d added no DISCOVERY-side question, so q-DISCOVERY.md was not regenerated.
+- b3 (8 candidates): untouched.
+
+`status` stays `feedback_needed` / `next_action_by: user`: no agent-executable work remains; everything left needs the user's B2-MOD-SHAPE decision (or the other b2 calls). q-DISCOVERY.md is present and current.
+
+### JWT errors
+
+None.

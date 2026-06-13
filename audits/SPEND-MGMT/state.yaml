@@ -1,7 +1,7 @@
 schema_version: 2
 domain: SPEND-MGMT
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 b1a:
@@ -137,6 +137,26 @@ b2:
     options:
       - "Agent surfaces per-handoff PCF candidates; user approves or names an alternative"
     why: "PCF taxonomy selection per cross-domain handoff is editorial."
+  - id: B2-B9D-OWN-1323
+    summary: "Corporate Spend Management: name an owner for \"Operationalize and implement plans to achieve budget\" (no one is responsible for it today)"
+    question: |
+      Enterprise Performance Management forwards spend request to Corporate Spend Management to operationalize and implement plans to achieve budget, but Corporate Spend Management does not yet have anyone assigned to operationalize and implement plans to achieve budget, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Corporate Spend Management owns, and assign a named owner once Corporate Spend Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Corporate Spend Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SPEND-MGMT.md q16.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-315
+    summary: "Corporate Spend Management: name an owner for \"Process accounts payable (AP)\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards spend request to Corporate Spend Management to process accounts payable (AP), but Corporate Spend Management does not yet have anyone assigned to process accounts payable (AP), so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Corporate Spend Management owns, and assign a named owner once Corporate Spend Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Corporate Spend Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SPEND-MGMT.md q17.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-MASTERLESS-FX-TREASURY

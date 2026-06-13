@@ -98,6 +98,26 @@ a9:
 
 ---
 
+q11: Core Financial Management forwards rental lease to Residential Property Management to post receivable entries, but Residential Property Management does not yet have anyone assigned to post receivable entries, so this step has no owner. How should it be handled?
+- a) Record it now as work Residential Property Management owns, and assign a named owner once Residential Property Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Residential Property Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
+q12: Field Service Management forwards tenant maintenance request to Residential Property Management to request unplanned maintenance, but Residential Property Management does not yet have anyone assigned to request unplanned maintenance, so this step has no owner. How should it be handled?
+- a) Record it now as work Residential Property Management owns, and assign a named owner once Residential Property Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Residential Property Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a12:
+
+---
+
 ## Optional (will not hold up the build)
 
 q10: Beyond the six core records, the flagship residential-management vendors model a deeper set of objects (owner distributions, property owners, owner statements, tenant screening reports, FCRA adverse-action notices, security deposits, eviction cases, fair-housing inquiries, lease charges, late-fee assessments, move-in and move-out inspections, rental listings, vendor work orders, lease renewal offers, pet profiles, renters-insurance certificates, resident-portal messages, and stored payment methods). Should I research and add the ones that hold up? (yes/no)
@@ -108,4 +128,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-STATE-LANDLORD-TENANT q2=B2-FHA-APPLICABILITY q3=B2-PATTERN-FLAGS.haspersonalcontent q4=B2-PATTERN-FLAGS.hassubmitlock q5=B2-SUPPLIER-INVOICES-ROLE q6=B2-PAIRWISE-RERUN q7=B1A-REL-473 q8=B1B-ENTITY-TYPE-UNCLASSIFIED q9=B1A-HANDOFF-296-TARGET q10=B3-OWNER-DISTRIBUTIONS+B3-PROPERTY-OWNERS+B3-OWNER-STATEMENTS+B3-TENANT-SCREENING-REPORTS+B3-FCRA-ADVERSE-ACTION+B3-SECURITY-DEPOSITS+B3-EVICTION-CASES+B3-FAIR-HOUSING-INQUIRIES+B3-LEASE-CHARGES+B3-LATE-FEE-ASSESSMENTS+B3-MOVE-IN-INSPECTIONS+B3-MOVE-OUT-INSPECTIONS+B3-RENTAL-LISTINGS+B3-VENDOR-WORK-ORDERS+B3-LEASE-RENEWAL-OFFERS+B3-PET-PROFILES+B3-RENTERS-INSURANCE+B3-RESIDENT-PORTAL-MESSAGES+B3-PAYMENT-METHODS | domain_id=144 -->
+<!-- agent map, ignore: q1=B2-STATE-LANDLORD-TENANT q2=B2-FHA-APPLICABILITY q3=B2-PATTERN-FLAGS.haspersonalcontent q4=B2-PATTERN-FLAGS.hassubmitlock q5=B2-SUPPLIER-INVOICES-ROLE q6=B2-PAIRWISE-RERUN q7=B1A-REL-473 q8=B1B-ENTITY-TYPE-UNCLASSIFIED q9=B1A-HANDOFF-296-TARGET q10=B3-OWNER-DISTRIBUTIONS+B3-PROPERTY-OWNERS+B3-OWNER-STATEMENTS+B3-TENANT-SCREENING-REPORTS+B3-FCRA-ADVERSE-ACTION+B3-SECURITY-DEPOSITS+B3-EVICTION-CASES+B3-FAIR-HOUSING-INQUIRIES+B3-LEASE-CHARGES+B3-LATE-FEE-ASSESSMENTS+B3-MOVE-IN-INSPECTIONS+B3-MOVE-OUT-INSPECTIONS+B3-RENTAL-LISTINGS+B3-VENDOR-WORK-ORDERS+B3-LEASE-RENEWAL-OFFERS+B3-PET-PROFILES+B3-RENTERS-INSURANCE+B3-RESIDENT-PORTAL-MESSAGES+B3-PAYMENT-METHODS q11=B2-B9D-OWN-1353 q12=B2-B9D-OWN-824 | domain_id=144 -->

@@ -1,7 +1,7 @@
 schema_version: 2
 domain: SAM
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 b1a:
@@ -217,6 +217,26 @@ b2:
       - escalate_to_vuln_mgmt_only
     why: |
       Recommendation: defer; not a true boundary gap.
+  - id: B2-B9D-OWN-1258
+    summary: "Software Asset Management: name an owner for \"Confirm hardware/software operational status\" (no one is responsible for it today)"
+    question: |
+      Discovery and Service Mapping forwards software installation to Software Asset Management to confirm hardware or software operational status, but Software Asset Management does not yet have anyone assigned to confirm hardware or software operational status, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Software Asset Management owns, and assign a named owner once Software Asset Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Software Asset Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SAM.md q11.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1134
+    summary: "Software Asset Management: name an owner for \"Optimize IT resource allocation\" (no one is responsible for it today)"
+    question: |
+      Cloud Financial Operations forwards software license to Software Asset Management to optimize IT resource allocation, but Software Asset Management does not yet have anyone assigned to optimize IT resource allocation, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Software Asset Management owns, and assign a named owner once Software Asset Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Software Asset Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SAM.md q12.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-S1

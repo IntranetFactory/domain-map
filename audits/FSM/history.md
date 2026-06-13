@@ -1,5 +1,15 @@
 # FSM audit history
 
+## 2026-06-13, B9d resolver pass (B1A-B9D-VERIFY executed)
+
+- Ran `scripts/analytics/b9d_resolver.ts FSM --write` (both directions). 18 boundary tags, 15 distinct (process,owner) findings: 9 ORPHAN, 3 RE-TAG, 2 UNOWNED, 1 RESOLVED.
+- **B1A-B9D-VERIFY RESOLVED** (B9d ran in both directions on this domain for the first time) -> removed from state.yaml.
+- ORPHANs (additive `b2` owner items at record_status='new', local audit files only, no catalog writes): on FSM kept pre-existing B2-B9D-OWN-353 (q16) / -355 (q17) / -862 (q18) and added B2-B9D-OWN-777 (q19, "Calculate and optimize destination dispatch plan", FSM-owned dispatch_records). Wrote owner-side `b2` + q items into neighbor domains: PLM (B2-B9D-OWN-552 "Manage drawings"), CRM (B2-B9D-OWN-736 "Collect and maintain account information"), REAL-EST + RE-PROP-MGMT (B2-B9D-OWN-824 "Request unplanned maintenance"), FLEET-MGMT (B2-B9D-OWN-862 "Manage transportation fleet"). These are the B9d cross-domain ORPHAN carve-out (write a q into the OWNER domain).
+- RE-TAGs surfaced as new b1a B1A-B9D-RETAG (destructive, awaiting sign-off): handoff 1261 (3.5.2 -> 3.5.4.2), 883+229 (6.2.2 -> 4.4.4.3), 292 (10.3.3 -> 4.3.1.6). Not executed.
+- UNOWNED surfaced as new b1b B1B-B9D-UNOWNED (owed by UTIL-OPS): processes 828 / 1898 carry payloads (utility_assets, meter_reads, utility_service_orders) with no master row anywhere; handoffs 940, 941, 945.
+- RESOLVED: process 302 "Invoice customer" (FSM->FIN, service_work_orders) already realized; no action.
+- No catalog/database writes. All edits are additive local audit-file content; record_status untouched (Rule #1).
+
 ## 2026-05-30, Validate b1 (full 4-pass)
 
 ### Summary

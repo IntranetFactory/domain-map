@@ -11,8 +11,9 @@
 schema_version: 2
 domain: INV-MGMT
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-07"
+# B9d reference-read (2026-06-13): "Inventory Location" is reference/config data of INV-MGMT; it becomes ownable work only if INV-MGMT later runs a workflow on it.
 
 b1a:
   - id: B1A-B9D-VERIFY
@@ -148,6 +149,16 @@ b2:
       - "PROMOTE all 4 to embedded_master so REPLENISHMENT and KITTING are standalone-deployable."
       - "Mixed: specify per row."
     why: "Default per audit procedure is DELETE; market shape (reorder_rules and kit_definitions plausibly need a local item/balance shell) suggests PROMOTE may be more market-aligned for INV than the CLM precedent. DELETE / overwrite of existing DMDO rows is destructive, so this is a user decision."
+  - id: B2-B9D-OWN-1326
+    summary: "Inventory Management: name an owner for \"Perform inventory accounting\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards cycle count to Inventory Management to perform inventory accounting, but Inventory Management does not yet have anyone assigned to perform inventory accounting, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Inventory Management owns, and assign a named owner once Inventory Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Inventory Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-INV-MGMT.md q15.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-MISSING-DEMAND-FORECASTS

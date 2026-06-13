@@ -11,7 +11,7 @@
 schema_version: 2
 domain: LOYALTY
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 b1a:
@@ -256,6 +256,16 @@ b2:
     options:
       - user authors cluster-drafts markdown
       - delegate to agent Phase-B draft (returns for review before load)
+  - id: B2-B9D-OWN-643
+    summary: "Customer Loyalty Management: name an owner for \"Monitor customer loyalty program benefits to the enterprise and the customer\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards loyalty transaction to Customer Loyalty Management to monitor customer loyalty program benefits to the enterprise and the customer, but Customer Loyalty Management does not yet have anyone assigned to monitor customer loyalty program benefits to the enterprise and the customer, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Customer Loyalty Management owns, and assign a named owner once Customer Loyalty Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Customer Loyalty Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-LOYALTY.md q6.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-PROMOTION-CAMPAIGNS

@@ -1,14 +1,10 @@
 schema_version: 2
 domain: EM-FUND-PLATFORM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-W1
     summary: Missing master entity_filings on EM-FUND-FORMATION; state-level + IRS filings (Delaware certificate of formation, EIN, blue-sky) as a master separate from fund_formations
     finding: entity_filings is universal across Sydecar, AngelList Stack, Allocations; the formation workflow produces durable per-jurisdiction filing artifacts that need their own status and approver lifecycle, not folded onto fund_formations.
@@ -24,14 +20,6 @@ b1a:
     proposed_module: EM-FUND-FORMATION
     vendor_evidence: [Sydecar, AngelList Stack]
     note: New-entity authoring; not in the mechanical-execute allow-list. Open.
-
-  - id: B1A-W3
-    summary: Missing embedded_master lp_kyc_records on EM-FUND-OPS-LITE; KYC / AML / sanctions output as embedded shell deferring to canonical FUND-ADMIN master
-    finding: KYC artifact for LP onboarding under the lite shape (Sydecar's investor verification tab). Canonical mastery belongs in FUND-ADMIN-LP-COMMITMENTS; this is an embedded shell. Canonical master lp_kyc_records (data_object 1022) CONFIRMED to exist live (2026-06-07), so this is a clean embedded_master insert (no B1B escalation needed).
-    action: Insert lp_kyc_records (1022) DMDO row (embedded_master, optional, module 28). Rule #11 canonical master pre-flight already satisfied.
-    proposed_module: EM-FUND-OPS-LITE
-    vendor_evidence: [Sydecar]
-    note: Single DMDO embedded_master insert; left out of this batch only because it pairs with the W-entity authoring tranche. Clean to execute next pass.
 
   - id: B1A-W4
     summary: Missing master spv_kyc_records on EM-FUND-SPV; per-subscription KYC distinct from spv_subscriptions and from lp_kyc_records
@@ -127,14 +115,6 @@ b1b:
       - {type: prerequisite_entity, ref: B1A-W2, reason: "banking_onboardings user edge gated on entity creation"}
       - {type: prerequisite_entity, ref: B1A-W4, reason: "spv_kyc_records user edge gated on entity creation"}
 
-  - id: B1B-S5-residual
-    summary: B10b aliases still missing on capital_calls (0)
-    finding: fund_formations (3) and spv_subscriptions (3) aliases authored 2026-06-07; spvs (2), funds (2), cap_tables (2), lp_commitments (1) already present. capital_calls remains at 0 aliases. capital_calls is an embedded shell here (mastered elsewhere), so its aliases belong with the canonical master's audit, not this domain.
-    action: Confirm capital_calls' canonical master domain owns the alias gap; if it sits here, supply exact (alias_name, alias_type) tuples and insert.
-    blocked_by:
-      - {type: user_decision, ref: null, reason: "exact (alias_name, alias_type) tuples need user pick AND capital_calls master ownership confirmation"}
-    affected_entities: [capital_calls]
-
   - id: B1B-H1a
     summary: Cross-domain handoff 1046 (fund_formation.operational -> funds) deferred to Discover Pass 3 custom-process authoring
     finding: No clean cross-industry APQC PCF row for fund-formation-to-fund-administration handoff; generic candidate 10737 (Manage international funds / consolidation) is a low-confidence placeholder. handoff 1046 has 0 handoff_processes rows (confirmed live 2026-06-07).
@@ -150,13 +130,6 @@ b1b:
     deferred: true
 
 b2:
-  - id: B2-1
-    summary: Catalog UX copy direction for EM-FUND-PLATFORM (A4) - RESOLVED BY EXECUTE 2026-06-07
-    question: Superseded. Rule #20 + Rule #21 require backfilling empty catalog UX by writing buyer-voice copy, not gating on a chat-approved direction. The agent authored and wrote catalog_tagline + catalog_description on domain 163 and all 4 modules on 2026-06-07 (record_status carries the review signal). User reviews the written copy in-record; may request a rewrite (operator-led vs brand-led, mention upgrade path) per the overwrite rule.
-    options: [accept-as-written, request-rewrite-operator-led, request-rewrite-brand-led, request-mention-upgrade-path]
-    why: No longer blocking; the empty-field gate was stale. Listed only so the user can request a rewrite of the now-populated copy.
-    resolved: 2026-06-07
-
   - id: B2-2
     summary: Collapse EM-FUND-CAPTABLE-LITE into EM-FUND-FORMATION?
     question: cap_tables is the only embedded master in module 29 (single capability EMFUND-CAPTABLE-LITE); flagship vendors ship cap-table as a tab inside fund-formation, not as a deployable. Keep current 4-module shape or merge module 29 into module 26 (drops module count to 3, still satisfies Rule #14 floor for 3-capability+ domains)?
