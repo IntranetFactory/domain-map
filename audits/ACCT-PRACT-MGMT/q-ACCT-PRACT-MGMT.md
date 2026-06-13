@@ -97,54 +97,74 @@ a8:
 
 ---
 
-## Optional (will not hold up the build)
+q9: A filed tax return is handed to the compliance domain, and the catalog maps that to the "prepare tax returns" process owned by this domain, but no one here is assigned to that work yet (no workflow states, no people). Record it now as work this domain owns? (yes/no)
 
-q9: Should I research and add the workflow records (workflow templates, workflow tasks, capacity forecasts, tax-calendar deadlines) so the Engagement Workflow module holds real domain-owned data? (yes/no)
-
-Recommended: yes, but additive and can happen after the modules exist. Evidence: Karbon, Jetpack Workflow, Canopy, CCH Axcess Practice.
+Recommended: yes. Recording it now means the moment you decide who prepares returns, this step already has a named owner instead of resurfacing later as a gap. Assigning the actual person depends on the same lifecycle and people setup as the tax-return workflow questions above.
 
 a9:
 
 ---
 
-q10: Should I research and add the engagement-letter records (proposals, engagement-acceptance checks, e-signature envelopes)? (yes/no)
+q10: The "tax return filed" handoff to the compliance domain currently carries two process tags: a broad "Process taxes" tag and a more specific "Prepare tax returns" tag. Which should be the single canonical tag, and the other deleted?
 
-Recommended: yes, but additive. Distinguishes the pre-signing proposal from the signed letter and adds independence and KYC checks. Evidence: Karbon, Ignition, TaxDome, Canopy.
+- a) Keep the broad "Process taxes" tag and delete the specific one (this handoff is the filing event, not the preparation work).
+- b) Keep the specific "Prepare tax returns" tag and delete the broad one (prefer the most specific match).
+- c) Leave both tags in place (no deletion).
+
+Recommended: a. The handoff fires when the return is filed, which is the filing emission rather than the preparation activity, so the broader process is the better home. Either deletion needs your sign-off because removing a row is destructive.
 
 a10:
 
 ---
 
-q11: Should I research and add the client-portal records (client documents, client messages)? (yes/no)
+## Optional (will not hold up the build)
 
-Recommended: yes, but additive. Document retention per IRS Pub 4557 and secure messaging as a distinct audit-trail record. Evidence: TaxDome, Liscio, Canopy.
+q11: Should I research and add the workflow records (workflow templates, workflow tasks, capacity forecasts, tax-calendar deadlines) so the Engagement Workflow module holds real domain-owned data? (yes/no)
+
+Recommended: yes, but additive and can happen after the modules exist. Evidence: Karbon, Jetpack Workflow, Canopy, CCH Axcess Practice.
 
 a11:
 
 ---
 
-q12: Should I research and add the billing records (invoices, payment transactions, retainer balances)? (yes/no)
+q12: Should I research and add the engagement-letter records (proposals, engagement-acceptance checks, e-signature envelopes)? (yes/no)
 
-Recommended: yes, but additive. Retainer balances are a CPA-specific construct, similar to but distinct from law-firm trust accounting. Evidence: Aiwyn, TaxDome, Ignition, Canopy.
+Recommended: yes, but additive. Distinguishes the pre-signing proposal from the signed letter and adds independence and KYC checks. Evidence: Karbon, Ignition, TaxDome, Canopy.
 
 a12:
 
 ---
 
-q13: Should client-acceptance and conflict checking be a standalone Intake and Conflict-Check module rather than a feature inside Engagement Workflow? (yes/no)
+q13: Should I research and add the client-portal records (client documents, client messages)? (yes/no)
 
-Recommended: yes only if you also picked the seven-module shape in q1; otherwise fold it into Engagement Workflow. Evidence: Karbon, Ignition.
+Recommended: yes, but additive. Document retention per IRS Pub 4557 and secure messaging as a distinct audit-trail record. Evidence: TaxDome, Liscio, Canopy.
 
 a13:
 
 ---
 
-q14: Should I add tax-research records (tax-research queries, tax-authority correspondence), or do these belong to the tax-prep software rather than practice management? (yes/no)
+q14: Should I research and add the billing records (invoices, payment transactions, retainer balances)? (yes/no)
 
-Recommended: no for now. These plausibly live in the tax-prep tooling (UltraTax, CCH Axcess Tax) rather than the practice-management buyer; defer pending vendor evidence. Evidence: Thomson Reuters Checkpoint, Bloomberg Tax.
+Recommended: yes, but additive. Retainer balances are a CPA-specific construct, similar to but distinct from law-firm trust accounting. Evidence: Aiwyn, TaxDome, Ignition, Canopy.
 
 a14:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MODULE-SHAPE-REFINE q2=B2-PATTERN-FLAGS.taxreturns q3=B2-PATTERN-FLAGS.clientengagements q4=B2-HANDOFF-340-PAYLOAD q5=B2-LETTERS-OWNERSHIP q6=B2-WRONG-FIT-APQC q7=B2-SUPPLIER-INV-CONTRIBUTOR q8=B2-ALIAS-SHAPE q9=B3-WORKFLOW-MASTERS q10=B3-ENGAGEMENT-LTR-MASTERS q11=B3-CLIENT-PORTAL-MASTERS q12=B3-BILLING-MASTERS q13=B3-INTAKE-CONFLICT-MODULE q14=B3-TAX-RESEARCH | domain_id=152 -->
+q15: Should client-acceptance and conflict checking be a standalone Intake and Conflict-Check module rather than a feature inside Engagement Workflow? (yes/no)
+
+Recommended: yes only if you also picked the seven-module shape in q1; otherwise fold it into Engagement Workflow. Evidence: Karbon, Ignition.
+
+a15:
+
+---
+
+q16: Should I add tax-research records (tax-research queries, tax-authority correspondence), or do these belong to the tax-prep software rather than practice management? (yes/no)
+
+Recommended: no for now. These plausibly live in the tax-prep tooling (UltraTax, CCH Axcess Tax) rather than the practice-management buyer; defer pending vendor evidence. Evidence: Thomson Reuters Checkpoint, Bloomberg Tax.
+
+a16:
+
+---
+
+<!-- agent map, ignore: q1=B2-MODULE-SHAPE-REFINE q2=B2-PATTERN-FLAGS.taxreturns q3=B2-PATTERN-FLAGS.clientengagements q4=B2-HANDOFF-340-PAYLOAD q5=B2-LETTERS-OWNERSHIP q6=B2-WRONG-FIT-APQC q7=B2-SUPPLIER-INV-CONTRIBUTOR q8=B2-ALIAS-SHAPE q9=B2-B9D-OWN-1505 q10=B2-HANDOFF-338-APQC-GRAIN q11=B3-WORKFLOW-MASTERS q12=B3-ENGAGEMENT-LTR-MASTERS q13=B3-CLIENT-PORTAL-MASTERS q14=B3-BILLING-MASTERS q15=B3-INTAKE-CONFLICT-MODULE q16=B3-TAX-RESEARCH | domain_id=152 -->

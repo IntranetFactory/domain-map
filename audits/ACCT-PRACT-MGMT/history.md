@@ -596,3 +596,30 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-13 - b1a execution (B9d-verify pass)
+
+Agent-actionable pass. Resolved the single open b1a item (B1A-B9D-VERIFY) plus the now-unblockable B10b source-module backfill. No record_status changes (Rule #1). No destructive writes. No edits to any other domain's audit files.
+
+### Executed
+
+- **B1A-B9D-VERIFY (resolved).** Ran `scripts/analytics/b9d_resolver.ts ACCT-PRACT-MGMT --dry-run` (both directions). 6 boundary tags across handoffs 338/339/340 classified: 1 RESOLVED, 2 ORPHAN, 1 RE-TAG, 2 UNOWNED.
+  - **RESOLVED:** handoff 339 -> process 807 "Manage contracts" (4.2.3.4), owner LEGAL-PRACT-MGMT master. No action.
+  - **ORPHAN pid 1505 "Prepare tax returns" (9.9.2.2), owner ACCT-PRACT-MGMT (unbuilt master), via handoff 338.** Genuine: tax_returns has zero lifecycle states and zero personas, so the prepare-returns step has no realized owner. Recorded as durable owner-side anchor **b2 B2-B9D-OWN-1505** in this domain's state.yaml + q-file (q9). The realizing process_raci write is gated on the same lifecycle/persona work as B1B-B12-LIFECYCLE-STATES.
+  - **ORPHAN pid 300 "Evaluate and manage financial performance" (9.1.5), owner LEGAL-PRACT-MGMT, via handoff 339.** NOT routed into LEGAL's files. This ORPHAN is an artifact of the wrong-fit duplicate handoff_processes id=206 already tracked here by B2-WRONG-FIT-APQC (q6); the corrected tag (id=466 -> 807) is the RESOLVED row above. Resolving B2-WRONG-FIT-APQC (delete/repoint id=206) removes the ORPHAN. Writing a LEGAL b2 would re-assert a known-wrong tag as real work, so it was deliberately skipped. No edit to LEGAL audit files.
+  - **RE-TAG pid 328 "Process taxes" (9.9.2) -> 1505 "Prepare tax returns" (9.9.2.2) on handoff 338.** Conflicts with the 2026-05-30 audit's deliberate L3 choice (filing-emission, not preparation activity). A genuine coarse-vs-specific grain judgment. Recorded as **b2 B2-HANDOFF-338-APQC-GRAIN** (q10). Any tag DELETE is destructive (Rule #21), surfaced for sign-off, not applied.
+  - **UNOWNED supplier_invoices on handoff 340** (no master anywhere). Already tracked by B2-HANDOFF-340-PAYLOAD (q4); surfaced on the sender, not dropped.
+
+- **B1B-B10B-SOURCE-MODULES (resolved).** Was blocked on "next Validate pass"; the modules now exist (207/208/209), making the B10b source-side derivation deterministic with a single candidate each. Backfilled `source_domain_module_id` (PATCH, record_status untouched):
+  - handoff 338 (tax_return.filed, event data_object 400 = tax_returns) -> module **208** (TAX-RETURN-PREP, masters tax_returns).
+  - handoff 340 (same event 331 / data_object 400) -> module **208**.
+  - handoff 339 (engagement_letter.signed, event data_object 394 = engagement_letters) -> module **207** (ENGAGEMENT-WORKFLOW, holds engagement_letters as contributor, the only/strongest ACCT role).
+  - handoff 339 target side was already 127 (CLM-REPOSITORY) from the 2026-05-31 continuation; 338/340 target side stays NULL (B1B-B10B-TARGET-GRC-APAUTO; GRC and AP-AUTO are 0-module).
+
+### State
+
+- b1a: empty.
+- Two new b2 items added (B2-B9D-OWN-1505, B2-HANDOFF-338-APQC-GRAIN); q-file regenerated to q1-q16 (q9/q10 new B9d questions; the prior Optional q9-q14 renumbered to q11-q16).
+- status=feedback_needed, next_action_by=user. Every remaining item is a user b2 decision or a b1b blocked on a user decision / neighbor-domain (GRC, AP-AUTO) modularization.
+
+UI: https://tests.semantius.app/domain_map/handoffs
