@@ -11,21 +11,20 @@
 schema_version: 2
 domain: APM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
-  - id: B1A-PHASE-P
-    summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED per current audit policy (do not author personas)."
-    finding: "Live triage 2026-06-02: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. 2026-06-07: personas/RACI authoring is deferred by audit policy; not executed."
-    action: "DEFER. Do NOT author. When picked up: author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: Enterprise Architect, Application Owner, Portfolio Manager (3 domain_roles already exist as RBAC roles: ENTERPRISE-ARCHITECT, IT-INFRA-APPLICATION-OWNER, IT-INFRA-PORTFOLIO-MANAGER and can anchor the persona layer)."
-    extra_phase_p_triage: "2026-06-02"
+b1a: []
 
 b1b:
+  - id: B1B-PHASE-P
+    summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED per current audit policy (do not author personas)."
+    finding: "Live triage 2026-06-02: 2 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. 2026-06-07: personas/RACI authoring is deferred by audit policy; not executed. 2026-06-13: reclassified from b1a to b1b (a deferred action is not agent-actionable); parked behind the audit-policy deferral."
+    action: "DEFER. Do NOT author. When picked up: author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 2 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts). Candidate personas: Enterprise Architect, Application Owner, Portfolio Manager (3 domain_roles already exist as RBAC roles: ENTERPRISE-ARCHITECT, IT-INFRA-APPLICATION-OWNER, IT-INFRA-PORTFOLIO-MANAGER and can anchor the persona layer)."
+    blocked_by:
+      - {type: user_decision, ref: audit_policy_persona_deferral}
+    extra_phase_p_triage: "2026-06-02"
+
   - id: B1B-M7
     summary: M7 within-domain incoherence on data_objects 267 (enterprise_applications) + 269 (technology_platforms) carrying master in module 103 AND consumer-required in module 104; awaits user pick on DELETE vs. promote-to-embedded_master before any write.
     finding: |
@@ -150,6 +149,77 @@ b2:
       - "Leave: keep the 4 discovery_substring rows as-is."
     why: |
       DELETE of existing rows is DESTRUCTIVE; never executed unapproved. The additive replacement is paired with the delete and is surfaced together so the swap is reviewed as one decision.
+
+  - id: B2-B9D-OWN-13
+    summary: "Application Portfolio Management: name an owner for \"Develop and Manage Business Capabilities\" (no one is responsible for it today)"
+    question: |
+      Business Process Architecture forwards business capability map to Application Portfolio Management to develop and Manage Business Capabilities, but Application Portfolio Management does not yet have anyone assigned to develop and Manage Business Capabilities, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Application Portfolio Management owns, and assign a named owner once Application Portfolio Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Application Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-APM.md q9.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1132
+    summary: "Application Portfolio Management: name an owner for \"Monitor and analyze IT financial performance\" (no one is responsible for it today)"
+    question: |
+      Cloud Financial Operations forwards application total cost of ownership to Application Portfolio Management to monitor and analyze IT financial performance, but Application Portfolio Management does not yet have anyone assigned to monitor and analyze IT financial performance, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Application Portfolio Management owns, and assign a named owner once Application Portfolio Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Application Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-APM.md q10.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1139
+    summary: "Application Portfolio Management: name an owner for \"Quantify value of IT service and project portfolio investments\" (no one is responsible for it today)"
+    question: |
+      Strategic Portfolio Management forwards application value score to Application Portfolio Management to quantify value of IT service and project portfolio investments, but Application Portfolio Management does not yet have anyone assigned to quantify value of IT service and project portfolio investments, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Application Portfolio Management owns, and assign a named owner once Application Portfolio Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Application Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-APM.md q11.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1156
+    summary: "Application Portfolio Management: name an owner for \"Identify and evaluate IT risk\" (no one is responsible for it today)"
+    question: |
+      Governance, Risk and Compliance forwards technology platform to Application Portfolio Management to identify and evaluate IT risk, but Application Portfolio Management does not yet have anyone assigned to identify and evaluate IT risk, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Application Portfolio Management owns, and assign a named owner once Application Portfolio Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Application Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-APM.md q12.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1170
+    summary: "Application Portfolio Management: name an owner for \"Conduct IT risk and threat assessments\" (no one is responsible for it today)"
+    question: |
+      Governance, Risk and Compliance forwards technology fit assessment to Application Portfolio Management to conduct IT risk and threat assessments, but Application Portfolio Management does not yet have anyone assigned to conduct IT risk and threat assessments, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Application Portfolio Management owns, and assign a named owner once Application Portfolio Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Application Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-APM.md q13.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1180
+    summary: "Application Portfolio Management: name an owner for \"Review and monitor application security controls\" (no one is responsible for it today)"
+    question: |
+      Software Asset Management forwards enterprise application to Application Portfolio Management to review and monitor application security controls, but Application Portfolio Management does not yet have anyone assigned to review and monitor application security controls, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Application Portfolio Management owns, and assign a named owner once Application Portfolio Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Application Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-APM.md q14.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1312
+    summary: "Application Portfolio Management: name an owner for \"Maintain IT asset records\" (no one is responsible for it today)"
+    question: |
+      IT Asset Management forwards technology platform to Application Portfolio Management to maintain IT asset records, but Application Portfolio Management does not yet have anyone assigned to maintain IT asset records, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Application Portfolio Management owns, and assign a named owner once Application Portfolio Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Application Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-APM.md q15.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-APM-MARKET-SURFACE

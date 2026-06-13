@@ -335,3 +335,52 @@ Total writes: 7 PATCH (entity_type) + 3 PATCH (catalog UX) + 7 INSERT (trigger_e
 - https://tests.semantius.app/domain_map/domain_modules
 - https://tests.semantius.app/domain_map/trigger_events
 - https://tests.semantius.app/domain_map/handoff_processes
+
+---
+
+## 2026-06-13 - Audit (B9d handoff-payload realization run)
+
+### Summary
+
+Executed the open `b1a` item `B1A-B9D-VERIFY` by running `scripts/analytics/b9d_resolver.ts APM` in both directions across every handoff boundary. Domain id=10; 14 boundary handoff_processes tags classified; 9 distinct (process, owner) findings, all **ORPHAN** (every owner is currently unbuilt, so no realized-sibling persona exists to mirror). No ROLL-UP, MIS-TAG, or UNOWNED findings, so no destructive re-point / delete proposals arose this pass. No catalog rows written; no `record_status` touched (Rule #1). No JWT errors.
+
+The resolver writes audit files only (additive `b2` + q-file edits), one finding per (process, owner). Per the guardrail that this pass may edit only `audits/APM/` files, the 7 **APM-owned** findings were authored into APM's `state.yaml` + `q-APM.md` by hand using the resolver's exact format; the 2 **neighbor-owned** findings (BPA, ITSM) are surfaced report-only below and are owned by those domains' own pending B9d passes (both already carry their own open `B1A-B9D-VERIFY` and a live q-file).
+
+### B9d classification (all ORPHAN; owner = domain that masters the carried entity)
+
+| process_id | PCF | carried entity | owner | handoffs | routed to |
+|---|---|---|---|---|---|
+| 13 | 13.0 Develop and Manage Business Capabilities | business_capability_maps | APM | 181 (BPA→APM) | APM b2 |
+| 1132 | 8.2.5.4 Monitor and analyze IT financial performance | application_costs | APM | 1196 (APM→FINOPS), 1197 (APM→EPM) | APM b2 |
+| 1139 | 8.2.6.2 Quantify value of IT service and project portfolio investments | application_value_scores | APM | 1198 (APM→SPM) | APM b2 |
+| 1156 | 8.3.1.8 Identify and evaluate IT risk | technology_platforms | APM | 855 (APM→GRC) | APM b2 |
+| 1170 | 8.3.3.8 Conduct IT risk and threat assessments | technology_fit_assessments | APM | 1195 (APM→GRC) | APM b2 |
+| 1180 | 8.3.5.5 Review and monitor application security controls | enterprise_applications | APM | 235/236/237/238 (APM→SAM/CMDB) | APM b2 |
+| 1312 | 8.7.7.4 Maintain IT asset records | technology_platforms | APM | 853 (APM→ITAM), 854 (APM→CMDB) | APM b2 |
+| 78 | 13.1 Manage business processes | business_process_models | BPA | 182 (BPA→APM) | **BPA b2 (report-only here)** |
+| 1299 | 8.7.5.9 Triage IT service delivery incidents | service_incidents | ITSM | 239 (APM→ITSM) | **ITSM b2 (report-only here)** |
+
+### Executed (additive, audit files only, no catalog writes)
+
+- Added 7 `b2` items to `audits/APM/state.yaml` (`B2-B9D-OWN-13`, `-1132`, `-1139`, `-1156`, `-1170`, `-1180`, `-1312`), one per APM-owned ORPHAN process. Each asks the user to name an owner / record the work for the unbuilt persona layer. `extra_b9d_added: 2026-06-13`.
+- Surfaced the same 7 as blocking questions q9–q15 in `audits/APM/q-APM.md`, with the footer token map updated. The existing q1–q8 (M7, notes-pollution, pattern flags, B9-retarget, H1-delete-stale, b3 market surface) are unchanged.
+
+### Report-only (owned by neighbor domains; NOT written here per the APM-only guardrail)
+
+- **BPA owns `B2-B9D-OWN-78`** ("Manage business processes", carried entity `business_process_models`, handoff 182 BPA→APM). BPA's own `B1A-B9D-VERIFY` (still open, BPA at `feedback_needed`) will author this when BPA's B9d runs.
+- **ITSM owns `B2-B9D-OWN-1299`** ("Triage IT service delivery incidents", carried entity `service_incidents`, handoff 239 APM→ITSM). ITSM's own `B1A-B9D-VERIFY` (still open, ITSM at `feedback_needed`) will author this when ITSM's B9d runs.
+
+These two are correctly routed by ownership; they are not APM's to write. They will be picked up the moment BPA / ITSM run their own (already-queued) B9d passes.
+
+### State changes
+
+- `B1A-B9D-VERIFY` resolved (B9d ran in both directions) → removed from `state.yaml`.
+- `B1A-PHASE-P` (deferred personas/RACI) reclassified `b1a` → `b1b` as `B1B-PHASE-P`: a deferred action is not agent-actionable, so it parks behind the audit-policy persona deferral (`blocked_by: user_decision`).
+- `b1a` is now empty. With 7 new B9d `b2` items plus the 5 pre-existing `b2` decisions and 1 destructive-pair, `next_action_by` is `user`; `status` stays `feedback_needed`.
+
+### Left untouched
+
+- All pre-existing `b2` (M7 option, notes-pollution, pattern flags, B9-retarget, H1-delete-stale) and the `b3` market surface: unchanged, still open.
+- All `b1b` cross-domain blockers (M7, B9b, B10b-OUT, B10b-IN, S9): still blocked on other domains' audits / the M7 decision.
+
+### No JWT errors during this pass.

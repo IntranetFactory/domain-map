@@ -64,6 +64,83 @@ a7:
 
 ---
 
+q9: Business Process Architecture forwards business capability map to Application Portfolio Management to develop and Manage Business Capabilities, but Application Portfolio Management does not yet have anyone assigned to develop and Manage Business Capabilities, so this step has no owner. How should it be handled?
+
+- a) Record it now as work Application Portfolio Management owns, and assign a named owner once Application Portfolio Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Application Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a9:
+
+---
+
+q10: Cloud Financial Operations forwards application total cost of ownership to Application Portfolio Management to monitor and analyze IT financial performance, but Application Portfolio Management does not yet have anyone assigned to monitor and analyze IT financial performance, so this step has no owner. How should it be handled?
+
+- a) Record it now as work Application Portfolio Management owns, and assign a named owner once Application Portfolio Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Application Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a10:
+
+---
+
+q11: Strategic Portfolio Management forwards application value score to Application Portfolio Management to quantify value of IT service and project portfolio investments, but Application Portfolio Management does not yet have anyone assigned to quantify value of IT service and project portfolio investments, so this step has no owner. How should it be handled?
+
+- a) Record it now as work Application Portfolio Management owns, and assign a named owner once Application Portfolio Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Application Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
+q12: Governance, Risk and Compliance forwards technology platform to Application Portfolio Management to identify and evaluate IT risk, but Application Portfolio Management does not yet have anyone assigned to identify and evaluate IT risk, so this step has no owner. How should it be handled?
+
+- a) Record it now as work Application Portfolio Management owns, and assign a named owner once Application Portfolio Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Application Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a12:
+
+---
+
+q13: Governance, Risk and Compliance forwards technology fit assessment to Application Portfolio Management to conduct IT risk and threat assessments, but Application Portfolio Management does not yet have anyone assigned to conduct IT risk and threat assessments, so this step has no owner. How should it be handled?
+
+- a) Record it now as work Application Portfolio Management owns, and assign a named owner once Application Portfolio Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Application Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a13:
+
+---
+
+q14: Software Asset Management forwards enterprise application to Application Portfolio Management to review and monitor application security controls, but Application Portfolio Management does not yet have anyone assigned to review and monitor application security controls, so this step has no owner. How should it be handled?
+
+- a) Record it now as work Application Portfolio Management owns, and assign a named owner once Application Portfolio Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Application Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a14:
+
+---
+
+q15: IT Asset Management forwards technology platform to Application Portfolio Management to maintain IT asset records, but Application Portfolio Management does not yet have anyone assigned to maintain IT asset records, so this step has no owner. How should it be handled?
+
+- a) Record it now as work Application Portfolio Management owns, and assign a named owner once Application Portfolio Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Application Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a15:
+
+---
+
 ## Optional (will not hold up the build)
 
 q8: Flagship portfolio tools (LeanIX, ServiceNow APM, MEGA HOPEX, Ardoq, Apptio) model a deeper technology and risk layer than we carry today: the single technology platform record is split into products, services, and platforms, and there is a dedicated risk and compliance surface (vulnerabilities, application risks, lifecycles, standards, controls, obligations) that would fit a new third module. Should I research and add the parts that hold up? (yes/no)
@@ -74,4 +151,4 @@ a8:
 
 ---
 
-<!-- agent map, ignore: q1=B2-M7-OPTION q2=B2-NOTES-POLLUTION q3=B2-PATTERN-FLAGS.capmap_submitlock q4=B2-PATTERN-FLAGS.valuescore_submitlock q5=B2-PATTERN-FLAGS.app_personalcontent q6=B2-B9-RETARGET q7=B2-H1-DELETE-STALE q8=B3-APM-MARKET-SURFACE | domain_id=10 -->
+<!-- agent map, ignore: q1=B2-M7-OPTION q2=B2-NOTES-POLLUTION q3=B2-PATTERN-FLAGS.capmap_submitlock q4=B2-PATTERN-FLAGS.valuescore_submitlock q5=B2-PATTERN-FLAGS.app_personalcontent q6=B2-B9-RETARGET q7=B2-H1-DELETE-STALE q9=B2-B9D-OWN-13 q10=B2-B9D-OWN-1132 q11=B2-B9D-OWN-1139 q12=B2-B9D-OWN-1156 q13=B2-B9D-OWN-1170 q14=B2-B9D-OWN-1180 q15=B2-B9D-OWN-1312 q8=B3-APM-MARKET-SURFACE | domain_id=10 -->
