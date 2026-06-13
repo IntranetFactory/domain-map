@@ -384,3 +384,131 @@ None during this run.
 ### Post-fix status
 
 `next_action_by: user` (B2-MOD-SHAPE / B1A-S14 / B2-PATTERN-FLAGS / B2-EVENT-12 decisions, then the gated build cascade).
+
+---
+
+## 2026-06-13 - Audit (B9d handoff-payload reconciliation, both directions)
+
+### Summary
+
+State-driven pass executing the one agent-actionable open item, B1A-B9D-VERIFY. The B9d
+band (handoff payload realization) had never run on AP-AUTO; it ran 2026-06-13 via
+`scripts/analytics/b9d_resolver.ts AP-AUTO --dry-run`, classifying every handoff payload on
+every AP-AUTO boundary in BOTH directions (inbound and outbound), not treating the inbound
+half as report-only. The classification is the substantive B9d work and is read-only; it is
+recorded here in full. No catalog content changed.
+
+`bun run scripts/analytics/b9d_resolver.ts AP-AUTO --dry-run`
+
+- Boundary tags classified: **31** | distinct (process, owner) findings: **17**.
+- Verdicts: **1 RESOLVED, 5 ORPHAN, 11 UNOWNED** (0 ROLL-UP, 0 MIS-TAG).
+- AP-AUTO-owned side: **nothing to fix.** Zero ROLL-UP means no `handoff_processes`
+  re-points owed by AP-AUTO; zero MIS-TAG means no AP-AUTO tag deletions. So B9d produced
+  no AP-AUTO catalog writes (additive or destructive).
+- All 5 ORPHAN + 11 UNOWNED findings are owned by neighbor domains, not AP-AUTO.
+
+### B9d classification (all 17 findings)
+
+**RESOLVED (1, no action):**
+
+- `12.4.9 "Negotiate and document agreements/contracts"` (pid 398), owner CLM (master),
+  payload `legal_contracts`, handoff 216 CLM->AP-AUTO. Realized with a persona; clears.
+
+**ORPHAN (5, real missing work, owned by neighbors):** carried entity is mastered by a
+neighbor that has not yet realized the process with a persona. Per the B9d band these route
+a durable `b2` item + a q-file question into the OWNER domain's audit files. 4 of the 5
+owners are unbuilt (cold-start b2; no persona pool yet), 1 is built (VMS).
+
+| process (pid) | owner | built? | payload(s) | handoff(s) |
+|---|---|---|---|---|
+| 9.2.3 Process accounts receivable (AR) (303) | RE-PROP-MGMT | unbuilt | rent_payments | 298 RE-PROP-MGMT->AP-AUTO |
+| 9.6.1 Process accounts payable (AP) (315) | FLEET-MAINT | unbuilt | vehicle_work_orders | 316 FLEET-MAINT->AP-AUTO |
+| 9.6.1 Process accounts payable (AP) (315) | VMS | built | contingent_invoices | 588 VMS->AP-AUTO |
+| 9.7.3 Manage in-house bank accounts (320) | FIN | unbuilt | bank_accounts | 537, 597 FIN->AP-AUTO |
+| 9.6.2.4 Process reimbursements and advances (1445) | EXPENSE | unbuilt | expense_reports, expense_lines | 130, 553 EXPENSE->AP-AUTO |
+
+**UNOWNED (11, surface on the sender, do not drop):** the carried entity has no `master`
+row anywhere in the catalog, so B9d cannot route the finding to an owner. These are unowned
+dependencies on the senders (AP-AUTO and its neighbors). Most trace to the still-unbuilt AP /
+procurement / supplier substrate (`supplier_invoices`, `invoice_matches`, `purchase_orders`,
+`suppliers`, `payment_runs`, etc. master nowhere yet). The list:
+
+- 4.2.5 Manage suppliers (167): suppliers, supplier_qualifications | 128, 596 SUP-LIFE->AP-AUTO
+- 9.6.1 Process accounts payable (AP) (315): supplier_invoices, invoice_matches, goods_receipts, extracted_records | 168 SPEND-MGMT->AP-AUTO, 340 ACCT-PRACT-MGMT->AP-AUTO, 542 AP-AUTO->FIN, 584 S2P->AP-AUTO, 598 AP-AUTO->SPEND-MGMT, 733 IDP->AP-AUTO
+- 4.2.3.2 Certify and validate suppliers (805): supplier_qualifications | 547 SUP-LIFE->AP-AUTO
+- 4.2.4.4 Create/Distribute purchase orders (811): purchase_orders | 581, 583 S2P->AP-AUTO
+- 4.2.4.6 Reconcile purchase orders (813): invoice_matches | 545 AP-AUTO->S2P
+- 4.2.5.1 Monitor/Manage supplier information (815): supplier_qualifications | 596 SUP-LIFE->AP-AUTO
+- 4.2.5.2 Prepare/Analyze procurement and supplier performance (816): invoice_matches | 543 AP-AUTO->SUP-LIFE
+- 9.5.2.5 Process and distribute payments (1422): payment_runs | 125, 192 AP-AUTO->FIN, 193 AP-AUTO->CSM
+- 9.6.1.3 Audit invoices and key data in AP system (1433): invoice_matches | 126 AP-AUTO->FIN, 544 AP-AUTO->AUDIT
+- 9.6.1.7 Research/Resolve payable exceptions (1437): supplier_invoices, invoice_matches, extracted_records | 191 AP-AUTO->FIN, 545 AP-AUTO->S2P, 734 IDP->AP-AUTO
+- 9.9.2.2 Prepare tax returns (1505): supplier_invoices | 340 ACCT-PRACT-MGMT->AP-AUTO
+
+The UNOWNED findings whose carried entity is an AP-AUTO master (`invoice_matches`,
+`payment_runs`) read as unowned only because those masters have no `domain_module_data_objects`
+`master` row yet (AP-AUTO is unbuilt: 0 modules). They will resolve automatically once B1B-S1
+ships the AP-AUTO modules and the masters get their module-level `master` rows; no separate
+B9d action is owed.
+
+### Owner-side routing NOT written (task-scope guardrail)
+
+The B9d band would normally `--write` the 5 ORPHAN findings as additive `b2` + q-file items
+into the 5 OWNER domains' audit files (EXPENSE, FIN, FLEET-MAINT, RE-PROP-MGMT, VMS). This
+pass was scoped to edit only `audits/AP-AUTO/` files, so the resolver was run `--dry-run` only
+and the neighbor-file writes were deliberately NOT performed. They are surfaced here as
+report-only follow-ups instead. To apply them, re-run the resolver with `--write` in a pass
+scoped to touch those neighbor audit files:
+
+`bun run scripts/analytics/b9d_resolver.ts AP-AUTO --write`
+
+That will add `B2-B9D-OWN-1445` (EXPENSE), `B2-B9D-OWN-320` (FIN), `B2-B9D-OWN-315`
+(FLEET-MAINT and VMS), and `B2-B9D-OWN-303` (RE-PROP-MGMT) to those domains' `state.yaml` +
+`q-` files. All additive (`record_status` untouched); no AP-AUTO write involved.
+
+### Executed
+
+None on the catalog. B9d classification is read-only; the AP-AUTO-owned side has zero
+ROLL-UP / MIS-TAG, so no re-points or deletions were owed by AP-AUTO.
+
+### Resolved (moved out of state.yaml this pass)
+
+- **B1A-B9D-VERIFY** -- B9d has now run on AP-AUTO in both directions; the classification is
+  recorded above. AP-AUTO owns no B9d fix (0 ROLL-UP, 0 MIS-TAG). The 5 ORPHAN owner-side
+  items belong to neighbor domains and are surfaced as report-only follow-ups (not written,
+  per the task scope). Item removed from `state.yaml`.
+
+### Still open (unchanged)
+
+- **B1A-S14** (destructive em-dash overwrite on `domains.id=29 business_logic`) -- surfaced
+  in q7. Needs user sign-off.
+- **B2-MOD-SHAPE / B2-PATTERN-FLAGS / B2-EVENT-12** (b2 user decisions) -- q1-q6.
+- **The b1b build cascade** (B1A-BUILD, B1B-S1/S2/S3/S8/S10/S11, B1B-B1..B4) -- all gated on
+  B2-MOD-SHAPE and the module build. Agent does not scaffold an unbuilt domain.
+- **b3** (B3-INVOICE-CAPTURE-JOBS, B3-PAYMENT-METHODS, B3-PAYMENT-RUN-LINES, B3-UNNAMED-POOL)
+  -- non-blocking; q8-q11.
+
+### Report-only follow-ups (owed by other domains)
+
+- **B9d ORPHAN owner items** (5): EXPENSE owes a persona for "Process reimbursements and
+  advances" (1445); FIN owes one for "Manage in-house bank accounts" (320); FLEET-MAINT and
+  VMS each owe one for "Process accounts payable (AP)" (315); RE-PROP-MGMT owes one for
+  "Process accounts receivable (AR)" (303). 4 are cold-start (owner unbuilt). Apply via
+  `b9d_resolver.ts AP-AUTO --write` in a neighbor-scoped pass.
+- **B9d UNOWNED dependencies** (11): trace to the still-unbuilt AP / procurement / supplier
+  master substrate. They clear as those masters land (including AP-AUTO's own once B1B-S1
+  ships). No single owner to route to today.
+- Prior report-only follow-ups (FIN/S2P/SUP-LIFE/SPEND-MGMT/CSM/AUDIT B8 mirrors, HCM
+  B9/B10b on `org_units`, SUP-LIFE/MDM dual-master on `suppliers`, counterparty B10b NULL
+  FKs) carry forward unchanged from the 2026-05-31 audit.
+
+### JWT errors
+
+None during this run.
+
+### Post-fix status
+
+`next_action_by: user`. AP-AUTO has no remaining agent-actionable item: the B9d verify ran,
+AP-AUTO owns no B9d fix, and every other open item is a user decision (B2-MOD-SHAPE and the
+other b2s), a destructive sign-off (B1A-S14), gated on the user-decided module build (the
+whole b1b cascade), or non-blocking (b3). The q-file `q-AP-AUTO.md` remains current.
