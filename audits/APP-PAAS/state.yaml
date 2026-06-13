@@ -27,17 +27,27 @@
 # vars / log streams / custom domains, all confirmed Core in the surface matrix) were CONFIRMED and
 # re-grounded inline with named vendors + dated capabilities. q-APP-PAAS.md regenerated from the report
 # evidence. Still feedback_needed: build gated on B2-S1 + the other b2 calls, awaiting a-APP-PAAS.md.
+#
+# 2026-06-13 B9d-VERIFY ran (the one agent-actionable build-independent item; ran
+# scripts/analytics/b9d_resolver.ts APP-PAAS --dry-run, both directions). All 10 boundary
+# tags classified: 3 RESOLVED (704 lcap_apps -> 52; 754/770 paas_deployments/software_deployments
+# -> 1262; 756 paas_deployments -> 1265), 5 UNOWNED (paas_runtime_instances/container_workloads/
+# paas_deployments/paas_addons/paas_build_records carry no master row anywhere -> surfaced on the
+# sender, never dropped; resolve once APP-PAAS is built and masters its own entities under B2-S1),
+# 1 ORPHAN (process 1299 "Triage IT service delivery incidents", handoff 757 APP-PAAS -> ITSM,
+# owned by ITSM which is UNBUILT). NO APP-PAAS-side writes were due (no ROLL-UP re-points, no
+# MIS-TAGs). The ORPHAN's owner is ITSM, so under this pass's APP-PAAS-only scope the resolver's
+# --write owner-side edit into audits/ITSM/* was NOT applied; routed as a report-only follow-up
+# for the user to run b9d_resolver against ITSM. B1A-B9D-VERIFY resolved (-> history.md). Domain
+# returns to feedback_needed / next_action_by: user: every remaining item cascades from B2-S1 (the
+# master gate, no a-APP-PAAS.md exists), so there is no further build-independent agent work.
 schema_version: 2
 domain: APP-PAAS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-08"
+next_action_by: user
+last_audit: "2026-06-13"
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
     finding: >

@@ -496,3 +496,80 @@ reversed.
 Unchanged: status: feedback_needed, next_action_by: user. APP-PAAS stays UNBUILT and gated
 on B2-S1 (the master gate) plus B2-S3 / B2-S4 / B2-S5 / B2-H1 / B2-ALIASES. No DB writes
 this pass; no record_status stamped. Awaiting a-APP-PAAS.md.
+
+## 2026-06-13 - Agent-actionable execute (B9d verify + finish-the-actionable-work pass)
+
+### Why this pass ran
+
+state.yaml carried `next_action_by: agent`, asserting build-independent agent work
+remained. The audit ran every genuinely-agent-actionable item under SKILL.md Rule #21
+(corrective/additive runs without asking; destructive + market-shape decisions surfaced,
+never executed). No `a-APP-PAAS.md` exists, so all market-shape `b2` items (the B2-S1
+module-split master gate and everything cascading from it) remain user-gated and were NOT
+touched. Scope was APP-PAAS audit files plus APP-PAAS-owned catalog content only.
+
+### Live re-verification (no drift from the 2026-06-08 snapshot)
+
+- domain id 76; 6 masters (463-468), all `entity_type=operational_workflow`, all with
+  singular + plural labels.
+- Still 0 `domain_modules` / 0 capabilities (UNBUILT; M1 hard-fail persists, gated on B2-S1).
+- 7 trigger_events (818-824) all carry `event_category` (set 2026-06-07; re-confirmed populated).
+- `catalog_tagline` + `catalog_description` populated in buyer voice (set 2026-06-07; confirmed).
+- 17 generic data_object_aliases present (set 2026-06-07).
+- `domains.description` carries NO em-dash (the pre-existing U+2014 flagged in earlier passes
+  is already gone, cleared by the catalog-wide sweep); no APP-PAAS-side description fix due.
+
+Every build-independent corrective item the prior passes recorded is already applied. The one
+remaining build-independent agent item was the B9d verification below.
+
+### Executed
+
+**B1A-B9D-VERIFY (resolved).** Ran `bun run scripts/analytics/b9d_resolver.ts APP-PAAS
+--dry-run` (both directions; 10 boundary tags, 9 distinct (process,owner) findings).
+Classification:
+
+| verdict | count | detail |
+|---|---|---|
+| RESOLVED | 3 | 704 (lcap_apps -> pid 52, owner LCAP); 754/770 (paas_deployments + software_deployments -> pid 1262); 756 (paas_deployments -> pid 1265). No action. |
+| UNOWNED | 5 | paas_runtime_instances (755 -> ITOM, pid 1304); container_workloads (759, pid 1305); paas_deployments (753 -> KUBE-PLAT, pid 1311); paas_addons (798 -> SAM, pid 1313); paas_build_records (758 -> VSDP, pid 1939). Carried entity has no master row anywhere, so no owner exists yet; surfaced on the sender, never dropped. These resolve once APP-PAAS is built (its own entities gain master rows) under B2-S1. |
+| ORPHAN | 1 | pid 1299 "Triage IT service delivery incidents", handoff 757 (APP-PAAS -> ITSM). Owner = ITSM (UNBUILT). |
+
+No APP-PAAS-side writes were due: zero ROLL-UP re-points, zero MIS-TAGs, so nothing on the
+source (APP-PAAS) needed editing. The single ORPHAN is owned by ITSM, and the resolver's
+`--write` would author an additive `b2` item + a `q-ITSM.md` question into `audits/ITSM/*`.
+That is outside this pass's APP-PAAS-only scope, so `--write` was deliberately NOT run; the
+ITSM ORPHAN is routed below as a report-only follow-up. B9d is now run in both directions for
+APP-PAAS, so B1A-B9D-VERIFY is resolved and removed from state.yaml.
+
+### Report-only follow-ups (owed by / surfaced for other domains)
+
+- **ITSM owes a B9d ORPHAN resolution:** process 1299 "Triage IT service delivery incidents"
+  (carried by APP-PAAS -> ITSM handoff 757, payload `service_incidents`) is unrealized and
+  unowned-with-a-persona on the ITSM side. Run `bun run scripts/analytics/b9d_resolver.ts
+  ITSM --write` (or audit ITSM) to author the owner-side `b2` + q. ITSM is UNBUILT, so the
+  candidate persona is part of that question. Not actioned here (out of APP-PAAS scope).
+- **5 UNOWNED carried entities** (paas_runtime_instances, container_workloads, paas_deployments,
+  paas_addons, paas_build_records) have no master row anywhere because APP-PAAS is UNBUILT and
+  the neighbor target domains (ITOM / OBS / VSDP / SAM / KUBE-PLAT) also lack masters for them.
+  These auto-clear as the respective domains are built; they re-classify on the next B9d run.
+
+### Surfaced (NOT executed; user-gated, unchanged from 2026-06-08)
+
+The entire build cascade stays gated on the master gate B2-S1 (no `a-APP-PAAS.md`): B1A-BUILD,
+B1B-S1 (modules + capabilities), and the cascade B1B-S4 / S7 / S9 / S10 / S11. Destructive /
+judgment items B2-S3 (pattern-flag flips), B2-S4 (runtime-instance shape), B2-S5 (consumer
+DMDO), B2-H1 (handoff-753 tag), B2-ALIASES (vendor-brand alias tuples) await user answers in
+`q-APP-PAAS.md`. b3 (release versions / secrets / log streams / custom domains) is
+discretionary and non-blocking. No `record_status` was stamped (Rule #1).
+
+### Status
+
+status: feedback_needed, next_action_by: user. The one agent-actionable item (B9d verify) is
+done; no further build-independent agent work exists. APP-PAAS remains UNBUILT, gated on B2-S1
+plus the other `b2` decisions, awaiting `a-APP-PAAS.md`. `q-APP-PAAS.md` is current and
+unchanged. No DB writes this pass.
+
+### UI spot-checks
+
+- https://tests.semantius.app/domain_map/handoffs?source_domain_id=eq.76
+- https://tests.semantius.app/domain_map/handoff_processes (filter by the APP-PAAS handoff ids)
