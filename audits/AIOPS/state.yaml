@@ -1,22 +1,27 @@
 schema_version: 2
 domain: AIOPS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
-# All agent-solvable build work executed 2026-06-07 (record_status='new'):
-# capabilities (6) + capability_domains, 2 full modules + domain_module_capabilities,
-# masters-into-modules (domain_module_data_objects incl. 9 telemetry consumers),
-# root_cause_analyses lifecycle states, system-skill toolset (tools + domain_module_tools),
-# 4 personas + role_modules, intra/cross-domain data_object_relationships + users edges,
-# lifecycle-cover trigger_events, and the handoff module-FK backfill (8 outbound + 16 inbound).
-# Only user-judgment decisions remain.
+# 2026-06-13: B9d (handoff payload realization) run via scripts/analytics/b9d_resolver.ts
+# in BOTH directions across all 13 boundary tags (14 distinct (process,owner) findings).
+# No MIS-TAG and no ROLL-UP (no destructive re-points). 10 ORPHANs + 3 UNOWNED.
+# AIOPS-owned ORPHANs (PCF 629, 1128, 1304) recorded as new b2 items B2-B9D-OWN-*
+# (persona-assignment decisions; AIOPS has personas but no process_raci yet). The
+# neighbor-owned ORPHANs (ITSM 837/1299, ITOM 1301/1304, CMDB 1309, DATA-AI-PLAT 272,
+# DCIM 1304) and 3 UNOWNED dependencies are surfaced in the 2026-06-13 history note for
+# routing to those domains' backlogs (this pass is scoped AIOPS-only and did not edit
+# neighbor audit files). B1A-B9D-VERIFY resolved. record_status untouched (Rule #1).
+#
+# 2026-06-07 build executed all agent-solvable items (record_status='new'):
+# 6 capabilities + capability_domains, 2 full modules + domain_module_capabilities,
+# masters-into-modules (incl. 9 telemetry consumers), root_cause_analyses lifecycle,
+# system-skill toolset, 4 personas + role_modules, intra/cross-domain relationships +
+# users edges, lifecycle-cover trigger_events, handoff module-FK backfill.
+# Only user-judgment decisions (b2) remain.
 
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+b1a: []
 
 b1b: []
 
@@ -50,6 +55,24 @@ b2:
     question: "The skill's notification tools are channel primitives (send_email, post_chat_message). Are they backing a specific named workflow, or generic notifications that should use the notify_person / notify_team abstraction?"
     options: [a-keep-channel-specific-name-workflow, b-swap-to-notify-abstraction]
     why: "Generic notifications should use the abstraction so the channel can change without rewiring; the built module_tools already use notify_person / notify_team. Recommended: b. (Rule #15 forbids notes-justification, so the decision surfaces here.)"
+
+  - id: B2-B9D-OWN-629
+    summary: "Assign an owner persona for 'Monitor and report events influencing factors' (PCF 629), an AIOPS-owned process handed work but with no RACI persona."
+    question: "ITOM hands event-burst correlation work to AIOPS (handoff 53, payload event_correlations), but no AIOPS persona is Responsible/Accountable for 'Monitor and report events influencing factors'. Which persona owns it?"
+    options: [a-noc-analyst-r-a, b-name-another-persona, c-leave-unassigned]
+    why: "ORPHAN from the 2026-06-13 B9d run: the process is realized nowhere on AIOPS (no process_id-wired lifecycle gate, no process_raci). AIOPS personas exist (NOC Analyst, SRE, Ops Manager, ML Engineer) but none is assigned. Recommended: a (NOC Analyst, primary on the Event Correlation module). Wiring the gate + authoring the process_raci R/A is additive (record_status='new') once you confirm the persona."
+
+  - id: B2-B9D-OWN-1128
+    summary: "Assign an owner persona for 'Monitor and report IT performance' (PCF 1128), an AIOPS-owned process handed work but with no RACI persona."
+    question: "OBS hands anomaly-candidate work to AIOPS (handoff 56, payload anomaly_detections), but no AIOPS persona is Responsible/Accountable for 'Monitor and report IT performance'. Which persona owns it?"
+    options: [a-sre-r-a, b-noc-analyst-r-a, c-name-another, d-leave-unassigned]
+    why: "ORPHAN from the 2026-06-13 B9d run: process realized nowhere on AIOPS. Recommended: a (SRE, the performance-monitoring owner). Additive realization on confirmation."
+
+  - id: B2-B9D-OWN-1304
+    summary: "Assign an owner persona for 'Manage infrastructure performance and capacity' (PCF 1304), an AIOPS-owned process handed work but with no RACI persona."
+    question: "AIOPS publishes elevated predictive signals to ITOM (handoff 605, payload predictive_signals) under 'Manage infrastructure performance and capacity', but no AIOPS persona is Responsible/Accountable for it. Which persona owns it?"
+    options: [a-sre-r-a, b-name-another-persona, c-leave-unassigned]
+    why: "ORPHAN from the 2026-06-13 B9d run: process realized nowhere on AIOPS. Recommended: a (SRE, capacity/performance owner). Additive realization on confirmation."
 
   - id: B2-H1B-PROMOTION
     summary: Promote provisional handoff_processes APQC tags to approved, and reconcile handoff 154's PCF mapping.

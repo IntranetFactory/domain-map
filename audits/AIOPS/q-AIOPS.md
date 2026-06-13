@@ -96,6 +96,43 @@ a9:
 
 ---
 
+q13: ITOM hands event-burst correlation work to AIOps (monitoring and reporting the factors that influence events), but no AIOps role is on the hook to do it. Who should own it?
+
+- a) NOC Analyst is Responsible and Accountable. They are the primary persona on the Event Correlation module, so this is the role already doing event-correlation work.
+- b) A different role you name owns it.
+- c) Leave it unassigned for now.
+
+Recommended: a. The NOC Analyst already leads the Event Correlation module, so giving this handed-off work to that role gives it a named owner with no stretch.
+
+a13:
+
+---
+
+q14: Observability hands anomaly-candidate work to AIOps (monitoring and reporting IT performance), but no AIOps role is on the hook to do it. Who should own it?
+
+- a) SRE is Responsible and Accountable. Performance monitoring is core SRE work.
+- b) NOC Analyst is Responsible and Accountable.
+- c) A different role you name owns it.
+- d) Leave it unassigned for now.
+
+Recommended: a. Watching IT performance and acting on anomalies is squarely SRE territory, so the SRE persona is the natural owner.
+
+a14:
+
+---
+
+q15: AIOps publishes elevated predictive signals to ITOM (managing infrastructure performance and capacity), but no AIOps role is on the hook to do it. Who should own it?
+
+- a) SRE is Responsible and Accountable. Capacity and performance management is core SRE work.
+- b) A different role you name owns it.
+- c) Leave it unassigned for now.
+
+Recommended: a. Capacity and performance forecasting is SRE work, so the SRE persona is the natural owner of this step.
+
+a15:
+
+---
+
 ## Optional (will not hold up the build)
 
 q10: Nine extra market-surface objects show up across the flagship AIOps vendors (correlation rules, enrichment pipelines, service health scores, alert storms, feedback labels, change correlations, model drift alerts, escalation policies, golden-signal definitions). Should I research and add the ones that hold up? (yes/no)
@@ -122,4 +159,4 @@ a12:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MODULE-SPLIT q2=B2-TRIGGER-TOPOLOGY-PUBLISHED q3=B2-MLOPS-OWNERSHIP q4=B2-PATTERN-FLAG-FREEZES.mltraining q5=B2-PATTERN-FLAG-FREEZES.rca q6=B2-PATTERN-FLAG-FREEZES.suppression q7=B2-CHANNEL-SWAP q8=B2-H1B-PROMOTION.promote q9=B2-H1B-PROMOTION.reconcile154 q10=B3-MARKET-SURFACE q11=B3-AIOPS-TO-OBS-FEEDBACK q12=B3-AIOPS-TO-SOAR-OR-ITPA | domain_id=6 -->
+<!-- agent map, ignore: q1=B2-MODULE-SPLIT q2=B2-TRIGGER-TOPOLOGY-PUBLISHED q3=B2-MLOPS-OWNERSHIP q4=B2-PATTERN-FLAG-FREEZES.mltraining q5=B2-PATTERN-FLAG-FREEZES.rca q6=B2-PATTERN-FLAG-FREEZES.suppression q7=B2-CHANNEL-SWAP q8=B2-H1B-PROMOTION.promote q9=B2-H1B-PROMOTION.reconcile154 q13=B2-B9D-OWN-629 q14=B2-B9D-OWN-1128 q15=B2-B9D-OWN-1304 q10=B3-MARKET-SURFACE q11=B3-AIOPS-TO-OBS-FEEDBACK q12=B3-AIOPS-TO-SOAR-OR-ITPA | domain_id=6 -->

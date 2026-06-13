@@ -479,3 +479,51 @@ Executed (all record_status=new):
 - Phase E: 4 personas + role_modules.
 
 Left for the user (q-AIOPS.md): module-split confirmation (built as 2-module), the destructive topology.published re-attribution, MLOps ownership, three pattern-flag freezes (overwrites), the channel-vs-abstraction swap, and APQC tag promotion / handoff-154 PCF reconcile. B3 ideas (market-surface objects, OBS feedback loop, SOAR/ITPA remediation) parked as non-blocking.
+
+## 2026-06-13: B9d (handoff payload realization, both directions)
+
+Ran `scripts/analytics/b9d_resolver.ts AIOPS --dry-run` to resolve the open `B1A-B9D-VERIFY` item. The resolver classified all 26 boundary tags across every AIOPS boundary in BOTH directions (14 distinct `(process, owner)` findings). No JWT errors. Scope note: this pass is AIOPS-only per the run guardrail, so I did NOT run `--write` (the resolver writes `b2`+q items into neighbor audit files such as CMDB/DATA-AI-PLAT/DCIM/ITOM/ITSM, which are out of scope). I applied the AIOPS-owned edits by hand and surface the neighbor-routed and unowned items below for routing to those domains' next audits.
+
+### Verdict summary
+
+`{"ORPHAN":10,"REFERENCE-READ":1,"UNOWNED":3}`. **No MIS-TAG and no ROLL-UP**: there are zero destructive re-points or mis-tag deletions to surface on the source side. Every actionable finding is additive owner-side realization (a persona-assignment `b2`).
+
+### AIOPS-owned ORPHANs (recorded as new b2 items this pass)
+
+These three processes are realized nowhere on AIOPS (no `process_id`-wired lifecycle gate and no `process_raci`). AIOPS has 4 personas (IT-INFRA-SRE id 35, IT-INFRA-NOC-ANALYST id 36, IT-INFRA-OPS-MANAGER id 37, SW-ENG-AIOPS-ML-ENGINEER id 38) with `role_modules` reach on modules 324/325, but none is assigned to these processes (cold-start on RACI). The persona is part of the question, so each is a `b2` (not auto-realized):
+
+| PCF | process name | payload / handoff | recommended owner | state.yaml id |
+| --- | --- | --- | --- | --- |
+| 629 | Monitor and report events influencing factors | event_correlations (53 ITOM->AIOPS) | NOC Analyst (R/A) | B2-B9D-OWN-629 |
+| 1128 | Monitor and report IT performance | anomaly_detections (56 OBS->AIOPS) | SRE (R/A) | B2-B9D-OWN-1128 |
+| 1304 | Manage infrastructure performance and capacity | predictive_signals (605 AIOPS->ITOM) | SRE (R/A) | B2-B9D-OWN-1304 |
+
+Surfaced as q13/q14/q15 in q-AIOPS.md. On the user's answer, wiring the chosen persona's `process_raci` R/A (and the `process_id`-wired gate) is additive `record_status='new'`.
+
+### REFERENCE-READ (no action)
+
+- PCF 1301 "Operate and monitor online systems" on `alert_suppression_rules` (606 AIOPS->OBS, 607 AIOPS->ITOM): AIOPS-owned but reference/config data; ownable work only if AIOPS later runs a workflow on it. No persona needed now.
+
+### Neighbor-owned ORPHANs (route to those domains; NOT written this pass, out of scope)
+
+Each is real missing work the neighbor owns. They should be recorded as `b2` items in those domains' own `state.yaml` + q-file on their next audit (or by running `b9d_resolver.ts <NEIGHBOR> --write` for the neighbor):
+
+- **ITSM**: PCF 837 "Perform root cause analysis" (service_problems/service_incidents; 58, 603 AIOPS->ITSM) and PCF 1299 "Triage IT service delivery incidents" (service_incidents; 57, 604 AIOPS->ITSM). ITSM is currently unbuilt for these.
+- **ITOM**: PCF 1301 "Operate and monitor online systems" (monitoring_events/monitoring_alerts; 59 AIOPS->ITOM, 141 RMM->AIOPS) and PCF 1304 "Manage infrastructure performance and capacity" (capacity_records; 619 ITOM->AIOPS).
+- **CMDB**: PCF 1309 "Manage infrastructure configuration" (service_maps; 628 CMDB->AIOPS).
+- **DATA-AI-PLAT**: PCF 272 "Develop and execute IT resilience and continuity operations" (data_pipelines; 154 DATA-AI-PLAT->AIOPS). [Note: handoff 154's PCF mapping is also the open B2-H1B reconcile question q9.]
+- **DCIM**: PCF 1304 "Manage infrastructure performance and capacity" (dc_power_distribution_units; 676 DCIM->AIOPS).
+
+### UNOWNED dependencies (carried entity has no master row anywhere; surface on the sender)
+
+These payloads have no `master` row in the catalog, so no owner can be assigned. Surface to the sending domain as an unowned dependency, do not drop:
+
+- **DEM**: `endpoint_anomaly_findings`, `real_user_sessions` (665, 667 DEM->AIOPS) under PCF 295 and PCF 1128.
+- **OBS / NPMD / DEM**: `metric_series`, `log_entries`, `distributed_traces`, `network_paths`, `endpoint_anomaly_findings`, `real_user_sessions` (608, 609, 610, 612, 613 OBS->AIOPS; 1394 NPMD->AIOPS; 665, 667 DEM->AIOPS) under PCF 1128.
+- **NPMD**: `network_flow_records` (649 NPMD->AIOPS) under PCF 1304.
+
+These telemetry payloads are consumer reads on the AIOPS side (and are wired as `consumer` rows on module 324 per the 2026-06-07 build); their masters live in the source/observability domains, which owe the master rows. This is the same set the prior audits flagged as "owed by other domains".
+
+### Outcome
+
+`B1A-B9D-VERIFY` resolved (B9d has now run in both directions). Three new AIOPS-owned `b2` items added. No catalog writes this pass; no `record_status` change (Rule #1); no destructive action. Domain ends `next_action_by: user`: the q-file now carries 12 blocking questions (q1-q9 carried over, q13-q15 new) plus 3 optional b3 ideas.
