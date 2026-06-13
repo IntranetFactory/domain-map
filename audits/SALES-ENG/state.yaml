@@ -11,7 +11,7 @@
 schema_version: 2
 domain: SALES-ENG
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 # 2026-06-02: domain modularized into 3 full modules (entity-only reuse pass).
@@ -242,6 +242,16 @@ b2:
     question: "Handoffs 81 (crm_opportunity.assigned), 210 (whitespace.identified, already tagged via agent_curated), and 510 (lead_score.recomputed) have no clean PCF cross-industry analog. Accept Discover Pass 3 deferral (preferred), or force a weak L4 tag and accept the catalog-quality hit?"
     options: [accept_deferrals, force_weak_L4]
     why: "Editorial. SKILL allows deferrals when no clean PCF match exists; forcing a weak tag pollutes the catalog."
+  - id: B2-B9D-OWN-25
+    summary: "Sales Engagement: name an owner for \"Develop and manage sales plans\" (no one is responsible for it today)"
+    question: |
+      Customer Data Platform forwards cadence to Sales Engagement to develop and manage sales plans, but Sales Engagement does not yet have anyone assigned to develop and manage sales plans, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Sales Engagement owns, and assign a named owner once Sales Engagement sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Sales Engagement decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SALES-ENG.md q14.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-CADENCE-STEPS

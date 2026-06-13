@@ -556,3 +556,57 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-13, Audit (B9d execution + B13 + state.yaml reconciliation)
+
+Agent-finish pass. Tenant confirmed (adenin, ma@adenin.com via getCurrentUser); no JWT-audience error. No catalog writes other than the two B13 entity_type PATCHes below; record_status untouched everywhere (Rule #1); no notes written (Rule #15); no catalog_tagline/catalog_description touched (Rule #20).
+
+### B1A-B9D-VERIFY: RESOLVED (B9d ran this pass, both directions)
+
+Ran `bun run scripts/analytics/b9d_resolver.ts CDP --write`. Boundary tags: 27. Distinct (process, owner) findings: 19. Verdicts: 14 ORPHAN, 3 RE-TAG, 1 MIS-TAG, 1 UNOWNED.
+
+- **ORPHAN (14, additive, applied):** the resolver wrote the owner-side `b2` (`B2-B9D-OWN-<pid>`) items + plain-language q-file questions into each OWNER's audit files, on whichever side the owner is. CDP got 6 (B2-B9D-OWN-100/115/132/136/150/196, q18-q23 in q-CDP.md). CRM got 4 (OWN-115/138/148/708), B2C-COMM 2 (OWN-100/115), DXP 1 (OWN-100), SALES-ENG 1 (OWN-25). Every ORPHAN owner is currently unbuilt (no personas yet), so each is a genuine `b2` "who owns this work" decision; the resolver modeled them as `b2`, not `b1b` (q-file-legal). No catalog rows written.
+- **RE-TAG (3, destructive re-point, surfaced NOT applied):** 3.3 -> 3.5.2 on #69 (source MA); 3.3 -> 3.3.4 on #74 (source MA); 3.3.4 -> 3.5.1.2 on #80/#69/#508 (source CDP). These edit handoff_processes tags the SOURCE authored; need sign-off.
+- **MIS-TAG (1, destructive, surfaced):** 2.3 -> 2.1.2.1 or delete on #997/#1004 (source PROD-MGMT). Carried entity already realized under 2.1.2.1.
+- **UNOWNED (1, surfaced):** #717 (source_records, from MDM) has no master row anywhere; surfaced on the sender, not dropped.
+
+### B13: RESOLVED (classified the 2 unclassified CDP masters in domain context)
+
+`audience_segments` (113) and `customer_journeys` (115) were `unclassified`. Both carry real state machines per vendor reality (segment draft/active/paused/archived; journey active/completed/abandoned) and already fire state-transition trigger events (`segment.activated`, `customer_journey.stage_entered`/`.exited`). PATCHed both `entity_type='operational_workflow'` (record_status untouched, stays `new`). The other 3 non-customers masters were already correctly typed: customer_events=operational_record, identity_graphs=computed, customer_attributes=computed. Zero unclassified CDP masters remain (B13 passes). Note: this makes B12 owe lifecycle states on 113/115; the state list itself is the open workflow-shape decision B2-S3, so B1B-S5 stays open.
+
+### Live-state re-verification cleared several carried-forward items
+
+- **B1B-S8 (users edges, Rule #10): RESOLVED in live state.** `users` (748) now edges to customers (97, `owns`), audience_segments (113, `defines`), customer_attributes (114, `configures`), customer_journeys (115, `defines`). customer_events (111, operational_record, machine-ingested) and identity_graphs (112, computed, machine-resolved) have no user-typed actor, so they legitimately need no users edge. The prior "zero users edges on all 6 masters" finding is stale; removed from state.yaml.
+- **B1B-S3 (B10b CDP-side): mostly RESOLVED in live state; slimmed.** The bulk of CDP-side handoff FK attribution is now backfilled live. Only the B10b no-candidate sub-case remains (CDP models no role on the payload/event data_object): outbound 79 source NULL (event fires on sales_cadences, a SALES-ENG entity; also a trigger-event quality smell) and inbound target NULL on 997/717/809/810/1004. Resolving these means adding consumer DMDOs for data CDP does not model, which is net-new footprint (Rule #21 expansive), so it is now a scope decision (new B2-S10), not corrective gap-fill. state.yaml B1B-S3 slimmed to just the residual.
+- **B1B-S4 (B10b owed by partners): refreshed to current NULL set.** Partner-side module FKs still NULL on 89 (SMM), 717/272 (MDM), 809/810 (DXP) inbound and 79 (SALES-ENG), 478 (LOYALTY), 479 (CSM), 480/529 (B2C-COMM), 481 (MDM) outbound. Owed by each partner's own B10b; blocked-on-another-domain (third outcome), not a CDP blocker.
+
+### state.yaml reconciliation (Rule #22 hygiene)
+
+- Removed `last_audit` stale value; set to 2026-06-13.
+- Deleted resolved b1a item B1A-B9D-VERIFY (B9d ran).
+- Deleted resolved b1b item B1B-S8 (users edges satisfied live).
+- Slimmed B1B-S3 to the residual no-candidate FKs; dropped the long now-resolved affected_handoffs list.
+- Refreshed B1B-S4 to the current partner-side NULL set.
+- B1B-S5/S6/S7 kept (genuinely blocked on user decisions B2-S3/B2-S4/B2-S8).
+- Added B2-S10 (B10b residual consumer-DMDO scope) + q24 in q-CDP.md.
+- All b2 items (B2-S2/S3/S4/S5/S6/S7/S8/S10 + the 6 B2-B9D-OWN-*) and b3 ideas kept open.
+
+### Items surfaced for the user (destructive / decisions; the agent cannot self-execute)
+
+- 3 RE-TAG re-points + 1 MIS-TAG fix (handoff_processes edits/deletes; destructive, Rule #21).
+- 1 UNOWNED dependency on #717 (source_records has no master anywhere; MDM owes the master row).
+- All b2 decisions in q-CDP.md (q1-q24): customers ownership, lifecycle-state split + state lists, regulation scope, composable-CDP classification, trigger-event semantics, customers state_order untangle, B10b residual scope, and the 6 B9d owner-assignment questions.
+
+### Verification
+
+- `/data_objects?id=in.(113,115)&select=entity_type` -> both `operational_workflow`.
+- `/skills?domain_id=eq.72` -> 1 row (cdp-system, id 35, domain_module_id null): F1/F2 clean; the 4 retired per-module skills (267-270) are already gone (per-domain-skill-restoration). F-band satisfied.
+- B9d resolver classification output captured in this pass's transcript (transcript gate met).
+
+### UI spot-check links
+
+- https://tests.semantius.app/domain_map/data_objects
+- https://tests.semantius.app/domain_map/handoff_processes
+- https://tests.semantius.app/domain_map/handoffs

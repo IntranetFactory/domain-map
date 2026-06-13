@@ -43,13 +43,13 @@ a4:
 
 ---
 
-q5: Should I author search synonyms (aliases) for BPA so the catalog and skill triggers catch obvious variants?
+q5: BPA now formally realizes two standard processes (publishing a process model, and analyzing/baselining a value stream) with named owners. Several existing handoffs are still tagged with a vaguer or wrong standard-process label. How should I correct those tags? (Each option changes or deletes existing tag records, so it needs your sign-off.)
 
-- a) Approve all six: business process management, BPM, process modeling, process architecture, BPMN authoring, process design.
-- b) Approve a subset (name which).
-- c) Decline.
+- a) Re-point the four "Manage business processes" tags (on the handoffs going out to process mining, the portfolio registry, and strategic portfolio management) down to the more precise "Publish processes" that BPA now realizes. This is a clean tightening of an already-correct-but-coarse tag.
+- b) For the three "Reengineer business processes and systems" tags (on the handoffs going out to product management and work management), either re-point them to "Analyze processes," or keep "Reengineer" as real future work and assign it an owner (Process Architect runs it, Process Owner approves). Reengineering and analyzing are genuinely different activities, so tell me which you prefer.
+- c) Leave all the tags as they are.
 
-Recommended: a. BPA has zero aliases today, so search and skill triggers miss common synonyms. Low stakes and additive.
+Recommended: a for the four coarse tags (low-risk tightening). For the three reengineering tags, keep them as real work and assign the owner rather than collapsing reengineering into analysis, unless you would rather not track reengineering as its own step yet.
 
 a5:
 
@@ -105,4 +105,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-CAPMAP-OWNER q2=B2-PATTERN-FLAGS.247 q3=B2-PATTERN-FLAGS.248 q4=B2-PATTERN-FLAGS.250 q5=B2-DOMAIN-ALIASES q6=B2-EA-SOLUTION-SPLIT q7=B2-PROC-MIN-RECONCILE q8=B3-PROCESS-DOC-PAGES+B3-PROCESS-KPIS+B3-REF-FRAMEWORK-LIB+B3-DECISION-MODELS+B3-PROCESS-REVIEW-CYCLES+B3-MODEL-REVISION-DIFFS+B3-PROCESS-CHANGE-REQS+B3-ARCHIMATE-MODELS q9=B3-EA-PROMOTION q10=B3-IBPMS-PROMOTION | domain_id=136 -->
+<!-- agent map, ignore: q1=B2-CAPMAP-OWNER q2=B2-PATTERN-FLAGS.247 q3=B2-PATTERN-FLAGS.248 q4=B2-PATTERN-FLAGS.250 q5=B2-B9D-RETAG q6=B2-EA-SOLUTION-SPLIT q7=B2-PROC-MIN-RECONCILE q8=B3-PROCESS-DOC-PAGES+B3-PROCESS-KPIS+B3-REF-FRAMEWORK-LIB+B3-DECISION-MODELS+B3-PROCESS-REVIEW-CYCLES+B3-MODEL-REVISION-DIFFS+B3-PROCESS-CHANGE-REQS+B3-ARCHIMATE-MODELS q9=B3-EA-PROMOTION q10=B3-IBPMS-PROMOTION | domain_id=136 -->

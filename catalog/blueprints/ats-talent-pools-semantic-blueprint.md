@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "2.0"
+blueprint_version: "3.0"
 license: MIT
 system_name: ATS-TALENT-POOLS
 system_description: Talent Pools
@@ -12,7 +12,7 @@ domain_modules:
 domain_code: ATS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ben-enrollment, hcm-core-worker, hcm-lifecycle-workflows, onb-journey-mgmt]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-RECRUITER]
-created_at: 2026-06-12
+created_at: 2026-06-13
 ---
 
 # Talent Pools
@@ -69,15 +69,15 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `candidate_tag_assignments` | Candidate Tag Assignment | Candidate Tag Assignments | master | junction | - | - | required | - | `:admin` | - |
-| 2 | `candidate_tags` | Candidate Tag | Candidate Tags | master | catalog | - | - | required | - | `:admin` | - |
-| 3 | `recruiter_saved_searches` | Recruiter Saved Search | Recruiter Saved Searches | master | catalog | - | - | optional | - | `:admin` | - |
-| 4 | `talent_pool_memberships` | Talent Pool Membership | Talent Pool Memberships | master | junction | - | - | required | - | `:manage` | - |
-| 5 | `talent_pools` | Talent Pool | Talent Pools | master | operational_workflow | - | - | required | - | `:manage` | - |
-| 6 | `talent_segments` | Talent Segment | Talent Segments | master | catalog | - | - | required | - | `:admin` | - |
-| 7 | `candidates` | Candidate | Candidates | embedded_master | operational_workflow | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
+| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | pattern flags | entity_type | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `candidate_tag_assignments` | `candidate_tag_assignments` | Candidate Tag Assignment | Candidate Tag Assignments | master | - | - | required | - | junction | `:admin` | - |
+| 2 | `candidate_tags` | `candidate_tags` | Candidate Tag | Candidate Tags | master | - | - | required | - | catalog | `:admin` | - |
+| 3 | `recruiter_saved_searches` | `recruiter_saved_searches` | Recruiter Saved Search | Recruiter Saved Searches | master | - | - | optional | - | catalog | `:admin` | - |
+| 4 | `talent_pool_memberships` | `talent_pool_memberships` | Talent Pool Membership | Talent Pool Memberships | master | - | - | required | - | junction | `:manage` | - |
+| 5 | `talent_pools` | `talent_pools` | Talent Pool | Talent Pools | master | - | - | required | - | operational_workflow | `:manage` | - |
+| 6 | `talent_segments` | `talent_segments` | Talent Segment | Talent Segments | master | - | - | required | - | catalog | `:admin` | - |
+| 7 | `candidates` | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 

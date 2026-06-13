@@ -1,8 +1,8 @@
 schema_version: 2
 domain: CCAAS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # Build landed 2026-06-07. All agent-solvable work executed at record_status='new':
 # 7 capabilities (+ capability_domains), 3-module split (CCAAS-ROUTING 329, CCAAS-DESKTOP 330,
@@ -22,11 +22,7 @@ last_audit: "2026-06-07"
 # B1B-E-ROLES. The agent_schedules consumer link skipped earlier was resolved by linking the real
 # WFM master work_schedules (160) on CCAAS-DESKTOP instead (decision recorded in history).
 
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+b1a: []
 
 b1b:
   - id: B1B-S4-REGULATIONS
@@ -108,6 +104,65 @@ b2:
     question: "Handoffs 743 (conversation_flow.fallback_triggered, tagged PCF 10395 'Resolve customer problems') and 746 (bot_definition.published, tagged PCF 20824 'Deploy services/solutions') were originally deferred-to-Discover as having no clean PCF match. Keep both tags, delete both and let Discover author custom processes, or mixed?"
     options: [a-keep-both, b-delete-both, c-mixed]
     why: "Both auto-tags are generic and conflict with the original judgment that bot-fallback engineering and bot-runtime publication have no clean PCF cross-industry match. DELETE is destructive, needs sign-off (Rule #1)."
+  - id: B2-B9D-OWN-195
+    summary: "Contact Center as a Service: name an owner for \"Plan and manage customer service workforce\" (no one is responsible for it today)"
+    question: |
+      Contact-center queue statistics feed workforce planning, but no one in the contact center is assigned to plan and manage the customer-service workforce. Who should own it?
+    options:
+      - "The Contact Center Operations Manager runs it and approves it."
+      - "The Quality Analyst (or a workforce/real-time analyst you name) runs it and the Operations Manager approves."
+      - "Leave it unassigned for now."
+    why: |
+      Capacity planning off queue volumes is the operations-manager job at every flagship contact center (Genesys, NICE, Five9): the person accountable for service levels owns the staffing plan. No process_raci is authored yet, so this names the first owner rather than mirroring an existing one. Surfaced as q-CCAAS.md q12.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-922
+    summary: "Contact Center as a Service: name an owner for \"Schedule customer service workforce\" (no one is responsible for it today)"
+    question: |
+      Agent-state signals feed workforce scheduling, but no one in the contact center is assigned to schedule the customer-service workforce. Who should own it?
+    options:
+      - "The Contact Center Operations Manager runs it and approves it."
+      - "The Contact Center Supervisor runs the day-to-day schedule and the Operations Manager approves."
+      - "Leave it unassigned for now."
+    why: |
+      Shift scheduling and adherence sit with the operations manager (or a dedicated WFM/RTA analyst under them) across Genesys, NICE, and Five9; the supervisor consumes the schedule but does not own it. No process_raci is authored yet, so this names the first owner. Surfaced as q-CCAAS.md q13.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-928
+    summary: "Contact Center as a Service: name an owner for \"Respond to customer problems, requests, and inquiries\" (no one is responsible for it today)"
+    question: |
+      Contact and support-session records flow out to the case and CRM systems, but no one in the contact center is assigned to respond to customer problems, requests, and inquiries. Who should own it?
+    options:
+      - "The Contact Center Agent runs it and the Contact Center Supervisor approves."
+      - "The Contact Center Agent both runs and approves it."
+      - "Leave it unassigned for now."
+    why: |
+      Handling inbound contacts is the front-line agent's core work everywhere (Genesys, NICE, Five9, Amazon Connect, Talkdesk), with the supervisor accountable for the queue and escalations. No process_raci is authored yet, so this names the first owner. Surfaced as q-CCAAS.md q14.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-934
+    summary: "Contact Center as a Service: name an owner for \"Respond to customer complaints\" (no one is responsible for it today)"
+    question: |
+      Negative-sentiment and escalated support sessions flow out to the case system as complaints, but no one in the contact center is assigned to respond to customer complaints. Who should own it?
+    options:
+      - "The Contact Center Agent runs it and the Contact Center Supervisor approves."
+      - "The Contact Center Supervisor both runs and approves it."
+      - "Leave it unassigned for now."
+    why: |
+      Complaints are worked by the agent first and escalated to the supervisor, who is accountable for resolution and service recovery, mirroring how the flagship suites route negative-sentiment and escalation events. No process_raci is authored yet, so this names the first owner. Surfaced as q-CCAAS.md q15.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-RETAG-530
+    summary: "Re-point handoff 530's coarse APQC tag (3.3.6 'Analyze and respond to customer insight') to the specific 6.2.2.4 'Respond to customer problems, requests, and inquiries'. DESTRUCTIVE re-point. Moot if B2-INTENT-IDENTIFIED-OWNERSHIP deletes handoff 530."
+    question: |
+      Handoff 530 (CCAAS->CRM, contact_records) is tagged with the broad process 3.3.6 "Analyze and respond to customer insight", but the same record already has a more specific match, 6.2.2.4 "Respond to customer problems, requests, and inquiries", on its sibling handoffs. Re-point handoff 530's tag from 3.3.6 to 6.2.2.4? (yes/no)
+    options: [a-repoint, b-keep-3.3.6]
+    why: |
+      Contact-record capture/screen-pop on a CCAAS->CRM handoff is the same "respond to customer problems/requests/inquiries" activity already tagged on handoffs 225/501, not a customer-insight-analytics activity, so 6.2.2.4 is the tighter fit. Re-pointing edits the tag CCAAS authored (destructive), so it needs sign-off (Rule #1 / B9d RE-TAG). This is moot if you take option (a) of B2-INTENT-IDENTIFIED-OWNERSHIP (delete handoff 530); answer it only if 530 survives.
+    extra_b9d_added: "2026-06-13"
+
+# B9d UNOWNED dependencies surfaced 2026-06-13 (report-only, owed by the sending domains; NOT CCAAS fixes):
+#  - knowledge_base_articles (handoff 722, KMS->CCAAS): no master row anywhere in the catalog. Owed by KMS.
+#  - conversation_flows (handoff 743, CONV-AI->CCAAS): no master row anywhere. Owed by CONV-AI.
+#  - conversation_transcripts (handoff 228, CONV-AI->CCAAS): no master row anywhere. Owed by CONV-AI.
+# Each carried entity needs a canonical master authored on the sending domain before its payload can
+# be realized; surfaced here for the sending domains' audits per the B9d UNOWNED rule (do not drop).
 
 b3:
   - id: B3-AGENT-SKILL-ASSIGNMENTS

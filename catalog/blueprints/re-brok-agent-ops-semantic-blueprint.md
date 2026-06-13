@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "2.0"
+blueprint_version: "3.0"
 license: MIT
 system_name: RE-BROK-AGENT-OPS
 system_description: Real Estate Agent Operations
@@ -12,7 +12,7 @@ domain_modules:
 domain_code: RE-BROKERAGE
 related_modules: [crm-acct-mgt, crm-lead-mgt, re-brok-brokerage-ops, re-invest-portfolio-val, real-estate-agent]
 persona: []
-created_at: 2026-06-12
+created_at: 2026-06-13
 ---
 
 # Real Estate Agent Operations
@@ -75,15 +75,15 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `disclosure_documents` | Disclosure Document | Disclosure Documents | master | operational_workflow | - | - | optional | personal_content, submit_lock, single_approver | `:manage` | - |
-| 2 | `real_estate_listings` | Real Estate Listing | Real Estate Listings | master | operational_workflow | - | - | required | personal_content | `:manage` | - |
-| 3 | `real_estate_transactions` | Real Estate Transaction | Real Estate Transactions | master | operational_workflow | - | - | required | personal_content, submit_lock | `:manage` | - |
-| 4 | `tour_appointments` | Tour Appointment | Tour Appointments | master | operational_workflow | - | - | required | personal_content | `:manage` | - |
-| 5 | `commission_splits` | Commission Split | Commission Splits | embedded_master | operational_workflow | `re-brok-brokerage-ops` | Brokerage Oversight and Commission Management | optional | submit_lock, single_approver | `:manage` | - |
-| 6 | `crm_contacts` | Contact | Contacts | contributor | operational_record | `crm-acct-mgt` | Account and Contact Management | required | personal_content | `:manage` | - |
-| 7 | `crm_leads` | Lead | Leads | contributor | operational_workflow | `crm-lead-mgt` | Lead Capture and Qualification | required | personal_content, submit_lock | `:manage` | - |
+| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | pattern flags | entity_type | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `disclosure_documents` | `disclosure_documents` | Disclosure Document | Disclosure Documents | master | - | - | optional | personal_content, submit_lock, single_approver | operational_workflow | `:manage` | - |
+| 2 | `real_estate_listings` | `real_estate_listings` | Real Estate Listing | Real Estate Listings | master | - | - | required | personal_content | operational_workflow | `:manage` | - |
+| 3 | `real_estate_transactions` | `real_estate_transactions` | Real Estate Transaction | Real Estate Transactions | master | - | - | required | personal_content, submit_lock | operational_workflow | `:manage` | - |
+| 4 | `tour_appointments` | `tour_appointments` | Tour Appointment | Tour Appointments | master | - | - | required | personal_content | operational_workflow | `:manage` | - |
+| 5 | `commission_splits` | `commission_splits` | Commission Split | Commission Splits | embedded_master | `re-brok-brokerage-ops` | Brokerage Oversight and Commission Management | optional | submit_lock, single_approver | operational_workflow | `:manage` | - |
+| 6 | `crm_contacts` | `crm_contacts` | Contact | Contacts | contributor | `crm-acct-mgt` | Account and Contact Management | required | personal_content | operational_record | `:manage` | - |
+| 7 | `crm_leads` | `crm_leads` | Lead | Leads | contributor | `crm-lead-mgt` | Lead Capture and Qualification | required | personal_content, submit_lock | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 

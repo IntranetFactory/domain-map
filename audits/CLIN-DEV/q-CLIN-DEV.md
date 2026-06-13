@@ -115,6 +115,17 @@ a10:
 
 ---
 
+q13: A work-order handoff into ITSM is tagged with a broad "perform asset maintenance" process, while its sibling calibration handoff uses the more specific "perform preventative asset maintenance". Should the work-order handoff be re-pointed to match the more specific one?
+
+- a) Re-point the work-order handoff to "perform preventative asset maintenance" so both ITSM-bound handoffs use the same precise activity.
+- b) Leave it on the broader "perform asset maintenance" (an opened work order is often corrective rather than preventative, so the coarser bucket may be intended).
+
+Recommended: weigh the trigger. The calibration handoff fires when a calibration is due, which is genuinely preventative. The work-order handoff fires when a work order is opened, which is frequently corrective (a device broke), so the broader parent may be the correct, deliberate grain. Pick (a) only if your clinical-engineering work orders are predominantly scheduled preventive maintenance. This re-point overwrites an existing tag, so it needs your sign-off; it is a tag-only choice and does not block the build.
+
+a13:
+
+---
+
 ## Optional (will not hold up the build)
 
 q11: The vendor study confirmed several deeper objects the current model collapses or omits, all bundled into the flagship CMMS core: a device model master (the recallable model versus the individual unit, modeled by AIMS, Nuvolo, EQ2, and ServiceNow CDM, and by the IoMT-security vendors Asimily/Cynerio for recall matching), a device location master (room/OR/department, for PM dispatch and recall isolation, modeled by all four CMMS flagships), and a device service-contract master (warranty and response-SLA, the dominant Clinical Engineering budget concern, modeled by all four). Recall-effectiveness tracking (units accounted for, time-to-isolation) is a thinner add, present in Nuvolo's analytics. Should I research and add the ones that hold up, into the CMMS core module? (yes/no)
@@ -136,4 +147,4 @@ a12:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S2 q2=B2-S1 q3=B2-S3 q4=B2-S4.incidentpii q5=B2-S4.incidentlock q6=B2-S4.caliblock q7=B2-S4.recallapprover q8=B2-S5 q9=B2-S6 q10=B2-S11b q11=B3-DEVICE-MODELS+B3-DEVICE-LOCATIONS+B3-DEVICE-SERVICE-CONTRACTS+B3-RECALL-EFFECTIVENESS q12=B3-IOMT-SEC+B3-MED-DEVICE-QMS | domain_id=50 | phase0=.tmp_deploy/CLIN-DEV-phase0-2026-06-08.md | reversed: B2-S2 "Inventory+Safety-Vigilance"->"CMMS-core+Sterile-Processing" (recall bundled into CMMS by all flagships; sterile processing is the real product boundary) -->
+<!-- agent map, ignore: q1=B2-S2 q2=B2-S1 q3=B2-S3 q4=B2-S4.incidentpii q5=B2-S4.incidentlock q6=B2-S4.caliblock q7=B2-S4.recallapprover q8=B2-S5 q9=B2-S6 q10=B2-S11b q13=B2-S6b q11=B3-DEVICE-MODELS+B3-DEVICE-LOCATIONS+B3-DEVICE-SERVICE-CONTRACTS+B3-RECALL-EFFECTIVENESS q12=B3-IOMT-SEC+B3-MED-DEVICE-QMS | domain_id=50 | phase0=.tmp_deploy/CLIN-DEV-phase0-2026-06-08.md | reversed: B2-S2 "Inventory+Safety-Vigilance"->"CMMS-core+Sterile-Processing" (recall bundled into CMMS by all flagships; sterile processing is the real product boundary) | b9d ran 2026-06-13: ORPHAN pid1556->ITSM(B2-B9D-OWN-1556), RE-TAG 353->1556 on h893 (q13/B2-S6b), UNOWNED pid199 = unbuilt-CLIN-DEV artifact (h895 device_incident_reports, self-resolves on build) -->

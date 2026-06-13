@@ -427,3 +427,81 @@ None encountered.
 - https://tests.semantius.app/domain_map/data_object_relationships
 - https://tests.semantius.app/domain_map/trigger_events
 - https://tests.semantius.app/domain_map/handoffs
+
+## 2026-06-13 - Audit (B9d handoff-payload realization, both directions)
+
+### Scope
+
+State-driven Validate execute pass against refreshed live state. The only agent-actionable open
+item was b1a B1A-B9D-VERIFY (run B9d, which had never run on this domain in either direction). Every
+other open item is either a user judgment call already surfaced in q-CCAAS.md (the 10 carried b2) or
+blocked (the 2 b1b regulation/compliance items, the 7 b3 Phase-0 candidates). No catalog rows were
+written and no record_status was touched (Rule #1). Resolver: scripts/analytics/b9d_resolver.ts CCAAS.
+
+### B9d classification (both directions, 12 boundary tags, 11 distinct (process, owner) findings)
+
+- verdicts: ORPHAN 5, RE-TAG 1, UNOWNED 4, RESOLVED 1.
+- 5 ORPHAN (real missing work, no persona): routed to owner by carried-entity mastery.
+  - owner CCAAS (built): pid 195 "Plan and manage customer service workforce" (queue_statistics, h500->WFM);
+    pid 922 "Schedule customer service workforce" (agent_states, h499->WFM);
+    pid 928 "Respond to customer problems, requests, and inquiries" (support_sessions/contact_records, h225->CSM, h501->CRM);
+    pid 934 "Respond to customer complaints" (support_sessions, h226->CSM).
+  - owner WSC (unbuilt): pid 928 (chat_threads, h833 WSC->CCAAS).
+- 1 RE-TAG (destructive re-point, sign-off): pid 138 "3.3.6 Analyze and respond to customer insight" on
+  handoff 530 (CCAAS->CRM, contact_records) -> a more specific 6.2.2.4 "Respond to customer problems,
+  requests, and inquiries" exists on the same entity. Interacts with B2-INTENT-IDENTIFIED-OWNERSHIP
+  (moot if 530 is deleted).
+- 4 UNOWNED (carried entity has no master row anywhere; owed by the sending domain, report-only):
+  knowledge_base_articles (h722, KMS->CCAAS, two tags pid 429/1293), conversation_flows (h743, CONV-AI->CCAAS),
+  conversation_transcripts (h228, CONV-AI->CCAAS). Surfaced, not dropped.
+- 1 RESOLVED: pid 52 "Deploy services/solutions" (bot_definitions, h746). No action.
+
+### Executed (additive owner-side audit-file edits; NO catalog writes, NO record_status change)
+
+- CCAAS state.yaml + q-CCAAS.md: 4 b2 owner items B2-B9D-OWN-195/922/928/934 (q12-q15). The resolver's
+  cold-start placeholder wording ("a named owner") was rewritten by hand to name the real CCAAS personas
+  (Contact Center Operations Manager for the WFM planning/scheduling pair; Contact Center Agent run +
+  Contact Center Supervisor approve for the inbound-response and complaints pair), grounded in flagship
+  CCaaS vendor practice. state.yaml question/options/why aligned with the q-file wording. No process_raci
+  exists on CCAAS yet, so each q names the FIRST owner rather than mirroring an existing assignment.
+- WSC state.yaml + q-WSC.md: 1 b2 owner item B2-B9D-OWN-928 (q11) routed to WSC (the chat_threads master),
+  cold-start "record it now" wording (WSC is unbuilt). This is the B9d neighbor-backlog write (state.yaml
+  hygiene carve-out (b)); WSC keeps its own open B1A-B9D-VERIFY untouched.
+- CCAAS b1a B1A-B9D-VERIFY removed (resolved this pass; recorded here, not tombstoned in state.yaml).
+
+### Surfaced (NOT applied; destructive / report-only, awaiting user)
+
+- B2-B9D-RETAG-530 (new b2 + q16): destructive re-point of handoff 530's APQC tag 3.3.6 -> 6.2.2.4.
+  Recommended yes if 530 survives; moot if B2-INTENT-IDENTIFIED-OWNERSHIP deletes 530.
+- 4 UNOWNED dependencies recorded as a header comment in CCAAS state.yaml, report-only follow-ups owed by
+  KMS (knowledge_base_articles) and CONV-AI (conversation_flows, conversation_transcripts): each carried
+  entity needs a canonical master authored on the sending domain before its payload can be realized.
+
+### Left (parked, unchanged)
+
+- b2 (15 total): the 10 carried module/scope/boundary/destructive decisions + the 4 new B9d-OWN + the 1
+  new B9d-RETAG. All in q-CCAAS.md q1-q16.
+- b1b (2): B1B-S4-REGULATIONS, B1B-COMPLIANCE-MASTERS (blocked on regulation scope / dialer decision).
+- b3 (7): Phase-0 candidate masters, non-blocking.
+
+### Outcome
+
+next_action_by: user. The single agent-actionable item (B9d) is executed; the domain is now fully
+agent-finished and waiting only on user decisions (the q-file) and blocked items. No b1a remains.
+
+### JWT errors
+
+None encountered.
+
+### Files written (repo only; NO DB/catalog writes)
+
+- audits/CCAAS/state.yaml (b1a -> []; +5 b2 items; UNOWNED header comment; last_audit 2026-06-13)
+- audits/CCAAS/q-CCAAS.md (+5 questions q12-q16; footer tokens added)
+- audits/CCAAS/history.md (this section)
+- audits/WSC/state.yaml (+1 b2 item B2-B9D-OWN-928)
+- audits/WSC/q-WSC.md (+1 question q11)
+
+### UI links
+
+- https://tests.semantius.app/domain_map/handoffs
+- https://tests.semantius.app/domain_map/handoff_processes

@@ -136,6 +136,78 @@ a14:
 
 ---
 
+q24: Several handoffs leave CDP's side unattributed because CDP receives (or sends) data it does not itself model: it ingests beta programs, source records, DXP segments and journey steps, and product features from neighbors, and it emits a high-intent signal carried on a Sales Engagement record. How should these be handled so the handoff attribution resolves?
+
+- a) Have CDP formally consume those inbound payloads (add them as consumer entities on the right CDP module), then attribute the handoffs.
+- b) Treat them as pass-through signals that CDP does not model, and leave CDP's side of the attribution blank.
+- c) Fix the high-intent-signal handoff first, since that signal is really produced by CDP and should be carried on a CDP record rather than a Sales Engagement one.
+
+Recommended: a for the inbound ingestion payloads (CDP genuinely reads them), and c for the high-intent signal (it looks mis-modeled). Adding entities CDP does not yet model is new footprint, so it is your scope call rather than an automatic fix.
+
+a24:
+
+---
+
+q18: Digital Commerce forwards customer event to Customer Data Platform to develop customer experience strategy, but Customer Data Platform does not yet have anyone assigned to develop customer experience strategy, so this step has no owner. How should it be handled?
+- a) Record it now as work Customer Data Platform owns, and assign a named owner once Customer Data Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Customer Data Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a18:
+
+---
+
+q19: Master Data Management sends Customer Data Platform an automatically calculated identity graph that feeds manage product and service master data, but Customer Data Platform does not yet have anyone assigned to that work, so this step has no owner. How should it be handled?
+- a) Record it now as work Customer Data Platform owns, and assign a named owner once Customer Data Platform sets up who does this work.
+- b) Treat it as an automatically calculated figure with no one to own, and leave it off the list.
+
+Recommended: a. Recording it now means that the moment Customer Data Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a19:
+
+---
+
+q20: Marketing Automation forwards audience segment to Customer Data Platform to design and manage customer loyalty program, but Customer Data Platform does not yet have anyone assigned to design and manage customer loyalty program, so this step has no owner. How should it be handled?
+- a) Record it now as work Customer Data Platform owns, and assign a named owner once Customer Data Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Customer Data Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a20:
+
+---
+
+q21: Marketing Automation forwards customer event to Customer Data Platform to develop and manage promotional activities, but Customer Data Platform does not yet have anyone assigned to develop and manage promotional activities, so this step has no owner. How should it be handled?
+- a) Record it now as work Customer Data Platform owns, and assign a named owner once Customer Data Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Customer Data Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a21:
+
+---
+
+q22: Customer Relationship Management forwards customer event to Customer Data Platform to manage sales orders, but Customer Data Platform does not yet have anyone assigned to manage sales orders, so this step has no owner. How should it be handled?
+- a) Record it now as work Customer Data Platform owns, and assign a named owner once Customer Data Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Customer Data Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a22:
+
+---
+
+q23: Customer Service Management forwards customer event to Customer Data Platform to manage customer service problems, requests, and inquiries, but Customer Data Platform does not yet have anyone assigned to manage customer service problems, requests, and inquiries, so this step has no owner. How should it be handled?
+- a) Record it now as work Customer Data Platform owns, and assign a named owner once Customer Data Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Customer Data Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a23:
+
+---
+
 ## Optional (will not hold up the build)
 
 q15: Should I research and add the deeper substrate entities that flagship CDP vendors ship (data sources, event sinks / destinations, activation runs, identity rules, merge decisions, consent records, data-subject requests, segment definitions, predictive models, model predictions, journey definitions)? These are the masters that would let the merged modules split apart cleanly. (yes/no)
@@ -162,4 +234,4 @@ a17:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S5 q2=B2-S3 q3=B2-S8 q4=B2-S7 q5=B2-S6 q6=B2-S2.events q7=B2-S2.identity q8=B2-S2.journeys q9=B2-S2.attributes q10=B2-S2.segments q11=B2-S4.lgpd q12=B2-S4.tcf q13=B2-S4.quebec q14=B2-S4.popia q15=B3-MISSING-ENTITIES q16=B3-MOD-PROMOTIONS q17=B3-DOM-REVERSE-ETL | domain_id=72 -->
+<!-- agent map, ignore: q1=B2-S5 q2=B2-S3 q3=B2-S8 q4=B2-S7 q5=B2-S6 q6=B2-S2.events q7=B2-S2.identity q8=B2-S2.journeys q9=B2-S2.attributes q10=B2-S2.segments q11=B2-S4.lgpd q12=B2-S4.tcf q13=B2-S4.quebec q14=B2-S4.popia q24=B2-S10 q15=B3-MISSING-ENTITIES q16=B3-MOD-PROMOTIONS q17=B3-DOM-REVERSE-ETL q18=B2-B9D-OWN-100 q19=B2-B9D-OWN-115 q20=B2-B9D-OWN-132 q21=B2-B9D-OWN-136 q22=B2-B9D-OWN-150 q23=B2-B9D-OWN-196 | domain_id=72 -->

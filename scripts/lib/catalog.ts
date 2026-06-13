@@ -264,6 +264,18 @@ type RawRelationships = {
 // Pure in-memory: build the Map indices from raw arrays. Reused by loadAllRelationships
 // (fresh from PostgREST) and loadCachedAllRelationships (deserialized from disk).
 function buildRelationshipIndices(raw: RawRelationships): AllRelationships {
+  // Deterministic lifecycle order. The `/data_object_lifecycle_states` query orders by
+  // (data_object_id, state_order), but state_order is not guaranteed unique per entity (a data bug
+  // the §7 M4 soft-assert flags, e.g. okr_objectives with two states at order 4). Tied rows then
+  // shuffle between fetches, churning §7 and the §8/§9 lifecycle-derived tables. Sort here, the one
+  // construction point feeding both the fresh-fetch and cache-read paths, with state_name as a
+  // stable final tiebreaker so every consumer sees one canonical order regardless of DB/cache order.
+  raw.lifecycle.sort((a: any, b: any) =>
+    ((a.data_object_id ?? -1) - (b.data_object_id ?? -1)) ||
+    ((a.state_order ?? -1) - (b.state_order ?? -1)) ||
+    (String(a.state_name ?? "") < String(b.state_name ?? "") ? -1 : String(a.state_name ?? "") > String(b.state_name ?? "") ? 1 : 0),
+  );
+
   const groupBy = <T>(rows: T[], keyFn: (r: T) => number | null | undefined): Map<number, T[]> => {
     const out = new Map<number, T[]>();
     for (const r of rows ?? []) {
@@ -768,6 +780,33 @@ export function loadModuleCatalog(
       }
     }
   }
+  // Deterministic emit order. The `/handoffs` query orders by `target_domain_id` only, so rows
+  // sharing a target domain come back in arbitrary DB order and §6 reshuffled on every fresh-cache
+  // regen (spurious `--check` drift, noisy diffs). Impose a stable total order here, in the shared
+  // loader, so cached and live loads render identically. Compare on the same fields §6 renders:
+  // domain/module endpoints, then the joined trigger event + transition, then payload, pattern,
+  // friction, description. Code-point string compare (not localeCompare) keeps it locale-independent.
+  const sc = (x: string, y: string): number => (x < y ? -1 : x > y ? 1 : 0);
+  const handoffCmp = (a: any, b: any): number => {
+    const ta = a.trigger_events || {};
+    const tb = b.trigger_events || {};
+    return (
+      (a.target_domain_id ?? -1) - (b.target_domain_id ?? -1) ||
+      (a.source_domain_id ?? -1) - (b.source_domain_id ?? -1) ||
+      (a.source_domain_module_id ?? -1) - (b.source_domain_module_id ?? -1) ||
+      (a.target_domain_module_id ?? -1) - (b.target_domain_module_id ?? -1) ||
+      sc(String(ta.event_name ?? ""), String(tb.event_name ?? "")) ||
+      sc(String(ta.from_state ?? ""), String(tb.from_state ?? "")) ||
+      sc(String(ta.to_state ?? ""), String(tb.to_state ?? "")) ||
+      sc(String(ta.event_category ?? ""), String(tb.event_category ?? "")) ||
+      (a.data_object_id ?? -1) - (b.data_object_id ?? -1) ||
+      sc(String(a.integration_pattern ?? ""), String(b.integration_pattern ?? "")) ||
+      sc(String(a.friction_level ?? ""), String(b.friction_level ?? "")) ||
+      sc(String(a.description ?? ""), String(b.description ?? ""))
+    );
+  };
+  outboundHandoffs.sort(handoffCmp);
+  inboundHandoffs.sort(handoffCmp);
 
   // Related modules: union of data-coupling sources + handoffs + persona reach, deduped,
   // with self removed. NOTE these are RELATED (navigation / integration hints), NOT

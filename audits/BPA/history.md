@@ -603,3 +603,61 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-13 - Audit/finish pass (agent-finished the agent-doable footprint)
+
+Ran the full per-domain audit/finish contract (SKILL.md Rule #21). All work below landed at `record_status='new'`; no `record_status` was flipped; no destructive step was executed.
+
+### B9d (B1A-B9D-VERIFY) - RESOLVED
+
+Ran `scripts/analytics/b9d_resolver.ts BPA` in both directions (--dry-run then --write). All three ORPHAN owner-side routings were already present (idempotent no-op): `B2-B9D-OWN-13` on APM (q9), `B2-B9D-OWN-414` and `B2-B9D-OWN-1708` on BPA (q11/q12). B9d has now positively run on this domain; B1A-B9D-VERIFY is resolved.
+
+**Consequence of the Phase-E realization work below:** after authoring the publish gate (1644) and the analyze gate (1641) with RACI, the B9d re-run reclassified the two former BPA ORPHANs as MIS-TAGs and pid 78 as ROLL-UP (the carried entities are now realized at a finer grain). The "name an owner" framing (old q11/q12, B2-B9D-OWN-414/1708) is superseded: the work IS realized; what remains is a destructive `handoff_processes` re-point/delete decision, surfaced as a new q-item for sign-off.
+
+### B10b - BPA-side resolved (B1B-S3 resolved in catalog; B1B-S4 BPA half done)
+
+- B1B-S3: re-query showed all 8 outbound BPA handoffs (180/181/182/184/783/784/785/786) already carry `source_domain_module_id` (220/221/222) - resolved in the catalog by a prior backfill. Removed from state.
+- Added 2 `consumer`/`optional` DMDO rows on BPA-PROCESS-REPO (220) for `discovered_process_models` (580) and `process_variants` (582) - the inbound payloads BPA consumes for conformance/comparison (events 798/799). Backfilled `target_domain_module_id=220` on inbound handoffs 740/741. This resolves the BPA side of B1B-S4 and the B9d UNOWNED finding (580/582 ARE mastered, by PROC-MIN in legacy `domain_data_objects`, domain 40 - a PROC-MIN modularization gap, not unowned).
+
+### B13 - entity_type classified
+
+PATCHed 247 / 249 / 250 to `operational_workflow` (each carries a clear state machine; 248 was already operational_workflow).
+
+### B12 - lifecycle states authored (11 rows, ids 2239-2249)
+
+- 247 business_process_models (module 220): draft -> in_review -> published (gate) -> retired.
+- 249 value_streams (module 222): in_discovery -> baselined (gate) -> archived.
+- 250 process_simulation_runs (module 222): queued -> running -> completed | failed.
+- M4 shape verified: each has exactly one initial, >=1 terminal, monotonic state_order.
+
+### B9b - intra-domain handoffs authored (3 rows, ids 1436-1438)
+
+All `source_domain_id=target_domain_id=136`, `integration_pattern='lifecycle_progression'`, `friction_level='low'`, grounded in the cross-module master relationships (all into BPA-PROCESS-REPO 220):
+- 221 -> 220 on `capability_map.updated` (357).
+- 222 -> 220 on `value_stream.bottleneck_identified` (359).
+- 222 -> 220 on `process_simulation_run.bottleneck_identified` (868).
+Resolves B1B-S5.
+
+### Phase E - personas + RACI (E1-E6)
+
+Zero personas before (E1 fired on a 7-capability / 3-module domain). Authored:
+- domain_roles: 77 Process Architect (BUSINESS-OPS-PROCESS-ARCHITECT, fn 34), 78 Process Analyst (BUSINESS-OPS-PROCESS-ANALYST, fn 34), 79 Process Owner (PROCESS-OWNER, cross-functional, business_function_id null).
+- role_modules (8 rows, ids 630-637): each persona reaches >=2 modules with interaction_level set (E2/E3).
+- Wired `process_id` on the two gated states: 247.published -> 1644 (13.1.3.5 Publish processes); 249.baselined -> 1641 (13.1.3.2 Analyze processes) (E6).
+- process_raci (5 rows, ids 160-164): Publish processes = Architect R / Owner A / Analyst C; Analyze processes = Analyst R / Architect A (E4: each gated process has R+A).
+
+### Aliases - authored (B1B-S6 / B2-DOMAIN-ALIASES resolved)
+
+6 `domain_aliases` rows (ids 38-43, all `alias_type='synonym'`, the only valid value): business process management, BPM, process modeling, process architecture, BPMN authoring, process design. The prior pass parked this as a b2; aliases are corrective-additive per Rule #21, so authored straight at `record_status='new'`.
+
+### Report-only follow-ups (owned by other domains; do NOT block BPA)
+
+- PROC-MIN B10b: modularize `discovered_process_models` (580) and `process_variants` (582) into `domain_module_data_objects` (currently mastered only in legacy `domain_data_objects`), then set `source_domain_module_id` on inbound 740/741; also set `target_domain_module_id` on outbound 180/783 (BPA->PROC-MIN).
+- SPM B10b: set `target_domain_module_id` on outbound 785 (BPA->SPM).
+- The MIS-TAG on handoff 183 (`handoff_processes` id 102, process_id 414, `proposal_source='discovery_substring'`) is a PROC-MIN-authored source tag; its re-point/delete is PROC-MIN's source edit.
+
+### Still open (user) - see q-BPA.md
+
+B2-CAPMAP-OWNER, B2-PATTERN-FLAGS, B2-EA-SOLUTION-SPLIT, B2-PROC-MIN-RECONCILE, the new B9d re-point/delete decisions (B2-B9D-RETAG), and the b3 research ideas. JWT errors: none.

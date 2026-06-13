@@ -68,6 +68,46 @@ b2:
     why: |
       Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CRM.md q7.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-115
+    summary: "Customer Relationship Management: name an owner for \"Manage product and service master data\" (no one is responsible for it today)"
+    question: |
+      Master Data Management forwards customer to Customer Relationship Management to manage product and service master data, but Customer Relationship Management does not yet have anyone assigned to manage product and service master data, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Customer Relationship Management owns, and assign a named owner once Customer Relationship Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CRM.md q8.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-138
+    summary: "Customer Relationship Management: name an owner for \"Analyze and respond to customer insight\" (no one is responsible for it today)"
+    question: |
+      Social Media Management forwards customer to Customer Relationship Management to analyze and respond to customer insight, but Customer Relationship Management does not yet have anyone assigned to analyze and respond to customer insight, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Customer Relationship Management owns, and assign a named owner once Customer Relationship Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CRM.md q9.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-148
+    summary: "Customer Relationship Management: name an owner for \"Manage customers and accounts\" (no one is responsible for it today)"
+    question: |
+      Customer Data Platform forwards customer to Customer Relationship Management to manage customers and accounts, but Customer Relationship Management does not yet have anyone assigned to manage customers and accounts, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Customer Relationship Management owns, and assign a named owner once Customer Relationship Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CRM.md q10.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-708
+    summary: "Customer Relationship Management: name an owner for \"Identify/receive leads/opportunities\" (no one is responsible for it today)"
+    question: |
+      Marketing Automation forwards lead to Customer Relationship Management to identify or receive leads or opportunities, but Customer Relationship Management does not yet have anyone assigned to identify or receive leads or opportunities, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Customer Relationship Management owns, and assign a named owner once Customer Relationship Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CRM.md q11.
+    extra_b9d_added: "2026-06-13"
 b3:
   # --- GROUP A: confirmed CRM-native, additive, fits an existing module (q1) ---
   - id: B3-CRM-COMPETITORS

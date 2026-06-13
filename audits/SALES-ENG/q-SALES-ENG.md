@@ -94,6 +94,16 @@ a10:
 
 ---
 
+q14: Customer Data Platform forwards cadence to Sales Engagement to develop and manage sales plans, but Sales Engagement does not yet have anyone assigned to develop and manage sales plans, so this step has no owner. How should it be handled?
+- a) Record it now as work Sales Engagement owns, and assign a named owner once Sales Engagement sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Sales Engagement decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a14:
+
+---
+
 ## Optional (will not hold up the build)
 
 q11: Flagship cadence vendors model several entities Sales Engagement does not have yet: typed cadence steps, a native prospect record (separate from CRM), reusable email templates, dialler phone-number pools and sessions, and conversation-intelligence topics and trackers. Should I research and add the ones that hold up into the existing modules? (yes/no)
@@ -120,4 +130,4 @@ a13:
 
 ---
 
-<!-- agent map, ignore: q1=B2-RETARGET-OR-MOVE q2=B2-PATTERN-FLAGS.callrec_pii q3=B2-PATTERN-FLAGS.email_pii q4=B2-PATTERN-FLAGS.cadence_lock q5=B2-PATTERN-FLAGS.ci_pii q6=B2-PATTERN-FLAGS.callrec_approver q7=B2-CATALOG-COPY q8=B2-APQC-WRONG-SUBSTRING q9=B2-APQC-L3-PROMOTION q10=B2-APQC-INBOUND-DEFER q11=B3-CADENCE-STEPS+B3-PROSPECTS+B3-EMAIL-TEMPLATES+B3-DIALER-INFRA+B3-CI-TOPICS-TRACKERS q12=B3-INTENT-SIGNALS+B3-MEETING-SCHEDULER q13=B3-TCPA-CONSENT | domain_id=95 -->
+<!-- agent map, ignore: q1=B2-RETARGET-OR-MOVE q2=B2-PATTERN-FLAGS.callrec_pii q3=B2-PATTERN-FLAGS.email_pii q4=B2-PATTERN-FLAGS.cadence_lock q5=B2-PATTERN-FLAGS.ci_pii q6=B2-PATTERN-FLAGS.callrec_approver q7=B2-CATALOG-COPY q8=B2-APQC-WRONG-SUBSTRING q9=B2-APQC-L3-PROMOTION q10=B2-APQC-INBOUND-DEFER q11=B3-CADENCE-STEPS+B3-PROSPECTS+B3-EMAIL-TEMPLATES+B3-DIALER-INFRA+B3-CI-TOPICS-TRACKERS q12=B3-INTENT-SIGNALS+B3-MEETING-SCHEDULER q13=B3-TCPA-CONSENT q14=B2-B9D-OWN-25 | domain_id=95 -->

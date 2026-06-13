@@ -79,7 +79,12 @@ const ROOT = "c:/dev/domain-map";
 const BLUEPRINTS_DIR = `${ROOT}/catalog/blueprints`;
 const BLUEPRINT_SUFFIX = "-semantic-blueprint.md";
 const TODAY = new Date().toISOString().slice(0, 10);
-const BLUEPRINT_VERSION = "2.0";
+// Blueprint format/schema version (front-matter `blueprint_version`). The producer owns this and
+// bumps it only when the file SHAPE changes. 3.0 (vs 2.x) adds exactly two Section 3 columns:
+// `canonical code` (the stable uber-model identity, beside the deployed `data_object`) and a
+// relocated `entity_type` (now immediately before `write tier`). No other section changed shape.
+// Emit exactly this one version key, never a consumer/authoring-tool version.
+const BLUEPRINT_VERSION = "3.0";
 
 // ---------- catalog index (loaded once via lib) ----------
 // Types, pg helper, and scoped query helpers live in ./lib/catalog.ts. Aliasing
@@ -664,7 +669,11 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   if (scopeRows.length === 0) {
     out.push(noneSection("no data_objects in scope"));
   } else {
-    const headers = ["#", "data_object", "singular", "plural", "role", "entity_type", "mastered in", "mastered label", "necessity", "pattern flags", "write tier"];
+    // 3.0 Section 3 header (13 canonical columns). `canonical code` sits immediately after
+    // `data_object`; `entity_type` sits immediately before `write tier`. Downstream parses by
+    // header name, not column position, but this is the canonical order. (`modules` is an
+    // extra multi-module-bundle column inserted before `notes`; single-module blueprints omit it.)
+    const headers = ["#", "data_object", "canonical code", "singular", "plural", "role", "mastered in", "mastered label", "necessity", "pattern flags", "entity_type", "write tier"];
     if (showModulesCol) headers.push("modules");
     headers.push("notes");
     out.push(tableHeader(headers, ["right"]));
@@ -687,17 +696,24 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
       const epTypes = o.entity_type === "junction" ? neighborEntityTypes(r.data_object_id, rels) : [];
       const wt = deriveWriteTier(o.entity_type, epTypes);
       const wtCell = wt.write === null ? "read-only" : `\`${wt.write}\`${wt.pending ? " _(pending)_" : ""}`;
+      // `canonical code`: the stable uber-model identity (3.0). The domain map IS the uber-model
+      // and uses canonical, agent-optimized naming, so canonical code == data_object here (spec
+      // population rule #1: self-describing naming). It is the value that feeds the downstream
+      // platform `entities.catalog_entity_code` once deployed; `data_object` is the deployed name
+      // and may drift (dialect / silo) at deploy time, the canonical code does not.
+      const canonicalCode = `\`${o.data_object_name}\``;
       const cells: (string | number)[] = [
         i++,
         `\`${o.data_object_name}\``,
+        canonicalCode,
         o.singular_label,
         o.plural_label,
         r.role,
-        o.entity_type || "unclassified",
         owner.code,
         owner.label,
         r.necessity || "-",
         flags.join(", "),
+        o.entity_type || "unclassified",
         wtCell,
       ];
       if (showModulesCol) cells.push(r.modules.map((m) => m.domain_module_code).sort().join(", "));
@@ -1019,9 +1035,16 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
     const lifecycleObjIds = new Set<number>((lifecycleRows ?? []).map((s: any) => s.data_object_id as number));
     const modCodes = modules.map((m) => m.domain_module_code).join("+");
     for (const r of scopeRows) {
-      if (r.role !== "master") continue;
       const o = r.data_object;
       const et = o.entity_type;
+      // 3.0 acceptance: a blueprint_version 3.0 file MUST NOT carry `unclassified` in §3 (it is the
+      // platform's un-set default, never an authored value). Warn (Policy 1) on any in-scope row
+      // whose source `data_objects.entity_type` is unset; the fix is to classify the data_object
+      // upstream so the emitter carries a real class forward (it never invents one). Hard gate: B13.
+      if (!et || et === "unclassified") {
+        console.warn(`  ⚠ 3.0: \`${o.data_object_name}\` has no entity_type; emits \`unclassified\`, invalid for blueprint_version ${BLUEPRINT_VERSION} (${modCodes})`);
+      }
+      if (r.role !== "master") continue;
       // M5: an operational_workflow master must carry >=1 lifecycle state.
       if (et === "operational_workflow" && !lifecycleObjIds.has(r.data_object_id)) {
         console.warn(`  ⚠ M5: \`${o.data_object_name}\` is operational_workflow but has no lifecycle states (${modCodes})`);

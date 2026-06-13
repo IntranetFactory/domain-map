@@ -17,8 +17,8 @@
 schema_version: 2
 domain: BANK-OPS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-08"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # 2026-06-08 PHASE 0 ran (Rule #22 forcing step: the prior 2026-06-07 pass surfaced the
 # market-shape b2 calls without a current vendor-surface report; this pass runs Phase 0
@@ -61,12 +61,23 @@ last_audit: "2026-06-08"
 # The remaining open items are ALL either a user decision (b2) or blocked on the build / on another
 # domain's audit (b1b). next_action_by=user: the load-bearing fork is B2-1 (module split), which
 # unblocks the build and ~9 b1b items in one decision.
+#
+# 2026-06-13 B9d ran (resolves former B1A-B9D-VERIFY). The b9d_resolver classified all 7 outbound
+# boundary tags in BOTH directions; there are 0 inbound handoffs (target_domain_id=43 is empty).
+# Verdicts: 4 distinct (process, owner) findings, all UNOWNED -- but NOT genuine unowned dependencies.
+# BANK-OPS masters every carried payload (banking_kyc_reviews, wire_transfers, banking_transactions,
+# banking_cases, loan_disbursements, account_openings) via legacy domain_data_objects role=master rows,
+# but has ZERO domain_module_data_objects master rows because the domain is unbuilt (0 modules). The
+# resolver reads ownership at module grain, finds no master DMDO row, and reports UNOWNED. So B9d
+# ownership routing for these payloads is blocked on B1A-BUILD (gated on B2-1), NOT a new finding to
+# route to a neighbor: no RESOLVED (nothing realized yet), no ROLL-UP to re-point, no MIS-TAG (all 4
+# process categories fit their boundaries: 11.2 compliance->GRC, 6.2.2 cust-service->CSM, 9.7.6
+# fraud/dispute->GRC+CSM, 9.6.1.8 payments->FIN), no neighbor-routable ORPHAN (owner is BANK-OPS
+# itself). --write applied no additive owner-file edits and wrote nothing to the catalog. B9d will
+# RESOLVE these payloads automatically once the build authors module-grain masters + lifecycle
+# process gates + process_raci. No agent-actionable B9d work remains; the verification is complete.
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capability_domains (A2 fail). The build is surfaced, not auto-scaffolded."
     finding: "Live 2026-06-07: 0 domain_modules rows and 0 capability_domains rows, so BANK-OPS is not deployable today. Per Rule #14 every domain needs >=1 module_kind='full' row. The build cannot be auto-run because its shape is a user decision (B2-1 module split). All build-independent fixes are already executed."

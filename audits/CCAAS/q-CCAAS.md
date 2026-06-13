@@ -115,6 +115,58 @@ a10:
 
 ---
 
+q12: Contact-center queue statistics feed workforce planning, but no one in the contact center is assigned to plan and manage the customer-service workforce, so that step currently has nobody responsible for it. Who should own it?
+- a) The Contact Center Operations Manager runs it and approves it.
+- b) The Quality Analyst (or a workforce/real-time analyst you name) runs it and the Operations Manager approves.
+- c) Leave it unassigned for now.
+
+Recommended: a. Capacity planning off queue volumes is the operations-manager job at every flagship contact center (Genesys, NICE, Five9): the person accountable for service levels owns the staffing plan that drives them. The contact center has no responsibility assignments authored yet, so this names the first owner rather than mirroring an existing one.
+
+a12:
+
+---
+
+q13: Agent-state signals feed workforce scheduling, but no one in the contact center is assigned to schedule the customer-service workforce, so that step currently has nobody responsible for it. Who should own it?
+- a) The Contact Center Operations Manager runs it and approves it.
+- b) The Contact Center Supervisor runs the day-to-day schedule and the Operations Manager approves.
+- c) Leave it unassigned for now.
+
+Recommended: a. Shift scheduling and adherence sit with the operations manager (or a dedicated WFM/RTA analyst under them) across Genesys, NICE, and Five9; the supervisor consumes the schedule but does not own it. The contact center has no responsibility assignments authored yet, so this names the first owner. If you intend to model a separate WFM/RTA analyst persona, name them in (b).
+
+a13:
+
+---
+
+q14: Contact and support-session records flow out to the case and CRM systems, but no one in the contact center is assigned to respond to customer problems, requests, and inquiries, so that step currently has nobody responsible for it. Who should own it?
+- a) The Contact Center Agent runs it and the Contact Center Supervisor approves.
+- b) The Contact Center Agent both runs and approves it.
+- c) Leave it unassigned for now.
+
+Recommended: a. Handling inbound contacts is the front-line agent's core work everywhere (Genesys, NICE, Five9, Amazon Connect, Talkdesk), with the supervisor accountable for the queue and escalations. The contact center has no responsibility assignments authored yet, so this names the first owner.
+
+a14:
+
+---
+
+q15: Negative-sentiment and escalated support sessions flow out to the case system as complaints, but no one in the contact center is assigned to respond to customer complaints, so that step currently has nobody responsible for it. Who should own it?
+- a) The Contact Center Agent runs it and the Contact Center Supervisor approves.
+- b) The Contact Center Supervisor both runs and approves it.
+- c) Leave it unassigned for now.
+
+Recommended: a. Complaints are worked by the agent first and escalated to the supervisor, who is accountable for resolution and any service recovery; this mirrors how the flagship suites route negative-sentiment and escalation events. The contact center has no responsibility assignments authored yet, so this names the first owner. Take (b) if your contact center routes all complaints straight to a supervisor.
+
+a15:
+
+---
+
+q16: Handoff 530 (CCaaS to CRM, carrying the contact record) is tagged with the broad process "Analyze and respond to customer insight", but the same record is tagged with the more specific "Respond to customer problems, requests, and inquiries" on its sibling handoffs. Re-point handoff 530's tag to the more specific process? (yes/no) (This edits an existing tag, so it needs your sign-off, and it is moot if you choose to delete handoff 530 in q5.)
+
+Recommended: yes, if handoff 530 stays. Capturing the contact and popping it into CRM is the same "respond to customer problems, requests, and inquiries" work already tagged on the sibling handoffs, not a customer-insight-analytics activity, so the specific tag is the tighter fit. Answer this only if you keep handoff 530 (q5 option b); if you delete it (q5 option a), this question goes away.
+
+a16:
+
+---
+
 ## Optional (will not hold up the build)
 
 q11: Flagship CCaaS vendors model several entities the CCaaS footprint does not yet carry: agent skill assignments, callback requests, wrap-up reasons, outbound campaigns, agent scorecards, speech-analytics categories, and IVR languages. Should I research and add the ones that hold up? (yes/no)
@@ -125,4 +177,4 @@ a11:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MODULE-SPLIT q2=B2-WEM-SCOPE q3=B2-NAMING-ARBITRATION q4=B2-DESC-EMDASH-BRITISH q5=B2-INTENT-IDENTIFIED-OWNERSHIP q6=B2-CONTACT-RECORDS-CRM-CONSUMER q7=B2-CALL-RECORDINGS-SPLIT q8=B2-CONV-INTEL-RELATIONSHIP q9=B2-H722-DEDUPE-DELETE q10=B2-H743-746-RETAG q11=B3-AGENT-SKILL-ASSIGNMENTS,B3-CALLBACK-REQUESTS,B3-WRAP-UP-REASONS,B3-OUTBOUND-CAMPAIGNS,B3-AGENT-SCORECARDS,B3-SPEECH-ANALYTICS-CATEGORIES,B3-IVR-LANGUAGES | domain_id=98 -->
+<!-- agent map, ignore: q1=B2-MODULE-SPLIT q2=B2-WEM-SCOPE q3=B2-NAMING-ARBITRATION q4=B2-DESC-EMDASH-BRITISH q5=B2-INTENT-IDENTIFIED-OWNERSHIP q6=B2-CONTACT-RECORDS-CRM-CONSUMER q7=B2-CALL-RECORDINGS-SPLIT q8=B2-CONV-INTEL-RELATIONSHIP q9=B2-H722-DEDUPE-DELETE q10=B2-H743-746-RETAG q11=B3-AGENT-SKILL-ASSIGNMENTS,B3-CALLBACK-REQUESTS,B3-WRAP-UP-REASONS,B3-OUTBOUND-CAMPAIGNS,B3-AGENT-SCORECARDS,B3-SPEECH-ANALYTICS-CATEGORIES,B3-IVR-LANGUAGES q12=B2-B9D-OWN-195 q13=B2-B9D-OWN-922 q14=B2-B9D-OWN-928 q15=B2-B9D-OWN-934 q16=B2-B9D-RETAG-530 | domain_id=98 -->

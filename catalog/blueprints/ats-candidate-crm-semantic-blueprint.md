@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "2.0"
+blueprint_version: "3.0"
 license: MIT
 system_name: ATS-CANDIDATE-CRM
 system_description: Candidate CRM
@@ -15,7 +15,7 @@ domain_modules:
 domain_code: ATS
 related_modules: [ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hiring-starter, lms-compliance-training, lms-ct-gdpr, onb-journey-mgmt, pa-workforce-metrics, tlnt-intel-marketplace, tlnt-intel-mobility, vms-worker-sourcing]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-RECRUITER]
-created_at: 2026-06-12
+created_at: 2026-06-13
 ---
 
 # Candidate CRM
@@ -117,23 +117,23 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `candidate_consents` | Candidate Consent | Candidate Consents | master | operational_workflow | - | - | optional | personal_content | `:manage` | - |
-| 2 | `candidate_documents` | Candidate Document | Candidate Documents | master | operational_record | - | - | required | personal_content | `:manage` | - |
-| 3 | `candidate_emails` | Candidate Email | Candidate Emails | master | operational_record | - | - | required | personal_content | `:manage` | - |
-| 4 | `candidate_engagements` | Candidate Engagement | Candidate Engagements | master | operational_record | - | - | required | personal_content | `:manage` | - |
-| 5 | `candidate_notes` | Candidate Note | Candidate Notes | master | operational_record | - | - | required | personal_content | `:manage` | - |
-| 6 | `candidate_nurture_campaigns` | Candidate Nurture Campaign | Candidate Nurture Campaigns | master | operational_workflow | - | - | required | - | `:manage` | - |
-| 7 | `candidates` | Candidate | Candidates | master | operational_workflow | - | - | required | personal_content | `:manage` | - |
-| 8 | `data_subject_requests` | Data Subject Request | Data Subject Requests | master | operational_workflow | - | - | optional | personal_content | `:manage` | - |
-| 9 | `recruiter_interactions` | Recruiter Interaction | Recruiter Interactions | master | operational_record | - | - | required | personal_content | `:manage` | - |
-| 10 | `recruiting_event_attendances` | Recruiting Event Attendance | Recruiting Event Attendances | master | junction | - | - | required | - | `:manage` | - |
-| 11 | `recruitment_agencies` | Recruitment Agency | Recruitment Agencies | master | operational_workflow | - | - | required | - | `:manage` | - |
-| 12 | `recruitment_events` | Recruitment Event | Recruitment Events | master | operational_workflow | - | - | required | - | `:manage` | - |
-| 13 | `recruitment_sources` | Recruitment Source | Recruitment Sources | master | catalog | - | - | required | - | `:admin` | - |
-| 14 | `internal_opportunities` | Opportunity | Opportunities | embedded_master | operational_workflow | `tlnt-intel-marketplace` | Talent Marketplace | optional | submit_lock, single_approver | `:manage` | - |
-| 15 | `talent_pools` | Talent Pool | Talent Pools | embedded_master | operational_workflow | `ats-talent-pools` | Talent Pools | optional | - | `:manage` | - |
+| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | pattern flags | entity_type | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `candidate_consents` | `candidate_consents` | Candidate Consent | Candidate Consents | master | - | - | optional | personal_content | operational_workflow | `:manage` | - |
+| 2 | `candidate_documents` | `candidate_documents` | Candidate Document | Candidate Documents | master | - | - | required | personal_content | operational_record | `:manage` | - |
+| 3 | `candidate_emails` | `candidate_emails` | Candidate Email | Candidate Emails | master | - | - | required | personal_content | operational_record | `:manage` | - |
+| 4 | `candidate_engagements` | `candidate_engagements` | Candidate Engagement | Candidate Engagements | master | - | - | required | personal_content | operational_record | `:manage` | - |
+| 5 | `candidate_notes` | `candidate_notes` | Candidate Note | Candidate Notes | master | - | - | required | personal_content | operational_record | `:manage` | - |
+| 6 | `candidate_nurture_campaigns` | `candidate_nurture_campaigns` | Candidate Nurture Campaign | Candidate Nurture Campaigns | master | - | - | required | - | operational_workflow | `:manage` | - |
+| 7 | `candidates` | `candidates` | Candidate | Candidates | master | - | - | required | personal_content | operational_workflow | `:manage` | - |
+| 8 | `data_subject_requests` | `data_subject_requests` | Data Subject Request | Data Subject Requests | master | - | - | optional | personal_content | operational_workflow | `:manage` | - |
+| 9 | `recruiter_interactions` | `recruiter_interactions` | Recruiter Interaction | Recruiter Interactions | master | - | - | required | personal_content | operational_record | `:manage` | - |
+| 10 | `recruiting_event_attendances` | `recruiting_event_attendances` | Recruiting Event Attendance | Recruiting Event Attendances | master | - | - | required | - | junction | `:manage` | - |
+| 11 | `recruitment_agencies` | `recruitment_agencies` | Recruitment Agency | Recruitment Agencies | master | - | - | required | - | operational_workflow | `:manage` | - |
+| 12 | `recruitment_events` | `recruitment_events` | Recruitment Event | Recruitment Events | master | - | - | required | - | operational_workflow | `:manage` | - |
+| 13 | `recruitment_sources` | `recruitment_sources` | Recruitment Source | Recruitment Sources | master | - | - | required | - | catalog | `:admin` | - |
+| 14 | `internal_opportunities` | `internal_opportunities` | Opportunity | Opportunities | embedded_master | `tlnt-intel-marketplace` | Talent Marketplace | optional | submit_lock, single_approver | operational_workflow | `:manage` | - |
+| 15 | `talent_pools` | `talent_pools` | Talent Pool | Talent Pools | embedded_master | `ats-talent-pools` | Talent Pools | optional | - | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -247,8 +247,8 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-CANDIDATE-CRM | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_added` | _(lifecycle)_ | `talent_pools` | lifecycle_progression | low | - |
 | ATS-CANDIDATE-CRM | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
+| ATS-CANDIDATE-CRM | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_added` | _(lifecycle)_ | `talent_pools` | lifecycle_progression | low | - |
 | ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)

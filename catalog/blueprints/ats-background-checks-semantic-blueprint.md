@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "2.0"
+blueprint_version: "3.0"
 license: MIT
 system_name: ATS-BACKGROUND-CHECKS
 system_description: Background Checks
@@ -15,7 +15,7 @@ domain_modules:
 domain_code: ATS
 related_modules: [ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, comp-statements, hcm-core-worker, hcm-lifecycle-workflows, hrsd-case-mgmt, lms-compliance-training, lms-ct-gdpr, onb-journey-mgmt, payroll-run]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-COORDINATOR, RECRUITING-MANAGER, RECRUITING-RECRUITER]
-created_at: 2026-06-12
+created_at: 2026-06-13
 ---
 
 # Background Checks
@@ -101,20 +101,20 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `adverse_action_notices` | Adverse Action Notice | Adverse Action Notices | master | operational_workflow | - | - | optional | personal_content | `:manage` | - |
-| 2 | `background_check_adjudications` | Background Check Adjudication | Background Check Adjudications | master | operational_workflow | - | - | required | personal_content, single_approver | `:manage` | - |
-| 3 | `background_check_components` | Background Check Component | Background Check Components | master | operational_workflow | - | - | required | personal_content | `:manage` | - |
-| 4 | `background_check_disputes` | Background Check Dispute | Background Check Disputes | master | operational_workflow | - | - | required | personal_content | `:manage` | - |
-| 5 | `background_check_packages` | Background Check Package | Background Check Packages | master | catalog | - | - | required | - | `:admin` | - |
-| 6 | `background_checks` | Background Check | Background Checks | master | operational_workflow | - | - | required | personal_content, submit_lock | `:manage` | - |
-| 7 | `drug_health_screenings` | Drug and Health Screening | Drug and Health Screenings | master | operational_workflow | - | - | optional | personal_content | `:manage` | - |
-| 8 | `fcra_disclosures` | FCRA Disclosure | FCRA Disclosures | master | operational_workflow | - | - | optional | personal_content | `:manage` | - |
-| 9 | `fcra_summary_of_rights_acknowledgements` | FCRA Summary of Rights Acknowledgement | FCRA Summary of Rights Acknowledgements | master | operational_record | - | - | optional | personal_content, submit_lock | `:manage` | - |
-| 10 | `pre_adverse_action_notices` | Pre-Adverse Action Notice | Pre-Adverse Action Notices | master | operational_workflow | - | - | optional | personal_content, submit_lock | `:manage` | - |
-| 11 | `candidates` | Candidate | Candidates | embedded_master | operational_workflow | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
-| 12 | `job_offers` | Offer | Offers | embedded_master | operational_workflow | `ats-offers` | Offers | required | personal_content, single_approver | `:manage` | - |
+| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | pattern flags | entity_type | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `adverse_action_notices` | `adverse_action_notices` | Adverse Action Notice | Adverse Action Notices | master | - | - | optional | personal_content | operational_workflow | `:manage` | - |
+| 2 | `background_check_adjudications` | `background_check_adjudications` | Background Check Adjudication | Background Check Adjudications | master | - | - | required | personal_content, single_approver | operational_workflow | `:manage` | - |
+| 3 | `background_check_components` | `background_check_components` | Background Check Component | Background Check Components | master | - | - | required | personal_content | operational_workflow | `:manage` | - |
+| 4 | `background_check_disputes` | `background_check_disputes` | Background Check Dispute | Background Check Disputes | master | - | - | required | personal_content | operational_workflow | `:manage` | - |
+| 5 | `background_check_packages` | `background_check_packages` | Background Check Package | Background Check Packages | master | - | - | required | - | catalog | `:admin` | - |
+| 6 | `background_checks` | `background_checks` | Background Check | Background Checks | master | - | - | required | personal_content, submit_lock | operational_workflow | `:manage` | - |
+| 7 | `drug_health_screenings` | `drug_health_screenings` | Drug and Health Screening | Drug and Health Screenings | master | - | - | optional | personal_content | operational_workflow | `:manage` | - |
+| 8 | `fcra_disclosures` | `fcra_disclosures` | FCRA Disclosure | FCRA Disclosures | master | - | - | optional | personal_content | operational_workflow | `:manage` | - |
+| 9 | `fcra_summary_of_rights_acknowledgements` | `fcra_summary_of_rights_acknowledgements` | FCRA Summary of Rights Acknowledgement | FCRA Summary of Rights Acknowledgements | master | - | - | optional | personal_content, submit_lock | operational_record | `:manage` | - |
+| 10 | `pre_adverse_action_notices` | `pre_adverse_action_notices` | Pre-Adverse Action Notice | Pre-Adverse Action Notices | master | - | - | optional | personal_content, submit_lock | operational_workflow | `:manage` | - |
+| 11 | `candidates` | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | operational_workflow | `:manage` | - |
+| 12 | `job_offers` | `job_offers` | Offer | Offers | embedded_master | `ats-offers` | Offers | required | personal_content, single_approver | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -222,10 +222,10 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-BACKGROUND-CHECKS | ATS | ATS-OFFERS | `job_offer.accepted` | `accepted` _(state_change)_ | `background_checks` | lifecycle_progression | low | - |
 | ATS-CANDIDATE-CRM | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
-| ATS-OFFERS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | _(state_change)_ | `job_offers` | lifecycle_progression | low | - |
 | ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
+| ATS-OFFERS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | _(state_change)_ | `job_offers` | lifecycle_progression | low | - |
+| ATS-BACKGROUND-CHECKS | ATS | ATS-OFFERS | `job_offer.accepted` | `accepted` _(state_change)_ | `background_checks` | lifecycle_progression | low | - |
 | ATS-BACKGROUND-CHECKS | ATS | ATS-OFFERS | `job_offer.rescinded` | _(state_change)_ | `background_checks` | lifecycle_progression | medium | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)

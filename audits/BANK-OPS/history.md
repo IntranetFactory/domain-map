@@ -524,3 +524,31 @@ None. Unlike the PRM 2026-06-08 pass (which reversed two recommendations), the f
 ### Errors
 
 None. No JWT-audience errors. No DB inserts / updates / deletes.
+
+## 2026-06-13 - Audit (B9d verification, the one agent-actionable item)
+
+Ran the per-domain audit. BANK-OPS is still UNBUILT (live: 0 `domain_modules`, 0 `capability_domains`), so the entire build cascade (B1A-BUILD and the B1B-* items) stays correctly gated on the user decision B2-1 (module split), which is a genuine market-shape `b2` already backed by the fresh 2026-06-08 Phase 0 report. The only agent-actionable open item was `B1A-B9D-VERIFY`; this pass executed it.
+
+### B9d (handoff payload realization, both directions) - RESOLVES B1A-B9D-VERIFY
+
+Ran `bun run scripts/analytics/b9d_resolver.ts BANK-OPS` (`--dry-run` then `--write`).
+
+- **Inbound:** 0 handoffs target BANK-OPS (`target_domain_id=eq.43` is empty), so the inbound half is empty by construction. The outbound boundary is 7 handoffs: BANK-OPS to GRC (886/887/888), to CSM (890/891), to FIN (889/892).
+- **Classification:** all 7 boundary tags resolve to 4 distinct `(process, owner)` findings, all **UNOWNED**:
+  - 11.2 "Manage compliance" (pid 70) -> banking_kyc_reviews, wire_transfers (886, 887)
+  - 6.2.2 "Manage customer service problems/requests/inquiries" (pid 196) -> account_openings (890)
+  - 9.7.6 "Manage financial fraud/dispute cases" (pid 323) -> banking_transactions, banking_cases (888, 891)
+  - 9.6.1.8 "Process payments" (pid 1438) -> loan_disbursements, wire_transfers (889, 892)
+- **Why UNOWNED is the unbuilt artifact, not a real gap:** BANK-OPS masters every one of these payloads (id 604-609) via legacy `domain_data_objects` role=master rows, but has ZERO `domain_module_data_objects` master rows because there are no modules yet. The resolver reads ownership at module grain, finds no master DMDO row, and reports UNOWNED. The owner of every payload IS BANK-OPS itself.
+- **No agent-actionable output:** no RESOLVED (nothing is realized yet, no lifecycle process gates), no ROLL-UP to re-point, no MIS-TAG (all 4 APQC categories fit their boundaries), no neighbor-routable ORPHAN (the owner is this domain, not a neighbor). `--write` applied no additive owner-file edits and wrote nothing to any audit file or to the catalog. The 4 UNOWNED items are owner-side-blocked on B1A-BUILD (gated on B2-1); B9d will RESOLVE them automatically once the build authors module-grain masters, lifecycle `process_id` gates, and `process_raci`.
+
+`B1A-B9D-VERIFY` is removed from `state.yaml` (resolved); `next_action_by` flipped agent -> user; `last_audit` -> 2026-06-13. Everything else still open is a user `b2` decision (B2-1, B2-2, B2-3, B2-5, B2-7, B2-8) surfaced in the existing `q-BANK-OPS.md`, or a `b1b` blocked on those decisions / the build.
+
+### Files written / edited
+
+- `audits/BANK-OPS/state.yaml` (removed resolved B1A-B9D-VERIFY; next_action_by agent -> user; last_audit -> 2026-06-13; added 2026-06-13 B9d note block)
+- `audits/BANK-OPS/history.md` (this section)
+
+### Errors
+
+None. No JWT-audience errors. No DB inserts / updates / deletes. No `record_status` changes (Rule #1).

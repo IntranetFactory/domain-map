@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "2.0"
+blueprint_version: "3.0"
 license: MIT
 system_name: CLM-AUTHORING
 system_description: Contract Authoring
@@ -15,7 +15,7 @@ domain_modules:
 domain_code: CLM
 related_modules: [clm-negotiation, clm-obligation-mgmt, clm-renewal, clm-repository, cpq-approvals-contracts]
 persona: [CONTRACT-OPS-MANAGER, CONTRACT-OPS-SPECIALIST, LEGAL-COUNSEL]
-created_at: 2026-06-12
+created_at: 2026-06-13
 ---
 
 # Contract Authoring
@@ -64,13 +64,13 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `clause_libraries` | Clause Library | Clause Libraries | master | catalog | - | - | optional | - | `:admin` | - |
-| 2 | `contract_clauses` | Contract Clause | Contract Clauses | master | catalog | - | - | required | - | `:admin` | - |
-| 3 | `contract_templates` | Contract Template | Contract Templates | master | catalog | - | - | required | - | `:admin` | - |
-| 4 | `contract_drafts` | CPQ Contract Draft | CPQ Contract Drafts | consumer | operational_workflow | `cpq-approvals-contracts` | Approvals and Contract Drafts | optional | - | `:manage` | - |
-| 5 | `sourcing_events` | Sourcing Event | Sourcing Events | consumer | operational_workflow | - | - | required | - | `:manage` | - |
+| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | pattern flags | entity_type | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `clause_libraries` | `clause_libraries` | Clause Library | Clause Libraries | master | - | - | optional | - | catalog | `:admin` | - |
+| 2 | `contract_clauses` | `contract_clauses` | Contract Clause | Contract Clauses | master | - | - | required | - | catalog | `:admin` | - |
+| 3 | `contract_templates` | `contract_templates` | Contract Template | Contract Templates | master | - | - | required | - | catalog | `:admin` | - |
+| 4 | `contract_drafts` | `contract_drafts` | CPQ Contract Draft | CPQ Contract Drafts | consumer | `cpq-approvals-contracts` | Approvals and Contract Drafts | optional | - | operational_workflow | `:manage` | - |
+| 5 | `sourcing_events` | `sourcing_events` | Sourcing Event | Sourcing Events | consumer | - | - | required | - | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -133,9 +133,9 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| CLM-AUTHORING | CLM | CLM-NEGOTIATION | `contract_clause.flagged` | _(state_change)_ | `contract_clauses` | lifecycle_progression | medium | Clause flagged during negotiation (counterparty pushed back, non-standard language detected, missing protection) is routed back to the authoring/library team for review. Library team decides whether the flag warrants a new approved variant or a clarification on the existing clause. |
 | CLM-AUTHORING | S2P | _(domain-level)_ | `sourcing_event.awarded` | _(state_change)_ | `sourcing_events` | event_stream | low | Award triggers contract drafting in CLM with the chosen supplier. |
 | CLM-AUTHORING | CPQ | CPQ-APPROVALS-CONTRACTS | `contract_draft.generated` | _(state_change)_ | `contract_drafts` | api_call | medium | CPQ-generated contract draft handed off to CLM for clause assembly and signature routing. Friction when CPQ's term language doesn't match approved CLM templates. |
-| CLM-AUTHORING | CLM | CLM-NEGOTIATION | `contract_clause.flagged` | _(state_change)_ | `contract_clauses` | lifecycle_progression | medium | Clause flagged during negotiation (counterparty pushed back, non-standard language detected, missing protection) is routed back to the authoring/library team for review. Library team decides whether the flag warrants a new approved variant or a clarification on the existing clause. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 

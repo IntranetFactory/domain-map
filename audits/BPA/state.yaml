@@ -1,17 +1,12 @@
 schema_version: 2
 domain: BPA
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-05"
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+next_action_by: user
+last_audit: "2026-06-13"
 b1b:
   - id: B1B-M3
     summary: "Resolve business_capability_maps (248) canonical owner; relocate DMDO master row from APM to BPA-CAPABILITY-MAP (221) or accept APM as canonical."
-    finding: "business_capability_maps (248) has its single catalog-wide DMDO role='master' row on APM-PORTFOLIO-REGISTRY (module 103, APM domain, DMDO id 528). On 2026-06-02 BPA modularized and assigned 248 as embedded_master/required on BPA-CAPABILITY-MAP (221), preserving M7 single-master. To make BPA canonical: DELETE DMDO 528, INSERT a master row for 248 on module 221, demote APM-103 to embedded_master or consumer, then relocate lifecycle states 673/674/675 (B1B-M4) and re-derive the BPA-prefixed publish permission. To keep APM canonical: leave 528 and the BPA embedded_master row as-is (current state), and DELETE BPA's legacy domain_data_objects master claim on 248."
+    finding: "business_capability_maps (248) has its single catalog-wide DMDO role='master' row on APM-PORTFOLIO-REGISTRY (module 103, APM domain, DMDO id 528). BPA modularized 2026-06-02 and assigned 248 as embedded_master/required on BPA-CAPABILITY-MAP (221), preserving M7 single-master. To make BPA canonical: DELETE DMDO 528, INSERT a master row for 248 on module 221, demote APM-103 to embedded_master or consumer, then relocate lifecycle states 673/674/675 (B1B-M4) and re-derive the BPA-prefixed publish permission. To keep APM canonical: leave 528 and the BPA embedded_master row as-is (current state), and DELETE BPA's legacy domain_data_objects master claim on 248."
     blocked_by:
       - type: user_decision
         ref: B2-CAPMAP-OWNER
@@ -34,169 +29,13 @@ b1b:
         workflow: "publish gate"
   - id: B1B-M5b
     summary: "Remove the legacy APM-103 realizations of capabilities 343 and 344 if B2-CAPMAP-OWNER resolves BPA as canonical."
-    finding: "On 2026-06-02 capabilities 343 (BUSINESS-CAPABILITY-MAP) and 344 (REFERENCE-FRAME-LIBRARY) were linked to BPA-CAPABILITY-MAP (221). They also retain their pre-existing realizations on APM-PORTFOLIO-REGISTRY (module 103) via domain_module_capabilities rows 190 and 191. The 5 previously-unrealized BPA capabilities (338, 339, 340, 341, 342) are now all realized by BPA modules. Double-realization of 343/344 is intentional for now; DELETE DMC rows 190/191 only if B2-CAPMAP-OWNER resolves BPA as the canonical owner of capability mapping."
+    finding: "On 2026-06-02 capabilities 343 (BUSINESS-CAPABILITY-MAP) and 344 (REFERENCE-FRAME-LIBRARY) were linked to BPA-CAPABILITY-MAP (221). They also retain their pre-existing realizations on APM-PORTFOLIO-REGISTRY (module 103) via domain_module_capabilities rows 190 and 191. Double-realization of 343/344 is intentional for now; DELETE DMC rows 190/191 only if B2-CAPMAP-OWNER resolves BPA as the canonical owner of capability mapping."
     blocked_by:
       - type: user_decision
         ref: B2-CAPMAP-OWNER
     affected_entities:
       - BUSINESS-CAPABILITY-MAP
       - REFERENCE-FRAME-LIBRARY
-  - id: B1B-S3
-    summary: "PATCH source_domain_module_id on 8 outbound BPA handoffs (now derivable post-modularization)."
-    finding: "B10b: all 8 outbound handoffs (180, 181, 182, 184, 783, 784, 785, 786) have source_domain_module_id=null. Derivation B10b is the module in source_domain_id holding trigger_events.data_object_id with the strongest role. As of 2026-06-02 those holders exist: business_process_models (247) -> BPA-PROCESS-REPO (220); value_streams (249) and process_simulation_runs (250) -> BPA-VALUE-STREAM (222); business_capability_maps (248) -> BPA-CAPABILITY-MAP (221, embedded_master). Out of scope for the modules-only pass; a follow-up handoff backfill pass owes these PATCHes."
-    blocked_by:
-      - type: catalog_addition
-        scope: modules
-        trigger: "handoff source-FK backfill pass (out of modularization scope)"
-    affected_handoffs:
-      - handoff_id: 180
-        direction: outbound
-        source_domain: BPA
-        target_domain: PROC-MIN
-        trigger_event: process_model.published
-        payload: business_process_models
-        null_field: source_domain_module_id
-      - handoff_id: 181
-        direction: outbound
-        source_domain: BPA
-        target_domain: APM
-        trigger_event: capability_map.updated
-        payload: business_capability_maps
-        null_field: source_domain_module_id
-      - handoff_id: 182
-        direction: outbound
-        source_domain: BPA
-        target_domain: APM
-        trigger_event: process_model.published
-        payload: business_process_models
-        null_field: source_domain_module_id
-      - handoff_id: 184
-        direction: outbound
-        source_domain: BPA
-        target_domain: PROD-MGMT
-        trigger_event: value_stream.bottleneck_identified
-        payload: value_streams
-        null_field: source_domain_module_id
-      - handoff_id: 783
-        direction: outbound
-        source_domain: BPA
-        target_domain: PROC-MIN
-        trigger_event: process_simulation_run.completed
-        payload: process_simulation_runs
-        null_field: source_domain_module_id
-      - handoff_id: 784
-        direction: outbound
-        source_domain: BPA
-        target_domain: PROD-MGMT
-        trigger_event: process_simulation_run.bottleneck_identified
-        payload: process_simulation_runs
-        null_field: source_domain_module_id
-      - handoff_id: 785
-        direction: outbound
-        source_domain: BPA
-        target_domain: SPM
-        trigger_event: process_simulation_run.completed
-        payload: process_simulation_runs
-        null_field: source_domain_module_id
-      - handoff_id: 786
-        direction: outbound
-        source_domain: BPA
-        target_domain: WORK-MGMT
-        trigger_event: process_simulation_run.bottleneck_identified
-        payload: process_simulation_runs
-        null_field: source_domain_module_id
-  - id: B1B-S4
-    summary: "PATCH target_domain_module_id on 3 inbound (+3 outbound) BPA handoffs."
-    finding: "B10b: inbound rows where BPA is target (183, 740, 741) all have target_domain_module_id=null on the BPA side. Post-2026-06-02 these resolve once BPA's consumer/contributor DMDO rows on the payload masters exist; today BPA holds master on 247 (BPA-PROCESS-REPO) so 183 (payload business_process_models) targets 220, but 740 (discovered_process_models 580) and 741 (process_variants 582) need a BPA consumer/contributor DMDO declaration that is out of this modules-only scope. Outbound rows 180 (PROC-MIN), 783 (PROC-MIN), 785 (SPM) still carry target_domain_module_id=null, resolved on PROC-MIN B10b and SPM B10b."
-    blocked_by:
-      - type: catalog_addition
-        scope: modules
-        trigger: "BPA consumer/contributor DMDO declarations on 580/582 (out of modularization scope)"
-      - type: domain_audit
-        blocking_domain: PROC-MIN
-        milestone: B10b-target-fk-backfill
-      - type: domain_audit
-        blocking_domain: SPM
-        milestone: B10b-target-fk-backfill
-    affected_handoffs:
-      - handoff_id: 183
-        direction: inbound
-        source_domain: PROC-MIN
-        target_domain: BPA
-        trigger_event: conformance.deviation_detected
-        payload: business_process_models
-        null_field: target_domain_module_id
-      - handoff_id: 740
-        direction: inbound
-        source_domain: PROC-MIN
-        target_domain: BPA
-        trigger_event: discovered_process_model.published
-        payload: discovered_process_models
-        null_field: target_domain_module_id
-      - handoff_id: 741
-        direction: inbound
-        source_domain: PROC-MIN
-        target_domain: BPA
-        trigger_event: process_variant.identified
-        payload: process_variants
-        null_field: target_domain_module_id
-      - handoff_id: 180
-        direction: outbound
-        source_domain: BPA
-        target_domain: PROC-MIN
-        trigger_event: process_model.published
-        payload: business_process_models
-        null_field: target_domain_module_id
-      - handoff_id: 783
-        direction: outbound
-        source_domain: BPA
-        target_domain: PROC-MIN
-        trigger_event: process_simulation_run.completed
-        payload: process_simulation_runs
-        null_field: target_domain_module_id
-      - handoff_id: 785
-        direction: outbound
-        source_domain: BPA
-        target_domain: SPM
-        trigger_event: process_simulation_run.completed
-        payload: process_simulation_runs
-        null_field: target_domain_module_id
-  - id: B1B-S5
-    summary: "Author 2-4 intra-domain handoffs rows on BPA now that it has 3 modules (B9b coverage)."
-    finding: "B9b requires intra-domain handoff coverage now that BPA has >=2 modules (220, 221, 222). Expected pairs from prior analysis: BPA-CAPABILITY-MAP (221) -> BPA-PROCESS-REPO (220) on capability_map.updated; BPA-VALUE-STREAM (222) -> BPA-PROCESS-REPO (220) on value_stream.bottleneck_identified; BPA-VALUE-STREAM (222) -> BPA-CAPABILITY-MAP (221) on simulation feedback. Use integration_pattern='lifecycle_progression' default and friction_level='low' default. Out of the modules-only scope; a handoff-authoring pass owes these inserts."
-    blocked_by:
-      - type: catalog_addition
-        scope: modules
-        trigger: "intra-domain handoff authoring pass (out of modularization scope)"
-  - id: B1B-S6
-    summary: "Author 6 domain_aliases rows for BPA discoverability."
-    finding: "BPA has zero domain_aliases rows. Catalog search and per-domain skill triggers miss obvious synonyms. Proposed aliases: 'business process management', 'BPM', 'process modeling', 'process architecture', 'BPMN authoring', 'process design'. Verify domain_aliases column shape before drafting the loader (data_object_aliases uses alias_name; domain_aliases may differ)."
-    blocked_by:
-      - type: user_decision
-        ref: B2-DOMAIN-ALIASES
-        reason: "Excluded from prior technical passes; needs user re-prioritization."
-  - id: B1B-B4
-    summary: "Author lifecycle states on 247, 249, 250 and re-evaluate pattern flags on all 4 BPA masters."
-    finding: "B12 fails on 3 of 4 masters (only 248 has states, anchored to APM-103). Proposed states: 247 business_process_models draft -> in_review -> published -> retired; 249 value_streams in_discovery -> baselined -> archived; 250 process_simulation_runs queued -> running -> completed | failed. Anchor state.domain_module_id to the new BPA module per master: 247 -> 220, 249 -> 222, 250 -> 222. Pattern-flag re-evaluation (B2-PATTERN-FLAGS) needs user confirmation before PATCH. Out of the modules-only scope (entity creation)."
-    blocked_by:
-      - type: catalog_addition
-        scope: modules
-        trigger: "lifecycle-state authoring pass (out of modularization scope)"
-      - type: user_decision
-        ref: B2-PATTERN-FLAGS
-    affected_masters:
-      - data_object_id: 247
-        name: business_process_models
-        target_module_id: 220
-        workflow: "draft to published to retired"
-      - data_object_id: 249
-        name: value_streams
-        target_module_id: 222
-        workflow: "in_discovery to baselined to archived"
-      - data_object_id: 250
-        name: process_simulation_runs
-        target_module_id: 222
-        workflow: "queued to running to completed or failed"
 b2:
   - id: B2-CAPMAP-OWNER
     summary: "Pick the canonical owner of business_capability_maps (248): APM (current) or relocate to BPA-CAPABILITY-MAP (221)."
@@ -214,15 +53,15 @@ b2:
       - "248 business_capability_maps: has_single_approver=true (capability-map publication routes to one architect lead); others stay false."
       - "250 process_simulation_runs: has_submit_lock=true (queued runs lock at start); others stay false."
       - "All 12 cells stay false (decline the audit's positive evaluation)."
-    why: "Rule 12 requires positive re-evaluation; PATCHes must wait for confirmation. Gates B1B-B4 flag-flip clause."
-  - id: B2-DOMAIN-ALIASES
-    summary: "Approve drafting 6 domain_aliases rows for BPA."
-    question: "Author the 6 proposed BPA domain_aliases (business process management, BPM, process modeling, process architecture, BPMN authoring, process design)?"
+    why: "Rule 12 requires positive re-evaluation; flipping a pattern flag from its default is a destructive overwrite (Rule #21) and must wait for confirmation. Lifecycle states are now authored on all 4 masters (2026-06-13), so the flags can be evaluated against real workflows."
+  - id: B2-B9D-RETAG
+    summary: "Re-point (or delete) the BPA handoff APQC tags now that BPA realizes the carried processes (supersedes the prior name-an-owner items B2-B9D-OWN-414 / B2-B9D-OWN-1708)."
+    question: "Now that BPA realizes Publish processes (13.1.3.5, pid 1644) and Analyze processes (13.1.3.2, pid 1641) with named owners, how should the existing BPA handoff process tags be corrected? Each option overwrites or deletes existing handoff_processes rows, so it needs your sign-off."
     options:
-      - "Approve all 6."
-      - "Approve a subset (name which)."
-      - "Decline."
-    why: "Excluded from prior technical passes; needs user re-prioritization. Verify the domain_aliases column shape before drafting the loader."
+      - "ROLL-UP re-point: handoff_processes 551/553/557/559 (handoffs 180/182/783/785, currently tagged 13.1 'Manage business processes' pid 78) -> 13.1.3.5 'Publish processes' (pid 1644), the realized finer-grain code. Makes them RESOLVED."
+      - "MIS-TAG on outbound 184/784/786 (handoff_processes 554/558/560, currently tagged 13.4.3.2 'Reengineer business processes and systems' pid 1708): either re-point to 13.1.3.2 'Analyze processes' (pid 1641), OR keep 1708 as genuine unrealized reengineering work and give it a Responsible/Accountable (Process Architect 77 / Process Owner 79 now exist). 'Reengineer' and 'Analyze' are different activities, so this is a judgment call, not a mechanical re-point."
+      - "Leave all tags as-is."
+    why: "After authoring the publish/analyze gates + RACI in the 2026-06-13 pass, the B9d re-run reclassified the former ORPHANs (414, 1708) as MIS-TAGs and pid 78 as ROLL-UP: the carried entities ARE now realized. The remaining decision is a destructive handoff_processes edit (Rule #21: surfaced for sign-off). Note: handoff 183's tag (handoff_processes 102, pid 414, proposal_source discovery_substring) is PROC-MIN-authored, so its re-point/delete is PROC-MIN's source edit, not BPA's."
   - id: B2-EA-SOLUTION-SPLIT
     summary: "Decide solution coverage split with the queued EA candidate."
     question: "How should the 4 BPA-and-EA solutions be coverage-split if EA promotes?"

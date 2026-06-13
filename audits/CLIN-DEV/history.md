@@ -369,3 +369,35 @@ Six flagships, 2025-2026 product docs: Nuvolo Connected Workplace for Healthcare
 - `audits/CLIN-DEV/history.md` (this section)
 
 No DB inserts / updates / deletes. No record_status stamped. No JWT-audience errors. Status stays feedback_needed / next_action_by user.
+
+## 2026-06-13 - Audit (agent-finish pass: B9d execution)
+
+State on entry: `feedback_needed` / `next_action_by: agent`. The only agent-actionable open item was `B1A-B9D-VERIFY` (B9d had never run on this domain); everything else open is a real user decision (the b2 set, already grounded in the 2026-06-08 Phase 0 study) or blocked on the B2-S2 module-split decision (the b1b cascade + B1A-BUILD) or a report-only defer (B1A-S11c) or a non-blocking idea (b3). No `a-CLIN-DEV.md` present, so the user has not yet answered the standing q-file.
+
+### B9d (handoff payload realization, both directions) - EXECUTED
+
+Ran `bun run scripts/analytics/b9d_resolver.ts CLIN-DEV --write`. CLIN-DEV publishes 6 outbound handoffs, 3 carry a `handoff_processes` tag; 0 inbound. The resolver classified 3 (process, owner) findings across the boundaries:
+
+| Finding | Process | Owner | Handoff | Disposition |
+|---|---|---|---|---|
+| ORPHAN | pid 1556 `10.3.3.1 Perform preventative asset maintenance` | ITSM (unbuilt) | 898 (CLIN-DEV→ITSM, payload service_incidents) | Additive owner-side edit written into `audits/ITSM`: new b2 `B2-B9D-OWN-1556` + `q-ITSM.md` q7. ITSM moved to `next_action_by: user`. |
+| RE-TAG | pid 353 `10.3.3 Perform asset maintenance` → child 1556 | ITSM | 893 (CLIN-DEV→ITSM, payload service_incidents) | Destructive source re-point (overwrites an existing handoff_processes.process_id on a CLIN-DEV-authored row). Surfaced as new b2 `B2-S6b` + q-file q13. Not applied. |
+| UNOWNED | pid 199 `6.2.5 Report incidents and risks to regulatory bodies` | (none at module grain) | 895 (CLIN-DEV→GRC, payload device_incident_reports) | Artifact of CLIN-DEV being unbuilt: `device_incident_reports` (615) IS a CLIN-DEV master in legacy `domain_data_objects` but has no `domain_module_data_objects` master row because the domain has 0 modules, so it reads owner-less at module grain. Self-resolves once B1A-BUILD ships modules (gated on B2-S2). No new action. |
+
+The RE-TAG carries a genuine judgment the user must make, not a mechanical fix: handoff 893 fires on `work_order.opened` (frequently a corrective work order), whereas the sibling 898 fires on `calibration.due` (genuinely preventative). The coarse parent on 893 may be deliberate. q13 surfaces both sides.
+
+No catalog writes, no DELETEs, no `record_status` changes. The only DB-touching work was reads. Owner-side edits are local audit-file backlog entries (the B9d band's documented cross-domain routing, state.yaml hygiene carve-out (b)), not ITSM catalog data.
+
+### state.yaml changes
+- Removed `B1A-B9D-VERIFY` (resolved, B9d ran). No agent-actionable items remain.
+- Added `B2-S6b` (B9d RE-TAG of handoff 893; destructive source re-point; q13).
+- `next_action_by: agent → user` (the q-file is the gate; nothing left for the agent until the user answers or the build is unblocked by B2-S2).
+- `last_audit: 2026-06-08 → 2026-06-13`.
+
+### Files written
+- `audits/CLIN-DEV/state.yaml` (B1A-B9D-VERIFY removed, B2-S6b added, next_action_by/last_audit updated, dated note block)
+- `audits/CLIN-DEV/q-CLIN-DEV.md` (q13 added, agent-map footer updated)
+- `audits/CLIN-DEV/history.md` (this section)
+- `audits/ITSM/state.yaml` + `audits/ITSM/q-ITSM.md` (additive owner-side B9d routing: B2-B9D-OWN-1556 / q7), written by the resolver
+
+No DB inserts/updates/deletes. No record_status stamped. No JWT-audience errors. Status stays `feedback_needed`, now correctly `next_action_by: user`.

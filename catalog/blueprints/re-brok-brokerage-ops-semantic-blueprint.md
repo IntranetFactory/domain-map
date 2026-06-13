@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "2.0"
+blueprint_version: "3.0"
 license: MIT
 system_name: RE-BROK-BROKERAGE-OPS
 system_description: Brokerage Oversight and Commission Management
@@ -12,7 +12,7 @@ domain_modules:
 domain_code: RE-BROKERAGE
 related_modules: [re-brok-agent-ops]
 persona: []
-created_at: 2026-06-12
+created_at: 2026-06-13
 ---
 
 # Brokerage Oversight and Commission Management
@@ -53,11 +53,11 @@ flowchart TD
 
 ## 3. Entities catalog
 
-| # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
-| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `commission_splits` | Commission Split | Commission Splits | master | operational_workflow | - | - | required | submit_lock, single_approver | `:manage` | - |
-| 2 | `disclosure_documents` | Disclosure Document | Disclosure Documents | embedded_master | operational_workflow | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock, single_approver | `:manage` | - |
-| 3 | `real_estate_transactions` | Real Estate Transaction | Real Estate Transactions | embedded_master | operational_workflow | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock | `:manage` | - |
+| # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | pattern flags | entity_type | write tier | notes |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `commission_splits` | `commission_splits` | Commission Split | Commission Splits | master | - | - | required | submit_lock, single_approver | operational_workflow | `:manage` | - |
+| 2 | `disclosure_documents` | `disclosure_documents` | Disclosure Document | Disclosure Documents | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock, single_approver | operational_workflow | `:manage` | - |
+| 3 | `real_estate_transactions` | `real_estate_transactions` | Real Estate Transaction | Real Estate Transactions | embedded_master | `re-brok-agent-ops` | Real Estate Agent Operations | required | personal_content, submit_lock | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 

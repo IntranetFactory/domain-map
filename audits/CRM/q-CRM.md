@@ -76,4 +76,44 @@ a7:
 
 ---
 
-<!-- agent map, ignore: q1=B3-CRM-COMPETITORS+B3-CRM-COMPETITOR-INTEL+B3-CRM-LEAD-RULES+B3-CRM-ACCOUNT-HIERARCHIES+B3-CRM-SALES-PLAYBOOKS+B3-CRM-SALES-TERRITORIES q2=B2-CRM-FORECAST-SPLIT+B2-CRM-MKTLIST-SPLIT q3=B3-CRM-FORECAST-CONSUMER q4=B3-CRM-SALES-QUOTAS+B3-CRM-COMMISSION+B3-CRM-PARTNER-REL q5=B3-CRM-REGULATIONS q6=B2-B9D-OWN-3 q7=B2-B9D-OWN-929 | domain_id=69 -->
+q8: Master Data Management forwards customer to Customer Relationship Management to manage product and service master data, but Customer Relationship Management does not yet have anyone assigned to manage product and service master data, so this step has no owner. How should it be handled?
+- a) Record it now as work Customer Relationship Management owns, and assign a named owner once Customer Relationship Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a8:
+
+---
+
+q9: Social Media Management forwards customer to Customer Relationship Management to analyze and respond to customer insight, but Customer Relationship Management does not yet have anyone assigned to analyze and respond to customer insight, so this step has no owner. How should it be handled?
+- a) Record it now as work Customer Relationship Management owns, and assign a named owner once Customer Relationship Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a9:
+
+---
+
+q10: Customer Data Platform forwards customer to Customer Relationship Management to manage customers and accounts, but Customer Relationship Management does not yet have anyone assigned to manage customers and accounts, so this step has no owner. How should it be handled?
+- a) Record it now as work Customer Relationship Management owns, and assign a named owner once Customer Relationship Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a10:
+
+---
+
+q11: Marketing Automation forwards lead to Customer Relationship Management to identify or receive leads or opportunities, but Customer Relationship Management does not yet have anyone assigned to identify or receive leads or opportunities, so this step has no owner. How should it be handled?
+- a) Record it now as work Customer Relationship Management owns, and assign a named owner once Customer Relationship Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
+<!-- agent map, ignore: q1=B3-CRM-COMPETITORS+B3-CRM-COMPETITOR-INTEL+B3-CRM-LEAD-RULES+B3-CRM-ACCOUNT-HIERARCHIES+B3-CRM-SALES-PLAYBOOKS+B3-CRM-SALES-TERRITORIES q2=B2-CRM-FORECAST-SPLIT+B2-CRM-MKTLIST-SPLIT q3=B3-CRM-FORECAST-CONSUMER q4=B3-CRM-SALES-QUOTAS+B3-CRM-COMMISSION+B3-CRM-PARTNER-REL q5=B3-CRM-REGULATIONS q6=B2-B9D-OWN-3 q7=B2-B9D-OWN-929 q8=B2-B9D-OWN-115 q9=B2-B9D-OWN-138 q10=B2-B9D-OWN-148 q11=B2-B9D-OWN-708 | domain_id=69 -->

@@ -11,7 +11,7 @@
 schema_version: 2
 domain: WSC
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-07"
 
 b1a:
@@ -114,6 +114,16 @@ b2_superseded:
   - id: B2-S3
     summary: "SUPERSEDED 2026-06-06 (per-domain-skill restoration). Rule #15 notes-pollution on 6 skill_tools rows across WSC system skills 174/175/176."
     note: "skill_tools is DROPPED under the per-domain-skill restoration (see supersession header). The notes-pollution question on skill_tools rows is moot: the table is retired and per-module tool requirements move to domain_module_tools. No action; retained for provenance only. Tool re-authoring is tracked in audits/_modularization-backlog.md."
+  - id: B2-B9D-OWN-928
+    summary: "Workstream Collaboration: name an owner for \"Respond to customer problems, requests, and inquiries\" (no one is responsible for it today)"
+    question: |
+      Contact Center as a Service forwards chat thread to Workstream Collaboration to respond to customer problems, requests, and inquiries, but Workstream Collaboration does not yet have anyone assigned to respond to customer problems, requests, and inquiries, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Workstream Collaboration owns, and assign a named owner once Workstream Collaboration sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Workstream Collaboration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-WSC.md q11.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-S1
