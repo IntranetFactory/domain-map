@@ -9,9 +9,9 @@ q1: (answer this first) How should GRC be split into modules (the sub-areas of t
 
 - a) Three modules: Risk Management (compliance risks and risk assessments); Compliance Management (obligations, controls, control assessments, evidence, audit issues, remediation plans); Policy and Attestation (policies and attestations).
 - b) Two modules: Risk Management, and a combined Compliance and Policy module.
-- c) Four modules: same as (a) but split Evidence and Audit (evidence, audit issues, remediation plans) out of Compliance Management into its own module.
+- c) Four modules: same as (a) but add a separate Audit module (audit issues, control assessments/tests, remediation plans) alongside the other three.
 
-Recommended: a. The three-module split is how the flagship GRC suites (ServiceNow IRM, Archer, MetricStream, OneTrust, AuditBoard) present the product, and it keeps each area small enough to own cleanly. This choice drives every module, lifecycle, persona, and per-module link below it, so it unlocks the rest of the build.
+Recommended: a (with c as a defensible alternative). Fresh vendor research (see .tmp_deploy/GRC-phase0-2026-06-13.md) shows the leaders package GRC into named per-area modules: ServiceNow IRM ships Risk Management, Policy and Compliance Management, and Audit Management; Archer ships separate Risk, Policy Program Management, and Audit Management modules; MetricStream, OneTrust, and Riskonnect each keep Risk, Compliance, Policy Management, and Internal Audit as distinct products. Option (b) is rejected because only ServiceNow co-packages policy with compliance: every other flagship keeps Policy as its own module. Option (c) is legitimate only if the fourth module is Audit (which every leader sells as a named product), NOT an "Evidence" module: no flagship sells Evidence as a standalone module. The three-module split (a) is the cleanest mirror that keeps each area small; choose (c) if you want Audit broken out to match the leaders' Internal Audit / Audit Management products. This choice drives every module, lifecycle, persona, and per-module link below it, so it unlocks the rest of the build.
 
 a1:
 
@@ -22,7 +22,7 @@ q2: Should GRC keep its link to the Compliance Training capability, or hand that
 - a) Keep it, and realize it through the Policy and Attestation module.
 - b) Remove the link; GRC keeps only the capabilities it actually masters, and LMS owns training delivery.
 
-Recommended: b. None of the flagship GRC vendors own training delivery; they all integrate with LMS and consume the attestation completion record as evidence. This also gates the build, so it needs your call before modules land.
+Recommended: b. Fresh vendor research (see .tmp_deploy/GRC-phase0-2026-06-13.md) confirms none of the flagship GRC vendors ship a training-delivery or courseware module: OneTrust, Archer, and ServiceNow each own the policy attestation / acknowledgement record and consume training-completion as inbound evidence, integrating with an LMS for the actual delivery. GRC should keep only the attestation / completion link and hand training delivery to LMS. This also gates the build, so it needs your call before modules land.
 
 a2:
 
@@ -125,7 +125,7 @@ a12:
 
 q13: Some vendor stacks split audit findings (owned by Audit) from audit issues (owned by GRC), with an edge between them. Should GRC keep audit issues as its own master and link to an Audit-owned findings object? (yes/no)
 
-Recommended: yes in principle, but it depends on the Audit domain's own audit landing first. Additive and non-blocking.
+Recommended: yes in principle, but it depends on the Audit domain's own audit landing first. Fresh vendor research (see .tmp_deploy/GRC-phase0-2026-06-13.md) shows the market is genuinely split: ServiceNow and OneTrust merge findings into a single Issue object (findings auto-generate Issues, no distinct finding master), while Archer, AuditBoard, and Workiva keep a distinct audit Finding / Observation upstream of a cross-domain Issue. The catalog's single audit_issues matches the merge model and is defensible as-is; a distinct audit_findings is a specialist-class enhancement, not a correctness fix. Additive and non-blocking.
 
 a13:
 

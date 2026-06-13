@@ -603,3 +603,54 @@ H1: 19/19 cross-domain handoffs tagged (06-06). B10b: 0 NULL module FKs on the M
 - https://adenin.semantius.ai/domain_map/data_object_relationships
 - https://adenin.semantius.ai/domain_map/data_object_aliases
 - https://adenin.semantius.ai/domain_map/domain_roles
+
+## 2026-06-13 - B9d handoff-payload realization (both directions)
+
+Trigger: "audit MA / run B9d". Continued from `state.yaml` (sole open agent item was
+`B1A-B9D-VERIFY`). Tenant confirmed `adenin` (`getCurrentUser` -> `ma@adenin.com`). Executed via the
+committed resolver `scripts/analytics/b9d_resolver.ts MA --dry-run` then `--write`. No catalog/DB
+writes: B9d's additive output is owner-side `b2` + `q-` edits to local audit files; the destructive
+re-points are held for sign-off.
+
+Resolver classified all 23 boundary tags (both directions) into 16 distinct (process, owner)
+findings: **11 ORPHAN, 5 RE-TAG (ROLL-UP)**. No MIS-TAG (every payload's APQC category fits an
+endpoint family). No RESOLVED-with-persona yet (MA has personas but no `process_id`-wired gates, so
+nothing is realized).
+
+### ORPHANs routed to owners (additive b2 + q written into each owner's files)
+
+| process | owner | payload(s) / handoffs |
+|---|---|---|
+| 23 Develop and manage marketing plans | HCMS (unbuilt) | content_entries / 94 |
+| 23 Develop and manage marketing plans | LOYALTY (unbuilt) | loyalty_members / 232 |
+| 23 Develop and manage marketing plans | B2C-COMM (built) | carts, checkouts, coupons / 327, 328, 506 |
+| 132 Design and manage customer loyalty program | CDP (unbuilt) | audience_segments / 78 |
+| 136 Develop and manage promotional activities | CDP (unbuilt) | customer_events / 74 |
+| 147 Manage leads/opportunities | **MA (built)** | lead_scores / 510 |
+| 665 Execute promotional activities | **MA (built)** | marketing_campaigns / 90, 91 |
+| 665 Execute promotional activities | DXP (unbuilt) | digital_experiences / 808 |
+| 708 Identify/receive leads/opportunities | CRM (unbuilt) | crm_leads / 508 |
+| 709 Validate and qualify leads/opportunities | CRM (unbuilt) | crm_leads / 60, 507 |
+| 1862 Collect and merge ... customer information | CRM (unbuilt) | crm_contacts / 85 |
+
+Owner-file edits applied (additive, `record_status` untouched): new b2+q in HCMS, LOYALTY, B2C-COMM,
+DXP, and CRM (B2-B9D-OWN-709, -1862); CDP (-132, -136) and CRM (-708) items already existed. The two
+**MA-owned** ORPHANs were written into MA's own files as `B2-B9D-OWN-147` (candidate R/A: Marketing
+Operations Manager, the only MA persona reaching MA-LEAD-SCORING) and `B2-B9D-OWN-665` (candidate R/A:
+Campaign Manager, owns campaign execution in MA-CAMPAIGN-AUTHORING). q7/q8 wording de-templated to
+name those personas. On the user's answer, additive `process_raci` is authored at `record_status='new'`.
+
+### RE-TAG (ROLL-UP) re-points HELD for sign-off (destructive)
+
+5 MA-published handoff tags carry a coarse APQC process while a finer one for the same entity exists:
+69 (3.3 row 1025 -> 3.3.4 / on crm_leads slice 3.5.1.3), 74 (3.3 row 1026 -> 3.3.4), 84 (3.5.1 row
+1022 -> 3.5.1.3), 508 (3.3.4 row 951 -> 3.5.1.3), 509 (3.5.1 row 1024 -> 3.5.1.3). Each is a
+destructive overwrite of an existing `handoff_processes.process_id` (Rule #1 / #21), so surfaced as
+`B2-B9D-RETAG-MA-SOURCE` (q-MA.md q9), not applied. The two non-MA-source RE-TAG rows (DXP-source 808/
+811) belong to DXP and are not MA's to edit.
+
+### state.yaml hygiene
+
+`B1A-B9D-VERIFY` EXECUTED and removed; b1a/b1b now empty. `next_action_by` -> `user`. All remaining
+items are user decisions (b2: H1-78, the 2 B9d ownership picks, the RE-TAG sign-off, plus the standing
+record_status batch) or parked b3 ideas. No agent-executable work remains on MA.

@@ -90,6 +90,26 @@ a8:
 
 ---
 
+q10: Identity Governance and Administration forwards enrolled device to Unified Endpoint Management to manage IT user authorization, but Unified Endpoint Management does not yet have anyone assigned to manage IT user authorization, so this step has no owner. How should it be handled?
+- a) Record it now as work Unified Endpoint Management owns, and assign a named owner once Unified Endpoint Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Unified Endpoint Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a10:
+
+---
+
+q11: Identity Governance and Administration forwards device compliance result to Unified Endpoint Management to manage IT user authentication mechanisms, but Unified Endpoint Management does not yet have anyone assigned to manage IT user authentication mechanisms, so this step has no owner. How should it be handled?
+- a) Record it now as work Unified Endpoint Management owns, and assign a named owner once Unified Endpoint Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Unified Endpoint Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
 ## Optional (will not hold up the build)
 
 q9: Ten extra device-management entities show up across the flagship UEM vendors (device groups, device scripts, device actions and command logs, reusable enrollment profiles, device certificates, per-device user assignments, per-policy assignment results, telemetry streams, remote-assist sessions, and inventory snapshots). Should I research and add the ones that hold up? (yes/no)
@@ -100,4 +120,4 @@ a9:
 
 ---
 
-<!-- agent map, ignore: q1=B2-CONFIG-APPS-SPLIT q2=B2-CATALOG-UX q3=B2-VERBS q4=B2-PATTERN-FLAGS.personalcontent q5=B2-PATTERN-FLAGS.tokenlock q6=B2-PATTERN-FLAGS.policylock q7=B2-COVERAGE q8=B2-REGULATIONS q9=B3-DEVICE-GROUPS+B3-DEVICE-SCRIPTS+B3-DEVICE-ACTIONS+B3-ENROLLMENT-PROFILES+B3-DEVICE-CERTIFICATES+B3-DEVICE-USERS+B3-POLICY-ASSIGNMENT-RESULTS+B3-DEVICE-TELEMETRY-STREAMS+B3-DEVICE-REMOTE-SESSIONS+B3-DEVICE-INVENTORY-SNAPSHOTS | domain_id=86 -->
+<!-- agent map, ignore: q1=B2-CONFIG-APPS-SPLIT q2=B2-CATALOG-UX q3=B2-VERBS q4=B2-PATTERN-FLAGS.personalcontent q5=B2-PATTERN-FLAGS.tokenlock q6=B2-PATTERN-FLAGS.policylock q7=B2-COVERAGE q8=B2-REGULATIONS q9=B3-DEVICE-GROUPS+B3-DEVICE-SCRIPTS+B3-DEVICE-ACTIONS+B3-ENROLLMENT-PROFILES+B3-DEVICE-CERTIFICATES+B3-DEVICE-USERS+B3-POLICY-ASSIGNMENT-RESULTS+B3-DEVICE-TELEMETRY-STREAMS+B3-DEVICE-REMOTE-SESSIONS+B3-DEVICE-INVENTORY-SNAPSHOTS q10=B2-B9D-OWN-1196 q11=B2-B9D-OWN-1197 | domain_id=86 -->

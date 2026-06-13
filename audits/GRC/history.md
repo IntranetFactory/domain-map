@@ -316,3 +316,33 @@ Stale-snapshot corrections found against live: handoff **842 is already tagged**
 ### JWT errors
 
 None encountered.
+
+## 2026-06-13, B9d handoff payload realization (both directions) + Phase 0 grounding
+
+Resolved the carried `B1A-B9D-VERIFY` item. Ran the committed resolver `scripts/analytics/b9d_resolver.ts GRC` in dry-run, then `--write`, classifying every handoff payload on every GRC boundary in BOTH directions (65 boundary tags, 52 distinct (process, owner) findings).
+
+### B9d verdicts
+
+- **RESOLVED (8):** payload exactly realized (gated process + RACI). No action. Includes LMS compliance-training (proc 1829), CLM/ITAM/DSPM/VSDP boundaries, and the GRC->HRSD / GRC->LMS / GRC->AUDIT obligation flows.
+- **REFERENCE-READ (1):** ECM `document_classifications` (proc 430), reference/config data; one-line note added to ECM state.yaml.
+- **RE-TAG (2, destructive, NOT applied, surfaced for sign-off):** handoff 248 GRC->ITSM coarse tag 9.8 -> more specific 11.3.1 "Create remediation plans"; handoff 338 ACCT-PRACT-MGMT->GRC coarse 9.9.2 -> 9.9.2.2 "Prepare tax returns". Both re-point an existing `handoff_processes` row, so they need user sign-off (Rule #1 / Rule #21).
+- **ORPHAN (21):** real missing work with an identified owner that masters the carried entity. Per the B9d band, each was written as an additive `b2` item (`B2-B9D-OWN-<pid>`) plus a plain-language q into the OWNER domain's state.yaml + q-file (cross-domain carve-out (b)). Owners touched: FIN (2), FSQM (2), APM (2), PAYROLL (2), FOOD-TRACE (2 incl. pre-existing), DAIRY-MGMT, VET-PRACT-MGMT, RE-BROKERAGE, INV-MGMT, REMOTE-ACCESS, LEGAL-PRACT-MGMT, IGA, ITSM, HAM, TELEMATICS, ACCT-PRACT-MGMT. Several already existed from prior runs (FOOD-TRACE, DAIRY-MGMT, APM, ACCT-PRACT-MGMT pid 1505, FIN pid 1379) and were left as-is. No catalog writes, no `record_status` flips.
+- **UNOWNED (20):** carried entity has no `master` row anywhere in the catalog, so no owner can be assigned. Surfaced on the sender per the band; NOT written. These map to entities like `audit_issues`, `compliance_controls`, `risk_assessments`, `audit_findings`, `follow_up_actions`, `audit_plans`, etc. that GRC participates in but that have no master row, which is consistent with GRC being UNBUILT (zero `domain_modules`, zero `domain_module_data_objects` master rows): once GRC is modularized (B1B-S1) and its masters land at module grain, most of these resolve.
+
+### Phase 0 (Rule #22 forcing step for the two market-shape gate questions)
+
+Produced a fresh vendor-surface report at `.tmp_deploy/GRC-phase0-2026-06-13.md` (flagship enumeration, union surface matrix, modularization-by-vendor-packaging analysis). Findings:
+
+- **Module split (B3-2):** the 3-module split (Risk / Compliance / Policy-and-Attestation) best mirrors the leaders' named products (ServiceNow IRM = Risk Management + Policy and Compliance + Audit Management; Archer = separate Risk / Policy Program Management / Audit; MetricStream, OneTrust, Riskonnect each keep Risk, Compliance, Policy, Internal Audit distinct). The 2-module combined Compliance-and-Policy is rejected because only ServiceNow co-packages those two. The legitimate 4th module is **Audit** (a named product across all leaders), NOT "Evidence", so option (c)'s wording was corrected in q-GRC.md.
+- **Compliance Training capability (B2-5):** confirmed hand-to-LMS. No flagship GRC vendor ships training delivery; they own the attestation/acknowledgement record and consume training-completion as evidence.
+- **audit_issues vs audit_findings (B3-3):** market is genuinely split (ServiceNow/OneTrust merge; Archer/AuditBoard/Workiva keep a distinct Finding). Single `audit_issues` is defensible; a distinct `audit_findings` is a specialist enhancement, not a fix.
+
+q-GRC.md refreshed: q1 (split) corrected and grounded inline with the named-vendor packaging evidence; q2 (training) and q13 (findings) grounded inline with the Phase 0 citations.
+
+### State
+
+`B1A-B9D-VERIFY` resolved and removed from state.yaml. No agent-executable work remains: the build is gated on B3-2 + B2-5 (user decisions), the APQC promotion and plural-label rename are destructive steps needing sign-off, and the rest of the cascade (B1B-S1 onward) is blocked behind modularization. `next_action_by` set to `user`; `status` stays `feedback_needed`; `last_audit` -> 2026-06-13.
+
+### JWT errors
+
+None encountered.

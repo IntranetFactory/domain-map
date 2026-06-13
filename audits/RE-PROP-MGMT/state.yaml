@@ -200,6 +200,16 @@ b2:
     why: |
       Recording it now means that the moment Residential Property Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-RE-PROP-MGMT.md q12.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1627
+    summary: "Residential Property Management: name an owner for \"Receive work product and manage/monitor case and work performed\" (no one is responsible for it today)"
+    question: |
+      Legal Service Delivery forwards tenant to Residential Property Management to receive work product and manage or monitor case and work performed, but Residential Property Management does not yet have anyone assigned to receive work product and manage or monitor case and work performed, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Residential Property Management owns, and assign a named owner once Residential Property Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Residential Property Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-RE-PROP-MGMT.md q13.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-OWNER-DISTRIBUTIONS

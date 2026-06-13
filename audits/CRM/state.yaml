@@ -128,6 +128,36 @@ b2:
     why: |
       Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CRM.md q13.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-709
+    summary: "Customer Relationship Management: name an owner for \"Validate and qualify leads/opportunities\" (no one is responsible for it today)"
+    question: |
+      Marketing Automation forwards lead to Customer Relationship Management to validate and qualify leads or opportunities, but Customer Relationship Management does not yet have anyone assigned to validate and qualify leads or opportunities, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Customer Relationship Management owns, and assign a named owner once Customer Relationship Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CRM.md q14.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1862
+    summary: "Customer Relationship Management: name an owner for \"Collect and merge internal and third-party customer information\" (no one is responsible for it today)"
+    question: |
+      Marketing Automation forwards contact to Customer Relationship Management to collect and merge internal and third-party customer information, but Customer Relationship Management does not yet have anyone assigned to collect and merge internal and third-party customer information, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Customer Relationship Management owns, and assign a named owner once Customer Relationship Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CRM.md q15.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-719
+    summary: "Customer Relationship Management: name an owner for \"Manage customer master data\" (no one is responsible for it today)"
+    question: |
+      Master Data Management forwards customer to Customer Relationship Management to manage customer master data, but Customer Relationship Management does not yet have anyone assigned to manage customer master data, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Customer Relationship Management owns, and assign a named owner once Customer Relationship Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CRM.md q16.
+    extra_b9d_added: "2026-06-13"
 b3:
   # --- GROUP A: confirmed CRM-native, additive, fits an existing module (q1) ---
   - id: B3-CRM-COMPETITORS

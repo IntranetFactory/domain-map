@@ -3,6 +3,7 @@ domain: HRSD
 status: passed
 next_action_by: done
 last_audit: "2026-06-09"
+# B9d reference-read (2026-06-13): "HR Case Category" is reference/config data of HRSD; it becomes ownable work only if HRSD later runs a workflow on it.
 
 # All blocking work (Phase E personas, M9 self-containment embeds, APQC tag fixes + approval,
 # B9d ROLL-UP re-points (448->7.7.3 hp.217, 1121->7.3.4.5 hp.221), pattern flags, event rename,

@@ -432,3 +432,36 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-13 - B9d (handoff payload realization) executed; B1A-B9D-VERIFY resolved
+
+Ran the B9d band bidirectionally on every NCDB boundary via the committed resolver
+(`bun run scripts/analytics/b9d_resolver.ts NCDB`), dry-run then `--write`. This clears the
+single outstanding b1a item B1A-B9D-VERIFY, which is now removed from state.yaml.
+
+Boundary inventory (live): NCDB ships 4 outbound handoffs (700 -> WORK-MGMT, 701 -> LCAP,
+702 -> DLP, 703 -> ITSM) and 0 inbound. Only handoff 703 carries a `handoff_processes` payload
+tag (process 285 `Manage change deployment control`, PCF 8.6.3, record_status `new`); handoffs
+700/701/702 are untagged, so B9d has no payload to realize on them (their APQC tagging stays an
+H1 concern, already tracked under b1b B1B-S11 / B1B-H1-RES, blocked on user/other-domain calls).
+
+Resolver verdicts: 1 boundary tag, 1 distinct (process, owner) finding, classification ORPHAN.
+
+- ORPHAN: process 285 `Manage change deployment control` (PCF 8.6.3), payload `service_incidents`,
+  handoff 703 NCDB -> ITSM. Owner = ITSM (it masters `service_incidents`; currently unbuilt).
+  The owner-side obligation `B2-B9D-OWN-285` ALREADY EXISTS on ITSM (state.yaml + q-ITSM.md q18,
+  seeded by a prior LCAP -> ITSM pass; the resolver grain is per (process_id, owner_domain) =
+  (285, ITSM), the same finding regardless of which boundary surfaces it). The `--write` run was
+  therefore a no-op on ITSM's files (reported `q-file:exists (q18)  state.yaml:exists`); md5 of
+  both ITSM files was byte-identical before and after. No new owner-file write was needed.
+
+No ROLL-UPs (nothing to re-point). No MIS-TAGs (no wrong-category tag to surface). No destructive
+edits proposed or applied. No catalog writes, no `record_status` touched (Rule #1). No em-dashes,
+American English.
+
+Net state change: B1A-B9D-VERIFY removed from state.yaml (resolved). No agent-executable work
+remains on NCDB; all open items are b1b (blocked on user decisions or other domains' audits) or
+b2 (user judgment) or b3 (parked ideas). `next_action_by` recomputed agent -> user; the existing
+q-NCDB.md (q1-q9) remains the current human-readable surface and is unchanged by this pass.

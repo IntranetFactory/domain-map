@@ -80,6 +80,18 @@ a8:
 
 ---
 
+q10: Two incoming links from HR Service Management (when an HR case resolves, and when a case category updates) were tagged to the wrong process categories ("enterprise knowledge management capability" and "harvest knowledge"). The work they actually represent is already tracked under "manage employee inquiry process". Should I move those two tags to the correct process, or just remove them?
+
+- a) Move both tags to "manage employee inquiry process"
+- b) Remove both tags
+- c) Leave them for now
+
+Recommended: a. The work is real and already has a home, so re-pointing keeps the link accurate. Either moving or removing is a change to existing records, so I need your OK before doing it.
+
+a10:
+
+---
+
 ## Optional (will not hold up the build)
 
 q9: Should I add an article-owner / steward entity (who maintains each article)? Other candidates (article subscriptions, scheduled verification cycles, search synonyms) wait until q1 is settled. (yes/no)
@@ -90,4 +102,4 @@ a9:
 
 ---
 
-<!-- agent map, ignore: q1=B2-1 q2=B2-2 q3=B2-3 q4=B2-4 q5=B2-5 q6=B2-6 q7=B2-7 q8=B1B-H1-APPROVE q9=B3-1 | domain_id=33 -->
+<!-- agent map, ignore: q1=B2-1 q2=B2-2 q3=B2-3 q4=B2-4 q5=B2-5 q6=B2-6 q7=B2-7 q8=B1B-H1-APPROVE q9=B3-1 q10=B2-B9D-MISTAG-HRSD | domain_id=33 -->

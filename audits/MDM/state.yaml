@@ -11,8 +11,8 @@
 schema_version: 2
 domain: MDM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-06"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # MDM is an UNBUILT domain (0 domain_modules, 2 capabilities). Per the unbuilt-domain
 # discipline the agent does NOT scaffold a build; the build (module split + masters +
@@ -20,15 +20,11 @@ last_audit: "2026-06-06"
 # Almost every open b1b item is transitively gated on B1B-S1 (module authoring), which is
 # itself gated on the B2-S2 user split decision. next_action_by=user: the domain cannot
 # advance until B2-S1 (master reconciliation path) and B2-S2 (module split) are decided.
-# All agent-doable, genuinely-unblocked items were executed 2026-06-06 (see history.md):
-# entity_type classification on all 6 masters, 5 APQC handoff tags (H1 now 12/13), and the
-# Rule #20 catalog UX backfill on the domain row.
-
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+# B9d ran 2026-06-13 (B1A-B9D-VERIFY resolved): the resolver classified all 14 boundary
+# tags in both directions; 3 ORPHANs routed to owner domains (CDP 115, CRM 719,
+# DATA-AI-PLAT 771 -- b2 items + q written into their audit files), 2 RESOLVED, 3 UNOWNED
+# (carried entity masters nowhere). Two MDM-authored source-side tag edits remain DESTRUCTIVE
+# and await user sign-off: B2-B9D-RETAG-272 and B2-B9D-MISTAG-274.
 
 b1b:
   - id: B1B-S1
@@ -233,6 +229,31 @@ b1b:
       - {type: prerequisite_entity, ref: B1B-S1}
 
 b2:
+  - id: B2-B9D-RETAG-272
+    summary: "B9d RE-TAG (destructive): outbound handoff 272 (MDM->CDP, customer_golden_record.updated) is tagged with a coarse master-data process; re-point to the specific customer one"
+    question: >-
+      Handoff 272 carries customers to CDP and is tagged to PCF 2.1.4 'Manage product and
+      service master data' (process_id 115). A more specific code for that exact payload,
+      3.5.2.5 'Manage customer master data', already exists in the catalog. B9d recommends
+      re-pointing the tag from 115 to 3.5.2.5. This edits a row MDM authored (handoff_processes
+      on 272) and is a DESTRUCTIVE re-point, so it needs sign-off.
+    options: ["a-repoint-to-3.5.2.5", "b-keep-115", "c-other"]
+    why: >-
+      Re-pointing aligns the handoff's APQC tag with the actual customer-master payload so the
+      cross-domain reconciliation resolves cleanly. The new tag row lands record_status='new'.
+  - id: B2-B9D-MISTAG-274
+    summary: "B9d MIS-TAG (destructive): outbound handoff 274 (MDM->HCM, employee_golden_record.created) carries an extra mis-categorized master-data tag alongside the correct employee one"
+    question: >-
+      Handoff 274 carries employees to HCM and holds TWO tags: 7.7.3 'Manage and maintain
+      employee data' (process_id 243, correct, RESOLVED) and 4.1.5.1 'Maintain master data'
+      (process_id 771). B9d flags 771 as a mis-tag: the employee payload is already realized
+      under the 7.x employee-data subtree, so the generic master-data tag is redundant/wrong.
+      Recommended: re-point 771 to 7.6.2 'Manage separation' OR delete the 274->771 row,
+      keeping only 243. Both are DESTRUCTIVE edits to MDM-authored rows; needs sign-off.
+    options: ["a-delete-274-771", "b-repoint-to-7.6.2", "c-keep-both"]
+    why: >-
+      Removing the redundant generic master-data tag leaves 274 cleanly RESOLVED under the
+      employee-data process. Deletion is destructive (Rule #1/#21) and is never done unapproved.
   - id: B2-S1
     summary: "M7 multi-master reconciliation path for customers (97), employees (31), suppliers (206)"
     question: >-

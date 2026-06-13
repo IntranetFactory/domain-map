@@ -196,6 +196,46 @@ b2:
     why: |
       Recording it now means that the moment Product Lifecycle Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PLM.md q8.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-588
+    summary: "Product Lifecycle Management: name an owner for \"Identify requirements for changes to manufacturing/delivery processes\" (no one is responsible for it today)"
+    question: |
+      Manufacturing Connected Operations forwards manufacturing bom to Product Lifecycle Management to identify requirements for changes to manufacturing or delivery processes, but Product Lifecycle Management does not yet have anyone assigned to identify requirements for changes to manufacturing or delivery processes, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Product Lifecycle Management owns, and assign a named owner once Product Lifecycle Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Product Lifecycle Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PLM.md q9.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-590
+    summary: "Product Lifecycle Management: name an owner for \"Install and validate production/service delivery process\" (no one is responsible for it today)"
+    question: |
+      Manufacturing Connected Operations forwards manufacturing bom to Product Lifecycle Management to install and validate production or service delivery process, but Product Lifecycle Management does not yet have anyone assigned to install and validate production or service delivery process, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Product Lifecycle Management owns, and assign a named owner once Product Lifecycle Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Product Lifecycle Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PLM.md q10.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1190
+    summary: "Product Lifecycle Management: name an owner for \"Implement and enforce change control procedures\" (no one is responsible for it today)"
+    question: |
+      Manufacturing Connected Operations forwards manufacturing bom to Product Lifecycle Management to implement and enforce change control procedures, but Product Lifecycle Management does not yet have anyone assigned to implement and enforce change control procedures, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Product Lifecycle Management owns, and assign a named owner once Product Lifecycle Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Product Lifecycle Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PLM.md q11.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1841
+    summary: "Product Lifecycle Management: name an owner for \"Design for manufacturing\" (no one is responsible for it today)"
+    question: |
+      Manufacturing Connected Operations forwards manufacturing routing to Product Lifecycle Management to design for manufacturing, but Product Lifecycle Management does not yet have anyone assigned to design for manufacturing, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Product Lifecycle Management owns, and assign a named owner once Product Lifecycle Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Product Lifecycle Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PLM.md q12.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-PLM-PORTFOLIO

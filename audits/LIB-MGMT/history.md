@@ -370,3 +370,42 @@ next_action_by flipped to user.
 ### JWT-audience errors
 
 None encountered.
+
+## 2026-06-13 - Audit (B9d verify, state-driven)
+
+State-driven pass over the one open agent-executable item, B1A-B9D-VERIFY.
+
+### Executed
+
+- **B1A-B9D-VERIFY (RESOLVED):** ran `scripts/analytics/b9d_resolver.ts LIB-MGMT --dry-run`.
+  Result: 0 boundary tags, 0 distinct (process, owner) findings, 0 verdicts. Confirmed live
+  that all 9 handoffs touching domain 168 are intra-domain (source_domain_id =
+  target_domain_id = 168, integration_pattern = lifecycle_progression); zero cross-domain
+  handoffs exist, so there are zero cross-domain handoff_processes payloads to classify.
+  B9d has now run in BOTH directions and found nothing to reconcile (no RESOLVED / ROLL-UP /
+  MIS-TAG / ORPHAN). The transcript gate is satisfied. Item removed from state.yaml; no
+  catalog write needed and none made. When LIB-MGMT later publishes the gated cross-domain
+  handoffs (B1B-S5, currently user-gated on counterparty selection), B9d will reclassify those
+  payloads on its next run.
+
+### Confirmed (no write)
+
+- entity_type on the 17 masters: 16 classified (11 operational_workflow, 4 catalog, 1
+  operational_record); library_holdings 826 deliberately left unclassified pending B2-S2.
+  B13 transcript-gate exception holds (classifying 826 pre-empts the open user decision).
+
+### Left (all user-gated; no agent-executable work remains)
+
+- B1A-PHASE-P: personas / RACI, deferred per audit policy (not authored unattended).
+- B1A-ENTITY-TYPE-826: blocked on B2-S2.
+- B1B-S4 / B1B-S5 / B1B-S6 / B1B-S7: cross-domain relationships + handoffs + holdings
+  lifecycle + APQC tags, all blocked on user decisions (counterparty selection, holdings shape).
+- B2-S2 / B2-S3 / B2-S4 / B2-S5 / B2-S6: user decisions, all carried in q-LIB-MGMT.md.
+- B3-S1..S5: backlog ideas (non-blocking).
+
+q-LIB-MGMT.md is current (q1-q6 = the open b2 decisions; q7 = the b3 backlog) and was not
+regenerated. status stays feedback_needed; next_action_by flipped agent -> user.
+
+### JWT-audience errors
+
+None encountered.

@@ -478,3 +478,81 @@ user_edges 9 INSERT.
 - https://tests.semantius.app/domain_map/domains?id=eq.47
 - https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(595,596,597,598,599,600,601)
 - https://tests.semantius.app/domain_map/data_object_relationships?data_object_id=in.(595,596,597,598,599,600,601)
+
+## 2026-06-13, Audit (B9d both-directions, state-driven)
+
+### Summary
+
+State-driven Validate over the open MFG-OPS items. The single agent-executable
+item was B1A-B9D-VERIFY (B9d had never run on this domain). Ran the committed
+resolver `scripts/analytics/b9d_resolver.ts MFG-OPS` in BOTH directions; all 20
+boundary payload tags classified. No catalog (database) writes. The domain is
+still UNBUILT (0 `domain_modules`, M1 fail), so the module-anchored cascade stays
+in place and was not scaffolded. After B9d, no agent-executable additive/corrective
+work remains: every open item is a user decision (b2), a surfaced value-flip /
+underspecified mirror, or blocked on the B2-MODULE-SPLIT gate. `next_action_by`
+moved agent -> user.
+
+### B9d executed (both directions, additive owner-side edits only)
+
+Resolver verdicts: 9 ORPHAN, 2 RE-TAG (source-edit, sign-off), 8 UNOWNED (no
+master row anywhere), across 20 boundary tags / 19 distinct (process, owner)
+findings.
+
+- **9 ORPHANs, all owned by NEIGHBORS, all neighbor owners UNBUILT.** None owned
+  by MFG-OPS. Per the B9d band + state.yaml hygiene carve-out (b), the resolver
+  authored an additive `b2` item (`B2-B9D-OWN-<pid>`) plus a plain-language
+  blocking question into each OWNER domain's `state.yaml` + `q-<OWNER>.md`:
+  - **PLM (6):** B2-B9D-OWN-549 (Manage bills of material, pre-existing/idempotent),
+    -588 (Identify requirements for changes to mfg/delivery processes), -590
+    (Install and validate production/service delivery process), -1190 (Implement
+    and enforce change control procedures), -1841 (Design for manufacturing). All
+    carry `manufacturing_boms` / `manufacturing_routings` (PLM-mastered) on inbound
+    handoffs 1087 / 1091 / 1092.
+  - **FSQM (3):** B2-B9D-OWN-579 (Eliminate quality and reliability problems),
+    -817 (Support inventory and production processes), -1551 (Undertake quality
+    control). Carry `critical_control_points` / `sanitation_records` (FSQM-mastered)
+    on inbound handoffs 975 / 979.
+  - **ITSM (1):** B2-B9D-OWN-1299 (Triage IT service delivery incidents,
+    pre-existing/idempotent) on outbound handoff 952 (`service_incidents`).
+  - These owner-side q/state edits each clear on the owner's own next pass; they
+    are additive, `record_status` never touched, nothing written to the catalog.
+
+### B9d surfaced (NOT applied; held for sign-off / sender-side gap-report)
+
+- **2 RE-TAG source edits (destructive re-points, owner = SOURCE domain, NOT MFG-OPS):**
+  - FSQM source on handoff 975: re-point `13.3.4` -> `2.3.1.11` (a more specific
+    tag exists on the same entity). Owned by FSQM's pass.
+  - PLM source on handoff 1092: re-point `2.3.1.10` -> `2.3.1.8.1`. Owned by PLM's pass.
+  - Both are destructive (re-point an existing `handoff_processes` row) and on the
+    source side; not MFG-OPS's to apply. Noted here for the owning domains.
+- **8 UNOWNED dependencies (carried entity has no `master` row in `domain_module_data_objects`).**
+  The carried entities ARE MFG-OPS masters in legacy `domain_data_objects`
+  (production_orders 595, production_schedules 597, produced_units 598,
+  production_downtime_events 599, production_quality_inspections 600), but MFG-OPS
+  has zero `domain_module_data_objects` master rows because it has **zero modules**.
+  These UNOWNED verdicts are a direct symptom of the unbuilt domain and resolve
+  automatically once B2-MODULE-SPLIT lands and the masters gain DMDO master rows
+  (already tracked by B1A-BUILD / B1B-S1, blocked on B2-MODULE-SPLIT). No new
+  state item created; surfaced here on the sender (MFG-OPS) as the band requires.
+  Affected handoffs: 949/953 (-> EAM), 950 (-> FIN), 951 (-> GRC), 954 (-> FOOD-TRACE),
+  plus inbound 867 (EAM) on the shared `4.3.1.4` tag.
+
+### State recompute
+
+- B1A-B9D-VERIFY resolved (B9d ran both directions); moved out of `state.yaml`.
+- Remaining open items are NOT agent-executable: B1A-S12 (B8 outbound mirror,
+  underspecified, user must name consuming data objects or confirm no mirror;
+  the one concrete 952 row gated on B2-SHOP-FLOOR-CASES-ITSM), B1A-S13 (pattern-flag
+  value flips, surfaced as q9/q10 — destructive value change), B1A-BUILD (UNBUILT,
+  gated on B2-MODULE-SPLIT). All Bucket-2 decisions carry forward in `q-MFG-OPS.md`.
+- `next_action_by: user`. The existing `q-MFG-OPS.md` already carries every open
+  decision (module split q1, produced_units q2, workforce-scheduling q3, salesforce
+  q4, honeywell q5, MES vendors q6, shop-floor/ITSM q7, regulations q8, pattern
+  flags q9/q10, alias approval q11, b3 candidates q12); no regeneration needed.
+
+### Verification
+
+- Resolver re-run idempotent on the two pre-existing owner items (PLM 549, ITSM 1299
+  reported `exists`, not re-appended).
+- No JWT-audience errors. Resolver run from project root; no catalog/database writes.

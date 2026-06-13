@@ -144,6 +144,16 @@ a15:
 
 ---
 
+q16: Identity Governance and Administration forwards channel member to Workstream Collaboration to manage IT user identity and authorization, but Workstream Collaboration does not yet have anyone assigned to manage IT user identity and authorization, so this step has no owner. How should it be handled?
+- a) Record it now as work Workstream Collaboration owns, and assign a named owner once Workstream Collaboration sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Workstream Collaboration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a16:
+
+---
+
 ## Optional (will not hold up the build)
 
 q10: Four entity surfaces show up across the flagship workstream-collaboration vendors that WSC does not model yet: emoji reactions, direct messages (1:1 and group DMs as a distinct surface from channels), huddle recordings and transcripts, and the chat-apps and workflows platform layer. Should I research and add the ones that hold up? (yes/no)
@@ -154,4 +164,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S4.channels_personal q4=B2-S4.channels_submitlock q5=B2-S4.members_personal q6=B2-S5 q7=B2-S6.employee q8=B2-S6.steward q9=B2-NOTE-C1 q10=B3-S1+B3-S2+B3-S3+B3-S4 q11=B2-B9D-OWN-928 q12=B2-B9D-OWN-196 q13=B2-B9D-OWN-1179 q14=B2-B9D-OWN-428 q15=B2-B9D-OWN-1440 | domain_id=75 -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S4.channels_personal q4=B2-S4.channels_submitlock q5=B2-S4.members_personal q6=B2-S5 q7=B2-S6.employee q8=B2-S6.steward q9=B2-NOTE-C1 q10=B3-S1+B3-S2+B3-S3+B3-S4 q11=B2-B9D-OWN-928 q12=B2-B9D-OWN-196 q13=B2-B9D-OWN-1179 q14=B2-B9D-OWN-428 q15=B2-B9D-OWN-1440 q16=B2-B9D-OWN-273 | domain_id=75 -->

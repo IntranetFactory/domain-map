@@ -10,10 +10,10 @@ Publish company news, target announcements by department or location, and reach 
 q1: (answer this first) Is Modern Intranet a thin leadership-tier landing area or a real product market you build out, and which build shape should it take?
 
 - a) Confirm leadership-tier: it stays a single landing area with no full module build, and the deeper bands pass by exception.
-- b) Treat it as a real point-solution market: research the vendor surface and build it out into roughly five to eight modules.
-- c) Hybrid: a leadership-tier landing area plus one starter module covering the publish-and-news minimum.
+- b) Treat it as a full real point-solution market: build it out into roughly five to eight modules.
+- c) Hybrid: build out the parts the intranet genuinely owns (publishing, news, newsletters, analytics) as real modules, and treat journeys, frontline, and advocacy as overlays / links to adjacent markets rather than modules this domain owns.
 
-Recommended: b. The vendor surface (Staffbase, Simpplr, Firstup, LumApps, Unily, Workvivo) is a real software market that customers buy as their system of record for internal communications, and the prior leadership-tier exemption was rescinded. This choice gates every build item and every entity candidate below it, so it unlocks the rest of the build.
+Recommended: c. Fresh vendor research (run today) shows this is a real market but only a partial one. Intranet products genuinely own a spine no other market owns: company pages and spaces, news and announcements with audience targeting and mandatory-acknowledgement receipts (Simpplr "Must Reads", Firstup must-read campaigns, and Microsoft Viva mandatory news all persist these as compliance-grade records), and internal newsletters (Poppulo Harmony, Workshop, and ContactMonkey are full newsletter systems of record with editions, sends, and open/click tracking). But three areas are really owned by dedicated adjacent markets: employee journeys belong to Enboarder and ChangeEngine (only Firstup models them richly among intranet vendors), frontline messaging belongs to WorkJam, Beekeeper, Crew, and YOOBIC (deeper than any intranet vendor), and employee advocacy belongs to Hootsuite Amplify, Sprinklr, GaggleAMP, and EveryoneSocial (only Haiilo and Sociabble truly master it among intranet players). Search is just an index over the HR directory and knowledge base, not owned data. So five co-equal master modules over-states what the intranet owns; the hybrid shape (roughly three owned modules plus an analytics store) matches what the flagship vendors actually persist. This choice gates every build item and entity candidate below it.
 
 a1:
 
@@ -54,11 +54,12 @@ a4:
 
 q5: If you pick the real-market or hybrid route on the first question, which module split should the build use?
 
-- a) The proposed five-module split: Publish, News, Journey, Frontline, Search (mobile folds into Publish, analytics is cross-cutting).
-- b) One module per capability (eight modules; heavy).
-- c) A custom module set (tell me the shape).
+- a) Three owned modules plus analytics (matches the hybrid route): Publish (pages and spaces), News (announcements with targeting and acknowledgements), Newsletter (newsletters, editions, subscriptions), plus an Analytics module that stores the read / open / acknowledgement receipts. Journeys, frontline, and advocacy are handled as overlays / cross-domain links, not modules this domain owns.
+- b) The five-module split: Publish, News, Journey, Frontline, Search (mobile folds into Publish, analytics is cross-cutting).
+- c) One module per capability (eight modules; heavy).
+- d) A custom module set (tell me the shape).
 
-Recommended: a. The five-module split keeps each area small enough to own cleanly and folds the delivery-axis and cross-cutting capabilities sensibly; the eight-module shape is heavier than the surface warrants. This only matters on the real-market or hybrid route.
+Recommended: a. Today's vendor research found only the publish / news / newsletter spine is genuinely owned data across the flagship intranet vendors (Staffbase, Simpplr, Firstup, Poppulo Harmony, Workshop, ContactMonkey), while journeys (Enboarder, ChangeEngine), frontline (WorkJam, Beekeeper), and advocacy (Hootsuite Amplify, GaggleAMP) are owned by dedicated adjacent markets. So three owned modules plus an analytics receipt store matches what the intranet actually persists; the five-module split treats three overlays as owned modules, and the eight-module shape is heavier still. This only matters on the real-market or hybrid route.
 
 a5:
 

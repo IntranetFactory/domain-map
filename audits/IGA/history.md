@@ -468,3 +468,48 @@ guidance does not apply: a non-conflicting owner already exists). No new rows au
 - `https://tests.semantius.app/domain_map/domains`
 - `https://tests.semantius.app/domain_map/domain_modules`
 - `https://tests.semantius.app/domain_map/handoff_processes`
+
+## 2026-06-13 - B9d handoff-payload realization (both directions; B1A-B9D-VERIFY resolved)
+
+Ran `scripts/analytics/b9d_resolver.ts IGA --write`: classified every handoff payload
+on every IGA boundary in BOTH directions (40 boundary tags, 27 distinct (process,owner)
+findings). Verdicts: 8 RESOLVED, 1 REFERENCE-READ, 11 ORPHAN, 3 RE-TAG, 2 MIS-TAG,
+2 UNOWNED. **B1A-B9D-VERIFY is resolved and removed from state.yaml** (this note is its
+disposition record). No catalog writes; only additive local audit-file edits.
+
+**ORPHANs routed to owners (additive `b2` + q into each OWNER's audit files, the B9d
+cross-domain carve-out):**
+- IGA (owner): B2-B9D-OWN-365 (pid 365 "Establish the enterprise risk framework and
+  policies", via handoff 464 IGA->GRC; was already present from the GRC pass, idempotent
+  skip) and NEW B2-B9D-OWN-1335 (pid 1335 "Manage asset resource deployment and
+  utilization", via handoff 462 IGA->ITAM). Surfaced as q-IGA.md q13 / q14.
+- Neighbors (written into their own state.yaml + q-files this pass, on whichever side owns
+  the payload): ONBOARDING B2-B9D-OWN-224 (existed), DSPM B2-B9D-OWN-273 (existed),
+  SMP B2-B9D-OWN-273 (added), WSC B2-B9D-OWN-273 (added), ECM B2-B9D-OWN-428 (existed) +
+  document_folders reference-read note, UEM B2-B9D-OWN-1196 / B2-B9D-OWN-1197 (added),
+  IWMS B2-B9D-OWN-1196 (added), ITSM B2-B9D-OWN-1299 (existed).
+
+**Destructive items surfaced for sign-off (NOT applied):**
+- RE-TAG, IGA is source: re-point handoff 466's tag 8.3.8 -> 8.7.5.9 ("Triage IT service
+  delivery incidents") on the same carried entity (service_incidents). Added as
+  B2-B9D-RETAG-466 / q-IGA.md q15 (this domain owns the 466 row).
+- RE-TAG / MIS-TAG owned by other sources (routed to their audits, not IGA's): UEM
+  re-points 8.3.6->8.3.8.4 on 659 and 8.3.8->8.3.8.3 on 656; IGA-source 8.3.8->8.7.5.9 on
+  631 belongs to ITSM (ITSM is the source of 631); HCM mis-tag 7.3.1->7.6.3 on 378/19;
+  DCG mis-tag 2.1.4.10->8.4.4.4 on 263. Each is a handoff_processes mutation needing
+  sign-off; the resolver left them for the owning source's audit.
+- UNOWNED dependencies surfaced on senders (no master row anywhere): api_consumers on
+  751 (APIM->IGA), visitor_registrations on 871 (VIS-MGMT->IGA).
+
+### Status
+
+All remaining IGA `b1a` items are either destructive (B1A-NOTES-DMDO / B1A-NOTES-HOFF,
+gated on B2-S2/S3-CARRY sign-off), explicitly deferred (B1A-APQC-REMAINDER no-clean-PCF;
+B1A-PHASE-P personas user-owned build), or destructive-rewrite needing sign-off
+(B1A-SELF-CONTAIN). No agent-executable additive work remains. Domain stays
+`feedback_needed` / `next_action_by: user`.
+
+### UI spot-check links
+
+- `https://tests.semantius.app/domain_map/handoff_processes`
+- `https://tests.semantius.app/domain_map/handoffs`

@@ -184,6 +184,36 @@ b2:
     why: |
       Recording it now means that the moment Private Capital Fund Administration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FUND-ADMIN.md q14.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-310
+    summary: "Private Capital Fund Administration: name an owner for \"Perform capital planning and project approval\" (no one is responsible for it today)"
+    question: |
+      Investor Relationship and Deal Flow Management forwards capital call to Private Capital Fund Administration to perform capital planning and project approval, but Private Capital Fund Administration does not yet have anyone assigned to perform capital planning and project approval, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Private Capital Fund Administration owns, and assign a named owner once Private Capital Fund Administration sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Private Capital Fund Administration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FUND-ADMIN.md q15.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-321
+    summary: "Private Capital Fund Administration: name an owner for \"Manage debt and investment\" (no one is responsible for it today)"
+    question: |
+      Investor Relationship and Deal Flow Management forwards capital call to Private Capital Fund Administration to manage debt and investment, but Private Capital Fund Administration does not yet have anyone assigned to manage debt and investment, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Private Capital Fund Administration owns, and assign a named owner once Private Capital Fund Administration sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Private Capital Fund Administration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FUND-ADMIN.md q16.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1480
+    summary: "Private Capital Fund Administration: name an owner for \"Process and oversee debt and investment transactions\" (no one is responsible for it today)"
+    question: |
+      Investor Relationship and Deal Flow Management forwards lp commitment to Private Capital Fund Administration to process and oversee debt and investment transactions, but Private Capital Fund Administration does not yet have anyone assigned to process and oversee debt and investment transactions, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Private Capital Fund Administration owns, and assign a named owner once Private Capital Fund Administration sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Private Capital Fund Administration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FUND-ADMIN.md q17.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-GP-CARRY-ALLOCATIONS

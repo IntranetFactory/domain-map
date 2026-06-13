@@ -183,6 +183,16 @@ a21:
 
 ---
 
+q22: Governance, Risk and Compliance forwards accounting period to Core Financial Management to perform general accounting and reporting, but Core Financial Management does not yet have anyone assigned to perform general accounting and reporting, so this step has no owner. How should it be handled?
+- a) Record it now as work Core Financial Management owns, and assign a named owner once Core Financial Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Core Financial Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a22:
+
+---
+
 ## Optional (will not hold up the build)
 
 q11: Flagship ERPs model several deeper financial masters that FIN does not have yet: chart-of-accounts segments, journal-entry lines, currencies and exchange rates, allocations and allocation rules, FX revaluation runs, consolidation units and elimination entries, revenue contracts and performance obligations, and tax codes and jurisdictions. Should I research and add the ones that hold up across the vendor set? (yes/no)
@@ -201,4 +211,4 @@ a12:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MODULE-SPLIT-CONFIRM+B3-MISSING-MASTER-AR-AP q2=B2-S1 q3=B2-S2.je q4=B2-S2.period q5=B2-S2.intercompany q6=B2-S2.fixedassets q7=B2-S2.revrec q8=B2-S3 q9=B2-S6 q10=B2-S7 q11=B3-CHART-OF-ACCOUNTS-SEGMENTS+B3-JOURNAL-ENTRY-LINES+B3-CURRENCIES+B3-ALLOCATIONS+B3-REVALUATION-RUNS+B3-CONSOLIDATION-UNITS+B3-REVENUE-CONTRACTS+B3-TAX-CODES q12=B3-CSRD+B3-PILLAR-TWO+B3-LEASE-ACCOUNTING q13=B2-B9D-OWN-307 q14=B2-B9D-OWN-1381 q15=B2-B9D-OWN-1392 q16=B2-B9D-OWN-320 q17=B2-B9D-OWN-1379 q18=B2-B9D-OWN-1382 q19=B2-B9D-OWN-1433 q20=B2-B9D-OWN-1461 q21=B2-B9D-RETAG-9-3 | domain_id=65 -->
+<!-- agent map, ignore: q1=B2-MODULE-SPLIT-CONFIRM+B3-MISSING-MASTER-AR-AP q2=B2-S1 q3=B2-S2.je q4=B2-S2.period q5=B2-S2.intercompany q6=B2-S2.fixedassets q7=B2-S2.revrec q8=B2-S3 q9=B2-S6 q10=B2-S7 q11=B3-CHART-OF-ACCOUNTS-SEGMENTS+B3-JOURNAL-ENTRY-LINES+B3-CURRENCIES+B3-ALLOCATIONS+B3-REVALUATION-RUNS+B3-CONSOLIDATION-UNITS+B3-REVENUE-CONTRACTS+B3-TAX-CODES q12=B3-CSRD+B3-PILLAR-TWO+B3-LEASE-ACCOUNTING q13=B2-B9D-OWN-307 q14=B2-B9D-OWN-1381 q15=B2-B9D-OWN-1392 q16=B2-B9D-OWN-320 q17=B2-B9D-OWN-1379 q18=B2-B9D-OWN-1382 q19=B2-B9D-OWN-1433 q20=B2-B9D-OWN-1461 q21=B2-B9D-RETAG-9-3 q22=B2-B9D-OWN-56 | domain_id=65 -->

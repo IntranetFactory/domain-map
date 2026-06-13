@@ -207,6 +207,16 @@ b2:
     why: |
       Recording it now means that the moment Vehicle Telematics decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-TELEMATICS.md q10.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1607
+    summary: "Vehicle Telematics: name an owner for \"Compile and communicate internal and regulatory compliance reports\" (no one is responsible for it today)"
+    question: |
+      Governance, Risk and Compliance forwards eld log to Vehicle Telematics to compile and communicate internal and regulatory compliance reports, but Vehicle Telematics does not yet have anyone assigned to compile and communicate internal and regulatory compliance reports, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Vehicle Telematics owns, and assign a named owner once Vehicle Telematics sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Vehicle Telematics decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-TELEMATICS.md q11.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-IFTA-JURISDICTION-SUMMARIES

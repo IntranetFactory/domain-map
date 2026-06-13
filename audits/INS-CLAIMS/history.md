@@ -1,5 +1,15 @@
 # INS-CLAIMS audit history
 
+## 2026-06-13, B9d verify + state recompute
+
+- Ran `scripts/analytics/b9d_resolver.ts INS-CLAIMS --dry-run` (both directions, transcript-gate satisfied). Result: 6 payload tags on the boundary, 3 distinct (process, owner) findings, all classified UNOWNED. Verdicts: {"UNOWNED":3}.
+- The UNOWNED verdicts are an artifact of the UNBUILT state, not real unowned dependencies: the carried payloads (insurance_claims 623, insurance_policies 624, claim_payments 629, claim_settlements 628, salvage_recovery_records 630) ARE mastered by INS-CLAIMS, but only on the legacy `domain_data_objects` junction. The resolver reads ownership from `domain_module_data_objects`, which is empty for this domain (0 modules). INS-CLAIMS owns all these payloads; their B9d realization (process_raci personas + gated lifecycle states) is downstream of the build and cannot be authored until B2-MOD-SPLIT is decided and modules exist.
+- No ROLL-UPs to re-point, no MIS-TAGs to surface, no built-owner ORPHANs. The resolver wrote nothing (correct). Handoffs 315 (TELEMATICS inbound) and 907 (siu_cases to GRC) carry no `handoff_processes` tag and are not payload-classified; they remain tracked under B1B-H1-APQC-TAGS (blocked on B2-APQC-STRATEGY).
+- **B1A-B9D-VERIFY resolved** and removed from `state.yaml`: B9d has now run in both directions on this domain with no agent-executable additive work outstanding.
+- **B1A-BUILD reclassified to b1b** (B1B-BUILD): it has no agent-executable step until B2-MOD-SPLIT is answered, so it is a blocked item, not an open agent task. The former `b1a` block is now empty and removed.
+- `next_action_by` recomputed `agent -> user`: no agent-executable work remains; everything outstanding is a user decision (B2-MOD-SPLIT and the rest of the b2 set) or gated on that decision. `status` stays `feedback_needed`; the existing `q-INS-CLAIMS.md` already covers every open b2 + the optional b3 and needs no regeneration.
+
+
 ## 2026-05-30, Validate b1 (full 4-pass)
 
 ### Summary

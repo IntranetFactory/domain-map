@@ -75,6 +75,26 @@ a8:
 
 ---
 
+q11: Knowledge Management forwards web content inventory record to Web Content Operations & Governance to manage content infrastructure, but Web Content Operations & Governance does not yet have anyone assigned to manage content infrastructure, so this step has no owner. How should it be handled?
+- a) Record it now as work Web Content Operations & Governance owns, and assign a named owner once Web Content Operations & Governance sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Web Content Operations & Governance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
+q12: Knowledge Management forwards content lifecycle plan to Web Content Operations & Governance to control delivered content, but Web Content Operations & Governance does not yet have anyone assigned to control delivered content, so this step has no owner. How should it be handled?
+- a) Record it now as work Web Content Operations & Governance owns, and assign a named owner once Web Content Operations & Governance sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Web Content Operations & Governance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a12:
+
+---
+
 ## Optional (will not hold up the build)
 
 q9: Four extra entities show up across the flagship vendors that the seven current masters do not yet cover (editorial briefs and tasks for production workflow, scanner runs as a first-class scan job separate from the audit report, rule catalogs the scanners check against, and URL redirects for retired pages). Should I research and add the ones that hold up? (yes/no)
@@ -93,4 +113,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-2.content_audits_submit_lock q2=B2-2.a11y_personal_content q3=B2-2.a11y_single_approver q4=B2-2.seo_single_approver q5=B2-2.brand_personal_content q6=B2-2.lifecycle_single_approver q7=B2-2.inventory_personal_content q8=B2-4 q9=B3-1+B3-3+B3-4+B3-5 q10=B3-7 | domain_id=128 -->
+<!-- agent map, ignore: q1=B2-2.content_audits_submit_lock q2=B2-2.a11y_personal_content q3=B2-2.a11y_single_approver q4=B2-2.seo_single_approver q5=B2-2.brand_personal_content q6=B2-2.lifecycle_single_approver q7=B2-2.inventory_personal_content q8=B2-4 q9=B3-1+B3-3+B3-4+B3-5 q10=B3-7 q11=B2-B9D-OWN-427 q12=B2-B9D-OWN-430 | domain_id=128 -->

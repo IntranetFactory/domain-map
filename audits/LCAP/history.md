@@ -466,3 +466,53 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-13 - B9d (handoff payload realization, both directions)
+
+Ran `scripts/analytics/b9d_resolver.ts LCAP --write`. This executes and resolves the
+outstanding `b1a` item B1A-B9D-VERIFY. The resolver walked every payload on every LCAP
+boundary in BOTH directions (4 distinct (process, owner) findings across 4 boundary tags).
+
+Classification:
+
+| handoff | direction | payload | process (code, pid) | verdict | owner |
+|---|---|---|---|---|---|
+| 704 LCAP->APP-PAAS | outbound | lcap_apps | 8.6 Deploy services/solutions (pid 52) | RESOLVED | LCAP |
+| 707 LCAP->DCG (DCG->LCAP work) | both | lcap_business_objects | 2.1.4 Manage product and service master data (pid 115) | ORPHAN | LCAP (unbuilt) |
+| 705 LCAP->IPAAS (IPAAS->LCAP work) | both | lcap_workflows | 8.5.1 Develop service/solution and integration strategy (pid 278) | ORPHAN | LCAP (unbuilt) |
+| 706 LCAP->ITSM | outbound | service_incidents | 8.6.3 Manage change deployment control (pid 285) | ORPHAN | ITSM (unbuilt) |
+
+- **RESOLVED (704):** `lcap_apps` payload realized by the gated deploy process with a persona; no action.
+- **No ROLL-UP, no MIS-TAG.** No `handoff_processes` re-points or deletions proposed; nothing destructive to surface.
+- **ORPHANs routed to owners (additive `record_status` untouched; no catalog writes):**
+  - LCAP owns `lcap_business_objects` -> b2 item **B2-B9D-OWN-115** added to state.yaml + q-LCAP.md q11.
+  - LCAP owns `lcap_workflows` -> **B2-B9D-OWN-278** already present (q10, added 2026-06-13 by the IPAAS audit pass); left as-is, not duplicated.
+  - ITSM owns `service_incidents` -> b2 item **B2-B9D-OWN-285** written into audits/ITSM/state.yaml + q-ITSM.md q18 (cross-domain carve-out: q into the OWNER domain's files).
+
+All three owner domains are unbuilt (0 personas), so each ORPHAN's persona is part of the
+recorded question rather than a pre-picked R/A, per the B9d cold-start rule. B1A-B9D-VERIFY
+removed from state.yaml.
+
+## 2026-06-13 - B1B-S13 (intra-domain handoffs) - DONE
+
+B1B-S13's only blocker (depends_on B1A-S5) was already satisfied (the 8 intra-domain
+data_object_relationships were loaded 2026-06-06), so the item became agent-executable and
+was run this pass per Rule #21. INSERTed 3 intra-domain `handoffs` rows
+(source_domain_id = target_domain_id = 37, integration_pattern=lifecycle_progression,
+friction_level=low, notes='', record_status default new):
+
+| id | event | source_mod -> target_mod | rationale (cross-module relationship) |
+|---|---|---|---|
+| 1440 | lcap_business_object.schema_changed (733) | 265 -> 266 | schema realized in 265 drives the runtime data layer in 266 (lcap_workflows operates_on lcap_business_objects) |
+| 1441 | lcap_workflow.published (735) | 266 -> 265 | published workflow realized in 266 is read back by the app composition layer in 265 (lcap_apps contains_workflows lcap_workflows) |
+| 1442 | lcap_workflow.failed (734) | 266 -> 265 | runtime failure in 266 surfaces back to the visual composition author in 265 |
+
+Source module = the module realizing the event's gated lifecycle state (221 -> 265, 222 -> 266);
+target module = the consuming sibling. All 3 are genuine cross-module pairs grounded in the
+existing cross-module data_object_relationships graph (2090 contains_workflows, 2094 operates_on).
+B1B-S13 removed from state.yaml.
+
+No agent-executable work remains; LCAP stays `feedback_needed` (next_action_by: user) on its
+b2 decisions and b1b items blocked on neighbor-domain audits.

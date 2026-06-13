@@ -486,3 +486,38 @@ All inserts use `record_status` omitted (default 'new', Rule #1). No `notes` wri
 - https://tests.semantius.app/domain_map/trigger_events
 - https://tests.semantius.app/domain_map/data_objects
 - https://tests.semantius.app/domain_map/data_object_aliases
+
+## 2026-06-13 - Audit (B9d handoff payload realization, both directions)
+
+### Summary
+
+State-driven pass executing the one agent-executable open item, B1A-B9D-VERIFY (run B9d, which had never run on this domain). KMS remains UNBUILT (0 domain_modules, gated on B2-1), so the build cascade (B1A-BUILD / B1B-S1, M/F/B10b) is left surfaced, not scaffolded. B9d ran in BOTH directions over all 17 handoff_processes tags on KMS's boundaries via `scripts/analytics/b9d_resolver.ts KMS --write`.
+
+### B9d resolver classification (17 boundary tags, 12 distinct (process,owner) findings)
+
+verdicts: ORPHAN 5, REFERENCE-READ 1, MIS-TAG 2, UNOWNED 3, RESOLVED 1
+
+- **ORPHAN x5 (additive owner-side edits APPLIED to neighbor audit files this pass):** each is a process realized nowhere whose category fits the OWNER domain. A durable b2 (id B2-B9D-OWN-<pid>) + a plain-language q were written into the OWNER's state.yaml + q-file:
+  - WEB-CONTOPS: B2-B9D-OWN-427 ("Manage content infrastructure", payload web_content_inventory_records, handoff 819) and B2-B9D-OWN-430 ("Control delivered content", payload content_lifecycle_plans, handoff 818). Both q-file + state.yaml entries added.
+  - ECM: B2-B9D-OWN-429 ("Deliver approved content", payload document_versions, handoff 826). Item already present from a prior pass (no duplicate written).
+  - LEGAL-PRACT-MGMT: B2-B9D-OWN-919 ("Harvest knowledge", payload legal_matters, handoff 334). q-file + state.yaml added.
+  - ITSM: B2-B9D-OWN-1293 ("Maintain service support knowledge repository", payload knowledge_articles, handoff 630). q-file + state.yaml added.
+- **REFERENCE-READ x1:** HRSD case_categories (PCF 13.6.2.2, handoff 447) is reference/config data, ownable only if HRSD later runs a workflow on it. A one-line note was added to HRSD/state.yaml. No question.
+- **MIS-TAG x2 (destructive, SURFACED not executed):** HRSD-sourced handoffs carry wrong-category tags. Handoff 1120 (hr_case.resolved) + 447 (case_category.updated) carry process 82 (PCF 13.5); handoff 1120 also carries process 919 (PCF 5.4.3.6). The carried hr_cases entity is already realized under PCF 7.7.2. HRSD is the sender and owns the tag edit. Recorded on KMS as new b2 item B2-B9D-MISTAG-HRSD and surfaced in q-KMS.md q10 (re-point to 7.7.2 / delete / leave). Re-point or delete is destructive (Rule #21), needs sign-off.
+- **UNOWNED dependency x3 (surfaced on the sender, not dropped):** carried entity has no master row anywhere in the catalog -- knowledge_base_articles on handoffs 720/721/722/723 (PCF 13.6.6, 8.7.5.3) and conversation_flows/knowledge_search_queries on 745/724 (PCF 5.4.3.6). These are the downstream symptom of B1A-BUILD / the M7-dual knowledge-article ownership question (B2-1): knowledge_base_articles is mastered only via the legacy domain_data_objects table, so the resolver sees no canonical master row. They resolve once the module build lands and the masters move into domain_module_data_objects. Left as report-only follow-ups; no action available before B2-1.
+- **RESOLVED x1:** handoff 721 payload knowledge_base_articles under PCF 7.7.2 already realized. No action.
+
+No catalog/database writes (B9d authors only additive local audit-file edits + surfaces destructive). No record_status flips (Rule #1). No notes written (Rule #15).
+
+### state.yaml recompute
+
+- B1A-B9D-VERIFY: RESOLVED (B9d ran both directions this pass). Removed from state.yaml.
+- New b2 item B2-B9D-MISTAG-HRSD added (destructive HRSD-sender tag fix awaiting sign-off).
+- next_action_by flipped agent -> user: no agent-executable work remains. Every open item is a user decision (B2-1..B2-7, B2-B9D-MISTAG-HRSD, B1B-H1-APPROVE record-approval) or the build gated on B2-1 (B1A-BUILD / B1B-S1 / B1B-M7-DUAL), or blocked on another domain (B1B-S4-CCAAS waits on CCAAS master enumeration).
+- q-KMS.md refreshed: added q10 (B2-B9D-MISTAG-HRSD) and updated the agent-map footer.
+
+### Report-only follow-ups (owed by / surfaced to other domains)
+
+- ORPHAN ownership questions now sit in WEB-CONTOPS, ECM, LEGAL-PRACT-MGMT, ITSM audit backlogs (written this pass).
+- MIS-TAG re-point/delete on handoffs 1120, 447 is a destructive edit recorded against HRSD (the sender) on approval.
+- UNOWNED knowledge_base_articles / conversation_flows dependencies clear when KMS's module build lands (B2-1 gate).

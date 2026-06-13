@@ -99,6 +99,36 @@ a10:
 
 ---
 
+q13: Governance, Risk and Compliance forwards iga sod violation to Identity Governance and Administration to establish the enterprise risk framework and policies, but Identity Governance and Administration does not yet have anyone assigned to establish the enterprise risk framework and policies, so this step has no owner. How should it be handled?
+- a) Record it now as work Identity Governance and Administration owns, and assign a named owner once Identity Governance and Administration sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Identity Governance and Administration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a13:
+
+---
+
+q14: IT Asset Management forwards iga provisioning event to Identity Governance and Administration to manage asset resource deployment and utilization, but Identity Governance and Administration does not yet have anyone assigned to manage asset resource deployment and utilization, so this step has no owner. How should it be handled?
+- a) Record it now as work Identity Governance and Administration owns, and assign a named owner once Identity Governance and Administration sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Identity Governance and Administration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a14:
+
+---
+
+q15: Handoff 466 (Identity Governance and Administration sends an approved access request to IT Service Management as a service incident) is currently tagged with the broad process "Manage IT user identity and authorization". A narrower process that fits the same work, "Triage IT service delivery incidents", already exists. Should the tag be re-pointed to the narrower process?
+- a) Re-point the tag to the narrower process (mechanical, but it overwrites an existing tag, so it needs your sign-off).
+- b) Leave the tag at the broader process.
+
+Recommended: a. The narrower tag describes the actual incident-triage work the handoff realizes, improving process-health accuracy. It overwrites a non-empty value, so the agent will not apply it without your confirmation.
+
+a15:
+
+---
+
 ## Optional (will not hold up the build)
 
 q11: Across the flagship IGA suites, five extra masters show up that the catalog does not model yet: separation-of-duties rulesets, per-line certification decisions, role-mining jobs, provisioning connectors, and break-glass accounts. Should I research and add the ones that hold up? (yes/no)
@@ -120,4 +150,4 @@ a12:
 
 ---
 
-<!-- agent map, ignore: q1=B2-M7-DECIDE q2=B2-S1-CARRY q3=B2-S2-CARRY q4=B2-S3-CARRY q5=B2-S4-CARRY.certlock q6=B2-S4-CARRY.entlock q7=B2-S4-CARRY.entapprover q8=B2-S5-CARRY q9=B2-PCF-SUBSTITUTE q10=B1A-SELF-CONTAIN q11=B3-RULESETS+B3-CERT-LINES+B3-ROLE-MINING+B3-CONNECTORS+B3-BREAK-GLASS q12=B3-PAM-DOMAIN | domain_id=35 -->
+<!-- agent map, ignore: q1=B2-M7-DECIDE q2=B2-S1-CARRY q3=B2-S2-CARRY q4=B2-S3-CARRY q5=B2-S4-CARRY.certlock q6=B2-S4-CARRY.entlock q7=B2-S4-CARRY.entapprover q8=B2-S5-CARRY q9=B2-PCF-SUBSTITUTE q10=B1A-SELF-CONTAIN q11=B3-RULESETS+B3-CERT-LINES+B3-ROLE-MINING+B3-CONNECTORS+B3-BREAK-GLASS q12=B3-PAM-DOMAIN q13=B2-B9D-OWN-365 q14=B2-B9D-OWN-1335 q15=B2-B9D-RETAG-466 | domain_id=35 -->

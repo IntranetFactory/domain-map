@@ -173,6 +173,26 @@ b2:
     why: |
       Recording it now means that the moment Legal Practice Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-LEGAL-PRACT-MGMT.md q9.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-325
+    summary: "Legal Practice Management: name an owner for \"Operate controls and monitor compliance with internal controls policies and procedures\" (no one is responsible for it today)"
+    question: |
+      Governance, Risk and Compliance forwards trust account to Legal Practice Management to operate controls and monitor compliance with internal controls policies and procedures, but Legal Practice Management does not yet have anyone assigned to operate controls and monitor compliance with internal controls policies and procedures, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Legal Practice Management owns, and assign a named owner once Legal Practice Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Legal Practice Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-LEGAL-PRACT-MGMT.md q10.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-919
+    summary: "Legal Practice Management: name an owner for \"Harvest knowledge\" (no one is responsible for it today)"
+    question: |
+      Knowledge Management forwards legal matter to Legal Practice Management to harvest knowledge, but Legal Practice Management does not yet have anyone assigned to harvest knowledge, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Legal Practice Management owns, and assign a named owner once Legal Practice Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Legal Practice Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-LEGAL-PRACT-MGMT.md q11.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-1

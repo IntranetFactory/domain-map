@@ -353,3 +353,26 @@ Re-read live confirmed: all 6 masters `entity_type='operational_workflow'`; doma
 - https://tests.semantius.app/domain_map/domains
 - https://tests.semantius.app/domain_map/data_object_aliases
 - https://tests.semantius.app/domain_map/data_object_lifecycle_states
+
+## 2026-06-13, Audit (state-driven execute: B9d band)
+
+### Summary
+
+State-driven Validate execute pass over the single open agent item, `B1A-B9D-VERIFY`. Domain 45 confirmed live and still UNBUILT (0 domain_modules, 0 capability_domains, confirmed live), so every build-gated item stays blocked on the B2-1 module-split decision. Ran the committed B9d resolver `scripts/analytics/b9d_resolver.ts HC-PATIENT` in both directions (`--dry-run` then `--write`). No JWT-audience errors.
+
+### B9d resolver output (both directions, non-skippable band)
+
+`boundary tags: 4 | distinct (process,owner) findings: 2 | verdicts: {UNOWNED:1, RESOLVED:1}`
+
+- **RESOLVED** -- `9.2.2 "Invoice customer"` (pid 302) carrying `clinical_encounters` + `clinical_notes` on the FIN boundary (handoffs 900, 903). Already realized. No action.
+- **UNOWNED (resolver-reported)** -- `6.2.2 "Manage customer service problems, requests, and inquiries"` (pid 196) carrying `patient_appointments` + `patient_referrals` on the CSM boundary (handoffs 899, 902). The resolver classifies it "no master anywhere" because it reads masters only from `domain_module_data_objects`, and HC-PATIENT has zero DMDO rows (unbuilt). Verified live: `patient_appointments` (617) and `patient_referrals` (620) ARE mastered by HC-PATIENT in legacy `domain_data_objects` (role=master, domain 45). So the true owner is HC-PATIENT itself; the boundary is outbound HC-PATIENT->CSM. Realizing `6.2.2` (gated lifecycle `process_id` + `process_raci`) is part of HC-PATIENT's own build and folds into `B1A-BUILD` (gated on B2-1); it spawns no external owner-side q. The resolver wrote no owner-file edits (`INTENDED OWNER-FILE EDITS: (none)`) and applied nothing additive.
+
+No ORPHAN routable to a built external owner, no ROLL-UP re-point owed, no MIS-TAG. The band is discharged additive-wise; the only residue is the UNOWNED-on-sender note above, which resolves at build time, not by an agent fix now.
+
+### State transition
+
+`B1A-B9D-VERIFY` resolved and removed from `state.yaml`. With it gone, no agent-executable work remains: every other open item is a B2 user decision (B2-1..B2-7), a destructive sign-off (B1A-B4-PATTERN-FLAGS flag flips; B1A-B9-ORPHAN-EVENT DELETE path), a Phase-0 / build block (B1A-B8-CROSS-DOMAIN-RELS, B1A-BUILD, B1A-B10b-SOURCE-MODULES, B1A-B10b-TARGET-MODULES), a Discover-Pass-3 defer (B1A-H1-APQC-896), or a user-tuple-review (B1A-B7-USER-EDGES, where the verb / inverse_verb tuples are not pre-specified and two prior passes already held it for review). `next_action_by` moved agent -> user; `status` stays `feedback_needed`. The existing `q-HC-PATIENT.md` is current (covers B2-1..B2-7, the 3 pattern-flag flips, the orphan-event decision, and the 3 optional b3 groups); no refresh needed (B9d carried no user-facing question).
+
+### Verification
+
+Live re-read confirmed: 0 domain_modules, 0 capability_domains, event 1022 still 0 handoffs, all 6 masters `entity_type='operational_workflow'` with all three pattern flags still `false` (held for sign-off), 0 `users`-edges. No catalog writes this pass (B9d resolver writes only to local audit files; it wrote none). No JWT-audience errors.

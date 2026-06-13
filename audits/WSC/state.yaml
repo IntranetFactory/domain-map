@@ -165,6 +165,16 @@ b2_superseded:
     why: |
       Recording it now means that the moment Workstream Collaboration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-WSC.md q15.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-273
+    summary: "Workstream Collaboration: name an owner for \"Manage IT user identity and authorization\" (no one is responsible for it today)"
+    question: |
+      Identity Governance and Administration forwards channel member to Workstream Collaboration to manage IT user identity and authorization, but Workstream Collaboration does not yet have anyone assigned to manage IT user identity and authorization, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Workstream Collaboration owns, and assign a named owner once Workstream Collaboration sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Workstream Collaboration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-WSC.md q16.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-S1

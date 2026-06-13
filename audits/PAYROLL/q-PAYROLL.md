@@ -194,6 +194,26 @@ a19:
 
 ---
 
+q20: Governance, Risk and Compliance forwards garnishment order to Payroll Management to maintain and administer applicable deductions, but Payroll Management does not yet have anyone assigned to maintain and administer applicable deductions, so this step has no owner. How should it be handled?
+- a) Record it now as work Payroll Management owns, and assign a named owner once Payroll Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Payroll Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a20:
+
+---
+
+q21: Governance, Risk and Compliance forwards tax filing to Payroll Management to file regulatory payroll tax forms, but Payroll Management does not yet have anyone assigned to file regulatory payroll tax forms, so this step has no owner. How should it be handled?
+- a) Record it now as work Payroll Management owns, and assign a named owner once Payroll Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Payroll Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a21:
+
+---
+
 ## Optional (will not hold up the build)
 
 q14: Flagship US vendors model two more first-class entities that PAYROLL has no record for today: retroactive pay adjustments (a back-dated change that produces a delta on the next pay run) and bank payment files (NACHA/ACH in the US, BACS/Faster Payments in the UK, SEPA in the EU). Should I research and add the ones that hold up? (yes/no)
@@ -204,4 +224,4 @@ a14:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2.approver_payrun q3=B2-S2.approver_journal q4=B2-S2.pii_payrun q5=B2-S3 q6=B2-S4 q7=B2-S5 q8=B2-S6 q9=B2-S7 q10=B2-S8 q11=B1A-H1-REVIEW q12=B1A-SELF-CONTAIN q13=B1A-S12-IT q14=B3-RETRO-PAY-ADJUSTMENTS+B3-BANK-PAYMENT-FILES q15=B2-B9D-OWN-1046 q16=B2-B9D-OWN-1379 q17=B2-B9D-OWN-59 q18=B2-B9D-OWN-1052 q19=B2-B9D-OWN-1438 | domain_id=55 -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2.approver_payrun q3=B2-S2.approver_journal q4=B2-S2.pii_payrun q5=B2-S3 q6=B2-S4 q7=B2-S5 q8=B2-S6 q9=B2-S7 q10=B2-S8 q11=B1A-H1-REVIEW q12=B1A-SELF-CONTAIN q13=B1A-S12-IT q14=B3-RETRO-PAY-ADJUSTMENTS+B3-BANK-PAYMENT-FILES q15=B2-B9D-OWN-1046 q16=B2-B9D-OWN-1379 q17=B2-B9D-OWN-59 q18=B2-B9D-OWN-1052 q19=B2-B9D-OWN-1438 q20=B2-B9D-OWN-1420 q21=B2-B9D-OWN-1430 | domain_id=55 -->

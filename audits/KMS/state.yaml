@@ -1,14 +1,10 @@
 schema_version: 2
 domain: KMS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 1 capability awaiting a build."
     finding: "Live 2026-06-07: KMS still has 0 domain_modules rows (M1 fail) and 1 capability_domains row, so it is not deployable. The module build is gated on the B2-1 ownership decision; per the UNBUILT discipline the build is surfaced, not scaffolded, and the M/F/B10b cascade is left until the modules exist."
@@ -165,6 +161,22 @@ b2:
       reject the optional state machines per master.
     options: [approve_optional_states, edit_per_master, reject_leave_stateless]
     why: With entity_type classified the states are now optional, not required; the user owns whether to add them.
+  - id: B2-B9D-MISTAG-HRSD
+    summary: "Two HRSD-authored APQC tags on inbound handoffs to KMS are mis-categorized (category 13/5 on an HR-case payload); re-point to 7.7.2 or delete."
+    question: >-
+      B9d (run 2026-06-13, both directions) flagged two handoff_processes tags on
+      HRSD-sourced inbound handoffs as MIS-TAGs: handoff 1120 (hr_case.resolved ->
+      KMS) and handoff 447 (case_category.updated -> KMS) carry process 82 (PCF
+      13.5 "Develop and manage enterprise-wide knowledge management capability"),
+      and handoff 1120 also carries process 919 (PCF 5.4.3.6 "Harvest knowledge").
+      The carried entity (hr_cases) is already realized under PCF 7.7.2 "Manage
+      employee inquiry process". HRSD is the sender and owns the tag. Re-point both
+      mis-tagged rows to 7.7.2, or delete them?
+    options: [repoint_to_7_7_2, delete_tags, leave_pending_review]
+    why: >-
+      Re-pointing or deleting a handoff_processes row is destructive (Rule #21);
+      surfaced for sign-off, never executed unapproved. The tag edit is recorded
+      against HRSD's audit (the sender) on approval.
 
 b3:
   - id: B3-1

@@ -204,6 +204,36 @@ b2:
     why: |
       Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q15.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-370
+    summary: "IT Service Management: name an owner for \"Create remediation plans\" (no one is responsible for it today)"
+    question: |
+      Governance, Risk and Compliance forwards incident to IT Service Management to create remediation plans, but IT Service Management does not yet have anyone assigned to create remediation plans, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q16.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1293
+    summary: "IT Service Management: name an owner for \"Maintain service support knowledge repository\" (no one is responsible for it today)"
+    question: |
+      Knowledge Management forwards knowledge article to IT Service Management to maintain service support knowledge repository, but IT Service Management does not yet have anyone assigned to maintain service support knowledge repository, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q17.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-285
+    summary: "IT Service Management: name an owner for \"Manage change deployment control\" (no one is responsible for it today)"
+    question: |
+      Low-Code Application Platform forwards incident to IT Service Management to manage change deployment control, but IT Service Management does not yet have anyone assigned to manage change deployment control, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q18.
+    extra_b9d_added: "2026-06-13"
 b3:
   - id: B3-SERVICE-OUTAGES
     candidate: service_outages

@@ -69,6 +69,16 @@ a9:
 
 ---
 
+q10: Marketing Automation forwards content entry to Headless Content Management to develop and manage marketing plans, but Headless Content Management does not yet have anyone assigned to develop and manage marketing plans, so this step has no owner. How should it be handled?
+- a) Record it now as work Headless Content Management owns, and assign a named owner once Headless Content Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Headless Content Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a10:
+
+---
+
 ## Optional (will not hold up the build)
 
 q7: Several content objects that the flagship vendors expose as first-class records are not yet modeled. Should I research and add the ones that hold up (webhook subscriptions and delivery logs, preview environments, content revisions, reusable content components, translation jobs, taxonomies, API tokens, audit log entries, space memberships, personalization audiences)? (yes/no)
@@ -87,4 +97,4 @@ a8:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2.entrylock q3=B2-S2.releaselock q4=B2-S2.entrypii q5=B2-S2.singleapprover q6=B2-LOCALIZATION-SPLIT q7=B3-MASTER-WEBHOOKS+B3-MASTER-VISUAL+B3-E1+B3-E2+B3-E6+B3-E7+B3-E4+B3-E8+B3-E9+B3-E10 q8=B3-D1+B3-D2 q9=B2-B9D-OWN-428 | domain_id=93 -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2.entrylock q3=B2-S2.releaselock q4=B2-S2.entrypii q5=B2-S2.singleapprover q6=B2-LOCALIZATION-SPLIT q7=B3-MASTER-WEBHOOKS+B3-MASTER-VISUAL+B3-E1+B3-E2+B3-E6+B3-E7+B3-E4+B3-E8+B3-E9+B3-E10 q8=B3-D1+B3-D2 q9=B2-B9D-OWN-428 q10=B2-B9D-OWN-23 | domain_id=93 -->

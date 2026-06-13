@@ -11,8 +11,8 @@
 schema_version: 2
 domain: GRC
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # UNBUILT: GRC has 0 domain_modules (M1 hard fail), 1 capability_domains link. The entire
 # build cascade (modules, lifecycle states, module skills/tools, persona roles, B10b backfill,
@@ -21,12 +21,18 @@ last_audit: "2026-06-07"
 # surfaced, not scaffolded. All currently-executable additive/corrective items have been applied
 # (2026-06-07): entity_type classification (10 masters), domain catalog UX, the 1 outstanding
 # clean-match APQC tag (handoff 249), and the 30 cross-vendor alias rows.
+#
+# 2026-06-13: B9d (handoff payload realization) ran in BOTH directions via
+# scripts/analytics/b9d_resolver.ts. Of 52 (process,owner) findings: 8 RESOLVED, 1 REFERENCE-READ,
+# 2 RE-TAG (destructive re-points, surfaced for sign-off, NOT applied), 21 ORPHAN (additive b2 +
+# q items written into the OWNER domains' audit files, the cross-domain carve-out), 20 UNOWNED
+# (carried entity has no master anywhere; surfaced on the sender, not written). Phase 0 vendor
+# research produced at .tmp_deploy/GRC-phase0-2026-06-13.md to ground the two market-shape gate
+# questions (B3-2 split, B2-5 capability); q-GRC.md refreshed with the named-vendor evidence.
+# NO agent-executable work remains: every open item is a user decision (b2) or a destructive step
+# needing sign-off, so next_action_by=user.
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 1 capability awaiting a build. SURFACED, not scaffolded."
     finding: "GRC has 0 domain_modules rows (M1 hard fail) and 1 capability_domains row, so it is not deployable today. It must be built before any persona / RACI / module-skill / lifecycle work applies. Per Validate-mode policy an unbuilt domain is surfaced, not scaffolded, and the dependent cascade is left."

@@ -29,6 +29,39 @@ a2:
 
 ---
 
+q7: Sales Engagement hands lead-score work to Marketing Automation, but no one in Marketing Automation is assigned to manage leads and opportunities, so that step has nobody responsible for it today. Who should own it?
+- a) The Marketing Operations Manager runs it and approves it.
+- b) Someone else you name runs and approves it.
+- c) Leave it unassigned for now.
+
+Recommended: a. The Marketing Operations Manager is the only Marketing Automation persona that reaches the lead-scoring module where this work lands, so it is the natural owner and gives the step a named owner.
+
+a7:
+
+---
+
+q8: Social Media Management hands campaign work to Marketing Automation, but no one in Marketing Automation is assigned to execute promotional activities, so that step has nobody responsible for it today. Who should own it?
+- a) The Campaign Manager runs it and approves it.
+- b) Someone else you name runs and approves it.
+- c) Leave it unassigned for now.
+
+Recommended: a. The Campaign Manager owns campaign execution in the campaign-authoring module where this promotional work lands, so it is the natural owner and gives the step a named owner.
+
+a8:
+
+---
+
+q9: Five handoffs that Marketing Automation publishes are tagged with a broad process when a more specific one for the same record already exists. Lining them up with the finer process means deleting/overwriting the existing broad tag, so it needs your call. Apply the cleanup?
+- a) Apply all five re-points.
+- b) Apply only the ones I name (say which).
+- c) Leave the broad tags as they are.
+
+Recommended: a. Each broad tag has a finer counterpart already on the same handoff or realized on the receiving side; re-pointing makes the handoff describe the actual work. It overwrites an existing tag, which is why it is your call rather than applied automatically.
+
+a9:
+
+---
+
 ## Optional (will not hold up the build)
 
 The domain is structurally and semantically complete (4 modules, all masters classified with lifecycle, relationships, aliases, personas, tools, and a system skill). The items below are additive ideas, not gaps.
@@ -65,4 +98,4 @@ a6:
 
 ---
 
-<!-- agent map, ignore: q1=B2-H1-78-FOLLOWUP q2=record_status_approval(Rule#1, all 2026-06-08 writes + 06-06 catalog copy) q3=B3-MARKETING-EMAIL-SENDS+B3-AUDIENCE-LISTS+B3-SUBSCRIBER-PREFERENCES+B3-AB-TEST-VARIANTS+B3-EMAIL-SEND-METRICS+B3-JOURNEY-STEP-EVENTS q4=B3-MA-COMPLIANCE-MODULE q5=B3-SMS-MARKETING-DOMAIN+B3-TRANSACT-EMAIL-DOMAIN+B3-REVERSE-ETL-DOMAIN q6=B3-REGULATION-CASL-LGPD-PIPEDA | domain_id=70 -->
+<!-- agent map, ignore: q1=B2-H1-78-FOLLOWUP q2=record_status_approval(Rule#1, all 2026-06-08 writes + 06-06 catalog copy) q3=B3-MARKETING-EMAIL-SENDS+B3-AUDIENCE-LISTS+B3-SUBSCRIBER-PREFERENCES+B3-AB-TEST-VARIANTS+B3-EMAIL-SEND-METRICS+B3-JOURNEY-STEP-EVENTS q4=B3-MA-COMPLIANCE-MODULE q5=B3-SMS-MARKETING-DOMAIN+B3-TRANSACT-EMAIL-DOMAIN+B3-REVERSE-ETL-DOMAIN q6=B3-REGULATION-CASL-LGPD-PIPEDA q7=B2-B9D-OWN-147 q8=B2-B9D-OWN-665 q9=B2-B9D-RETAG-MA-SOURCE | domain_id=70 -->

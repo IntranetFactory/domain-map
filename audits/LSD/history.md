@@ -613,3 +613,33 @@ Tenant confirmed `ma@adenin.com` / org `adenin` (domain_map id 1001) via `getCur
 ### Post-fix status
 
 `next_action_by: user`. The gating decision is B2-MODULE-SHAPE; every remaining structural fix cascades from the unbuilt module set. The two module-independent wins (entity_type classification + catalog UX) shipped this pass.
+
+## 2026-06-13, Audit: run B9d handoff-payload realization (resolve B1A-B9D-VERIFY)
+
+Single agent-executable item outstanding was B1A-B9D-VERIFY (B9d had never run on LSD). Ran `scripts/analytics/b9d_resolver.ts LSD` in both directions; classified all 13 boundary payload tags across every neighbor (ECM, AUDIT, HCM, GRC, RE-PROP-MGMT, HCMS).
+
+### B9d classification (13 boundary tags, 6 distinct (process, owner) findings)
+
+| Verdict | Process | Owner | Handoffs | Disposition |
+|---|---|---|---|---|
+| ORPHAN | 13.6.7 Control delivered content (pid 430) | ECM (unbuilt) | 824 ECM->LSD | Owner-side b2 + q written into ECM |
+| ORPHAN | 12.4.5.4 Receive work product and manage/monitor case (pid 1627) | RE-PROP-MGMT (unbuilt) | 300 RE-PROP-MGMT->LSD | Owner-side b2 + q written into RE-PROP-MGMT |
+| UNOWNED | 11.2.2 Manage regulatory compliance (pid 369) | (no master) | 914 LSD->AUDIT, 1030 LSD->GRC | Surfaced for review; carried entities (regulatory_inquiries, in_house_legal_matters) have no DMDO master because LSD is unbuilt (M1). Self-resolves when M1 lands. |
+| UNOWNED | 11.3.4 Investigate legal aspects (pid 373) | (no master) | 911, 915, 916, 913, 1028, 1029 | Same: legal_holds + in_house_legal_matters unowned at DMDO grain pending M1. |
+| UNOWNED | 12.4.7 Resolve disputes and litigations (pid 396) | (no master) | 912 LSD->ECM | Same: ediscovery_requests unowned at DMDO grain pending M1. |
+| RESOLVED | 12.4.8 Provide legal advice/counseling (pid 397) | (no master) | 1031, 1032 | No action. |
+
+### Owner-side edits applied (additive, local audit files only; no catalog/DB writes)
+
+- `audits/ECM/state.yaml` + `audits/ECM/q-ECM.md`: B2-B9D-OWN-430 (Control delivered content, payload content_documents on inbound handoff 824).
+- `audits/RE-PROP-MGMT/state.yaml` + `audits/RE-PROP-MGMT/q-RE-PROP-MGMT.md`: B2-B9D-OWN-1627 (Receive work product / manage case, payload property_tenants on inbound handoff 300). q-RE-PROP-MGMT.md newly created by the resolver.
+
+These ORPHANs route to the OWNER domain per the state.yaml hygiene carve-out (b); both owners are unbuilt, so the owner-master signal is the authoritative (unbuilt-safe) signal and the realized-sibling cross-check is correctly skipped.
+
+### UNOWNED dependencies (surfaced for review, not written, not destructive)
+
+The 3 UNOWNED findings are an artifact of LSD being unbuilt: the resolver reads ownership from `domain_module_data_objects` (master/embedded_master), and LSD has zero DMDO rows (M1 blocked), so its legacy-mastered entities (in_house_legal_matters, legal_holds, ediscovery_requests, regulatory_inquiries) show as no-master. They are surfaced on the sender (LSD) and not dropped; they will reclassify to RESOLVED/ORPHAN once B1B-M1 lands and LSD's masters get DMDO master rows. Already captured by open b1b items B1B-M1 / B1B-B1; no new state row needed. No `handoff_processes` re-points or deletions were proposed (no ROLL-UP or MIS-TAG), so no destructive sign-off is owed from this pass.
+
+### State change
+
+B1A-B9D-VERIFY resolved and removed; `b1a` now empty. No agent-executable work remains on LSD: every open item is b1b (blocked on B1B-M1, itself gated on user decision B2-MODULE-SHAPE) or b2 (user decisions). `next_action_by: agent -> user`. The existing `q-LSD.md` already covers all open b2 + b3 items and needed no regeneration (B9d added no LSD-side questions).

@@ -339,3 +339,37 @@ No action: all 4 cross-domain handoffs (1038, 1039, 1040, 1041) already carry `h
 - https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(752,753,754)
 - https://tests.semantius.app/domain_map/trigger_events?data_object_id=in.(750,751,754)
 - https://tests.semantius.app/domain_map/data_object_lifecycle_states?data_object_id=in.(751,754)
+
+## 2026-06-13, Audit (B9d handoff-payload realization, both directions)
+
+### Summary
+
+State-driven Validate run executing the single agent-open item B1A-B9D-VERIFY (run B9d in both directions). Ran the committed resolver `scripts/analytics/b9d_resolver.ts INV-CRM` (dry-run then --write). Domain id 159; boundaries with FUND-ADMIN and PORT-MONIT. No catalog writes, no `record_status` touches; only additive owner-side audit-file edits. No JWT / schema errors.
+
+### B9d classification (5 payloads on 4 cross-domain handoffs, both directions)
+
+All 5 distinct (process, owner) findings classified ORPHAN (real missing work: a process gated nowhere, no persona). Every owner is currently unbuilt, so the owner-by-mastered-entity signal is authoritative and the realized-sibling cross-check is skipped. No ROLL-UP, no MIS-TAG, no destructive step.
+
+| handoff | direction | payload | PCF process | owner (unbuilt) | verdict |
+|---|---|---|---|---|---|
+| 1040 | FUND-ADMIN -> INV-CRM | lp_prospects | 63 "Manage international funds/consolidation" (9.10) | INV-CRM | ORPHAN |
+| 1038 | INV-CRM -> FUND-ADMIN | capital_calls | 310 "Perform capital planning and project approval" (9.4.1) | FUND-ADMIN | ORPHAN |
+| 1038 | INV-CRM -> FUND-ADMIN | capital_calls | 321 "Manage debt and investment" (9.7.4) | FUND-ADMIN | ORPHAN |
+| 1039 | INV-CRM -> PORT-MONIT | portfolio_companies | 409 "Manage portfolio" (13.2.1) | PORT-MONIT | ORPHAN |
+| 1041 | FUND-ADMIN -> INV-CRM | lp_commitments | 1480 "Process and oversee debt and investment transactions" (9.7.4.5) | FUND-ADMIN | ORPHAN |
+
+### Owner-side edits applied (additive, local audit files only)
+
+Per the B9d band, each ORPHAN is recorded NOW on whichever side masters the carried entity, as a `b2` item + a plain-language q-file question.
+
+- **INV-CRM** (masters lp_prospects): added `B2-B9D-OWN-63` to state.yaml + q7 in q-INV-CRM.md.
+- **FUND-ADMIN** (masters capital_calls + lp_commitments): added `B2-B9D-OWN-310`, `B2-B9D-OWN-321`, `B2-B9D-OWN-1480` to its state.yaml + q15/q16/q17 in q-FUND-ADMIN.md.
+- **PORT-MONIT** (masters portfolio_companies): added `B2-B9D-OWN-409` to its state.yaml + q14 in q-PORT-MONIT.md.
+
+### Resolved this run (moved out of state.yaml)
+
+- **B1A-B9D-VERIFY**: B9d has now run on this domain in both directions. The tracking item is removed from state.yaml; its ORPHAN outputs are recorded as `B2-B9D-OWN-*` items on each owner (INV-CRM keeps `B2-B9D-OWN-63`; the FUND-ADMIN / PORT-MONIT items live in those domains' files). The action text's legacy "write a durable b1b item" is superseded by the current band, which uses a `b2` (a `b1b`-backed q is illegal under the q-file content rule); the resolver authored the correct `b2` shape.
+
+### State after this run
+
+`status: feedback_needed`, `next_action_by: user`. No agent-executable work remains. Every other open b1a is either gated on a b2 user decision (B1A-S4-CONFIG-SHAPE, B1A-S6), deferred per run instructions (B1A-PHASE-P personas), retired/superseded (B1A-S7 per-module skills), or net-new master authoring (B1A-M1..M6) that is an expansive market-shape addition surfaced via the q-file per Rule #21, not auto-executed. b1b items are blocked (B1B-B1 needs a fully-specified tuple list / user input; B1B-S8 gated on B2-REGULATION-SCOPE). The q-INV-CRM.md file carries q1-q7 (q7 is the new B9d ownership question; q6 is the optional b3 bundle).

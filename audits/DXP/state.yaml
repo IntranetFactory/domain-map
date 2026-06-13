@@ -62,6 +62,16 @@ b2:
     why: |
       Recording it now means that the moment Digital Experience Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-DXP.md q10.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-665
+    summary: "Digital Experience Platform: name an owner for \"Execute promotional activities\" (no one is responsible for it today)"
+    question: |
+      Marketing Automation forwards digital experience to Digital Experience Platform to execute promotional activities, but Digital Experience Platform does not yet have anyone assigned to execute promotional activities, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Digital Experience Platform owns, and assign a named owner once Digital Experience Platform sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Digital Experience Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-DXP.md q11.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-1

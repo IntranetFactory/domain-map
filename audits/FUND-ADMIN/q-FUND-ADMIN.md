@@ -139,6 +139,36 @@ a14:
 
 ---
 
+q15: Investor Relationship and Deal Flow Management forwards capital call to Private Capital Fund Administration to perform capital planning and project approval, but Private Capital Fund Administration does not yet have anyone assigned to perform capital planning and project approval, so this step has no owner. How should it be handled?
+- a) Record it now as work Private Capital Fund Administration owns, and assign a named owner once Private Capital Fund Administration sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Private Capital Fund Administration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a15:
+
+---
+
+q16: Investor Relationship and Deal Flow Management forwards capital call to Private Capital Fund Administration to manage debt and investment, but Private Capital Fund Administration does not yet have anyone assigned to manage debt and investment, so this step has no owner. How should it be handled?
+- a) Record it now as work Private Capital Fund Administration owns, and assign a named owner once Private Capital Fund Administration sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Private Capital Fund Administration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a16:
+
+---
+
+q17: Investor Relationship and Deal Flow Management forwards lp commitment to Private Capital Fund Administration to process and oversee debt and investment transactions, but Private Capital Fund Administration does not yet have anyone assigned to process and oversee debt and investment transactions, so this step has no owner. How should it be handled?
+- a) Record it now as work Private Capital Fund Administration owns, and assign a named owner once Private Capital Fund Administration sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Private Capital Fund Administration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a17:
+
+---
+
 ## Optional (will not hold up the build)
 
 q10: Several extra entities show up across the flagship fund-admin vendors (GP carry allocations, LP side letters, NAV revaluations, recallable distributions, fund expenses, LP commitment transfers). Should I research and add the ones that hold up? (yes/no)
@@ -157,4 +187,4 @@ a11:
 
 ---
 
-<!-- agent map, ignore: q1=B2-APPROVAL-WORKFLOW q2=B2-EVENT-955-REATTRIB q3=B2-CLOSE-MODULE q4=B2-LP-PORTAL q5=B2-PATTERN-FLAGS q6=B2-PAIRWISE-RECONCILIATION q7=B2-H1A-OVERRIDE q8=B2-H1E-OVERRIDE q9=B1A-H2 q10=B3-GP-CARRY-ALLOCATIONS+B3-LP-SIDE-LETTERS+B3-NAV-REVALUATIONS+B3-RECALLABLE-DISTRIBUTIONS+B3-FUND-EXPENSES+B3-LP-COMMITMENT-TRANSFERS q11=B3-PCF-FUND-LAUNCH q12=B2-B9D-OWN-491 q13=B2-B9D-OWN-1422 q14=B2-B9D-OWN-1461 | domain_id=160 -->
+<!-- agent map, ignore: q1=B2-APPROVAL-WORKFLOW q2=B2-EVENT-955-REATTRIB q3=B2-CLOSE-MODULE q4=B2-LP-PORTAL q5=B2-PATTERN-FLAGS q6=B2-PAIRWISE-RECONCILIATION q7=B2-H1A-OVERRIDE q8=B2-H1E-OVERRIDE q9=B1A-H2 q10=B3-GP-CARRY-ALLOCATIONS+B3-LP-SIDE-LETTERS+B3-NAV-REVALUATIONS+B3-RECALLABLE-DISTRIBUTIONS+B3-FUND-EXPENSES+B3-LP-COMMITMENT-TRANSFERS q11=B3-PCF-FUND-LAUNCH q12=B2-B9D-OWN-491 q13=B2-B9D-OWN-1422 q14=B2-B9D-OWN-1461 q15=B2-B9D-OWN-310 q16=B2-B9D-OWN-321 q17=B2-B9D-OWN-1480 | domain_id=160 -->

@@ -325,3 +325,42 @@ All writes at `record_status='new'` (Rule #1 honored; nothing stamped approved).
 - https://tests.semantius.app/domain_map/data_objects
 - https://tests.semantius.app/domain_map/domains
 - https://tests.semantius.app/domain_map/data_object_aliases
+
+## 2026-06-13 - Audit (state-driven; B9d verify)
+
+### Summary
+
+State-driven Validate pass over the single open agent item B1A-B9D-VERIFY. Ran the committed
+B9d resolver in BOTH directions via `bun run scripts/analytics/b9d_resolver.ts IDP --dry-run`
+then `--write`. IDP (domain_id=39) remains UNBUILT (0 `domain_modules`, 0 DMDO rows), so the
+module-split decision (B2-IDP-MODULE-SPLIT) still gates the whole build cascade.
+
+### B9d result (B1A-B9D-VERIFY resolved)
+
+- Boundary: 4 outbound `handoff_processes` tags (644/645/825/826), all `agent_curated` + `new`:
+  732 -> pid 428 (Develop and manage content, IDP->ECM), 733 -> pid 315 (Process accounts
+  payable, IDP->AP-AUTO), 734 -> pid 1437 (Research/Resolve payable exceptions, IDP->AP-AUTO),
+  735 -> pid 428 (IDP->ECM). Inbound direction is vacuous: IDP has 0 inbound handoffs.
+- Verdicts: 3 distinct (process, owner) findings, all **UNOWNED**. Reason: the carried payloads
+  `extracted_records` (533) and `document_classification_results` (535) have NO `domain_module_data_objects`
+  master row anywhere (the resolver reads the module grain). IDP genuinely masters both, but only at
+  the legacy `domain_data_objects` grain (domain_id=39), because IDP is unbuilt and has no modules.
+- Resolver wrote ZERO owner-file edits and ZERO catalog writes. The 3 UNOWNED findings are an
+  unbuilt-domain artifact, not an agent-resolvable ORPHAN/MIS-TAG/ROLL-UP: there is no neighbor
+  domain to route a `q` into (IDP is itself the legacy master of both payloads). They clear
+  automatically once B2-IDP-MODULE-SPLIT lands and B1B-S4-DMDO authors the module-grain master
+  rows. No `record_status` touched (Rule #1).
+
+B1A-B9D-VERIFY is therefore EXECUTED and removed from `state.yaml`. No agent-executable work
+remains; every other open item is `b1b` (blocked on the build cascade / module split) or `b2`
+(user decision) or `b3` (Phase-0 ideas).
+
+### State change
+
+- `next_action_by`: agent -> user. The existing `q-IDP.md` (q1-q10) already surfaces every open
+  `b2` decision and the `b3` backlog; it is current and unchanged. The headline gate remains
+  B2-IDP-MODULE-SPLIT (q1).
+
+### JWT errors
+
+None.

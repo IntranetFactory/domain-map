@@ -11,14 +11,10 @@
 schema_version: 2
 domain: GTM-PLAN
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-RECLASS
     summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; classification settled as master-bearing under the overlay test. Build needed, not an exemption."
     finding: >-
@@ -193,10 +189,17 @@ b2:
       - 5-module consolidation (PLAN-CORE plus CAPACITY plus LAUNCH-ORCH plus SCENARIO plus EXEC-HANDOFF)
       - 3-module collapse (PLAN-DESIGN plus SCENARIO-MODELING plus PLAN-LOCK-AND-PUSH)
     why: >-
-      Anaplan and Pigment tilt toward granular per-capability shape; Fullcast and Salesforce Sales
-      Planning tilt toward 3-to-5-module CRM-centric view. Decision rewrites the module set authored
-      under B1B-M1 and the proposed_module column on B1B-V1 through B1B-V4. Resolve together with
-      B2-S1, B2-S2, B3-PMM, B3-ABM-PLATFORM, B3-SALES-PLANNING-PLATFORM.
+      Phase 0 (.tmp_deploy/GTM-PLAN-phase0-2026-06-13.md) settles this on vendor seams: Anaplan
+      ships discrete apps (Account Segmentation; Territory and Quota; Sales Capacity; Crediting;
+      Incentive Comp), proving territory+quota travel as ONE surface and capacity as another, but
+      it does NOT split segmentation/ICP/scoring into three products. Pigment bundles the same way;
+      Salesforce Sales Planning and Fullcast collapse further to one product with tabs. So 8
+      over-splits and 3 under-splits. RECOMMEND 5-module shape: PLANNING-CORE (segmentation + ICP +
+      named lists + scoring) + TERRITORY-QUOTA + CAPACITY + SCENARIO + EXEC-HANDOFF, with channel-mix
+      (B3-CHANNEL-MIX-SCOPE) and launch-orch (B2-S1) decided separately. Decision rewrites the module
+      set under B1B-M1 and the proposed_module column on B1B-V1 through B1B-V4.
+    extra_phase0: ".tmp_deploy/GTM-PLAN-phase0-2026-06-13.md (D1 verdict: 5 modules)"
+    extra_recommended: "5-module shape (PLANNING-CORE + TERRITORY-QUOTA + CAPACITY + SCENARIO + EXEC-HANDOFF)"
 
   - id: B2-C1
     summary: Add capability-level RACI overrides for LAUNCH-ORCHESTRATION (PMM) and CHANNEL-MIX-PLANNING (Marketing).
@@ -227,8 +230,11 @@ b2:
       - GDPR plus CCPA plus SOX (full conservative set)
     why: >-
       Independent of every other Bucket 2 / Bucket 3 item. The planning shell has no statutory
-      anchor of its own; regulation exposure exists only if account-scoring includes
-      contact-level data.
+      anchor of its own; regulation exposure exists only if account-scoring includes contact-level
+      data. Phase 0 (D-compliance) confirms GTM-PLAN masters cohort-level segments / ICPs / named
+      lists, not contact-level PII; the contact-level intent surface that triggers GDPR/CCPA lives
+      in Demandbase / 6sense (the downstream ABM system). RECOMMEND none.
+    extra_recommended: "none (exposure travels downstream with contact-level intent into ABM-PLATFORM)"
 
   - id: B2-S1
     summary: Promote PMM as its own domain and relocate GTM-PLAN's LAUNCH-ORCHESTRATION capability.
@@ -241,8 +247,13 @@ b2:
       - Keep LAUNCH-ORCH in GTM-PLAN and let PMM be the launch-readiness consumer downstream
       - Wait until PMM mention count grows past 3 (cross-domain blast radius)
     why: >-
-      Strong cross-dependency with B2-M1 and B3-PMM. Resolves the LAUNCH-ORCH ownership question
-      and may shrink the module set authored under B1B-M1.
+      Phase 0 (.tmp_deploy/GTM-PLAN-phase0-2026-06-13.md, D2) confirms the clean buyer split: NONE
+      of the GTM-planning vendors (Anaplan, Pigment, Fullcast, Salesforce, Varicent) master launch
+      plans, milestones, readiness checklists, or battlecards. Those are mastered by Klue / Crayon
+      (PMM/CI buyer) and Aha! (PM/PMM launch orchestration). RECOMMEND promote PMM and relocate
+      LAUNCH-ORCH. Strong cross-dependency with B2-M1 and B3-PMM.
+    extra_phase0: ".tmp_deploy/GTM-PLAN-phase0-2026-06-13.md (D2 verdict: promote PMM)"
+    extra_recommended: "promote PMM, relocate LAUNCH-ORCH"
 
   - id: B2-S2
     summary: Promote ABM-PLATFORM as its own domain and split ICP / ACCOUNT-TARGETING out.
@@ -256,9 +267,15 @@ b2:
       - Keep ICP and account-targeting in GTM-PLAN as the sales-ops-owned planning side, let ABM-PLATFORM be the marketing-ops-owned engagement platform downstream (the planning vs engagement cut)
       - Defer until ABM-PLATFORM mention count grows
     why: >-
-      Strong Bucket 3 dependency on B3-ABM-PLATFORM. The defensible cut is planning-side (ICP /
-      target lists) stays in GTM-PLAN, engagement-side (intent scoring, ad targeting, web
-      personalization) goes to ABM-PLATFORM.
+      Phase 0 (.tmp_deploy/GTM-PLAN-phase0-2026-06-13.md, D3) confirms the planning-vs-engagement
+      cut the vendors draw themselves: Demandbase / 6sense model ICP, target lists, and account
+      scoring but differentiate on engagement (predictive intent, ad targeting, web personalization);
+      the planning side (ICPs and named lists authored once per cycle, segment-level scoring) is also
+      native to Anaplan / Pigment / Fullcast / Salesforce, proving it belongs to GTM-PLAN. RECOMMEND
+      promote ABM-PLATFORM as the downstream engagement consumer (owning intent/ad/personalization),
+      keep ICP + target lists + planning-grade scoring in GTM-PLAN.
+    extra_phase0: ".tmp_deploy/GTM-PLAN-phase0-2026-06-13.md (D3 verdict: keep planning side, ABM owns engagement)"
+    extra_recommended: "promote ABM-PLATFORM as engagement consumer; ICP + lists stay in GTM-PLAN"
 
   - id: B2-D1
     summary: Rewrite domains.description after B2-S1 and B2-S2 settle, scope narrows if PMM and ABM-PLATFORM promote.
@@ -305,10 +322,10 @@ b3:
       - {vendor: Seismic, evidence: secondary}
     proposed_module: relocate GTM-PLAN-LAUNCH-ORCH to PMM
     extra_verification_path: >-
-      Phase 0 against Klue and Crayon competitive intelligence schemas, Aha! launch templates,
-      Highspot sales enablement entities; confirm vendor consensus on the entity surface
-      (launches, positioning, messaging, win-loss interviews, persona-management) and whether
-      GTM-PLAN's LAUNCH-ORCH cleanly relocates.
+      Phase 0 DONE 2026-06-13 (.tmp_deploy/GTM-PLAN-phase0-2026-06-13.md, D2): confirmed launch
+      plans / milestones / readiness checklists / battlecards are absent from every GTM-planning
+      vendor and mastered by Klue / Crayon / Aha! (distinct PMM/PM buyer). LAUNCH-ORCH relocates
+      cleanly. Decision rides B2-S1 (recommended: promote).
     extra_mention_count: 2
 
   - id: B3-ABM-PLATFORM
@@ -327,10 +344,11 @@ b3:
       - {vendor: Mutiny, evidence: secondary}
     proposed_module: relocate GTM-PLAN-ICP-SEGMENT and GTM-PLAN-ACCOUNT-TARGETING to ABM-PLATFORM
     extra_verification_path: >-
-      Phase 0 against Demandbase platform docs, 6sense Revenue AI schema, RollWorks ABM entity
-      model; test whether ICP and account-list authoring sit on the GTM-PLAN side or the
-      ABM-PLATFORM side. The defensible cut is GTM-PLAN authors ICPs and named account lists
-      once per planning cycle; ABM-PLATFORM ingests those lists and runs engagement.
+      Phase 0 DONE 2026-06-13 (.tmp_deploy/GTM-PLAN-phase0-2026-06-13.md, D3): confirmed the
+      planning-vs-engagement cut. ICP / target-list / planning-grade scoring are native to both the
+      ABM vendors AND the GTM planners, so they stay in GTM-PLAN; the engagement-only entities
+      (intent_signals, web_personalization_rules, ad_campaign_targets, contact-level scoring) sit
+      only on the ABM side. Decision rides B2-S2 (recommended: promote ABM as engagement consumer).
     extra_mention_count: 1
 
   - id: B3-SALES-PLANNING-PLATFORM
@@ -339,10 +357,12 @@ b3:
       Anaplan Sales Planning, Pigment, Board, Fullcast, Salesforce Sales Planning, Varicent.
       Already queued at mention count 2 (SALES-PERF plus GTM-PLAN). The platform-market test is
       whether these vendors compete on a buyer (RevOps Strategy lead) distinct from both
-      SALES-PERF's commissions buyer and GTM-PLAN's cross-functional Sales-Ops buyer. Gartner
-      has begun calling out "Sales Planning Platforms" as a category in 2024 to 2025. The most
-      consequential candidate; if promoted, GTM-PLAN may shrink to a thin Sales-Ops shell or
-      merge into the new platform.
+      SALES-PERF's commissions buyer and GTM-PLAN's cross-functional Sales-Ops buyer. The original
+      premise was that Gartner named a distinct "Sales Planning Platforms" category in 2024 to 2025;
+      Phase 0 could NOT verify that (no standalone MQ / Market Guide found; territory + quota planning
+      live inside the SPM Market Guide, and Anaplan sits in the xP&A Market Guide). RECOMMEND do NOT
+      promote on the unverified category; keep TERRITORY / CAPACITY / SCENARIO in GTM-PLAN. Revisit
+      only if a Gartner document title for the category surfaces.
     vendor_evidence:
       - {vendor: Anaplan Sales Planning, evidence: 1st_class}
       - {vendor: Pigment, evidence: 1st_class}
@@ -352,11 +372,12 @@ b3:
       - {vendor: Varicent, evidence: secondary}
     proposed_module: relocate GTM-PLAN-TERRITORY, GTM-PLAN-CAPACITY, GTM-PLAN-SCENARIO to SALES-PLANNING-PLATFORM
     extra_verification_path: >-
-      Phase 0 against Anaplan Sales Planning vs Pigment vs Fullcast docs, plus the Salesforce
-      native Sales Planning surface; test whether the planning surface and the commission
-      surface have one buyer or two. If two, promote SALES-PLANNING-PLATFORM, relocate the
-      heavy planning capabilities from GTM-PLAN (potentially leaving only LAUNCH-ORCH plus
-      CHANNEL-MIX which then become PMM / Marketing surfaces).
+      Phase 0 DONE 2026-06-13 (.tmp_deploy/GTM-PLAN-phase0-2026-06-13.md, D4): the named Gartner
+      "Sales Planning Platforms" category could not be confirmed. The sales-planning cluster is real
+      and its buyer is distinct from commissions (Anaplan / Varicent sell Incentive Comp as a SEPARATE
+      app from Territory and Quota), but do not carve out a domain on a category that cannot be cited.
+      RECOMMEND: do not promote; keep the three capabilities in GTM-PLAN.
+    extra_recommended: "do NOT promote (Gartner category unverified)"
     extra_mention_count: 2
 
   - id: B3-CHANNEL-MIX-SCOPE
@@ -376,7 +397,10 @@ b3:
       - {vendor: Salesforce Marketing Cloud Account Engagement, evidence: secondary}
     proposed_module: undecided, CHANNEL-MIX-PLANNING stays in GTM-PLAN or relocates to MA or splits
     extra_verification_path: >-
-      Phase 0 against Anaplan plus Demandbase plus HubSpot for channel-mix entity shape; decide
-      whether CHANNEL-MIX-PLANNING stays in GTM-PLAN, relocates to MA, or splits across both.
-      Less urgent than candidates 1 to 3.
+      Phase 0 DONE 2026-06-13 (.tmp_deploy/GTM-PLAN-phase0-2026-06-13.md, D5): no clean pure-play;
+      the surface bifurcates by buyer (Anaplan / Pigment model it inline as sales-ops coverage;
+      Demandbase / 6sense as ABM engagement spend; HubSpot / SFMC Account Engagement as MA budget).
+      RECOMMEND split: keep the thin strategic channel-mix master (which channels carry which
+      segments) in GTM-PLAN; relocate paid-media / campaign budget allocation to MA / ABM-PLATFORM.
+    extra_recommended: "split (strategic channel-mix in GTM-PLAN, spend allocation downstream)"
     extra_priority: low

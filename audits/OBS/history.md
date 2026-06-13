@@ -470,3 +470,71 @@ UI spot-check:
 - https://tests.semantius.app/domain_map/data_objects (entity_type on the 5 OBS masters)
 - https://tests.semantius.app/domain_map/domains (OBS catalog_tagline + catalog_description)
 - https://tests.semantius.app/domain_map/data_object_aliases (7 new OBS synonym rows)
+
+## 2026-06-13, B9d handoff-payload realization (bidirectional, B1A-B9D-VERIFY resolved)
+
+Ran `scripts/analytics/b9d_resolver.ts OBS` (dry-run then --write). B9d had never run on
+this domain (it post-dates OBS's last audit), so B1A-B9D-VERIFY was the one open
+agent-executable item. The resolver walked every OBS boundary in BOTH directions.
+
+### Resolver result
+
+- 20 boundary tags, 11 distinct (process, owner) findings.
+- Verdicts: RESOLVED 2, ROLL-UP 0, MIS-TAG 0, REFERENCE-READ 1, ORPHAN 3, UNOWNED 5.
+
+No ROLL-UP re-points and no MIS-TAGs, so there were no destructive tag edits to surface.
+
+### ORPHANs (3) -- owner-side b2 + q authored into the OWNER domains (additive, record_status untouched)
+
+The resolver wrote a durable `b2` item plus a plain-language q-file question into each
+OWNER domain's audit files, per the B9d carve-out (writing a q into an owner domain is
+allowed). All idempotent: the AIOPS and ITOM items already existed from those domains'
+own audits; ITSM was added/refreshed this run.
+
+| Process (PCF) | Owner | Payload(s) | OBS handoff(s) | Item |
+|---|---|---|---|---|
+| 8.2.4.7 "Monitor and report IT performance" (pid 1128) | AIOPS (built) | anomaly_detections | 56 | B2-B9D-OWN-1128 (AIOPS q14, existing) |
+| 8.7.5.9 "Triage IT service delivery incidents" (pid 1299) | ITSM (unbuilt) | service_incidents | 55, 611 | B2-B9D-OWN-1299 (ITSM q8, added this run) |
+| 8.7.6.1 "Operate and monitor online systems" (pid 1301) | ITOM (unbuilt) | monitoring_alerts | 54 | B2-B9D-OWN-1301 (ITOM q11, existing) |
+
+REFERENCE-READ (1): 8.7.6.1 on inbound 606 (AIOPS->OBS), payload `alert_suppression_rules`
+is reference/config data AIOPS owns; a one-line note was added to AIOPS state.yaml. No
+question.
+
+### UNOWNED dependencies (5) -- surfaced on OBS the sender; NOT auto-written
+
+The resolver flagged 5 payloads whose carried entity has no `role='master'` row at the
+**module grain** (`domain_module_data_objects`). For the three OBS-mastered payloads this
+is a symptom of OBS being UNBUILT: `metric_series` (88), `log_entries` (89),
+`distributed_traces` (90), `service_level_objectives` (91), `error_groups` (92) all carry
+`role='master'` rows in the legacy `domain_data_objects` rollup (domain_id 7), but OBS has
+0 `domain_modules`, so no module-grain master row exists yet. The two genuinely-external
+ones are inbound payloads mastered by other unbuilt domains.
+
+| Process (PCF) | Payload(s) | Handoff(s) | Owner reality |
+|---|---|---|---|
+| 8.2.4.7 (pid 1128) | metric_series, log_entries, distributed_traces | 608, 609, 610, 612, 613 (OBS->AIOPS) | OBS-mastered in legacy rollup; module-grain master pending B2-S1 build |
+| 8.7.5.9 (pid 1299) | service_level_objectives, error_groups, integration_runs | 614, 615, 618 (OBS->ITSM), 766 (IPAAS->OBS) | SLOs+error_groups OBS-mastered in legacy rollup; integration_runs is IPAAS' (unbuilt) |
+| 8.2.5.9 (pid 1137) | synthetic_monitoring_results | 666 (DEM->OBS) | DEM-mastered (unbuilt) |
+| 8.7.6.4 (pid 1304) | network_performance_metrics, kubernetes_clusters | 651 (NPMD->OBS), 760 (KUBE-PLAT->OBS) | NPMD / KUBE-PLAT-mastered (unbuilt) |
+| 8.7.6.7 (pid 1307) | api_gateways | 749 (APIM->OBS) | APIM-mastered (unbuilt) |
+
+None of these are agent-fixable now: the OBS-mastered ones need the module-grain master
+rows that only land with the B2-S1 build; the external ones need their owner domains to be
+built. They are part of the existing unbuilt cascade, not new work. Recorded here for the
+sender (OBS); no owner-file q was written because none has a built owner with a persona pool.
+
+RESOLVED (2, no action): 8.6.4.5 "Implement software change/release" (pid 1262, inbound 773
+VSDP->OBS, payload software_deployments) and 8.6.4.8 "Verify change/release implementation
+success" (pid 1265, inbound 756 APP-PAAS->OBS, payload paas_deployments).
+
+### Resolution
+
+B1A-B9D-VERIFY is RESOLVED: B9d has now run bidirectionally on every OBS boundary, the 3
+ORPHANs are recorded on their owners, and the 5 UNOWNED dependencies are documented as part
+of the unbuilt cascade. With the one agent-executable item closed, OBS has no remaining
+agent-doable work: everything still open is a user decision (B2-S1 build shape, the
+destructive B2-S2 / B2-S3 steps, B2-APQC-616-617) or the build-gated cascade. OBS returns
+to `next_action_by: user`.
+
+No catalog/database writes (B9d is additive audit-file only here). No JWT errors.

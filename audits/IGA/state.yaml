@@ -1,14 +1,10 @@
 schema_version: 2
 domain: IGA
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-07"
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-NOTES-DMDO
     summary: "DESTRUCTIVE (overwrite non-empty notes): PATCH notes='' on 20 IGA DMDO rows (ids 789-808) that restate role+necessity+target module (Rule #15 forbidden pattern); contingent on B2-S3-CARRY answer. NOT applied by the 2026-06-07 pass (overwriting a non-empty value needs sign-off)."
     finding: "20 domain_module_data_objects rows on IGA modules carry notes that restate what role+necessity+target_module already communicate (e.g. 'Mover events trigger access-review requests in IGA.', 'Contract-end events auto-trigger access revocation via provisioning.', 'ITSM service-catalog publications spawn corresponding entitlement-catalog entries.'). Rule #15 explicitly bans this pattern. Affected ids: 789, 790, 791, 792, 793, 794, 795, 796, 797, 798, 799, 800, 801, 802, 803, 804, 805, 806, 807, 808."
@@ -153,6 +149,36 @@ b2:
       - "Load the missing PCFs into /processes (a catalog-wide change, outside IGA scope)."
       - "Defer until the catalog-wide PCF backfill."
     why: "Without resolution these 5 high-confidence APQC tags stay deferred and the H1 process-health number stays below target."
+  - id: B2-B9D-OWN-365
+    summary: "Identity Governance and Administration: name an owner for \"Establish the enterprise risk framework and policies\" (no one is responsible for it today)"
+    question: |
+      Governance, Risk and Compliance forwards iga sod violation to Identity Governance and Administration to establish the enterprise risk framework and policies, but Identity Governance and Administration does not yet have anyone assigned to establish the enterprise risk framework and policies, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Identity Governance and Administration owns, and assign a named owner once Identity Governance and Administration sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Identity Governance and Administration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-IGA.md q13.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1335
+    summary: "Identity Governance and Administration: name an owner for \"Manage asset resource deployment and utilization\" (no one is responsible for it today)"
+    question: |
+      IT Asset Management forwards iga provisioning event to Identity Governance and Administration to manage asset resource deployment and utilization, but Identity Governance and Administration does not yet have anyone assigned to manage asset resource deployment and utilization, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Identity Governance and Administration owns, and assign a named owner once Identity Governance and Administration sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Identity Governance and Administration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-IGA.md q14.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-RETAG-466
+    summary: "DESTRUCTIVE (re-point an existing handoff_processes tag): IGA authored handoff 466's process tag at the coarse code 8.3.8; a more-specific code 8.7.5.9 exists on the same carried entity. Re-point or leave?"
+    question: |
+      Handoff 466 (Identity Governance and Administration sends an approved access request to IT Service Management as a service incident) is currently tagged with the broad process \"Manage IT user identity and authorization\". A narrower process that fits the same work, \"Triage IT service delivery incidents\", already exists. Should the tag be re-pointed to the narrower process?
+    options:
+      - "Re-point handoff 466's tag from process 273 (8.3.8) to process 1299 (8.7.5.9). Mechanical, but it overwrites an existing tag, so it needs your sign-off."
+      - "Leave the tag at the broader process 8.3.8."
+    why: |
+      The narrower tag describes the actual incident-triage work the handoff realizes, improving process-health accuracy. It overwrites a non-empty value (Rule #21 destructive), so the agent will not apply it without confirmation. Surfaced as q-IGA.md q15. The sibling re-point on handoff 631 belongs to IT Service Management's audit (it is the source of 631).
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-RULESETS

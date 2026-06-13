@@ -107,6 +107,26 @@ a9:
 
 ---
 
+q12: One outbound link to the Customer Data Platform (when a customer golden record is updated) is currently labeled with a generic "manage product and service master data" process. A more precise label, "manage customer master data," already exists for exactly that customer payload. Should I switch the label to the customer-specific one? (yes/no)
+
+Recommended: yes. The link carries customers, so the customer-specific label is the correct one and makes the cross-system picture line up. Switching it replaces the existing label, which is a change to an existing record, so it needs your sign-off.
+
+a12:
+
+---
+
+q13: One outbound link to HCM (when an employee golden record is created) carries two process labels: the correct "manage and maintain employee data," plus a redundant generic "maintain master data." How should the redundant one be handled?
+
+- a) Remove the redundant "maintain master data" label, keeping only "manage and maintain employee data."
+- b) Re-point the redundant label to "manage separation" instead of removing it.
+- c) Keep both labels.
+
+Recommended: a. The employee payload is already fully covered by the employee-data label, so the generic master-data label is redundant noise. Removing it is a deletion of an existing record, so it needs your sign-off.
+
+a13:
+
+---
+
 ## Optional (will not hold up the build)
 
 q10: Beyond the six objects modeled today, the flagship MDM vendors model a deeper substrate (match candidates, stewardship task queues, per-attribute survivorship rules, data-quality rules, and parent-child golden-record hierarchies, each suggesting its own module: stewardship workflow, data quality, hierarchy management). Should I research and add the ones that hold up across the vendor set? (yes/no)
@@ -125,4 +145,4 @@ a11:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S2 q2=B2-S1 q3=B2-S3 q4=B2-S8 q5=B2-S4 q6=B2-S5 q7=B2-S6 q8=B2-S7+B3-R1+B3-R2+B3-R3+B3-R4 q9=B2-B11 q10=B3-E1+B3-E2+B3-E3+B3-E4+B3-E5+B3-M1+B3-M2+B3-M3 q11=B3-D1 | domain_id=87 -->
+<!-- agent map, ignore: q1=B2-S2 q2=B2-S1 q3=B2-S3 q4=B2-S8 q5=B2-S4 q6=B2-S5 q7=B2-S6 q8=B2-S7+B3-R1+B3-R2+B3-R3+B3-R4 q9=B2-B11 q12=B2-B9D-RETAG-272 q13=B2-B9D-MISTAG-274 q10=B3-E1+B3-E2+B3-E3+B3-E4+B3-E5+B3-M1+B3-M2+B3-M3 q11=B3-D1 | domain_id=87 -->

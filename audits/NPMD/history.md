@@ -661,3 +661,35 @@ obligations. What remains is user-owned (b2) or gated on the build (b1b) or RETI
 
 next_action_by=user. All b1a closed; status feedback_needed pending the b2 decisions, chiefly
 B2-MOD-SPLIT which gates the build.
+
+## 2026-06-13, B9d handoff-payload realization (B1A-B9D-VERIFY resolved)
+
+Ran `scripts/analytics/b9d_resolver.ts NPMD` in BOTH directions (the B9d band; the only open b1a
+on this domain). Boundary tags classified: 8 outbound payload tags across 5 distinct (process, owner)
+findings; inbound boundary empty (NPMD declares no consumer dependencies, nothing owed inbound).
+
+Verdicts: 1 ORPHAN, 4 UNOWNED.
+
+- **ORPHAN (1): process 1299 "Triage IT service delivery incidents" -> owner ITSM (unbuilt).**
+  Carried entity `service_incidents` (id 47) is mastered by ITSM; handoffs 650 / 652 (NPMD->ITSM).
+  The owner-side obligation already exists in ITSM's audit files (`B2-B9D-OWN-1299` in
+  audits/ITSM/state.yaml line 127; surfaced as q8 in audits/ITSM/q-ITSM.md). The resolver `--write`
+  run was therefore an idempotent no-op (state.yaml:exists, q-file:exists q8). No ITSM file changed,
+  no catalog write.
+- **UNOWNED (4): processes 1128, 1137, 1304, 1309.** The carried entities (`network_paths` 539,
+  `network_performance_metrics` 540, `network_flow_records` 538, `saas_application_performance` 543,
+  `network_topology_snapshots` 544) have no `domain_module_data_objects` master row anywhere, so the
+  resolver reads them as no-master / UNOWNED. This is a direct consequence of NPMD being UNBUILT:
+  these are NPMD masters in the legacy `domain_data_objects` rollup but carry no DMDO `master` row
+  until B1B-M1 lands the module split. The resolver surfaced them for sign-off (NOT auto-written),
+  which is correct. They resolve automatically once B1B-M1 ships the modules and DMDO master rows;
+  tracked as B1B-B9D-UNOWNED in state.yaml, blocked on B1B-M1.
+
+No ROLL-UP re-points and no MIS-TAGs were produced for NPMD (no destructive sign-off owed from this
+band). Rule #1 honored: no `record_status` touched, no catalog write.
+
+### Post-B9d status
+
+next_action_by=user. B1A-B9D-VERIFY resolved (B9d ran both directions; ORPHAN already owned by ITSM,
+UNOWNED parked on B1B-M1). No agent-executable b1a remains. The domain is gated on the b2 decisions
+(chiefly B2-MOD-SPLIT) and the M1-blocked b1b cascade. q-NPMD.md (6 questions + 1 optional) is current.

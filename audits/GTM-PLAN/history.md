@@ -461,3 +461,65 @@ empty fields, guards against em-dash).
 ### UI links
 
 - https://tests.semantius.app/domain_map/domains (the PATCHed catalog UX row, id 104)
+
+## 2026-06-13 - Audit (state-driven execute: B9d + Phase 0 forcing step)
+
+### Summary
+
+State-driven Validate (Rule #21) over GTM-PLAN's open agent-executable surface. Live re-verify
+(`/domains?domain_code=eq.GTM-PLAN`, `/domain_modules?domain_id=eq.104`,
+`/handoffs?or=(source_domain_id.eq.104,target_domain_id.eq.104)`) confirms GTM-PLAN (id 104) is
+still fully UNBUILT: 0 domain_modules, 0 masters, 0 handoffs in either direction. Catalog UX
+(tagline + description) is populated and untouched. Two agent-executable items were outstanding:
+B1A-B9D-VERIFY (run B9d) and the Rule #22 forcing step (Phase 0 must run before the market-shape
+q-file is surfaced). Both executed this pass; no catalog writes (unbuilt domain).
+
+### Executed
+
+| Item | Action | Result |
+|---|---|---|
+| B1A-B9D-VERIFY | Ran `scripts/analytics/b9d_resolver.ts GTM-PLAN` (dry-run then --write), both directions. | 0 boundary tags, 0 (process,owner) findings, 0 owner-file edits. B9d passes vacuously (0 handoffs on any boundary). Item resolved; removed from state.yaml. |
+| Rule #22 Phase 0 | Ran Phase 0 vendor-surface research (general-purpose subagent); saved `.tmp_deploy/GTM-PLAN-phase0-2026-06-13.md` (flagship-vendor table, union surface matrix, modularization hypothesis, per-decision verdicts D1-D5). | Fresh evidence CONTRADICTED three q-file recommendations; reversed them (Rule #22 "fresh evidence wins") and regenerated `q-GTM-PLAN.md`. |
+
+### Phase 0 verdicts (now driving the q-file recommendations)
+
+- **D1 / B2-M1 (module shape): 5 modules**, reversing the prior "8". Anaplan ships discrete apps
+  (Account Segmentation; Territory and Quota; Sales Capacity; Crediting; Incentive Comp), proving
+  territory+quota are one surface and capacity another, but does NOT split segmentation/ICP/scoring
+  into three products; Salesforce Sales Planning and Fullcast collapse further. 8 over-splits,
+  3 under-splits. Recommended shape: PLANNING-CORE + TERRITORY-QUOTA + CAPACITY + SCENARIO +
+  EXEC-HANDOFF (channel-mix and launch-orch decided by B3-CHANNEL-MIX-SCOPE and B2-S1).
+- **D2 / B2-S1 (PMM): promote, relocate LAUNCH-ORCH.** No GTM-planning vendor masters launch plans /
+  milestones / checklists / battlecards; Klue, Crayon, Aha! do, with a distinct PMM/PM buyer.
+- **D3 / B2-S2 (ABM-PLATFORM): promote as downstream engagement consumer; keep ICP + target lists +
+  planning-grade scoring in GTM-PLAN.** Demandbase / 6sense differentiate on intent / ad targeting /
+  web personalization (engagement-only); the planning side is native to the GTM planners too.
+- **D4 / B3-SALES-PLANNING-PLATFORM: do NOT promote**, reversing the prior promote-leaning stance.
+  The Gartner "Sales Planning Platforms" category could not be verified (territory/quota live inside
+  the SPM Market Guide; Anaplan sits in xP&A). Keep TERRITORY / CAPACITY / SCENARIO in GTM-PLAN.
+- **D5 / B3-CHANNEL-MIX-SCOPE: split.** Keep the strategic channel-mix master in GTM-PLAN; relocate
+  paid-media / campaign budget allocation downstream to MA / ABM-PLATFORM.
+- **Compliance / B2-R1: none.** GTM-PLAN masters cohort-level data, not contact-level PII; the
+  GDPR/CCPA-triggering intent surface lives downstream in Demandbase / 6sense (ABM-PLATFORM).
+
+### Left (all user decisions; nothing agent-executable remains)
+
+- B2-M1, B2-C1, B2-R1, B2-S1, B2-S2, B2-D1, B2-P1: the build (B1A-BUILD / B1B-M1, B1B-V1..V4) is
+  gated on these. q-GTM-PLAN.md surfaces all of them with Phase-0-grounded recommendations.
+- B3-PMM, B3-ABM-PLATFORM, B3-SALES-PLANNING-PLATFORM, B3-CHANNEL-MIX-SCOPE: Phase 0 now executed on
+  all four; surfaced as q8 / q9 (the two non-blocking ones) with verdicts. PMM and ABM-PLATFORM
+  ride their B2-S1 / B2-S2 twins.
+- B1A-RECLASS: classification settled (master-bearing), recorded only; the build is B1B-M1.
+
+### Files written
+
+- `audits/GTM-PLAN/q-GTM-PLAN.md` (regenerated from Phase 0 evidence; q1/q8 recommendations reversed)
+- `audits/GTM-PLAN/state.yaml` (removed resolved B1A-B9D-VERIFY; folded Phase 0 verdicts +
+  recommended answers into B2-M1 / B2-R1 / B2-S1 / B2-S2 / B3-* via extra_phase0 / extra_recommended;
+  next_action_by agent -> user; last_audit 2026-06-13)
+- `audits/GTM-PLAN/history.md` (this section)
+- `.tmp_deploy/GTM-PLAN-phase0-2026-06-13.md` (Phase 0 report, ephemeral)
+
+### UI links
+
+- https://tests.semantius.app/domain_map/domains (catalog UX row, id 104, unchanged this pass)

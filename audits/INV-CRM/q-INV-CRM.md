@@ -70,6 +70,16 @@ a5:
 
 ---
 
+q7: Private Capital Fund Administration forwards lp prospect to Investor Relationship and Deal Flow Management to manage international funds or consolidation, but Investor Relationship and Deal Flow Management does not yet have anyone assigned to manage international funds or consolidation, so this step has no owner. How should it be handled?
+- a) Record it now as work Investor Relationship and Deal Flow Management owns, and assign a named owner once Investor Relationship and Deal Flow Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Investor Relationship and Deal Flow Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a7:
+
+---
+
 ## Optional (will not hold up the build)
 
 q6: Seven extra entities show up across the flagship VC and PE specialists (email threads, free-text CRM notes, signal alerts, allocation mandates, deal-attached documents, per-record activity logs, and a funds consumer or embedded master on the LP-CRM side). Should I research and add the ones that hold up? (yes/no)
@@ -80,4 +90,4 @@ a6:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MODULARIZATION-STABILITY q2=B2-CONFIG-SHAPE q3=B2-REGULATION-SCOPE q4=B2-ROLE-NAMING q5=B2-PAIRWISE-AUDIT-SCHEDULE q6=B3-EMAIL-THREADS+B3-NOTES+B3-SIGNAL-ALERTS+B3-MANDATES+B3-DOCUMENTS+B3-ACTIVITY-LOGS+B3-FUNDS | domain_id=159 -->
+<!-- agent map, ignore: q1=B2-MODULARIZATION-STABILITY q2=B2-CONFIG-SHAPE q3=B2-REGULATION-SCOPE q4=B2-ROLE-NAMING q5=B2-PAIRWISE-AUDIT-SCHEDULE q6=B3-EMAIL-THREADS+B3-NOTES+B3-SIGNAL-ALERTS+B3-MANDATES+B3-DOCUMENTS+B3-ACTIVITY-LOGS+B3-FUNDS q7=B2-B9D-OWN-63 | domain_id=159 -->

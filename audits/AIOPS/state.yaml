@@ -3,6 +3,7 @@ domain: AIOPS
 status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-13"
+# B9d reference-read (2026-06-13): "Alert Suppression Rule" is reference/config data of AIOPS; it becomes ownable work only if AIOPS later runs a workflow on it.
 
 # 2026-06-13: B9d (handoff payload realization) run via scripts/analytics/b9d_resolver.ts
 # in BOTH directions across all 13 boundary tags (14 distinct (process,owner) findings).

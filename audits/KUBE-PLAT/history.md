@@ -616,3 +616,15 @@ APP-PAAS B10b (source FK on 753); OBS/VSDP/GRC/ITOM B10b (target FKs on 760/762/
 - https://tests.semantius.app/domain_map/trigger_events?data_object_id=in.(448,449,450,451,452,453,454,455)
 - https://tests.semantius.app/domain_map/domains?id=eq.81
 - https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(448,449,450,451,452,453,454,455)
+
+## 2026-06-13, B9d run (resolve B1A-B9D-VERIFY)
+
+State-driven pass: the only agent-executable open item was B1A-B9D-VERIFY (run B9d on every boundary, both directions). Ran `scripts/analytics/b9d_resolver.ts KUBE-PLAT` (dry-run then --write). All 8 boundary tags classified across both directions; nothing destructive proposed.
+
+Verdicts (per (process, owner)): 1 RESOLVED, 1 ORPHAN, 5 UNOWNED.
+
+- RESOLVED: 8.6.4.5 "Implement software change/release" (pid 1262), helm_releases -> VSDP (handoff 762). No action.
+- ORPHAN: 8.7.5.9 "Triage IT service delivery incidents" (pid 1299), service_incidents on handoff 763 (KUBE-PLAT -> ITSM). Owner = ITSM (master exists, domain unbuilt). Routed an additive b2 item B2-B9D-OWN-1299 + question into ITSM's audit files (state.yaml hygiene carve-out (b)). The resolver found the ITSM-side item already present (added 2026-06-13 from another sender's boundary; the owner-side question dedupes by (process, owner)), so the KUBE-PLAT boundary is already reconciled on the ITSM side. The --write run additively synced ITSM's full owner-side B9d backlog (it also materialized the already-footnoted q16/q17 = B2-B9D-OWN-370, B2-B9D-OWN-1293 bodies); purely additive, no deletions, no record_status touched.
+- UNOWNED (5): 8.7.6.4 (pid 1304) cluster_node_pools/kubernetes_clusters -> ITOM/OBS (761, 760); 8.7.6.5 (pid 1305) container_workloads -> APP-PAAS (759); 8.7.6.7 (pid 1307) container_registries -> GRC (764); 8.7.7.3 (pid 1311) paas_deployments -> KUBE-PLAT inbound (753); 8.7.7.4 (pid 1312) kubernetes_clusters -> ITAM (799). Each carried entity has a legacy domain_data_objects master (domain 81) but NO domain_module_data_objects master row, because KUBE-PLAT has zero modules. The resolver reads ownership at module grain, so it cannot route these until B1B-S1 (modules) lands. Recorded as extra_b9d on B1B-S7; clears automatically once the unbuilt build runs (gated on B2-MODULARIZATION). Not a new gap, a symptom of the already-surfaced unbuilt state. Surfaced for the sender, not dropped.
+
+No ROLL-UPs, no MIS-TAGs. No catalog/database writes. No record_status changes (Rule #1). B1A-B9D-VERIFY resolved and removed from state.yaml (b1a block now empty). next_action_by flipped agent -> user: everything still open is b1b (blocked on B2-MODULARIZATION / B2-EDGE-TUPLES / B2-ALIAS-TUPLES) or b2 user decisions, all already in the current q-KUBE-PLAT.md. No q-file refresh needed (no b1a/b1b ever appear there; the b2/b3 set is unchanged).

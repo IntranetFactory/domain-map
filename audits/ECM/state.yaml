@@ -13,6 +13,8 @@ domain: ECM
 status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-13"
+# B9d reference-read (2026-06-13): "Document Folder" is reference/config data of ECM; it becomes ownable work only if ECM later runs a workflow on it.
+# B9d reference-read (2026-06-13): "Document Classification" is reference/config data of ECM; it becomes ownable work only if ECM later runs a workflow on it.
 
 # b1a fully cleared. See history.md for the 2026-06-06 and 2026-06-13 execution notes.
 # 2026-06-13 agent pass cleared: B1A-B9D-VERIFY (B9d run both directions via b9d_resolver),

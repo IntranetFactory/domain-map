@@ -11,24 +11,25 @@
 schema_version: 2
 domain: NPMD
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # Pending items only. Resolved items live in history.md.
 # next_action_by derives: agent (b1a non-empty) > user (b2) > research (b3) > blocked (only b1b) > done.
-# 2026-06-07 state-driven execute closed all b1a (entity_type, event_category, catalog voice,
-# intra-domain relationships, missing handoffs, aliases, alert lifecycle). What remains is
-# user-owned: the module-split decision (B2-MOD-SPLIT) gates the whole build cascade, and the
-# remaining b2 judgment calls. b1b items are blocked on that build, on user decisions, or are
-# RETIRED under the per-domain-skill supersession above. next_action_by=user (b2 non-empty).
-
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+# 2026-06-13 B9d ran both directions (B1A-B9D-VERIFY resolved): 1 ORPHAN (process 1299) already owned
+# by ITSM (B2-B9D-OWN-1299, idempotent no-op); 4 UNOWNED carried entities parked on B1B-M1 (NPMD masters
+# have no DMDO master row until the module split lands). No ROLL-UP / MIS-TAG owed. No b1a remains.
+# What remains is user-owned: the module-split decision (B2-MOD-SPLIT) gates the whole build cascade,
+# plus the remaining b2 judgment calls; b1b items are blocked on that build. next_action_by=user (b2 non-empty).
 
 b1b:
+  - id: B1B-B9D-UNOWNED
+    summary: "4 B9d UNOWNED carried entities on NPMD outbound boundaries: the masters resolve no DMDO owner because NPMD is unbuilt."
+    finding: "2026-06-13 B9d resolver classified 4 (process,owner) findings as UNOWNED: 1128 on network_paths (->AIOPS 1394), 1137 on saas_application_performance (->DEM 653), 1304 on network_performance_metrics/network_flow_records/saas_application_performance (->OBS 651, ->AIOPS 649, ->DEM 653), 1309 on network_topology_snapshots (->CMDB 654). These are NPMD masters in the legacy domain_data_objects rollup but carry no domain_module_data_objects master row, so the resolver reads them as no-master. Surfaced for sign-off, NOT auto-written, per the B9d band."
+    action: "Resolves automatically when B1B-M1 lands the module split and authors the DMDO master rows for the 8 NPMD masters; the carried entities then resolve to NPMD as owner and the payloads reclassify (RESOLVED or owner-routed) on the next B9d run. No agent action available before M1."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-M1}
+    affected_handoffs: [649, 651, 653, 654, 1394]
   - id: B1B-M1
     summary: Author NPMD domain_modules (default 4-module split) and load module-realizing capabilities (A2) plus vendors/solutions (A3). UNBUILT domain.
     finding: "Live 2026-06-07: 0 domain_modules (M1 hard fail), 0 capability_domains (A2), 0 solution_domains (A3). NPMD is UNBUILT. Per the build rule the module cascade is not scaffolded piecemeal; it lands together once the split is chosen. The 8 masters, 9 trigger_events, 9 outbound handoffs, intra-domain relationships, aliases, entity_type, and the alert lifecycle are all in place and module-independent."

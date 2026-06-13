@@ -178,6 +178,56 @@ b2:
     why: |
       Recording it now means that the moment Food Safety and Quality Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSQM.md q11.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-170
+    summary: "Food Safety and Quality Management: name an owner for \"Perform quality testing\" (no one is responsible for it today)"
+    question: |
+      Governance, Risk and Compliance forwards ccp measurement to Food Safety and Quality Management to perform quality testing, but Food Safety and Quality Management does not yet have anyone assigned to perform quality testing, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Food Safety and Quality Management owns, and assign a named owner once Food Safety and Quality Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Food Safety and Quality Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSQM.md q12.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-393
+    summary: "Food Safety and Quality Management: name an owner for \"Ensure compliance\" (no one is responsible for it today)"
+    question: |
+      Governance, Risk and Compliance forwards allergen program to Food Safety and Quality Management to ensure compliance, but Food Safety and Quality Management does not yet have anyone assigned to ensure compliance, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Food Safety and Quality Management owns, and assign a named owner once Food Safety and Quality Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Food Safety and Quality Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSQM.md q13.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-579
+    summary: "Food Safety and Quality Management: name an owner for \"Eliminate quality and reliability problems\" (no one is responsible for it today)"
+    question: |
+      Manufacturing Connected Operations forwards critical control point to Food Safety and Quality Management to eliminate quality and reliability problems, but Food Safety and Quality Management does not yet have anyone assigned to eliminate quality and reliability problems, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Food Safety and Quality Management owns, and assign a named owner once Food Safety and Quality Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Food Safety and Quality Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSQM.md q14.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-817
+    summary: "Food Safety and Quality Management: name an owner for \"Support inventory and production processes\" (no one is responsible for it today)"
+    question: |
+      Manufacturing Connected Operations forwards sanitation record to Food Safety and Quality Management to support inventory and production processes, but Food Safety and Quality Management does not yet have anyone assigned to support inventory and production processes, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Food Safety and Quality Management owns, and assign a named owner once Food Safety and Quality Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Food Safety and Quality Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSQM.md q15.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1551
+    summary: "Food Safety and Quality Management: name an owner for \"Undertake quality control\" (no one is responsible for it today)"
+    question: |
+      Manufacturing Connected Operations forwards sanitation record to Food Safety and Quality Management to undertake quality control, but Food Safety and Quality Management does not yet have anyone assigned to undertake quality control, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Food Safety and Quality Management owns, and assign a named owner once Food Safety and Quality Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Food Safety and Quality Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSQM.md q16.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-CORRECTIVE-ACTION-RECORDS

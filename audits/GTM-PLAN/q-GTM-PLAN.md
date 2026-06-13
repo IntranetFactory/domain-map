@@ -10,10 +10,10 @@ Go-to-Market Planning runs the cross-functional planning that decides how you en
 q1: (answer this first) How should Go-to-Market Planning be split into modules (the sub-areas of the product)?
 
 - a) Eight modules, one per capability: ICP and segmentation; account targeting; territory; capacity; channel mix; launch orchestration; scenario modeling; plan-to-execution handoff.
-- b) Five modules: a combined planning core (ICP, account targeting, territory, channel mix) plus capacity, launch orchestration, scenario modeling, and plan-to-execution handoff.
+- b) Five core modules along the lines real planning vendors draw: planning core (segmentation, ICP, named-account lists, account scoring together); territory and quota; capacity; scenario modeling; plan lock and handoff. (Channel mix and launch orchestration are then decided by q9 and q4 respectively, rather than getting their own up-front module.)
 - c) Three modules: plan design, scenario modeling, and plan lock and push.
 
-Recommended: a. The granular per-capability shape mirrors how Anaplan and Pigment lay out plan-modeling tabs and maps cleanly onto the eight existing capabilities. This choice drives the whole build (every module, master placement, and the promotion calls below depend on it), so it unlocks the rest.
+Recommended: b. Vendor reality, not tidiness, sets this. Anaplan Sales Planning ships discrete apps (Account Segmentation; Territory and Quota; Sales Capacity; Crediting; Incentive Comp), which proves territory and quota travel together as one surface and capacity as another, but it does NOT split segmentation, ICP, and account scoring into three separate products: they are one segmentation app. Pigment bundles the same way (territory plus quota together; capacity and scenario as surfaces inside one platform). The CRM-native vendors collapse even further: Salesforce Sales Planning is a single product whose tabs are Segment/Hierarchy, Territory Carving, Quota Allocation, and Collaboration, and Fullcast unifies plan plus handoff in one plan-to-pay surface. So eight (a) over-splits: no vendor sells segmentation, ICP, and scoring as three products. Three (c) under-splits: it would fuse capacity with scenario against Anaplan's explicit app boundary. The five-module seam matches what Anaplan, Pigment, Fullcast, and Salesforce actually expose. This choice drives the whole build, so it unlocks the rest.
 
 a1:
 
@@ -26,7 +26,7 @@ q2: Should the launch-orchestration and channel-mix capabilities carry their own
 - c) Override launch orchestration only, leave channel mix inherited.
 - d) Wait until PMM is promoted (q4) and relocate launch orchestration there entirely.
 
-Recommended: a. Launch orchestration is naturally PMM-owned and channel mix is naturally Marketing-Ops-owned, so explicit overrides match reality. If you lean toward promoting PMM in q4, option (d) becomes the cleaner path for launch orchestration.
+Recommended: d for launch orchestration, with channel mix overridden to Marketing. The Phase 0 surface shows launch plans, launch milestones, readiness checklists, and battlecards are mastered only by the PMM/CI tools (Klue, Crayon, Aha!), never by the GTM-planning vendors, so the cleaner move is to relocate launch orchestration into a promoted PMM domain (q4) rather than leave it as a Sales-Ops capability with an override. Channel mix is claimed by Marketing-Ops budget tools (HubSpot Marketing Hub, Salesforce Marketing Cloud Account Engagement) for its spend-allocation half, so a Marketing override on the channel-mix capability matches the buyer. If you decline to promote PMM in q4, fall back to (a) and override launch orchestration to Product Management.
 
 a2:
 
@@ -34,12 +34,12 @@ a2:
 
 q3: Which compliance frameworks should be tagged onto Go-to-Market Planning?
 
-- a) None (it is a planning shell, regulations apply downstream at CRM and Marketing Automation).
+- a) None (it is a planning shell, regulations apply downstream at CRM, Marketing Automation, and the ABM platform).
 - b) GDPR only (account-scoring may include EU-resident intent data).
 - c) GDPR plus CCPA (US plus EU intent-data coverage).
 - d) GDPR plus CCPA plus SOX (full conservative set).
 
-Recommended: a. The planning shell has no statutory anchor of its own; regulation exposure exists only if account-scoring carries contact-level data, and that risk lands in the consuming systems. Pick (b) or (c) if your account scores include EU or US contact-level intent data.
+Recommended: a. The Phase 0 surface confirms GTM-PLAN masters cohort-level segments, ICPs, and named-account lists, not contact-level PII. The contact-level intent surface that actually triggers GDPR/CCPA exposure (person-level scoring, intent signals) lives in Demandbase and 6sense, the downstream ABM engagement system, not in the planning domain. If account scores ever ingest EU or US contact-level intent, the consent and subject-access entities belong with that data in the promoted ABM-PLATFORM (q5), not here. So no regulation rows on GTM-PLAN.
 
 a3:
 
@@ -47,11 +47,11 @@ a3:
 
 q4: Should PMM (Product Marketing Management) be promoted as its own domain, taking the launch-orchestration capability and its module out of Go-to-Market Planning?
 
-- a) Promote PMM and relocate launch orchestration (cleanest market shape, matches the Klue, Crayon, and Aha! Roadmaps Create vendor boundary).
+- a) Promote PMM and relocate launch orchestration.
 - b) Keep launch orchestration in Go-to-Market Planning and let PMM be the launch-readiness consumer downstream.
 - c) Wait until PMM is mentioned in more domains before deciding (cross-domain blast radius).
 
-Recommended: a. The PMM buyer is distinct from Sales Ops and RevOps, and promoting it resolves the launch-orchestration ownership question while shrinking the module set. PMM is already queued at mention count 2.
+Recommended: a. None of the GTM-planning vendors (Anaplan, Pigment, Fullcast, Salesforce, Varicent) master launch plans, launch milestones, readiness checklists, or battlecards; those surfaces are absent from their products entirely. They are mastered by a distinct market with a distinct buyer: Klue and Crayon (competitive intelligence and launch support, bought by Product Marketing) and Aha! (cross-functional product-launch orchestration, bought by Product/PMM). Highspot and Seismic sit enablement-adjacent, confirming launch lives in a PMM/PM neighborhood, not the Sales-Ops/RevOps planning neighborhood. The buyer split is clean, so launch orchestration is not a feature the GTM-planning vendors carry; promote PMM and move the launch entities there.
 
 a4:
 
@@ -59,19 +59,19 @@ a4:
 
 q5: Should ABM-PLATFORM be promoted as its own domain, taking the market-segmentation and account-scoring capabilities (the ICP and account-targeting modules) out of Go-to-Market Planning?
 
-- a) Promote ABM-PLATFORM and relocate both modules (Gartner has consistently treated ABM as its own platform market with a Marketing-Ops buyer).
-- b) Keep ICP and account targeting in Go-to-Market Planning as the Sales-Ops-owned planning side, and let ABM-PLATFORM run the Marketing-Ops-owned engagement side downstream (the planning vs engagement cut).
+- a) Promote ABM-PLATFORM and relocate both capabilities and their entities (ICP, target lists, all account scoring).
+- b) Promote ABM-PLATFORM as the downstream engagement platform, but keep ICP, named account lists, and planning-grade account scoring in Go-to-Market Planning (the planning-vs-engagement cut).
 - c) Defer until ABM-PLATFORM is mentioned in more domains.
 
-Recommended: b. The defensible cut is that Go-to-Market Planning authors ICPs and named account lists once per planning cycle, while ABM-PLATFORM ingests those lists and runs engagement (intent scoring, ad targeting, web personalization). ABM-PLATFORM is only at mention count 1.
+Recommended: b. The vendors draw a clean planning-vs-engagement line themselves. Demandbase and 6sense do model ICP definition, target-account lists, and account scoring with a Marketing-Ops buyer, but their differentiator is engagement: 6sense predictive intent (in-market detection before a hand is raised), Demandbase's multi-trillion monthly signals, ad targeting, and web personalization. The planning side (ICPs and named account lists authored once per planning cycle, segment-level scoring) is also natively present in Anaplan, Pigment, Fullcast, and Salesforce Sales Planning, which proves it belongs to the planning domain. The engagement-only entities (intent signals, web-personalization rules, ad-campaign targets, contact-level scoring) sit only on the ABM side. So GTM-PLAN authors the ICPs, target lists, and planning-grade scores; ABM-PLATFORM ingests them and runs engagement. Promote ABM-PLATFORM owning intent/ad/personalization, not the planning-side ICP authoring.
 
 a5:
 
 ---
 
-q6: If both PMM (q4) and ABM-PLATFORM (q5) are promoted, the domain description will need a rewrite to narrow its scope to the territory, quota, capacity, and scenario planning core. Should I rewrite it once those two are settled? (yes/no)
+q6: If PMM (q4) and ABM-PLATFORM (q5) are promoted, the domain description will need a light rewrite to reflect that launch orchestration moved to PMM and the engagement side moved to ABM-PLATFORM (the ICP and named-list authoring stays). Should I rewrite it once those two are settled? (yes/no)
 
-Recommended: yes, but only after q4 and q5 are answered. The new description then goes through your review. If neither promotion happens, keep the current broad description.
+Recommended: yes, but only after q4 and q5 are answered. With the recommended answers (promote PMM, keep ICP/lists in GTM-PLAN while ABM takes engagement) the rewrite is small: drop launch orchestration, clarify GTM-PLAN authors ICPs and named lists that the ABM platform then engages against. The new wording goes through your review. If neither promotion happens, keep the current broad description.
 
 a6:
 
@@ -91,17 +91,21 @@ a7:
 
 ## Optional (will not hold up the build)
 
-q8: Should SALES-PLANNING-PLATFORM be researched and promoted as its own domain, absorbing the territory-carving, capacity-planning, and scenario-modeling capabilities? This is the largest blast radius: if it lands, Go-to-Market Planning may shrink to a thin Sales-Ops shell. (yes/no)
+q8: Should SALES-PLANNING-PLATFORM be promoted as its own domain, absorbing the territory-carving, capacity-planning, and scenario-modeling capabilities? (yes/no)
 
-Recommended: yes to research it (Phase 0 against Anaplan Sales Planning, Pigment, and Fullcast), but it is non-blocking and the call is whether the planning surface and the commission surface have one buyer or two. Already queued at mention count 2.
+Recommended: no, do not promote it. The premise was that Gartner named a distinct "Sales Planning Platforms" category in 2024 to 2025; Phase 0 could not verify that. What Gartner actually publishes is the Sales Performance Management Market Guide / Magic Quadrant (which explicitly contains territory planning and quota planning) plus the xP&A Market Guide (where Anaplan sits). The asserted standalone category is not substantiated, so do not carve out a domain on a category that cannot be cited. The market behavior is real (Anaplan, Pigment, Fullcast, Salesforce, Varicent compete as a sales-planning cluster, and Anaplan and Varicent do sell Incentive Comp as a separate app from Territory and Quota, confirming a buyer split from commissions), so keep territory, capacity, and scenario inside Go-to-Market Planning as its Sales-Ops planning core for now. Revisit only if a Gartner document title for the category surfaces.
 
 a8:
 
 ---
 
-q9: Should I research where channel-mix planning truly belongs (Sales-Ops-owned inside Go-to-Market Planning, Marketing-Ops-owned in Marketing Automation, or split across both)? (yes/no)
+q9: Where should channel-mix planning live: stay whole in Go-to-Market Planning, relocate entirely to Marketing Automation, or split?
 
-Recommended: yes, but it is the least urgent candidate and non-blocking. There is no clean pure-play: Anaplan and Pigment model it inline with plan modeling, while Demandbase, 6sense, and the marketing-automation vendors model it as engagement budget allocation.
+- a) Keep it whole in Go-to-Market Planning.
+- b) Relocate it entirely to Marketing Automation.
+- c) Split: keep the planning-grade channel-mix master (which channels carry which segments, a Sales-Ops coverage decision) in Go-to-Market Planning, and relocate paid-media and campaign budget allocation downstream to Marketing Automation / the promoted ABM-PLATFORM.
+
+Recommended: c. There is no clean pure-play; the surface is claimed three ways by three buyers. Anaplan and Pigment model channel mix inline with plan modeling as a Sales-Ops coverage decision (which routes carry which segments). Demandbase and 6sense treat channel allocation as ABM engagement spend (ad budget by account tier), a Marketing-Ops decision. HubSpot Marketing Hub and Salesforce Marketing Cloud Account Engagement treat it as marketing-automation campaign budget with ROI dashboards. Because the entity bifurcates by buyer, keep the thin strategic channel-mix master here and let the spend-execution allocation live downstream.
 
 a9:
 

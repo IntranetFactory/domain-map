@@ -357,3 +357,52 @@ record_status flip. Loader: `.tmp_deploy/ipaas_state_execute_2026_06_07.ts`.
 
 `user`: every remaining b1 item is gated on B2-S1 (the module-split decision) or another b2
 judgment call. Nothing in b1a/b1b can fire until the user supplies the module split.
+
+---
+
+## 2026-06-13 - Audit (state-driven; B9d realization)
+
+### Summary
+
+State-driven Validate pass over the open items in `audits/IPAAS/state.yaml`. IPAAS (domain id 36)
+re-confirmed UNBUILT live: 0 `domain_modules` (M1 fail), 0 `capability_domains`. The build
+(B1A-BUILD / B1B-S1) and the entire M1-gated cascade stay SURFACED, not scaffolded, gated on the
+B2-S1 module-split decision. The one agent-executable open item, B1A-B9D-VERIFY, was executed.
+
+### Executed
+
+- **B9d (handoff payload realization), BOTH directions, via `scripts/analytics/b9d_resolver.ts
+  IPAAS --write`.** 8 boundary tags classified across all 7 neighbors. Verdicts: 1 RESOLVED, 2
+  ORPHAN, 5 UNOWNED. No ROLL-UP, no MIS-TAG (no destructive re-point or tag deletion needed).
+  - **RESOLVED (1):** handoff 801 IPAAS->VSDP, payload integration_recipes (PCF 8.6.4.5). No action.
+  - **ORPHAN (2), routed additively to the OWNER domain's audit files (Rule #22 carve-out (b)):**
+    handoff 765 IPAAS->ITSM, payload service_incidents -> ITSM `B2-B9D-OWN-1299` (already present
+    from a prior pass; resolver confirmed it, no duplicate written); inbound handoff 705 LCAP->IPAAS,
+    payload lcap_workflows -> LCAP `B2-B9D-OWN-278` (newly written as a b2 item + q10 in
+    `audits/LCAP/q-LCAP.md`). Both owners are unbuilt, so the realized-nearest-sibling cross-check is
+    skipped per the band; each clears on its own next review. No catalog writes, no record_status
+    flips.
+  - **UNOWNED (5), surfaced for user review on the sender (IPAAS), NOT auto-written (carried entity
+    has no master row anywhere):** handoff 767 integration_connectors (PCF 8.3.8); inbound 748
+    api_specifications (PCF 8.6.1); handoff 766 integration_runs (PCF 8.7.5.9); handoff 768
+    integration_data_mappings (PCF 13.3.2.1); handoff 769 webhook_subscriptions (PCF 8.5.5.1.4).
+    Recorded in `extra_report_only_other_domains` for the user to decide (own elsewhere vs accept as
+    a domain-level signal). The 5 IPAAS-mastered payloads here are integration_connectors /
+    integration_runs / integration_data_mappings / webhook_subscriptions, which DO have master rows
+    on IPAAS as data_objects; the resolver reports them no-master because IPAAS has 0
+    `domain_module_data_objects` rows (no modules), i.e. the dependency resolves the moment B1B-S1
+    lands and the masters attribute to modules. Left as surfaced rather than force-resolved.
+
+### Left (unchanged, all gated on B2-S1 or another b2)
+
+- **B1A-BUILD / B1B-S1:** the build (modules + capabilities + DMDOs). Gated on B2-S1.
+- **B1B-S3, S4, S7, S9, S10, S11:** M1-gated cascade. Not touched.
+- **B1B-S6:** vendor-keyed aliases (Rule #18 industry_id). Generic surface already done.
+- **b2 (S1, S3, S4, S5, S6, S7, S8):** user judgment; q-IPAAS.md already current.
+- **b3 (5 candidates):** backlog; not auto-executed.
+
+### next_action_by
+
+`user`: B1A-B9D-VERIFY is resolved (removed from state.yaml). No agent-executable work remains.
+Every open b1 item is gated on the B2-S1 module-split decision or another b2 judgment call. The
+existing q-IPAAS.md already surfaces all 8 b2 questions; it stays current.

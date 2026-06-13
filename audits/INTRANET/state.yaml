@@ -1,21 +1,20 @@
 schema_version: 2
 domain: INTRANET
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
-# 2026-06-07 state-driven execute: catalog UX copy written (override of the stale
-# surface-before-write gate), and 5 generic domain_aliases inserted (B11). The domain
-# remains UNBUILT (0 domain_modules, 0 masters); the build and its whole cascade are
-# left, because the classification (leadership-tier vs real point-solution market vs
-# hybrid) is still an open user decision (B2-CLASSIFICATION). Per Rule #21 UNBUILT
-# clause: do not scaffold; surface the build; leave the cascade.
+# 2026-06-13 state-driven execute: ran the B9d resolver in BOTH directions (zero handoff
+# boundaries on this domain, so zero payloads to classify) -- B1A-B9D-VERIFY resolved,
+# moved to history.md. Ran Phase 0 vendor research (Rule #22 forcing step for the
+# market-shape B2-CLASSIFICATION gate): verdict master-bearing-but-partial, recommends
+# route (c) hybrid (~3 entity-owning modules + analytics; journey/frontline/advocacy are
+# overlays). Folded that named-vendor evidence into B2-CLASSIFICATION + B2-MODULARIZATION
+# and the q-file. No agent-executable work remains: the domain is UNBUILT and its build is
+# gated entirely on the user's classification route (Rule #21 UNBUILT clause: do not
+# scaffold). next_action_by=user.
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-RECLASS
     summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; under the overlay test INTRANET is master-bearing. Build needed, not an exemption. SURFACED, not executed (gated on B2-CLASSIFICATION + UNBUILT-do-not-scaffold)."
     finding: >
@@ -82,18 +81,31 @@ b2:
   - id: B2-CLASSIFICATION
     summary: Is INTRANET a leadership-tier aggregator or a real point-solution market? Gates the entire build.
     question: |
-      SKILL.md leadership-tier list includes INTRANET (zero masters expected). The vendor
-      surface (a real software market customers buy as system of record for internal
-      communications) plus the rescinded leadership-tier exemption (skill-changelog
-      2026-06-02) point to master-bearing. Decide the build route.
+      Decide the build route. Phase 0 vendor research run 2026-06-13
+      (.tmp_deploy/INTRANET-phase0-2026-06-13.md) verdict: master-bearing real market, but
+      PARTIAL. INTRANET genuinely masters a spine no other catalog domain owns: spaces /
+      pages, news / announcements + targeting audiences + mandatory-acknowledgement receipts
+      (Simpplr Must Reads, Firstup must-read campaigns, Viva mandatory news persist these as
+      compliance-grade records), internal newsletters + editions + subscriptions (Poppulo
+      Harmony / Workshop / ContactMonkey are newsletter systems of record with edition / send /
+      open / click records), mobile push messages, and read / open / click receipts. But three
+      of the eight capabilities are overlays on dedicated adjacent markets: JOURNEY is owned by
+      Enboarder / ChangeEngine (only Firstup richly models it among intranet vendors), FRONTLINE
+      by WorkJam / Beekeeper / Crew / YOOBIC (deeper than intranet vendors), ADVOCACY by Hootsuite
+      Amplify / Sprinklr / GaggleAMP / EveryoneSocial (only Haiilo (Smarp) and Sociabble truly
+      master it among intranet players). SEARCH is an index over HCM / KM, not an owned master.
+      So the evidence supports ~3 entity-owning modules, not 5 co-equal master modules.
     options:
-      - {key: a, label: "Confirm leadership-tier: M1 fix = one landing module, no Phase B; B / E / F / H pass by exception."}
-      - {key: b, label: "Flip to real point-solution market: run Phase 0 vendor research from the b3 candidates; load Phase A / M / B / C / E / F / H; expected 5 to 8 modules per the proposed split (see B2-MODULARIZATION)."}
-      - {key: c, label: "Hybrid: leadership-tier landing module plus a module_kind='starter' for the publish-and-news minimum surface."}
+      - {key: a, label: "Confirm leadership-tier: M1 fix = one landing module, no Phase B; B / E / F / H pass by exception. (Phase 0 argues AGAINST this: the publish/news/newsletter spine is real owned data.)"}
+      - {key: b, label: "Full real point-solution market: load Phase A / M / B / C / E / F / H across 5 to 8 modules (see B2-MODULARIZATION). Phase 0 caution: 3 of the proposed master modules (journey/frontline/advocacy) are really overlays on adjacent markets."}
+      - {key: c, label: "Hybrid (Phase 0 recommended): build ~3 entity-owning modules (INTRANET-PUBLISH, INTRANET-NEWS, INTRANET-NEWSLETTER) plus INTRANET-ANALYTICS as the receipt/event store; demote JOURNEY / FRONTLINE / ADVOCACY to capability overlays + cross-domain links, with FRONTLINE flagged as a possible standalone domain."}
     why: |
       Every remaining build item (B1A-RECLASS, B1A-BUILD, B1B-M1, B1B-M2-M4) and the b3
       candidate set are gated by this answer. UNBUILT: the agent will not scaffold until the
-      route is chosen.
+      route is chosen. Phase 0 (2026-06-13) recommends route (c): the publish / news / newsletter
+      spine is genuinely master-bearing while journey / frontline / advocacy are overlays on
+      dedicated vendor markets, so 5 co-equal master modules over-states what INTRANET owns.
+    extra_phase0_report: ".tmp_deploy/INTRANET-phase0-2026-06-13.md"
 
   - id: B2-CATALOG-UX-REVIEW
     summary: Review the catalog_tagline + catalog_description written 2026-06-07 (record_status='new', awaiting approval).
@@ -159,11 +171,15 @@ b2:
       cross-cutting, not a module. INTRANET-ADVOCACY likely drops if EMP-ADVOCACY promotes
       (B2-ADVOCACY-COLLISION).
     options:
-      - {key: 5-module, label: "Adopt the 5-module split as proposed."}
+      - {key: 3-module, label: "Phase 0 recommended (route c): INTRANET-PUBLISH (spaces + pages/posts), INTRANET-NEWS (announcements + targeting + acknowledgements), INTRANET-NEWSLETTER (newsletters + editions + subscriptions), plus INTRANET-ANALYTICS as the receipt/event store; journey/frontline/advocacy become overlays/cross-domain links not master modules."}
+      - {key: 5-module, label: "Adopt the 5-module split as proposed (Publish, News, Journey, Frontline, Search)."}
       - {key: 8-module, label: "1:1 with capabilities (8 modules; heavy)."}
       - {key: custom, label: "Specify an alternative module set."}
     why: |
-      Determines the Phase A loader shape and downstream Phase B candidate routing.
+      Determines the Phase A loader shape and downstream Phase B candidate routing. Phase 0
+      (2026-06-13) found only the publish / news / newsletter spine is genuinely master-bearing;
+      journey / frontline / advocacy are overlays on dedicated adjacent vendor markets, so the
+      3-module shape matches what flagship intranet vendors actually persist.
     blocked_by:
       - {type: user_decision, ref: B2-CLASSIFICATION}
 

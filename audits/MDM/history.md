@@ -493,3 +493,71 @@ UI links:
 ### JWT errors
 
 None encountered this pass.
+
+## 2026-06-13, Audit (state-driven: B9d handoff-payload realization)
+
+### Scope
+
+State-driven pass against MDM's single open `b1a` item, B1A-B9D-VERIFY (run B9d in both
+directions; the domain was last audited before the B9d band existed). MDM stays an UNBUILT
+domain (0 domain_modules, 2 capabilities); no build scaffolded (B2-S1 + B2-S2 still owe the
+user decision). Tenant verified (adenin, domain_map 1001). No catalog/database writes this
+pass: B9d's owner-side edits are to local audit files only, and the destructive source-side
+tag edits are surfaced for sign-off, not applied.
+
+### Executed: B9d resolver (B1A-B9D-VERIFY resolved)
+
+Ran `scripts/analytics/b9d_resolver.ts MDM` (dry-run then --write). 14 boundary tags, 10
+distinct (process, owner) findings, both directions:
+
+- **RESOLVED (2):** 274->HCM (employees, pid 243 'Manage and maintain employee data');
+  718->HCM (source_records under pid 243). No action.
+- **ORPHAN (3)** routed to OWNER audit files (additive, record_status untouched):
+  - pid 115 'Manage product and service master data', owner CDP (unbuilt), payload
+    identity_graphs (inbound 481 CDP->MDM). Wrote B2-B9D-OWN-115 into audits/CDP/state.yaml +
+    q-CDP.md (q19; both already existed, item appended).
+  - pid 719 'Manage customer master data', owner CRM (unbuilt), payload customers
+    (270->CSM, 271->SUB-MGMT, 269->CRM). Wrote B2-B9D-OWN-719 into audits/CRM/state.yaml +
+    q-CRM.md (q16; q-file row newly added).
+  - pid 771 'Maintain master data', owner DATA-AI-PLAT (unbuilt), payload data_products
+    (inbound 155). Wrote B2-B9D-OWN-771 into audits/DATA-AI-PLAT/state.yaml + q-file (q11;
+    both already existed, item appended).
+- **UNOWNED (3)** (carried entity masters nowhere in the catalog; surfaced on the sender, not
+  dropped): pid 115 on 717/719 (source_records, merge_rules); pid 771 on 716/718
+  (merge_rules, source_records); pid 815 on 273 (suppliers). These are the same
+  "no canonical master" symptom that B1B-S2 / B2-S1 already track (suppliers has no DMDO
+  master anywhere; merge_rules/source_records are MDM-owned but unbuilt at module grain).
+  No new state item: they resolve when the build lands (B2-S2) or master reconciliation
+  (B2-S1) decides.
+
+### Surfaced (DESTRUCTIVE, MDM-authored source-side tags, await sign-off)
+
+Both are edits to handoff_processes rows MDM authored, so they live in MDM's b2 queue:
+
+- **B2-B9D-RETAG-272:** handoff 272 (MDM->CDP, customers) tagged to coarse pid 115
+  '2.1.4 Manage product and service master data'; a specific 3.5.2.5 'Manage customer master
+  data' exists. Re-point 115 -> the customer code.
+- **B2-B9D-MISTAG-274:** handoff 274 (MDM->HCM, employees) holds the correct pid 243 AND a
+  redundant pid 771 '4.1.5.1 Maintain master data'. Delete the 274->771 row (or re-point to
+  7.6.2), keeping only 243.
+
+Confirmed live: 272 carries pid 115 (new); 274 carries pid 243 + 771 (both new).
+
+### state.yaml delta
+
+- Removed b1a B1A-B9D-VERIFY (executed).
+- Added b2 B2-B9D-RETAG-272 and B2-B9D-MISTAG-274 (destructive source-side sign-offs).
+- next_action_by: agent -> user. No agent-executable work remains; the domain is blocked on
+  the B2 decisions (B2-S1/S2 build gate + the two new B9d sign-offs) plus the b1b cascade
+  gated on B1B-S1 (module authoring) and the report-only items owed by other domains.
+- q-MDM.md regenerated to add q12 (RE-TAG 272) and q13 (MIS-TAG 274).
+
+### Owner-domain files edited (cross-domain carve-out (b))
+
+audits/CDP/{state.yaml,q-CDP.md}, audits/CRM/{state.yaml,q-CRM.md},
+audits/DATA-AI-PLAT/{state.yaml,q-DATA-AI-PLAT.md}: each gained the B9d ORPHAN ownership b2
+item + q-question. Additive only; no neighbor data overwritten, no record_status touched.
+
+### JWT errors
+
+None encountered this pass.

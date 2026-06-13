@@ -275,3 +275,29 @@ Loader: `.tmp_deploy/2026-06-07_intranet_state_execute.ts` (`bun run`, Rule #4b)
 
 - https://tests.semantius.app/domain_map/domains?id=eq.126
 - https://tests.semantius.app/domain_map/domain_aliases?domain_id=eq.126
+
+## 2026-06-13 - Audit (state-driven execute: B9d verify + Phase 0)
+
+### Summary
+
+State-driven Validate (Rule #21), working the open `next_action_by: agent` items. Live state re-confirmed against domain id 126: still UNBUILT (0 `domain_modules`, 0 outbound/inbound `handoffs`, 0 masters); catalog UX copy and 5 `domain_aliases` from 2026-06-07 intact at `record_status='new'`. The only agent-executable item was B1A-B9D-VERIFY; ran it and (per Rule #22) ran the Phase 0 vendor research that grounds the still-open B2-CLASSIFICATION market-shape gate. No catalog writes this pass. After it, no agent-executable work remains; the build is gated entirely on the user's classification route. `next_action_by` -> `user`.
+
+### Executed
+
+- **B1A-B9D-VERIFY (resolved, moved here from state.yaml):** ran `scripts/analytics/b9d_resolver.ts INTRANET --dry-run`. Output: `boundary tags: 0 | distinct (process,owner) findings: 0 | verdicts: {}`. INTRANET has zero handoff boundaries (zero outbound and zero inbound handoffs in the catalog), so there are no payloads to classify in either direction. B9d is now verified clean both ways; nothing to re-point, no MIS-TAG, no ORPHAN, no owner-side b2 to write. The item is closed.
+- **Phase 0 vendor research (Rule #22 forcing step for B2-CLASSIFICATION):** the entire build is gated on a market-shape decision, so Phase 0 ran this pass before re-surfacing the question. Report at `.tmp_deploy/INTRANET-phase0-2026-06-13.md`. Verdict: **master-bearing but PARTIAL.** Genuinely owned spine no other domain masters: spaces/pages, news/announcements + targeting + mandatory-acknowledgement receipts (Simpplr Must Reads, Firstup must-read campaigns, Viva mandatory news), internal newsletters + editions + subscriptions (Poppulo Harmony, Workshop, ContactMonkey as newsletter systems of record), mobile push messages, read/open/click receipts. Overlays on dedicated adjacent markets: JOURNEY (Enboarder, ChangeEngine; only Firstup rich among intranet vendors), FRONTLINE (WorkJam, Beekeeper, Crew, YOOBIC), ADVOCACY (Hootsuite Amplify, Sprinklr, GaggleAMP, EveryoneSocial; only Haiilo/Sociabble master it among intranet players). SEARCH is an index over HCM/KM, not an owned master. Recommended route: **(c) hybrid** = ~3 entity-owning modules (PUBLISH, NEWS, NEWSLETTER) + ANALYTICS receipt store; demote journey/frontline/advocacy to overlays, FRONTLINE flagged as a possible standalone domain.
+
+### Phase 0 effect on the open decisions (fresh evidence wins, Rule #22)
+
+The fresh Phase 0 refines the prior B2-CLASSIFICATION recommendation (was route (b), 5-8 co-equal master modules) to route (c) hybrid. Updated B2-CLASSIFICATION and B2-MODULARIZATION in state.yaml with the named-vendor evidence inline, added the 3-module option to B2-MODULARIZATION, and regenerated q1 + q5 to recommend the hybrid / 3-module shape with the vendor evidence cited. No contradiction with the build-gating structure: the route is still the user's call.
+
+### Left (unchanged, all user-gated or non-blocking)
+
+- B1A-RECLASS, B1A-BUILD, B1B-M1, B1B-M2-M4: the build/cascade, gated on B2-CLASSIFICATION; UNBUILT, not scaffolded.
+- b2: B2-CLASSIFICATION (now Phase-0-grounded), B2-CATALOG-UX-REVIEW, B2-CAPABILITY-OWNERSHIP, B2-REGULATIONS, B2-MODULARIZATION (now with 3-module option), B2-ADVOCACY-COLLISION.
+- b3: 8 speculative master candidates, all gated on the route.
+
+### UI links
+
+- https://tests.semantius.app/domain_map/domains?id=eq.126
+- https://tests.semantius.app/domain_map/domain_aliases?domain_id=eq.126

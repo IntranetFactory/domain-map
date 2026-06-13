@@ -82,6 +82,26 @@ a8:
 
 ---
 
+q10: Integration Platform as a Service forwards low-code workflow to Low-Code Application Platform to develop service or solution and integration strategy, but Low-Code Application Platform does not yet have anyone assigned to develop service or solution and integration strategy, so this step has no owner. How should it be handled?
+- a) Record it now as work Low-Code Application Platform owns, and assign a named owner once Low-Code Application Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Low-Code Application Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a10:
+
+---
+
+q11: Data Catalog and Governance forwards low-code business object to Low-Code Application Platform to manage product and service master data, but Low-Code Application Platform does not yet have anyone assigned to manage product and service master data, so this step has no owner. How should it be handled?
+- a) Record it now as work Low-Code Application Platform owns, and assign a named owner once Low-Code Application Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Low-Code Application Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
 ## Optional (will not hold up the build)
 
 q9: Flagship vendors model a deeper set of objects beyond the five masters loaded today (app versions, deployments, environments, app packages, per-app role definitions, workflow execution runs, audit logs, integration endpoints, AI prompts, AI-generated artifacts, and per-app compliance assertions). Should I research and add the ones that hold up across the vendor set? (yes/no)
@@ -92,4 +112,4 @@ a9:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MODULE-CATALOG-UX q2=B2-S2.apps q3=B2-S2.businessobjects q4=B2-S2.datasources q5=B2-S2.workflows q6=B2-S3 q7=B2-S5 q8=B2-S4 q9=B3-LCAP-VERSIONS+B3-LCAP-DEPLOYMENTS+B3-LCAP-ENVIRONMENTS+B3-LCAP-PACKAGES+B3-LCAP-ROLE-DEFS+B3-LCAP-EXECUTIONS+B3-LCAP-AUDIT-LOGS+B3-LCAP-ENDPOINTS+B3-LCAP-AI-PROMPTS+B3-LCAP-GEN-ARTIFACTS+B3-LCAP-COMPLIANCE | domain_id=37 -->
+<!-- agent map, ignore: q1=B2-MODULE-CATALOG-UX q2=B2-S2.apps q3=B2-S2.businessobjects q4=B2-S2.datasources q5=B2-S2.workflows q6=B2-S3 q7=B2-S5 q8=B2-S4 q9=B3-LCAP-VERSIONS+B3-LCAP-DEPLOYMENTS+B3-LCAP-ENVIRONMENTS+B3-LCAP-PACKAGES+B3-LCAP-ROLE-DEFS+B3-LCAP-EXECUTIONS+B3-LCAP-AUDIT-LOGS+B3-LCAP-ENDPOINTS+B3-LCAP-AI-PROMPTS+B3-LCAP-GEN-ARTIFACTS+B3-LCAP-COMPLIANCE q10=B2-B9D-OWN-278 q11=B2-B9D-OWN-115 | domain_id=37 -->

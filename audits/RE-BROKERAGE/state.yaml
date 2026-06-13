@@ -1,7 +1,7 @@
 schema_version: 2
 domain: RE-BROKERAGE
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-07"
 
 b1a:
@@ -123,6 +123,16 @@ b2:
       - {handoff_process_id: 190, handoff_id: 311, pcf_external_id: "20114", pcf_name: "Submit regulatory reports"}
       - {handoff_process_id: 191, handoff_id: 861, pcf_external_id: "10192", pcf_name: "Close the sale"}
       - {handoff_process_id: 192, handoff_id: 862, pcf_external_id: "10192", pcf_name: "Close the sale"}
+  - id: B2-B9D-OWN-207
+    summary: "Real Estate Brokerage and Agent Operations: name an owner for \"Submit regulatory reports\" (no one is responsible for it today)"
+    question: |
+      Governance, Risk and Compliance forwards disclosure document to Real Estate Brokerage and Agent Operations to submit regulatory reports, but Real Estate Brokerage and Agent Operations does not yet have anyone assigned to submit regulatory reports, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Real Estate Brokerage and Agent Operations owns, and assign a named owner once Real Estate Brokerage and Agent Operations sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Real Estate Brokerage and Agent Operations decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-RE-BROKERAGE.md q4.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-PHASE0-MARKET-GAPS

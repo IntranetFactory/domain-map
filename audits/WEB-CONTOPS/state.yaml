@@ -11,7 +11,7 @@
 schema_version: 2
 domain: WEB-CONTOPS
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 # b1a fully resolved on 2026-06-06 (see history.md "2026-06-06 - b1a execution"):
@@ -208,6 +208,26 @@ b2:
     why: |
       Regulation-mapping calls fall on the user; the audit can identify the gap but not
       unilaterally write domain_regulations rows with applicability qualifiers.
+  - id: B2-B9D-OWN-427
+    summary: "Web Content Operations & Governance: name an owner for \"Manage content infrastructure\" (no one is responsible for it today)"
+    question: |
+      Knowledge Management forwards web content inventory record to Web Content Operations & Governance to manage content infrastructure, but Web Content Operations & Governance does not yet have anyone assigned to manage content infrastructure, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Web Content Operations & Governance owns, and assign a named owner once Web Content Operations & Governance sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Web Content Operations & Governance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-WEB-CONTOPS.md q11.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-430
+    summary: "Web Content Operations & Governance: name an owner for \"Control delivered content\" (no one is responsible for it today)"
+    question: |
+      Knowledge Management forwards content lifecycle plan to Web Content Operations & Governance to control delivered content, but Web Content Operations & Governance does not yet have anyone assigned to control delivered content, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Web Content Operations & Governance owns, and assign a named owner once Web Content Operations & Governance sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Web Content Operations & Governance decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-WEB-CONTOPS.md q12.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-1

@@ -11,8 +11,8 @@
 schema_version: 2
 domain: INS-CLAIMS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # INS-CLAIMS (domain id 44) is UNBUILT: 0 domain_modules (M1 hard fail), 0 capability_domains.
 # Per the UNBUILT clause the build (modules, capabilities, lifecycle, module-grain everything)
@@ -21,27 +21,25 @@ last_audit: "2026-06-07"
 # domain-row catalog UX copy (Rule #20). Everything below is a user decision, blocked on the
 # build, owed by another domain, retired, or backlog.
 
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
-  - id: B1A-BUILD
-    summary: "Unbuilt domain: 0 domain_modules (M1 hard fail), 0 capabilities. Surfaced for build, not scaffolded."
+b1b:
+  - id: B1B-BUILD
+    summary: "Unbuilt domain: 0 domain_modules (M1 hard fail), 0 capabilities. Surfaced for build, gated on the module-split decision."
     finding: >
-      Live 2026-06-07: domain 44 has 0 domain_modules and 0 capability_domains, so it is not
+      Live 2026-06-13: domain 44 has 0 domain_modules and 0 capability_domains, so it is not
       deployable. The whole module/capability/lifecycle/skill cascade depends on this build and
       on the module-split decision (B2-MOD-SPLIT). Per the UNBUILT clause we do not scaffold;
-      we surface the build and leave the cascade. The 10 masters (623 to 632) now carry typed
-      entity_type (executed 2026-06-07); 5 are operational_workflow and will need lifecycle states
-      authored onto their realizing modules once the modules exist.
+      we surface the build and leave the cascade. The 10 masters (623 to 632) carry typed
+      entity_type; 5 are operational_workflow and will need lifecycle states authored onto their
+      realizing modules once the modules exist. There is no agent-executable step until
+      B2-MOD-SPLIT is answered.
     action: >
-      Resolve B2-MOD-SPLIT, then run Phase A (solutions) + M (modules) + B (lifecycle states,
-      aliases, DMDOs) + the single domain-grain system skill (per the 2026-06-06 model). If the
-      result is multi-module, run Phase P (personas, role_modules, process_raci) afterward.
+      Once B2-MOD-SPLIT resolves, run Phase A (solutions) + M (modules) + B (lifecycle states,
+      aliases, DMDOs) + the single domain-grain system skill. If the result is multi-module, run
+      Phase P (personas, role_modules, process_raci) afterward.
+    blocked_by:
+      - {type: user_decision, ref: B2-MOD-SPLIT}
     extra_phase_p_triage: "2026-06-02"
 
-b1b:
   - id: B1B-A2-CAPABILITIES
     summary: "Zero capability_domains rows; needs the module split decided first"
     finding: >
