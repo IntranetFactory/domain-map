@@ -1,5 +1,30 @@
 # ACCT-PLAN audit history
 
+## 2026-06-13 - Audit (state-driven, B9d verification pass)
+
+### Summary
+
+State-driven Validate pass (Rule #21) continuing from `state.yaml`, which carried `next_action_by: agent` solely because of the open B1A-B9D-VERIFY item (run the B9d handoff-payload-realization band, which had never run on this domain). Live re-verification (domain id 105): still 0 `domain_modules` (M1 hard fail), 0 masters, 0 skills, 7 `capability_domains`, 1 owner `business_function_domains` row (Sales), catalog UX + 4 aliases already in place from the 2026-06-07 pass. The domain remains master-bearing-but-UNBUILT; the entire build cascade stays surfaced (gated on user b2 decisions), never scaffolded.
+
+The only genuinely agent-actionable item (B1A-B9D-VERIFY) was executed this pass. Everything else is either expansive net-new market structure gated behind the open b2 decisions (Rule #21 research carve-out: never written before the q-file is answered) or destructive and gated. After B9d there is no ACCT-PLAN-owned additive write left, so `next_action_by` flips agent -> user.
+
+### Executed
+
+| Item | Action | Result |
+|---|---|---|
+| B1A-B9D-VERIFY | Ran `scripts/analytics/b9d_resolver.ts ACCT-PLAN --dry-run`, classifying both boundary handoffs in BOTH directions. | Resolved; moved here. |
+
+B9d classification (2 boundary tags, 2 distinct (process,owner) findings):
+
+- **ORPHAN** - handoff 210 (ACCT-PLAN -> SALES-ENG, payload `customers`), process `6.2.2.5` / pid 929 "Identify and capture upsell/cross-sell opportunities". Owner = **CRM** (it masters `customers`; CRM is itself unbuilt). The resolver would write an additive `b2` (`B2-B9D-OWN-929`) + a q into **CRM's** audit files. Per this task's hard scope guardrail (edit only `audits/ACCT-PLAN/` + ACCT-PLAN-owned catalog content), I did NOT write into CRM's files. **Routed to CRM** (recorded here so it is not lost); CRM owns the realization, and CRM is already in `feedback_needed` with its own `q-CRM.md`. No ACCT-PLAN-owned action.
+- **RE-TAG** - handoff 209 (ACCT-PLAN -> CSM, payload `customers`), existing tag process 148 "Manage customers and accounts" (L3). The resolver recommends re-pointing to the sharper L4 process 929 (same `customers` entity; the same code handoff 210 already carries). This supersedes the prior 2026-05-31 process-717 proposal. **Destructive** (overwrites a non-empty tag) and gated on B2-T1, so it stays surfaced as B1B-H1-209-REFINE (now updated to 148 -> 929); NOT executed.
+
+No `record_status` touched (Rule #1). No live writes this pass.
+
+### Surfaced / unchanged (await user)
+
+All open `b2` decisions (B2-L1, B2-M1, B2-T1, B2-D1, B2-K1, B2-C1, B2-E1, B2-V1), the destructive B1B-H1-209-REFINE re-point, and the build cascade (B1A-BUILD / B1B-M1-MODULES / B1B-V1..V7 / B1B-S1) remain gated exactly as before. The existing `q-ACCT-PLAN.md` already projects all of these for the user and is current. `status` stays `feedback_needed`; `next_action_by` now `user`.
+
 ## 2026-06-07 - Audit (state-driven execute, bulk batch)
 
 ### Summary

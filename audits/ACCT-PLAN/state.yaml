@@ -1,8 +1,8 @@
 schema_version: 2
 domain: ACCT-PLAN
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # ACCT-PLAN is master-bearing (overlay test: it persists real account_plans,
 # mutual_action_plans, relationship_maps, white_space_maps) but UNBUILT:
@@ -12,10 +12,6 @@ last_audit: "2026-06-07"
 # (catalog UX copy, domain aliases); everything else gates on the build decisions below.
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-RECLASS
     summary: "Settled: ACCT-PLAN is master-bearing, not leadership-tier overlay. Leadership-tier zero-master exemption rescinded 2026-06-02; overlay test confirms masters (account_plans, mutual_action_plans, relationship_maps, white_space_maps). Needs a build, not an exemption."
     finding: >
@@ -56,17 +52,18 @@ b1b:
       - {handoff_id: 210, direction: outbound, source_domain: ACCT-PLAN, target_domain: SALES-ENG, trigger_event: whitespace.identified, payload: customers, null_field: source_domain_module_id}
 
   - id: B1B-H1-209-REFINE
-    summary: "DESTRUCTIVE (surfaced): handoff 209 already carries an agent_curated APQC tag (process 148 'Manage customers and accounts', L3). The proposed sharper tag (process 717 'Manage sales/key account plan', L4) would REPLACE the existing weak tag."
-    finding: "Live 2026-06-07: handoff_processes id 1073 (handoff 209, process 148, role implements, proposal_source agent_curated, record_status new) already covers the H1 gap. Coverage of cross-domain handoffs is 2 of 2 (handoff 210 = id 377/process 929). The 2026-05-31 audit proposed process 717 (a more precise L4 key-account-plan match) but adding it would duplicate the tag and refining means deleting/replacing 1073."
-    action: "User decision: keep the existing L3 tag (1073), or REPLACE it with the L4 process 717. Replacing a non-empty tag is destructive (Rule #21) and is also gated on B2-T1 (if the publisher re-attributes to CRM, the tag belongs on CRM's outbound handoff instead)."
+    summary: "DESTRUCTIVE (surfaced): handoff 209 carries an agent_curated APQC tag (process 148 'Manage customers and accounts', L3). The B9d resolver (run 2026-06-13) classifies it RE-TAG and proposes re-pointing it to the sharper L4 process 929 / external_id 16928 'Identify and capture upsell/cross-sell opportunities' on the same entity (customers). Replacing a non-empty tag is destructive."
+    finding: "Live 2026-06-13: handoff_processes id 1073 (handoff 209, process 148, role implements, proposal_source agent_curated, record_status new) covers the H1 gap. Coverage of cross-domain handoffs is 2 of 2 (handoff 210 = id 377 / process 929). The B9d resolver supersedes the prior 2026-05-31 process-717 proposal: the nearest realized sibling on customers is process 929 (the same code handoff 210 already carries), so the recommended re-point is 148 -> 929, not 148 -> 717. Re-pointing means overwriting the existing non-empty tag on id 1073."
+    action: "User decision: keep the existing L3 tag (1073), or RE-POINT it to L4 process 929. Re-pointing a non-empty tag is destructive (Rule #21) and is also gated on B2-T1 (if the publisher re-attributes to CRM, the tag belongs on CRM's outbound handoff instead)."
     blocked_by:
       - {type: user_decision, ref: B2-T1}
-      - {type: destructive, ref: replace-weak-tag, reason: "swapping handoff_processes id 1073 (process 148 -> 717) overwrites an existing non-empty tag"}
+      - {type: destructive, ref: re-point-weak-tag, reason: "re-pointing handoff_processes id 1073 (process 148 -> 929) overwrites an existing non-empty tag"}
     affected_handoffs:
       - {handoff_id: 209, direction: outbound, source_domain: ACCT-PLAN, target_domain: CSM, trigger_event: account_health.declined, payload: customers}
     extra_existing_tag: {handoff_processes_id: 1073, process_id: 148, process_name: "Manage customers and accounts", hierarchy_level: 3}
-    extra_proposed_process_id: 717
-    extra_proposed_process_name: "Manage sales/key account plan"
+    extra_proposed_process_id: 929
+    extra_proposed_process_name: "Identify and capture upsell/cross-sell opportunities"
+    extra_proposed_external_id: "16928"
 
   - id: B1B-V1-ACCOUNT-PLANS
     summary: "Load account_plans master in ACCT-PLAN-CORE (or wherever B2-M1's module shape lands it)."
