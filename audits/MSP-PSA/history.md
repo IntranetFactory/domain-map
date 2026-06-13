@@ -447,3 +447,33 @@ already necessity=optional).
 - https://tests.semantius.app/domain_map/domains
 - https://tests.semantius.app/domain_map/domain_modules
 - https://tests.semantius.app/domain_map/handoff_processes
+
+## 2026-06-13 — Audit (B9d handoff-payload realization)
+
+Ran the new B9d band (`scripts/analytics/b9d_resolver.ts MSP-PSA`, both directions),
+executing the agent-actionable `B1A-B9D-VERIFY` item from the 2026-06-07 pass. B9d had
+never run on this domain (added 2026-06-09).
+
+**Classification:** 10 boundary tags -> 9 distinct (process, owner) findings:
+6 ORPHAN, 2 RE-TAG (roll-up), 1 RESOLVED.
+
+**Applied (additive owner-side edits, `--write`, no catalog writes):**
+- 3 ORPHANs owned by MSP-PSA itself, written as b2 + q17/q18/q19:
+  B2-B9D-OWN-6 ("Manage Customer Service", pid 6, handoff 525 MSP-PSA->CSM),
+  B2-B9D-OWN-55 ("Perform revenue accounting", pid 55, handoff 526 MSP-PSA->FIN),
+  B2-B9D-OWN-927 ("Resolve customer problems, requests, and inquiries", pid 927,
+  handoff 159 RMM->MSP-PSA).
+- 3 ORPHANs routed into neighbor backlogs (their state.yaml + q-file, owner-anchored):
+  HAM B2-B9D-OWN-1312 (hardware_assets, "Maintain IT asset records", handoff 161),
+  REMOTE-ACCESS B2-B9D-OWN-295 (remote_sessions, "Operate IT user support", handoff 647),
+  WSC B2-B9D-OWN-196 (chat_messages, "Manage customer service problems...", handoff 835).
+
+**Surfaced for sign-off (DESTRUCTIVE roll-up re-points, NOT applied):**
+- B2-B9D-RETAG-523 (q20): handoff 523 tag 6.2.2 -> 6.2.2.3 (MSP-PSA owns the edit).
+- B1B-S11: handoffs 160/163 tag 8.7.8 -> 6.2.2.3 (REMOTE-ACCESS owns the edit; blocked on its audit).
+
+**RESOLVED (no action):** handoff 524 (msp_invoices) already tagged 9.2.2 "Invoice customer"
+with a gated + RACI'd process.
+
+`B1A-B9D-VERIFY` is resolved and removed from state.yaml. Domain stays `feedback_needed`;
+the B9d findings are all user-judgment (owner assignment) or destructive (re-points).

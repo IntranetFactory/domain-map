@@ -363,3 +363,35 @@ None during this pass.
 ### Post-fix status
 
 next_action_by: user (the build is gated on B2-MOD + B2-CAP; all remaining b1b items are module-dependent or b2-gated).
+
+## 2026-06-13 - Audit (B9d verify, state-driven)
+
+### Summary
+
+State-driven pass over CONV-AI (domain_id=34). The only agent-executable open item was B1A-B9D-VERIFY (B9d handoff-payload realization had never run on this domain). Ran the committed resolver `scripts/analytics/b9d_resolver.ts CONV-AI` in both --dry-run and --write. Everything else in state.yaml is gated on the eight open b2 decisions (B2-MOD modularization the gate) or is module-dependent (the unbuilt build cascade), so nothing else was agent-executable. Live re-confirmed: CONV-AI is still unbuilt (0 domain_modules, 0 domain_module_data_objects, 0 capability_domains); the 5 masters live only in legacy domain_data_objects.
+
+### B9d resolver result (B1A-B9D-VERIFY resolved)
+
+- Boundaries walked in BOTH directions across all neighbors (CRM, CCAAS, KMS, CSM, DATA-AI-PLAT). 9 boundary tags, 8 distinct (process, owner) findings.
+- Verdicts: 6 UNOWNED + 2 RESOLVED. **Zero ORPHAN, zero MIS-TAG, zero ROLL-UP.**
+- No owner-side b2 + q edits to write into any domain (no ORPHANs): the --write run applied nothing additive.
+- The 6 UNOWNED findings (pids 196 intent_detections, 429 knowledge_base_articles, 919 conversation_flows + knowledge_search_queries, 926 intent_definitions, 927 conversation_flows, 928 conversation_transcripts) are an artifact of the unbuilt state: the resolver reads ownership from domain_module_data_objects, which is empty here, so payloads CONV-AI masters in legacy domain_data_objects read as "no master". They will resolve to CONV-AI (and KMS) as owner once modules land (B2-MOD). Surfaced-for-review only; not auto-applied.
+- The 2 RESOLVED: 8.6 "Deploy services/solutions" (pid 52) on ai_agents (owner DATA-AI-PLAT, master present) and on bot_definitions. No action.
+
+### B1A-B9D-VERIFY closed
+
+Removed from state.yaml. B9d is verified in both directions; no agent-executable follow-up remains (the UNOWNED set clears mechanically when the domain is modularized, which is the B2-MOD user decision, not new agent work).
+
+### Left (untouched, unchanged)
+
+- UNBUILT build cascade: B1A-BUILD + module-dependent b1b items (B1B-S1 modules, S2 capabilities, S4 retired-model skill note, S6 publish-lock confirm, S10 handoff FK backfill, S11 aliases, S12 lifecycle states, S13 business_function_capabilities, S14 roles, B1B-MISSING 7 entities, B1B-H2 destructive PCF override). All gated on B2-MOD / module existence / user wording.
+- 8 open b2 decisions (B2-MOD, B2-CAP, B2-FLAGS, B2-DETECT-LIFECYCLE, B2-AI-AGENTS-MODULE, B2-PCF-228, B2-E911-SCOPE, B2-ALIAS-WORDING) and 7 b3 speculative candidates (now mostly promoted-to-build pending q9 answer). q-CONV-AI.md is current and unchanged; the open items it maps did not move this pass.
+- Pre-existing em-dash in domains row 34 business_logic (flagged 2026-06-07) still untouched; overwriting a non-empty value is destructive, awaits approved cleanup.
+
+### JWT errors
+
+None during this pass.
+
+### Post-fix status
+
+next_action_by: user. B9d (the one agent-executable item) is done; everything remaining is gated on the eight open b2 decisions (B2-MOD first) and user-wording approvals.

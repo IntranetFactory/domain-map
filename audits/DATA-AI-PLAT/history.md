@@ -429,3 +429,48 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-13 - B9d (handoff payload realization), bidirectional
+
+Resolves and closes `B1A-B9D-VERIFY` (B9d had never run on this domain). Executed `scripts/analytics/b9d_resolver.ts DATA-AI-PLAT --write`, which classifies every handoff payload on every boundary in BOTH directions (this->neighbor and neighbor->this) and writes the additive owner-side `b2` + q-file items. No catalog/database writes; no `record_status` touched (Rule #1); no destructive edits applied unprompted.
+
+### Classification (18 boundary tags -> 16 distinct (process, owner) findings)
+
+verdicts: ORPHAN 9, ROLL-UP 1, UNOWNED 3, RESOLVED 3.
+
+**RESOLVED (3, no action):**
+- 8.6 "Deploy services/solutions" (pid 52), owner DATA-AI-PLAT, payload `ai_agents`, handoff 153 -> CONV-AI.
+- 8.4.2 "Define and maintain business information architecture" (pid 275), owner DATA-AI-PLAT, payloads `ontologies` / `semantic_metrics`, handoffs 221 (KGP->), 151 (->BI).
+- 8.4.4.1 "Monitor and control business information" (pid 1212), owner DATA-AI-PLAT, payload `lakehouse_tables`, handoff 156 -> DQ.
+
+**ORPHAN (9 -> 8 owner-file items written; one owner appears once per distinct process):** real missing work (a process with no persona), routed to the OWNER's audit files as durable `b2` + q items. All owners are currently unbuilt (no personas yet), so each item makes the persona part of the question.
+
+| process | pid | owner | payload | handoff(s) | item written |
+|---|---|---|---|---|---|
+| Develop and execute IT resilience and continuity operations | 272 | DATA-AI-PLAT | data_pipelines | 154 -> AIOPS | B2-B9D-OWN-272 (DATA-AI-PLAT) |
+| Develop and execute IT resilience and continuity operations | 272 | ITSM | service_incidents | 682 / 686 -> ITSM | B2-B9D-OWN-272 (ITSM) |
+| Manage IT user identity and authorization | 273 | DATA-AI-PLAT | lakehouse_tables | 158 (DCG->) | B2-B9D-OWN-273 (DATA-AI-PLAT) |
+| Manage business information | 277 | DATA-AI-PLAT | lakehouse_tables | 157 (DI->) | B2-B9D-OWN-277 (DATA-AI-PLAT) |
+| Maintain master data | 771 | DATA-AI-PLAT | data_products | 155 -> MDM | B2-B9D-OWN-771 (DATA-AI-PLAT) |
+| Establish data, information, and analytic governance | 1203 | DATA-AI-PLAT | data_products | 152 -> DCG | B2-B9D-OWN-1203 (DATA-AI-PLAT) |
+| Establish data, information, and analytic governance | 1203 | METRICS-LAYER | metric_definitions | 219 (METRICS-LAYER->) | B2-B9D-OWN-1203 (METRICS-LAYER) |
+| Maintain and evolve enterprise data and information architecture | 1209 | KGP | kgp_ontologies | 697 (KGP->) | B2-B9D-OWN-1209 (KGP) |
+| Maintain business information feeds and repositories | 1213 | METRICS-LAYER | metric_materializations | 693 (METRICS-LAYER->) | B2-B9D-OWN-1213 (METRICS-LAYER) |
+
+5 items landed in DATA-AI-PLAT's own state.yaml + q-DATA-AI-PLAT.md (q8-q12); the cross-boundary items were written into the OWNER neighbors per the state.yaml hygiene carve-out (b): ITSM (q11), KGP (q9), METRICS-LAYER (q13/q14). All additive `b2` items, no neighbor data overwritten, no `record_status` flips.
+
+**ROLL-UP (1, destructive re-point -> NOT applied, awaiting sign-off):**
+- 8.4.4 "Manage business information" (pid 277) on handoff 219 (METRICS-LAYER->DATA-AI-PLAT, payload `metric_definitions`): the realized code is the child 8.4.4.1, so the tag should re-point 8.4.4 -> 8.4.4.1. This edits the SOURCE (METRICS-LAYER authored the tag); surfaced for sign-off, not executed.
+
+**UNOWNED (3, surfaced on the sender, no master anywhere):** carried entities have no `master` row in the catalog, so there is no owner to route to. Surfaced on the sender (DI); do not drop.
+- 8.3.7 (pid 272) on handoff 725 (DI->), payload `pipeline_runs`.
+- 8.4.4 (pid 277) on handoff 725 (DI->), payload `pipeline_runs`.
+- 8.4.2.5 (pid 1209) on handoff 731 (DI->), payload `schema_registries`.
+
+### State
+
+- `B1A-B9D-VERIFY` resolved (executed) -> removed from state.yaml.
+- 5 new `b2` items added (B2-B9D-OWN-272/273/277/771/1203), surfaced in q-DATA-AI-PLAT.md q8-q12.
+- `status: feedback_needed`, `next_action_by: user`: all remaining open items are `b2` user decisions (the new B9d ownership questions, plus the pre-existing B2-LIFECYCLE-SHAPE and B2-S3) or `b1b` blocked on B2-LIFECYCLE-SHAPE. No agent-executable work remains. The ROLL-UP re-point on handoff 219 is METRICS-LAYER's source-side destructive step (sign-off), not DATA-AI-PLAT's.

@@ -87,14 +87,22 @@ a8:
 
 ---
 
-## Optional (will not hold up the build)
+q9: One Data Integration handoff (the "data asset discovered" feed to your Data Catalog and Governance domain) is tagged to a broad parent process ("Manage business information") when the actual work your catalog domain does sits one level finer (a child of that process). Should I re-point that tag down to the finer process it really maps to? (yes/no)
 
-q9: Ten deeper entity candidates show up across the flagship Data Integration vendors. The strongest, by vendor count in the fresh study: per-task connector runs (Fivetran sync tasks, Airbyte job attempts, Confluent Connect tasks), lineage event records (OpenLineage RunEvents, dbt Discovery API metadata, Qlik/Striim lineage), governed connection credentials (every flagship), and a connector catalog of supported source/sink types. Softer signals: data contracts (dbt model contracts, plus contract-shaped audit in Qlik/Striim), transformation models distinct from runs (dbt models, Matillion transformation pipelines), stream topics (Confluent-only, which may instead argue for a separate streaming-platform domain), deployment environments (dbt, Matillion, Informatica), data incidents (an observability-domain concern), and data-contract tests. Should I research and add the ones that hold up? (yes/no)
-
-Recommended: yes, but additive and after the modules exist. The runtime trio (per-task runs, lineage events, connection credentials) is the strongest signal in the study (3+ flagships each) and the contract/model layer is the next tier; stream topics and data incidents likely belong in sibling domains (streaming-platform and data-observability respectively) rather than Data Integration. All want a verification pass first.
+Recommended: yes. The finer process is the one your catalog domain actually realizes and staffs, so the handoff should point at the real work, not its umbrella. This re-points one existing tag, so it needs your sign-off. The other Data Integration handoffs that did not resolve cleanly are waiting on the module build (q1): once Data Integration has modules and its run / connector / schema objects are owned, those tags resolve on their own.
 
 a9:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2.txjlock q3=B2-S2.txjapprover q4=B2-S2.schemalock q5=B2-S3 q6=B2-S5 q7=B2-S4 q8=B1A-EMDASH-BL q9=B3-CONNECTOR-TASKS+B3-DATA-LINEAGE-EVENTS+B3-DATA-CONTRACTS+B3-STREAM-TOPICS+B3-CONNECTION-CREDENTIALS+B3-DBT-MODELS+B3-CONNECTOR-CATALOG-ENTRIES+B3-DEPLOYMENT-ENVIRONMENTS+B3-DATA-INCIDENTS+B3-DATA-CONTRACT-TESTS | domain_id=89 | phase0=.tmp_deploy/DI-phase0-2026-06-08.md | reversed: none (Phase 0 confirmed all prior recommendations; q3 and q6 reasons re-grounded in named-vendor evidence with confidence noted) -->
+## Optional (will not hold up the build)
+
+q10: Ten deeper entity candidates show up across the flagship Data Integration vendors. The strongest, by vendor count in the fresh study: per-task connector runs (Fivetran sync tasks, Airbyte job attempts, Confluent Connect tasks), lineage event records (OpenLineage RunEvents, dbt Discovery API metadata, Qlik/Striim lineage), governed connection credentials (every flagship), and a connector catalog of supported source/sink types. Softer signals: data contracts (dbt model contracts, plus contract-shaped audit in Qlik/Striim), transformation models distinct from runs (dbt models, Matillion transformation pipelines), stream topics (Confluent-only, which may instead argue for a separate streaming-platform domain), deployment environments (dbt, Matillion, Informatica), data incidents (an observability-domain concern), and data-contract tests. Should I research and add the ones that hold up? (yes/no)
+
+Recommended: yes, but additive and after the modules exist. The runtime trio (per-task runs, lineage events, connection credentials) is the strongest signal in the study (3+ flagships each) and the contract/model layer is the next tier; stream topics and data incidents likely belong in sibling domains (streaming-platform and data-observability respectively) rather than Data Integration. All want a verification pass first.
+
+a10:
+
+---
+
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2.txjlock q3=B2-S2.txjapprover q4=B2-S2.schemalock q5=B2-S3 q6=B2-S5 q7=B2-S4 q8=B1A-EMDASH-BL q9=B1A-B9D-ROLLUP-259 q10=B3-CONNECTOR-TASKS+B3-DATA-LINEAGE-EVENTS+B3-DATA-CONTRACTS+B3-STREAM-TOPICS+B3-CONNECTION-CREDENTIALS+B3-DBT-MODELS+B3-CONNECTOR-CATALOG-ENTRIES+B3-DEPLOYMENT-ENVIRONMENTS+B3-DATA-INCIDENTS+B3-DATA-CONTRACT-TESTS | domain_id=89 | phase0=.tmp_deploy/DI-phase0-2026-06-08.md | reversed: none (Phase 0 confirmed all prior recommendations; q3 and q6 reasons re-grounded in named-vendor evidence with confidence noted) -->

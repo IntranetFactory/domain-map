@@ -11,25 +11,27 @@
 schema_version: 2
 domain: TEST-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # UNBUILT domain: 0 domain_modules (M1 hard-fail), 0 capability_domains. The build (B1A-BUILD)
-# and its whole cascade are SURFACED, not executed (LEAVE rule for unbuilt domains). The 2026-06-07
-# state-driven pass executed only the two build-independent additive items:
-#   - entity_type classified on all 8 masters (was unclassified): test_cases / test_suites
-#     -> operational_record; test_plans / test_runs / test_defects / automation_scripts ->
-#     operational_workflow; test_environments -> catalog; requirements_to_test_traceability
-#     -> junction. The 4 operational_workflow masters now OWE lifecycle states once modules ship
-#     (folded into B1B-S4 below).
-#   - Catalog UX authored on the domain row (catalog_tagline + catalog_description, Rule #20);
-#     module-level UX is authored at build time (B1A-BUILD / B1B-M1).
+# and its whole cascade are SURFACED, not executed (LEAVE rule for unbuilt domains). The
+# 2026-06-13 pass ran B9d (B1A-B9D-VERIFY); the 2026-06-07 pass executed the two
+# build-independent additive items (entity_type on all 8 masters; domain-row catalog UX).
+#
+# B9d run 2026-06-13 (scripts/analytics/b9d_resolver.ts TEST-MGMT, both directions): 10 boundary
+# tags -> 7 findings (1 ORPHAN, 6 UNOWNED). The single genuine cross-boundary ORPHAN routed to
+# ITSM (B2-B9D-OWN-579, service_incidents, "Eliminate quality and reliability problems") and was
+# written into ITSM's own state.yaml + q-file. The 6 UNOWNED findings are an ARTIFACT OF THIS
+# DOMAIN BEING UNBUILT: the carried payloads (test_runs, test_defects,
+# requirements_to_test_traceability) are TEST-MGMT's OWN masters but still live in legacy
+# domain_data_objects, not domain_module_data_objects, so the resolver finds no master row and
+# reports "no owner". They auto-resolve once B1B-M3 migrates the masters to DMDO during the build;
+# subsumed by B1A-BUILD, no separate item. (api_specifications / integration_data_mappings /
+# ci_pipeline_runs are owned by APIM / IPAAS / VSDP, also unbuilt; they resolve on those builds.)
+# B1A-B9D-VERIFY resolved (moved to history.md).
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-S1-CAPABILITIES
     summary: Author 5 to 7 TEST-MGMT capabilities and capability_domains rows; zero exist today.
     finding: A2 fails with zero capability_domains rows on TEST-MGMT (id 8). Market surface reads as 5 to 7 capabilities (test case authoring, test execution orchestration, defect lifecycle, automation script management, test environment management, traceability and coverage analytics, release-readiness gating). Cross-cutting convention check needed on TRACEABILITY and RELEASE-READINESS (>=3 domains => domain-neutral code).

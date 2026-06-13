@@ -128,6 +128,25 @@ a11:
 
 ---
 
+q13: One of DAM's handoffs (when agency management approves a creative deliverable) carries two process tags: a broad one ("manage product marketing material") and a more specific one ("assess and approve content"). Should the broad tag be re-pointed to the specific one? (yes/no)
+
+Recommended: yes. The specific tag better describes what actually happens on that handoff; this is a small cleanup. Because it edits an existing tag (and that handoff originates in agency management), it needs your sign-off rather than being applied automatically.
+
+a13:
+
+---
+
+q14: When DAM publishes an approved asset to the content system, the "publish approved content" step currently has no owner, because DAM has no module that masters the asset yet (DAM is unbuilt). How should that be handled?
+
+- a) Resolve it by building DAM: once you pick the module split (q1) and DAM masters its assets, this step gets an owner automatically.
+- b) Accept it as a known gap until DAM is built.
+
+Recommended: a. This is not a separate decision so much as another thing the DAM build unblocks; answering q1 and shipping the modules clears it on its own.
+
+a14:
+
+---
+
 ## Optional (will not hold up the build)
 
 q12: Beyond the headline asset and distribution objects, the flagship DAM vendors model a deeper set of objects (review rounds and comments, downloadable brand guidelines, on-the-fly asset transformations, asset usage/analytics events, bulk upload sessions, creative workspaces/projects, and standalone license agreements). Should I research and add the ones that hold up? (yes/no)
@@ -138,4 +157,4 @@ a12:
 
 ---
 
-<!-- agent map, ignore: q1=B2-1 q2=B2-2 q3=B2-3 q4=B2-4 q5=B2-5 q6=B2-6 q7=B2-7 q8=B2-S9.personal_content q9=B2-S9.submit_lock q10=B2-S9.single_approver q11=B2-H1 q12=B3-1+B3-2+B3-3+B3-4+B3-5+B3-6+B3-7 | domain_id=92 -->
+<!-- agent map, ignore: q1=B2-1 q2=B2-2 q3=B2-3 q4=B2-4 q5=B2-5 q6=B2-6 q7=B2-7 q8=B2-S9.personal_content q9=B2-S9.submit_lock q10=B2-S9.single_approver q11=B2-H1 q12=B3-1+B3-2+B3-3+B3-4+B3-5+B3-6+B3-7 q13=B2-B9D-RETAG-344 q14=B2-B9D-DAM-UNOWNED | domain_id=92 -->

@@ -83,6 +83,16 @@ a7:
 
 ---
 
+q9: Data and AI Platform forwards kgp ontology to Knowledge Graph Platform to maintain and evolve enterprise data and information architecture, but Knowledge Graph Platform does not yet have anyone assigned to maintain and evolve enterprise data and information architecture, so this step has no owner. How should it be handled?
+- a) Record it now as work Knowledge Graph Platform owns, and assign a named owner once Knowledge Graph Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Knowledge Graph Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a9:
+
+---
+
 ## Optional (will not hold up the build)
 
 q8: Three capabilities currently have no backing master object, and flagship graph vendors expose each as a first-class surface: an inference-rules object (SWRL or custom rule languages, in Stardog, GraphDB, AllegroGraph), a named-graphs object (the access-control and partitioning unit in every RDF triple-store), and a virtual-graph-mappings object (R2RML/RML definitions that expose external sources as RDF). Should I research and add the ones that hold up? (yes/no)
@@ -93,4 +103,4 @@ a8:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B2-S6 q5=B2-S5.domaincopy q6=B2-S5.modulereview q7=B2-APQC-APPROVAL+B1B-APQC-H265-NOTE q8=B3-S1+B3-S2+B3-S3 | domain_id=138 -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B2-S6 q5=B2-S5.domaincopy q6=B2-S5.modulereview q7=B2-APQC-APPROVAL+B1B-APQC-H265-NOTE q8=B3-S1+B3-S2+B3-S3 q9=B2-B9D-OWN-1209 | domain_id=138 -->

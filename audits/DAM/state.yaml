@@ -11,8 +11,8 @@
 schema_version: 2
 domain: DAM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # UNBUILT DOMAIN: DAM has 0 domain_modules and 1 capability (CREATIVE-REVIEW 446).
 # It is not deployable. The build itself is gated on the B2-1 module-split decision
@@ -20,11 +20,13 @@ last_audit: "2026-06-07"
 # b1b is agent-actionable until the module set exists. b1a is empty: the 2026-06-07
 # execute pass cleared the em-dash (B1A-S12), entity_type, and Rule #20 catalog copy.
 
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+b1a: []
+# B1A-B9D-VERIFY resolved 2026-06-13 (see history.md). B9d ran both directions via
+# scripts/analytics/b9d_resolver.ts DAM --write. 4 boundary payloads classified:
+# 2 ORPHANs routed to owners (creative_deliverables -> AGENCY-MGMT B2-B9D-OWN-1762;
+# content_entries -> HCMS B2-B9D-OWN-428), 1 RE-TAG surfaced for source sign-off
+# (AGENCY-MGMT-sourced #344), 1 UNOWNED dependency surfaced on DAM (#98 digital_assets,
+# tracked as B2-B9D-DAM-UNOWNED below). Nothing agent-executable remains for B9d.
 
 b1b:
   # ALL b1b items are blocked on the B2-1 module-split decision (the unbuilt-domain
@@ -301,6 +303,39 @@ b2:
       - Leave all at new
     why: |
       Headline catalog-quality metric for the H-band is approved-row count. Currently zero approved. All 4 tag rows already exist at record_status=new (no insert owed); only the approval flip is pending.
+
+  - id: B2-B9D-DAM-UNOWNED
+    summary: "B9d UNOWNED dependency on DAM's outbound handoff 98: payload digital_assets has no master row anywhere in the catalog."
+    question: |
+      Handoff 98 (digital_asset.published, DAM -> HCMS, payload digital_assets) carries APQC
+      tag 1763 ("Publish approved content", L4 21681). B9d classified this payload UNOWNED:
+      digital_assets (137) has no role=master row in any domain_module_data_objects across the
+      catalog, because DAM is unbuilt (0 modules). So the published-content process cannot be
+      realized (no owning module, no persona) until DAM ships its module set.
+    options:
+      - "Resolve by building DAM (answer B2-1, then B1B-S1 masters digital_assets in a module). The UNOWNED state clears automatically once digital_assets gets a master row and a realizing module."
+      - "Accept as a known gap until DAM is built."
+    why: |
+      This is the sender-side surface of B9d's UNOWNED dependency: it is gated on the DAM build
+      (B2-1 / B1B-S1), not separately actionable. Recorded so the published-content realization
+      is not silently lost while DAM stays unbuilt.
+    blocked_by:
+      - {type: user_decision, ref: B2-1}
+
+  - id: B2-B9D-RETAG-344
+    summary: "B9d RE-TAG (DESTRUCTIVE, AGENCY-MGMT-sourced): re-point handoff 344's coarse tag 141 to the more specific 1762."
+    question: |
+      B9d found handoff 344 (deliverable.approved, AGENCY-MGMT -> DAM, payload creative_deliverables)
+      carries two tags: 141 ("Manage product marketing material", L3 16629, coarse) and 1762
+      ("Assess and approve content", L4 21680, specific). The coarse 141 should be re-pointed to
+      1762 on the same entity. Handoff 344 is AGENCY-MGMT-sourced, so this tag edit is the source
+      side's call; surfaced here because it was found on DAM's boundary review.
+    options:
+      - "Approve the re-point: handoff_processes 255 (344->141) re-pointed to process 1762."
+      - "Leave both tags as-is."
+    why: |
+      Re-pointing a handoff_processes row is a destructive source-side edit needing sign-off
+      (Rule #1 / Rule #21). The agent will not apply it unprompted. ROLL-UP/RE-TAG, not a coverage gap.
 
 b3:
   - id: B3-1

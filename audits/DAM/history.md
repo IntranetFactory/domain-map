@@ -369,3 +369,44 @@ Re-running the loader is a no-op (all three writes guard on current state). No J
 
 - https://tests.semantius.app/domain_map/data_objects?id=eq.137
 - https://tests.semantius.app/domain_map/domains?id=eq.92
+
+## 2026-06-13 - B9d handoff-payload realization (state-driven execute)
+
+### Summary
+
+Resolved B1A-B9D-VERIFY: ran the committed B9d resolver in BOTH directions over every DAM
+boundary via `scripts/analytics/b9d_resolver.ts DAM --write`. 4 boundary payloads across 3
+handoffs classified; no catalog/database writes (additive audit-file edits + surfaced sign-offs
+only). No JWT errors. DAM remains UNBUILT (0 modules); the entire b1b build cascade stays gated
+on the B2-1 module-split user decision (q-DAM.md q1), unchanged by this pass.
+
+### B9d classification (4 (process, owner) findings)
+
+| Verdict | Process | pid | Owner | Payload | Handoff | Action taken |
+|---|---|---|---|---|---|---|
+| ORPHAN | Develop and manage content (13.6.5) | 428 | HCMS (unbuilt) | content_entries | 806 HCMS->DAM | Routed: added b2 B2-B9D-OWN-428 + q into HCMS audit files |
+| ORPHAN | Assess and approve content (13.6.6.1) | 1762 | AGENCY-MGMT (unbuilt) | creative_deliverables | 344 AGENCY-MGMT->DAM | Routed: added b2 B2-B9D-OWN-1762 + q into AGENCY-MGMT audit files |
+| RE-TAG | Manage product marketing material (3.3.9) | 141 | AGENCY-MGMT | creative_deliverables | 344 AGENCY-MGMT->DAM | Surfaced for sign-off (DESTRUCTIVE source-side re-point 141->1762); recorded as DAM b2 B2-B9D-RETAG-344 |
+| UNOWNED | Publish approved content (13.6.6.2) | 1763 | (no master) | digital_assets | 98 DAM->HCMS | Surfaced on sender DAM (digital_assets has no master anywhere; DAM unbuilt); recorded as DAM b2 B2-B9D-DAM-UNOWNED, gated on B2-1 |
+
+### Owner-side routing (additive, local audit files only, no catalog writes)
+
+- HCMS: `q-HCMS.md` q9 + `state.yaml` b2 `B2-B9D-OWN-428`; flipped HCMS `next_action_by` to `user`.
+- AGENCY-MGMT: `q-AGENCY-MGMT.md` q14 + `state.yaml` b2 `B2-B9D-OWN-1762` (distinct from the prior 2026-06-11 B9d item; no duplicate).
+
+Both ORPHAN owners are unbuilt, so the realized-nearest-sibling cross-check was skipped per the
+B9d band (an unbuilt owner realizes nothing; the owner = entity-master signal is authoritative).
+The personas themselves are part of each owner's open question (cold-start: those domains have no
+persona pool yet).
+
+### Surfaced for user sign-off (not applied; Rule #1 / Rule #21)
+
+- RE-TAG 141 -> 1762 on handoff 344 (AGENCY-MGMT-sourced; destructive re-point) - DAM b2 B2-B9D-RETAG-344.
+- UNOWNED digital_assets on handoff 98 - clears automatically once DAM builds (B2-1 / B1B-S1 masters digital_assets in a module) - DAM b2 B2-B9D-DAM-UNOWNED.
+
+### State
+
+B1A-B9D-VERIFY cleared; b1a now empty. All remaining DAM items are b1b (blocked on B2-1 build
+cascade), b2 (user decisions, already in q-DAM.md plus the two new B9d sign-off items), or b3.
+DAM stays `feedback_needed` / `next_action_by: user`. q-DAM.md refreshed to carry the two new
+B9d sign-off questions.

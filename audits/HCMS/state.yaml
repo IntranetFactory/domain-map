@@ -11,7 +11,7 @@
 schema_version: 2
 domain: HCMS
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 # b1a fully resolved 2026-06-06 (see history.md "2026-06-06 - b1a execution"):
@@ -170,6 +170,16 @@ b2:
       - "(a) Keep content_locales in HCMS-AUTHORING; do not split (current state)."
       - "(b) When translation_jobs (B3-E6) lands, create HCMS-LOCALIZATION and move content_locales 135 plus translation_jobs into it."
     why: "Architectural call; only justified once a translation-workflow master exists. content_locales alone is config-shape and does not warrant a standalone module."
+  - id: B2-B9D-OWN-428
+    summary: "Headless Content Management: name an owner for \"Develop and manage content\" (no one is responsible for it today)"
+    question: |
+      Digital Asset Management forwards content entry to Headless Content Management to develop and manage content, but Headless Content Management does not yet have anyone assigned to develop and manage content, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Headless Content Management owns, and assign a named owner once Headless Content Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Headless Content Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-HCMS.md q9.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-MASTER-WEBHOOKS

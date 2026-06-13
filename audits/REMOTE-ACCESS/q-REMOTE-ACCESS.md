@@ -72,6 +72,16 @@ a6:
 
 ---
 
+q8: MSP Professional Services Automation forwards remote session to Remote Access and Support to operate IT user support, but Remote Access and Support does not yet have anyone assigned to operate IT user support, so this step has no owner. How should it be handled?
+- a) Record it now as work Remote Access and Support owns, and assign a named owner once Remote Access and Support sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Remote Access and Support decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a8:
+
+---
+
 ## Optional (will not hold up the build)
 
 q7: Nine extra entities show up across the flagship remote-access vendors as first-class objects (registered endpoint devices, endpoint groups, access policies, privilege elevations, file transfers, consent records, MFA challenges, relay nodes, recording retention policies). Should I research the ones that hold up and add them? (yes/no)
@@ -82,4 +92,4 @@ a7:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B2-S4 q5=B2-H1 q6=B1A-B6 q7=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5+B3-S6+B3-S7+B3-S8+B3-S9 | domain_id=132 -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B2-S4 q5=B2-H1 q6=B1A-B6 q7=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5+B3-S6+B3-S7+B3-S8+B3-S9 q8=B2-B9D-OWN-295 | domain_id=132 -->

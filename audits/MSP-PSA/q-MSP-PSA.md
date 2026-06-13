@@ -130,6 +130,44 @@ a13:
 
 ---
 
+q17: Customer Service Management forwards msp service contract to MSP Professional Services Automation to manage Customer Service, but MSP Professional Services Automation does not yet have anyone assigned to manage Customer Service, so this step has no owner. How should it be handled?
+- a) Record it now as work MSP Professional Services Automation owns, and assign a named owner once MSP Professional Services Automation sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment MSP Professional Services Automation decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a17:
+
+---
+
+q18: Core Financial Management forwards msp service contract to MSP Professional Services Automation to perform revenue accounting, but MSP Professional Services Automation does not yet have anyone assigned to perform revenue accounting, so this step has no owner. How should it be handled?
+- a) Record it now as work MSP Professional Services Automation owns, and assign a named owner once MSP Professional Services Automation sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment MSP Professional Services Automation decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a18:
+
+---
+
+q19: Remote Monitoring and Management forwards msp ticket to MSP Professional Services Automation to resolve customer problems, requests, and inquiries, but MSP Professional Services Automation does not yet have anyone assigned to resolve customer problems, requests, and inquiries, so this step has no owner. How should it be handled?
+- a) Record it now as work MSP Professional Services Automation owns, and assign a named owner once MSP Professional Services Automation sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment MSP Professional Services Automation decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a19:
+
+---
+
+q20: One service-desk handoff to Customer Success is filed under a broad "manage customer service problems" process, but a more precise "resolve customer problems" step already exists and is the one your tickets actually run through. Should I re-file that handoff under the more precise step? (yes/no)
+
+Recommended: yes. It is a tidy-up that points the handoff at the step your ticket workflow already realizes. It rewrites an existing tag, so it needs your sign-off; the corrected tag lands as new (unreviewed) for you to confirm.
+
+a20:
+
+---
+
 ## Optional (will not hold up the build)
 
 q14: Flagship MSP platforms model six extra first-class objects that this domain currently leaves implicit (block-hour pools, SLA templates, recurring billing schedules, a per-client managed-estate inventory, quotes for new work, and MSP-scoped change requests). Should I research and add the ones that hold up? (yes/no)
@@ -156,4 +194,4 @@ a16:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B1A-SELF-CONTAIN q3=B2-S7 q4=B2-S5 q5=B2-S6 q6=B2-S3 q7=B2-S2.tickets_pii q8=B2-S2.clients_pii q9=B2-S2.contracts_pii q10=B2-S2.invoices_pii q11=B2-S2.timeentry_submitlock q12=B2-S2.ticket_submitlock q13=B2-S2.timeentry_singleapprover q14=B3-BLOCK-HOURS+B3-SLA-DEFS+B3-RECURRING-BILLING+B3-ESTATE-INVENTORY+B3-QUOTES+B3-CHANGE-REQUESTS q15=B3-MODULARIZATION-CONTRACTS-SPLIT q16=B3-PCI-DSS+B3-SOC2-MSP+B3-HIPAA-BAA+B3-DATA-BREACH-STATUTES | domain_id=131 -->
+<!-- agent map, ignore: q1=B2-S1 q2=B1A-SELF-CONTAIN q3=B2-S7 q4=B2-S5 q5=B2-S6 q6=B2-S3 q7=B2-S2.tickets_pii q8=B2-S2.clients_pii q9=B2-S2.contracts_pii q10=B2-S2.invoices_pii q11=B2-S2.timeentry_submitlock q12=B2-S2.ticket_submitlock q13=B2-S2.timeentry_singleapprover q14=B3-BLOCK-HOURS+B3-SLA-DEFS+B3-RECURRING-BILLING+B3-ESTATE-INVENTORY+B3-QUOTES+B3-CHANGE-REQUESTS q15=B3-MODULARIZATION-CONTRACTS-SPLIT q16=B3-PCI-DSS+B3-SOC2-MSP+B3-HIPAA-BAA+B3-DATA-BREACH-STATUTES q17=B2-B9D-OWN-6 q18=B2-B9D-OWN-55 q19=B2-B9D-OWN-927 q20=B2-B9D-RETAG-523 | domain_id=131 -->

@@ -417,3 +417,66 @@ rows default `record_status='new'` (Rule #1); no `notes`-column writes (Rule #15
 ### JWT errors
 
 None.
+
+## 2026-06-13 - Audit (state-driven execute: B9d + clean B8 edge)
+
+### Summary
+
+State-driven Validate pass (Rule #21) against DEM's state.yaml; next_action_by was `agent` for the
+outstanding B9d verification. Live re-confirmed DEM is still UNBUILT (domains.id=83; 0 domain_modules,
+0 capability_domains, 0 solution_domains). The unbuilt-domain BUILD (B1A-A2 / A3 / BUILD) and the
+M1-gated b1b cascade are left untouched per Rule #21 (the agent does not scaffold an unbuilt domain;
+the build shape is a user decision via B2-MODULE-SPLIT / B2-DEX-BOUNDARY). Only agent-executable
+additive/corrective work that stands independent of the module set was executed.
+
+### Executed
+
+- **B1A-B9D-VERIFY (DONE).** Ran the committed B9d resolver
+  (`bun run scripts/analytics/b9d_resolver.ts DEM --write`) over both directions of every DEM boundary.
+  8 boundary tags -> 5 distinct (process, owner) findings:
+  - **1 ORPHAN**: process 1299 "Triage IT service delivery incidents" (handoff 664 DEM->ITSM, payload
+    service_incidents), owner = ITSM (unbuilt). Resolver wrote the additive owner-side item into ITSM:
+    `B2-B9D-OWN-1299` in `audits/ITSM/state.yaml` plus question q8 in `audits/ITSM/q-ITSM.md`
+    (state.yaml hygiene carve-out (b); the OWNER decides who triages, recorded now so it is not lost).
+    No DEM-side data touched; nothing written to the catalog.
+  - **4 UNOWNED dependencies** (surfaced for review, not written): processes 295 "Operate IT user
+    support", 1128 "Monitor and report IT performance", 1137 "Select/deploy/operate IT performance
+    analytics tools", 1304 "Manage infrastructure performance and capacity" on handoffs 665/667
+    (DEM->AIOPS), 666 (DEM->OBS), 653 (NPMD->DEM). Each carries a payload entity
+    (endpoint_anomaly_findings, real_user_sessions, synthetic_monitoring_results,
+    saas_application_performance) that has NO `master` row anywhere in the catalog (AIOPS / OBS / NPMD
+    are unbuilt and DEM only publishes these as payloads, it does not master them). The resolver's rule
+    is to surface on the sender and never silently drop; they resolve once those neighbor domains build
+    their masters. Carried forward as B1A-B9D-UNOWNED (b1b, blocked on neighbor M1).
+
+- **B1A-B8 clean ITSM edge (DONE).** Authored the lone neighbor-built cross-domain mirror relationship
+  `endpoint_experience_scores (585) triggers service_incidents (47)` -> id 2354, mirroring handoff 664
+  (target module 38 ITSM-INCIDENT-MGMT already wired). Conventions matched existing
+  `<source> triggers service_incidents` rows (one_to_many, reference, is_required=false,
+  owner_side=target). record_status='new'. The 3 remaining B8 edges (665/666/667 into AIOPS/OBS) target
+  as-yet-unbuilt neighbor modules and stay gated.
+
+### Surfaced (no write; user decision or neighbor-gated)
+
+- **B1A-A2 / B1A-A3 / B1A-BUILD**: unbuilt-domain BUILD; expansive net-new structure (capabilities,
+  solutions, modules). Rule #21 forbids authoring before the q-file answers; gated on B2-MODULE-SPLIT +
+  B2-DEX-BOUNDARY.
+- **B1A-B9-ORPHAN** (trigger event 680, zero handoffs): DELETE (destructive) vs AUTHOR a DEM->ITSM
+  handoff (additive expansion). User decision, unchanged.
+- **B1A-B9-EVENTS**: speculative recovery/resolution events, best authored with the build + 589
+  lifecycle.
+- **B1A-B9D-UNOWNED** (NEW, b1b): the 4 UNOWNED payload dependencies above, blocked on AIOPS / OBS /
+  NPMD building masters for the carried entities.
+
+### Left (M1-gated b1b, unchanged)
+
+B1B-M1 (blocked on B2 split + DEX boundary), B1B-B4 (B2-PATTERN-FLAGS), B1B-B10b, B1B-B12.
+
+### b2 / b3 (unchanged)
+
+B2-MODULE-SPLIT, B2-DEX-BOUNDARY, B2-PATTERN-FLAGS open; B3-MARKET-ENTITIES, B3-DEX-PLATFORM,
+B3-APM-MONITORING parked.
+
+### JWT errors
+
+None.

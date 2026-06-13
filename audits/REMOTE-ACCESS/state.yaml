@@ -1,7 +1,7 @@
 schema_version: 2
 domain: REMOTE-ACCESS
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-07"
 
 # 2026-06-07 state-driven audit: EXECUTED entity_type classify (238 + 239 ->
@@ -157,6 +157,16 @@ b2:
       record_status='new'.)
     options: ["approve all 7", "approve subset (specify by handoff_id)", "decline / re-tag"]
     why: "Approving handoff_processes shifts record_status to 'approved'; requires explicit per-load user confirmation per Rule #1."
+  - id: B2-B9D-OWN-295
+    summary: "Remote Access and Support: name an owner for \"Operate IT user support\" (no one is responsible for it today)"
+    question: |
+      MSP Professional Services Automation forwards remote session to Remote Access and Support to operate IT user support, but Remote Access and Support does not yet have anyone assigned to operate IT user support, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Remote Access and Support owns, and assign a named owner once Remote Access and Support sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Remote Access and Support decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-REMOTE-ACCESS.md q8.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-S1

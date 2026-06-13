@@ -96,6 +96,26 @@ a12:
 
 ---
 
+q13: Data and AI Platform forwards metric definition to Metrics Layer / Headless BI to establish data, information, and analytic governance, but Metrics Layer / Headless BI does not yet have anyone assigned to establish data, information, and analytic governance, so this step has no owner. How should it be handled?
+- a) Record it now as work Metrics Layer / Headless BI owns, and assign a named owner once Metrics Layer / Headless BI sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Metrics Layer / Headless BI decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a13:
+
+---
+
+q14: Data and AI Platform forwards metric materialization to Metrics Layer / Headless BI to maintain business information feeds and repositories, but Metrics Layer / Headless BI does not yet have anyone assigned to maintain business information feeds and repositories, so this step has no owner. How should it be handled?
+- a) Record it now as work Metrics Layer / Headless BI owns, and assign a named owner once Metrics Layer / Headless BI sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Metrics Layer / Headless BI decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a14:
+
+---
+
 ## Optional (will not hold up the build)
 
 q9: Four extra master tables show up across the flagship metrics-layer vendors (named saved metric views, registered downstream consumers, metric assertion or quality rules, and a metric-change-as-pull-request workflow). Should I research and add the ones that hold up? (yes/no)
@@ -122,4 +142,4 @@ a11:
 
 ---
 
-<!-- agent map, ignore: q1=B2-NAMING-ARBITRATION q2=B2-PATTERN-FLAGS.mdsubmitlock q3=B2-PATTERN-FLAGS.mdapprover q4=B2-PATTERN-FLAGS.policyapprover q5=B2-PATTERN-FLAGS.modelsubmitlock q6=B2-CATALOG-UX q7=B2-DCG-INBOUND-TAG q8=B2-LOOKER-RECLASSIFICATION q9=B3-METRIC-VIEWS+B3-METRIC-CONSUMERS+B3-METRIC-ASSERTION-RULES+B3-METRIC-CHANGE-PROPOSALS q10=B3-DELIVERY-SPLIT q11=B3-REGULATION-TAGGING q12=B2-B9D-OWN-1299 | domain_id=137 -->
+<!-- agent map, ignore: q1=B2-NAMING-ARBITRATION q2=B2-PATTERN-FLAGS.mdsubmitlock q3=B2-PATTERN-FLAGS.mdapprover q4=B2-PATTERN-FLAGS.policyapprover q5=B2-PATTERN-FLAGS.modelsubmitlock q6=B2-CATALOG-UX q7=B2-DCG-INBOUND-TAG q8=B2-LOOKER-RECLASSIFICATION q9=B3-METRIC-VIEWS+B3-METRIC-CONSUMERS+B3-METRIC-ASSERTION-RULES+B3-METRIC-CHANGE-PROPOSALS q10=B3-DELIVERY-SPLIT q11=B3-REGULATION-TAGGING q12=B2-B9D-OWN-1299 q13=B2-B9D-OWN-1203 q14=B2-B9D-OWN-1213 | domain_id=137 -->

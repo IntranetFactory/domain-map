@@ -29,6 +29,56 @@ a2:
 
 ---
 
+q8: AIOps forwards data pipeline to Data and AI Platform to develop and execute IT resilience and continuity operations, but Data and AI Platform does not yet have anyone assigned to develop and execute IT resilience and continuity operations, so this step has no owner. How should it be handled?
+- a) Record it now as work Data and AI Platform owns, and assign a named owner once Data and AI Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Data and AI Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a8:
+
+---
+
+q9: Data Catalog and Governance forwards lakehouse table to Data and AI Platform to manage IT user identity and authorization, but Data and AI Platform does not yet have anyone assigned to manage IT user identity and authorization, so this step has no owner. How should it be handled?
+- a) Record it now as work Data and AI Platform owns, and assign a named owner once Data and AI Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Data and AI Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a9:
+
+---
+
+q10: Data Integration forwards lakehouse table to Data and AI Platform to manage business information, but Data and AI Platform does not yet have anyone assigned to manage business information, so this step has no owner. How should it be handled?
+- a) Record it now as work Data and AI Platform owns, and assign a named owner once Data and AI Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Data and AI Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a10:
+
+---
+
+q11: Master Data Management forwards data product to Data and AI Platform to maintain master data, but Data and AI Platform does not yet have anyone assigned to maintain master data, so this step has no owner. How should it be handled?
+- a) Record it now as work Data and AI Platform owns, and assign a named owner once Data and AI Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Data and AI Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a11:
+
+---
+
+q12: Data Catalog and Governance forwards data product to Data and AI Platform to establish data, information, and analytic governance, but Data and AI Platform does not yet have anyone assigned to establish data, information, and analytic governance, so this step has no owner. How should it be handled?
+- a) Record it now as work Data and AI Platform owns, and assign a named owner once Data and AI Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Data and AI Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a12:
+
+---
+
 ## Optional (will not hold up the build)
 
 q3: Eight extra AI and ML objects show up across the flagship vendors (model experiments, model endpoints, vector indexes, prompt templates, agent tools, RAG retrievers, data contracts, lineage events). Should I research and add the ones that hold up? (yes/no)
@@ -74,4 +124,4 @@ a7:
 
 ---
 
-<!-- agent map, ignore: q1=B2-LIFECYCLE-SHAPE q2=B2-S3 q3=B3-ENT-MODEL-EXPERIMENTS+B3-ENT-MODEL-ENDPOINTS+B3-ENT-VECTOR-INDEXES+B3-ENT-PROMPT-TEMPLATES+B3-ENT-AGENT-TOOLS+B3-ENT-RAG-RETRIEVERS+B3-ENT-DATA-CONTRACTS+B3-ENT-LINEAGE-EVENTS q4=B3-MISSING-MASTER-NOTEBOOKS q5=B3-REG-CANDIDATES q6=B3-MOD-MLOPS-DOMAIN+B3-MOD-AGENTS-SPLIT q7=B3-INBOUND-DMDO+B3-H1R-DEFERRED | domain_id=129 -->
+<!-- agent map, ignore: q1=B2-LIFECYCLE-SHAPE q2=B2-S3 q3=B3-ENT-MODEL-EXPERIMENTS+B3-ENT-MODEL-ENDPOINTS+B3-ENT-VECTOR-INDEXES+B3-ENT-PROMPT-TEMPLATES+B3-ENT-AGENT-TOOLS+B3-ENT-RAG-RETRIEVERS+B3-ENT-DATA-CONTRACTS+B3-ENT-LINEAGE-EVENTS q4=B3-MISSING-MASTER-NOTEBOOKS q5=B3-REG-CANDIDATES q6=B3-MOD-MLOPS-DOMAIN+B3-MOD-AGENTS-SPLIT q7=B3-INBOUND-DMDO+B3-H1R-DEFERRED q8=B2-B9D-OWN-272 q9=B2-B9D-OWN-273 q10=B2-B9D-OWN-277 q11=B2-B9D-OWN-771 q12=B2-B9D-OWN-1203 | domain_id=129 -->

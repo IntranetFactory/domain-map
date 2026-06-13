@@ -1,7 +1,7 @@
 schema_version: 2
 domain: KGP
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 b1a:
@@ -176,6 +176,16 @@ b2:
       - "(a) Approve the batch at process 275 (Define and maintain business information architecture)"
       - "(b) Re-anchor (specify PCF)"
     why: "record_status flip to approved is Rule #1-governed; reviewer owns the approval."
+  - id: B2-B9D-OWN-1209
+    summary: "Knowledge Graph Platform: name an owner for \"Maintain and evolve enterprise data and information architecture\" (no one is responsible for it today)"
+    question: |
+      Data and AI Platform forwards kgp ontology to Knowledge Graph Platform to maintain and evolve enterprise data and information architecture, but Knowledge Graph Platform does not yet have anyone assigned to maintain and evolve enterprise data and information architecture, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Knowledge Graph Platform owns, and assign a named owner once Knowledge Graph Platform sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Knowledge Graph Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-KGP.md q9.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-S1

@@ -172,6 +172,16 @@ b2:
     why: |
       Recording it now means that the moment Agency Management Software decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-AGENCY-MGMT.md q13.
     extra_b9d_added: "2026-06-11"
+  - id: B2-B9D-OWN-1762
+    summary: "Agency Management Software: name an owner for \"Assess and approve content\" (no one is responsible for it today)"
+    question: |
+      Digital Asset Management forwards creative deliverable to Agency Management Software to assess and approve content, but Agency Management Software does not yet have anyone assigned to assess and approve content, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Agency Management Software owns, and assign a named owner once Agency Management Software sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Agency Management Software decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-AGENCY-MGMT.md q14.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-AGENCY-RATE-CARDS

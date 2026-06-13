@@ -11,8 +11,8 @@
 schema_version: 2
 domain: DI
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-08"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # UNBUILT domain: 0 domain_modules, 0 capabilities (confirmed live 2026-06-07, re-verified
 # 2026-06-08). The entire M-band cascade below is gated on the user picking the module split
@@ -38,10 +38,6 @@ last_audit: "2026-06-08"
 # destructive-surface (em-dash) + b3, awaiting a-DI.md.
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-EMDASH-BL
     summary: "DESTRUCTIVE (surface only): replace one em-dash in domains.business_logic on DI id=89 with a comma to comply with the project no-em-dashes rule."
     finding: "domains.business_logic on DI id=89 contains one em-dash character: 'Streaming and ELT runtimes, change-data-capture engines, and schema-evolution handling [em-dash] the platform IS the kernel.' Project rule (CLAUDE.md No em-dashes) forbids em-dashes in any catalog text. domains.description, catalog_tagline, catalog_description are all clean (catalog copy authored 2026-06-07 is em-dash free)."
@@ -49,6 +45,14 @@ b1a:
     classification: destructive-overwrite-surface
     affected_entities:
       - domains.id=89.business_logic
+
+  - id: B1A-B9D-ROLLUP-259
+    summary: "DESTRUCTIVE (surface only): re-point the APQC tag on handoff 259 (DI -> DCG, data_asset.discovered, payload data_assets) from process 8.4.4 (Manage business information, pid 277) to its realized child 8.4.4.1, which is the gated+RACI'd process DCG actually realizes."
+    finding: "B9d (2026-06-13, scripts/analytics/b9d_resolver.ts DI) classified handoff 259's payload as ROLL-UP: the tagged process 8.4.4 is not itself realized, but its descendant 8.4.4.1 IS the gated data_object_lifecycle_states.process_id carrying process_raci on the DCG side. The work exists at a finer grain; the tag points at the parent."
+    action: "PATCH the handoff_processes row for handoff 259 to process_id of 8.4.4.1 (record_status='new'). This re-points an existing tag DI authored (DI-side edit), so per Rule #21 it is a destructive re-point surfaced for sign-off rather than executed. The other 4 B9d findings on DI's boundary are UNOWNED dependencies (payload data_objects pipeline_runs / source_connectors / sink_connectors / schema_registries are not yet mastered anywhere because DI is unbuilt) and resolve automatically once DI is built (B2-S1)."
+    classification: destructive-overwrite-surface
+    affected_entities:
+      - handoff_processes.handoff_id=259
 
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities. Surface the build; agent does not scaffold unprompted."

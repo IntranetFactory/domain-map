@@ -354,3 +354,28 @@ State-driven Validate pass (SKILL.md Rule #21) over the open items in `state.yam
 
 - https://tests.semantius.app/domain_map/data_objects?id=in.(572,573,574,575,576,577,578,225)
 - https://tests.semantius.app/domain_map/domains?id=eq.8
+
+## 2026-06-13 — Audit (B9d handoff-payload realization)
+
+Ran the new B9d band (`scripts/analytics/b9d_resolver.ts TEST-MGMT`, both directions),
+executing the agent-actionable `B1A-B9D-VERIFY` item. B9d had never run on this domain
+(added 2026-06-09).
+
+**Classification:** 10 boundary tags -> 7 findings: 1 ORPHAN, 6 UNOWNED.
+
+**Applied (additive owner-side edit, `--write`):**
+- B2-B9D-OWN-579 routed into ITSM's backlog (its state.yaml + q-file): service_incidents,
+  "Eliminate quality and reliability problems" (pid 579), handoff 779 TEST-MGMT->ITSM.
+  ITSM masters the carried entity, so ITSM owns the owner-assignment decision.
+
+**UNOWNED (6) — artifact of TEST-MGMT being unbuilt, NOT a new gap:**
+The resolver reports "no master anywhere" for test_runs (782/771/778 VSDP, 802 GRC),
+test_defects (780 WORK-MGMT), requirements_to_test_traceability (781 PROD-MGMT) — but these
+ARE TEST-MGMT's own masters, still sitting in legacy domain_data_objects rather than
+domain_module_data_objects. They resolve automatically when B1B-M3 migrates the 8 masters
+to DMDO during the build. api_specifications / integration_data_mappings / ci_pipeline_runs
+(752 APIM, 768 IPAAS, 771 VSDP) are owned by those (unbuilt) domains and resolve on their
+builds. No separate item; all subsumed by B1A-BUILD.
+
+`B1A-B9D-VERIFY` is resolved and removed from state.yaml. Domain stays `feedback_needed`
+(unbuilt; the whole build cascade gates on B2-1 / B2-2).

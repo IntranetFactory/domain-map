@@ -53,6 +53,16 @@ a13:
 
 ---
 
+q14: Digital Asset Management forwards creative deliverable to Agency Management Software to assess and approve content, but Agency Management Software does not yet have anyone assigned to assess and approve content, so this step has no owner. How should it be handled?
+- a) Record it now as work Agency Management Software owns, and assign a named owner once Agency Management Software sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Agency Management Software decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a14:
+
+---
+
 ## Optional (will not hold up the build)
 
 q5: Should I add a dedicated rate-card record, so per-client rate sheets and effective-dated bill rates live as first-class records instead of overrides on time entries? (yes/no)
@@ -119,4 +129,4 @@ a12:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S5 q2=B2-S3.submitlock q3=B2-S3.singleapprover q4=B2-S6 q5=B3-AGENCY-RATE-CARDS q6=B3-AGENCY-INVOICES q7=B3-AGENCY-CHANGE-ORDERS q8=B3-MEDIA-BUYS q9=B3-PROOFING-ROUNDS q10=B3-DOMAIN-MEDIA-BUY-PLATFORM q11=B3-DOMAIN-CREATIVE-PROOFING q12=B3-DOMAIN-MRM q13=B2-B9D-OWN-32 | domain_id=153 -->
+<!-- agent map, ignore: q1=B2-S5 q2=B2-S3.submitlock q3=B2-S3.singleapprover q4=B2-S6 q5=B3-AGENCY-RATE-CARDS q6=B3-AGENCY-INVOICES q7=B3-AGENCY-CHANGE-ORDERS q8=B3-MEDIA-BUYS q9=B3-PROOFING-ROUNDS q10=B3-DOMAIN-MEDIA-BUY-PLATFORM q11=B3-DOMAIN-CREATIVE-PROOFING q12=B3-DOMAIN-MRM q13=B2-B9D-OWN-32 q14=B2-B9D-OWN-1762 | domain_id=153 -->

@@ -479,3 +479,62 @@ substance change beyond this re-grounding (the underlying decisions stand).
 - `audits/DI/history.md` (this section)
 
 No DB inserts/updates/deletes. No em-dash characters authored. American English throughout.
+
+## 2026-06-13 - B9d handoff-payload realization (resolves B1A-B9D-VERIFY)
+
+### Summary
+
+Ran the committed B9d resolver (`scripts/analytics/b9d_resolver.ts DI`) in BOTH directions over
+every DI boundary. DI is still UNBUILT (0 domain_modules), so its own side authors no realization;
+the band's job here is classifying the APQC payload on each handoff against realized work and routing
+each ORPHAN to the OWNER domain. Resolves the only agent-executable open item, `B1A-B9D-VERIFY`.
+Everything else on DI stays user-gated (the q-DI.md decisions q1-q9). Status remains
+`feedback_needed`; `next_action_by` moves from `agent` to `user`.
+
+### Classification (10 boundary tags -> 7 distinct (process, owner) findings)
+
+| verdict | process (pid) | owner | payload(s) | handoff(s) | disposition |
+|---|---|---|---|---|---|
+| ORPHAN | 8.4.4 Manage business information (277) | DATA-AI-PLAT (unbuilt) | lakehouse_tables | 157 | additive b2 + q written into DATA-AI-PLAT |
+| ORPHAN | 8.7.5.9 Triage IT service delivery incidents (1299) | ITSM (unbuilt) | service_incidents | 727 | additive b2 + q written into ITSM |
+| ROLL-UP | 8.4.4 Manage business information (277) | DCG | data_assets | 259 | destructive re-point 8.4.4 -> 8.4.4.1, SURFACED for sign-off (not applied) |
+| UNOWNED | 8.3.5 IT security/privacy/data protection (270) | (no master anywhere) | source_connectors, sink_connectors | 729, 730 | surfaced on sender DI; carried entity has no master row, not dropped |
+| UNOWNED | 8.3.7 IT resilience and continuity (272) | (no master anywhere) | pipeline_runs | 725 | surfaced on sender DI |
+| UNOWNED | 8.4.4 Manage business information (277) | (no master anywhere) | pipeline_runs | 728, 726, 725 | surfaced on sender DI |
+| UNOWNED | 8.4.2.5 Maintain/evolve enterprise data architecture (1209) | (no master anywhere) | schema_registries | 731 | surfaced on sender DI |
+
+The four UNOWNED findings reflect that DI's payload data_objects (pipeline_runs, source_connectors,
+sink_connectors, schema_registries) are NOT yet declared `master` anywhere in `domain_module_data_objects`
+because DI has zero modules (the B2-S1 / M-band gate). They are surfaced on DI as unowned dependencies
+per the SKILL.md ORPHAN rule (never silently dropped). They will resolve to RESOLVED / ORPHAN-routed
+automatically once DI is built (B2-S1 answered, masters migrated to `domain_module_data_objects`).
+
+### Applied (additive, local audit files only; no catalog writes)
+
+- `audits/DATA-AI-PLAT/state.yaml` + `q-DATA-AI-PLAT.md`: added `B2-B9D-OWN-277` (Manage business
+  information, payload lakehouse_tables from DI handoff 157) plus the other ORPHANs the resolver found
+  on DATA-AI-PLAT's full boundary set (272, 273, 771, 1203 from AIOPS/DCG/MDM). DATA-AI-PLAT's own
+  `B1A-B9D-VERIFY` cleared as a result; its `next_action_by` moved to `user`.
+- `audits/ITSM/state.yaml` + `q-ITSM.md`: added `B2-B9D-OWN-1299` (Triage IT service delivery
+  incidents, payload service_incidents from DI handoff 727) plus the other ITSM-owned ORPHANs the
+  resolver surfaced (579, 272 from Test Management / DATA-AI-PLAT).
+
+These owner-domain writes are the explicit B9d cross-domain carve-out (state.yaml hygiene carve-out
+(b)): an ORPHAN is recorded as a `b2` in the OWNER's backlog the moment it is found, on whichever
+side owns it.
+
+### NOT applied (surfaced for sign-off; Rule #1 / Rule #21)
+
+- ROLL-UP re-point `8.4.4 -> 8.4.4.1` on `handoff_processes` for handoff 259 (DI -> DCG). This edits
+  the tag DI authored, so it is a DI-side destructive edit; it needs explicit user sign-off before
+  the re-point.
+- The 4 UNOWNED dependencies above are review items (they need DI to be built before the carried
+  entities have masters); no write is possible or appropriate now.
+
+### Files written this pass
+
+- `audits/DI/history.md` (this section)
+- `audits/DI/state.yaml` (removed resolved `B1A-B9D-VERIFY`; `next_action_by: user`; `last_audit` 2026-06-13)
+- `audits/DATA-AI-PLAT/*` and `audits/ITSM/*` (additive owner-side b2 + q items, via the resolver)
+
+No DB inserts/updates/deletes. No em-dash characters authored. American English throughout.

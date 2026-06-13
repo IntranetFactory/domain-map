@@ -11,20 +11,18 @@
 schema_version: 2
 domain: DEM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # DEM is UNBUILT: 0 domain_modules (M1 fail, blocking), 0 capability_domains, 0 solution_domains.
 # Per Rule #21 the agent does NOT scaffold an unbuilt domain; the build is surfaced (b1a-A2/A3/BUILD)
-# and the M1-gated cascade is left. The 2026-06-07 pass executed only the additive/corrective items
-# that stand independent of the module set (entity_type classification, Rule #20 catalog text,
-# event_category backfill, intra-domain master-to-master relationships).
+# and the M1-gated cascade is left. No agent-executable work remains: B9d ran 2026-06-13 (ORPHAN routed
+# to ITSM as B2-B9D-OWN-1299; 4 UNOWNED -> B1A-B9D-UNOWNED, neighbor-gated) and the clean ITSM B8 edge
+# was authored (id 2354). Everything still open is a user decision (B2-MODULE-SPLIT / B2-DEX-BOUNDARY /
+# B2-PATTERN-FLAGS / B1A-B9-ORPHAN) or M1/neighbor-gated b1b. Prior passes executed entity_type
+# classification, Rule #20 catalog text, event_category backfill, and intra-domain relationships.
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-A2
     summary: Author 5-7 DEM capabilities and link via capability_domains.
     finding: >-
@@ -58,21 +56,17 @@ b1a:
       - {vendor: Riverbed Aternity, evidence: secondary}
 
   - id: B1A-B8
-    summary: Author 4 cross-domain mirror data_object_relationships for outbound handoffs.
+    summary: Author the 3 remaining cross-domain mirror data_object_relationships for outbound handoffs (AIOPS/OBS edges).
     finding: >-
-      The 4 outbound DEM handoffs (664 DEM->ITSM service_incidents, 665 DEM->AIOPS
-      endpoint_anomaly_findings, 666 DEM->OBS synthetic_monitoring_results, 667 DEM->AIOPS
-      real_user_sessions) still have no mirror data_object_relationships. SURFACED, not executed:
-      three of the four target the neighbor's own (as-yet-unbuilt) module surface and the state's
-      own action text reads "record relationship only here once AIOPS/OBS lands modules" (asymmetric,
-      part of the neighbor cascade). The lone clean edge (585 endpoint_experience_scores triggers
-      47 service_incidents into the already-built ITSM) can be authored without neighbor gating if
-      desired; the AIOPS/OBS edges should wait for those audits.
+      The clean ITSM edge was AUTHORED 2026-06-13 (id 2354: 585 endpoint_experience_scores triggers
+      47 service_incidents, mirroring handoff 664 into the already-built ITSM, target module 38).
+      The 3 remaining outbound mirrors (665 DEM->AIOPS endpoint_anomaly_findings, 666 DEM->OBS
+      synthetic_monitoring_results, 667 DEM->AIOPS real_user_sessions) target the neighbor's own
+      as-yet-unbuilt module surface and stay gated on AIOPS/OBS building masters for those payloads.
     affected_handoffs:
-      - {handoff_id: 664, source_domain: DEM, target_domain: ITSM, payload: service_incidents, edge: "585 triggers 47", neighbor_built: true}
       - {handoff_id: 665, source_domain: DEM, target_domain: AIOPS, payload: endpoint_anomaly_findings, edge: "589 published_to AIOPS-side", neighbor_built: false}
       - {handoff_id: 666, source_domain: DEM, target_domain: OBS, payload: synthetic_monitoring_results, edge: "586 published_to OBS-side", neighbor_built: false}
-      - {handoff_id: 667, source_domain: DEM, target_domain: AIOPS, payload: real_user_sessions, edge: "587 flagged_to 94 anomaly_detections", neighbor_built: false}
+      - {handoff_id: 667, source_domain: DEM, target_domain: AIOPS, payload: real_user_sessions, edge: "587 flagged_to AIOPS-side", neighbor_built: false}
 
   - id: B1A-B9-ORPHAN
     summary: Resolve trigger event 680 (digital_friction_event.recorded) orphan.
@@ -114,6 +108,21 @@ b1a:
       Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward.
 
 b1b:
+  - id: B1A-B9D-UNOWNED
+    summary: 4 B9d UNOWNED handoff-payload dependencies; carried entities have no master anywhere.
+    finding: >-
+      B9d (run 2026-06-13) classified 4 boundary payloads as UNOWNED: their carried entities have no
+      master row in the catalog, so no domain owns the realization. endpoint_anomaly_findings +
+      real_user_sessions (handoffs 665, 667 DEM->AIOPS) under processes 295 / 1128; saas_application_
+      performance + synthetic_monitoring_results (653 NPMD->DEM, 666 DEM->OBS) under processes 1137 /
+      1304. DEM only PUBLISHES these as handoff payloads, it does not master them; AIOPS / OBS / NPMD
+      are unbuilt. Per the B9d band these are surfaced on the sender, never silently dropped. They
+      clear once the owning neighbor builds a master for the carried entity.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: AIOPS, milestone: M1}
+      - {type: domain_audit, blocking_domain: OBS, milestone: M1}
+      - {type: domain_audit, blocking_domain: NPMD, milestone: M1}
+
   - id: B1B-M1
     summary: BLOCKING. Author the DEM domain_modules row set.
     finding: >-
