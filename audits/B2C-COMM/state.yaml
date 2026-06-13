@@ -1,168 +1,43 @@
-# === SUPERSEDED 2026-06-06: per-domain-skill restoration ===
-# The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
-# Any open item that says "author/split a per-module system skill", "one system skill per
-# domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELED.
-# New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
-# domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
-# DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
-# cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
-# re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
-# === end supersession note ===
 schema_version: 2
 domain: B2C-COMM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-05"
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+next_action_by: user
+last_audit: "2026-06-13"
+# All agent-buildable corrective gap-fill is DONE (verified live 2026-06-13): intra-domain
+# master-master relationships, users-edges (Rule #10), aliases, lifecycle states, and the
+# outbound handoff source_domain_module_id backfill are all present in the catalog. B9d ran
+# this pass in BOTH directions. Everything still open below is user-gated: b2 decisions,
+# destructive sign-offs, deferred-research (b3), or blocked-on-neighbor.
 b1b:
-  - id: B1B-S3-INTRA-RELS
-    summary: Author intra-domain master-to-master data_object_relationships among the 10 B2C-COMM masters.
-    finding: |
-      Zero intra-domain master-to-master data_object_relationships among the 10 B2C-COMM masters (carts, checkouts, commerce_orders, order_lines, payment_transactions, fulfillments, commerce_shipments, commerce_products, commerce_storefronts, coupons). The 7 edges present touching these masters all originate from foreign-domain authoring (trade promotions, content releases, lot / serial). Expected chain: carts -> checkouts -> commerce_orders -> order_lines / payment_transactions / fulfillments -> commerce_shipments; commerce_storefronts -> commerce_products; coupons -> commerce_orders / order_lines. Module placement is now known (213 / 214 / 215), so module-level edges can be wired in the same pass.
-    blocked_by:
-      - {type: depends_on, ref: B1A-MODULE-SKILLS-UX, reason: bundle into the same cluster-drafts loader as the per-module skill + UX pass}
-    affected_masters:
-      - {data_object_id: 381, name: commerce_orders, target_module_id: 214, workflow: order_capture}
-      - {data_object_id: 382, name: order_lines, target_module_id: 214, workflow: order_capture}
-      - {data_object_id: 383, name: carts, target_module_id: 214, workflow: order_capture}
-      - {data_object_id: 384, name: commerce_products, target_module_id: 213, workflow: catalog_merch}
-      - {data_object_id: 385, name: commerce_storefronts, target_module_id: 213, workflow: catalog_merch}
-      - {data_object_id: 386, name: checkouts, target_module_id: 214, workflow: order_capture}
-      - {data_object_id: 387, name: payment_transactions, target_module_id: 214, workflow: order_capture}
-      - {data_object_id: 388, name: fulfillments, target_module_id: 215, workflow: fulfill_ship}
-      - {data_object_id: 389, name: commerce_shipments, target_module_id: 215, workflow: fulfill_ship}
-      - {data_object_id: 390, name: coupons, target_module_id: 213, workflow: catalog_merch}
-  - id: B1B-S4-USERS-EDGES
-    summary: Author users-edges (Rule #10) between data_object 748 (users, platform_builtin) and each of the 10 B2C-COMM masters.
-    finding: |
-      Zero data_object_relationships rows link data_object 748 (users) to any of the 10 B2C-COMM masters. Actors implied across the master set: commerce_orders.customer / shopper, carts.shopper, checkouts.shopper, commerce_storefronts.merchandiser / merchant_admin, commerce_products.product_owner, coupons.created_by, payment_transactions.cashier_or_customer.
-    blocked_by:
-      - {type: depends_on, ref: B1A-MODULE-SKILLS-UX, reason: bundle into the same cluster-drafts load as B1B-S3}
-    affected_masters:
-      - {data_object_id: 381, name: commerce_orders, target_module_id: 214, workflow: actor_customer}
-      - {data_object_id: 382, name: order_lines, target_module_id: 214, workflow: actor_customer}
-      - {data_object_id: 383, name: carts, target_module_id: 214, workflow: actor_shopper}
-      - {data_object_id: 384, name: commerce_products, target_module_id: 213, workflow: actor_product_owner}
-      - {data_object_id: 385, name: commerce_storefronts, target_module_id: 213, workflow: actor_merchandiser}
-      - {data_object_id: 386, name: checkouts, target_module_id: 214, workflow: actor_shopper}
-      - {data_object_id: 387, name: payment_transactions, target_module_id: 214, workflow: actor_payer}
-      - {data_object_id: 388, name: fulfillments, target_module_id: 215, workflow: actor_fulfillment_clerk}
-      - {data_object_id: 389, name: commerce_shipments, target_module_id: 215, workflow: actor_carrier_clerk}
-      - {data_object_id: 390, name: coupons, target_module_id: 213, workflow: actor_created_by}
-  - id: B1B-S6-ALIASES
-    summary: Author data_object_aliases for all 10 B2C-COMM masters (vendor / industry synonyms).
-    finding: |
-      Zero data_object_aliases across all 10 B2C-COMM masters despite well-known vendor / industry synonyms (Items / SKUs / Catalog Items for commerce_products; Baskets / Shopping Sessions for carts; Sales Orders / Web Orders for commerce_orders; Sites / Channels / Sales Channels for commerce_storefronts; Checkout Sessions / Cart Sessions for checkouts; Promo Codes / Vouchers / Promotions for coupons; Pick Tickets / Allocations for fulfillments; Parcels / Packages for commerce_shipments; Charges / Captures / Authorizations for payment_transactions; Line Items / Order Items for order_lines).
-    blocked_by:
-      - {type: depends_on, ref: B1A-MODULE-SKILLS-UX, reason: bundle into cluster-drafts loader with B1B-S3 / B1B-S4}
-    affected_masters:
-      - {data_object_id: 381, name: commerce_orders, target_module_id: 214, workflow: alias_pack}
-      - {data_object_id: 382, name: order_lines, target_module_id: 214, workflow: alias_pack}
-      - {data_object_id: 383, name: carts, target_module_id: 214, workflow: alias_pack}
-      - {data_object_id: 384, name: commerce_products, target_module_id: 213, workflow: alias_pack}
-      - {data_object_id: 385, name: commerce_storefronts, target_module_id: 213, workflow: alias_pack}
-      - {data_object_id: 386, name: checkouts, target_module_id: 214, workflow: alias_pack}
-      - {data_object_id: 387, name: payment_transactions, target_module_id: 214, workflow: alias_pack}
-      - {data_object_id: 388, name: fulfillments, target_module_id: 215, workflow: alias_pack}
-      - {data_object_id: 389, name: commerce_shipments, target_module_id: 215, workflow: alias_pack}
-      - {data_object_id: 390, name: coupons, target_module_id: 213, workflow: alias_pack}
-  - id: B1B-S7-LIFECYCLE
-    summary: Author data_object_lifecycle_states for the 8 workflow-bearing B2C-COMM masters and surface config-shape exemption for the 2 config-shape masters.
-    finding: |
-      Zero data_object_lifecycle_states across all 10 masters. Workflow masters with clear lifecycles: carts (active, abandoned, converted, expired); checkouts (started, address_entered, shipping_quoted, payment_authorized, completed, abandoned); commerce_orders (placed, confirmed, fulfilled, completed, refunded, cancelled); payment_transactions (authorized, captured, declined, refunded, voided); fulfillments (created, picked, packed, shipped, delivered, returned); commerce_shipments (created, in_transit, delivered, exception, returned); commerce_products (draft, published, discontinued, archived); coupons (issued, redeemed, expired, revoked). Config-shape exemption candidates: order_lines and commerce_storefronts (surface to user; do NOT auto-populate notes per Rule #15). Each lifecycle state now ties to a realizing module (213 / 214 / 215) via domain_module_id.
-    blocked_by:
-      - {type: depends_on, ref: B1A-MODULE-SKILLS-UX, reason: each lifecycle state ties to a realizing module via domain_module_id}
-    affected_masters:
-      - {data_object_id: 383, name: carts, target_module_id: 214, workflow: state_machine_required}
-      - {data_object_id: 386, name: checkouts, target_module_id: 214, workflow: state_machine_required}
-      - {data_object_id: 381, name: commerce_orders, target_module_id: 214, workflow: state_machine_required}
-      - {data_object_id: 387, name: payment_transactions, target_module_id: 214, workflow: state_machine_required}
-      - {data_object_id: 388, name: fulfillments, target_module_id: 215, workflow: state_machine_required}
-      - {data_object_id: 389, name: commerce_shipments, target_module_id: 215, workflow: state_machine_required}
-      - {data_object_id: 384, name: commerce_products, target_module_id: 213, workflow: state_machine_required}
-      - {data_object_id: 390, name: coupons, target_module_id: 213, workflow: state_machine_required}
-      - {data_object_id: 382, name: order_lines, target_module_id: 214, workflow: config_shape_exemption_candidate}
-      - {data_object_id: 385, name: commerce_storefronts, target_module_id: 213, workflow: config_shape_exemption_candidate}
-  - id: B1B-S8-OUTBOUND-MODULE-FK
-    summary: Backfill source_domain_module_id on 17 outbound handoffs from B2C-COMM (now unblocked; module ids exist).
-    finding: |
-      17 outbound handoffs (66, 67, 75, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 502, 504, 505, 506) carry source_domain_module_id=NULL. The 3 modules now exist (213 catalog-merch, 214 order-capture, 215 fulfill-ship), so each handoff maps to its source module by payload: customers / commerce_orders / order_lines / carts / checkouts / payment_transactions / customer_subscriptions -> 214; commerce_products / coupons -> 213; fulfillments -> 215.
-    blocked_by:
-      - {type: depends_on, ref: B1A-MODULE-SKILLS-UX, reason: bundle the FK backfill into the same B2C-COMM module-completion pass}
-    affected_handoffs:
-      - {handoff_id: 66, direction: outbound, source_domain: B2C-COMM, target_domain: CRM, trigger_event: customer.signed_up, payload: customers, null_field: source_domain_module_id}
-      - {handoff_id: 67, direction: outbound, source_domain: B2C-COMM, target_domain: SUB-MGMT, trigger_event: order.subscription_purchase, payload: customer_subscriptions, null_field: source_domain_module_id}
-      - {handoff_id: 75, direction: outbound, source_domain: B2C-COMM, target_domain: CDP, trigger_event: storefront.interaction, payload: customer_events, null_field: source_domain_module_id}
-      - {handoff_id: 322, direction: outbound, source_domain: B2C-COMM, target_domain: OMS, trigger_event: commerce_order.placed, payload: commerce_orders, null_field: source_domain_module_id}
-      - {handoff_id: 323, direction: outbound, source_domain: B2C-COMM, target_domain: CRM, trigger_event: commerce_order.placed, payload: commerce_orders, null_field: source_domain_module_id}
-      - {handoff_id: 324, direction: outbound, source_domain: B2C-COMM, target_domain: LOYALTY, trigger_event: commerce_order.placed, payload: commerce_orders, null_field: source_domain_module_id}
-      - {handoff_id: 325, direction: outbound, source_domain: B2C-COMM, target_domain: FIN, trigger_event: commerce_order.confirmed, payload: payment_transactions, null_field: source_domain_module_id}
-      - {handoff_id: 326, direction: outbound, source_domain: B2C-COMM, target_domain: FIN, trigger_event: commerce_order.refunded, payload: commerce_orders, null_field: source_domain_module_id}
-      - {handoff_id: 327, direction: outbound, source_domain: B2C-COMM, target_domain: MA, trigger_event: cart.abandoned, payload: carts, null_field: source_domain_module_id}
-      - {handoff_id: 328, direction: outbound, source_domain: B2C-COMM, target_domain: MA, trigger_event: checkout.started, payload: checkouts, null_field: source_domain_module_id}
-      - {handoff_id: 329, direction: outbound, source_domain: B2C-COMM, target_domain: CRM, trigger_event: payment.declined, payload: payment_transactions, null_field: source_domain_module_id}
-      - {handoff_id: 330, direction: outbound, source_domain: B2C-COMM, target_domain: CSM, trigger_event: commerce_order.completed, payload: commerce_orders, null_field: source_domain_module_id}
-      - {handoff_id: 331, direction: outbound, source_domain: B2C-COMM, target_domain: SUB-MGMT, trigger_event: commerce_order.placed, payload: commerce_orders, null_field: source_domain_module_id}
-      - {handoff_id: 502, direction: outbound, source_domain: B2C-COMM, target_domain: OMS, trigger_event: order_line.added, payload: order_lines, null_field: source_domain_module_id}
-      - {handoff_id: 504, direction: outbound, source_domain: B2C-COMM, target_domain: CDP, trigger_event: commerce_product.published, payload: commerce_products, null_field: source_domain_module_id}
-      - {handoff_id: 505, direction: outbound, source_domain: B2C-COMM, target_domain: LOYALTY, trigger_event: fulfillment.delivered, payload: fulfillments, null_field: source_domain_module_id}
-      - {handoff_id: 506, direction: outbound, source_domain: B2C-COMM, target_domain: MA, trigger_event: coupon.redeemed, payload: coupons, null_field: source_domain_module_id}
-  - id: B1B-S9-INBOUND-MODULE-FK
-    summary: Backfill target_domain_module_id on 16 inbound handoffs into B2C-COMM (now unblocked; module ids exist).
-    finding: |
-      16 inbound handoffs (80, 93, 96, 480, 492, 498, 503, 529, 812, 982, 984, 986, 990, 993, 1059, 1234, 1237) carry target_domain_module_id=NULL on the B2C-COMM side. The receiving module is the one whose DMDO declares the payload: commerce_products -> 213 (master); customers / customer_invoices / customer_subscriptions -> 214; audience_segments -> 213 (consumer); fulfillments -> 215. Map the remaining consumed payloads to the module that declares the consumer DMDO row.
-    blocked_by:
-      - {type: depends_on, ref: B1A-MODULE-SKILLS-UX, reason: bundle into the same B2C-COMM module-completion pass; some payloads need consumer DMDO rows added first}
-    affected_handoffs:
-      - {handoff_id: 80, direction: inbound, source_domain: CDP, target_domain: B2C-COMM, trigger_event: segment.activated, payload: customers, null_field: target_domain_module_id}
-      - {handoff_id: 93, direction: inbound, source_domain: HCMS, target_domain: B2C-COMM, trigger_event: content_entry.published, payload: content_entries, null_field: target_domain_module_id}
-      - {handoff_id: 96, direction: inbound, source_domain: HCMS, target_domain: B2C-COMM, trigger_event: content_release.published, payload: content_releases, null_field: target_domain_module_id}
-      - {handoff_id: 480, direction: inbound, source_domain: CDP, target_domain: B2C-COMM, trigger_event: customer_journey.stage_entered, payload: customer_journeys, null_field: target_domain_module_id}
-      - {handoff_id: 492, direction: inbound, source_domain: SUB-MGMT, target_domain: B2C-COMM, trigger_event: customer_invoice.issued, payload: customer_invoices, null_field: target_domain_module_id}
-      - {handoff_id: 498, direction: inbound, source_domain: LOYALTY, target_domain: B2C-COMM, trigger_event: redemption_transaction.completed, payload: redemption_transactions, null_field: target_domain_module_id}
-      - {handoff_id: 503, direction: inbound, source_domain: OMS, target_domain: B2C-COMM, trigger_event: fulfillment.delivered, payload: fulfillments, null_field: target_domain_module_id}
-      - {handoff_id: 529, direction: inbound, source_domain: CDP, target_domain: B2C-COMM, trigger_event: customer_attributes.refreshed, payload: customer_attributes, null_field: target_domain_module_id}
-      - {handoff_id: 812, direction: inbound, source_domain: DXP, target_domain: B2C-COMM, trigger_event: personalization_rule.activated, payload: personalization_rules, null_field: target_domain_module_id}
-      - {handoff_id: 982, direction: inbound, source_domain: OMS, target_domain: B2C-COMM, trigger_event: inventory_location.capacity_threshold_breached, payload: inventory_locations, null_field: target_domain_module_id}
-      - {handoff_id: 984, direction: inbound, source_domain: OMS, target_domain: B2C-COMM, trigger_event: order_allocation.created, payload: order_allocations, null_field: target_domain_module_id}
-      - {handoff_id: 986, direction: inbound, source_domain: OMS, target_domain: B2C-COMM, trigger_event: order_allocation.reassigned, payload: order_allocations, null_field: target_domain_module_id}
-      - {handoff_id: 990, direction: inbound, source_domain: OMS, target_domain: B2C-COMM, trigger_event: sourcing_decision.computed, payload: sourcing_decisions, null_field: target_domain_module_id}
-      - {handoff_id: 993, direction: inbound, source_domain: OMS, target_domain: B2C-COMM, trigger_event: store_pickup_order.ready, payload: store_pickup_orders, null_field: target_domain_module_id}
-      - {handoff_id: 1059, direction: inbound, source_domain: INV-MGMT, target_domain: B2C-COMM, trigger_event: inv_stock_item.created, payload: commerce_products, null_field: target_domain_module_id}
-      - {handoff_id: 1234, direction: inbound, source_domain: PIM, target_domain: B2C-COMM, trigger_event: pim_product.published, payload: commerce_products, null_field: target_domain_module_id}
-      - {handoff_id: 1237, direction: inbound, source_domain: PIM, target_domain: B2C-COMM, trigger_event: pim_product.discontinued, payload: commerce_products, null_field: target_domain_module_id}
-  - id: B1B-H1-CSM-COARSE
-    summary: INSERT or defer coarse h330 (commerce_order.completed -> CSM) and h506 (coupon.redeemed -> MA) PCF tags.
-    finding: |
-      h330 (B2C-COMM -> CSM, commerce_order.completed, commerce_orders payload) has no L3 / L4 cross-industry PCF that fits cleanly; the L1 parent "Manage Customer Service" (process id 6) is structurally correct but coarse. h506 (coupon.redeemed -> MA) has the same shape (no L3 / L4 promotions PCF available in live /processes beyond coarse marketing rollups).
-    blocked_by:
-      - {type: user_decision, ref: B2-S8}
-    affected_handoffs:
-      - {handoff_id: 330, direction: outbound, source_domain: B2C-COMM, target_domain: CSM, trigger_event: commerce_order.completed, payload: commerce_orders, null_field: null}
-      - {handoff_id: 506, direction: outbound, source_domain: B2C-COMM, target_domain: MA, trigger_event: coupon.redeemed, payload: coupons, null_field: null}
   - id: B1B-H1-DEFER-DISCOVER
     summary: 4 handoffs route to Discover Pass 3 custom-process authoring (no clean cross-industry PCF).
     finding: |
-      h75 (storefront.interaction -> CDP), h327 (cart.abandoned -> MA), h328 (checkout.started -> MA), h812 (personalization_rule.activated, DXP -> B2C-COMM) all lack a clean cross-industry PCF match. These belong on the Discover Pass 3 custom-process queue (digital-experience / marketing-trigger primitives).
+      h75 (storefront.interaction -> CDP), h327 (cart.abandoned -> MA), h328 (checkout.started -> MA), h812 (personalization_rule.activated, DXP -> B2C-COMM) all lack a clean cross-industry PCF match. They currently carry coarse parent tags (75/480/529 -> 100 "Develop customer experience strategy"; 327/328 -> 23 "Develop and manage marketing plans"; 812 -> 677). They belong on the Discover Pass 3 custom-process queue (digital-experience / marketing-trigger primitives) for a tighter tag.
     blocked_by:
       - {type: catalog_addition, scope: custom_processes, trigger: Discover Pass 3 custom-process queue}
     affected_handoffs:
-      - {handoff_id: 75, direction: outbound, source_domain: B2C-COMM, target_domain: CDP, trigger_event: storefront.interaction, payload: customer_events, null_field: null}
-      - {handoff_id: 327, direction: outbound, source_domain: B2C-COMM, target_domain: MA, trigger_event: cart.abandoned, payload: carts, null_field: null}
-      - {handoff_id: 328, direction: outbound, source_domain: B2C-COMM, target_domain: MA, trigger_event: checkout.started, payload: checkouts, null_field: null}
-      - {handoff_id: 812, direction: inbound, source_domain: DXP, target_domain: B2C-COMM, trigger_event: personalization_rule.activated, payload: personalization_rules, null_field: null}
-  - id: B1B-H1-529-VERIFY
-    summary: h529 (customer_attributes.refreshed, CDP -> B2C-COMM) needs PCF lookup verification.
+      - {handoff_id: 75, direction: outbound, source_domain: B2C-COMM, target_domain: CDP, trigger_event: storefront.interaction, payload: customer_events}
+      - {handoff_id: 327, direction: outbound, source_domain: B2C-COMM, target_domain: MA, trigger_event: cart.abandoned, payload: carts}
+      - {handoff_id: 328, direction: outbound, source_domain: B2C-COMM, target_domain: MA, trigger_event: checkout.started, payload: checkouts}
+      - {handoff_id: 812, direction: inbound, source_domain: DXP, target_domain: B2C-COMM, trigger_event: personalization_rule.activated, payload: personalization_rules}
+  - id: B1B-S9-INBOUND-MODULE-FK
+    summary: 11 inbound handoffs into B2C-COMM still carry target_domain_module_id=NULL; the payload is a foreign-mastered record B2C-COMM does not declare a DMDO row for, so the FK is not a mechanical backfill but a scope decision (see B2-B9D-CONSUME).
     finding: |
-      h529 was not tagged in the 2026-05-30 baseline and remains untagged. The candidate L4 ("Develop customer-data analytics" or "Manage customer master data") needs a live /processes search to verify a unique match before INSERT.
+      11 inbound handoffs (93, 96, 480, 498, 529, 812, 982, 984, 986, 990, 993) carry target_domain_module_id=NULL on the B2C-COMM side. Unlike the outbound FKs (already backfilled) and the 5 inbound rows that resolved cleanly (80, 492, 1059, 1234, 1237 -> module 213/214 via existing DMDO), these 11 name payloads B2C-COMM does NOT model on any module: content_entries / content_releases (HCMS/CMS internals), customer_journeys / customer_attributes (CDP internals), redemption_transactions (LOYALTY), personalization_rules (DXP), inventory_locations / order_allocations / sourcing_decisions / store_pickup_orders (OMS internals). B10b sub-case 2: either add a consumer DMDO row on the receiving B2C-COMM module (which expands B2C-COMM's footprint to consume those internals) or accept the handoff as a domain-level signal with no module owner. This is a scope judgment, surfaced as B2-B9D-CONSUME.
     blocked_by:
-      - {type: depends_on, ref: B1A-H1-CORE, reason: bundle the verify + INSERT into the same H-band loader pass}
+      - {type: user_decision, ref: B2-B9D-CONSUME}
     affected_handoffs:
-      - {handoff_id: 529, direction: inbound, source_domain: CDP, target_domain: B2C-COMM, trigger_event: customer_attributes.refreshed, payload: customer_attributes, null_field: null}
+      - {handoff_id: 93, source_domain: HCMS, payload: content_entries}
+      - {handoff_id: 96, source_domain: HCMS, payload: content_releases}
+      - {handoff_id: 480, source_domain: CDP, payload: customer_journeys}
+      - {handoff_id: 498, source_domain: LOYALTY, payload: redemption_transactions}
+      - {handoff_id: 529, source_domain: CDP, payload: customer_attributes}
+      - {handoff_id: 812, source_domain: DXP, payload: personalization_rules}
+      - {handoff_id: 982, source_domain: OMS, payload: inventory_locations}
+      - {handoff_id: 984, source_domain: OMS, payload: order_allocations}
+      - {handoff_id: 986, source_domain: OMS, payload: order_allocations}
+      - {handoff_id: 990, source_domain: OMS, payload: sourcing_decisions}
+      - {handoff_id: 993, source_domain: OMS, payload: store_pickup_orders}
 b2:
   - id: B2-S1
     summary: payment_transactions / commerce_orders / checkouts has_personal_content flag flip.
@@ -188,14 +63,47 @@ b2:
       - "(b) no, domain-level RACI is sufficient"
       - "(c) split B2B into its own module and let module-level ownership carry the override"
     why: COMM-B2B-COMM capability is B2B-shaped (account hierarchies, requisition lists, quote-to-order) and plausibly Sales-owned. It is currently realized inside B2C-COMM-ORDER-CAPTURE (module 214); a future split could carve a dedicated B2B module. Interacts with B3-S4 if B2B is elevated to its own domain.
-  - id: B2-S8
-    summary: H1 refinement requests on h80 / h505 / h66.
-    question: Refine h80 (substring match too coarse for segment.activated), h505 (currently 738 "Determine fulfillment process"; LOYALTY destination suggests "Manage customer loyalty programs"), and h66 (substring "Manage Customer Service" coarse for customer.signed_up to CRM) via DELETE + INSERT?
+  - id: B2-B9D-RETAG
+    summary: "B9d found 7 coarse handoff_processes tags on B2C-COMM-authored handoffs with a more specific PCF code available on the same entity. Re-pointing replaces an existing non-empty tag (destructive overwrite, Rule #21), so it needs sign-off."
+    question: "Re-point the 7 coarse tags to their tighter PCF codes (DELETE-then-INSERT the handoff_processes row)?"
     options:
-      - "(a) refine all three (DELETE existing + INSERT tighter PCF)"
-      - "(b) refine selectively (list which)"
-      - "(c) skip, accept coarse rows and surface in Discover later"
-    why: DELETE + INSERT pairs are judgment per audit procedure rule that refinements route to user decision.
+      - "(a) re-point all 7"
+      - "(b) re-point a named subset"
+      - "(c) skip, accept the coarse rows"
+    why: |
+      B9d (run 2026-06-13, both directions) flagged these as ROLL-UP/RE-TAG: the work is realized at a finer grain than the tag. Each is a B2C-COMM-side SOURCE edit (B2C-COMM authored the tag). Proposed re-points:
+      - h66 (B2C-COMM->CRM, customers): 6.0 "Manage Customer Service" -> 3.3.4 "Develop and manage promotional activities".
+      - h504 (B2C-COMM->CDP, commerce_products): 1.2.8 "Develop customer experience strategy" -> 4.4.3.3 "Track product availability".
+      - h1237 (PIM->B2C-COMM, commerce_products): 2.1.2 "Manage product and service life cycle" -> 4.4.3.3 "Track product availability".
+      - h1234 (PIM->B2C-COMM, commerce_products): 2.1.4 "Manage product and service master data" -> 4.4.3.3 "Track product availability".
+      - h324 (B2C-COMM->LOYALTY, commerce_orders): 3.2.7 "Design and manage customer loyalty program" -> 3.5.4.1 "Accept and validate sales orders".
+      - h323 + h331 (B2C-COMM->CRM / SUB-MGMT, commerce_orders): 3.5.4 "Manage sales orders" -> 3.5.4.1 "Accept and validate sales orders".
+      - h330 (B2C-COMM->CSM, commerce_orders): 6.2.2 "Manage customer service problems, requests, and inquiries" -> 3.5.4.1 "Accept and validate sales orders".
+      Supersedes the prior B2-S8 / B1B-H1-CSM-COARSE refinement items (same handoffs, now driven by the B9d classification).
+  - id: B2-B9D-RACI
+    summary: "B9d found 6 B2C-COMM-owned ORPHAN processes (handed work with no Responsible/Accountable persona). B2C-COMM has 3 personas (MARKETING-MERCHANDISER, COMMERCE-OPERATOR, OPERATIONS-FULFILLMENT-SPECIALIST) but zero process_raci and zero process_id-wired lifecycle gates, so the RACI layer (E4/E6/B9e) is unauthored. Assigning R/A per process is a judgment call."
+    question: "For each of the 6 B2C-COMM-owned processes a neighbor hands work to, which persona is Responsible and which is Accountable, and which lifecycle state realizes it (so the gate's process_id can be wired)?"
+    options:
+      - "(a) accept the recommended persona mapping below for all 6"
+      - "(b) assign a named persona per process"
+      - "(c) defer RACI authoring for this domain"
+    why: |
+      B9d ORPHAN findings on B2C-COMM-owned processes (each is real handed-in work with nobody responsible):
+      - pid 23 "Develop and manage marketing plans" (carts/checkouts/coupons -> MA, h327/h328/h506). Recommended R/A: MARKETING-MERCHANDISER.
+      - pid 735 "Accept and validate sales orders" (commerce_orders/order_lines -> OMS, h322/h502). Recommended R/A: COMMERCE-OPERATOR.
+      - pid 738 "Determine fulfillment process" (fulfillments -> LOYALTY/FIN, h505/h503). Recommended R/A: OPERATIONS-FULFILLMENT-SPECIALIST.
+      - pid 854 "Track product availability" (commerce_products <- INV-MGMT, h1059). Recommended R/A: MARKETING-MERCHANDISER (catalog/merch) or COMMERCE-OPERATOR.
+      - pid 1359 "Post AR activity to the general ledger" (payment_transactions -> FIN, h325). Likely a FIN-owned process consumed here; recommended: C/I for B2C-COMM personas, R/A on FIN. Surface as cross-domain seam.
+      - pid 1422 "Process and distribute payments" (payment_transactions/commerce_orders -> CRM/FIN, h329/h326). Recommended R/A: COMMERCE-OPERATOR (or FIN if treated as a FIN process).
+      Authoring process_raci + wiring data_object_lifecycle_states.process_id is additive (record_status='new') once the persona mapping is decided; the decision is which persona, hence b2.
+  - id: B2-B9D-CONSUME
+    summary: "Scope decision for the 11 NULL inbound handoff module FKs (B1B-S9): should B2C-COMM declare consumer DMDO rows for the foreign-mastered payloads it reacts to, or treat each as a domain-level signal with no module owner?"
+    question: "For the 11 inbound handoffs whose payload B2C-COMM does not model (content_entries, content_releases, customer_journeys, customer_attributes, redemption_transactions, personalization_rules, inventory_locations, order_allocations x2, sourcing_decisions, store_pickup_orders), add consumer DMDO rows so the target_domain_module_id resolves, or accept them as domain-level signals?"
+    options:
+      - "(a) add consumer DMDO rows for all (expands B2C-COMM footprint to consume those internals)"
+      - "(b) add consumer rows only for the OMS allocation/sourcing/pickup set (the fulfillment-relevant reads) on module 215, and leave CDP/CMS/DXP internals as domain-level signals"
+      - "(c) accept all 11 as domain-level signals; leave target_domain_module_id NULL"
+    why: B10b sub-case 2 (handoff names a payload the target domain does not model) is explicitly a load-a-consumer-row-vs-accept-as-domain-signal judgment. Adding consumer DMDO rows is expansive footprint (Rule #21 expansive-additions gate), so it routes to the user rather than auto-loading.
 b3:
   - id: B3-S1
     candidate: catalog substrate cluster (product_variants, product_categories, catalog_attributes)
@@ -240,9 +148,9 @@ b3:
       - Adobe Commerce
     proposed_module: B2C-COMM-ORDER-CAPTURE (or a new dedicated B2B module / new B2B-COMM domain)
   - id: B3-MISSING-MASTER-CANDIDATES
-    candidate: aggregate missing-master flag surfaced by the 2026-06-02 modularization pass
+    candidate: aggregate missing-master flag surfaced by the modularization pass
     rationale: |
-      The 3-module split is structurally complete against the EXISTING 10 masters, but the flagship vendor surface implies the catalog is materially incomplete. The highest-confidence missing masters by module: B2C-COMM-CATALOG-MERCH (213) lacks product_variants (SKU-level row under commerce_products), product_categories, catalog_attributes (B3-S1, high confidence, every flagship). B2C-COMM-ORDER-CAPTURE (214) lacks payment_methods, price_books, tax_calculations, gift_cards, shipping_methods (B3-S2). B2C-COMM-FULFILL-SHIP (215) lacks returns / rma_requests as a distinct lifecycle from commerce_order.refunded (B3-S3). These do not block deployability of the current modules but cap their realism. No new data_objects were created this pass (modules-only scope).
+      The 3-module split is structurally complete against the EXISTING 10 masters, but the flagship vendor surface implies the catalog is materially incomplete. The highest-confidence missing masters by module: B2C-COMM-CATALOG-MERCH (213) lacks product_variants (SKU-level row under commerce_products), product_categories, catalog_attributes (B3-S1, high confidence, every flagship). B2C-COMM-ORDER-CAPTURE (214) lacks payment_methods, price_books, tax_calculations, gift_cards, shipping_methods (B3-S2). B2C-COMM-FULFILL-SHIP (215) lacks returns / rma_requests as a distinct lifecycle from commerce_order.refunded (B3-S3). These do not block deployability of the current modules but cap their realism.
     vendor_evidence:
       - Shopify Plus
       - BigCommerce
