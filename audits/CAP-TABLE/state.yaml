@@ -11,14 +11,10 @@
 schema_version: 2
 domain: CAP-TABLE
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-PHASE-P
     summary: "Multi-module (6 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
     finding: "6 domain_modules and 0 domain_roles reach this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. business_function_domains C1 wiring is already in place (Finance owner; Legal + Investment Management contributor; HR consumer)."
@@ -118,6 +114,23 @@ b1b:
       - {id: 1095, name: secondary_transactions}
 
 b2:
+  - id: B2-B9D-RETAG-1044
+    summary: "B9d RE-TAG (destructive): delete redundant coarse APQC tag on handoff 1044."
+    question: >-
+      The B9d resolver ran on this domain (both directions) on 2026-06-13. Handoff 1044
+      (CAP-TABLE-EXIT-MODELING -> FUND-ADMIN on exit_scenario.executed, payload fund_distributions)
+      carries TWO handoff_processes tags: row 712 = process 354 (10.4.1 "Develop exit strategy", L3,
+      coarse) AND row 713 = process 491 (1.2.3.3 "Develop merger/demerger/acquisition/exit strategy",
+      L4, specific). The specific L4 tag already covers the payload; the coarse L3 tag is redundant
+      on this edge. Re-pointing reduces to deleting the coarse row 712. This is DESTRUCTIVE (a
+      handoff_processes row delete) so it needs your sign-off; nothing was deleted.
+    options:
+      - Delete handoff_processes row 712 (the coarse process-354 tag on handoff 1044); keep row 713 (process 491).
+      - Keep both tags (accept the coarse + specific overlap on handoff 1044).
+    why: >-
+      Handoff 1045 (-> PORT-MONIT) keeps its single process-354 tag (row 635); only handoff 1044
+      carries the redundant pair. The B9d band treats a ROLL-UP/RE-TAG to a more specific same-entity
+      tag as a source-side edit requiring approval; the delete is the destructive half.
   - id: B2-S1
     summary: Multi-master lifecycle realization for equity_grants (and the single-master integrity fix).
     question: >-

@@ -121,38 +121,49 @@ a12:
 
 ---
 
-## Optional (will not hold up the build)
+q13: A handoff payload check (run this pass) found that one cross-domain handoff (cap table to fund administration, on an executed exit scenario) is tagged with two overlapping process labels: a broad "Develop exit strategy" and a more specific "Develop merger/demerger/acquisition/exit strategy". The specific one already covers it, so the broad tag is redundant on that handoff. Should I delete the redundant broad tag? (yes/no)
 
-q13: Flagship vendors model several equity instruments and records the catalog does not have yet (SAFEs, convertible notes, warrants, tax-form records like 3921/3922, board consents, share certificates, ESPP records, phantom-share/SAR/profits-interest grants, beneficial-owner/KYC records, voting/proxy records), some of which would warrant new modules (convertibles, tax-reporting, ESPP, compliance, board-consents). Should I research and add the ones that hold up? (yes/no)
+- a) Yes, delete the redundant broad tag (keep the specific one). This removes a duplicate, but deleting a tag row is destructive so it needs your sign-off.
+- b) No, keep both tags.
 
-Recommended: yes, but additive and after the modules settle. These come from analyst vendor knowledge and still want a verification pass first.
+Recommended: a. The specific label fully describes this handoff, so the broad label adds nothing; the other handoff (cap table to portfolio monitoring) keeps its single label and is unaffected.
 
 a13:
 
 ---
 
-q14: Two cross-domain handoffs show up in the flagship set but are not wired: stock-based-comp expense pushed to the general ledger on asc718_expense_period.closed, and e-signature records flowing back for grant acceptance and board consents. Should I add them? (yes/no)
+## Optional (will not hold up the build)
 
-Recommended: yes, pending a quick check of the partner domains (FIN and ESIGN). Additive and non-blocking.
+q14: Flagship vendors model several equity instruments and records the catalog does not have yet (SAFEs, convertible notes, warrants, tax-form records like 3921/3922, board consents, share certificates, ESPP records, phantom-share/SAR/profits-interest grants, beneficial-owner/KYC records, voting/proxy records), some of which would warrant new modules (convertibles, tax-reporting, ESPP, compliance, board-consents). Should I research and add the ones that hold up? (yes/no)
+
+Recommended: yes, but additive and after the modules settle. These come from analyst vendor knowledge and still want a verification pass first.
 
 a14:
 
 ---
 
-q15: Should I attach the additional jurisdiction and compliance regulations the vendor set implies (GDPR / CCPA, UK EMI, UK CSOP, German VSOP, FinCEN Corporate Transparency Act, SEC Reg CF)? (yes/no)
+q15: Two cross-domain handoffs show up in the flagship set but are not wired: stock-based-comp expense pushed to the general ledger on asc718_expense_period.closed, and e-signature records flowing back for grant acceptance and board consents. Should I add them? (yes/no)
 
-Recommended: yes for the ones that match your jurisdictions; the US-anchored statutes are already attached. Additive and non-blocking.
+Recommended: yes, pending a quick check of the partner domains (FIN and ESIGN). Additive and non-blocking.
 
 a15:
 
 ---
 
-q16: Should I queue the two adjacent domain candidates this audit surfaced (EQUITY-COMP-PLATFORM for the equity-comp overlap with the compensation domain, and PRIVATE-COMPANY-TRANSFER-AGENT for the third-party transfer-agent role)? (yes/no)
+q16: Should I attach the additional jurisdiction and compliance regulations the vendor set implies (GDPR / CCPA, UK EMI, UK CSOP, German VSOP, FinCEN Corporate Transparency Act, SEC Reg CF)? (yes/no)
 
-Recommended: yes for EQUITY-COMP-PLATFORM (it passes the point-solution-market test and is already queued); PRIVATE-COMPANY-TRANSFER-AGENT is borderline and often bundled into cap-table software. Non-blocking.
+Recommended: yes for the ones that match your jurisdictions; the US-anchored statutes are already attached. Additive and non-blocking.
 
 a16:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B2-S4.captables_pii q5=B2-S4.optionpools_lock q6=B2-S4.equitygrants_lock q7=B2-S4.valuations_nopii q8=B2-S4.secondary_pii q9=B2-S4.asc718_lock q10=B2-S5 q11=B2-S6 q12=B2-S7 q13=B3-CAND-01,B3-CAND-02,B3-CAND-03,B3-CAND-04,B3-CAND-05,B3-CAND-06,B3-CAND-07,B3-CAND-10,B3-CAND-11,B3-CAND-12,B3-MOD-01,B3-MOD-02,B3-MOD-03,B3-MOD-04,B3-MOD-05 q14=B3-CAND-08,B3-CAND-09 q15=B3-REG-01,B3-REG-02,B3-REG-03,B3-REG-04,B3-REG-05,B3-REG-06 q16=B3-DOM-01,B3-DOM-02 | domain_id=162 -->
+q17: Should I queue the two adjacent domain candidates this audit surfaced (EQUITY-COMP-PLATFORM for the equity-comp overlap with the compensation domain, and PRIVATE-COMPANY-TRANSFER-AGENT for the third-party transfer-agent role)? (yes/no)
+
+Recommended: yes for EQUITY-COMP-PLATFORM (it passes the point-solution-market test and is already queued); PRIVATE-COMPANY-TRANSFER-AGENT is borderline and often bundled into cap-table software. Non-blocking.
+
+a17:
+
+---
+
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B2-S4.captables_pii q5=B2-S4.optionpools_lock q6=B2-S4.equitygrants_lock q7=B2-S4.valuations_nopii q8=B2-S4.secondary_pii q9=B2-S4.asc718_lock q10=B2-S5 q11=B2-S6 q12=B2-S7 q13=B2-B9D-RETAG-1044 q14=B3-CAND-01,B3-CAND-02,B3-CAND-03,B3-CAND-04,B3-CAND-05,B3-CAND-06,B3-CAND-07,B3-CAND-10,B3-CAND-11,B3-CAND-12,B3-MOD-01,B3-MOD-02,B3-MOD-03,B3-MOD-04,B3-MOD-05 q15=B3-CAND-08,B3-CAND-09 q16=B3-REG-01,B3-REG-02,B3-REG-03,B3-REG-04,B3-REG-05,B3-REG-06 q17=B3-DOM-01,B3-DOM-02 | domain_id=162 -->

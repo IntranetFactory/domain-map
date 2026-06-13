@@ -33,17 +33,27 @@
 # regenerated with inline named-vendor evidence per Rule #22. Still feedback_needed: B2-S1 +
 # B2-S3 (4 flags) + B2-S4 open; awaiting a-BI.md.
 #
+# 2026-06-13 B9d RAN both directions via scripts/analytics/b9d_resolver.ts (resolves the
+# former B1A-B9D-VERIFY, now deleted from b1a -> history.md). 10 boundary tags; verdicts
+# 2 RESOLVED, 2 ROLL-UP, 3 UNOWNED, 2 ORPHAN. ORPHANs (PCF 1299 "Triage IT service delivery
+# incidents") routed to the OWNERs: B2-B9D-OWN-1299 added to audits/ITSM (q8) and
+# audits/METRICS-LAYER (q12), both unbuilt owners. ROLL-UP re-points (218 source METRICS-LAYER,
+# 711 source DCG: 8.4.4 -> 8.4.4.1) are SOURCE-owned destructive sign-off items, NOT BI's.
+# 3 UNOWNED (bi_subscriptions->SUB-MGMT, bi_reports/bi_dashboards->DCG, bi_queries->FINOPS) are a
+# FALSE NEGATIVE from BI being unbuilt: BI masters all three at the legacy domain_data_objects
+# grain (230/691/692/693/694 role=master) but has 0 domain_module_data_objects (M1 unbuilt), so
+# the resolver cannot see module-grain mastery. Their owner-side realization (lifecycle states +
+# process_raci) is BI's own work, gated on the BI build (B1A-BUILD), itself gated on B2-S1. No
+# catalog writes, no record_status touched. next_action_by flips agent -> user: only B1A-BUILD
+# remains and it is blocked on B2-S1; q-BI.md is current. Awaiting a-BI.md.
+#
 schema_version: 2
 domain: BI
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-08"
+next_action_by: user
+last_audit: "2026-06-13"
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities. The build is gated on the B2-S1 module-cut decision; do not scaffold unasked."
     finding: >-

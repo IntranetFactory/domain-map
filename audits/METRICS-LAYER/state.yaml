@@ -1,7 +1,7 @@
 schema_version: 2
 domain: METRICS-LAYER
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 b1a:
@@ -128,6 +128,16 @@ b2:
     why: Rule #1 requires explicit instruction for any record_status flip other than new; the agent cannot self-resolve.
     affected_handoffs:
       - {handoff_id: 220, direction: inbound, source_domain: DCG, target_domain: METRICS-LAYER, trigger_event: metric.deprecated, payload: metric_definitions, null_field: agent_curated_tag}
+  - id: B2-B9D-OWN-1299
+    summary: "Metrics Layer / Headless BI: name an owner for \"Triage IT service delivery incidents\" (no one is responsible for it today)"
+    question: |
+      Business Intelligence and Analytics forwards metric materialization to Metrics Layer / Headless BI to triage IT service delivery incidents, but Metrics Layer / Headless BI does not yet have anyone assigned to triage IT service delivery incidents, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Metrics Layer / Headless BI owns, and assign a named owner once Metrics Layer / Headless BI sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Metrics Layer / Headless BI decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-METRICS-LAYER.md q12.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-METRIC-VIEWS

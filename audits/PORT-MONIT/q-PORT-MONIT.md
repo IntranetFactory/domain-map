@@ -111,6 +111,16 @@ a9:
 
 ---
 
+q13: Cap Table Management and Equity Administration forwards portfolio company to Portfolio Monitoring for Private Capital to develop exit strategy, but Portfolio Monitoring for Private Capital does not yet have anyone assigned to develop exit strategy, so this step has no owner. How should it be handled?
+- a) Record it now as work Portfolio Monitoring for Private Capital owns, and assign a named owner once Portfolio Monitoring for Private Capital sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Portfolio Monitoring for Private Capital decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a13:
+
+---
+
 ## Optional (will not hold up the build)
 
 q10: Five extra entity candidates show up across the flagship PE/VC monitoring vendors (co-investment positions, peer benchmarks / portco peer groups, GP attribution analyses, valuation-committee meetings, portco management metrics). Should I research and add the ones that hold up? (yes/no)
@@ -137,4 +147,4 @@ a12:
 
 ---
 
-<!-- agent map, ignore: q1=B2-4 q2=B2-1 q3=B2-6 q4=B2-2 q5=B2-3 q6=B2-5 q7=B2-7 q8=B2-8.h1042 q9=B2-8.h1043 q10=B3-1+B3-2+B3-3+B3-4+B3-5 q11=B3-6 q12=B3-7 | domain_id=161 -->
+<!-- agent map, ignore: q1=B2-4 q2=B2-1 q3=B2-6 q4=B2-2 q5=B2-3 q6=B2-5 q7=B2-7 q8=B2-8.h1042 q9=B2-8.h1043 q10=B3-1+B3-2+B3-3+B3-4+B3-5 q11=B3-6 q12=B3-7 q13=B2-B9D-OWN-354 | domain_id=161 -->

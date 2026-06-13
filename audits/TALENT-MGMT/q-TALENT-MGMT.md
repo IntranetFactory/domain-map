@@ -83,6 +83,26 @@ a8:
 
 ---
 
+q12: Compensation Management forwards nine-box placement to Talent Management to manage employee performance, but Talent Management does not yet have anyone assigned to manage employee performance, so this step has no owner. How should it be handled?
+- a) Record it now as work Talent Management owns, and assign a named owner once Talent Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Talent Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a12:
+
+---
+
+q13: Compensation Management forwards performance review to Talent Management to review employee performance, but Talent Management does not yet have anyone assigned to review employee performance, so this step has no owner. How should it be handled?
+- a) Record it now as work Talent Management owns, and assign a named owner once Talent Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Talent Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a13:
+
+---
+
 ## Optional (will not hold up the build)
 
 q9: Eight extra entities show up as first-class records across the flagship talent vendors (competencies, peer-review invitations, development plans, succession candidates, performance improvement plans, goal check-ins, 1-on-1 meetings, calibration committees). Should I research and add the ones that hold up? (yes/no)
@@ -109,4 +129,4 @@ a11:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S4.a q3=B2-S4.b q4=B2-S4.c q5=B2-S4.d q6=B2-S4.e q7=B2-S5 q8=B2-S6 q9=B3-COMPETENCIES+B3-PEER-REVIEW-INVITATIONS+B3-DEVELOPMENT-PLANS+B3-SUCCESSION-CANDIDATES+B3-PIPS+B3-GOAL-CHECK-INS+B3-1ON1-MEETINGS+B3-CALIBRATION-COMMITTEES q10=B3-REG-EEOC+B3-REG-NYC-LL144+B3-REG-IL-HB3773+B3-REG-GDPR+B3-REG-HIPAA-BAA q11=B3-MOD-PEER-RECOGNITION+B3-RECOGNITION-BADGES+B3-MOD-MENTORSHIP+B3-MENTORSHIP-PAIRINGS | domain_id=58 -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S4.a q3=B2-S4.b q4=B2-S4.c q5=B2-S4.d q6=B2-S4.e q7=B2-S5 q8=B2-S6 q9=B3-COMPETENCIES+B3-PEER-REVIEW-INVITATIONS+B3-DEVELOPMENT-PLANS+B3-SUCCESSION-CANDIDATES+B3-PIPS+B3-GOAL-CHECK-INS+B3-1ON1-MEETINGS+B3-CALIBRATION-COMMITTEES q10=B3-REG-EEOC+B3-REG-NYC-LL144+B3-REG-IL-HB3773+B3-REG-GDPR+B3-REG-HIPAA-BAA q11=B3-MOD-PEER-RECOGNITION+B3-RECOGNITION-BADGES+B3-MOD-MENTORSHIP+B3-MENTORSHIP-PAIRINGS q12=B2-B9D-OWN-225 q13=B2-B9D-OWN-1028 | domain_id=58 -->

@@ -86,6 +86,16 @@ a8:
 
 ---
 
+q12: Business Intelligence and Analytics forwards metric materialization to Metrics Layer / Headless BI to triage IT service delivery incidents, but Metrics Layer / Headless BI does not yet have anyone assigned to triage IT service delivery incidents, so this step has no owner. How should it be handled?
+- a) Record it now as work Metrics Layer / Headless BI owns, and assign a named owner once Metrics Layer / Headless BI sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Metrics Layer / Headless BI decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a12:
+
+---
+
 ## Optional (will not hold up the build)
 
 q9: Four extra master tables show up across the flagship metrics-layer vendors (named saved metric views, registered downstream consumers, metric assertion or quality rules, and a metric-change-as-pull-request workflow). Should I research and add the ones that hold up? (yes/no)
@@ -112,4 +122,4 @@ a11:
 
 ---
 
-<!-- agent map, ignore: q1=B2-NAMING-ARBITRATION q2=B2-PATTERN-FLAGS.mdsubmitlock q3=B2-PATTERN-FLAGS.mdapprover q4=B2-PATTERN-FLAGS.policyapprover q5=B2-PATTERN-FLAGS.modelsubmitlock q6=B2-CATALOG-UX q7=B2-DCG-INBOUND-TAG q8=B2-LOOKER-RECLASSIFICATION q9=B3-METRIC-VIEWS+B3-METRIC-CONSUMERS+B3-METRIC-ASSERTION-RULES+B3-METRIC-CHANGE-PROPOSALS q10=B3-DELIVERY-SPLIT q11=B3-REGULATION-TAGGING | domain_id=137 -->
+<!-- agent map, ignore: q1=B2-NAMING-ARBITRATION q2=B2-PATTERN-FLAGS.mdsubmitlock q3=B2-PATTERN-FLAGS.mdapprover q4=B2-PATTERN-FLAGS.policyapprover q5=B2-PATTERN-FLAGS.modelsubmitlock q6=B2-CATALOG-UX q7=B2-DCG-INBOUND-TAG q8=B2-LOOKER-RECLASSIFICATION q9=B3-METRIC-VIEWS+B3-METRIC-CONSUMERS+B3-METRIC-ASSERTION-RULES+B3-METRIC-CHANGE-PROPOSALS q10=B3-DELIVERY-SPLIT q11=B3-REGULATION-TAGGING q12=B2-B9D-OWN-1299 | domain_id=137 -->

@@ -103,6 +103,47 @@ a9:
 
 ---
 
+q12: IT Service Management forwards ci baseline to Configuration Management Database to implement and enforce change control procedures, but Configuration Management Database does not yet have anyone assigned to implement and enforce change control procedures, so this step has no owner. How should it be handled?
+- a) Record it now as work Configuration Management Database owns, and assign a named owner once Configuration Management Database sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Configuration Management Database decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a12:
+
+---
+
+q13: IT Service Management forwards ci baseline to Configuration Management Database to triage IT service delivery incidents, but Configuration Management Database does not yet have anyone assigned to triage IT service delivery incidents, so this step has no owner. How should it be handled?
+- a) Record it now as work Configuration Management Database owns, and assign a named owner once Configuration Management Database sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Configuration Management Database decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a13:
+
+---
+
+q14: Discovery and Service Mapping forwards configuration item to Configuration Management Database to manage infrastructure configuration, but Configuration Management Database does not yet have anyone assigned to manage infrastructure configuration, so this step has no owner. How should it be handled?
+- a) Record it now as work Configuration Management Database owns, and assign a named owner once Configuration Management Database sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Configuration Management Database decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a14:
+
+---
+
+q15: CMDB spans three modules but currently has no personas or responsibility (RACI) layer, so there is nobody named as accountable for the CI lifecycle, data quality, service maps, or baselines. (This is the umbrella version of the three owner questions above.) Should I author the CMDB persona / RACI layer now?
+
+- a) Author it now (proposed personas: a configuration manager across all three modules, a configuration data steward for attestation and data quality, a service-map owner, and a baseline analyst).
+- b) Defer to the standing per-domain persona sweep.
+
+Recommended: a, but please answer q5 (role naming) first, since it sets the naming convention these personas would use. Authoring personas is additive; it lands as new records you review in the UI.
+
+a15:
+
+---
+
 ## Optional (will not hold up the build)
 
 q10: Several entities show up across the flagship CMDB and discovery vendors that are not yet modeled here (curated CI views, service health indicators, change blackout windows, software install records, CI health scores, CI decommission requests, CI certification evidence, and the FedRAMP CM-2 / CM-8 configuration-management controls). Should I research and add the ones that hold up? (yes/no)
@@ -121,4 +162,4 @@ a11:
 
 ---
 
-<!-- agent map, ignore: q1=B2-1 q2=B2-2 q3=B2-3 q4=B2-4 q5=B2-5 q6=B2-6 q7=B2-7 q8=B2-DESTRUCTIVE-H1 q9=B2-DESTRUCTIVE-M9 q10=B3-E1,B3-E2,B3-E3,B3-E4,B3-E5,B3-E6,B3-E7,B3-E8 q11=B3-D1,B3-D2,B3-D3 | domain_id=4 -->
+<!-- agent map, ignore: q1=B2-1 q2=B2-2 q3=B2-3 q4=B2-4 q5=B2-5 q6=B2-6 q7=B2-7 q8=B2-DESTRUCTIVE-H1 q9=B2-DESTRUCTIVE-M9 q10=B3-E1,B3-E2,B3-E3,B3-E4,B3-E5,B3-E6,B3-E7,B3-E8 q11=B3-D1,B3-D2,B3-D3 q12=B2-B9D-OWN-1190 q13=B2-B9D-OWN-1299 q14=B2-B9D-OWN-1309 q15=B1A-PHASE-P | domain_id=4 -->

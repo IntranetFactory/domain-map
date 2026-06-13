@@ -11,7 +11,7 @@
 schema_version: 2
 domain: FUND-ADMIN
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-07"
 
 b1a:
@@ -154,6 +154,16 @@ b2:
     summary: Handoff 1044 APQC tag, replace strategy-development tags with payments-side PCF?
     question: "Replace the 2 strategy-development tags (ids 712 + 713) with a payments-side PCF (10911 family), keep current, or attach both."
     options: ["Replace with 10911-family", "Keep current", "Attach both", Defer]
+  - id: B2-B9D-OWN-491
+    summary: "Private Capital Fund Administration: name an owner for \"Develop merger/demerger/acquisition/exit strategy\" (no one is responsible for it today)"
+    question: |
+      Cap Table Management and Equity Administration forwards fund distribution to Private Capital Fund Administration to develop merger or demerger or acquisition or exit strategy, but Private Capital Fund Administration does not yet have anyone assigned to develop merger or demerger or acquisition or exit strategy, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Private Capital Fund Administration owns, and assign a named owner once Private Capital Fund Administration sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Private Capital Fund Administration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FUND-ADMIN.md q12.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-GP-CARRY-ALLOCATIONS

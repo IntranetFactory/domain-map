@@ -117,6 +117,16 @@ a11:
 
 ---
 
+q14: Compensation Management sends People Analytics an automatically calculated workforce segment that feeds develop diversity, equity, and inclusion plan, but People Analytics does not yet have anyone assigned to that work, so this step has no owner. How should it be handled?
+- a) Record it now as work People Analytics owns, and assign a named owner once People Analytics sets up who does this work.
+- b) Treat it as an automatically calculated figure with no one to own, and leave it off the list.
+
+Recommended: a. Recording it now means that the moment People Analytics decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a14:
+
+---
+
 ## Optional (will not hold up the build)
 
 q12: Several additional first-class entities show up across the flagship People Analytics vendors (dashboards, data-quality audits, benchmark datasets, per-employee attrition-risk assessments, and employee-listening cycles). Should I research and add the ones that hold up? (yes/no)
@@ -135,4 +145,4 @@ a13:
 
 ---
 
-<!-- agent map, ignore: q1=B2-PA-NAMING+B3-EMP-LISTENING-DOMAIN q2=B2-ENGAGEMENT-SCOPE-SPLIT q3=B2-MODULE-84-MASTER+B3-PAY-EQUITY-ANALYSES+B3-DEI-COHORTS q4=B2-EVENT-ATTRIBUTION-DEFECT q5=B2-CROSS-DOMAIN-CONSUMERS q6=B2-CUSTOMERS-FEEDS-KPI q7=B2-PATTERN-FLAGS.engagement q8=B2-PATTERN-FLAGS.predictive q9=B2-PATTERN-FLAGS.attrition q10=B1A-SELF-CONTAIN q11=B1A-APQC-REPLACE q12=B3-DASHBOARDS+B3-DATA-QUALITY-AUDITS+B3-BENCHMARK-DATASETS+B3-ATTRITION-RISK-ASSESSMENTS+B3-EMPLOYEE-LISTENING-CYCLES q13=B3-TALENT-INTEL-DOMAIN | domain_id=63 -->
+<!-- agent map, ignore: q1=B2-PA-NAMING+B3-EMP-LISTENING-DOMAIN q2=B2-ENGAGEMENT-SCOPE-SPLIT q3=B2-MODULE-84-MASTER+B3-PAY-EQUITY-ANALYSES+B3-DEI-COHORTS q4=B2-EVENT-ATTRIBUTION-DEFECT q5=B2-CROSS-DOMAIN-CONSUMERS q6=B2-CUSTOMERS-FEEDS-KPI q7=B2-PATTERN-FLAGS.engagement q8=B2-PATTERN-FLAGS.predictive q9=B2-PATTERN-FLAGS.attrition q10=B1A-SELF-CONTAIN q11=B1A-APQC-REPLACE q12=B3-DASHBOARDS+B3-DATA-QUALITY-AUDITS+B3-BENCHMARK-DATASETS+B3-ATTRITION-RISK-ASSESSMENTS+B3-EMPLOYEE-LISTENING-CYCLES q13=B3-TALENT-INTEL-DOMAIN q14=B2-B9D-OWN-984 | domain_id=63 -->

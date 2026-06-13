@@ -124,6 +124,26 @@ b2:
     why: |
       Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q7.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1299
+    summary: "IT Service Management: name an owner for \"Triage IT service delivery incidents\" (no one is responsible for it today)"
+    question: |
+      Business Intelligence and Analytics forwards incident to IT Service Management to triage IT service delivery incidents, but IT Service Management does not yet have anyone assigned to triage IT service delivery incidents, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q8.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1241
+    summary: "IT Service Management: name an owner for \"Define IT change/release standards\" (no one is responsible for it today)"
+    question: |
+      Configuration Management Database forwards change to IT Service Management to define IT change or release standards, but IT Service Management does not yet have anyone assigned to define IT change or release standards, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q9.
+    extra_b9d_added: "2026-06-13"
 b3:
   - id: B3-SERVICE-OUTAGES
     candidate: service_outages

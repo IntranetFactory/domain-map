@@ -115,6 +115,44 @@ a11:
 
 ---
 
+q15: Payroll Management forwards merit recommendation to Compensation Management to administer compensation and rewards to employees, but Compensation Management does not yet have anyone assigned to administer compensation and rewards to employees, so this step has no owner. How should it be handled?
+- a) Record it now as work Compensation Management owns, and assign a named owner once Compensation Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Compensation Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a15:
+
+---
+
+q16: Human Capital Management forwards compensation plan to Compensation Management to review compensation plan, but Compensation Management does not yet have anyone assigned to review compensation plan, so this step has no owner. How should it be handled?
+- a) Record it now as work Compensation Management owns, and assign a named owner once Compensation Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Compensation Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a16:
+
+---
+
+q17: Core Financial Management forwards equity grant to Compensation Management to process journal entries, but Compensation Management does not yet have anyone assigned to process journal entries, so this step has no owner. How should it be handled?
+- a) Record it now as work Compensation Management owns, and assign a named owner once Compensation Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Compensation Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a17:
+
+---
+
+q18: A fresh handoff-payload review found two process tags on this domain's handoffs that point at the wrong work. One benchmark-to-workforce-planning handoff is tagged at a process level that is broader than where the work is actually done, and four employee-data handoffs are tagged as compensation administration when the work is really employee separation / data maintenance owned by the people system. Should these tags be corrected? (yes/no)
+
+Recommended: yes. The corrected tags match where the work actually happens. Each correction either re-points or deletes an existing tag, so it is destructive and needs your sign-off.
+
+a18:
+
+---
+
 ## Optional (will not hold up the build)
 
 q12: Six market-surface entities show up across the flagship compensation vendors (pay-equity assessments, incentive plans, bonus pools, commission statements, total-rewards offers, pay-transparency disclosures). Should I research and add the ones that hold up? (yes/no)
@@ -141,4 +179,4 @@ a14:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S7.plansingleapprover q3=B2-S7.equitysubmitlock q4=B2-S7.statementsubmitlock q5=B2-S5 q6=B2-S6 q7=B2-S3 q8=B2-S4 q9=B2-S2 q10=B1A-S9-RESIDUAL q11=B1A-SELF-CONTAIN q12=B3-PAY-EQUITY-ASSESSMENTS+B3-INCENTIVE-PLANS+B3-BONUS-POOLS+B3-COMMISSION-STATEMENTS+B3-TOTAL-REWARDS-OFFERS+B3-PAY-TRANSPARENCY-DISCLOSURES q13=B3-ICM-DOMAIN-SPLIT q14=B3-COMPLIANCE-REGULATIONS | domain_id=60 -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S7.plansingleapprover q3=B2-S7.equitysubmitlock q4=B2-S7.statementsubmitlock q5=B2-S5 q6=B2-S6 q7=B2-S3 q8=B2-S4 q9=B2-S2 q10=B1A-S9-RESIDUAL q11=B1A-SELF-CONTAIN q12=B3-PAY-EQUITY-ASSESSMENTS+B3-INCENTIVE-PLANS+B3-BONUS-POOLS+B3-COMMISSION-STATEMENTS+B3-TOTAL-REWARDS-OFFERS+B3-PAY-TRANSPARENCY-DISCLOSURES q13=B3-ICM-DOMAIN-SPLIT q14=B3-COMPLIANCE-REGULATIONS q15=B2-B9D-OWN-1046 q16=B2-B9D-OWN-1049 q17=B2-B9D-OWN-1379 q18=B1A-B9D-DESTRUCTIVE | domain_id=60 -->

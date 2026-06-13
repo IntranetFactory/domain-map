@@ -1,7 +1,7 @@
 schema_version: 2
 domain: DCIM
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-07"
 
 # All agent-solvable build work executed 2026-06-07 (record_status='new'):
@@ -56,6 +56,17 @@ b2:
     question: "Event 694 (dc_environmental_reading.threshold_breached) currently publishes only to ITOM (handoff 673). Add a second outbound to ITSM-INCIDENT-MGMT (module 38, payload service_incidents 47) so a sustained environmental breach can trigger a major incident directly, or leave it to ITOM to correlate and re-publish?"
     options: [a-fan-out-add-itsm-handoff, b-leave-to-itom-correlation, c-defer]
     why: "Vendor practice: Schneider EcoStruxure IT and Vertiv route sustained environmental-threshold alarms straight to an incident/ticketing workflow (EcoStruxure IT Expert opens service tickets on critical environmental alarms; Vertiv Environet Alert escalates thermal/leak alarms to on-call), not solely through a correlation layer, because a water-leak or over-temperature alarm is itself a candidate major incident. The cabinet-level environmental alert already fans out to ITSM (handoff 674); the sensor-reading event arguably should too. Leaving it to ITOM preserves single-source-of-event semantics but depends on an ITOM correlator existing. Adding the handoff is additive, but it creates a new cross-domain publish, so surface it rather than auto-author. Recommended: a."
+  - id: B2-B9D-OWN-1309
+    summary: "Data Center Infrastructure Management: name an owner for \"Manage infrastructure configuration\" (no one is responsible for it today)"
+    question: |
+      Configuration Management Database hands work to Data Center Infrastructure Management, but Data Center Infrastructure Management has no one assigned to manage infrastructure configuration, so that step currently has nobody responsible for it. Who should own it?
+    options:
+      - "The a named owner runs it and approves it."
+      - "Someone else you name runs and approves it."
+      - "Leave it unassigned for now."
+    why: |
+      Data Center Infrastructure Management already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-DCIM.md q8.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-FLOOR-PLANS

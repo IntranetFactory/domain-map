@@ -63,6 +63,26 @@ a7:
 
 ---
 
+q8: Business Intelligence and Analytics forwards incident to IT Service Management to triage IT service delivery incidents, but IT Service Management does not yet have anyone assigned to triage IT service delivery incidents, so this step has no owner. How should it be handled?
+- a) Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a8:
+
+---
+
+q9: Configuration Management Database forwards change to IT Service Management to define IT change or release standards, but IT Service Management does not yet have anyone assigned to define IT change or release standards, so this step has no owner. How should it be handled?
+- a) Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a9:
+
+---
+
 ## Optional (will not hold up the build)
 
 q6: I have now run the vendor research (5 flagship ITSM products: ServiceNow, Jira Service Management + Statuspage, BMC Helix, Freshservice, ManageEngine). Seven new entities are confirmed as things real ITSM products model, and all are additive (a new record inside an existing module, no restructure). Should I add all seven? (yes/no)
@@ -85,4 +105,4 @@ a6:
 
 ---
 
-<!-- agent map, ignore: q1=B1A-SELF-CONTAIN q2=B2-PATTERN-FLAGS.incidentpii q3=B2-PATTERN-FLAGS.knowledgepii q4=B2-PATTERN-FLAGS.changelock q5=B2-SLA-LIFECYCLE q6=B3-SERVICE-OUTAGES+B3-SERVICE-RELEASES+B3-CAB-MEETINGS+B3-CHANGE-COLLISIONS+B3-SERVICE-OFFERINGS-SPLIT+B3-VIRTUAL-AGENT-CONVERSATIONS+B3-WALKUP-VISITS q7=B2-B9D-OWN-1556 | domain_id=1 -->
+<!-- agent map, ignore: q1=B1A-SELF-CONTAIN q2=B2-PATTERN-FLAGS.incidentpii q3=B2-PATTERN-FLAGS.knowledgepii q4=B2-PATTERN-FLAGS.changelock q5=B2-SLA-LIFECYCLE q6=B3-SERVICE-OUTAGES+B3-SERVICE-RELEASES+B3-CAB-MEETINGS+B3-CHANGE-COLLISIONS+B3-SERVICE-OFFERINGS-SPLIT+B3-VIRTUAL-AGENT-CONVERSATIONS+B3-WALKUP-VISITS q7=B2-B9D-OWN-1556 q8=B2-B9D-OWN-1299 q9=B2-B9D-OWN-1241 | domain_id=1 -->

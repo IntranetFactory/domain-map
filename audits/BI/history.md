@@ -426,3 +426,69 @@ None this pass. Status stays feedback_needed / next_action_by: user; build remai
 ### JWT errors
 
 None encountered during this pass.
+
+## 2026-06-13, B9d handoff-payload realization (both directions)
+
+### Why this pass ran
+
+`state.yaml` carried `next_action_by: agent` pointing at the one unblocked b1a item,
+B1A-B9D-VERIFY: B9d had never run on this domain. Everything else (B1A-BUILD, all b1b,
+b2, b3) is blocked on the B2-S1 module-cut user decision, so B9d was the only
+agent-actionable work. Ran it per the SKILL.md B9d band via
+[scripts/analytics/b9d_resolver.ts](../../scripts/analytics/b9d_resolver.ts) (BI), both
+directions on every boundary. No catalog/DB writes; no `record_status` touched.
+
+### Classification (10 boundary tags; 9 distinct (process, owner) findings)
+
+| Verdict | Count | Payloads / owners |
+|---|---|---|
+| RESOLVED | 2 | `dimensional_models` (METRICS-LAYER, h692); `semantic_metrics` (DATA-AI-PLAT, h151). PCF 8.4.2 gated + RACI'd. No action. |
+| ROLL-UP | 2 | h218 `metric_definitions` (source METRICS-LAYER) and h711 `data_certifications` (source DCG), tagged at parent 8.4.4, realized at child 8.4.4.1. SOURCE-owned destructive re-point; surfaced for sign-off, NOT BI's edit. |
+| ORPHAN | 2 | PCF 1299 "Triage IT service delivery incidents": owner ITSM (h689 `service_incidents`), owner METRICS-LAYER (h696 `metric_materializations`). Both owners unbuilt. Routed owner-side per band. |
+| UNOWNED | 3 | `bi_subscriptions`->SUB-MGMT (h687); `bi_reports`/`bi_dashboards`->DCG (h688, h1341); `bi_queries`->FINOPS (h691). FALSE NEGATIVE (see below). |
+
+### What was written (additive, local audit files only)
+
+- **ITSM**: `B2-B9D-OWN-1299` b2 item + `q-ITSM.md` q8 (owner-name question for PCF 1299).
+  ITSM set `feedback_needed` / `next_action_by: user`. The new item is purely additive and
+  does NOT disturb ITSM's existing PCF-1299 deferral decision on handoffs 843/901.
+- **METRICS-LAYER**: `B2-B9D-OWN-1299` b2 item + `q-METRICS-LAYER.md` q12. Set
+  `feedback_needed` / `next_action_by: user`.
+- Both inserts idempotent by id / footer token.
+
+### Held for sign-off (destructive / judgment; NOT applied)
+
+- SOURCE re-point 8.4.4 -> 8.4.4.1 on handoff 218 (owned by METRICS-LAYER's audit).
+- SOURCE re-point 8.4.4 -> 8.4.4.1 on handoff 711 (owned by DCG's audit).
+- The 3 UNOWNED reviews (see analysis below).
+
+### The 3 UNOWNED findings are a false negative from BI being unbuilt
+
+The resolver reads ownership from `domain_module_data_objects` (module grain). BI masters all
+three carried entities at the legacy `domain_data_objects` grain (`bi_subscriptions` 694,
+`bi_reports` 691, `bi_dashboards` 692, `bi_queries` 693, all role=master), but has ZERO
+`domain_module_data_objects` rows because the domain has no modules (M1 unbuilt). So the
+resolver cannot see BI's mastery and flags the payloads "no master row anywhere". They are NOT
+unowned dependencies on the sender: they are BI's OWN outbound payloads, and their owner-side
+realization (lifecycle states + `process_raci`) is BI's own work, gated on the BI build
+(B1A-BUILD), itself gated on the B2-S1 module-cut decision. No fix is authorable until BI is
+built. Recorded here so the next pass (post-B2-S1) realizes them rather than re-flagging.
+
+### State changes
+
+- Deleted resolved item `B1A-B9D-VERIFY` from `state.yaml` b1a (moved here).
+- `next_action_by`: agent -> user. Only B1A-BUILD remains in b1a and it is blocked on B2-S1.
+- `last_audit` -> 2026-06-13. `status` stays `feedback_needed`; `q-BI.md` is current (the
+  2026-06-08 Phase-0-grounded regeneration), so no q-file regeneration was needed.
+
+### DB writes
+
+None. No catalog rows added or changed; no `record_status` flip; no em-dash authored.
+
+### Git
+
+Zero git write commands run.
+
+### JWT errors
+
+None encountered during this pass.

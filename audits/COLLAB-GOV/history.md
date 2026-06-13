@@ -341,3 +341,38 @@ Catalog UX text (1 PATCH) + 3 generic aliases (see Executed).
 
 None.
 
+## 2026-06-13 - Audit (review/execute pass)
+
+### Summary
+
+State-driven review of the open items in state.yaml. Live re-verification confirmed the snapshot unchanged: COLLAB-GOV domains row id 127 (parent 91 = ECM, record_status='new'), all 7 metadata fields populated, catalog UX text present (written 2026-06-07), 0 domain_modules (M1 fail, UNBUILT), 7 capability_domains, 0 masters, 3 domain_aliases (generic synonyms, record_status='new'), 0 domain_regulations, 2 business_function_domains (owner = End-User Computing 59, contributor = Security 28), 0 handoffs (outbound and inbound), 0 skills.
+
+The one agent-actionable b1a item this pass was B1A-B9D-VERIFY.
+
+### Executed
+
+- **B9d (handoff payload realization), BOTH directions** - ran `scripts/analytics/b9d_resolver.ts COLLAB-GOV --dry-run`. Result: 0 boundary tags, 0 distinct (process, owner) findings, empty verdicts. COLLAB-GOV authors zero handoffs in either direction, so there are no payloads to classify, re-point, or route to owners. B9d is verified clean vacuously in both directions. **B1A-B9D-VERIFY RESOLVED** and removed from state.yaml.
+- **Phase 0 vendor surface (Rule #22 forcing step)** - confirmed `.tmp_deploy/COLLAB-GOV-phase0-2026-06-13.md` is current; it names six flagship pure-play governance vendors (AvePoint, ShareGate, Syskit Point, CoreView, Orchestry, Rencore), gives a vendor-by-entity surface matrix, and carries per-decision verdicts for B2-1 / B2-5 / B2-6 / B2-7 plus the M365-MGMT note. The market-shape recommendations in the q-file are grounded in this evidence (full build, 4-module split, promote SAAS-BACKUP, promote TENANT-MIGRATION).
+- **q-COLLAB-GOV.md** - confirmed current and Rule #22-conformant: 7 blocking questions (q1 gate marked "answer this first") covering B2-1/B2-3/B2-4/B2-5/B2-6/B2-7/B2-8 plus 1 optional b3 question (q8), each with vendor-grounded Recommended lines, yes/no or pick-one shape, and an accurate agent-map footer. No em-dashes, American English.
+
+### Left (untouched; gated on the user)
+
+- **b2 (B2-1, B2-3, B2-4, B2-5, B2-6, B2-7, B2-8)** - all surfaced in the q-file. B2-1 (build shape) is the gate. B2-3 is the destructive owner flip (surfaced, not applied). The full UNBUILT build cascade (B1A-BUILD + b1b M1/B-band/E-band/F-band) stays gated on B2-1/B2-5 per the UNBUILT clause: surface the build, do not scaffold.
+- **b3 (B3-1 .. B3-8)** - candidate master groups remain backlog, surfaced as the single optional q8; gated on the B2-1 real-market route.
+
+### Fixes applied
+
+B9d verification (read-only resolver, 0 findings). No catalog rows written this pass. No record_status changes.
+
+### Final state
+
+status: feedback_needed, next_action_by: user. q-COLLAB-GOV.md is the current human-readable projection.
+
+### Git
+
+Zero git write commands run this pass (read-only review + audit-file edits only).
+
+### JWT-audience errors
+
+None.
+

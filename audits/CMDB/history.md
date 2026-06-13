@@ -428,3 +428,76 @@ None.
 
 next_action_by: user (open b2 decisions + two destructive steps awaiting sign-off; personas
 deferred). b1a retains the 3 additive master builds (M1/M2/M4) for a dedicated pass.
+
+## 2026-06-13 - Audit (B9d handoff-payload realization, both directions)
+
+State-driven Validate run (SKILL.md Rule #21) working the one open agent-actionable item,
+B1A-B9D-VERIFY. Domain confirmed live: CMDB = domains.id=4; modules CMDB-CORE 108,
+CMDB-SERVICE-MAPPING 109, CMDB-BASELINES-DRIFT 110 (all module_kind=full). Resolver:
+`scripts/analytics/b9d_resolver.ts CMDB --dry-run` then `--write`.
+
+### B9d classification (both directions)
+
+17 boundary tags reduced to 9 distinct (process, owner) findings: 7 ORPHAN, 1 RE-TAG, 1 UNOWNED.
+
+- ORPHAN, owner CMDB (3): pid 1190 "Implement and enforce change control procedures" (ci_baselines,
+  handoff 1200 CMDB->ITSM); pid 1299 "Triage IT service delivery incidents" (ci_baselines, handoff
+  629 CMDB->ITSM); pid 1309 "Manage infrastructure configuration" (configuration_items /
+  ci_relationships / ci_classes / service_maps; handoffs 48, 49, 146, 627, 628, 1199). CMDB is the
+  owner (masters the carried entity) and has no realized persona yet (cold-start, 0 personas reach
+  this domain per the deferred B1A-PHASE-P). Each is the same gap as the deferred persona/RACI layer
+  viewed per process.
+- ORPHAN, owner APM (2): pid 1180 (enterprise_applications), pid 1312 (technology_platforms). Written
+  into APM's audit files (state.yaml + q-APM.md q14/q15).
+- ORPHAN, owner ITSM (1): pid 1241 "Define IT change/release standards" (service_changes). Written
+  into ITSM's audit files (state.yaml + q-ITSM.md q9).
+- ORPHAN, owner DCIM (1, built): pid 1309 (dc_port_connections). Written into DCIM's audit files
+  (state.yaml + q-DCIM.md q8).
+- RE-TAG (source CMDB, sign-off): handoff_processes id 52 (handoff 51 CMDB->ITSM) tagged process 9
+  "Manage Financial Resources" (L1 framework header, coarse) via discovery_substring; a specific tag
+  1309 "Manage infrastructure configuration" exists on the same entity. Re-point 9 -> 1309 proposed.
+  This is the same destructive thread as B2-DESTRUCTIVE-H1 (handoff 51 leg). NOT applied; needs
+  sign-off (DELETE/overwrite). Verified live: id 52, process_id=9, proposal_source=discovery_substring,
+  record_status=new.
+- UNOWNED dependency (review on sender): pid 1309 carrying discovery_scans / network_topology_snapshots
+  / discovery_sources (handoffs 621 DISCOVERY->CMDB, 654 NPMD->CMDB, 625 DISCOVERY->CMDB) - none of
+  these entities has a master row anywhere in the catalog. Surfaced, not dropped. Routes to the
+  senders (DISCOVERY, NPMD), which are unmodularized (already tracked in b1b B1B-B10b-DISCOVERY /
+  -NPMD).
+
+### Applied (additive, local audit files only; NO catalog writes)
+
+- CMDB state.yaml: added b2 items B2-B9D-OWN-1190, B2-B9D-OWN-1299, B2-B9D-OWN-1309 (CMDB-owned
+  ORPHANs).
+- CMDB q-CMDB.md: appended q12/q13/q14 mapping to those three b2 items; footer agent-map updated.
+- Neighbor backlogs (state.yaml hygiene carve-out (b)): APM (B2-B9D-OWN-1180, -1312), ITSM
+  (B2-B9D-OWN-1241), DCIM (B2-B9D-OWN-1309) each received a b2 item + q-file question on whichever
+  side owns the payload.
+- Resolved B1A-B9D-VERIFY: deleted from state.yaml (B9d has now run in both directions); recorded here.
+
+### Not applied (need sign-off / blocked)
+
+- RE-TAG handoff 51 (process 9 -> 1309): destructive, surfaced via B2-DESTRUCTIVE-H1; not applied.
+- All pre-existing b2 (B2-1..B2-7, the two B2-DESTRUCTIVE-*, B1A-PHASE-P) and b3 (E1-E8, D1-D4)
+  unchanged, already in q-CMDB.md q1-q11.
+- b1b (8 items): all blocked on neighbor modularization (DISCOVERY, AIOPS, RMM, NPMD, DCIM) or user
+  decisions (B2-1 gates B1B-S2; B2-6 gates B1B-S4).
+- b1a M1/M2/M4 (new masters): expansive additions; remain in b1a for a dedicated Phase-B build pass
+  (Rule #21 research carve-out: written to catalog only after q-file approval, never auto-loaded).
+
+### Structural re-verification (spot checks)
+
+- B13: all 5 masters carry typed entity_type (76 operational_workflow, 77 junction, 78 catalog,
+  79 operational_workflow, 80 operational_workflow). No unclassified. PASS.
+- B15: no pattern flag set on the catalog (78) / junction (77) masters. PASS.
+
+### JWT errors
+
+None.
+
+### Post-fix status
+
+next_action_by: user. The single open agent-actionable item (B1A-B9D-VERIFY) is resolved; B9d now
+ran in both directions. Three new CMDB-owned B9d ORPHAN decisions joined the existing 7 b2 +
+2 destructive + 1 deferred-persona items in q-CMDB.md (q1-q14). b1a retains the 3 additive master
+builds for a dedicated pass (non-blocking, research carve-out). Zero git write commands run.

@@ -387,3 +387,43 @@ C1 note: `business_function_domains` for domain 60 already carries an owner (fun
 - https://tests.semantius.app/domain_map/data_object_aliases
 - https://tests.semantius.app/domain_map/data_object_relationships
 - https://tests.semantius.app/domain_map/handoff_processes
+
+## 2026-06-13 - Audit (B9d handoff-payload realization, both directions)
+
+### Summary
+
+Ran the open agent-actionable item B1A-B9D-VERIFY: the B9d band (handoff-payload realization) had never executed on this domain. Ran `scripts/analytics/b9d_resolver.ts COMP-MGMT` (dry-run then --write). The resolver classified all 29 boundary tags in BOTH directions (18 distinct (process, owner) findings): 5 RESOLVED, 4 REFERENCE-READ (notes only), 7 ORPHAN, 1 ROLL-UP, 1 MIS-TAG. No catalog/database writes were made; all edits are additive to local audit files. The resolved B1A-B9D-VERIFY tracking item is deleted from state.yaml (moved here). Domain stays `feedback_needed` / `next_action_by: user` (it already was, on the carried B2 / destructive items).
+
+### B9d classification
+
+- **RESOLVED (5, no action):** 121/1076 (compensation_statements, 7.2.4 owner COMP-MGMT); 398 (job_offers, 7.2.4 owner ATS); 123 (employees, 7.6.3 owner HCM); 1137 (compensation_statements, 7.7.2 owner COMP-MGMT); 372 (employees, 7.7.3 owner HCM).
+- **REFERENCE-READ (4, one-line note only, no ownable work):** labor_market_benchmarks (460, SWP); earning_codes (1141, PAYROLL); salary_bands (425, COMP-MGMT); compensation_benchmarks (1139, COMP-MGMT). Reference/config data; becomes ownable only if a workflow later runs on it.
+- **ORPHAN (7, owner-side b2 + q authored this pass):**
+  - COMP-MGMT owns: pid 1046 "Administer compensation and rewards to employees" (merit_recommendations/compensation_statements/merit_cycles/equity_grants; handoffs 105/1136/422/421/107/423) -> B2-B9D-OWN-1046; pid 1049 "Review compensation plan" (compensation_plans; 1125/1126) -> B2-B9D-OWN-1049; pid 1379 "Process journal entries" (equity_grants; 424, AMBIGUOUS multi-master COMP-MGMT/CAP-TABLE) -> B2-B9D-OWN-1379.
+  - PA owns: pid 984 "Develop diversity, equity, and inclusion plan" (workforce_segments; 1105) -> B2-B9D-OWN-984 written into audits/PA.
+  - PAYROLL owns: pid 1046 (pay_slips/earning_codes; 187/1140) -> B2-B9D-OWN-1046 written into audits/PAYROLL; plus an earning_codes reference-read note.
+  - TALENT-MGMT owns: pid 225 "Manage employee performance" (nine_box_placements; 439) and pid 1028 "Review employee performance" (performance_reviews; 113) -> B2-B9D-OWN-225 / B2-B9D-OWN-1028 written into audits/TALENT-MGMT.
+- **ROLL-UP (1, destructive, surfaced not applied):** handoff 1138 (compensation_benchmarks -> SWP), tag 7.1.2 should re-point to 7.1.2.16 (realized at same entity family).
+- **MIS-TAG (1, destructive, surfaced not applied):** handoffs 106/381/385/387 carry a 7.5.1.5 "Administer compensation and rewards" tag whose payload (employees/employment_contracts/hcm_positions/job_profiles) is HCM-mastered and realized under 7.6.2 "Manage separation". Re-point to 7.6.2 or delete.
+
+### Executed (additive, local audit files only; no catalog writes)
+
+- COMP-MGMT state.yaml: added 3 b2 items (B2-B9D-OWN-1046/1049/1379); deleted resolved B1A-B9D-VERIFY; added B1A-B9D-DESTRUCTIVE (surfaced ROLL-UP + MIS-TAG); `next_action_by` is `user`.
+- q-COMP-MGMT.md: refreshed; the 3 B9d ownership questions (q15/q16/q17) and the B9d destructive-tag question (q18) added; footer map updated.
+- Neighbor backlogs (additive append, state.yaml hygiene carve-out (b)): PA (B2-B9D-OWN-984 + q), PAYROLL (B2-B9D-OWN-1046 + q + reference-read note), TALENT-MGMT (B2-B9D-OWN-225 + B2-B9D-OWN-1028 + q's), SWP (labor_market_benchmarks reference-read note).
+
+### Surfaced (NOT applied; need user sign-off)
+
+- B1A-B9D-DESTRUCTIVE: ROLL-UP re-point on handoff 1138 (7.1.2 -> 7.1.2.16) and MIS-TAG re-point/delete on 106/381/385/387 (7.5.1.5 -> 7.6.2). Both rewrite/delete existing handoff_processes rows -> destructive -> q-file q18.
+
+### Carried (unchanged, still open)
+
+- B2-S1..S7 (carried), B1A-S9-RESIDUAL (1105 no clean PCF + 4 REPLACE candidates), B1A-SELF-CONTAIN (M9), B1A-S8 (report-only routing), B1A-PHASE-P (deferred personas), B1B-M7 / B1B-E1 (blocked on B2-S1), b3 backlog.
+
+### Git / Rule #1
+
+Zero git write commands. No `record_status` writes of any kind. No catalog/database writes (B9d edits are local audit files only).
+
+### Spot-check links
+
+- https://tests.semantius.app/domain_map/handoff_processes

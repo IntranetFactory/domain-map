@@ -11,7 +11,7 @@
 schema_version: 2
 domain: PA
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-07"
 
 b1a:
@@ -166,6 +166,16 @@ b2:
       - "(b) PROMOTE People Listening to separate domain (queued as B3-EMP-LISTENING-DOMAIN in _missing-domains.md)"
     why: |
       Couples with B2-ENGAGEMENT-SCOPE-SPLIT and B3-EMP-LISTENING-DOMAIN.
+  - id: B2-B9D-OWN-984
+    summary: "People Analytics: name an owner for \"Develop diversity, equity, and inclusion plan\" (no one is responsible for it today)"
+    question: |
+      Compensation Management sends People Analytics an automatically calculated workforce segment that feeds develop diversity, equity, and inclusion plan, but People Analytics does not yet have anyone assigned to that work, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work People Analytics owns, and assign a named owner once People Analytics sets up who does this work."
+      - "Treat it as an automatically calculated figure with no one to own, and leave it off the list."
+    why: |
+      Recording it now means that the moment People Analytics decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PA.md q14.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-PAY-EQUITY-ANALYSES

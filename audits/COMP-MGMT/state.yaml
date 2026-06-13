@@ -11,7 +11,7 @@
 schema_version: 2
 domain: COMP-MGMT
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-07"
 # B9d reference-read (2026-06-10): "Compensation Benchmark" is reference/config data of COMP-MGMT; it becomes ownable work only if COMP-MGMT later runs a workflow on it.
 # B9d reference-read (2026-06-10): "Salary Band" is reference/config data of COMP-MGMT; it becomes ownable work only if COMP-MGMT later runs a workflow on it.
@@ -27,10 +27,6 @@ last_audit: "2026-06-07"
 #                  H1 now 28/29 cross-domain tagged. Remaining S9 work is non-executable (below).
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-S9-RESIDUAL
     summary: "1 untagged cross-domain handoff has NO clean APQC PCF match (defer to Discover); plus 4 REPLACE candidates that overwrite existing handoff_processes rows (destructive, surface)."
     finding: "Post-execute H1 = 28/29 cross-domain tagged. handoff 1105 (PA pay_equity.gap_detected -> COMP-BENCHMARKING, payload workforce_segments) has no clean PCF process: APQC PCF cross-industry has no pay-equity or workforce-metric L3/L4 process; the nearest (1046 Administer compensation and rewards) is not a pay-equity process. The 4 REPLACE candidates are destructive overwrites of existing rows."
@@ -40,6 +36,14 @@ b1a:
       - {handoff_id: 372, current: "process 41 / L2 20599 Manage employee onboarding, training, and development (discovery_override)", recommended: "process 1046 / L4 10502 Administer compensation and rewards to employees", reason: "HCM employee.created -> COMP-PLANNING is a comp-admin event, not onboarding/training."}
       - {handoff_id: 1125, current: "process 1049 / L4 10511 Review compensation plan (discovery_substring)", recommended: "process 1046 / L4 10502 Administer compensation and rewards to employees", reason: "compensation_plan.published -> HCM is plan administration/publishing, not plan review."}
       - {handoff_id: 1126, current: "process 1049 / L4 10511 Review compensation plan (discovery_substring)", recommended: "process 1046 / L4 10502 Administer compensation and rewards to employees", reason: "compensation_plan.published -> PAYROLL is plan administration/publishing, not plan review."}
+
+  - id: B1A-B9D-DESTRUCTIVE
+    summary: "B9d ran 2026-06-13 (both directions). 1 ROLL-UP re-point + 1 MIS-TAG, both COMP-MGMT-owned source edits on handoff_processes. Each rewrites/deletes an existing tag (destructive); surfaced, not applied."
+    finding: "B9d classified all 29 boundary tags: 5 RESOLVED, 4 REFERENCE-READ (notes only), 7 ORPHAN (owner-side b2 items written: COMP-MGMT 1046/1049/1379, PA 984, PAYROLL 1046, TALENT-MGMT 225/1028), 1 ROLL-UP, 1 MIS-TAG. The ROLL-UP and MIS-TAG are source-owned destructive edits to existing handoff_processes rows."
+    action: "Apply only on user sign-off (q-file). ROLL-UP: re-point handoff 1138 (compensation_benchmarks -> SWP) tag from process 216 (7.1.2) to 7.1.2.16, realized at the same entity family. MIS-TAG: handoffs 106/381/385/387 carry a 7.5.1.5 'Administer compensation and rewards' tag whose payload (employees/employment_contracts/hcm_positions/job_profiles) is HCM-mastered and realized under 7.6.2; re-point 7.5.1.5 -> 7.6.2 or delete the tag."
+    surfaced_destructive:
+      - {kind: ROLL-UP, handoff_id: 1138, current: "process 216 / 7.1.2 Develop and implement workforce planning", recommended: "re-point to 7.1.2.16 (realized at same entity family)", reason: "compensation_benchmarks -> SWP work is realized at the narrower 7.1.2.16, not the L3 parent."}
+      - {kind: MIS-TAG, handoff_ids: [106, 381, 385, 387], current: "process 1046 / 7.5.1.5 Administer compensation and rewards to employees", recommended: "re-point to 7.6.2 Manage separation, or delete the tag", reason: "carried entities (employees, employment_contracts, hcm_positions, job_profiles) are HCM-mastered and already realized under 7.6.2; COMP-MGMT mis-tagged this as comp-admin."}
 
   - id: B1A-SELF-CONTAIN
     summary: "M9 self-containment: 4 contributor/required-consumer DMDO rows point at other-domain masters and are not embedded here. Each fix rewrites role/necessity on an existing row (destructive); surface, do not write."
@@ -149,6 +153,36 @@ b2:
     question: "(a) compensation_plans.has_single_approver is false; plans are typically board-approved at issuance, should be true? (b) equity_grants.has_submit_lock is false; most equity-grant flows lock once approved, should be true? (c) compensation_statements.has_submit_lock is false; statements lock once delivered, could be true."
     options:
       - "Per-flag yes / no from user; capture in audit Decisions. Each flip overwrites an existing flag value (destructive), so needs approval."
+  - id: B2-B9D-OWN-1046
+    summary: "Compensation Management: name an owner for \"Administer compensation and rewards to employees\" (no one is responsible for it today)"
+    question: |
+      Payroll Management forwards merit recommendation to Compensation Management to administer compensation and rewards to employees, but Compensation Management does not yet have anyone assigned to administer compensation and rewards to employees, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Compensation Management owns, and assign a named owner once Compensation Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Compensation Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-COMP-MGMT.md q15.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1049
+    summary: "Compensation Management: name an owner for \"Review compensation plan\" (no one is responsible for it today)"
+    question: |
+      Human Capital Management forwards compensation plan to Compensation Management to review compensation plan, but Compensation Management does not yet have anyone assigned to review compensation plan, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Compensation Management owns, and assign a named owner once Compensation Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Compensation Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-COMP-MGMT.md q16.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1379
+    summary: "Compensation Management: name an owner for \"Process journal entries\" (no one is responsible for it today)"
+    question: |
+      Core Financial Management forwards equity grant to Compensation Management to process journal entries, but Compensation Management does not yet have anyone assigned to process journal entries, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Compensation Management owns, and assign a named owner once Compensation Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Compensation Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-COMP-MGMT.md q17.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-PAY-EQUITY-ASSESSMENTS

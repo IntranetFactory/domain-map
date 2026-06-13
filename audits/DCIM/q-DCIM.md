@@ -65,6 +65,17 @@ a6:
 
 ---
 
+q8: Configuration Management Database hands work to Data Center Infrastructure Management, but Data Center Infrastructure Management has no one assigned to manage infrastructure configuration, so that step currently has nobody responsible for it. Who should own it?
+- a) The a named owner runs it and approves it.
+- b) Someone else you name runs and approves it.
+- c) Leave it unassigned for now.
+
+Recommended: a. Data Center Infrastructure Management already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
+
+a8:
+
+---
+
 ## Optional (will not hold up the build)
 
 q7: Five extra market-surface objects show up across the flagship DCIM vendors but are absent from DCIM: floor plans (visual rack layout), sites (the location parent above racks), power reservations (reserved kW headroom), audit trails (SOC-2-shaped change log), and discovery scans (collector scan records). Should I research and add the ones that hold up? (yes/no)
@@ -75,4 +86,4 @@ a7:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MODULE-SPLIT q2=B2-EAM-CMDB-OVERLAP q3=B2-CHANGE-REQUEST-FLAGS.submit_lock q4=B2-CHANGE-REQUEST-FLAGS.single_approver q5=B2-DEVICE42-COVERAGE q6=B2-ENV-READING-FAN-OUT q7=B3-MARKET-SURFACE | domain_id=84 -->
+<!-- agent map, ignore: q1=B2-MODULE-SPLIT q2=B2-EAM-CMDB-OVERLAP q3=B2-CHANGE-REQUEST-FLAGS.submit_lock q4=B2-CHANGE-REQUEST-FLAGS.single_approver q5=B2-DEVICE42-COVERAGE q6=B2-ENV-READING-FAN-OUT q7=B3-MARKET-SURFACE q8=B2-B9D-OWN-1309 | domain_id=84 -->

@@ -384,3 +384,65 @@ UI spot-checks:
 - https://tests.semantius.app/domain_map/domains?id=eq.17
 - https://tests.semantius.app/domain_map/domain_modules?domain_id=17
 - https://tests.semantius.app/domain_map/handoffs?id=253
+
+## 2026-06-13, Audit (B9d verify pass)
+
+### Why this pass
+
+`state.yaml` carried `next_action_by: agent` pointing at the one agent-actionable item, `B1A-B9D-VERIFY`: B9d (handoff payload realization) had never run on BCM (the domain was last audited before B9d existed). Every other open item is a user decision (B2-1/B2-2/B2-3 market-shape, B1B-S5 destructive trigger re-attribution) or a build step gated on B2-1, none agent-solvable now. This pass runs B9d in both directions and resolves the verify item. No catalog writes.
+
+### Live state re-verified (zero drift)
+
+- BCM (domain 17) still UNBUILT: 0 `domain_modules`, 0 `capability_domains`, 0 `skills`, 0 DMDOs, masters zero data_objects.
+- Exactly ONE boundary handoff: id 253, GRC (15) -> BCM (17), `trigger_event_id=227` (`assessment.completed`, keyed on `risk_assessments` id 291, the known defect), payload `data_object_id=282` (`compliance_risks`), both module FK columns NULL.
+- One `handoff_processes` row on 253: id 118, process 271 (`8.3.6` "Conduct and analyze IT compliance assessments", L3), `proposal_source=discovery_substring`, `record_status=new`.
+- `compliance_risks` (id 282): legacy-mastered by GRC (`domain_data_objects` role=master), but ZERO `domain_module_data_objects` master rows (GRC has 0 modules). `entity_type=operational_workflow`.
+- GRC (domain 15) confirmed unbuilt: 0 `domain_modules`.
+
+### B9d run (scripts/analytics/b9d_resolver.ts BCM, both directions)
+
+Resolver output (transcript-gate satisfied):
+
+```
+boundary tags: 1 | distinct (process,owner) findings: 1
+verdicts: {"UNOWNED":1}
+[UNOWNED] 8.3.6 "Conduct and analyze IT compliance assessments" (pid 271) owner=(no owner) no-master
+    payload(s): compliance_risks | handoffs: 253:GRC->BCM
+    -> UNOWNED DEPENDENCY: carried entity has no master row anywhere; surface on the sender, do not drop.
+```
+
+`--write` applied ZERO additive owner-file edits (no catalog writes, no audit-file edits). The single payload classifies UNOWNED: `compliance_risks` has no module-grain master anywhere because GRC is unbuilt, so the resolver has no buildable owner to route a realization `b2` / persona to. Per the B9d band this is "surface on the sender, do not drop"; the sender/owner is GRC, which is itself unbuilt, so the finding is foreign-blocked on GRC's own build.
+
+### Routing decision
+
+No NEW item routed to GRC. The UNOWNED finding is the same root defect already captured by BCM's `B1B-S5` (defective trigger 227 / handoff 253 wiring) and by the standing report-only follow-ups: GRC owes a non-defective trigger keyed on `compliance_risks` (GRC B9) and a module-grain master once its M-band builds (GRC B10b / B-band). GRC's `state.yaml` already tracks its unbuilt M-band; the B9d UNOWNED result adds nothing GRC's own audit does not already imply.
+
+### Executed
+
+| Write type | Target | Rows |
+|---|---|---|
+| (none, catalog) | -- | 0 |
+| Resolve B1A-B9D-VERIFY | `audits/BCM/state.yaml` | moved out (this history note) |
+| Status recompute | `audits/BCM/state.yaml` | `next_action_by: agent` -> `user`; `last_audit` -> 2026-06-13 |
+
+No `record_status` changes (Rule #1). No git write commands.
+
+### State after
+
+- `status: feedback_needed`, `next_action_by: user` (no agent-actionable work remains; all open items are user decisions or foreign/build-blocked).
+- Open: b1b foreign/build-blocked (B1B-S1/S2/S4/S6 build steps gated on B2-1; B1B-S5 destructive + GRC-blocked; B1B-A1 blocked behind B1B-S5); b2 (B2-1/B2-2/B2-3); b3 (12 candidate masters gated on B2-1). b1a now carries only B1A-RECLASS (records settled classification) and B1A-BUILD (gated on B2-1).
+- `q-BCM.md` unchanged: it is current (regenerated 2026-06-08 with Phase 0 grounding and inline named-vendor evidence on B2-1/B2-2/B2-3, plus q4=B1B-S5 and the optional q5 b3 list). The B9d finding raises no new user question (it is foreign-blocked on GRC and duplicates B1B-S5), so no new q-file entry was added.
+
+### JWT errors
+
+None.
+
+### Files written
+
+- `audits/BCM/state.yaml` (B1A-B9D-VERIFY removed; `next_action_by: user`; `last_audit` 2026-06-13; dated B9d note added to the header block).
+- `audits/BCM/history.md` (this section).
+
+UI spot-checks:
+- https://tests.semantius.app/domain_map/handoffs?id=253
+- https://tests.semantius.app/domain_map/handoff_processes?handoff_id=253
+- https://tests.semantius.app/domain_map/domains?id=eq.17

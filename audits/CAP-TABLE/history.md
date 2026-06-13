@@ -472,3 +472,64 @@ doable additive/corrective work is executed at record_status='new'.
 - https://tests.semantius.app/domain_map/data_object_lifecycle_states
 - https://tests.semantius.app/domain_map/handoffs?source_domain_id=eq.162
 - https://tests.semantius.app/domain_map/domain_regulations?domain_id=eq.162
+
+## 2026-06-13 - Audit (state-driven; B9d band run for the first time)
+
+State-driven pass on the one agent-actionable open item, B1A-B9D-VERIFY. B9d had never run
+on this domain; this pass ran the committed resolver in BOTH directions across all three
+boundary tags. No catalog writes; no record_status touched (Rule #1). No git write commands.
+
+### B9d run (scripts/analytics/b9d_resolver.ts CAP-TABLE)
+
+verdicts: 2 ORPHAN, 1 RE-TAG. Both ORPHAN owners are UNBUILT, so the owner-masters-the-entity
+signal governs and the items route additively into each owner's backlog (state.yaml hygiene
+carve-out (b)); no realization rows were authored on an unbuilt owner.
+
+- **ORPHAN -> PORT-MONIT (unbuilt).** Process 354 (10.4.1 "Develop exit strategy"), payload
+  portfolio_companies, handoff 1045 (CAP-TABLE -> PORT-MONIT). Owner = PORT-MONIT (masters
+  portfolio_companies). Resolver --write added `B2-B9D-OWN-354` to
+  `audits/PORT-MONIT/state.yaml` + a blocking question to `audits/PORT-MONIT/q-PORT-MONIT.md`.
+- **ORPHAN -> FUND-ADMIN (unbuilt).** Process 491 (1.2.3.3 "Develop merger/demerger/
+  acquisition/exit strategy"), payload fund_distributions, handoff 1044 (CAP-TABLE ->
+  FUND-ADMIN). Owner = FUND-ADMIN (masters fund_distributions). Resolver --write added
+  `B2-B9D-OWN-491` to `audits/FUND-ADMIN/state.yaml` + a blocking question to
+  `audits/FUND-ADMIN/q-FUND-ADMIN.md`.
+- **RE-TAG (source edit, NOT applied -- destructive, needs sign-off).** Handoff 1044 carries
+  TWO handoff_processes tags: row 712 = process 354 (L3, coarse) AND row 713 = process 491
+  (L4, specific, same entity). The specific tag covers the payload; the coarse row 712 is
+  redundant. Re-pointing reduces to deleting row 712. Surfaced as a new `b2` item
+  `B2-B9D-RETAG-1044` (CAP-TABLE state.yaml) + q13 in `q-CAP-TABLE.md`. Not applied. Handoff
+  1045's single process-354 tag (row 635) is correct and untouched.
+
+### Quick structural re-checks (read-only, all clean)
+
+- **B13 (entity_type):** 0 unclassified CAP-TABLE masters; 9 operational_workflow, 2 catalog
+  (security_classes, vesting_schedules), 1 operational_record (shareholder_records), 1 computed
+  (exit_waterfall_calculations). No work.
+- **B15 (pattern flag on catalog/junction/computed master):** 0 violations on the 3 non-workflow
+  masters (771, 774, 778). No work.
+- **M7 (single-master on equity_grants):** dual-master defect still live (module 79 id 399 AND
+  module 21 id 66, both master+required). This is exactly B2-S1 (q1); the fix is destructive
+  (demote one master) and correctly stays a user decision.
+
+### state.yaml hygiene
+
+- Removed B1A-B9D-VERIFY (resolved this pass).
+- Added b2 `B2-B9D-RETAG-1044` (destructive approval owed by CAP-TABLE; surfaced in q-file q13).
+- B1A-PHASE-P (personas) stays `deferred` per audit policy (not agent-authored without user
+  direction). All B1B / remaining B2 items stay open, blocked on user decisions.
+- status stays feedback_needed; next_action_by flipped agent -> user (the only agent-actionable
+  item, B9d, is done; everything left needs a user decision or destructive sign-off).
+
+### q-CAP-TABLE.md
+
+Refreshed: added q13 (B9d RE-TAG destructive approval) before the Optional section; renumbered
+the optional b3 questions to q14-q17; footer agent-map updated.
+
+### Decisions
+
+_(empty pending user review)_
+
+### Spot-check links
+
+- https://tests.semantius.app/domain_map/handoff_processes?handoff_id=in.(1044,1045)

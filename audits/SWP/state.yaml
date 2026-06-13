@@ -13,6 +13,7 @@ domain: SWP
 status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-10"
+# B9d reference-read (2026-06-13): "Labor Market Benchmark" is reference/config data of SWP; it becomes ownable work only if SWP later runs a workflow on it.
 
 # 2026-06-10 review pass: ran the B9d resolver (scripts/analytics/b9d_resolver.ts SWP) in BOTH
 # directions for the first time on this domain, clearing B1A-B9D-VERIFY. The 26 boundary tags

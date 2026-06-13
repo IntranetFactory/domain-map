@@ -280,3 +280,15 @@ None.
 ### Post-fix status
 
 `next_action_by: user`. Catalog copy is live (record_status='new', awaiting approval). Everything else is gated on the B2-FOLD-VS-DISTINCT decision.
+
+## 2026-06-13 - Audit (state-driven execute)
+
+State-driven Validate pass (SKILL.md Rule #21) over the open items in `audits/CAFM/state.yaml`. Live state re-verified, no drift: CAFM (id 142) still has 0 domain_modules, 0 domain_data_objects, 0 business_function_domains, 0 handoffs (either direction), 0 skills, 0 roles; domain metadata + catalog UX copy populated.
+
+- **B1A-B9D-VERIFY resolved (executed).** Ran the committed B9d resolver `bun run scripts/analytics/b9d_resolver.ts CAFM --dry-run`: 0 boundary tags, 0 distinct (process,owner) findings, empty verdicts, no owner-file edits. CAFM publishes and receives zero handoffs, so there are zero payloads to classify on any boundary in either direction. B9d is verified clean both ways. Item deleted from `state.yaml` per Rule #22 hygiene (resolved, not a tombstone).
+- **B1A-BUILD moved b1a -> b1b.** The item is blocked solely on the user decision B2-FOLD-VS-DISTINCT (and the agent does not scaffold an unbuilt domain per the UNBUILT clause), so it is a blocked item, not agent-solvable-now. Moving it lets `next_action_by` correctly compute to `user`.
+- No catalog writes this pass (B9d empty; build gated). No record_status touched. Zero git write commands.
+
+### Post-fix status
+
+`status: feedback_needed`, `next_action_by: user`. No agent-actionable item remains open. Everything is gated on the B2-FOLD-VS-DISTINCT decision and its dependents; the current `q-CAFM.md` carries all six b2 questions plus the two optional b3 ideas.

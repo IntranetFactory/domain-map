@@ -11,7 +11,7 @@
 schema_version: 2
 domain: PORT-MONIT
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-07"
 
 b1a:
@@ -296,6 +296,16 @@ b2:
       Verified live 2026-06-07: 1042 carries rows 634 (1401) + 762 (1422); 1043 carries rows
       633 (1390) + 763 (56). Multi-tagging is allowed but convention leads with the single
       most-specific PCF; surplus tags should carry clear value or get demoted.
+  - id: B2-B9D-OWN-354
+    summary: "Portfolio Monitoring for Private Capital: name an owner for \"Develop exit strategy\" (no one is responsible for it today)"
+    question: |
+      Cap Table Management and Equity Administration forwards portfolio company to Portfolio Monitoring for Private Capital to develop exit strategy, but Portfolio Monitoring for Private Capital does not yet have anyone assigned to develop exit strategy, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Portfolio Monitoring for Private Capital owns, and assign a named owner once Portfolio Monitoring for Private Capital sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Portfolio Monitoring for Private Capital decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-PORT-MONIT.md q13.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-1-CO-INVESTMENT-POSITIONS

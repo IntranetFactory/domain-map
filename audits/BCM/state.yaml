@@ -30,8 +30,8 @@
 schema_version: 2
 domain: BCM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-08"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # BCM (domain 17) is a leadership-tier sub-domain under GRC (parent_domain_id=15) and is
 # UNBUILT: 0 domain_modules, 0 capability_domains, 0 skills, 0 DMDOs, and it masters ZERO
@@ -39,12 +39,19 @@ last_audit: "2026-06-08"
 # (leadership-tier vs promote vs hybrid). Until the user answers B2-1, no module / capability /
 # skill / DMDO / master can be authored. The only build-independent EXECUTE item (A4 catalog UX
 # on the domain row) was completed 2026-06-07. next_action_by=user on B2-1.
+#
+# 2026-06-13 B9d ran (B1A-B9D-VERIFY, now resolved -> history.md). scripts/analytics/b9d_resolver.ts
+# BCM, both directions: BCM has exactly ONE boundary handoff (253, GRC 15 -> BCM 17), one payload
+# (compliance_risks, id 282). Verdict: UNOWNED dependency. compliance_risks is legacy-mastered by
+# GRC (domain_data_objects role=master) but has NO module-grain master anywhere because GRC is
+# unbuilt (0 modules), so the resolver finds no buildable owner to route a realization b2/persona to.
+# --write produced ZERO additive owner-file edits (correct: "surface on the sender, do not drop";
+# the sender/owner GRC is itself unbuilt). This is the same root defect already tracked in B1B-S5 and
+# in the standing GRC report-only follow-ups (GRC owes a non-defective trigger on compliance_risks
+# and a module-grain master once its M-band builds). No new routing to GRC needed beyond what GRC's
+# own unbuilt state already implies. No agent-writable additive work remained; back to feedback_needed.
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-RECLASS
     summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; classification settled as master-bearing-capable (overlay test). Build needed, not an exemption. Records the settled classification; the actual module/master count is the B2-1 decision."
     finding: >

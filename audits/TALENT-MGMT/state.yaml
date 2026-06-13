@@ -11,7 +11,7 @@
 schema_version: 2
 domain: TALENT-MGMT
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-07"
 
 # B1A items are all EXECUTED as of 2026-06-07 (entity_type classify, A4/M8 catalog UX,
@@ -113,6 +113,26 @@ b2:
 # -> TALENT) carries no handoff_processes row. Searched apqc_pcf_cross_industry: no clean match for the
 # portfolio-value-to-individual-performance crossing. All other 22 cross-domain handoffs ARE tagged
 # (mostly agent_curated, well above the H1 0.5N floor). 793 deferred to a Discover pass.
+  - id: B2-B9D-OWN-225
+    summary: "Talent Management: name an owner for \"Manage employee performance\" (no one is responsible for it today)"
+    question: |
+      Compensation Management forwards nine-box placement to Talent Management to manage employee performance, but Talent Management does not yet have anyone assigned to manage employee performance, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Talent Management owns, and assign a named owner once Talent Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Talent Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-TALENT-MGMT.md q12.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1028
+    summary: "Talent Management: name an owner for \"Review employee performance\" (no one is responsible for it today)"
+    question: |
+      Compensation Management forwards performance review to Talent Management to review employee performance, but Talent Management does not yet have anyone assigned to review employee performance, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Talent Management owns, and assign a named owner once Talent Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Talent Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-TALENT-MGMT.md q13.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-COMPETENCIES
