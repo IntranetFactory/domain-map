@@ -439,3 +439,47 @@ None. Unlike the PRM 2026-06-08 pass (which reversed two recommendations), the f
 - `audits/AUDIT/q-AUDIT.md` (regenerated with inline named-vendor grounding + Grounding block + phase0 path in the agent-map comment)
 - `audits/AUDIT/state.yaml` (added the dated 2026-06-08 Phase 0 note block after the supersession header; enriched the `why` framing on B2-MOD-SHAPE / B2-AUDIT-VS-GRC / B2-B3-NAMING / B2-DOMAIN-PEER with named-vendor evidence; set last_audit 2026-06-08; status stays feedback_needed / next_action_by user; no b1a/b1b/b2/b3 item deleted or restructured)
 - `audits/AUDIT/history.md` (this section)
+
+## 2026-06-13: B9d handoff-payload realization (resolve B1A-B9D-VERIFY)
+
+### Why this pass ran
+
+B1A-B9D-VERIFY was the single agent-actionable item open on this domain: B9d (handoff-payload realization) was added after AUDIT's last full audit, so its handoff payload tags had never been classified. Every other open item (B1A-BUILD, the entire b1b cascade, all 8 b2 calls) is gated on the user's B2-MOD-SHAPE answer and stays surfaced, not executed. This pass ran B9d in both directions and resolved the verify item. No catalog writes, no record_status change (Rule #1), no destructive action.
+
+### How it ran
+
+`bun run scripts/analytics/b9d_resolver.ts AUDIT --dry-run`. The resolver walked all 40 boundary tags on every AUDIT boundary in BOTH directions (inbound and outbound, never treating the inbound half as report-only) and produced 34 distinct (process, owner) findings:
+
+- verdicts: ORPHAN 17, UNOWNED 16, RESOLVED 1.
+- **No MIS-TAG and no ROLL-UP**, so there are zero destructive re-points and zero mis-tag deletions to surface from B9d this pass. (The pre-existing B2-BAD-TAGS already separately tracks the suspect substring tags on handoffs 256 and 825; the resolver classifies both as UNOWNED, consistent with that item.)
+
+### AUDIT-owned findings: none
+
+The resolver found **zero ORPHANs owned by AUDIT** and emitted **no `### AUDIT` owner-file edit block**. AUDIT is unbuilt (0 modules, 0 capability_domains, 0 master `domain_module_data_objects` rows, 0 personas, 0 process_raci), so it owns no realized process subtree and has no persona pool to assign an R/A from. There is therefore no new AUDIT-side b2 persona-assignment decision to record (contrast AIOPS 2026-06-13, which had 3 self-owned ORPHANs to record). Every B9d finding routes either to a neighbor domain or is a symptom of AUDIT's own unbuilt state.
+
+### Neighbor-owned ORPHANs (route to those domains' backlogs; neighbor files left untouched)
+
+17 ORPHANs are owned by the domain that masters the carried entity, which is never AUDIT. Per this pass's AUDIT-only scope, the neighbor audit files are NOT edited here; they are recorded for routing when each neighbor is next audited. Owner in parentheses; (unbuilt) means the owner realizes nothing yet, so the ORPHAN is correctly tagged and must not be downgraded:
+
+- FIN (unbuilt): pid 56 general accounting (accounting_periods, legal_entities), pid 1379 process journal entries (journal_entries), pid 1382 intercompany reconciliation (intercompany_transactions), pid 1433 audit invoices (fixed_assets), pid 1461 cash positions (cash_transactions).
+- EPM (unbuilt): pid 1324 periodic forecasts (financial_forecasts), pid 1325 variance analysis (variance_analyses).
+- EXPENSE (unbuilt): pid 1433 audit invoices (expense_lines). SPEND-MGMT (unbuilt): pid 1433 (card_authorizations).
+- FSQM (unbuilt): pid 162 quality standards (haccp_plans). FOOD-TRACE (unbuilt): pid 1570 compliance audits (critical_tracking_events), pid 1830 regulatory records (key_data_elements).
+- ITSM (unbuilt): pid 389 report audit findings (service_incidents). ECM (unbuilt): pid 1440 retain records (records_retention_policies).
+- LEGAL-PRACT-MGMT (unbuilt): pid 1616 respond to audit inquiries (external_court_filings). RE-CRE (unbuilt): pid 1783 environmental impact (building_certifications).
+- DCG (BUILT): pid 1171 monitor and manage IT activity risk (data_lineage_relationships). This is the one neighbor that is built and has a persona pool, so its DCG-owned ORPHAN is the one most ready to realize on its next audit.
+
+### UNOWNED dependencies (carried entity masters nowhere)
+
+16 UNOWNED findings: the carried entity has no `master` row anywhere in the catalog. Two sub-classes:
+
+- **AUDIT-owned-but-unbuilt payloads** (resolve automatically once B1B-MOD1 lands): audit_findings (pid 366, 389), follow_up_actions (pid 1496), work_papers (pid 1187), audit_plans (pid 1598), control_tests + compliance_controls (pid 61, 325), audit_recommendations (pid 573), audit_issues (pid 326). These read as no-master only because AUDIT has no module to carry the `master` DMDO role yet; they are already tracked by B1A-BUILD / B1B-MOD1, not new items.
+- **Genuinely unmastered neighbor payloads**: supplier_risk_assessments (pid 367, SUP-LIFE), regulatory_inquiries (pid 369, LSD), legal_holds + in_house_legal_matters (pid 373, LSD), invoice_matches (pid 1433, AP-AUTO), rpa_executions + rpa_activity_logs (pid 1184, RPA), esg_disclosures + esg_initiatives + emissions_records (pid 1802, 2016, ESG). These are unowned dependencies on the senders; surfaced for those domains, not fixable from AUDIT.
+
+### RESOLVED
+
+1 payload classified RESOLVED: pid 1163 (evaluate enterprise regulatory and compliance obligations) on the inbound GRC->AUDIT handoff 251 (compliance_obligations). No action.
+
+### Post-pass status
+
+B1A-B9D-VERIFY resolved and removed from state.yaml. No other agent-actionable work exists without the build or a user decision: the build cascade (B1A-BUILD + B1B-MOD1/A2/B12/B10b-OUT/B10b-IN) is gated on B2-MOD-SHAPE, and all 8 b2 items remain open awaiting a-AUDIT.md. The earlier `next_action_by: agent` (which had pointed at this very B9d item) is corrected back to `user`. Domain stays `feedback_needed`; q-AUDIT.md (regenerated 2026-06-08 with inline named-vendor grounding) is current and unchanged.
