@@ -70,7 +70,7 @@ a5:
 
 q6: Should a customer entitlement require a named approver to sign off on activation or upgrade? (yes/no)
 
-Recommended: yes. Activation and upgrade are the natural signoff points for a support tier. This overwrites a current value, so it needs your confirmation.
+Recommended: no, do not set the single-approver flag. Since the last audit, the customer-entitlement record was classified as configuration data (a "catalog" entity, like a service-tier definition). On configuration data the approver is expressed through the activation lifecycle step and its responsibility assignment, not through the per-record single-approver flag, which the system deliberately ignores on configuration entities (and an audit rule would flag it as a contradiction). So the right way to require activation signoff is to keep the flag off and let the activation step carry the approval. If you instead believe entitlements behave like a live operational record rather than configuration, say so and we will revisit the classification first.
 
 a6:
 
@@ -111,6 +111,18 @@ a10:
 
 ---
 
+q12: A handoff from Subscription Management to CSM (a failed-payment alert) is currently labeled as if CSM were the team that "processes and distributes payments." CSM does not distribute payments; when a payment fails it opens a customer case to chase it. The label and the underlying event are mis-attributed (this is the same root issue as the payment-failed event noted under q2). How should this be handled?
+
+- a) Re-key the failed-payment event to its real publisher (the invoice on Subscription Management) and re-label the CSM side as a case-opening step (payment dispute opened), not payment distribution.
+- b) Record "process and distribute payments" as work CSM owns and assign it an owner.
+- c) Leave it as-is for now and revisit under q2.
+
+Recommended: a. CSM never moves money; the failed-payment signal belongs to the invoice/payment owner (Subscription Management), and CSM's real action is opening and working a case. Labeling CSM as the payment-distribution owner (option b) would credit it with work no support desk does. This is the same defect tracked internally as the mis-attributed payment-failed event under q2, so answering q2 settles the customer-keyed side and this settles the process-label side.
+
+a12:
+
+---
+
 ## Optional (will not hold up the build)
 
 q11: Across the five flagship support vendors, extra entities recur that CSM does not model yet (case comments, case attachments, service contracts, SLA policies/milestones, business-hours schedules, routing rules, canned responses, agent teams, escalation rows, knowledge categories/versions, and CSM-side omnichannel sessions). Vendor research this pass confirmed case comments, case conversations, agent teams, routing rules, canned responses, and knowledge categories/versions are all Core (present in all five). Should I research and add the ones that hold up? (yes/no)
@@ -121,4 +133,4 @@ a11:
 
 ---
 
-<!-- agent map, ignore: q1=B2-CSM-KNOWLEDGE-MASTER q2=B2-CUSTOMERS-AMBIGUITY q3=B2-CROSS-DOMAIN-INTEGRITY q4=B2-CAPABILITY-SHAPE q5=B2-APQC-SCOPE q6=B2-PATTERN-FLAGS.entitlements q7=B2-PATTERN-FLAGS.csat q8=B2-PATTERN-FLAGS.events q9=B1A-SELF-CONTAIN q10=B2-PAIRWISE-SCHEDULING q11=B3 | domain_id=30 phase0=.tmp_deploy/CSM-phase0-2026-06-08.md -->
+<!-- agent map, ignore: q1=B2-CSM-KNOWLEDGE-MASTER q2=B2-CUSTOMERS-AMBIGUITY q3=B2-CROSS-DOMAIN-INTEGRITY q4=B2-CAPABILITY-SHAPE q5=B2-APQC-SCOPE q6=B2-PATTERN-FLAGS.entitlements q7=B2-PATTERN-FLAGS.csat q8=B2-PATTERN-FLAGS.events q9=B1A-SELF-CONTAIN q10=B2-PAIRWISE-SCHEDULING q12=B2-B9D-OWN-1422 q11=B3 | domain_id=30 phase0=.tmp_deploy/CSM-phase0-2026-06-08.md -->

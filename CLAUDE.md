@@ -1,5 +1,15 @@
 # Project rules
 
+## Never discard uncommitted work (git is not a cleanup tool)
+
+**Never run any command that discards working-tree changes without the user's explicit, in-the-moment approval.** This is absolute, no exceptions. The banned commands include (any form, any path, any flag): `git checkout -- <path>`, `git checkout .`, `git restore`, `git reset --hard`, `git reset` (when it would unstage/lose work), `git clean`, `git stash drop/clear`, and `git checkout <branch>` when it would overwrite local changes. **`git checkout -- audits/` (or any path) is specifically forbidden.** Uncommitted edits are unrecoverable once discarded; one such command destroyed an entire session of audit work.
+
+If the working tree looks wrong, messy, or "cascaded", **do not try to fix it by reverting.** Stop, run read-only diagnostics (`git status`, `git diff`), and report to the user with what you see. Let the user decide. Reverting another worker's changes is never your call.
+
+This binds **every subagent** too. When dispatching subagents:
+- Tell each subagent it may edit ONLY its own assigned files, and that running `git checkout`/`reset`/`clean`/`restore`/`stash drop` is forbidden.
+- When multiple writers run in parallel against the shared tree, **commit after each batch** before starting the next, so no later command can wipe earlier uncommitted work. Never leave a wave's output uncommitted while launching another wave of writers.
+
 ## Memory is off-limits
 
 Do **not** write to your file-based memory system (`~/.claude/projects/.../memory/`) for anything related to this project. No `MEMORY.md`, no `feedback_*.md`, no `project_*.md`, no `reference_*.md`. Memory entries are not committed, not reviewable, and not visible to other contributors. They invariably drift out of sync with the source of truth.

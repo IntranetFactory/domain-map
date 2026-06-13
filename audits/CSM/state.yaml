@@ -1,8 +1,22 @@
 schema_version: 2
 domain: CSM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-08"
+next_action_by: user
+last_audit: "2026-06-13"
+# 2026-06-13 review: B9d ran (dry-run classification, both directions) and resolved
+#   B1A-B9D-VERIFY. Every other open item is gated on the q-CSM.md b2 answers or is a
+#   destructive sign-off; the agent has executed all build-independent work, so the
+#   domain stays feedback_needed / next_action_by: user. NOTE (CORRECTED 2026-06-13):
+#   b9d_resolver.ts --write does NOT have a cascade defect. By design it routes a
+#   B2-B9D-OWN item into each OWNER neighbor's files (for CSM that is ~12 neighbors), so
+#   a single run legitimately edits a dozen-plus audit files. The earlier "~140 files
+#   rewritten" reading was a misdiagnosis: `git status` showed the whole shared working
+#   tree, which then held the uncommitted work of many parallel-wave agents, not this
+#   resolver's output. That misread led to an erroneous `git checkout -- audits/` which
+#   discarded other agents' uncommitted work (see CLAUDE.md rule "Never discard
+#   uncommitted work"). B9d findings here were recorded BY HAND, CSM-scoped. Neighbor-owed
+#   ORPHANs are listed report-only below (B1A-B9D-NEIGHBOR), to be routed by a sequential
+#   resolver run (never two --write runs concurrently: they race on shared neighbor files).
 
 # PHASE 0 (2026-06-08): vendor-surface report run this pass to ground the market-shape b2s
 #   per Rule #22. Report: .tmp_deploy/CSM-phase0-2026-06-08.md (Zendesk, Salesforce Service
@@ -26,10 +40,78 @@ last_audit: "2026-06-08"
 
 # SURFACED-FOR-USER 2026-06-06 (no write; carried as b1a-deferred / destructive-awaiting-approval):
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+  # B1A-B9D-VERIFY RESOLVED 2026-06-13: b9d_resolver ran on CSM (both directions).
+  # 60 boundary tags -> 38 (process,owner) findings: 19 ORPHAN, 10 UNOWNED, 4 RE-TAG,
+  # 1 MIS-TAG, 2 REFERENCE-READ, 2 RESOLVED. The CSM-owned + CSM-source findings are
+  # recorded below; neighbor-owed ORPHANs are report-only in B1A-B9D-NEIGHBOR.
+
+  - id: B1A-B9D-RETAG
+    summary: "B9d: 4 CSM-source ROLL-UP/RE-TAG re-points await sign-off (destructive: rewrites tags CSM authored)."
+    status: surfaced_destructive
+    finding: >-
+      Coarse-tag -> specific-tag corrections on handoff_processes rows CSM authored.
+      Each replaces an existing record_status='new' tag, so destructive (Rule #21);
+      awaiting user sign-off. NOT auto-applied.
+    csm_source_retags:
+      - {handoffs: [233], from: "6.0 Manage Customer Service", to: "6.2.2 Manage customer service problems, requests, and inquiries", entity: customers}
+      - {handoffs: [224, 209, 234, 488, 486], from: "3.5.2 Manage customers and accounts", to: "3.5.2.5 Manage customer master data", entity: customers}
+      - {handoffs: [70, 470], from: "6.2.2 Manage customer service problems, requests, and inquiries", to: "3.5.2.5 Manage customer master data", entity: "customers, crm_opportunities"}
+    routed_to_neighbors_for_their_signoff:
+      - {handoffs: [65, 487], source_domain: SUB-MGMT, kind: "RE-TAG 6.2.2 -> 9.5.2.5", note: "SUB-MGMT authored the tag; belongs on SUB-MGMT's audit."}
+      - {handoffs: [1003], source_domain: PROD-MGMT, kind: "MIS-TAG 6.2.2 -> 2.1.2.2 or delete", entity: product_features, note: "PROD-MGMT mis-tagged; belongs on PROD-MGMT's audit."}
+
+  - id: B1A-B9D-UNOWNED
+    summary: "B9d: 10 inbound payloads (vertical-industry masters) have NO master row anywhere; surface on the senders, never drop."
+    status: report_only
+    finding: >-
+      The carried payload has no role=master row in any domain (no owner can be credited).
+      Per the B9d UNOWNED rule these are surfaced on the SENDER, never dropped from CSM.
+      They overlap the existing B1B-B10B-CLASS-B / B2-CROSS-DOMAIN-INTEGRITY set (q3): the
+      senders own the missing master rows; CSM's only action is the consumer-DMDO decision
+      already captured under q3. No CSM-side fix beyond q3.
+    unowned_payloads:
+      - {handoffs: [890, 899, 902, 904, 908, 910, 930, 942], process: "6.2.2", entities: "account_openings, patient_appointments, patient_referrals, insurance_claims, insurance_policies, telco_subscriptions, outage_events", senders: "BANK-OPS, HC-PATIENT, INS-CLAIMS, TELCO-BSS, UTIL-OPS"}
+      - {handoffs: [891], process: "9.7.6", entity: banking_cases, sender: BANK-OPS}
+      - {handoffs: [931], process: "3.5.4.6", entity: telco_service_orders, sender: TELCO-BSS}
+      - {handoffs: [992, 985], process: "4.2.4.7", entities: "sourcing_decisions, order_allocations", sender: OMS}
+      - {handoffs: [744], process: "6.2.2.2", entity: intent_definitions, sender: CONV-AI}
+      - {handoffs: [987], process: "6.2.4.1", entity: return_authorizations, sender: OMS}
+      - {handoffs: [720], process: "8.7.5.3", entity: knowledge_base_articles, sender: KMS}
+      - {handoffs: [924], process: "9.2.2.2", entity: license_renewals, sender: PS-LIC}
+      - {handoffs: [923], process: "9.2.2.5", entity: permit_inspections, sender: PS-LIC}
+      - {handoffs: [193], process: "9.5.2.5", entity: payment_runs, sender: AP-AUTO}
+
+  - id: B1A-B9D-NEIGHBOR
+    summary: "B9d: 18 ORPHAN payloads on CSM boundaries are owned by NEIGHBOR domains; report-only here, owed an owner-side b2 on each neighbor."
+    status: report_only
+    finding: >-
+      ORPHAN = a real unrealized process whose owner is the domain that masters the carried
+      entity. The protocol routes each to the OWNER's audit files as a durable b2 + q. The
+      b9d_resolver --write that does this auto-routing is sound: it writes a B2-B9D-OWN item
+      into each owner by design (that is the whole point of the resolver). The routing was NOT
+      applied on this pass only because the run happened during parallel-wave activity and a
+      later erroneous `git checkout -- audits/` discarded uncommitted work; rather than re-run
+      into a dirty tree, the owners are listed here report-only so a SEQUENTIAL resolver run
+      (one domain at a time, committing between runs, never two --write runs concurrently) can
+      write B2-B9D-OWN-<pid> into each owner. Most owners are UNBUILT, so the item is a
+      future-owner placeholder, not a blocker for CSM.
+    neighbor_owned_orphans:
+      - {owner: MSP-PSA, built: false, process: "6.0 / 6.2.2", payloads: "msp_contracts, msp_tickets", handoffs: [525, 523]}
+      - {owner: SUB-MGMT, built: false, process: "3.5.2 / 6.2.2 / 9.2.4", payloads: "customer_subscriptions, dunning_events, usage_records, customer_invoices", handoffs: [195, 73, 494, 496, 493, 194]}
+      - {owner: CDP, built: false, process: "6.2.2", payloads: "customer_events, customer_attributes", handoffs: [77, 479]}
+      - {owner: B2C-COMM, built: true, process: "6.2.2", payloads: "commerce_orders", handoffs: [330]}
+      - {owner: FSM, built: false, process: "6.2.2 / 4.1.5.7", payloads: "service_work_orders, field_visits, dispatch_records", handoffs: [883, 229, 230]}
+      - {owner: RE-PROP-MGMT, built: false, process: "6.2.2", payloads: "rental_units", handoffs: [865]}
+      - {owner: INV-MGMT, built: false, process: "6.3.1 / 6.4.1", payloads: "inv_serialized_units, inv_inventory_lots", handoffs: [1058, 1056]}
+      - {owner: SMM, built: false, process: "3.3.6.1", payloads: "social_messages, social_mentions", handoffs: [86, 87, 511]}
+      - {owner: CRM, built: false, process: "3.5.2.5", payloads: "customers", handoffs: [270]}
+      - {owner: VET-PRACT-MGMT, built: false, process: "3.5.3.15", payloads: "animal_patients, veterinary_vaccinations", handoffs: [337, 947]}
+      - {owner: CCAAS, built: true, process: "6.2.2.4 / 6.2.3.4", payloads: "support_sessions", handoffs: [225, 226]}
+      - {owner: PROD-MGMT, built: true, process: "6.5.1.3", payloads: "customer_feedback_items", handoffs: [998]}
+    note: >-
+      The single CSM-OWNED ORPHAN (process 1422, customer_cases via handoff 72) is recorded
+      separately as B2-B9D-OWN-1422 below (it overlaps B1B-B1, the mis-attributed payment.failed
+      event). RESOLVED tags: 520 (CLM contract_obligations), 1010 (PROD-MGMT product_releases).
   - id: B1A-PHASE-P
     summary: "Multi-module (3 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer."
     status: deferred
@@ -66,7 +148,7 @@ b1b:
     blocked_by:
       - {type: user_decision, ref: B2-PATTERN-FLAGS, reason: "Bucket 2 #6 owns the per-flag decision; flag flips on a non-empty value are an overwrite."}
     affected_masters:
-      - {data_object_id: 104, name: customer_entitlements, target_module_id: 113, workflow: "activation/suspension/expiry", note: "entity_type now 'catalog'; has_single_approver=true still proposed for activation signoff"}
+      - {data_object_id: 104, name: customer_entitlements, target_module_id: 113, workflow: "activation/suspension/expiry", note: "entity_type='catalog'; has_single_approver stays FALSE per B15/Rule #12 (flag suppressed on catalog masters). Activation signoff -> lifecycle gate + RACI. CORRECTED 2026-06-13."}
       - {data_object_id: 105, name: csat_responses, target_module_id: 112, workflow: "captured-once / immutable", note: "has_submit_lock=true proposed"}
       - {data_object_id: 111, name: customer_events, target_module_id: 112, workflow: "append-only event log", note: "all three flags stay false proposed"}
 
@@ -218,12 +300,15 @@ b2:
     summary: Confirm pattern-flag re-evaluation outcomes on 104, 105, 111 (drives B1B-S2 PATCH).
     question: Confirm proposed flips before B1B-S2 PATCH lands (each is an overwrite on a non-empty boolean).
     options:
-      - "104 has_single_approver = true (activation/upgrade signoff)"
-      - "105 has_submit_lock = true (responses immutable once captured)"
+      - "104 has_single_approver stays FALSE (CORRECTED 2026-06-13: entity_type='catalog'; per B15/Rule #12 a pattern flag on a catalog master is suppressed by the emitter and would be a B15 contradiction. Activation signoff belongs on the lifecycle gate + RACI, not the flag.)"
+      - "105 has_submit_lock = true (responses immutable once captured; 105 is operational_record so the flag is valid)"
       - "111 all three flags remain false (append-only event log)"
     why: >-
-      Reasoning is plausible but not certain; Rule #12 prohibits auto-populating notes to
-      explain flips, so the user confirms directly.
+      105 / 111 reasoning is plausible but not certain; Rule #12 prohibits auto-populating
+      notes to explain flips, so the user confirms directly. 104 is now resolved by the
+      entity_type='catalog' classification: the single-approver flag does not apply to
+      configuration data, so the recommendation is to keep it FALSE (q6 updated to match).
+      If the user reclassifies 104, revisit.
 
   - id: B2-PAIRWISE-SCHEDULING
     summary: Decide whether to schedule full pairwise reconciliation passes against SUB-MGMT and CRM.
@@ -234,15 +319,28 @@ b2:
       - "(a) accept inline summaries, no further passes"
       - "(b) schedule full Validate runs on SUB-MGMT and CRM with audit appends on those files"
 
-  - id: B2-CATALOG-UX
-    summary: Catalog UX backfill (domain + modules).
-    status: resolved_by_rule
-    resolution: >-
-      RESOLVED 2026-06-06 by Rule #20 (in-record review). Current Rule #20 + A4/M8 fix text
-      direct authoring buyer-voice copy straight into empty fields; record_status carries the
-      review signal. The old surface-then-write gate is retired. catalog_tagline +
-      catalog_description written on domain 30 and modules 112/113/114 at record_status='new'.
-      User reviews in-record / in the catalog UI.
+  - id: B2-B9D-OWN-1422
+    summary: "B9d: handoff 72 (SUB-MGMT->CSM payment.failed) tagged process 9.5.2.5 'Process and distribute payments'; CSM does not distribute payments. Re-key event + re-label as case-opening."
+    question: |
+      B9d (2026-06-13) classified handoff 72 as ORPHAN owned by CSM because the carried entity
+      (customer_cases) is CSM-mastered, but the tagged process (9.5.2.5 payment distribution) is a
+      finance-family process CSM does not perform. SAME defect as B1B-B1 (trigger_event 94
+      'payment.failed' mis-attributed to customer_cases / DO 103). Resolution is a re-key, not an
+      owner assignment.
+    options:
+      - "(a) Re-key trigger_event 94 to its publisher (customer_invoices id 107 on SUB-MGMT) and re-label the CSM side as a case-opening process (customer_case.payment_dispute_opened), not payment distribution."
+      - "(b) Record 'Process and distribute payments' as CSM-owned work and assign an owner (over-models; no support desk distributes payments)."
+      - "(c) Leave as-is and fold into B2-CUSTOMERS-AMBIGUITY (q2)."
+    recommended: "(a)"
+    why: |
+      CSM never moves money; the failed-payment signal belongs to the invoice/payment owner
+      (SUB-MGMT), and CSM's real action is opening/working a case. Re-keying is the same fix B1B-B1
+      proposes. PATCHing trigger_events.data_object_id is a corrective overwrite (destructive) and a
+      handoff_processes re-point/delete needs sign-off; both await the user. Surfaced as q-CSM.md q12;
+      cross-linked to B1B-B1 / B2-CUSTOMERS-AMBIGUITY.
+    blocked_by:
+      - {type: user_decision, ref: B1B-B1, reason: "Same mis-attributed payment.failed event; resolve together."}
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-CASE-COMMENTS

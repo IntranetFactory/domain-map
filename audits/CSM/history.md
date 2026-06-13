@@ -454,3 +454,79 @@ questions) is the human-readable surface; answer by renaming to `a-CSM.md`.
 ### JWT errors
 
 None.
+
+---
+
+## 2026-06-13 - Review (B9d run + pattern-flag correction)
+
+### Summary
+
+CSM was `feedback_needed` with a current `q-CSM.md` (11 questions). The one genuinely
+agent-doable, ungated item on the worklist was `B1A-B9D-VERIFY` (B9d had never run on this
+domain). Ran it this pass and resolved it; also caught and corrected a pattern-flag
+recommendation that contradicted the entity_type='catalog' classification. All other open
+items remain gated on the q-file b2 answers or are destructive sign-offs, so the domain
+stays `feedback_needed` / `next_action_by: user`.
+
+### B9d (handoff payload realization, both directions)
+
+Ran `b9d_resolver CSM`. Classification (60 boundary tags -> 38 (process,owner) findings):
+19 ORPHAN, 10 UNOWNED, 4 RE-TAG, 1 MIS-TAG, 2 REFERENCE-READ, 2 RESOLVED.
+
+- **CSM-owned ORPHAN (1):** process 1422 "Process and distribute payments" via customer_cases
+  on handoff 72 (SUB-MGMT->CSM payment.failed). This is the SAME defect as B1B-B1 (mis-attributed
+  trigger_event 94). CSM does not distribute payments; the fix is a re-key + re-label as a
+  case-opening process, not an owner assignment. Recorded as B2-B9D-OWN-1422 (b2) and surfaced
+  as q-CSM.md q12, cross-linked to B1B-B1 / B2-CUSTOMERS-AMBIGUITY.
+- **CSM-source RE-TAGs (4, destructive):** coarse->specific re-points on handoff_processes rows
+  CSM authored (233, 224/209/234/488/486, 70/470). Awaiting sign-off (B1A-B9D-RETAG).
+- **Neighbor-authored source edits:** RE-TAG 65/487 -> SUB-MGMT; MIS-TAG 1003 -> PROD-MGMT.
+  Belong on those domains' audits.
+- **UNOWNED (10):** vertical-industry payloads with no master row anywhere; surface on senders,
+  never drop. Overlap the existing q3 set (B1A-B9D-UNOWNED, report-only).
+- **Neighbor-owned ORPHANs (18):** owed an owner-side b2 on each neighbor (mostly UNBUILT owners).
+  Recorded report-only as B1A-B9D-NEIGHBOR (see DEFECT note below for why not auto-routed).
+- **RESOLVED:** 520 (CLM contract_obligations), 1010 (PROD-MGMT product_releases).
+
+### DEFECT found and reverted: b9d_resolver.ts --write catalog-wide cascade
+
+`bun run scripts/analytics/b9d_resolver.ts CSM --write` is nominally domain-scoped, but its
+file-write phase cascaded catalog-wide: it modified ~144 audit files across the whole catalog
+(unrelated domains' state.yaml next_action_by / last_audit / findings rewritten) and DELETED 4
+q-files (q-ACCT-PLAN, q-BCM, q-BPA, q-CAFM), plus created spurious a-*.md files. This is
+destructive, out-of-scope, and unapproved. The entire run was reverted with `git checkout --
+audits/` (restored the deleted q-files) and the spurious a-files were removed. The B9d FINDINGS
+were then recorded BY HAND, CSM-scoped only; neighbor ORPHAN routing was left report-only
+(B1A-B9D-NEIGHBOR) pending a safe per-neighbor pass or a fixed resolver. The resolver's
+read/classification (dry-run) output is sound; only its --write file-routing is unsafe. Flag for
+the orchestrator: do NOT run b9d_resolver --write until the cascade is fixed.
+
+### Pattern-flag correction (q6 / B2-PATTERN-FLAGS)
+
+customer_entitlements (104) is entity_type='catalog'. The prior q6 recommended setting
+has_single_approver=true, which per B15/Rule #12 is a contradiction (pattern flags on catalog
+masters are suppressed by the emitter; activation signoff belongs on the lifecycle gate + RACI).
+Corrected the q6 recommendation to "keep the flag FALSE" and updated B2-PATTERN-FLAGS + B1B-S2.
+No catalog write (the flag was already false; this only fixes the recommendation).
+
+### state.yaml hygiene
+
+Moved the resolved `B2-CATALOG-UX` tombstone (status `resolved_by_rule`, RESOLVED 2026-06-06
+by Rule #20: catalog_tagline + catalog_description authored on domain 30 + modules 112/113/114
+at record_status='new', user reviews in-record) out of state.yaml per the OPEN-items-only rule.
+Recorded here.
+
+### Live verification (no drift)
+
+- B13: all 4 masters classified (103 operational_workflow, 104 catalog, 105/111 operational_record).
+- B15: no pattern flag set on the catalog master 104. Clean.
+- CSM modules 112/113/114 confirmed; 114 (CSM-KNOWLEDGE) still masterless (q1 decision).
+
+### No catalog writes this pass
+
+Every remaining item is gated on a q-file b2 answer or is a destructive sign-off. No
+record_status touched (Rule #1).
+
+### JWT errors
+
+None.

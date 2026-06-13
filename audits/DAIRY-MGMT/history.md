@@ -688,3 +688,73 @@ Loader: `.tmp_deploy/2026-06-07_dairy_mgmt_state_driven_execute.ts` (gitignored)
 next_action_by: **user** (all remaining open items are user decisions, neighbor-blocked, or
 backlog). Aliases (B1A-S7) and source_domain_module_id (B1A-B10B) were already complete from the
 2026-06-05 pass and were not re-touched.
+
+---
+
+## 2026-06-13 - Audit (B9d handoff-payload realization pass)
+
+### Summary
+
+Continued from the open state.yaml worklist. The one purely agent-executable open item was
+B1A-B9D-VERIFY (B9d had never run on this domain). Ran it via
+`scripts/analytics/b9d_resolver.ts DAIRY-MGMT --dry-run` ONLY (NOT --write, per the run-safety
+note: the resolver's --write has a catalog-wide cascade defect that rewrote ~144 unrelated audit
+files and deleted q-files in a prior run). All B9d findings recorded BY HAND into DAIRY-MGMT's
+own audit files. No neighbor files touched (every ORPHAN owner is DAIRY-MGMT itself). Verified
+with git status that only DAIRY-MGMT/{state.yaml,q-DAIRY-MGMT.md,history.md} changed.
+
+### B9d classification (both directions, all 6 boundary payload tags)
+
+4 distinct (process, owner) findings, ALL classified ORPHAN, every one owned by DAIRY-MGMT (the
+domain that masters the carried entity). No ROLL-UP (no re-point needed), no MIS-TAG (every
+payload's APQC category fits dairy production: quality 4.3.x, compliance 11.2, traceability
+2.1.4.9). DAIRY-MGMT is persona-cold-start: zero domain_roles on its modules (227-230), zero
+gated lifecycle states wiring process_id for {70,170,171,556}, zero process_raci. Confirmed live.
+So each ORPHAN is real missing work with no persona, and the owning persona is itself part of the
+question (cold-start case the B9d band calls out).
+
+- ORPHAN 11.2 "Manage compliance" (pid 70): inbound handoff 355 (FSQM->DAIRY-MGMT,
+  cow_health_event.treatment_administered, payload cow_health_events).
+- ORPHAN 4.3.3 "Perform quality testing" (pid 170): inbound handoff 354 (FSQM->DAIRY-MGMT,
+  milk_quality_test.failed, payload milk_quality_tests).
+- ORPHAN 4.3.4 "Maintain production records and manage lot traceability" (pid 171): inbound
+  handoffs 353 + 955 (FOOD-TRACE->DAIRY-MGMT, bulk_milk_shipment.dispatched / milking.completed,
+  payloads bulk_milk_shipments, milkings).
+- ORPHAN 2.1.4.9 "Manage traceability data" (pid 556): inbound handoffs 957 (GRC->DAIRY-MGMT,
+  breeding_event.recorded) + 959 (FOOD-TRACE->DAIRY-MGMT, feed_ration.changed), payloads
+  breeding_events, feed_rations.
+
+### Executed (recorded by hand)
+
+- Resolved B1A-B9D-VERIFY (removed from b1a; this entry is its disposition note).
+- Added 4 durable b2 items to state.yaml: B2-B9D-OWN-70 / -170 / -171 / -556 (owner = DAIRY-MGMT;
+  modeled as b2 per the B9d contract, not b1b, since a b1b-backed q is illegal under the q-file
+  content rule, and the owner must decide who does the work). Each item is "record now + name a
+  persona once Phase E personas land, or leave off".
+- Added the 4 questions to q-DAIRY-MGMT.md as q9-q12 (plain-language, owner-decision), updated the
+  agent-map footer. They sit in the main (blocking) question list; q7/q8 stay in the Optional
+  section.
+
+### Other bands spot-verified (no change)
+
+- B13: zero unclassified masters (all 8 classified; passes).
+- B15: zero pattern flags on catalog/junction/computed masters (passes; feed_rations is catalog,
+  carries no stray flag).
+- B14: the 8 master+required rows are all universal dairy workflow entities (no statute-prefix /
+  sector binding), so required is correct.
+
+### Not executed this pass (unchanged from prior state)
+
+- All q-file decisions (B1A-S11, B2-3, B2-4, B2-6, B2-7, B2-8) remain user-owned; no a-file present.
+- b1b mirrors (B1B-S3 intra-domain relationships, B1B-S8 lifecycle states, B1B-B2..B5 cross-domain
+  mirrors blocked on neighbor payload masters, B1B-H2 gated on B2-8 approval).
+- b3 backlog (B3-1..B3-8) non-blocking.
+- No record_status flips (Rule #1); no notes written (Rule #15); no non-empty value overwritten;
+  no approved stamped.
+
+### Post-fix status
+
+next_action_by: **user**. The domain stays feedback_needed: all remaining open items are user
+decisions (q1-q12 in the q-file), neighbor-blocked b1b mirrors, b1b authoring items (relationships,
+lifecycle states), or non-blocking b3. The B9d band is now run and recorded for this domain in both
+directions.

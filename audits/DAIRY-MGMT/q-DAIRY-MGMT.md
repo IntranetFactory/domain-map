@@ -70,6 +70,50 @@ a6:
 
 ---
 
+q9: Food-safety/quality (FSQM) sends each treated-cow health event back to this domain to "manage compliance" (drug-withdrawal and treatment compliance), but no one in this domain is assigned to that work yet. How should it be handled?
+
+- a) Record it now as work this domain owns, and name who does it once this domain's roles are set up.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment you decide who handles withdrawal/treatment compliance, this step already has a named owner instead of being rediscovered later as a gap.
+
+a9:
+
+---
+
+q10: FSQM sends each milk-quality test to this domain to "perform quality testing", but no one in this domain is assigned to that work yet. How should it be handled?
+
+- a) Record it now as work this domain owns, and name who does it once roles are set up (a milk-quality / lab-tech role in the milk-quality module is the natural fit).
+- b) Leave it off the list for now.
+
+Recommended: a. Same reasoning as above: capture the owner-to-be now so the milk-quality testing step is not a silent gap.
+
+a10:
+
+---
+
+q11: Food traceability (FOOD-TRACE) sends bulk-milk shipments and milkings to this domain to "maintain production records and manage lot traceability", but no one in this domain is assigned to that work yet. How should it be handled?
+
+- a) Record it now as work this domain owns, and name who does it once roles are set up (a parlor / production-records role is the natural fit).
+- b) Leave it off the list for now.
+
+Recommended: a. Production records and lot traceability are core parlor work; capturing the owner-to-be now keeps it from being rediscovered later.
+
+a11:
+
+---
+
+q12: Governance/compliance (GRC) and food traceability send breeding events and feed rations to this domain to "manage traceability data", but no one in this domain is assigned to that work yet. How should it be handled?
+
+- a) Record it now as work this domain owns, and name who does it once roles are set up.
+- b) Leave it off the list for now.
+
+Recommended: a. Same reasoning: capture the owner-to-be now so the traceability-data step is not a silent gap.
+
+a12:
+
+---
+
 ## Optional (will not hold up the build)
 
 q7: Across the flagship herd-record and parlor vendors, several extra first-class entities recur (cow groups / pens, heat detections and pregnancy checks, bulk tanks and milk-meter readings, feed ingredients and TMR batches, somatic cell counts and withdrawal-period holds, and cow-lifecycle events like dry-offs, calvings, and culling decisions). Should I research and add the ones that hold up? (yes/no)
@@ -88,4 +132,4 @@ a8:
 
 ---
 
-<!-- agent map, ignore: q1=B1A-S11 q2=B2-3 q3=B2-4 q4=B2-6 q5=B2-8 q6=B2-7 q7=B3-1+B3-2+B3-3+B3-4+B3-5+B3-6 q8=B3-7+B3-8 | domain_id=156 -->
+<!-- agent map, ignore: q1=B1A-S11 q2=B2-3 q3=B2-4 q4=B2-6 q5=B2-8 q6=B2-7 q9=B2-B9D-OWN-70 q10=B2-B9D-OWN-170 q11=B2-B9D-OWN-171 q12=B2-B9D-OWN-556 q7=B3-1+B3-2+B3-3+B3-4+B3-5+B3-6 q8=B3-7+B3-8 | domain_id=156 -->
