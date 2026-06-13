@@ -12,7 +12,7 @@ domain_modules:
 domain_code: RE-BROKERAGE
 related_modules: [re-brok-agent-ops]
 persona: []
-created_at: 2026-06-11
+created_at: 2026-06-12
 ---
 
 # Brokerage Oversight and Commission Management

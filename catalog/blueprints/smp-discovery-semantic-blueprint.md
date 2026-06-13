@@ -12,7 +12,7 @@ domain_modules:
 domain_code: SMP
 related_modules: [apm-portfolio-registry, iga-entitlement-catalog, itam-portfolio-reporting, smp-automation, smp-optimization, smp-renewal-vendor, spend-mgmt-cards]
 persona: []
-created_at: 2026-06-11
+created_at: 2026-06-12
 ---
 
 # SMP Discovery and Catalog
@@ -76,7 +76,7 @@ flowchart TD
 | 2 | `smp_app_lifecycle_stages` | App Lifecycle Stage | App Lifecycle Stages | master | operational_workflow | - | - | required | - | `:manage` | - |
 | 3 | `smp_alerts` | SaaS Alert | SaaS Alerts | master | operational_workflow | - | - | required | - | `:manage` | - |
 | 4 | `smp_app_integrations` | SaaS App Integration | SaaS App Integrations | master | operational_workflow | - | - | required | - | `:manage` | - |
-| 5 | `smp_app_owners` | SaaS App Owner | SaaS App Owners | master | junction | - | - | required | personal_content | `:manage` | - |
+| 5 | `smp_app_owners` | SaaS App Owner | SaaS App Owners | master | junction | - | - | required | - | `:manage` | - |
 | 6 | `saas_applications` | SaaS Application | SaaS Applications | master | operational_workflow | - | - | required | - | `:manage` | - |
 | 7 | `shadow_it_apps` | Shadow IT App | Shadow IT Apps | master | operational_workflow | - | - | required | - | `:manage` | - |
 

@@ -45,18 +45,21 @@ This skill delegates all CLI mechanics to `use-semantius`. Without it, the disco
 
 ---
 
-## Check 4: target domain module is deployed in this platform
+## Check 4: at least one of the domain's modules is deployed
 
-**How to check:** query the platform's `modules` table for the module slug recorded in `spec.json`'s `domain.code`:
+**How to check:** enumerate the domain's modules by the `catalog_module_code` domain axis (provenance, core v0.1.2), reading the module codes from `spec.modules[].code`. This survives a renamed `module_slug`; the slug query is a fallback only for pre-provenance modules whose `catalog_module_code` is still `''` (empty, never NULL).
 
 ```bash
-semantius call crud postgrestRequest '{"method":"GET","path":"/modules?module_slug=eq.<slug>&select=id,module_slug,module_name"}'
+# primary: the domain axis
+semantius call crud postgrestRequest '{"method":"GET","path":"/modules?catalog_module_code=in.(<spec.modules[].code>)&select=id,module_slug,module_name,catalog_module_code"}'
+# fallback for pre-provenance modules (catalog_module_code == '')
+semantius call crud postgrestRequest '{"method":"GET","path":"/modules?module_slug=in.(<slugs>)&select=id,module_slug,module_name,catalog_module_code"}'
 ```
 
-The slug is derived from the domain code, lowercased and underscored (e.g. `ATS` -> `ats`, `WORK-MGMT` -> `work_mgmt`). Read `spec.domain.code` from `spec.json` as the canonical source.
+The present `module_id`s form the **domain slice** that scopes ladder step 2 (see [discovery.md](discovery.md)).
 
-- If the query returns one row, record `module_id` and `module_slug` in `state.yaml` under `deployment` and proceed.
-- If the query returns zero rows, halt with the error template below, substituting the configured domain at runtime:
+- If at least one module is present, record the present `module_id`s in `state.yaml` under `deployment` and proceed. A spec module that is absent is a deployment choice, not a failure.
+- If **no** module is present, halt with the error template below, substituting the configured domain at runtime:
 
 > The `<spec.domain.name>` domain is not deployed in your platform. Deploy the domain blueprint first:
 >
@@ -66,7 +69,7 @@ The slug is derived from the domain code, lowercased and underscored (e.g. `ATS`
 >
 > Re-run this skill once the module is live.
 
-- If the query returns multiple rows (shouldn't happen — `module_slug` is unique), surface all rows and halt with a "catalog integrity issue" message; the user investigates.
+- Multiple rows are **expected** (a domain has several modules); each present module joins the domain slice. `catalog_module_code` is non-unique by design (clone-and-customize), so two modules sharing a code is not an error.
 
 ---
 
@@ -76,8 +79,7 @@ Record the deployment metadata in `state.yaml`:
 
 ```yaml
 deployment:
-  module_slug: <from check 4>
-  module_id: <from check 4>
+  module_ids: [<present module_ids from check 4>]   # the domain slice
   org: <from check 3 getCurrentUser response>
   bootstrap_passed_at: <ISO timestamp>
 ```

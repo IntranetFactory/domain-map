@@ -15,7 +15,7 @@ domain_modules:
 domain_code: ATS
 related_modules: [ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hiring-starter, lms-compliance-training, lms-ct-gdpr, onb-journey-mgmt, pa-workforce-metrics, tlnt-intel-marketplace, tlnt-intel-mobility, vms-worker-sourcing]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-RECRUITER]
-created_at: 2026-06-11
+created_at: 2026-06-12
 ---
 
 # Candidate CRM
@@ -128,7 +128,7 @@ flowchart TD
 | 7 | `candidates` | Candidate | Candidates | master | operational_workflow | - | - | required | personal_content | `:manage` | - |
 | 8 | `data_subject_requests` | Data Subject Request | Data Subject Requests | master | operational_workflow | - | - | optional | personal_content | `:manage` | - |
 | 9 | `recruiter_interactions` | Recruiter Interaction | Recruiter Interactions | master | operational_record | - | - | required | personal_content | `:manage` | - |
-| 10 | `recruiting_event_attendances` | Recruiting Event Attendance | Recruiting Event Attendances | master | junction | - | - | required | personal_content | `:manage` | - |
+| 10 | `recruiting_event_attendances` | Recruiting Event Attendance | Recruiting Event Attendances | master | junction | - | - | required | - | `:manage` | - |
 | 11 | `recruitment_agencies` | Recruitment Agency | Recruitment Agencies | master | operational_workflow | - | - | required | - | `:manage` | - |
 | 12 | `recruitment_events` | Recruitment Event | Recruitment Events | master | operational_workflow | - | - | required | - | `:manage` | - |
 | 13 | `recruitment_sources` | Recruitment Source | Recruitment Sources | master | catalog | - | - | required | - | `:admin` | - |

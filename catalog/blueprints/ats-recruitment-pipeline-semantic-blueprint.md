@@ -15,7 +15,7 @@ domain_modules:
 domain_code: ATS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-referrals, ats-talent-pools, ben-enrollment, comp-benchmarking, comp-planning, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hiring-starter, iga-access-request, iwms-location-master, lms-compliance-training, lms-ct-gdpr, onb-journey-mgmt, psa-resource-mgmt, skills-mgmt-profile, swp-demand-forecast, tlnt-intel-mobility, vms-worker-sourcing]
 persona: [HIRING-MANAGER, HR-BUSINESS-PARTNER, HR-HRIS-ADMIN, HR-ORG-DESIGN-ANALYST, LEGAL-COMPLIANCE-SPECIALIST, PEOPLE-MANAGER, RECRUITING-MANAGER, RECRUITING-RECRUITER, RECRUITING-SOURCER]
-created_at: 2026-06-11
+created_at: 2026-06-12
 ---
 
 # Recruitment Pipeline
@@ -164,7 +164,7 @@ flowchart TD
 | 14 | `requisition_approvals` | Requisition Approval | Requisition Approvals | master | operational_workflow | - | - | required | single_approver | `:manage` | - |
 | 15 | `voluntary_self_identifications` | Voluntary Self-Identification | Voluntary Self-Identifications | master | operational_record | - | - | optional | personal_content, submit_lock | `:manage` | - |
 | 16 | `candidates` | Candidate | Candidates | embedded_master | operational_workflow | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
-| 17 | `job_profiles` | Job Profile | Job Profiles | embedded_master | catalog | `hcm-org-positions` | Organisation and Position Management | required | single_approver | `:admin` | - |
+| 17 | `job_profiles` | Job Profile | Job Profiles | embedded_master | catalog | `hcm-org-positions` | Organisation and Position Management | required | - | `:admin` | - |
 | 18 | `locations` | Location | Locations | embedded_master | catalog | `iwms-location-master` | Location and Property Master | optional | - | `:admin` | - |
 | 19 | `org_units` | Org Unit | Org Units | embedded_master | operational_workflow | `hcm-org-positions` | Organisation and Position Management | optional | - | `:manage` | - |
 | 20 | `hcm_positions` | Position | Positions | embedded_master | operational_workflow | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | `:manage` | - |
@@ -329,7 +329,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | HCM-ORG-POSITIONS | COMP-MGMT | COMP-PLANNING | `hcm_position.approved_for_creation` | `approved_for_creation` _(lifecycle)_ | `hcm_positions` | event_stream | low | Approved position carries grade/band, anchoring offer-comp generation. |
 | HCM-ORG-POSITIONS | COMP-MGMT | COMP-BENCHMARKING | `job_profile.published` | _(state_change)_ | `job_profiles` | event_stream | low | Job profile links to salary bands; COMP-MGMT mapping authoritative. |
 | ATS-CANDIDATE-CRM | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
-| HCM-ORG-POSITIONS | FIN | _(domain-level)_ | `org_unit.created` | _(state_change)_ | `org_units` | api_call | medium | New org unit usually maps to cost-center; FIN must reflect the structure for budgeting and labor allocation. |
+| HCM-ORG-POSITIONS | FIN | _(domain-level)_ | `org_unit.created` | _(state_change)_ | `org_units` | api_call | medium | New org unit usually maps to cost-center; ERP-FIN must reflect the structure for budgeting and labor allocation. |
 | HCM-ORG-POSITIONS | PSA | PSA-RESOURCE-MGMT | `job_profile.updated` | _(state_change)_ | `job_profiles` | event_stream | low | Job profile updated (competencies, level, responsibilities). PSA revalidates the resource pool's skill matches and surfaces gaps via existing resource_skill_inventory.gap_identified signal. |
 | HCM-ORG-POSITIONS | PSA | PSA-RESOURCE-MGMT | `job_profile.retired` | _(state_change)_ | `job_profiles` | event_stream | low | Job profile retired. PSA blocks new assignments to the role and surfaces a migration list for any existing project_assignments still referencing it. |
 | HCM-ORG-POSITIONS | PSA | PSA-RESOURCE-MGMT | `job_profile.activated` | _(state_change)_ | `job_profiles` | event_stream | low | Job profile activated for production. PSA makes the role assignable on new project_assignments and project_resource_allocations. |

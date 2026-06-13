@@ -15,7 +15,7 @@ domain_modules:
 domain_code: WORK-MGMT
 related_modules: [crm-pipeline-mgt, emp-exp-action-planning, intgov-governance, pm-discovery, pm-roadmap-delivery, psa-project-delivery, psa-resource-mgmt, sem-execution-tracking, spm-demand-mgmt, spm-portfolio-planning, spm-resource-capacity, work-mgmt-goals-okr, work-mgmt-intake, wsc-channels-conversations]
 persona: [OPERATIONS-WORK-CONTRIBUTOR, OPERATIONS-WORK-PROGRAM-LEAD]
-created_at: 2026-06-11
+created_at: 2026-06-12
 ---
 
 # Task and Project Execution
@@ -199,7 +199,7 @@ flowchart TD
 | 14 | `work_dependencies` | Work Dependency | Work Dependencies | master | junction | - | - | required | - | `:manage` | - |
 | 15 | `work_items` | Work Item | Work Items | master | operational_workflow | - | - | required | - | `:manage` | - |
 | 16 | `work_projects` | Work Project | Work Projects | master | operational_workflow | - | - | required | submit_lock | `:manage` | - |
-| 17 | `work_user_workloads` | Workload | Workloads | master | computed | - | - | required | personal_content | read-only | - |
+| 17 | `work_user_workloads` | Workload | Workloads | master | computed | - | - | required | - | read-only | - |
 | 18 | `business_value_assessments` | Business Value Assessment | Business Value Assessments | consumer | operational_workflow | `spm-demand-mgmt` | Demand and Value Management | optional | submit_lock, single_approver | `:manage` | - |
 | 19 | `action_plans` | Engagement Action Plan | Engagement Action Plans | consumer | operational_workflow | `emp-exp-action-planning` | Action Planning | optional | - | `:manage` | - |
 | 20 | `feature_requests` | Feature Request | Feature Requests | consumer | operational_workflow | `pm-discovery` | Product Discovery and Prioritization | optional | - | `:manage` | - |

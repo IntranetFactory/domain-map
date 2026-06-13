@@ -12,7 +12,7 @@ domain_modules:
 domain_code: ATS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, comp-statements, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hiring-starter, onb-journey-mgmt, vms-worker-sourcing]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-MANAGER, RECRUITING-RECRUITER]
-created_at: 2026-06-11
+created_at: 2026-06-12
 ---
 
 # Offers
@@ -76,7 +76,7 @@ flowchart TD
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `offer_approvals` | Offer Approval | Offer Approvals | master | operational_workflow | - | - | required | single_approver | `:manage` | - |
 | 2 | `offer_letter_documents` | Offer Letter Document | Offer Letter Documents | master | operational_workflow | - | - | required | personal_content | `:manage` | - |
-| 3 | `offer_letter_templates` | Offer Letter Template | Offer Letter Templates | master | catalog | - | - | required | submit_lock, single_approver | `:admin` | - |
+| 3 | `offer_letter_templates` | Offer Letter Template | Offer Letter Templates | master | catalog | - | - | required | - | `:admin` | - |
 | 4 | `offer_versions` | Offer Version | Offer Versions | master | operational_workflow | - | - | required | personal_content | `:manage` | - |
 | 5 | `job_offers` | Offer | Offers | master | operational_workflow | - | - | required | personal_content, single_approver | `:manage` | - |
 | 6 | `job_applications` | Application | Applications | embedded_master | operational_workflow | `ats-recruitment-pipeline` | Recruitment Pipeline | required | personal_content | `:manage` | - |

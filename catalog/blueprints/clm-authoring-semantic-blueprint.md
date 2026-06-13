@@ -15,7 +15,7 @@ domain_modules:
 domain_code: CLM
 related_modules: [clm-negotiation, clm-obligation-mgmt, clm-renewal, clm-repository, cpq-approvals-contracts]
 persona: [CONTRACT-OPS-MANAGER, CONTRACT-OPS-SPECIALIST, LEGAL-COUNSEL]
-created_at: 2026-06-11
+created_at: 2026-06-12
 ---
 
 # Contract Authoring
@@ -67,8 +67,8 @@ flowchart TD
 | # | data_object | singular | plural | role | entity_type | mastered in | mastered label | necessity | pattern flags | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `clause_libraries` | Clause Library | Clause Libraries | master | catalog | - | - | optional | - | `:admin` | - |
-| 2 | `contract_clauses` | Contract Clause | Contract Clauses | master | catalog | - | - | required | submit_lock | `:admin` | - |
-| 3 | `contract_templates` | Contract Template | Contract Templates | master | catalog | - | - | required | submit_lock | `:admin` | - |
+| 2 | `contract_clauses` | Contract Clause | Contract Clauses | master | catalog | - | - | required | - | `:admin` | - |
+| 3 | `contract_templates` | Contract Template | Contract Templates | master | catalog | - | - | required | - | `:admin` | - |
 | 4 | `contract_drafts` | CPQ Contract Draft | CPQ Contract Drafts | consumer | operational_workflow | `cpq-approvals-contracts` | Approvals and Contract Drafts | optional | - | `:manage` | - |
 | 5 | `sourcing_events` | Sourcing Event | Sourcing Events | consumer | operational_workflow | - | - | required | - | `:manage` | - |
 

@@ -12,7 +12,7 @@ domain_modules:
 domain_code: ATS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ben-enrollment, hcm-core-worker, hcm-lifecycle-workflows, onb-journey-mgmt]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-RECRUITER]
-created_at: 2026-06-11
+created_at: 2026-06-12
 ---
 
 # Talent Pools
@@ -74,7 +74,7 @@ flowchart TD
 | 1 | `candidate_tag_assignments` | Candidate Tag Assignment | Candidate Tag Assignments | master | junction | - | - | required | - | `:admin` | - |
 | 2 | `candidate_tags` | Candidate Tag | Candidate Tags | master | catalog | - | - | required | - | `:admin` | - |
 | 3 | `recruiter_saved_searches` | Recruiter Saved Search | Recruiter Saved Searches | master | catalog | - | - | optional | - | `:admin` | - |
-| 4 | `talent_pool_memberships` | Talent Pool Membership | Talent Pool Memberships | master | junction | - | - | required | personal_content | `:manage` | - |
+| 4 | `talent_pool_memberships` | Talent Pool Membership | Talent Pool Memberships | master | junction | - | - | required | - | `:manage` | - |
 | 5 | `talent_pools` | Talent Pool | Talent Pools | master | operational_workflow | - | - | required | - | `:manage` | - |
 | 6 | `talent_segments` | Talent Segment | Talent Segments | master | catalog | - | - | required | - | `:admin` | - |
 | 7 | `candidates` | Candidate | Candidates | embedded_master | operational_workflow | `ats-candidate-crm` | Candidate CRM | required | personal_content | `:manage` | - |
