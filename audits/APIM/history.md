@@ -431,3 +431,9 @@ None. The fresh evidence CONFIRMED all four pattern flags and the 4-module shape
 - [audits/APIM/history.md](history.md) (this section)
 
 No DB writes. No `record_status` stamping. No JWT errors (read-only verification only).
+
+## 2026-06-13 — Agent pass (B9d verification)
+
+Ran the single agent-actionable open item, B1A-B9D-VERIFY (B9d had never run on APIM since the band was added 2026-06-09). Executed `scripts/analytics/b9d_resolver.ts APIM --dry-run` over all 8 cross-domain handoff payloads in BOTH directions (7 outbound: 747 VSDP / 748 IPAAS / 749 OBS / 750 SUB-MGMT / 751 IGA / 752 TEST-MGMT / 797 GRC; 1 inbound: 767 IPAAS->APIM `integration_connectors`). Verdicts: 1 RESOLVED (`api_deployments` pid 52 -> VSDP), 7 UNOWNED (no-master). Zero ORPHAN / MIS-TAG / ROLL-UP; resolver reported "INTENDED OWNER-FILE EDITS (none)" and no destructive proposals, so nothing additive to author into any neighbor and nothing destructive to surface. The 7 UNOWNED-no-master findings are a direct symptom of APIM being unbuilt (masters live only in the legacy `domain_data_objects` rollup; no `domain_module_data_objects` master row exists), and auto-resolve once the module set lands (B1B-S1), so they are subsumed by B1A-BUILD / B1B-S1 and get no separate state item. B1A-B9D-VERIFY resolved and removed from `state.yaml`.
+
+No other corrective-additive work was executable: the 7 masters already carry singular/plural labels and classified `entity_type` (456/457/458/459/462 operational_workflow, 460 computed, 461 catalog); pattern-flag flips are B2-S2, regulations are B2-S3, and the whole build is gated on B2-S1, all user decisions. `next_action_by` flips agent -> user; status stays `feedback_needed`. q-APIM.md re-verified current, unchanged. No DB writes, no `record_status` stamping, no JWT errors (read-only verification only).
