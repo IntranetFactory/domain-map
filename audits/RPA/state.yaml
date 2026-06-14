@@ -127,6 +127,12 @@ b2:
       of the orchestrator. Both shapes are valid. Folding keeps the module count at 2 (still
       satisfies the M2 >=2 floor); splitting is closer to security-conscious deployments. Choice may
       be informed by whether SECRETS-MGMT (B3-S2) gets promoted as a sibling domain.
+    evidence: |
+      UiPath separates its credential store (Assets) into a surface distinct from the Orchestrator,
+      which maps to the dedicated RPA-BOT-IDENTITY module in option (a); Automation Anywhere instead
+      keeps credentials inside the Control Room (alongside orchestration), which maps to the folded
+      option (b). Blue Prism's vault is likewise embedded in its central server rather than a separate
+      surface, reinforcing that both packaging shapes ship in flagship products.
 
   - id: B2-S2
     summary: "Resolve `rpa_activity_logs` alias collision with AUDIT's `audit_findings`"

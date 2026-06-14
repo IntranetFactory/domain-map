@@ -114,6 +114,14 @@ b2:
       - "alternative split (specify)"
     why: "Direct dependency on B2-1 and on B2-6 / B2-7."
     extra_default_modules: [COLLAB-GOV-INVENTORY, COLLAB-GOV-LIFECYCLE, COLLAB-GOV-PERMS, COLLAB-GOV-STALE]
+    evidence: >
+      The flagship suites package into a handful of functional areas, not one product per
+      capability: AvePoint Confidence Platform and Syskit Point bundle tenant inventory,
+      lifecycle, and permission/access-review governance; ShareGate groups lifecycle automation
+      with permissions audit (Protect); Orchestry and ProvisionPoint 365 carry provisioning and
+      archive lifecycle as a distinct area, matching the Inventory / Lifecycle / Permissions /
+      Stale split. The same vendors sell migration (ShareGate Migrate, AvePoint Fly) and backup
+      as separate products, so those fall outside this split (handled by B2-6 / B2-7).
 
   - id: B2-6
     summary: "COLLAB-GOV-BACKUP capability vs SAAS-BACKUP candidate domain (queued mention_count=1)."

@@ -127,6 +127,7 @@ b2:
     question: "How should PSA's relationship to SUB-MGMT-mastered revenue_recognition_records be modeled?"
     options: ["(a) PSA stays contributor; PATCH state 403 domain_module_id to a SUB-MGMT module (or NULL); PATCH tool 1035 to compute with NULL data_object", "(b) PSA co-masters the project-revenue slice; INSERT second master DMDO row on module 89 + slice decomposition recorded here", "(c) Leave as-is and accept wrong-prefix permission materialization"]
     why: "Architectural intent question. The audit cannot decide whether PSA materializing the workflow on a foreign master was intent or mistake at original load time."
+    evidence: "Flagship vendor packaging puts the PSA on the contributor side of this split: Kantata aggregates project data for ASC 606 with no recognition engine of its own, while Certinia, NetSuite OpenAir, and Deltek feed performance-obligation data from the PSA into a separate revenue/billing engine (Certinia Revenue Cloud, NetSuite ERP rev-rec, Deltek financials) that masters the recognition record. None has the project-delivery module own the recognition state machine, supporting option (a)."
 
   - id: B2-S4
     summary: "Handling for inbound handoffs 787 + 515 with NULL target_module + no PSA DMDO (carry from 2026-05-30)."

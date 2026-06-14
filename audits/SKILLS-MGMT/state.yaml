@@ -148,6 +148,8 @@ b2:
       - "Hold all of B1A-M1 / B1A-M2 / split decision until Bucket 3 is vetted"
     why: |
       The split decision is informed by which speculative entities land. Has a Bucket 3 dependency.
+    evidence: |
+      The specialist vendors package taxonomy versioning as a release surface on the same ontology product, not as a separately bounded module: Lightcast Open Skills ships monthly versions behind a /versions/{version} API on the one taxonomy, TechWolf exposes taxonomy snapshots inside its Skills Engine, and 365Talents pins profiles to a release of the same skills platform. None carve versioning out as its own module, which supports keeping the two-module shape and deferring the split until B3-1 / B3-7 / B3-8 are vetted.
 
   - id: B2-6
     summary: Alias gap on the remaining 4 bare-ontology masters.

@@ -13,7 +13,7 @@ q1: (answer this first) How should ESG and Sustainability be split into modules 
 - b) Three modules: same as (a) but fold Performance Management into Disclosure and Reporting.
 - c) Five modules: same as (a) plus a separate Product Footprint module, if the product-carbon-footprint candidate domain does not get its own home.
 
-Recommended: a. The four-module shape matches how the regulated ESG market is organized (carbon-accounting-first versus disclosure-first vendors both fit), and keeps each area ownable. This is the blocking decision: it unblocks the whole build (modules, capabilities, the new compliance and carbon entities, lifecycle states, pattern flags, and handoff wiring all cascade from it).
+Recommended: a. The flagship vendors package this market along all four splits: Watershed and Persefoni lead with carbon accounting (emissions, factors, calculation runs), Workiva and Diligent lead with disclosure and reporting (CSRD/ISSB filings, assurance, taxonomies), while Sphera, IBM Envizi, and Salesforce Net Zero Cloud carry both plus a distinct target/initiative performance layer; supplier sustainability is a standalone packaged area for EcoVadis (supplier ESG ratings as a pure-play) and Sphera Supply Chain, which is why the four-module split, not a three-fold collapse, mirrors the market. This is the blocking decision: modules, capabilities, the new compliance and carbon entities, lifecycle states, pattern flags, and handoff wiring all cascade from it.
 
 a1:
 

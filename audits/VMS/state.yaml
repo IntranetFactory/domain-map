@@ -59,6 +59,11 @@ b2:
       Only the user can pick. The modularization placed 187 as master in 315 per its
       description; this does not pre-judge the rename. Gates B1B-B1 and the 187 lifecycle-state
       portion of the (now-resolved) B12 work, plus all Bucket 3.
+    evidence: |
+      Every flagship VMS vendor (Workday VNDLY, SAP Fieldglass, Beeline, Magnit, Utmost) masters
+      a staffing-requisition / SOW entity as the start of the sourcing cycle and none masters
+      preventive maintenance (an Enterprise Asset Management concern), so entity 187 is a staffing
+      requisition that was mis-named; option (a) rename-in-place matches that vendor packaging.
 
   - id: B2-2
     summary: Approve catalog_tagline + catalog_description wording for the VMS domain row.
@@ -104,6 +109,13 @@ b2:
     why: |
       Module codes are load-bearing. The default is already built and now has handoffs, roles,
       and system skills attached to 315 / 316; changing it now is a migration, not a fresh build.
+    evidence: |
+      The flagship VMS vendors (Workday VNDLY, SAP Fieldglass, Beeline, Magnit, Utmost) package
+      this market in two halves, sourcing / pre-engagement (requisitions, supplier distribution,
+      candidate submissions, rate cards, worker records) and time-and-spend (timesheets, approvals,
+      invoices, AP reconciliation), which is exactly the 315 Worker Sourcing / 316 Time-and-Invoicing
+      seam; the 3-way alternative would fracture the suppliers-and-rates concern those vendors keep
+      inside sourcing.
 
   - id: B2-5
     summary: Approve business_logic wording on the VMS domain row.

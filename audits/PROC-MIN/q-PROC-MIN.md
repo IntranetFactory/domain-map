@@ -27,7 +27,7 @@ q2: Which capability set should Process Mining adopt?
 - c) The seven minus task mining (route task mining to its own candidate domain or a sub-module later).
 - d) Rename the set to align with the APQC Process Improvement vocabulary.
 
-Recommended: a. The seven capabilities cover the loaded masters cleanly without committing to task mining, which is still an open domain-versus-sub-module question. The capability count also drives the module count in q1, so resolve the two together.
+Recommended: a. The flagship process-mining vendors package task mining as a distinct product rather than as a process-discovery capability: Celonis ships Task Mining separately from its core EMS process mining, UiPath ships UiPath Task Mining alongside (not inside) UiPath Process Mining, and Skan.ai is a task-mining pure-play, so the seven system-level capabilities belong to PROC-MIN while task mining stays out as its own domain-versus-sub-module question. The capability count also drives the module count in q1, so resolve the two together.
 
 a2:
 

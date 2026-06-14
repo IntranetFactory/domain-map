@@ -100,7 +100,7 @@ Read is uniformly `<module>:read`. Which baseline governs an entity's WRITES is 
 | `catalog` | `<module>:admin` |
 | `junction` | `<module>:admin` if a linked endpoint is `catalog`, else `<module>:manage` |
 | `computed` | none (read-only) |
-| `unclassified` | `<module>:manage`, flagged pending (graceful; the hard check is audit band B13) |
+| `unclassified` | `<module>:manage`, flagged pending — defense-in-depth only: the emitter HARD-fails the module (B13 gate) before shipping this tier, so a real 3.0 file never carries it |
 
 No new permission is minted: `:manage` and `:admin` already exist per module, so `entity_type` only selects which existing baseline tier applies. The M6 generator guard suppresses pattern-flag overrides on `catalog` / `junction` / `computed` masters.
 

@@ -78,6 +78,13 @@ b2:
       - "b, migrate both to CORP-CARD-PROGRAM after promotion (module 192 retires or becomes thin consumer)"
       - "c, split (keep corporate_cards in EXPENSE, migrate card_transactions to CORP-CARD-PROGRAM)"
     why: "Architectural call gated on candidate-domain triage. Bucket 3 dependency on CORP-CARD-PROGRAM promotion (_missing-domains.md)."
+    evidence: >
+      Bundled spend platforms (Brex, Ramp, Mesh, Airwallex) master both card issuance and expense reporting in one
+      product, so keeping corporate_cards (212) + card_transactions (213) in EXPENSE matches a real packaging; the pure
+      issuance-infrastructure vendors (Marqeta, Stripe Issuing) sit a layer below (Ramp issues its cards through Stripe)
+      and are the separable CORP-CARD-PROGRAM market a later migration could carve out. Pure-play expense vendors (Concur,
+      Expensify, Workday) only consume the card feed, so the real axis is master-vs-consume; mastering both now (already
+      isolated in module 192) keeps any future migration non-destructive. Supports option (a).
 
   - id: B2-S3
     summary: "Does EXPENSE own travel_bookings (215), or should it migrate to TRAVEL-MGMT?"

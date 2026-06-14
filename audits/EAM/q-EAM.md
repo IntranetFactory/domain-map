@@ -11,7 +11,7 @@ q1: (answer this first) How should Enterprise Asset Management be split into mod
 - b) Three modules: same as (a) but pull PM planning out into its own EAM-PM-PLANNING surface, separating the planning of maintenance from its execution.
 - c) Other shape (you propose it).
 
-Recommended: a. The two-module split is the minimal shape that satisfies the floor for six capabilities and unblocks the build today. This choice drives the module layout, the capability links, the lifecycle attribution, and the module FK on every EAM handoff, so it unlocks everything below it.
+Recommended: a. The flagship CMMS/EAM vendors co-locate PM planning with work-order execution rather than splitting it out: IBM Maximo files both PM schedules and work orders under Work Management, Hexagon EAM and IFS Cloud EAM bundle PM and work orders in one maintenance-management area, and SAP PM keeps maintenance plans and maintenance orders together inside Plant Maintenance, while all of them carry the asset register as a separate surface (AVEVA APM sits adjacent on the reliability side and feeds the CMMS). That packaging maps to two modules, EAM-ASSETS and EAM-MAINTENANCE-OPS, and gives no vendor support for pulling PM planning into a third module as option (b) proposes.
 
 a1:
 

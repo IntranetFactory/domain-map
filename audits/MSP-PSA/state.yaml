@@ -250,6 +250,11 @@ b2:
       msp_time_entries, (c) ACCEPT DISPATCH 140 as a contributor-only module and waive M1.
     options: ["promote_msp_dispatch_schedules_master", "demote_dispatch_to_starter", "waive_m1"]
     why: Architectural intent + Phase 0 verification choice. Flagship vendor evidence (ConnectWise Dispatch, Autotask LiveLinks, Halo Dispatch) supports (a) but the user owns the call.
+    evidence: >-
+      ConnectWise Dispatch, Autotask, and Halo all model the dispatch schedule / board
+      as a first-class entity the dispatcher owns, so promoting a msp_dispatch_schedules
+      master (option a) packages the dispatch axis the way every flagship vendor does and
+      cures the M1 no-master rule on DISPATCH 140.
 
 # NOTE on B2-S4: RETIRED. The skill 85 retire-vs-repurpose question is moot under the
 # 2026-06-06 per-domain-skill-restoration model (FULL modules carry no skill; domain keeps

@@ -36,7 +36,7 @@ q3: How should vehicle inspections be scoped, given the overlap with the telemat
 - b) Keep both kinds unified here with a kind discriminator.
 - c) Move all inspections to telematics.
 
-Recommended: b. The data shape is identical for both kinds, so one record with a discriminator is simplest. This is a coordinated call with the telematics audit, so resolving it here also settles their open item.
+Recommended: b. Fleetio, the pure-play fleet-ops and maintenance specialist, packages both DVIR (driver pre/post-trip) and PMI (mechanic periodic) as one inspection record that flows into work orders, while the telematics and ELD vendors (Motive with the strongest DVIR posture, plus Samsara, Geotab, and Verizon Connect) emit DVIR inside the driver-app and ELD workflow but never own the mechanic PMI side, so option (c) has no vendor backing. Keeping both unified here with a kind discriminator mirrors the Fleetio specialist shape rather than carving DVIR out to telematics. This is a coordinated call with the telematics audit, so resolving it here also settles their open item.
 
 a3:
 

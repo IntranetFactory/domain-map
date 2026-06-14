@@ -13,7 +13,7 @@ q1: (answer this first) How should Subscription Management be split into modules
 - b) Split into three to five modules under Subscription Management (for example a separate Usage Metering module and a separate Revenue Recognition module), rebinding the capabilities accordingly.
 - c) Spin Usage Metering and Revenue Recognition out as their own separate domains, leaving Subscription Management focused on the subscription lifecycle and billing.
 
-Recommended: a. The two-module shape is the minimal build that ships today; (b) and (c) only pay off once the metering and rev-rec objects justify standalone surfaces. This choice drives the persona shape, the module-level roles and permissions, and the rebinding of capabilities below it, so it unlocks the rest of the build.
+Recommended: a. The flagship subscription-billing suites (Stripe Billing, Zuora, Chargebee, Recurly) package subscription lifecycle and billing as one integrated product, which is the two-module shape; metering (Metronome, Orb, Lago) and revenue recognition (Maxio SaaSOptics, RightRev) are separate point-solution markets that bolt on rather than force an internal split. So (b) splitting into 3 to 5 modules, and (c) promoting metering and rev-rec to standalone domains, only follow the vendor packaging once those objects justify their own deployable surfaces; today they sit as capabilities inside Subscriptions.
 
 a1:
 

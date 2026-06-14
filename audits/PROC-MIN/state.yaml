@@ -156,6 +156,7 @@ b2:
       - Drop task-mining (route to TASK-MINING candidate domain or PROC-MIN-TASK-MINING sub-module)
       - Rename to align with APQC PCF Process Improvement (10047 / 10048 / 10049)
     why: Capability vocabulary is editorial. Rule #14 ties module count to capability count, so the capability list informs B2-MODULARIZATION; the two should resolve together.
+    evidence: "The flagship process-mining vendors package task mining as a distinct product, not as a process-discovery capability: Celonis ships Task Mining separately from core EMS process mining, UiPath ships UiPath Task Mining alongside (not inside) UiPath Process Mining, and Skan.ai is a task-mining pure-play. This supports adopting the seven system-level capabilities for PROC-MIN and keeping task mining out as its own domain-versus-sub-module question."
 
   - id: B2-NAMING-RULES
     summary: business_rules_extracted naming arbitration; only adjective-trailing master in the catalog

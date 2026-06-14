@@ -256,6 +256,12 @@ b2:
     why: |
       Has a Bucket 3 dependency: if option (b), b3 #6 (lp_capital_call_notices cross-reference)
       reshapes against the new domain.
+    evidence: |
+      Vendor packaging splits along GP-vs-LP: the GP-side suites Allvue and eFront bundle LP
+      reporting inside the portfolio-monitoring domain, while the LP-analytics products Chronograph
+      and Cobalt LP run it as a separate LP-side platform. Keeping lp_quarterly_reports in PORT-MONIT
+      (a GP-side monitoring domain) mirrors the Allvue/eFront shape; the split (b) follows the
+      Chronograph/Cobalt LP shape but is a destructive restructure.
 
   - id: B2-5-ESG-PROMOTION
     summary: Promote PORTMONIT-ESG-DIVERSITY-TRACKING capability to a cross-cutting capability shared with ESG (21). DESTRUCTIVE if rename (overwrite of capability code/name).

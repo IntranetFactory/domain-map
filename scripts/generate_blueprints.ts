@@ -1030,19 +1030,24 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   // domain map for realization details.
 
   // M5 / M6 emit-time soft annotations (Policy 1: warn, never throw). Surface classification
-  // violations without bricking the corpus; the hard checks live in audit bands B12 / B13.
+  // violations without bricking the corpus; the M5 / M6 hard checks live in audit band B12.
+  // entity_type is the exception: it is now an architect/analyst-authored field, so a missing
+  // value is an authoring defect, not a soft degrade. It is a HARD emit gate (B13, thrown below):
+  // the module fails and emits no file rather than producing an invalid `unclassified` 3.0 blueprint.
   {
     const lifecycleObjIds = new Set<number>((lifecycleRows ?? []).map((s: any) => s.data_object_id as number));
     const modCodes = modules.map((m) => m.domain_module_code).join("+");
+    const unclassified: string[] = [];
     for (const r of scopeRows) {
       const o = r.data_object;
       const et = o.entity_type;
-      // 3.0 acceptance: a blueprint_version 3.0 file MUST NOT carry `unclassified` in §3 (it is the
-      // platform's un-set default, never an authored value). Warn (Policy 1) on any in-scope row
-      // whose source `data_objects.entity_type` is unset; the fix is to classify the data_object
-      // upstream so the emitter carries a real class forward (it never invents one). Hard gate: B13.
+      // 3.0 acceptance + B13 hard gate: a blueprint_version 3.0 file MUST NOT carry `unclassified`
+      // in §3 (it is the platform's un-set default, never an authored value). Collect every in-scope
+      // row whose source `data_objects.entity_type` is unset and throw after the loop, so one run
+      // reports all offenders at once. The fix is to classify the data_object upstream; the emitter
+      // never invents a class.
       if (!et || et === "unclassified") {
-        console.warn(`  ⚠ 3.0: \`${o.data_object_name}\` has no entity_type; emits \`unclassified\`, invalid for blueprint_version ${BLUEPRINT_VERSION} (${modCodes})`);
+        unclassified.push(o.data_object_name);
       }
       if (r.role !== "master") continue;
       // M5: an operational_workflow master must carry >=1 lifecycle state.
@@ -1054,6 +1059,13 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
       if (hasFlag && (et === "catalog" || et === "junction" || et === "computed")) {
         console.warn(`  ⚠ M6: \`${o.data_object_name}\` is ${et} but carries a pattern flag (overrides suppressed) (${modCodes})`);
       }
+    }
+    // B13 hard gate: refuse to emit a 3.0 blueprint that would carry any unclassified entity_type.
+    // entity_type is architect/analyst-authored; an unset value must be fixed upstream, not emitted.
+    if (unclassified.length > 0) {
+      throw new Error(
+        `B13: ${unclassified.length} data_object(s) missing entity_type (classify upstream; emitter never invents one): ${unclassified.join(", ")}`,
+      );
     }
   }
 
@@ -1106,8 +1118,10 @@ type BusinessRule = { name: string; dataObject: string; sourceFlag: string; inte
 // Read is uniformly `:read`; the write tier selects which existing module baseline governs
 // mutations. No new permission is minted: `:manage` / `:admin` already exist per module.
 // `endpointEntityTypes` matters only for junctions (admin when a linked endpoint is a catalog).
-// `unclassified` (and null / unknown) degrade gracefully to `:manage`, flagged pending (m2):
-// the emitter never aborts; the hard classification check lives in audit band B13.
+// `unclassified` (and null / unknown) map to `:manage`, flagged pending (m2). This is now
+// defense-in-depth only: the emitter HARD-aborts any module carrying an unclassified entity_type
+// (B13 gate in emitBlueprint), so a real 3.0 file never ships a pending tier from a missing class.
+// The graceful default is kept so non-emit callers (e.g. audits) can derive a tier without crashing.
 type WriteTier = { read: string; write: string | null; pending: boolean };
 
 function deriveWriteTier(entityType: string | null | undefined, endpointEntityTypes: string[] = []): WriteTier {
@@ -1546,9 +1560,14 @@ if (MODULE_CODE) {
     console.error(`module ${MODULE_CODE} not found in domain_modules`);
     exit(2);
   }
-  const r = await emitOneModuleBlueprint(m);
-  console.log(`${r.changed ? (CHECK ? "WOULD-CHANGE" : "wrote") : "unchanged"}  ${MODULE_CODE}  →  ${r.path}`);
-  if (CHECK && r.changed) exit(1);
+  try {
+    const r = await emitOneModuleBlueprint(m);
+    console.log(`${r.changed ? (CHECK ? "WOULD-CHANGE" : "wrote") : "unchanged"}  ${MODULE_CODE}  →  ${r.path}`);
+    if (CHECK && r.changed) exit(1);
+  } catch (e) {
+    console.error(`FAILED module ${MODULE_CODE}: ${(e as Error).message}`);
+    exit(1);
+  }
 } else if (REGEN) {
   // Refresh ONLY the blueprint files already on disk. Map each filename slug back to its
   // module; never (re)generate a file for a module that has no committed blueprint.

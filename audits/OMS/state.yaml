@@ -137,6 +137,7 @@ b2:
       - "(a) 5-8 capabilities + 4-module split (default; OMS-ORDER-ORCHESTRATION, OMS-RETURNS, OMS-STORE-PICKUP, OMS-LOCATIONS)"
       - "(b) 3 capabilities + 2-module split (OMS-CORE-ORCHESTRATION, OMS-RETURNS-AND-PICKUP)"
       - "(c) 8+ capabilities + 4-5 modules including ATP + post-purchase"
+    evidence: "Salesforce Order Management, IBM Sterling, Manhattan Active Omni, and Fluent Commerce all package OMS as several distinct surfaces: order orchestration plus sourcing/routing, a separate returns/RMA surface, a separate store-pickup/BOPIS surface, and inventory nodes/locations carried as configuration rather than a workflow. That four-way packaging is option (a)'s split at 5 to 8 capabilities; ATP and post-purchase tracking (option c) appear across these vendors as additive surfaces layered on top, not as the baseline, while a 2-module compaction (option b) collapses returns and store pickup that every flagship keeps apart."
 
   - id: B2-S5
     summary: "B12 config-shape confirmation for inventory_locations (425). Now CLASSIFIED entity_type='catalog'."

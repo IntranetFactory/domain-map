@@ -36,7 +36,7 @@ q3: The dispatch module currently owns no data of its own (it only writes into t
 - b) Downgrade dispatch to a lightweight "starter" module with embedded shells of tickets and time entries, which removes the requirement.
 - c) Accept dispatch as a contributor-only module and waive the rule here.
 
-Recommended: a. ConnectWise Dispatch, Autotask, and Halo all model a first-class dispatch-schedule entity, so promoting one is the cleanest cure, but the call is yours.
+Recommended: a. ConnectWise Dispatch, Autotask, and Halo all model a first-class dispatch-schedule entity, so promoting one cures the no-master rule, but the call is yours.
 
 a3:
 

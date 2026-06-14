@@ -96,8 +96,14 @@ function lintFile(code: string): Finding[] {
   const lines = text.split(/\r?\n/);
   const findings: Finding[] = [];
   let curQ: { id: string; stem: string; text: string } | null = null;
+  // Questions under the "## Optional (will not hold up the build)" heading are b3 ideas
+  // (promote-to-domain / research-and-add) by the Rule #22 q-file format. They are
+  // non-blocking and never market-shape gates, so the grounding gate does not apply.
+  let inOptional = false;
   for (const raw of lines) {
     const l = raw.trim();
+    if (/^#{1,4}\s+optional\b/i.test(l)) { inOptional = true; curQ = null; continue; }
+    if (inOptional) continue;
     const qm = l.match(/^(q\d+):\s*(.*)$/i);
     if (qm) { curQ = { id: qm[1], stem: qm[2], text: qm[2] }; continue; }
     // accumulate option lines into the question text so MARKET_SHAPE sees them

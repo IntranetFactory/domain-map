@@ -186,6 +186,13 @@ b1b:
 b2:
   - id: B2-1
     summary: "Decide the DAM module split (2 / 3 / 4 modules) and name the modules. LOAD-BEARING: gates the entire b1b build cascade."
+    evidence: |
+      Flagship-vendor packaging splits review and rights OUT of the asset library. Bynder ships a
+      distinct Workflow module (review/annotation/approval) and a distinct Digital Rights Management
+      module (licensing, copyright, embargo/expiration) alongside its core DAM; Adobe AEM corroborates
+      both (Workfront-tied review surface plus rights handling); Frontify and Widen carry review and
+      rights as first-class workflows too. The named-vendor evidence supports the 4-module shape (c),
+      not the 2-module shape (a).
     question: |
       Which module split for DAM? Options:
         (a) 2-module: DAM-ASSET-LIB + DAM-DISTRIBUTION

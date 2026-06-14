@@ -14,7 +14,7 @@ q1: (answer this first) How should Digital Asset Management be split into module
 - b) Three modules: same as (a) plus Creative Review (review rounds, comments, and approval workflow).
 - c) Four modules: same as (b) plus Rights Management (asset rights, model releases, and license agreements split out as their own module).
 
-Recommended: a. The two-module split is the minimal shape that gets DAM deployable and unblocks every fix below; (b) and (c) only pay off once the review-workflow or rights-management objects are actually confirmed. This choice drives every module, capability binding, lifecycle owner, handoff FK, and entity routing below it, so it unlocks the rest of the build.
+Recommended: c. The flagship DAMs package these as separate, separately-sold surfaces: Bynder ships a distinct Workflow module (review, annotation, approval) AND a distinct Digital Rights Management module (licensing, copyright, embargo/expiration) alongside its core DAM, and Adobe AEM corroborates both (a Workfront-tied review surface plus rights handling), while Frontify and Widen carry review and rights as first-class workflows too. So the named-vendor packaging splits Creative Review and Rights Management out of the asset library rather than folding them in, which is the 4-module shape; pick (b) if rights stays inside the library as metadata, or (a) only if neither review nor rights is a buyer-visible workflow for your deployment.
 
 a1:
 

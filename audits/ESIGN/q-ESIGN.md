@@ -10,7 +10,7 @@ q1: (answer this first) How should Electronic Signature be split into modules (t
 - a) One module, ESIGN Signature Ops, covering the whole surface (envelope prep, identity verification, signing workflow, audit trail).
 - b) Two modules: Authoring (templates, envelope prep, recipient sequencing) and Completion (signing, identity verification, audit trail, certificate).
 
-Recommended: a. E-signature is a point-solution market where each flagship vendor ships a single product, so one module matches the shape; the two-module split mainly buys you a role floor at the cost of authoring two sets of permissions and tooling. This choice gates the module build and every capability, permission, and link below it, so it unlocks the rest.
+Recommended: a. DocuSign eSignature, Adobe Acrobat Sign, Dropbox Sign, PandaDoc, SignNow, and OneSpan Sign each ship the whole signing surface (envelope prep, identity verification, signing, audit trail) as one product, and none of them splits authoring from completion into separate modules: where DocuSign does draw a product line it is between eSignature and CLM, not inside the signing flow. So a single ESIGN-SIGNATURE-OPS module matches how every flagship packages this market; the two-module split buys only a role floor at the cost of authoring two sets of permissions and tooling.
 
 a1:
 

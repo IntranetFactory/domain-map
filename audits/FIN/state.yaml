@@ -106,6 +106,13 @@ b2:
       - "keep 4 modules (agent recommends; no orphan capability, no empty module, no borrowed master promoted)"
       - "add FIN-AR-BILLING + FIN-AP-DISBURSE as borrowed-master/consumer modules and move caps 60/61 there"
     why: "Reversible module-design decision; affects downstream skill/persona/handoff-FK fan-out."
+    evidence: >
+      In S/4HANA (FI-AR / FI-AP), Oracle Fusion (Receivables / Payables), NetSuite (AR / AP),
+      D365 Finance, and Workday, AR and AP are standalone sub-ledger modules only because each
+      masters its own open-item ledger (open items, dunning, payment / disbursement runs) and posts
+      a summary to the GL. FIN masters no such object (customer invoicing is mastered by CRM / OMS /
+      SUB-MGMT, supplier invoicing by AP-AUTO), so the vendor case for a dedicated AR / AP module
+      does not apply and the 4-module split matches the flagship packaging.
 
   - id: B2-S1
     summary: "Rule #15 notes-pollution on 6 domain_data_objects rows."

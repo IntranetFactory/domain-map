@@ -105,6 +105,7 @@ b2:
     question: "Should EAM ship as 2 full modules (EAM-ASSETS + EAM-MAINTENANCE-OPS) or 3 full modules (add EAM-PM-PLANNING as a separate planning surface)?"
     options: ["2-module split", "3-module split", "other (user proposes shape)"]
     why: "Decision gates the Rule 14 floor (>=2 for 6 capabilities), the DMDO layout for masters, the domain-grain system skill toolset, and the source_domain_module_id / target_domain_module_id PATCHes on every EAM handoff (B1B-B1 / B1B-B2)."
+    evidence: "Flagship CMMS/EAM vendors co-locate PM planning with work-order execution and keep the asset register separate: IBM Maximo (PM schedules and work orders both under Work Management), Hexagon EAM and IFS Cloud EAM (PM bundled with work orders in maintenance management), and SAP PM (maintenance plans plus maintenance orders inside Plant Maintenance). This maps to the 2-module shape (EAM-ASSETS + EAM-MAINTENANCE-OPS) and gives no vendor support for a separate EAM-PM-PLANNING module."
 
   - id: B2-M7-ESCALATES
     summary: "eam_work_orders escalates_to service_incidents (relationship id 636): keep or downgrade?"

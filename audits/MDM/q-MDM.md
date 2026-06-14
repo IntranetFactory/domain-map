@@ -13,7 +13,7 @@ q1: (answer this first) How should Master Data Management be split into modules 
 - b) Two modules: MDM-Golden-Records (the golden records and source records) and MDM-Match-and-Merge-Engine (the match and merge rules plus the stewardship workflow).
 - c) A larger split (three or more modules), separating stewardship workflow, data quality, and hierarchy management into their own modules.
 
-Recommended: a. MDM has only two capabilities, below the threshold that forces a split, so the single-module floor is the cleanest start; you can split out the match-merge engine later if its workflow diverges. This choice gates the whole build (modules, lifecycle states, permissions, user edges, and handoff attribution all hang off it), so it unlocks everything below.
+Recommended: a. The flagship MDM hubs (Informatica Intelligent MDM, Reltio Connected Data Platform, Profisee, Stibo STEP, Semarchy xDM) ship golden-record mastering and the match/merge/survivorship engine as facets of one unified hub product, not as separately-licensed modules, so a single MDM-Golden-Record-Management module mirrors how every flagship packages the market. The deeper substrate that would justify carving out separate modules (match candidates, survivorship rules, steward task queues, hierarchies) only becomes first-class in the larger vendors and stays a Bucket-3 candidate here, so the match-merge engine can split out later if its stewardship workflow diverges. This choice gates the whole build, so modules, lifecycle states, permissions, user edges, and handoff attribution all hang off it.
 
 a1:
 
@@ -58,7 +58,7 @@ q5: Both capabilities (Identity Resolution and Customer 360) sit under MDM, but 
 - c) Move Customer 360 to CDP.
 - d) Host both jointly across MDM and CDP.
 
-Recommended: a. MDM is the system that masters the records; CDP consuming and operationalizing them is the normal division of labor, so keeping both under MDM reflects ownership correctly.
+Recommended: a. The CDP vendors (Segment, Tealium, mParticle, Simon Data, Treasure Data) package identity resolution and Customer 360 as an activation layer that stitches a unified profile from real-time behavioral signals for marketing, while the MDM hubs (Informatica, Reltio, Stibo) master the governed golden record under stewardship; the CDP consumes that golden record rather than mastering it. Both capabilities are therefore mastered at MDM, and the CDP operationalizing them is the normal division of labor, so the mastering side stays under MDM.
 
 a5:
 

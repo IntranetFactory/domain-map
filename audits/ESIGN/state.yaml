@@ -93,6 +93,7 @@ b2:
       - "Single ESIGN-SIGNATURE-OPS (recommended; point-solution market, single product per flagship vendor)"
       - "Two modules ESIGN-AUTHORING + ESIGN-COMPLETION (unlocks E1 role floor at the cost of authoring 2 sets of permissions + module tooling)"
     why: "Module-shape design call. Gates B1A-S1 and every downstream M / F / E item."
+    evidence: "DocuSign eSignature, Adobe Acrobat Sign, Dropbox Sign, PandaDoc, SignNow, and OneSpan Sign each ship the whole signing surface (envelope prep, identity verification, signing, audit trail) as a single product; none splits authoring from completion into separate modules. Where DocuSign draws a product line it is between eSignature and CLM, not inside the signing flow, so a single ESIGN-SIGNATURE-OPS module matches the flagship packaging."
   - id: B2-S4
     summary: "B12 lifecycle gate scope on declined / expired"
     question: "voided (441) and sent (436) are already gates. Should declined (440) and / or expired (442) also carry requires_permission=true?"

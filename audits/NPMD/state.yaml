@@ -95,6 +95,7 @@ b2:
       - "(b) NPMD embedded_master, with CMDB potentially mastering later"
       - "(c) NPMD consumes CMDB configuration_items via filter"
     why: Affects future synthetic-test and path-tracing references; tied to the b3 candidate entities.
+    evidence: "ThousandEyes, NETSCOUT nGeniusONE, and Kentik each master their own network-device entity carrying monitoring-scoped fields (SNMP credentials, polling profiles) distinct from a CMDB configuration item, but none positions itself as the enterprise canonical device source of record. That maps to an embedded master (b): NPMD owns the device fields now while leaving canonical discovery to CMDB later, edging out outright master (a) and raw CMDB-CI consumption (c)."
   - id: B2-NAMING-ARBIT
     summary: Naming arbitration for the 2 collision-risk masters (Rule #9). Gates B1B-B3.
     question: Stamp is_canonical_bare_word=false and author naming_authority_rationale for network_interfaces (collides on bare word interfaces) and saas_application_performance (overlaps APM application_performance)? Both already use a domain prefix, so the prefix path is open; the question is the recorded rationale text.

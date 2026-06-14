@@ -102,6 +102,7 @@ b2:
       - "(a) Schedule SPM b1 audit, let SPM master roadmap_items."
       - "(b) DELETE the (131, 275) consumer DMDO + PATCH handoff 243 data_object_id from 275 to 405."
     note: "Option (b) is DESTRUCTIVE (DELETE + payload re-attribution) - surfaced, not executed."
+    evidence: "Dragonboat and Aha! both split roadmaps into a portfolio/strategy tier (Dragonboat portfolio roadmaps + strategic objectives, Aha! strategy initiatives) that masters the cross-product roadmap and a product-delivery tier that consumes it. That master-vs-consume split puts a portfolio roadmap_items master in SPM with PROD-MGMT consuming, supporting option (a)."
 
   - id: B2-31-5
     summary: "F5 Semantius score gap: notify_team (914) external on skill 202 vs notify_person (913) platform on skill 201"

@@ -234,7 +234,7 @@ Every master data_object MUST have `entity_type` classified (default `unclassifi
 | `catalog` | `:admin` | reference data; reconfiguring it is an admin act |
 | `junction` | `:admin` if a linked endpoint is `catalog`, else `:manage` | resolved from the relationship endpoints |
 | `computed` | none (read-only) | no write permission emitted |
-| `unclassified` | `:manage` _(pending)_ | graceful fallback (m2); the emitter never aborts, the hard check is audit band B13 |
+| `unclassified` | `:manage` _(pending)_ | defense-in-depth fallback (m2); the emitter now HARD-fails the module (B13 gate) rather than shipping this tier, so it is never reached in a real 3.0 file |
 
 **The exemption is structural now, not prose.** If a master is genuinely config / record / junction / computed, classify it via `entity_type` and move on. The earlier practice of recording the config-shape exemption in `data_objects.notes` is RESCINDED at every layer: Rule #15 removed the license for the notes write; this rule moves the classification itself to a typed column. There is no notes-based exemption surface.
 
@@ -251,7 +251,7 @@ Every master data_object MUST have `entity_type` classified (default `unclassifi
 - `catalog` — config / template / taxonomy / rule definition referenced by other entities (templates, question banks, taxonomies, configured bundles)
 - `junction` — N:M link, may carry a qualifier (`<a>_<b>_assignments`, `<a>_<b>_memberships`)
 - `computed` — derived rollup or projection (workloads, aggregate ratings)
-- `unclassified` — fallback only; surfaces as an audit failure (B13)
+- `unclassified` — fallback only; surfaces as an audit failure (B13) AND hard-fails blueprint emit for the module (the emitter refuses to ship a 3.0 file with it)
 
 ### 13. Catalog enums to know without rediscovering them.
 

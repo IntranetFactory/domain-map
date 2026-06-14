@@ -11,7 +11,7 @@ q1: (answer this first) How should Corporate Spend Management handle the reimbur
 - b) Carve a thin Spend-owned reimbursement module that is genuinely distinct from Expense (you specify its scope and whether it needs its own record type).
 - c) Drop the reimbursement links from Spend entirely and let Expense own that capability outright.
 
-Recommended: a. It is the reuse-only default and needs no new record type or re-link; (b) and (c) both require you to authorize either a new master record or a capability move. This is the boundary decision that shapes the module split, so it unlocks the rest of the build.
+Recommended: a. Brex, Ramp, and Airbase (now BILL Spend & Expense) all bundle out-of-pocket reimbursement into their expense product rather than running a separate spend-side reimbursement record, and Coupa keeps reimbursement on its expense layer inside the wider spend suite, so reimbursement stays realized off the Expense master with Spend reusing it; (b) and (c) instead force a new Spend-owned record or a capability move that no flagship packages this way.
 
 a1:
 

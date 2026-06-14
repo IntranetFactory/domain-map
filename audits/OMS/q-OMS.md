@@ -14,7 +14,7 @@ q1: (answer this first) How should Order Management be split into modules, and h
 - b) 3 capabilities with a 2-module split: Core Orchestration and Returns-and-Pickup.
 - c) 8-plus capabilities with a 4 to 5 module split, adding available-to-promise and post-purchase tracking.
 
-Recommended: a. The OMS market reads as multi-capability and multi-module (order capture, sourcing, available-to-promise, returns, and store pickup at minimum), and the 4-module split aligns cleanly to the workflow-bearing masters. This is the single decision that gates the entire build cascade, so it unlocks everything below it.
+Recommended: a. Salesforce Order Management, IBM Sterling, Manhattan Active Omni, and Fluent Commerce all package OMS as several distinct surfaces rather than one: order orchestration plus sourcing/routing (Sterling's allocation plans, Salesforce's fulfillment plans), a separate returns/RMA surface, and a separate store-pickup/BOPIS surface, with inventory nodes/locations carried as configuration rather than a workflow. That four-way packaging is exactly option (a)'s split (Order Orchestration, Returns, Store Pickup, Locations) at 5 to 8 capabilities; available-to-promise and post-purchase tracking (option c) show up across these vendors as additive surfaces layered on top, not as the baseline shape, and a 2-module compaction (option b) collapses returns and store pickup that every flagship keeps apart.
 
 a1:
 

@@ -63,6 +63,13 @@ b2:
       Architectural / market-definition question. Modularization chose (a) as the
       reuse-only default; (b) and (c) require either a new master or a capability
       re-link the user must authorize.
+    evidence: >-
+      Brex, Ramp, and Airbase (now BILL Spend & Expense) bundle out-of-pocket
+      reimbursement into their expense product rather than mastering a separate
+      spend-side reimbursement record, and Coupa keeps reimbursement on its
+      expense layer within the broader spend suite. No flagship carves a distinct
+      Spend-owned reimbursement master, supporting option (a): reimbursement stays
+      realized off the Expense master with Spend reusing it.
 
   - id: B2-S2
     summary: "spend_policies (747) lifecycle exemption per Rule #12."

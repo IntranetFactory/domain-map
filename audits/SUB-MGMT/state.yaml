@@ -123,6 +123,7 @@ b2:
       - "(b) Split into 3-5 modules under SUB-MGMT; capability rebinding required."
       - "(c) Spin out USAGE-METERING and REV-REC as separate domains per Bucket 3 candidates."
     why: "SUB-MGMT-SUBSCRIPTIONS currently hosts 5 capabilities. SUB-USAGE-METER, SUB-REV-REC, SUB-CHURN-ANALYTICS each have independent point-solution markets (Metronome / Orb / Lago for metering; Maxio SaaSOptics / RightRev for rev-rec; ChartMogul / SaaSGrid for analytics). Compression hides the modularization. Gates B1A-PHASE-P (persona shape)."
+    evidence: "The flagship subscription-billing suites (Stripe Billing, Zuora, Chargebee, Recurly) package subscription lifecycle and billing as one integrated product, which maps to the 2-module shape (option a). Metering (Metronome, Orb, Lago) and rev-rec (Maxio SaaSOptics, RightRev) are separate point-solution markets that bolt on rather than force an internal split, so options (b)/(c) only follow the vendor packaging once those objects justify their own deployable surfaces."
 
   - id: B2-S6
     summary: "HVAC-SVC-MGMT starter 171 hosting on SUB-MGMT via host-junction."

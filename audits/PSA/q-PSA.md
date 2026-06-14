@@ -11,7 +11,7 @@ q1: (answer this first) How should PSA relate to the revenue-recognition records
 - b) PSA co-masters the project-revenue slice: add a second master row on the PSA financials module and record the slice split here, leaving subscription revenue with Subscription Management.
 - c) Leave it as-is and accept that the recognition permission would materialize under the wrong domain prefix.
 
-Recommended: a. The record is mastered by Subscription Management, so keeping PSA as a contributor and proposing the value (rather than directly writing it) is the cleanest boundary. This choice also settles how the related self-containment fix below is applied, so it unlocks the rest.
+Recommended: a. Across the flagship surface the PSA layer feeds recognition rather than owning it: Kantata aggregates project data for ASC 606 but has no recognition engine of its own, and Certinia, NetSuite OpenAir, and Deltek each push performance-obligation data from the PSA into a separate revenue/billing engine (Certinia Revenue Cloud, the NetSuite ERP rev-rec module, Deltek financials) that masters the recognition record. That puts every flagship on the contributor side of this split, matching option (a): PSA proposes the value off project completion and the master (Subscription Management here) commits it. The same boundary settles how the related self-containment fix below is applied.
 
 a1:
 

@@ -159,6 +159,12 @@ b2:
       - {key: a, label: "TPRM consumes SUP-LIFE's `suppliers` (single master across the org)"}
       - {key: b, label: "TPRM masters a separate `third_parties` entity scoped to risk-managed counterparties only"}
       - {key: c, label: "Introduce a new MDM-tier `counterparties` master that both SUP-LIFE and TPRM consume"}
+    evidence: |
+      OneTrust, ProcessUnity, and Whistic each master their own third-party (vendor) inventory that is
+      broader than the procurement-invoiced supplier list (it adds SaaS providers, data subprocessors,
+      and IT vendors that may never be AP suppliers) and ingest procurement / CMDB / contract sources
+      into it rather than reusing a supplier master as-is. That packaging lands on the separate
+      risk-managed-counterparty master side (b), not on reusing the supplier record (a).
 
   - id: B2-4
     summary: "`supplier_risk_assessments` (730, aliases TPRM assessment / due diligence review) - TPRM canonical or SUP-LIFE canonical?"

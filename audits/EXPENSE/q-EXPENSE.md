@@ -11,7 +11,7 @@ q1: (answer this first) Does Expense Management own corporate cards and card tra
 - b) Migrate both to a corporate-card-program domain once that domain exists (the card module retires or shrinks to a thin consumer that only reads transactions).
 - c) Split: keep corporate cards in Expense Management but move card transactions to the corporate-card-program domain as the ledger record.
 
-Recommended: a. The cards and transactions are already isolated in their own module, so keeping them here is the simple current state and a later migration stays non-destructive. This ownership call shapes the build the most and also drives which card-related pattern-flag flips below stick, so it unlocks the rest.
+Recommended: a. Bundled spend platforms (Brex, Ramp, Mesh, Airwallex) own both card issuance and expense reporting in one product, so keeping corporate_cards and card_transactions in Expense Management matches a real packaging, while the pure issuance-infrastructure vendors (Marqeta, Stripe Issuing) sit a layer below (Ramp itself issues its cards through Stripe) and are the separable corporate-card-program market that a later migration could carve out. Pure-play expense vendors (Concur, Expensify, Workday) by contrast only consume the card feed, so the only question is whether you master cards here or consume them, and mastering them now (both already isolated in module 192) keeps the migration to a future corporate-card-program domain non-destructive. This ownership call shapes the build the most and drives which card-related pattern-flag flips below stick.
 
 a1:
 

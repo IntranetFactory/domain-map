@@ -119,6 +119,7 @@ b2:
       - "4-module: SCHED + ORDERS + CLINICAL-DOC + CARE-COORD for finer-grained deployability for SMB ambulatory"
       - "Other (specify)"
     why: Blocks B1A-BUILD and every downstream B1 item that touches modules (B1A-B10b-SOURCE-MODULES, B1A-B10b-TARGET-MODULES, lifecycle-state module attribution).
+    evidence: The flagship ambulatory and EHR vendors (Epic, Oracle Health/Cerner, MEDITECH, Athenahealth, eClinicalWorks) package patient operations as one integrated clinician suite with scheduling on one side and encounter capture, ordering, and documentation on the other, and none license order entry or clinical documentation as standalone products, so the two-module scheduling-vs-clinical split mirrors the flagship packaging. The four-module split tracks component branding (Epic Cadence, Epic Orders/CPOE, Innovaccer's EHR-agnostic care-coordination layer) that the flagships bundle and only smaller ambulatory practices buy piecemeal.
 
   - id: B2-2-OWNER-FUNCTION
     summary: HC-PATIENT currently lists Business Operations as owner (business_function 34); clinical operations would be more accurate but the 20-function spine has no Clinical Operations row.

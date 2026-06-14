@@ -177,6 +177,12 @@ b2:
       - "b: drop SEMANTIC-MODELING, keep OPERATIONAL-DATA-APPS"
       - "c: keep both and expand each to its full domain set"
     why: "Cross-cutting capability scope is a market-test decision the user owns. Co-dependent with LCAP audit."
+    evidence: >
+      Airtable (Interfaces, Omni), Notion, Coda, and SmartSuite (Solutions) all package an
+      app-building layer over their data, so OPERATIONAL-DATA-APPS sits squarely on NCDB. None
+      of these flagships market a semantic-modeling product; that capability is owned by data
+      integration / governance / master data, supporting option b (keep operational data apps,
+      drop semantic modeling).
     extra_linked_audit: LCAP-2026-05-30 B2-S4
   - id: B2-S5
     summary: "FORM-BUILDER boundary on `nocode_forms` mastery."

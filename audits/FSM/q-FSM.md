@@ -48,7 +48,7 @@ q4: The mobile-technician capability currently lives inside the dispatch module.
 - b) Split into dispatcher-side and mobile-technician modules.
 - c) Defer until the optional mobile entities are vetted.
 
-Recommended: c. The split pays off once the mobile-specific entities (signature records, service photos, mobile devices) are confirmed, so vet those first. This choice also decides where those entities land.
+Recommended: b. Every flagship packages the truck as its own module separate from the desk: Salesforce ships Field Service Mobile, ServiceMax ships ServiceMax Go, Praxedo ships Praxedo Mobile, ServiceNow ships Mobile Agent, and ServiceTitan and IFS field a dedicated technician mobile app, each carrying the offline-sync, route-of-day, and signature-capture surface the dispatcher console does not. None of them fold the tech persona into the dispatch board, so the split follows the market shape, and it also decides where the mobile-specific entities (signature records, service photos, mobile devices) land.
 
 a4:
 

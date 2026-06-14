@@ -182,6 +182,7 @@ b2:
       - "(a) Keep single DISPATCH-OPS."
       - "(b) Split into DISPATCH-OPS + MOBILE-TECH."
       - "(c) Defer until Bucket 3 vetting."
+    evidence: "Every flagship packages the technician truck as a module separate from the dispatcher desk: Salesforce Field Service Mobile, ServiceMax Go, Praxedo Mobile, ServiceNow Mobile Agent, plus the dedicated technician apps from ServiceTitan and IFS, each carrying offline sync, route-of-day, and signature capture that the dispatch console does not. None fold the tech persona into the dispatch board, so the market shape supports the split."
     why: "Modularization design call; pairs with B3-V2 entity placement."
 
   - id: B2-STARTER-HOST-SCOPE

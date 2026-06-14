@@ -153,6 +153,14 @@ b2:
     why: >-
       Coordinated decision with the TELEMATICS audit; resolving here cascades
       into TELEMATICS' B1-M1. Cross-domain dependency.
+    evidence: >-
+      Fleetio, the pure-play fleet-ops and maintenance specialist, packages DVIR
+      (driver pre/post-trip) and PMI (mechanic periodic) as one inspection record
+      that flows into work orders, supporting the unified-with-discriminator shape
+      (option b). The telematics and ELD vendors (Motive with the strongest DVIR
+      posture, plus Samsara, Geotab, Verizon Connect) emit DVIR inside the
+      driver-app and ELD workflow but never own the mechanic PMI side, so a full
+      move to TELEMATICS (option c) has no vendor backing.
 
   - id: B2-SIGN-DOCUMENT
     summary: sign_document workflow rationale on legacy skill 60.

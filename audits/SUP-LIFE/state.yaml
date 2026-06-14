@@ -113,6 +113,7 @@ b2:
       - "c: 5-module split (promote SUP-LIFE-CERTIFICATION-TRACKING out of ONBOARDING-QUAL)"
       - "d: custom boundary specified by user"
     why: "Module boundary is editorial/deployability judgment; agent has no opinion stronger than the structural floor. Resolving this unblocks B1A-BUILD and the entire b1b cascade."
+    evidence: "HICX, SAP Ariba SLP, Coupa SIM, Ivalua, and Jaggaer all package this market four ways: a supplier master/portal, a combined onboarding+qualification+certification workflow, a performance/scorecard surface, and a separate risk overlay (Ariba sells Supplier Risk as a distinct add-on on top of SLP). This supports option (a)'s 4-module split over folding risk into performance (b) or promoting certification tracking out of qualification (c)."
 
   - id: B2-S2
     summary: "Per-flag confirmation on the 5 proposed B4 pattern-flag flips"

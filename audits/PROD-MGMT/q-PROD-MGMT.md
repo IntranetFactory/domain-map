@@ -65,7 +65,7 @@ q7: The roadmap_items entity is consumed by the roadmap-delivery module but has 
 - a) Schedule the SPM audit and let SPM own a portfolio-level roadmap_items master that Product Management consumes.
 - b) Treat roadmap_items as a redundant alias for product_roadmaps: delete the orphan consumer row and re-point the SPM handoff payload to product_roadmaps.
 
-Recommended: a. SPM is the natural owner of a portfolio-level roadmap concept, and keeping the consumer link avoids destroying data. Option (b) deletes a row and re-attributes a handoff payload, so it needs your sign-off.
+Recommended: a. Dragonboat and Aha! both package roadmaps as two tiers, a portfolio/strategy tier (Dragonboat portfolio roadmaps and strategic objectives, Aha! strategy initiatives) that masters the cross-product roadmap and a product-delivery tier that consumes it, so a portfolio roadmap_items master belongs in SPM (the strategic-portfolio domain) with Product Management consuming it, exactly the master-vs-consume split the vendors draw. Option (b) deletes a row and re-attributes a handoff payload, so it needs your sign-off.
 
 a7:
 

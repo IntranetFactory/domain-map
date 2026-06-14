@@ -133,6 +133,7 @@ b2:
       - "(c) 3-module split: PS-LIC-INTAKE, PS-LIC-COMPLIANCE, PS-LIC-BILLING"
       - "(d) single full module PS-LIC-CORE plus a module_kind='starter' lite variant for SMB / county-tier deployments"
     why: "Rule #14 requires >=1 full module; once A2 lands >=3 capabilities, >=2 modules required. The pick determines every downstream b1b cure (B12 lifecycle anchoring, B10b source FK derivation, B9 missing-handoff drafts)."
+    evidence: "Flagship vendors split this market along the four lifecycle phases option (a) names: OpenGov ships a Permitting, Licensing, and Code Enforcement suite separating intake, business-license issuance and renewal, inspections plus code enforcement, and fees with payments, and Accela and Tyler EnerGov carry discrete inspections, code-enforcement, and hearings modules. ServiceNow PSDS and CitizenServe cover the same intake-to-fees lifecycle, so the 4-module shape mirrors how the market is packaged rather than the (b)/(c) collapses or the (d) single module."
 
   - id: B2-2
     summary: "Capability set for PS-LIC; pick alongside B2-1 to satisfy A2 and M4 / M6 bipartite coverage."

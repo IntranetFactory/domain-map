@@ -40,7 +40,16 @@ per-row tables below as the working list. A canonical re-run (subagents writing
 structured output) would reconcile the exact 250. The actionable set (copy + synthesize
 + research, below) is the part that matters and is listed in full.
 
-## Status (2026-06-14)
+## Status (2026-06-14, revised after plan review)
+
+> The tag tables further down are the FIRST-PASS classification and are superseded. The
+> authoritative, reviewed lists now live in the two session prompts. A second review of the
+> first draft found the lists conflated b3 "Optional" ideas with b2 market-shape decisions,
+> so they were re-derived from the tightened lint + a state.yaml bucket parse + a
+> per-question classification pass. Net result: **research collapsed to 0** (every genuine
+> market-shape gap already has a named-vendor surface in history), and the synthesize list
+> was corrected to ~34 real b2 items. The lint also now skips the q-file "Optional" section
+> (the clean b3 signal), cutting the flagged total from 250 to ~91.
 
 - **not-a-gap (~155): handled by tightening the lint.** `qfile_grounding_lint.ts` now
   excludes the non-market-shape question classes (event/handoff attribution, naming,

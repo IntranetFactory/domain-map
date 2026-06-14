@@ -14,7 +14,7 @@ q1: (answer this first) How should Supplier Lifecycle Management be split into m
 - c) Five modules: same as (a) but promote Certification Tracking out of Onboarding and Qualification into its own module.
 - d) A custom boundary you specify.
 
-Recommended: a. Four modules satisfy the minimum split rule and keep each supplier workflow (master, onboarding, performance, risk) cleanly separated, matching how the flagship supplier platforms present the product. This choice gates the entire build (modules, capabilities, lifecycle states, roles, and the cross-domain handoff wiring all hang off it), so it unlocks everything below.
+Recommended: a. The flagship platforms package this market exactly four ways: HICX, SAP Ariba SLP, Coupa SIM, Ivalua, and Jaggaer each carry a supplier master record plus self-service portal (MASTER), bundle onboarding, qualification, and certification into one gating workflow set (ONBOARDING-QUAL), and present scorecards and SLA monitoring as a performance surface (PERFORMANCE); supplier risk sits on its own, sold by Ariba as a separate Supplier Risk add-on layered on SLP rather than folded into performance (RISK), which is why (a) keeps it distinct rather than (b). The 3-module fold (b) would collapse that risk overlay into performance against how the vendors ship it, and the 5-module split (c) would promote certification tracking, which the same vendors keep inside qualification.
 
 a1:
 

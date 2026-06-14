@@ -11,7 +11,7 @@ q1: (answer this first) How should Healthcare Patient Operations be split into m
 - b) Four modules: Scheduling, Orders, Clinical Documentation, and Care Coordination, for finer-grained deployability for smaller ambulatory practices.
 - c) Other (specify).
 
-Recommended: a. The two-module split is the audit's default proposal and the minimal shape that unblocks the build today; the four-module split only pays off for smaller practices that want to ship the pieces separately. This choice drives the build, the capability count, every per-module handoff wiring, and the lifecycle-state attribution below it, so it unlocks the rest of the build.
+Recommended: a. The flagship ambulatory and EHR vendors (Epic, Oracle Health/Cerner, MEDITECH, Athenahealth, eClinicalWorks) package patient operations as one integrated clinician suite where scheduling sits on one side and encounter capture, ordering, and documentation sit on the other; none of them license order entry or clinical documentation as separate products, so the two-module scheduling-vs-clinical shape mirrors how the market is actually packaged. The four-module split maps to component branding (Epic Cadence for scheduling, Epic Orders for CPOE, Innovaccer's EHR-agnostic care-coordination layer) that the flagships ship as one bundle and only smaller ambulatory practices buy piecemeal. This choice drives the capability count, every per-module handoff wiring, and the lifecycle-state attribution below it.
 
 a1:
 

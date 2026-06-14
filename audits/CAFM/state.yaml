@@ -142,6 +142,7 @@ b2:
       - "Route utility tracking to queued ENERGY-MGMT candidate domain."
       - "Embed UTIL-OPS utility_meters (id 661) as embedded_master + optional in CAFM."
     why: "CAFM description explicitly excludes both. Has a b3 dependency: a Phase 0 utility-tracking pass could surface whether utility_meter_readings (UTIL-OPS handoff 293 payload) should be embedded_master + optional in CAFM."
+    evidence: "Flagship packaging splits both out of facility-booking CAFM tools. Utility/energy tracking is owned by dedicated platforms with no desk-booking surface (ENGIE Impact, Schneider Resource Advisor, Watershed, Accruent Lucernex Utility; Eptura ships sustainability as a separate module from its workplace product), supporting route-to-ENERGY-MGMT. Lease accounting is owned by standalone ASC 842 / IFRS 16 / GASB 87 lease-administration products (Accruent Lucernex, which integrates with FM/CMMS rather than bundling it), supporting route-to-LEASE-ACCT. No vendor packages meter readings inside the booking workflow, so embedding in CAFM (option c) is unsupported."
     extra_depends_on_decision: B2-FOLD-VS-DISTINCT
     extra_bucket3_dependency: true
 

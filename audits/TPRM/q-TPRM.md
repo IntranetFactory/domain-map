@@ -36,7 +36,7 @@ q3: How should the "vendor" record relate to the existing "supplier" record (a n
 - b) Master a separate "third parties" record scoped to risk-managed counterparties only.
 - c) Introduce a new shared master-data "counterparties" record that both the supplier domain and this domain consume.
 
-Recommended: a. A single shared master is the cleanest outcome and avoids a known overlap that would need alias and relationship mapping. Pick (b) or (c) only if risk-managed counterparties genuinely differ from invoiced suppliers in your org.
+Recommended: b. OneTrust, ProcessUnity, and Whistic each master their own third-party (vendor) inventory that is deliberately broader than the procurement-invoiced supplier list (it adds SaaS providers, data subprocessors, and IT vendors that may never be AP suppliers), and they ingest procurement, CMDB, and contract sources into it rather than reusing a supplier master as-is. So the pure-plays land on the separate risk-managed-counterparty master side, not on reusing the supplier record. Pick (a) only if your risk-managed counterparties are genuinely identical to your invoiced suppliers, or (c) if you want a neutral counterparties master that both the supplier domain and this domain consume.
 
 a3:
 

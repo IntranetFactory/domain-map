@@ -117,6 +117,7 @@ b2:
       - "(b) load as parent_domain_id=11 children, mirroring the existing SOAR/VULN-MGMT/THREAT-INTEL wiring."
       - "(c) defer until the user picks 2 to 3 highest-priority detection verticals (SIEM, EDR, XDR is the minimum coherent set) and load them in a focused wave."
     why: "Catalog precedent (ITAM umbrella) and the existing SECOPS->child wiring (B2-5) both suggest parent-child. Cross-bucket dependency with B2-1 and B2-5."
+    evidence: "Each detection vertical ships as a pure-play specialist with its own first-class schema (Splunk Enterprise Security, Microsoft Sentinel, IBM QRadar for SIEM; Exabeam for UEBA-led SIEM; CrowdStrike Falcon for EDR/XDR; Darktrace for NDR), so each is a distinct point-solution market, not a SECOPS module. No single vendor packages the whole umbrella, so SECOPS sits above the verticals as the coordinating layer, the parent-child shape (option b) the existing SOAR/VULN-MGMT/THREAT-INTEL wiring already expresses."
 
   - id: B2-3
     summary: "Decide SOAR vs SECOPS-RESPONSE-OPS module scope overlap."
@@ -126,6 +127,7 @@ b2:
       - "(b) SECOPS masters case-correlated execution, SOAR masters the orchestration engine itself (rule library, connector catalog, workflow templates)."
       - "(c) consolidate SOAR into SECOPS as a module (DESTRUCTIVE: would deprecate the SOAR domain row id 12; never done unapproved)."
     why: "SOAR is already a separate child domain (id 12, parent_domain_id=11). The proposed SECOPS-RESPONSE-OPS module under B2-1 option (b) overlaps materially. The answer reshapes the scope of SECOPS-RESPONSE-OPS."
+    evidence: "Splunk SOAR and Palo Alto Cortex XSOAR are standalone orchestration platforms that master the playbook library, the instantiated playbook_executions, and the per-asset containment_actions those playbooks invoke, distinct from the SIEM/case layer. They package these as the SOAR market, so SOAR (the existing child domain) is the canonical owner and SECOPS consumes or embedded_masters them (option a), rather than a SECOPS-RESPONSE-OPS module duplicating that orchestration scope."
 
   - id: B2-5
     summary: "Reconcile existing domains.parent_domain_id wiring on SOAR, VULN-MGMT, THREAT-INTEL with the B2-1 and B2-2 framing."

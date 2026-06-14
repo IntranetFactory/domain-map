@@ -221,6 +221,7 @@ b2:
       - "3 modules (collapse PERFORMANCE-MGMT into DISCLOSURE-REPORTING)"
       - "5 modules (split out ESG-PRODUCT-FOOTPRINT if PROD-CARBON-FOOTPRINT does not promote)"
     why: "Gates B1B-S4 and cascades through B1B-S5 / B1B-S10 / B1B-S12 / B1B-S13. This is the blocking decision for the whole build."
+    evidence: "The flagship vendors package the market along all four splits: Watershed and Persefoni lead carbon accounting, Workiva and Diligent lead disclosure and reporting, Sphera / IBM Envizi / Salesforce Net Zero Cloud carry both plus a distinct target/initiative performance layer, and supplier sustainability is a standalone packaged area (EcoVadis as a pure-play supplier-ratings vendor, Sphera Supply Chain). The four-module split mirrors that surface, not a three-fold collapse."
 
   - id: B2-5
     summary: "Handoff 851 target re-routing"

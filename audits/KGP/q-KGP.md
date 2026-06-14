@@ -22,7 +22,7 @@ q2: Should the matching "knowledge_graph_entities" concept follow the same owner
 - a) Collapse the data-platform object into KGP's kgp_knowledge_graph_entities (matches q1 option a).
 - b) Keep the data platform as the canonical owner and retire KGP's kgp_knowledge_graph_entities.
 
-Recommended: a. It is coupled to q1; if KGP wins ontology canonicality it should own this concept by the same logic. This involves retiring a duplicate master, so it needs your sign-off.
+Recommended: a. Stardog, GraphDB, AllegroGraph, Anzo, and Neo4j all store the instance/entity layer (RDF resources, individuals, labeled-property-graph nodes) in the same native graph store that masters the ontology classes those entities instantiate, asserting, reasoning over, and merging them as graph-platform functions; the data platform consumes that graph (lineage, semantic models) rather than mastering it, so the entities belong on the same side as the ontology under q1. This involves retiring a duplicate master, so it needs your sign-off.
 
 a2:
 

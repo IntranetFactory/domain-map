@@ -11,7 +11,7 @@ q1: (answer this first) The build shipped 4 modules (GL and Close, Fixed Assets,
 - a) Keep 4 modules. No module owns a master it does not actually hold, and the AR and AP capabilities stay anchored to Cash and Banking.
 - b) Add an AR Billing module and an AP Disbursement module as borrowed-master / consumer modules, and move the AR and AP capabilities there. Only do this if you want FIN to hold its own receivable / payable sub-ledger detail (open-item management, dunning, payment runs) rather than just consuming the downstream masters.
 
-Recommended: a. Neither AR nor AP masters any FIN data object today, so keeping 4 modules avoids an empty module or a promoted borrowed master. This choice drives the downstream skill, persona, and handoff fan-out, so it unlocks the rest of the build.
+Recommended: a. In the flagship ERPs (S/4HANA FI-AR / FI-AP, Oracle Fusion Receivables / Payables, NetSuite AR / AP, D365 Finance, Workday) AR and AP are standalone sub-ledger modules precisely because each masters its own open-item ledger (customer / supplier open items, dunning, payment and disbursement runs) and posts only a summary to the GL. FIN holds no such master: customer invoicing is mastered by CRM / OMS / SUB-MGMT and supplier invoicing by AP-AUTO, so the vendor justification for a dedicated AR or AP module does not apply here, and the AR (60) and AP (61) capabilities stay anchored to Cash and Banking as consumers. The 4-module split therefore matches the flagship packaging once the AR / AP mastering already lives upstream.
 
 a1:
 

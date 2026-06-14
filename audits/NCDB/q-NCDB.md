@@ -53,7 +53,7 @@ q5: Two cross-cutting capabilities are currently attached to No-Code Database: o
 - b) Keep operational data apps, drop semantic modeling (it belongs to data integration / governance / master data).
 - c) Keep both and expand each to its full domain set.
 
-Recommended: a. Both fit the domain today and changing scope is co-dependent with the low-code app platform audit, so leave them in place unless that pass forces a wider remap.
+Recommended: b. Airtable (Interfaces, Omni), Notion, Coda, and SmartSuite (Solutions) all package an app-building layer over their data, so operational data apps sits squarely on this domain; none of them market a semantic-modeling product, so that capability belongs to data integration / governance / master data, not here.
 
 a5:
 

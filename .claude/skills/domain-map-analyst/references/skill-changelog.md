@@ -510,6 +510,20 @@ The two changes are paired, not independent: Phase 0 prevents the failure at loa
 
 ---
 
+## 2026-06-14 — `entity_type` promoted to a HARD emit gate (B13 enforced in the emitter, not just the audit)
+
+**Context.** While checking whether any committed blueprint would render an `unclassified` `entity_type`, the user observed that the blueprint generator was acting as a soft QA gate only: a missing `entity_type` produced a `console.warn` and emitted a file carrying the literal `unclassified` (an invalid value for `blueprint_version` 3.0), and the hard check lived solely in audit band B13. With `entity_type` now treated as an architect/analyst-authored field, an unset value is an authoring defect, not something to degrade around.
+
+**Decision.** The emitter (`scripts/generate_blueprints.ts`) now HARD-fails any module whose in-scope rows include a `data_object` with `entity_type` unset or `unclassified`: it collects every offender in the scope and `throw`s a `B13:` error before returning the body, so no file is written for that module. The multi-module driver (`--regenerate` / `--all`) catches it, reports `FAILED module <code>`, keeps emitting the passing modules, and exits non-zero; the single-module path now wraps emit in the same try/catch for a clean `FAILED` message. `deriveWriteTier`'s graceful `unclassified` → `:manage (pending)` fallback is KEPT as defense-in-depth (so non-emit callers like audits can still derive a tier without crashing) but is now unreachable in a real 3.0 file.
+
+**Reasoning.** A generator that silently emits an invalid file is not a gate. B13 already declared `unclassified` an audit failure; moving the same check into the emitter makes "no blueprint ships unclassified" structurally true at generation time, not just at audit time. Safe to enable now: a `--regenerate --check` pass over all 19 existing blueprints reported zero `unclassified` rows, so the gate fails nothing in the current corpus. No `BLUEPRINT_VERSION` bump (file SHAPE is unchanged; this only refuses invalid output). M5 / M6 stay soft warns (Policy 1) — only `entity_type` is promoted.
+
+**Scope.** `scripts/generate_blueprints.ts` (gate + single-module try/catch + `deriveWriteTier` comment). Docs synced: SKILL.md write-tier table + classification heuristic, references/modules.md write-tier table. `--all` over un-blueprinted `unclassified` modules will now FAIL those modules by design (it already was never run for that reason).
+
+**Status.** active.
+
+---
+
 # Incidents
 
 Append one entry per occurrence. Used by SKILL.md Rule #15 — the agent MUST log here when notes have been written without user approval, AND revert the writes, AND propose a SKILL.md edit that removes whatever passage rationalized the violation.

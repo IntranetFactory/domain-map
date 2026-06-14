@@ -13,7 +13,7 @@ q1: (answer this first) One entity (id 187) is named "Preventive Maintenance Wor
 - b) It is genuinely Preventive Maintenance: delete the contingent-labor master row and the relationships tying it to staffing data, route the entity to Enterprise Asset Management, and create a fresh staffing-requisitions master here instead.
 - c) Split the difference: keep the entity as Preventive Maintenance (route to Enterprise Asset Management) and create a new staffing-requisitions master here.
 
-Recommended: a. The description, attached workflows, trigger event, and handoff routing all point at a staffing requisition or SOW, so renaming is the cleanest fix. This choice gates the module shape and several other items below, so it unlocks the rest of the build. Note: options (b) and (c) involve deletions and entity removal, so picking either is a destructive change that needs your explicit sign-off.
+Recommended: a. Every flagship VMS vendor (Workday VNDLY, SAP Fieldglass, Beeline, Magnit, Utmost) masters a staffing-requisition / SOW entity that starts the sourcing cycle, and none of them masters preventive maintenance, which is an Enterprise Asset Management concern; entity 187's description, attached workflows, trigger event, and handoff routing all match that staffing-requisition shape, so the name and aliases are wrong and renaming in place is the right fix. Note: options (b) and (c) involve deletions and entity removal, so picking either is a destructive change that needs your explicit sign-off.
 
 a1:
 
@@ -25,7 +25,7 @@ q2: How should Vendor Management System be split into modules (the sub-areas of 
 - b) Re-split into three modules: Requisitions, Suppliers and Rates, and Time and Invoicing. This requires a follow-up migration of capabilities and master records.
 - c) Keep the two-module split but rename the module codes (note: the codes are load-bearing in URLs, permission prefixes, and handoff backfills).
 
-Recommended: a. The default two-way split is already live and now has handoffs, roles, and system skills attached to it; changing it now is a migration, not a fresh build.
+Recommended: a. The flagship VMS vendors (Workday VNDLY, SAP Fieldglass, Beeline, Magnit, Utmost) all package this market in two operational halves, a sourcing / pre-engagement side (requisitions, supplier distribution, candidate submissions, rate cards, worker records) and a time-and-spend side (timesheets, approvals, invoices, AP reconciliation), which is exactly the Worker Sourcing plus Time and Invoicing seam this domain uses. The three-way split (option b) would fracture the suppliers-and-rates concern that those vendors keep inside the sourcing module, so the two-way split is the one that matches vendor packaging.
 
 a2:
 

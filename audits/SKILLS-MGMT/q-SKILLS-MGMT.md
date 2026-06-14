@@ -13,7 +13,7 @@ q1: (answer this first) How should Skills Management be shaped: keep the two mod
 - b) Pre-commit now to a third module (SKILLS-MGMT-ONTOLOGY-VERSIONING) shaped around taxonomy versioning and ontology edges.
 - c) Hold everything (including approving the two missing masters below) until the speculative entity list is vetted.
 
-Recommended: a. The split only pays off once you know which speculative entities actually land, so committing to a third module now is premature; (c) needlessly stalls two already-confirmed masters. This choice drives the module shape everything else hangs off, so it unlocks the rest of the build.
+Recommended: a. The specialist vendors all package taxonomy versioning as a release surface on the same ontology product, not as a separately bounded module: Lightcast Open Skills ships monthly versions behind a /versions/{version} API on the one taxonomy, TechWolf exposes taxonomy snapshots inside its Skills Engine, and 365Talents pins profiles to a release of the same skills platform. None of them carve versioning out as its own module, so a third SKILLS-MGMT-ONTOLOGY-VERSIONING module is premature until the speculative versioning entities (B3-1 taxonomy_versions, B3-7 inference_models, B3-8 governance_policies) actually land; (c) needlessly stalls two already-confirmed masters.
 
 a1:
 

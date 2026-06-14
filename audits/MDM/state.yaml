@@ -282,6 +282,12 @@ b2:
       match/merge engine. The agent will NOT scaffold the build until this is decided.
     options: ["a-single-mdm-golden-record-mgmt", "b-two-modules-records-and-engine", "c-larger-split"]
     why: "Modularization shape gates every downstream Bucket-1 item (B1B-S1 cascade)."
+    evidence: >-
+      The flagship MDM hubs (Informatica Intelligent MDM, Reltio Connected Data
+      Platform, Profisee, Stibo STEP, Semarchy xDM) package golden-record mastering and
+      the match/merge/survivorship engine as facets of one unified hub product, not as
+      separately-licensed modules, supporting the single-module floor (option a); the
+      deeper substrate that would justify a larger split stays a Bucket-3 candidate.
 
   - id: B2-S3
     summary: "domains.business_logic em-dash replacement wording (Rule #9 + Rule #15 boundary)"
@@ -303,6 +309,12 @@ b2:
       move? Bucket-3 RDM candidate is independent.
     options: ["a-both-stay-mdm", "b-identity-resolution-to-cdp", "c-customer-360-to-cdp", "d-dual-host"]
     why: "Capability scope decision; informs Bucket-3 modularization candidate and CDP-MDM boundary pass."
+    evidence: >-
+      The CDP vendors (Segment, Tealium, mParticle, Simon Data, Treasure Data) package
+      identity resolution and Customer 360 as a real-time activation layer that consumes
+      the golden record, while the MDM hubs (Informatica, Reltio, Stibo) master it under
+      stewardship; both capabilities are therefore mastered at MDM with CDP operationalizing
+      (option a), not a capability move.
 
   - id: B2-S5
     summary: "Lifecycle state machine names per MDM master"

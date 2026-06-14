@@ -23,7 +23,7 @@ q2: Should the detection verticals (SIEM, EDR, XDR, MDR, NDR, UEBA, DFIR, BAS, S
 - b) Load them as children of SECOPS, mirroring the existing SOAR, vulnerability-management, and threat-intelligence wiring.
 - c) Defer until you pick the 2 to 3 highest-priority verticals (SIEM, EDR, XDR is the minimum coherent set) and load them in a focused wave.
 
-Recommended: b. Both the catalog precedent (the ITAM umbrella) and the existing umbrella-to-children wiring already in place point at the parent-child shape.
+Recommended: b. Each named vertical ships as a pure-play specialist with its own first-class schema: Splunk Enterprise Security, Microsoft Sentinel, and IBM QRadar lead SIEM, Exabeam anchors the UEBA-led SIEM slice, CrowdStrike Falcon owns EDR/XDR, and Darktrace owns NDR, so every detection vertical is a distinct point-solution market in its own right rather than a SECOPS module. None of these vendors packages the full umbrella; the SECOPS row sits above them as the coordinating layer where cases consolidate across the verticals, which is exactly the parent-child shape the existing SOAR, vulnerability-management, and threat-intelligence wiring already expresses (and the ITAM umbrella precedent confirms).
 
 a2:
 
@@ -35,7 +35,7 @@ q3: Where should playbook executions and containment actions be canonically owne
 - b) SECOPS owns the case-correlated execution; SOAR owns the orchestration engine itself (rule library, connector catalog, workflow templates).
 - c) Consolidate SOAR into SECOPS as a module. This deprecates the existing SOAR domain row and is destructive, so it needs your explicit sign-off.
 
-Recommended: a. SOAR is already a separate child domain, so letting it keep these masters avoids duplicating its scope inside a SECOPS response module. Option (c) is destructive and would not be done without your approval.
+Recommended: a. The playbook-execution and containment-action schemas are owned by the dedicated orchestration platforms: Splunk SOAR and Palo Alto Cortex XSOAR are standalone SOAR products that master the playbook library, the instantiated playbook runs, and the per-asset containment actions those playbooks invoke, distinct from the SIEM/case layer above them. Since SOAR is already a separate child domain, letting it keep these masters (with SECOPS as consumer or embedded_master) tracks how those vendors package the market and avoids duplicating the orchestration scope inside a SECOPS response module. Option (c) is destructive and would not be done without your approval.
 
 a3:
 

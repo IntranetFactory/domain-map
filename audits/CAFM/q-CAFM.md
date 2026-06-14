@@ -69,7 +69,7 @@ q6: If CAFM stays distinct, where should lease accounting and utility tracking l
 - b) Route utility tracking to a new energy-management candidate domain.
 - c) Embed the utility-operations meter master into CAFM as an embedded, optional master.
 
-Recommended: a and b together (keep both out of CAFM proper). CAFM's description deliberately excludes lease accounting and utility metering, so routing each to its own specialist domain keeps CAFM light; option c is only worth it if a quick vendor pass shows meter readings really belong inside the booking workflow.
+Recommended: a and b together (keep both out of CAFM proper). The flagship packaging splits these out: energy and utility tracking is owned by dedicated platforms with no desk-booking surface (ENGIE Impact, Schneider Resource Advisor, Watershed, Accruent Lucernex Utility, and Eptura's sustainability module ships separate from its workplace product), which routes utility tracking to ENERGY-MGMT (b); lease accounting is owned by standalone lease-administration products built around ASC 842 / IFRS 16 / GASB 87 compliance (Accruent Lucernex, which integrates with FM/CMMS rather than bundling it), which routes lease accounting to LEASE-ACCT (a). Option c (embed the meter master in CAFM) is only worth it if a vendor pass shows meter readings really belong inside the booking workflow, and none of these vendors package them that way.
 
 a7:
 

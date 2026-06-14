@@ -35,7 +35,7 @@ q3: How should NPMD model network devices (router, switch, firewall, SD-WAN edge
 - b) NPMD treats them as an embedded master, with CMDB potentially mastering them later.
 - c) NPMD consumes CMDB configuration items via a filter instead of holding its own device entity.
 
-Recommended: b. An embedded master gives NPMD the device fields it needs now (SNMP credentials, polling profiles) while leaving room for CMDB to take over canonical device discovery later. This affects future synthetic-test and path-tracing references.
+Recommended: b. ThousandEyes, NETSCOUT nGeniusONE, and Kentik each carry their own network-device entity (router, switch, firewall, SD-WAN edge, packet broker) holding monitoring-scoped fields like SNMP credentials and polling profiles, distinct from a CMDB configuration item, yet none of them claims to be the enterprise's canonical device source of record. That packaging is exactly an embedded master: NPMD owns the device fields it needs now while leaving canonical discovery to CMDB later, which is why it edges out mastering outright (a) and consuming CMDB CIs raw via a filter (c), and it sets the target for future synthetic-test and path-tracing references.
 
 a3:
 

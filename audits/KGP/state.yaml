@@ -152,6 +152,12 @@ b2:
       - "(a) Collapse 255 into 743 under KGP (parallel with B2-S1 (a))"
       - "(b) Keep 255 in DATA-AI-PLAT as canonical, retire 743"
     why: "Architectural; coupled to B2-S1 in most outcomes."
+    evidence: >-
+      Stardog, GraphDB, AllegroGraph, Anzo, and Neo4j all master the instance/entity layer
+      (RDF resources, individuals, LPG nodes) in the same native graph store that holds the
+      ontology classes those entities instantiate; the data platform consumes that graph
+      (lineage, semantic models) rather than mastering it, so the KG entities sit on the same
+      side as the ontology, favoring option (a).
 
   - id: B2-S3
     summary: "Prefix vs bare-word naming for the canonical KGP masters (only triggers if B2-S1 picks the merge path)."

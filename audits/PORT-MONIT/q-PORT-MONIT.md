@@ -11,7 +11,7 @@ q1: (answer this first) Where should LP reporting live?
 - b) Split LP-Reporting into a new LP-side domain (an LP analytics platform) and queue it for separate modeling.
 - c) Move lp_quarterly_reports into Fund Administration (closer to the commitments and capital-account ledger).
 
-Recommended: a. Keeping it here is the current shape and unblocks the build now; options (b) and (c) are destructive restructures (a split or a re-master) that can wait. This choice reshapes the domain and one optional item below, so settle it first.
+Recommended: a. The GP-side suites Allvue and eFront bundle LP reporting inside the portfolio-monitoring domain, which is exactly the shape PORT-MONIT (a GP-side monitoring domain) already carries; only the LP-analytics products Chronograph and Cobalt LP run it as a separate LP-side platform, so option (b) is a real packaging but a destructive split, and option (c) is a re-master, both of which can wait. This choice reshapes the domain and one optional item below, so settle it first.
 
 a1:
 

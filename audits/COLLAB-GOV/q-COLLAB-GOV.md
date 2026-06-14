@@ -52,7 +52,7 @@ q4: How should Collaboration Governance be split into modules (the sub-areas of 
 - c) Five modules: the four-module default but with external-sharing split out of Permissions into its own module.
 - d) An alternative split (specify).
 
-Recommended: a. The four-module split respects the minimum-module floor for a seven-capability domain without one-module-per-capability sprawl, and it groups the capabilities the way the flagship vendors present them. This depends on the build shape in q1 and on the two collision calls below.
+Recommended: a. The flagship suites ship a handful of functional areas, not one product per capability: AvePoint Confidence Platform and Syskit Point bundle tenant inventory, lifecycle, and permission/access-review governance under one suite, ShareGate groups lifecycle automation with permissions audit (Protect), and Orchestry plus ProvisionPoint 365 carry provisioning and archive lifecycle as a distinct area, which is exactly the Inventory / Lifecycle / Permissions / Stale grouping. The same vendors sell migration (ShareGate Migrate, AvePoint Fly) and backup as separate products, so those fall outside this split and are handled by the q5 and q6 promote calls. This depends on the build shape in q1 and on the two collision calls below.
 
 a4:
 

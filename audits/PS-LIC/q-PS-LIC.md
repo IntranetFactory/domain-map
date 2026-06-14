@@ -14,7 +14,7 @@ q1: (answer this first) How should Public-Sector Permitting and Licensing be spl
 - c) Three modules: Intake, Compliance, and Billing.
 - d) A single full module (PS-LIC-CORE) plus a lighter starter variant for small county or SMB deployments.
 
-Recommended: a. It maps cleanly to the four lifecycle phases, gives each area a small ownable scope, and satisfies the rule that a domain with this many capabilities needs at least two modules. This choice drives every downstream fix (lifecycle gates, handoff wiring, the capability-to-module mapping), so it unlocks the rest of the build.
+Recommended: a. The flagship vendors split this market along the same four lifecycle phases option (a) names: OpenGov packages a Permitting, Licensing, and Code Enforcement suite that separates application intake, business-license issuance and renewal, inspections plus code enforcement, and fee calculation with payments; Accela and Tyler EnerGov ship discrete inspections, code-enforcement, and hearings modules alongside their intake and licensing surfaces, while ServiceNow PSDS and CitizenServe deliver the same intake-to-fees lifecycle. Application Intake, Issuance and Renewal, Inspection and Enforcement, and Fees each fall on a distinct side of how these vendors package the product, so the four-module split mirrors the established market rather than the two- or three-way collapses in (b) and (c) or the single-module shape in (d).
 
 a1:
 

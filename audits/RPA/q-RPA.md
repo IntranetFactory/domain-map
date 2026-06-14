@@ -14,7 +14,7 @@ q1: (answer this first) How should Robotic Process Automation be split into modu
 - b) Two modules: same as (a) but fold the credential vault into Orchestration as a fourth data set.
 - c) Defer the call until a vendor-research pass compares how the major platforms package these areas.
 
-Recommended: a. UiPath separates its credential store (Assets) into a surface distinct from the Orchestrator, which is exactly the dedicated Bot Identity module in (a); Automation Anywhere instead keeps credentials inside the Control Room, which is the folded (b) shape. The UiPath-style split matches security-conscious deployments and keeps each area cleanly owned; folding (b) is also valid if you want it leaner. This choice drives every module, capability, and downstream link below it, so it unlocks the rest of the build.
+Recommended: a. UiPath separates its credential store (Assets) into a surface distinct from the Orchestrator, which is exactly the dedicated Bot Identity module in (a); Automation Anywhere instead keeps credentials inside the Control Room, which is the folded (b) shape. The UiPath-style split matches security-conscious deployments; folding (b) is also valid if you want it leaner.
 
 a1:
 
