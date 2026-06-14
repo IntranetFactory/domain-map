@@ -146,6 +146,16 @@ b2:
     why: |
       Recording it now means that the moment Configure-Price-Quote decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CPQ.md q14.
     extra_b9d_added: "2026-06-11"
+  - id: B2-B9D-OWN-115
+    summary: "Configure-Price-Quote: name an owner for \"Manage product and service master data\" (no one is responsible for it today)"
+    question: |
+      Product Information Management forwards product configuration to Configure-Price-Quote to manage product and service master data, but Configure-Price-Quote does not yet have anyone assigned to manage product and service master data, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Configure-Price-Quote owns, and assign a named owner once Configure-Price-Quote sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Configure-Price-Quote decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CPQ.md q15.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-E1

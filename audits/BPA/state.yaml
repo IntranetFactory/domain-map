@@ -78,6 +78,17 @@ b2:
       - "Defer to a PROC-MIN audit."
       - "Skip as overspecification."
     why: "Discovered during pairwise BPA and PROC-MIN reconciliation. Not blocking; speculative additional cross-domain edge."
+  - id: B2-B9D-OWN-1708
+    summary: "Business Process Architecture: name an owner for \"Reengineer business processes and systems\" (no one is responsible for it today)"
+    question: |
+      Work Management hands work to Business Process Architecture, but Business Process Architecture has no one assigned to reengineer business processes and systems, so that step currently has nobody responsible for it. Who should own it?
+    options:
+      - "The a named owner runs it and approves it."
+      - "The a named owner runs it and the Process Owner approves."
+      - "Leave it unassigned for now."
+    why: |
+      Business Process Architecture already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-BPA.md q11.
+    extra_b9d_added: "2026-06-13"
 b3:
   - id: B3-CAPMAP-RELOCATE
     candidate: "business_capability_maps (248) master relocation BPA <- APM"

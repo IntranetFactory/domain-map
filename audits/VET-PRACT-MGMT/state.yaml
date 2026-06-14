@@ -317,6 +317,16 @@ b2:
     why: |
       Recording it now means that the moment Veterinary Practice Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-VET-PRACT-MGMT.md q11.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-815
+    summary: "Veterinary Practice Management: name an owner for \"Monitor/Manage supplier information\" (no one is responsible for it today)"
+    question: |
+      Supplier Lifecycle Management forwards controlled substance ledger entry to Veterinary Practice Management to monitor or Manage supplier information, but Veterinary Practice Management does not yet have anyone assigned to monitor or Manage supplier information, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Veterinary Practice Management owns, and assign a named owner once Veterinary Practice Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Veterinary Practice Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-VET-PRACT-MGMT.md q12.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-VETERINARY-APPOINTMENTS

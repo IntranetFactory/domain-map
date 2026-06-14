@@ -291,3 +291,25 @@ PROC-MIN is still pre-modular (0 `domain_modules`, 0 `capability_domains`) and m
 ### Post-fix status
 
 `next_action_by: user` (the remaining backlog is gated on the B2 modularization/capability decisions and the Phase-A build; no further unblocked agent-executable additive work remains this pass).
+
+## 2026-06-13 - Audit (B9d verification pass)
+
+State-driven pass. The only agent-executable item was B1A-B9D-VERIFY (run B9d in both directions; added 2026-06-09, after PROC-MIN's last audit). Executed via the committed resolver `bun run scripts/analytics/b9d_resolver.ts PROC-MIN` (`--dry-run` then `--write`); no catalog/DB writes, additive owner-side edits only.
+
+### Executed
+
+- **B1A-B9D-VERIFY resolved.** The resolver classified all 5 boundary handoff_processes tags across both directions (4 outbound to BPA/WORK-MGMT, 2 inbound from BPA). Verdicts: 1 ROLL-UP, 1 MIS-TAG, 1 UNOWNED. `--write` applied NO additive owner-side edits (the resolver reported "(none)" intended owner-file edits): none of the findings are ORPHAN-class additive `b2` items owed to an owner; all three are either destructive (sign-off) or a no-master surfacing. B1A-B9D-VERIFY removed from state.yaml (this entry is its disposition).
+
+### B9d findings (per the resolver, both directions)
+
+- **ROLL-UP, handoffs 180 / 783 (BPA -> PROC-MIN inbound), tag 13.1 'Manage business processes' pid 78, owner BPA.** Re-point to realized child 13.1.3.5. These are inbound rows BPA authored, so the re-point is a BPA-side SOURCE edit (destructive, sign-off). Report-only for BPA's audit, not authored from PROC-MIN's pass. NOT added to PROC-MIN state.yaml (owed by BPA).
+- **MIS-TAG, handoff 183 (PROC-MIN -> BPA outbound), tag 13.3.3 'Manage non-conformance' pid 414, owner BPA.** The carried entity (business_process_models) is realized under 13.1.3.5 'Publish processes'; 13.3.3's category fits neither endpoint. PROC-MIN authored this tag, so PROC-MIN owns the destructive re-point/delete -> recorded as new `b2` item B2-B9D-MISTAG-183 and surfaced in q-PROC-MIN.md (q9). Tag is `discovery_substring` provenance.
+- **UNOWNED, handoffs 740 / 741 (PROC-MIN -> BPA outbound), tag 13.1 pid 78.** Payloads discovered_process_models (580) / process_variants (582) read as no-master because PROC-MIN is unbuilt: it masters them at the legacy `domain_data_objects` grain (role=master) but has zero `domain_module_data_objects` rows, which is where the resolver reads ownership. Not a real coverage gap and not a mis-tag; clears automatically once B2-MODULARIZATION lands and the modular master rows are authored. Recorded as `b1b` item B1B-B9D-UNOWNED-740-741 (blocked on B2-MODULARIZATION).
+
+### Surfaced / left
+
+- Everything else carries forward unchanged: B1A-H1-742 (handoff 742 untagged, user decision), B1A-BUILD (unbuilt domain), all b2 decisions (B2-MODULARIZATION, B2-CAPABILITIES, B2-NAMING-RULES, B2-PATTERN-FLAGS, B2-EM-DASHES), the new B2-B9D-MISTAG-183, the b1b Phase-A-blocked band, and the b3 candidate backlog.
+
+### Post-fix status
+
+`next_action_by: user`. No agent-executable additive work remains: B1A-B9D-VERIFY (the only agent item) executed; its destructive ROLL-UP/MIS-TAG findings need user sign-off, the UNOWNED finding is blocked on the Phase-A build, and the rest of the backlog is user-decision (b2) or build-blocked (b1b). q-PROC-MIN.md refreshed with q9 (the MIS-TAG re-point/delete decision).

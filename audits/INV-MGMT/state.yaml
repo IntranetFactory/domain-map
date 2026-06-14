@@ -13,6 +13,7 @@ domain: INV-MGMT
 status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-07"
+# B9d reference-read (2026-06-13): "Stock Item" is reference/config data of INV-MGMT; it becomes ownable work only if INV-MGMT later runs a workflow on it.
 # B9d reference-read (2026-06-13): "Inventory Location" is reference/config data of INV-MGMT; it becomes ownable work only if INV-MGMT later runs a workflow on it.
 
 b1a:

@@ -378,3 +378,35 @@ written, no `record_status` stamped to approved, no JWT-audience errors.
 - https://tests.semantius.app/domain_map/domains
 - https://tests.semantius.app/domain_map/data_object_relationships
 - https://tests.semantius.app/domain_map/data_object_aliases
+
+## 2026-06-13 - B9d handoff-payload realization (B1A-B9D-VERIFY resolved)
+
+Ran the committed B9d resolver (`scripts/analytics/b9d_resolver.ts RPA`) in both directions over
+RPA's 4 boundary handoff-payload tags. 2 distinct (process, owner) findings, both directions
+walked; no catalog writes, no record_status touched, no JWT-audience errors.
+
+Classification:
+
+- **ORPHAN** - process 1299 "Triage IT service delivery incidents" (APQC 8.7.5.9), payload
+  `service_incidents`, handoffs 736 + 739 (RPA -> ITSM). Owner = ITSM (the domain that masters the
+  carried `service_incidents` entity), currently unbuilt. The owner-side `b2` item
+  `B2-B9D-OWN-1299` plus its q-question were ALREADY routed into `audits/ITSM/state.yaml` (line 127)
+  and `audits/ITSM/q-ITSM.md` (q8) by a prior B9d pass that audited ITSM. The `--write` run confirmed
+  idempotency (`q-file:exists (q8) state.yaml:exists`) and added nothing new. No duplicate written.
+- **UNOWNED** - process 1184 "Conduct IT compliance control auditing of internal and external
+  services" (APQC 8.3.6.2), payloads `rpa_executions` (524) + `rpa_activity_logs` (527), handoffs
+  737 + 738 (RPA -> AUDIT). The resolver reports "no master" because it reads ownership at the
+  module grain (`domain_module_data_objects`), which is empty for RPA (unbuilt). Both entities ARE
+  RPA-mastered at the legacy `domain_data_objects` grain (verified live: domain_id 38, role master).
+  This UNOWNED verdict is therefore a pure artifact of RPA being unbuilt, not a real cross-domain
+  gap: once Phase A (B1A-S1) migrates the 7 masters to `domain_module_data_objects`, process 1184's
+  payloads become RPA-owned and reclassify as RPA's own realization. Subsumed by the existing
+  B1A-S1 build item; the resolver surfaces it for sign-off rather than auto-applying, and nothing
+  was written.
+
+Outcome: B9d has now run on RPA in both directions. B1A-B9D-VERIFY removed from `state.yaml`
+(resolved). No agent-executable work remains: every open item is user-gated (B2-S1..S4, already in
+`q-RPA.md`) or build-blocked (B1A-S1 / B1A-S4 / B1B-S7 / B1B-S9). `next_action_by` flipped to `user`;
+the existing `q-RPA.md` (q1-q10) carries all open user decisions. State unchanged otherwise: RPA
+remains unbuilt (0 modules, 0 capabilities), prior additive work intact (B13 entity_type on all 7
+masters, 7 users-edges, 7 intra-domain relationships, 17 aliases, 10 event_category, 4 APQC tags).

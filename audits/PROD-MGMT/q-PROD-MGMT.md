@@ -113,6 +113,29 @@ a11:
 
 ---
 
+q13: Customer Service Management hands work to Product Management, but Product Management has no one assigned to provide customer feedback to product management on customer service experience, so that step currently has nobody responsible for it. Who should own it?
+- a) The a named owner runs it and approves it.
+- b) The a named owner runs it and the Head of Product approves.
+- c) Leave it unassigned for now.
+
+Recommended: a. Product Management already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
+
+a13:
+
+---
+
+q14: Six cross-domain handoffs were tagged by Product Management with a process category that does not match the work (for example a customer-service or cost-accounting process attached to a product-feature handoff). In each case the real work is already a product-development process. How should these mismatched tags be fixed?
+
+- a) Re-point each tag to the correct product-development process.
+- b) Delete the mismatched tags and re-tag them later in a dedicated research pass.
+- c) Decide per handoff (tell me which to re-point and which to delete).
+
+Recommended: a. The correct process already exists in each case, so re-pointing keeps the link and fixes the category in one step. Re-pointing changes an existing tag, so it needs your sign-off.
+
+a14:
+
+---
+
 ## Optional (will not hold up the build)
 
 q12: Eight first-class entity candidates show up across the flagship Product Management vendors (product_opportunities, product_themes, prioritization_scores, release_notes, feature_flag_records, user_research_sessions, release_milestones, competitor_intelligence_records). Should I research and add the ones that hold up? (yes/no)
@@ -123,4 +146,4 @@ a12:
 
 ---
 
-<!-- agent map, ignore: q1=B2-31-1 q2=B2-31-2 q3=B2-31-3.featreqpii q4=B2-31-3.releaselock q5=B2-31-3.roadmaplock q6=B2-31-3.linelock q7=B2-31-4 q8=B2-31-5 q9=B2-31-6 q10=B2-31-7 q11=B1A-APQC-APPROVAL-PASS q12=B3-PROD-OPPORTUNITIES+B3-PROD-THEMES+B3-PRIORITIZATION-SCORES+B3-RELEASE-NOTES+B3-FEATURE-FLAG-RECORDS+B3-USER-RESEARCH-SESSIONS+B3-RELEASE-MILESTONES+B3-COMPETITOR-INTELLIGENCE | domain_id=101 -->
+<!-- agent map, ignore: q1=B2-31-1 q2=B2-31-2 q3=B2-31-3.featreqpii q4=B2-31-3.releaselock q5=B2-31-3.roadmaplock q6=B2-31-3.linelock q7=B2-31-4 q8=B2-31-5 q9=B2-31-6 q10=B2-31-7 q11=B1A-APQC-APPROVAL-PASS q12=B3-PROD-OPPORTUNITIES+B3-PROD-THEMES+B3-PRIORITIZATION-SCORES+B3-RELEASE-NOTES+B3-FEATURE-FLAG-RECORDS+B3-USER-RESEARCH-SESSIONS+B3-RELEASE-MILESTONES+B3-COMPETITOR-INTELLIGENCE q13=B2-B9D-OWN-956 q14=B2-B9D-MISTAG-REPOINT | domain_id=101 -->

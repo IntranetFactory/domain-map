@@ -400,3 +400,61 @@ was owed.
 `next_action_by: user`. The agent has executed everything it can on an UNBUILT domain (catalog UX
 copy). All remaining progress is gated on the B2-1 module-shape decision and the B2-2..B2-7
 ownership-boundary calls; B2-H1 awaits a destructive-DELETE sign-off.
+
+## 2026-06-13 - B9d verify executed (B1A-B9D-VERIFY resolved)
+
+Ran the single open agent-executable item, B1A-B9D-VERIFY, via
+`bun run scripts/analytics/b9d_resolver.ts TPRM` (dry-run then `--write`). The resolver classifies
+every handoff payload on every boundary in BOTH directions. TPRM is a leaf consumer (UNBUILT: 0
+modules, masters nothing, publishes nothing), so its only boundaries are the two inbound handoffs.
+
+### Resolver output (both directions, both boundaries)
+
+- boundary tags: 4 | distinct (process, owner) findings: 4 | verdicts: 4 UNOWNED.
+
+| Boundary | Payload | PCF tags | Owner (legacy DDO master) | Verdict |
+|---|---|---|---|---|
+| 258 AUDIT (16) -> TPRM (19) | `audit_findings` (294) | 11.1.2 "Oversee enterprise risk mgmt" (pid 366); 12.3.2 "Report audit findings" (pid 389) | AUDIT (16), UNBUILT | UNOWNED (symptom of unbuilt owner) |
+| 278 ESG (21) -> TPRM (19) | `supplier_esg_assessments` (327) | 4.2.5 "Manage suppliers" (pid 167); 4.2.5.1 "Monitor/Manage supplier information" L4 (pid 815) | ESG (21), UNBUILT | UNOWNED (symptom of unbuilt owner) |
+
+### Why UNOWNED, not ORPHAN, and why no owner-side b2 was written
+
+The resolver reads ownership from the module-grain `domain_module_data_objects` junction only. Both
+carried entities DO have a canonical `master` row, but at the legacy `domain_data_objects` grain
+(`audit_findings` -> AUDIT 16; `supplier_esg_assessments` -> ESG 21, both verified live). Both owners
+are UNBUILT (0 `domain_modules`, hence 0 DMDO master rows), so the resolver reports "no master".
+This is a symptom of the unbuilt owners, NOT a coverage gap on TPRM: each payload resolves to
+RESOLVED/owned automatically once its owner builds.
+
+Both owners have ALREADY dispositioned these exact payloads in their own 2026-06-13 B9d passes:
+- **AUDIT** (state.yaml, 2026-06-13): "The UNOWNED findings on AUDIT-owned payloads (audit_findings,
+  ...) are a symptom of the unbuilt state, already covered by B1A-BUILD / B1B-MOD1."
+- **ESG** (history.md, 2026-06-13): "5 UNOWNED ... PCF 167 ... 815 carry ESG's own entities
+  (supplier_esg_assessments ...). These read as 'no master row anywhere' ONLY because ESG is unbuilt
+  ... All five resolve to RESOLVED/owned automatically once ESG is built ... left for the build."
+
+So no new `B2-B9D-OWN-*` item is owed on either owner (each has folded these into its own build), and
+writing duplicates would conflict with their finalized (`next_action_by: user`) state. The `--write`
+run applied ZERO owner-file edits and ZERO catalog writes (intended owner-file edits: "(none)"). No
+ROLL-UP re-point and no MIS-TAG delete arose from B9d: the PCF-815 L4 tag stays the separate,
+already-surfaced destructive user decision B2-H1, not a B9d finding. No `record_status` touched
+(Rule #1).
+
+### Other bands
+
+TPRM remains UNBUILT (verified live 2026-06-13: `/domain_modules?domain_id=eq.19` -> `[]`). The M1
+cascade is unchanged; every band below M stays non-evaluable and the build is surfaced (B2-1), not
+scaffolded, per the Rule #21 LEAVE rule for unbuilt domains. No fresh from-scratch audit was run;
+this was a state-driven execute pass over the one open agent-executable item.
+
+### JWT / PGRST errors
+
+None. No schema-cache refresh needed.
+
+### Post-fix status
+
+`next_action_by: user`. B1A-B9D-VERIFY is resolved and removed from `state.yaml`. The agent has now
+executed everything it can on this UNBUILT domain. All remaining work is the B2-1 module-shape
+decision, the B2-2..B2-9 ownership-boundary calls, and the destructive B2-H1 (PCF-815 DELETE)
+sign-off, plus the b3 backlog. None are agent-executable while UNBUILT. The current `q-TPRM.md`
+(q1..q11) covers all of them and is unchanged.

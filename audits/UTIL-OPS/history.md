@@ -385,3 +385,73 @@ Total rows written: 46 (8 PATCH data_objects, 1 PATCH domains touching 2 fields,
 - https://tests.semantius.app/domain_map/domains?id=eq.49
 - https://tests.semantius.app/domain_map/business_function_domains?domain_id=eq.49
 - https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(660,661,662,663,664,665,666,667)
+
+---
+
+## 2026-06-13 - Audit (B9d handoff-payload realization)
+
+State-driven Validate pass. The one fresh agent-executable item, B1A-B9D-VERIFY (run B9d
+bidirectionally on every boundary), was executed via `scripts/analytics/b9d_resolver.ts UTIL-OPS
+--write`. The domain is still UNBUILT (0 domain_modules, 0 capability_domains); every other open
+item is either a b2 user decision or a b1b item gated on the build B1B-S1 (itself gated on B2-5).
+The agent does not scaffold an unbuilt domain. No catalog rows were written this pass (B9d touches
+audit files only). JWT errors: 0.
+
+### B9d classification (7 boundary tags, both directions)
+
+The resolver walked every cross-domain handoff UTIL-OPS touches (all 7 are outbound; UTIL-OPS has
+zero inbound) and classified each payload against the realized work set:
+
+| Verdict | Handoff(s) | Process | Payload | Disposition |
+|---|---|---|---|---|
+| ORPHAN | 943 UTIL-OPS->ITSM | 1299 Triage IT service delivery incidents | service_incidents | Owner = ITSM (masters service_incidents). Routed to ITSM. |
+| RESOLVED | 944 UTIL-OPS->FIN | 302 Invoice customer | meter_reads | Realized; no action. |
+| UNOWNED | 942 UTIL-OPS->CSM | 196 Manage customer service problems | outage_events | Carried entity has no module-grain master (UTIL-OPS unbuilt). Subsumed by B1B-S1. |
+| UNOWNED | 941 + 945 UTIL-OPS->FSM | 828 Report maintenance issues | utility_assets, meter_reads | Same; subsumed by B1B-S1. |
+| UNOWNED | 939 UTIL-OPS->FIN | 1351 Generate customer billing data | utility_bills | Same; subsumed by B1B-S1. |
+| UNOWNED | 940 UTIL-OPS->FSM | 1898 Schedule field service | utility_service_orders | Same; subsumed by B1B-S1. |
+
+### Routed (cross-domain carve-out)
+
+- **ORPHAN pid 1299 -> ITSM.** Authored an additive `b2` item `B2-B9D-OWN-1299` into
+  `audits/ITSM/state.yaml` plus a plain-language question (q8) into `audits/ITSM/q-ITSM.md`
+  (ITSM masters `service_incidents`, so ITSM owns assigning a persona to triage the forwarded
+  incident). Additive only; record_status untouched (Rule #1). ITSM already carried a stack of
+  B9d owner items from prior runs; this slotted in as q8.
+
+### Not net-new work
+
+- **4 UNOWNED findings (handoffs 939, 940, 941+945, 942).** These are an artifact of UTIL-OPS
+  being unbuilt: the carried entities (utility_bills, utility_service_orders, utility_assets,
+  meter_reads, outage_events) ARE mastered by UTIL-OPS in the legacy `domain_data_objects` rollup
+  (domain 49), but the resolver reads ownership from `domain_module_data_objects` and UTIL-OPS has
+  zero modules. They resolve to UTIL-OPS itself the moment B1B-S1 (the build) lands, so they are
+  already subsumed by the existing build gate, not net-new orphans owed elsewhere. No new b1b item
+  created; the resolver left them as sender-side review items (not applied).
+
+### B1A-B9D-VERIFY resolved
+
+All 7 handoff payloads are now classified in both directions. The verify item is complete and
+removed from state.yaml.
+
+### Remaining (all blocked on the user or the build)
+
+- **b2 (user decisions, in q-UTIL-OPS.md):** B2-5 (umbrella vs promote, the gate), B2-1 (pattern
+  flags), B2-2 (outage payload), B2-3 (raw reads to FIN), B2-4 (asset-failure fan-out),
+  B2-RACI-ENG (Engineering RACI mapping).
+- **b1b (gated on B1B-S1, itself gated on B2-5):** B1B-S1 build + the module-grain cascade
+  (S2/S5/S6/S7/S8/S9/S11), B1B-S12-PARTIAL.
+- **b3:** 7 missing-domain candidates (non-blocking).
+
+### Counts
+
+- Executed this pass: B9d resolver (1 ORPHAN routed to ITSM, 1 RESOLVED, 4 UNOWNED subsumed by
+  build).
+- Catalog rows written: 0.
+- Audit-file edits: ITSM state.yaml + q-ITSM.md (B2-B9D-OWN-1299); UTIL-OPS history.md + state.yaml.
+- JWT errors: 0.
+
+### Final status
+
+`feedback_needed` / `next_action_by: user`. No agent-executable work remains; the domain waits on
+B2-5 (and the other b2 decisions) before the build can proceed.

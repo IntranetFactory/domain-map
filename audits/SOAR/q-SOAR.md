@@ -5,13 +5,19 @@ Turn security alerts into automated, repeatable response with playbooks that act
 
 ---
 
-q1: (answer this first) Before building SOAR, should we run formal vendor research, or build straight from the agent's proposed module shape?
+q1: (answer this first) We have now done the vendor research for SOAR. Should we build straight from the researched module shape below, or do you want to change it? (pick one)
 
-- a) Vetted route: run a formal vendor-research pass against the leading SOAR vendor public docs, save the result, then build.
-- b) Eyeball route: accept the agent's proposed 3-module split (Playbook Authoring, Automation Runtime, Case Management) and build now.
-- c) Defer the build entirely until the vendor-research pass lands.
+- a) Build the researched 3-module shape now (Playbook Authoring with connectors folded in, Automation Runtime, Case Management with one incident master).
+- b) Keep researching / defer the build.
+- c) Build a different shape (tell me how in your answer).
 
-Recommended: a. The leading SOAR vendors (alert-centric, playbook-centric, and workflow-DAG-centric) diverge enough in their schemas that building from an eyeball guess would mis-shape the modules. This choice gates the whole build, so it unlocks everything else.
+What the vendor research found (so you can decide from facts):
+- The market is genuinely three-shaped: Splunk SOAR is alert/event-centric (the Container is the headline object), Cortex XSOAR and ServiceNow Security Incident Response are incident-centric (the Incident is the spine, playbooks attach to it), and Tines (Stories) and Torq (Workflows) are workflow-DAG-centric with no required incident at all. There is no single canonical master, so the build names the authoring master generically (security_playbooks, with a workflow/story alias) so the DAG vendors are not second-class.
+- Integration connectors are a first-class, independently versioned authored surface, not loose playbook config: Cortex XSOAR Marketplace Content Packs, Splunk Apps, Torq and Swimlane integration catalogs all ship connectors as versioned, lifecycle-managed units. But five of seven vendors package connectors alongside playbooks/content (XSOAR Content Packs bundle integrations plus playbooks plus layouts together), so connectors live inside the Authoring module rather than as their own top-level module. Tines is the lone thin-connector exception (mostly generic HTTP actions).
+- Case versus incident: almost no vendor models "case" and "incident" as two separate masters. XSOAR's Incident, ServiceNow SIR's Security Incident, and Splunk's Container each serve as both case and incident in one record. The few vendors with a literal Cases object (Tines Cases, Torq HyperSOC, ThreatConnect) use it as the primary investigation container, not a tier below an incident, and Tines/Torq often defer the case to an external ITSM entirely. So the build uses a single security_incidents master and drops the separate security_cases entity proposed earlier.
+- SEC 8-K disclosure and breach-notification trails are not first-class entities in any flagship product; they are assembled from the incident timeline, case notes, and run logs. The build models them as Compliance-class field sets and tasks on the incident plus an audit-log entity, not as new masters.
+
+Recommended: a, with the researched shape: (1) SOAR-PLAYBOOK-AUTHORING owns security_playbooks/workflows, playbook_steps, playbook_versions, and integration_connectors (plus content packs, layouts, credentials); (2) SOAR-AUTOMATION-RUNTIME owns automation_runs, automation_run_steps, automation_artifacts, automation_run_logs; (3) SOAR-CASE-MGMT owns a single security_incidents master with case_tasks, case_evidence, case_timelines, case_notes, and IOC records. This is the eyeball 3-module split with two evidence-driven corrections (connectors moved into authoring, security_cases folded into security_incidents). Answering this unlocks the whole build.
 
 a1:
 
@@ -19,7 +25,7 @@ a1:
 
 q2: SOAR's business description still contains a forbidden em-dash character. Should I rewrite it to remove the em-dash (replacing it with a sentence break, no other change)? (yes/no)
 
-Recommended: yes. The em-dash is forbidden project-wide. This overwrites a non-empty value, so it needs your sign-off; the rewrite is a mechanical character swap only.
+Recommended: yes. The em-dash is forbidden project-wide. This overwrites a non-empty value, so it needs your sign-off; the rewrite is a mechanical character swap only. The new text would read: "Playbook DSL runtime that executes orchestrated steps across security tools. The engine IS the product, even if individual steps are declarative."
 
 a2:
 

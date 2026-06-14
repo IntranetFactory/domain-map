@@ -11,8 +11,8 @@
 schema_version: 2
 domain: WORK-MGMT
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-06"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # Resolved on 2026-06-02 (now live only in history.md, dropped here):
 #   B13 entity_type (22 masters), E1/E2/E3 personas (4 + 9 reach), E4 RACI+gate wiring,
@@ -25,10 +25,6 @@ last_audit: "2026-06-06"
 #   B2-RULE20-WORDING is therefore moot (the pre-write approval gate was rescinded).
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-H1-APQC-DEFERRED
     summary: "8 cross-domain handoffs have no clean cross-industry PCF match; route to Discover Pass 3"
     finding: >-
@@ -130,6 +126,34 @@ b1b:
     blocked_by:
       - {type: domain_audit, blocking_domain: CRM, milestone: "author-crm_opportunities-to-work_items-relationship"}
 
+  - id: B1B-B9D-SOURCE-OWNED-TAGS
+    summary: "B9d found 4 tag fixes on inbound handoffs owned by the SOURCE domain (CRM, PROD-MGMT, PSA, INTRANET-GOV)"
+    finding: >-
+      B9d both-directions classification found handoff_processes tag fixes whose handoff_processes
+      row was authored by the SOURCE domain (the row-level edit follows the source per the B9d band):
+      175 (CRM, ROLL-UP 3.5.1 -> 3.5.1.6), 999 (PROD-MGMT, MIS-TAG 1.4.2.3 -> 2.1.1.3 on feature_requests),
+      1249 (PSA, MIS-TAG 5.4.3.4 -> 5.2.2 on project_assignments), 1433 (INTRANET-GOV, MIS-TAG
+      13.6.4.6 -> 13.2.3 on work_items). Report-only for WM: each is fixed on the source domain's
+      own audit. The realized work itself is already RESOLVED on the WM side.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: CRM, milestone: "b9d-repoint-handoff-175"}
+      - {type: domain_audit, blocking_domain: PROD-MGMT, milestone: "b9d-mistag-handoff-999"}
+      - {type: domain_audit, blocking_domain: PSA, milestone: "b9d-mistag-handoff-1249"}
+      - {type: domain_audit, blocking_domain: INTRANET-GOV, milestone: "b9d-mistag-handoff-1433"}
+
+  - id: B1B-B9D-UNOWNED-DEPENDENCIES
+    summary: "B9d found 3 inbound payloads with no master row anywhere; surfaced on the sender, not droppable"
+    finding: >-
+      B9d found 3 inbound handoff payloads whose carried entity has no master row in the catalog,
+      so no owner can be assigned: 776 (VSDP, pull_requests, PCF 8.5.4), 780 (TEST-MGMT, test_defects,
+      PCF 2.3.1.11), 769 (IPAAS, webhook_subscriptions, PCF 8.5.5.1.4). Each is an unowned dependency
+      on the SENDER side; resolves when the sender domain masters the entity (or the handoff is
+      re-scoped). Not droppable from WM.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: VSDP, milestone: "master-pull_requests-or-rescope-handoff-776"}
+      - {type: domain_audit, blocking_domain: TEST-MGMT, milestone: "master-test_defects-or-rescope-handoff-780"}
+      - {type: domain_audit, blocking_domain: IPAAS, milestone: "master-webhook_subscriptions-or-rescope-handoff-769"}
+
 b2:
   - id: B2-ENTITY-TYPE-AMBIGUOUS
     summary: "Confirm or override 4 judgment-call entity_type classifications"
@@ -177,6 +201,38 @@ b2:
       - "Delete handoff 787 from WORK-MGMT side"
     affected_handoffs:
       - {handoff_id: 787, direction: outbound, target_domain: PSA, trigger_event: work_automation.triggered, null_field: target_domain_module_id}
+
+  - id: B2-B9D-MISTAG-OKR-PERF
+    summary: "WM mis-tagged okr_objectives handoffs to TALENT-MGMT with a perf-mgmt PCF code; re-point or delete (destructive)"
+    question: >-
+      B9d found handoffs 1320 + 1321 (WORK-MGMT okr_objective.committed/.scored → TALENT-MGMT)
+      tagged with PCF 7.3.2 "Manage employee performance" (pid 225). The carried entity
+      (okr_objectives) is already realized under PCF 1.2.6 "Develop and set organizational
+      objectives" (pid 98). The 7.3.2 tag is a mis-tag authored on the WM side. Fix is to
+      re-point handoff_processes 7.3.2 -> 1.2.6 on both rows, OR delete the tags. Both are
+      destructive edits to existing non-empty handoff_processes rows and need your sign-off.
+    options:
+      - "Re-point the tag from 7.3.2 to 1.2.6 on handoffs 1320 + 1321 (keeps APQC coverage, corrects the category)"
+      - "Delete the 7.3.2 handoff_processes rows on 1320 + 1321 (drops the tags entirely)"
+      - "Leave as-is"
+    affected_handoffs:
+      - {handoff_id: 1320, direction: outbound, target_domain: TALENT-MGMT, trigger_event: okr_objective.committed, payload: okr_objectives}
+      - {handoff_id: 1321, direction: outbound, target_domain: TALENT-MGMT, trigger_event: okr_objective.scored, payload: okr_objectives}
+
+  - id: B2-B9D-ROLLUP-OKR-PROD
+    summary: "WM outbound handoff 1324 tag sits at a child PCF grain; re-point to the realized parent (destructive)"
+    question: >-
+      B9d found handoff 1324 (WORK-MGMT okr_objective.scored → PROD-MGMT) tagged with PCF
+      1.2.6.3 "Monitor performance against objective" (pid 506). The carried entity
+      (okr_objectives) is realized at the parent grain 1.2.6 "Develop and set organizational
+      objectives" (pid 98). This is a ROLL-UP: re-point handoff_processes 1.2.6.3 -> 1.2.6 to
+      match the realized grain. It overwrites an existing non-empty handoff_processes row, so it
+      needs your sign-off.
+    options:
+      - "Re-point the tag from 1.2.6.3 to 1.2.6 on handoff 1324"
+      - "Leave as-is"
+    affected_handoffs:
+      - {handoff_id: 1324, direction: outbound, target_domain: PROD-MGMT, trigger_event: okr_objective.scored, payload: okr_objectives}
 
 b3: []
 # B3-PHASE0 resolved 2026-06-02: subagent ran; findings promoted to B1A-PHASE0-MISSING (under b1a above).

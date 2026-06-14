@@ -12,7 +12,7 @@ q1: (answer this first) How should the Value Stream Delivery Platform be split i
 - c) Four modules: Source Control, CI/CD, Deployment Management, and Value Stream Analytics.
 - d) A VSDP-Platform monolith plus a smaller VSDP-Starter kit for SMB buyers.
 
-Recommended: b. Rule #14 needs at least two modules once the domain has three or more capabilities, and the two-way split is the minimal shape that clears that floor without over-fragmenting before the deeper substrate exists. This is the build gate: it sets the module roster the loader writes and unblocks the capabilities, edges, lifecycle states, roles, and every per-module item below it.
+Recommended: b. The one seam every modular vendor agrees on is upstream-build versus downstream-deliver-and-measure: Atlassian splits Bitbucket Pipelines (build) from Bamboo (deploy), Harness sells CI and CD as separate priced modules, Octopus and Argo CD are deploy-only products, and Plandek and LinearB sell only the measurement slice. GitLab Ultimate sells the whole thing as one consolidated tiered product, which argues against fragmenting more than necessary and rules out the four-way split at build time. Azure DevOps (Repos / Pipelines / Artifacts / Test Plans / Boards) proves a finer split is possible later, but it bundles artifacts with the build side, which is why artifacts go in the Dev Pipeline module here. The 2-split is the only shape that is both faithful to the seam all vendors share and minimal enough to match the consolidated sellers. It is the build gate: it sets the module roster the loader writes and unblocks capabilities, edges, lifecycle states, roles, and every per-module item below.
 
 a1:
 
@@ -24,7 +24,7 @@ q2: Which flagship vendors should be authored as solutions on this domain, and a
 - b) Primary tier plus secondary CI/CD and delivery specialists: Jenkins (CloudBees), CircleCI, Buildkite, Harness CD, Argo CD, Octopus Deploy.
 - c) Everything in (b) plus the pure-play VSM specialists Plandek and LinearB.
 
-Recommended: c. The pure-play VSM vendors keep the value-stream-analytics surface honest, and the full set is what the catalog needs to be credible. This choice also unlocks the vendor-terminology aliases, which need a solution row to point at.
+Recommended: c. GitLab Ultimate, GitHub Enterprise, and Azure DevOps Services are the primary tier: broad platforms that span repos through analytics and define the consolidated-platform shape. Jenkins/CloudBees, CircleCI, Buildkite, Harness CD, Argo CD, Octopus Deploy, and the Atlassian surface (Bitbucket, Bitbucket Pipelines, Bamboo) validate the sub-slices as secondary coverage. Plandek and LinearB are non-optional: they are pure-play VSM vendors that master no repos or pipelines and sell only the analytics slice, so without them value_stream_metrics reads as a GitLab/Azure feature rather than a market with standalone vendors. This choice also unlocks the vendor-terminology aliases, which need a solution row to point at.
 
 a2:
 
@@ -36,7 +36,7 @@ q3: Where should test runs be mastered relative to this domain and the Test Mana
 - b) Let a VSDP CI/CD module hold test runs as an embedded master while Test Management stays canonical.
 - c) Make no change here, and only flag the test-defects relationship owner-side for the Test Management team's own next pass.
 
-Recommended: a. The current boundary (CI/CD orchestrates, Test Management owns assertion authoring and result detail) holds across the vendor set, so keeping Test Management canonical avoids duplicating mastery.
+Recommended: a. The flagship vendors do not blur pipeline runs and test runs into one record. Azure DevOps keeps Test Plans a separate named service from Pipelines, with test runs and results as first-class objects that a pipeline run merely references via the publish-test-results task. GitLab keeps the CI job distinct from the JUnit test reports it ingests, and CircleCI/Jenkins treat test results as artifacts attached to a run, not as the run itself. So CI/CD orchestrates and references test execution while assertion authoring and result detail are a separate mastery: keep Test Management canonical and have the VSDP CI/CD module link to test_runs rather than embed them.
 
 a3:
 
@@ -47,7 +47,7 @@ q4: Is a software deployment the umbrella event over platform-specific realizati
 - a) Keep it as a master: the umbrella release event that platform-specific records (Helm releases, PaaS deployments) realize.
 - b) Flip it to a derived/computed view rolled up from the platform-specific masters (matches the pure-play VSM normalization model).
 
-Recommended: a. Treating the deployment as the umbrella master keeps a single canonical release event for cross-domain handoffs; the derived shape only pays off once a normalization layer over multiple platform masters actually exists.
+Recommended: a. The deployment-owning vendors all persist it as a first-class master record: Octopus records each deployment of a release to an environment, Argo CD reconciles desired state into an actual sync/deployment record, and Harness CD tracks each deployment with its own lifecycle (queued, in-progress, succeeded, rolled-back). Only Plandek and LinearB treat deployment as a derived/computed event, and they do so precisely because they normalize signals pulled from those underlying tools rather than owning the deployment. Keep software_deployments as the umbrella master so a single canonical release event anchors the cross-domain handoffs (incident, change, observability); the derived shape only pays off once a normalization layer over multiple platform masters actually exists, which VSDP does not yet have.
 
 a4:
 
@@ -59,7 +59,7 @@ q5: Should Atlassian Bitbucket, Bitbucket Pipelines, and Bamboo be added as solu
 - b) Separate later load.
 - c) Skip them.
 
-Recommended: a. Adding the Atlassian delivery surface in the same pass keeps the solutions inventory complete from the start and avoids a second loader run.
+Recommended: a. Atlassian is a real flagship in this market (Bitbucket for SCM and pull requests, Bitbucket Pipelines for cloud CI/CD, Bamboo for server-side deployment), so adding its delivery surface in the same pass keeps the solutions inventory complete from the start and avoids a second loader run.
 
 a5:
 
@@ -71,7 +71,7 @@ q6: Which compliance frameworks should be attached to this domain, if any?
 - b) Attach the build-artifact-relevant subset (SLSA plus NIST SSDF) to VSDP.
 - c) Attach all four (NIST SSDF SP 800-218, EO 14028, EU Cyber Resilience Act, SLSA) to VSDP.
 
-Recommended: a. The domain itself is not directly regulated; supply-chain obligations attach most cleanly to the dedicated security domains, the way employment law attaches to hiring rather than to a delivery pipeline. Pick (b) only if you want build-artifact lifecycle policy enforceable from this domain directly.
+Recommended: a. The flagship platforms surface supply-chain-security signals but do not carry the frameworks as their own subject. GitHub Advanced Security provides SAST, secret scanning, dependency review, artifact attestations, and SBOM export that map to SLSA and NIST SSDF but are sold as a security add-on; GitLab Ultimate surfaces security dashboards and compliance pipelines as a tier capability over the pipeline. Neither models NIST SSDF, EO 14028, the EU Cyber Resilience Act, or SLSA as governed framework objects; those are the subject matter of dedicated AppSec and supply-chain-security domains (where Snyk, Chainguard, Sigstore, and JFrog Xray live). VSDP consumes and enforces policy (build gates, attestation requirements) but is not the regulation's home, the way employment law attaches to hiring rather than to the delivery pipeline that enforces a gate. Pick (b) only if you want build-artifact lifecycle policy enforceable from this domain directly.
 
 a6:
 

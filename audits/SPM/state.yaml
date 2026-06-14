@@ -43,6 +43,26 @@ b2:
     why: |
       Recording it now means that the moment Strategic Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SPM.md q4.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1135
+    summary: "Strategic Portfolio Management: name an owner for \"Manage IT projects and services interdependencies\" (no one is responsible for it today)"
+    question: |
+      Value Stream Delivery Platform forwards dependency chain to Strategic Portfolio Management to manage IT projects and services interdependencies, but Strategic Portfolio Management does not yet have anyone assigned to manage IT projects and services interdependencies, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Strategic Portfolio Management owns, and assign a named owner once Strategic Portfolio Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Strategic Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SPM.md q5.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-409
+    summary: "Strategic Portfolio Management: name an owner for \"Manage portfolio\" (no one is responsible for it today)"
+    question: |
+      Work Management forwards portfolio to Strategic Portfolio Management to manage portfolio, but Strategic Portfolio Management does not yet have anyone assigned to manage portfolio, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Strategic Portfolio Management owns, and assign a named owner once Strategic Portfolio Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Strategic Portfolio Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SPM.md q6.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   # Discretionary additive entities flagship vendors also model. Non-blocking; module landing now resolved.

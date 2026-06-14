@@ -11,14 +11,10 @@
 schema_version: 2
 domain: PROC-MIN
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-H1-742
     summary: Handoff 742 (business_rule_extracted.identified -> WORK-MGMT) untagged in handoff_processes; no clean APQC PCF match, defer to Discover
     finding: "H1 coverage stands at 5 of 6 cross-domain handoffs tagged (180/740/741/783 agent_curated -> process 78 Manage business processes L2; 183 discovery_substring -> process 414 Manage non-conformance L3). Handoff 742 is the residual untagged row. 2026-06-07 live PCF search confirmed no clean L3 match for business-rule extraction (only unrelated rule processes exist, e.g. 1896 Establish engagement rules, 593 warranty rules/claim codes, 677 develop business rules to provide personalized offers). Per Rule #21 EXECUTE policy this is a no-clean-match -> defer-to-Discover, NOT a forced best-effort tag."
@@ -126,6 +122,15 @@ b1b:
       - {type: user_decision, ref: B2-MODULARIZATION}
       - {type: user_decision, ref: B2-CAPABILITIES}
 
+  - id: B1B-B9D-UNOWNED-740-741
+    summary: "B9d UNOWNED: payloads discovered_process_models (740) / process_variants (741) read by resolver as no-master; artifact of PROC-MIN being unbuilt (legacy masters only, zero domain_module_data_objects). Clears on modularization."
+    finding: "B9d resolver run 2026-06-13 in both directions classified handoffs 740 / 741 (PROC-MIN -> BPA, tagged 13.1 'Manage business processes' pid 78) as UNOWNED: the carried entities (discovered_process_models 580, process_variants 582) have no role='master' row in domain_module_data_objects. They ARE PROC-MIN masters at the legacy domain_data_objects grain (role=master), but PROC-MIN has zero domain_modules so the modular master junction is empty and the resolver reads ownership from there. Not a real coverage gap and not a mis-tag: once B2-MODULARIZATION lands and the modular master rows are authored, these reclassify as owned-by-PROC-MIN and the 13.1 tag re-evaluates (ROLL-UP to a realized child, e.g. 13.1.3.5, on the next pass)."
+    blocked_by:
+      - {type: user_decision, ref: B2-MODULARIZATION}
+    affected_handoffs:
+      - {handoff_id: 740, direction: outbound, source_domain: PROC-MIN, target_domain: BPA, payload: discovered_process_models}
+      - {handoff_id: 741, direction: outbound, source_domain: PROC-MIN, target_domain: BPA, payload: process_variants}
+
   - id: B1B-F-BAND-SUPERSEDED
     summary: "RETIRED (2026-06-06 supersession): legacy skill 91 + per-module system skill items (was F1 / F2 / F3 / F5)"
     finding: "Per the supersession header, the per-module system-skill grain is canceled. The old items B1B-F1-LEGACY-SKILL (delete legacy domain-anchored skill 91 once per-module skills exist) and B1B-F2-F3-F5 (one system skill per module, skill_tools per skill, per-module Semantius score) no longer apply. New model: ONE domain-grain system skill per domain (skill 91 IS that domain-grain skill: domain_id=40, domain_module_id=NULL), tools live on domain_module_tools, full modules carry no skill. Skill 91 is therefore the correct domain-grain artifact, NOT a transitional one to delete. F-band re-evaluation under the new model happens after the Phase-A build (per-module tool authoring tracked in audits/_modularization-backlog.md)."
@@ -191,6 +196,17 @@ b2:
       - {table: trigger_events, id: 358, field: description}
       - {table: trigger_events, id: 798, field: description}
       - {table: skills, id: 91, field: description}
+
+  - id: B2-B9D-MISTAG-183
+    summary: "B9d MIS-TAG: handoff 183 (PROC-MIN -> BPA, payload business_process_models) is tagged 13.3.3 'Manage non-conformance' (pid 414), but BPA's business_process_models work is realized under 13.1.3.5 'Publish processes'. Destructive re-point or delete; PROC-MIN authored the tag so PROC-MIN owns the fix."
+    question: "Handoff 183 carries a handoff_processes tag pointing at the wrong APQC process. The conformance-deviation event ships business_process_models to BPA, but that entity's realized work sits under 13.1.3.5 'Publish processes', not 13.3.3 'Manage non-conformance'. Re-point the tag, or delete it?"
+    options:
+      - "Re-point handoff_processes(183) from process 414 (13.3.3) to the realized code 13.1.3.5 'Publish processes' (record_status='new')"
+      - "Delete the handoff_processes row for 183 and leave it untagged (route to Discover for a fresh tag)"
+      - "Leave the 13.3.3 tag in place (accept the mis-categorization)"
+    why: "B9d resolver run 2026-06-13 classified this as MIS-TAG (the 13.3.3 code's category fits neither endpoint's realized family; BPA realizes business_process_models under 13.1.x 'Publish processes'). Re-pointing overwrites a non-empty process_id and deleting removes a row, so both are destructive (Rule #21) and user-gated. The tag is a discovery_substring row (low-confidence provenance), which strengthens the re-point case."
+    affected_handoffs:
+      - {handoff_id: 183, direction: outbound, source_domain: PROC-MIN, target_domain: BPA, payload: business_process_models, current_tag: "process 414 / 13.3.3 Manage non-conformance"}
 
 b3:
   - id: B3-DATA-SOURCE-CONNECTIONS

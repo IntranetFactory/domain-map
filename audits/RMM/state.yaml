@@ -11,23 +11,27 @@
 schema_version: 2
 domain: RMM
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
-# b1a fully executed 2026-06-06 (see history.md "## 2026-06-06 - b1a execution").
-# All 7 b1a items resolved:
-#   B1A-HANDOFF-SRC-MODID, B1A-HANDOFF-TGT-MODID, B1A-H1, B1A-CATALOG-UX,
-#   B1A-SYSTEM-SKILLS, B1A-INTRA-HANDOFFS (DONE in full);
-#   B1A-LIFECYCLE-STATES (agent-mandated scope rmm_agents 223 + patch_jobs 224 DONE;
-#   automation_scripts 225 left unauthored pending the B2-S6 config-shape user_decision,
-#   which already tracks that residual). b1a is now empty.
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+# b1a is empty: B1A-B9D-VERIFY executed 2026-06-13 (B9d resolver run in both directions;
+# see history.md "## 2026-06-13 - B9d execution"). All earlier b1a items resolved 2026-06-06.
 
 b1b:
+  - id: B1B-B9D-UNOWNED-DISC-DEVICES
+    summary: "UNOWNED handoff payload on outbound 147: discovered_devices has no master row anywhere"
+    finding: |
+      B9d (2026-06-13, both directions) classified outbound handoff 147 (RMM
+      network_device.discovered -> DISCOVERY, PCF 8.7.7.1 "Manage infrastructure
+      configuration") as UNOWNED: the carried entity discovered_devices has no role='master'
+      row in any domain_module_data_objects across the catalog, so the payload cannot be
+      routed to an owner. RMM is the sender, so this is surfaced here (do not drop). The fix
+      is for DISCOVERY to master discovered_devices (then it routes as a normal ORPHAN to the
+      DISCOVERY owner), or for the handoff to be re-modeled. Not RMM's structural fix to author.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: DISCOVERY, milestone: master-discovered_devices}
+    affected_handoffs:
+      - {handoff_id: 147, direction: outbound, source_domain: RMM, target_domain: DISCOVERY, trigger_event: network_device.discovered, payload: discovered_devices, defect: no_master_anywhere}
   - id: B1B-S7
     summary: 4 outbound handoffs have NULL target_domain_module_id owed by counter-parties
     finding: |
@@ -161,6 +165,26 @@ b2:
       smaller?
     options: [a-match, b-larger, c-smaller]
     why: "Skill / tool design is product-shape call. Affects Phase S authoring throughput."
+  - id: B2-B9D-OWN-355
+    summary: "Remote Monitoring and Management: name an owner for \"Decommission productive assets\" (no one is responsible for it today)"
+    question: |
+      Hardware Asset Management forwards rmm agent to Remote Monitoring and Management to decommission productive assets, but Remote Monitoring and Management does not yet have anyone assigned to decommission productive assets, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Remote Monitoring and Management owns, and assign a named owner once Remote Monitoring and Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Remote Monitoring and Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-RMM.md q12.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1552
+    summary: "Remote Monitoring and Management: name an owner for \"Update work and asset records\" (no one is responsible for it today)"
+    question: |
+      IT Asset Management forwards automation script to Remote Monitoring and Management to update work and asset records, but Remote Monitoring and Management does not yet have anyone assigned to update work and asset records, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Remote Monitoring and Management owns, and assign a named owner once Remote Monitoring and Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Remote Monitoring and Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-RMM.md q13.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-AGENT-GROUPS

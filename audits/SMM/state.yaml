@@ -11,7 +11,7 @@
 schema_version: 2
 domain: SMM
 status: feedback_needed
-next_action_by: agent
+next_action_by: user
 last_audit: "2026-06-06"
 
 # 2026-06-02 modularization built the 4-module shape (path a): SMM-PUBLISHING (299),
@@ -20,14 +20,11 @@ last_audit: "2026-06-06"
 # the build; cascade items below lose their B2-MODULE-SHAPE gate but keep independent blockers.
 
 # b1a: agent-solvable; no other blocker; ready for next-pass technical action
-# All six b1a items executed 2026-06-06 (see history.md "2026-06-06 - b1a execution"):
-#   B1A-A4-CATALOG-UX, B1A-B7-USERS-EDGES, B1A-B6-INTRA-RELS, B1A-B11-ALIASES,
-#   B1A-F2-PER-MODULE-SKILLS, B1A-H1-PCF-RELOOKUP -- all DONE, removed from the list.
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+# All six original b1a items executed 2026-06-06 (see history.md "2026-06-06 - b1a execution").
+# B1A-B9D-VERIFY executed 2026-06-13 (see history.md "2026-06-13 - B9d verify"): B9d resolver
+#   classified all 8 boundary tags both directions -> 4 ORPHANs (no MIS-TAG, no ROLL-UP). The
+#   one ORPHAN SMM owns (pid 674, social_messages/social_mentions) is now b2 B2-B9D-OWN-674
+#   below; the other 3 routed to owner domains (CRM x2, MA x1). b1a is now empty.
 
 # b1b: blocked on a prior item or on a separate domain audit
 b1b:
@@ -195,24 +192,6 @@ b2:
     extra_origin_id: B2-S1
     extra_first_seen: "2026-05-30"
 
-  - id: B2-NOTES-SKILLTOOLS
-    summary: Rule #15 notes-pollution on 4 skill_tools rows on legacy skill 18. User-approved or auto-populated? Carry forward to new per-module skills?
-    question: >-
-      Four skill_tools rows on the legacy smm-system skill (id 18) carry populated
-      notes, Posts published externally to social network destinations, Mention
-      sentiment is core SMM analytics, AI-generated post imagery, AI-generated
-      post copy. Per Rule #15 these need to have been explicitly user-approved
-      at load time. When B1A-F2-PER-MODULE-SKILLS retires skill 18 and per-module
-      system skills land, decide whether the new rows ship with empty notes or
-      carry the same prose.
-    options:
-      - (approved-keep) The prose was user-approved; carry forward verbatim to new per-module skill_tools rows.
-      - (revert-and-strip) The prose was auto-written; do not carry forward. New rows ship with empty notes.
-    why: >-
-      Same as B2-NOTES-DDO; depends on load-time provenance. Gates B1A-F2-PER-MODULE-SKILLS write step.
-    extra_origin_id: B2-S2
-    extra_first_seen: "2026-05-30"
-
   - id: B2-PATTERN-FLAGS
     summary: B4 positive re-evaluation of pattern flags on all 5 workflow-bearing SMM masters per Rule #12.
     question: >-
@@ -265,6 +244,17 @@ b2:
       - B1B-REGULATIONS
     extra_origin_id: B1-2026-05-31-C
     extra_first_seen: "2026-05-31"
+
+  - id: B2-B9D-OWN-674
+    summary: "Social Media Management: name an owner for \"Monitor and respond to social media activity\" (no one is responsible for it today)"
+    question: |
+      Customer Service Management forwards social message to Social Media Management to monitor and respond to social media activity, but Social Media Management does not yet have anyone assigned to monitor and respond to social media activity, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Social Media Management owns, and assign a named owner once Social Media Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Social Media Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SMM.md q6.
+    extra_b9d_added: "2026-06-13"
 
 # b3: vendor research pending (Phase 0) -- missing-master candidates
 b3:

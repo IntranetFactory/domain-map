@@ -424,3 +424,27 @@ next_action_by: user. All remaining open items are user decisions (B2-S1/S2/S4/S
 - https://tests.semantius.app/domain_map/data_objects?id=in.(811,812,813,814,815,816,817,818)
 - https://tests.semantius.app/domain_map/domains?id=eq.167
 - https://tests.semantius.app/domain_map/domain_modules?domain_id=eq.167
+
+## 2026-06-13, B9d handoff-payload realization (B1A-B9D-VERIFY resolved)
+
+Ran the B9d band in BOTH directions on every PIM boundary via `scripts/analytics/b9d_resolver.ts PIM --write`. This was the one outstanding agent-executable item (`B1A-B9D-VERIFY`); it is now resolved and removed from state.yaml.
+
+**Classification of the 10 boundary payload tags** (verdicts: 4 ORPHAN, 2 REFERENCE-READ, 4 RE-TAG):
+
+- **ORPHAN (4)** -- real unrealized work, routed to the OWNER's audit files as additive `b2` items + q-file questions (`record_status` untouched; nothing written to the catalog):
+  - B2-B9D-OWN-113 "Manage product and service life cycle" (pid 113) -> owner **B2C-COMM** (handoff 1237 PIM->B2C-COMM, payload commerce_products). Added to `audits/B2C-COMM/` (q16).
+  - B2-B9D-OWN-115 "Manage product and service master data" (pid 115) -> owner **B2C-COMM** (handoff 1234, payload commerce_products). Already present in `audits/B2C-COMM/` from a prior run (q10); no duplicate.
+  - B2-B9D-OWN-115 "Manage product and service master data" (pid 115) -> owner **CPQ** (unbuilt; handoff 1236, payload product_configurations). Added to `audits/CPQ/` (q15).
+  - B2-B9D-OWN-1845 "Design and manage product data, design, and bill of materials" (pid 1845) -> owner **PIM** itself (unbuilt; handoff 1242 PLM->PIM, payload pim_products, mastered by PIM). Added to `audits/PIM/state.yaml` (b2) + `q-PIM.md` (q10). PIM is the owner because it masters the carried entity (pim_products).
+- **REFERENCE-READ (2)** -- inv_stock_items is INV-MGMT reference/config data (handoff 1235 PIM->INV-MGMT, pids 115 + 854); becomes ownable work only if INV-MGMT later runs a workflow on it. Recorded as a one-line note in `audits/INV-MGMT/state.yaml`. No question.
+- **RE-TAG (4)** -- DESTRUCTIVE `handoff_processes.process_id` re-points on PLM-sourced inbound handoffs (1241/1242/1243), where PLM tagged coarsely and a more specific code 2.3.1.8.5 exists on pim_products. These edit the handoff PLM authored, so they are NOT applied here; surfaced for sign-off:
+  - re-point pid 113 (2.1.2) -> 1845 (2.3.1.8.5) on handoff 1242
+  - re-point pid 115 (2.1.4) -> 1845 (2.3.1.8.5) on handoff 1241
+  - re-point pid 369 (11.2.2) -> 1845 (2.3.1.8.5) on handoff 1243
+  - re-point pid 418 (13.4.3) -> 1845 (2.3.1.8.5) on handoff 1241
+
+No catalog/database writes. All edits are additive, local to audit files. The 4 RE-TAGs remain user-sign-off items (PLM-source, destructive).
+
+### Post-fix status
+
+next_action_by: user. The only agent-executable item (B1A-B9D-VERIFY) is resolved. Remaining open: user decisions (B2-S1/S2/S4/S6/S7/S9 + the new B2-B9D-OWN-1845), deferred personas (B1A-PHASE-P), b1b blocked on other domains' audits (B1B-M7-DELETE-SIBLINGS, B1B-B11-REGULATIONS, B1B-PLM-DISCONTINUED-HANDOFF, B1B-B10B-*), and b3 backlog. The 4 B9d RE-TAGs await user sign-off (destructive, PLM-source).

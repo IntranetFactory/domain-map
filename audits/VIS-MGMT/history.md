@@ -334,3 +334,25 @@ next_action_by = user (the build is gated on B2-MODULE-SPLIT, the single decisio
 - https://tests.semantius.app/domain_map/data_objects
 - https://tests.semantius.app/domain_map/domains
 - https://tests.semantius.app/domain_map/trigger_events
+
+## 2026-06-13 - B9d handoff-payload realization (B1A-B9D-VERIFY resolved)
+
+Ran `scripts/analytics/b9d_resolver.ts VIS-MGMT` in both directions (`--dry-run` then `--write`). Resolved B1A-B9D-VERIFY; deleted it from state.yaml.
+
+### Result
+
+- **Boundary tags: 3, all outbound; 0 inbound handoffs.** VIS-MGMT is the source on all three cross-domain handoffs (871 to IGA, 872 to GRC, 873 to HCM); no domain hands off INTO VIS-MGMT, so the inbound half of the boundary is empty. Both directions were walked (the requirement is to process both, not that both be non-empty).
+- **All 3 payloads classify as UNOWNED at the module grain.** The resolver reads ownership from `domain_module_data_objects` (module grain), which is empty for VIS-MGMT because the domain is UNBUILT (0 modules). The carried entities are nonetheless mastered by VIS-MGMT itself in the legacy `domain_data_objects` table (verified live: 668 `visitor_registrations`, 671 `host_assignments`, 675 `visitor_audit_logs` all `role=master` on domain 24). So the true owner of all three payloads is VIS-MGMT, and that owner is unbuilt.
+  - 1523 "Provide facility access and security" -- payload `visitor_registrations` -- handoff 871 VIS-MGMT->IGA.
+  - 1540 "Manage safety, security, and access to sites" -- payload `host_assignments` -- handoff 873 VIS-MGMT->HCM.
+  - 1570 "Manage compliance audits" -- payload `visitor_audit_logs` -- handoff 872 VIS-MGMT->GRC.
+- **No owner-file edits written (catalog or audit), in either mode.** `--write` applied nothing: there is no module-grain owner to route a durable b2 + q into, and no NEIGHBOR owns any payload (VIS-MGMT owns all three), so the cross-domain q/b1b carve-out does not apply. The realized-nearest-sibling cross-check is correctly skipped per the B9d band because the owner is unbuilt (it realizes nothing).
+- **No ROLL-UP, no MIS-TAG.** Each PCF code is the exact tag of its handoff and sits in a fitting category, so there is nothing to re-point and nothing to delete; no destructive sign-off is owed. The 3 `handoff_processes` rows remain `agent_curated`, `record_status='new'` (untouched).
+
+### Disposition
+
+The B9d realization (authoring `process_raci` for processes 1523 / 1540 / 1570 and wiring each handoff's lifecycle `process_id` gate) requires modules, lifecycle states, and personas to exist. All of that is the UNBUILT build cascade gated on **B2-MODULE-SPLIT** (already surfaced in q-VIS-MGMT.md as q1). The three payloads will reclassify RESOLVED once the build lands and Phase E authors their RACI; until then they are correctly-tagged ORPHANs owned by this unbuilt domain, folded into B1A-BUILD. B1A-B9D-VERIFY is therefore resolved (run, both directions, nothing separately actionable) and removed from state.yaml; no new open item is created.
+
+### Post-fix status
+
+next_action_by = user. The only remaining work is B1A-BUILD, gated on the B2-MODULE-SPLIT decision (the single decision that unblocks the build). q-VIS-MGMT.md is current and unchanged (it already carries all 8 b2 decisions plus the optional b3 research bundle).

@@ -589,3 +589,65 @@ records). next_action_by flips back to user (B2-M1 is the load-bearing open item
   the build lands: Sales Comp Analyst, Sales Operations Manager, RevOps Strategy Lead,
   Commissions Finance Partner, Sales Rep (payee, statement-consumer).
 - No JWT errors. No notes writes. No record_status overrides. No mcp__* tool use. No cd.
+
+## 2026-06-13, Audit (state-driven Validate, Rule #21)
+
+### Summary
+
+State-driven pass working the single open agent-executable item in state.yaml:
+B1A-B9D-VERIFY (B9d had never run on SALES-PERF; the domain was last audited before
+the B9d band existed). Ran `scripts/analytics/b9d_resolver.ts SALES-PERF` in BOTH
+directions per the B9d band. Live state unchanged since 2026-06-07: domain id 102, 0
+domain_modules, 0 masters, 8 capabilities, 3 inbound cross-domain handoffs (202, 203
+from CRM; 208 from REV-INTEL), 0 outbound. catalog_tagline / catalog_description on the
+domains row remain populated (B1B-A1, prior pass). next_action_by flips agent -> user:
+the only unblocked agent item (B1A-B9D-VERIFY) is now resolved; the rest is gated on the
+user's B2-M1 module-shape decision.
+
+### Executed: B1A-B9D-VERIFY (B9d, both directions)
+
+The resolver classified all SALES-PERF boundary payloads (5 tags across 3 handoffs;
+3 distinct (process, owner) findings):
+
+- **RESOLVED** -- pid 712 "Manage opportunity pipeline" (owner CRM, master). No action.
+- **RE-TAG** -- pid 54 "Perform planning and management accounting" -> pid 3.5.1.7
+  "Determine sales resource allocation" on handoff 203 (source CRM). DESTRUCTIVE source
+  edit; NOT applied -- surfaced for sign-off. This is the same incorrect discovery_substring
+  row already tracked as B2-H1 / q-SALES-PERF.md q4 (substring matcher pulled "account"
+  from account.tier_changed). No new q-item authored; the existing q4 covers it.
+- **ORPHAN** -- pid 713 "Determine sales resource allocation" (owner CRM, which is unbuilt;
+  CRM masters crm_opportunities and customers, the carried payloads). Per the B9d band the
+  ORPHAN routes to the OWNER on whichever side owns it. Owner = CRM. The resolver added the
+  additive owner-side item to CRM's audit files:
+  - audits/CRM/state.yaml: B2-B9D-OWN-713 (b2 item, additive).
+  - audits/CRM/q-CRM.md: q19 (blocking question, plain-language).
+  Idempotent: each ID appears exactly once in the CRM files; the resolver also added two
+  other CRM-owned ORPHANs discovered on the same run (B2-B9D-OWN-151, -686) from CRM's other
+  boundaries. No catalog writes, no record_status touched, no SALES-PERF data overwritten.
+
+SALES-PERF authored no new SALES-PERF-side q-item from B9d: all ORPHAN/RE-TAG payloads are
+CRM-owned (SALES-PERF masters nothing -- it is unbuilt), so the durable items live in CRM's
+backlog per the state.yaml hygiene carve-out (b). B9d is now VERIFIED for SALES-PERF in both
+directions; B1A-B9D-VERIFY is resolved and removed from state.yaml.
+
+### Left (gated on the user, unchanged)
+
+- B1A-BUILD: UNBUILT domain (0 modules, 8 capabilities, master-bearing). Agent does not
+  scaffold; gated on B2-M1. blocked_by: user_decision B2-M1.
+- B1B-S1 (B10b target-side backfill on 202/203/208): blocked on B1A-BUILD.
+- B1B-V1..V7 (7 vendor-surface master placeholders): blocked on B1A-BUILD + B2-M1.
+- B2-M1 (module shape 8/5/3), B2-C1 (INCENTIVE-COMP-MGMT RACI), B2-R1 (regulations),
+  B2-H1 (discovery_substring row 106 disposition -- same row as the B9d RE-TAG above),
+  B2-P1 (pairwise timing). All five live in q-SALES-PERF.md (q1-q5). Unchanged.
+- B3-CompExpense, B3-CreditingRules, B3-Overlay, B3-CapacityCarveout: Phase-0-pending
+  backlog (q-SALES-PERF.md q6). Kept.
+
+### Files written
+
+- audits/SALES-PERF/state.yaml (B1A-B9D-VERIFY removed; next_action_by -> user; header refreshed).
+- audits/SALES-PERF/history.md (this section).
+- audits/CRM/state.yaml + audits/CRM/q-CRM.md (additive B9d owner-side ORPHAN items, via resolver).
+
+q-SALES-PERF.md unchanged (the 5 b2 + 1 b3-bundle questions remain current; B9d produced no
+new SALES-PERF-side question). No catalog writes. No JWT errors. No notes writes. No
+record_status overrides. No mcp__* tool use. No cd.

@@ -436,3 +436,54 @@ not scaffolded.
 `next_action_by: user`. All agent-doable additive/corrective work is executed at
 `record_status='new'`. S2P is now waiting on the user for the module-split build decision plus the
 surfaced judgment / destructive items above.
+
+## 2026-06-13, Audit (B9d handoff-payload realization, both directions)
+
+Resolved the one open agent-executable item B1A-B9D-VERIFY by running
+`scripts/analytics/b9d_resolver.ts S2P` in dry-run then `--write`. B9d had never run on S2P (the
+domain was last audited before the band existed). All 36 boundary tags on S2P's 29 cross-domain
+handoffs were classified in BOTH directions.
+
+### Verdicts (26 distinct (process, owner) findings)
+
+- **7 ORPHAN** (unrealized process whose category fits an OWNER; real missing work). Routed, as
+  additive `b2` + q items, into each OWNER domain's own audit files (the state.yaml hygiene
+  carve-out (b) / B9d owner-routing):
+  - SMP `B2-B9D-OWN-53` (8.7 Create and manage support services/solutions; payload saas_subscriptions; #42)
+  - VMS `B2-B9D-OWN-315` (9.6.1 Process accounts payable; payload contingent_invoices; #117) -- already present, left as-is.
+  - PLM `B2-B9D-OWN-588` (2.3.3.2; payload engineering_parts; #1089) -- already present, left as-is.
+  - SPEND-MGMT `B2-B9D-OWN-793` (4.2.1.1 Develop procurement plan; payload spend_policies; #560)
+  - HAM `B2-B9D-OWN-808` (4.2.4.1 Process/Review requisitions; payloads spare_parts_inventory, hardware_warranties; #668, #669)
+  - SAM `B2-B9D-OWN-809` (4.2.4.2 Approve requisitions; payload software_licenses; #636)
+  - AGENCY-MGMT `B2-B9D-OWN-1433` (9.6.1.3 Audit invoices and key data in AP; payload insertion_orders; #347)
+  - 5 of these were newly added (SMP, SPEND-MGMT, HAM, SAM, AGENCY-MGMT); VMS + PLM already carried the item.
+- **1 RESOLVED**: 12.4.9 Negotiate and document agreements/contracts (legal_contracts; #215). No action.
+- **1 RE-TAG** (source-side destructive, sign-off): handoff 347 tagged coarsely with 9.6.1 (315);
+  more specific 9.6.1.3 (1433) exists on the same entity. Surfaced as S2P `b2` B2-B9D-RETAG-347.
+- **1 MIS-TAG** (source-side destructive, sign-off): handoff 40 tagged 4.2.1 (163) but legal_contracts
+  is realized under 12.4.9 (398). Surfaced as S2P `b2` B2-B9D-MISTAG-40.
+- **16 UNOWNED**: carried entity has no master row anywhere. Same root cause as M1 (S2P is unbuilt,
+  0 domain_modules => 0 DMDO master rows), so its own masters lack a master-role DMDO row. Recorded
+  on B1B-S2P-MODULE-SPLIT.note_b9d_unowned; resolves automatically when the module split lands and
+  DMDO master rows are authored. Not a separate open item.
+
+### Writes
+
+- 5 neighbor domains' audit files (SMP, SPEND-MGMT, HAM, SAM, AGENCY-MGMT) received an additive
+  `b2` item + a plain-language q in each `q-<NEIGHBOR>.md`. No catalog/DB writes. No `record_status`
+  touched anywhere.
+- S2P state.yaml: deleted resolved B1A-B9D-VERIFY; added `b2` B2-B9D-RETAG-347 + B2-B9D-MISTAG-40
+  (source-side destructive sign-off items); recorded the UNOWNED note under B1B-S2P-MODULE-SPLIT.
+- S2P q-S2P.md: added q8 (RE-TAG) + q9 (MIS-TAG); renumbered the optional catalog question to q10;
+  updated the agent-map footer.
+
+### Post-fix status
+
+`next_action_by: user`. No agent-executable work remains on S2P. The domain waits on the user for:
+the module-split build decision (B2-MODULE-SPLIT, gates the entire b1b cascade), the carried-forward
+judgment items (Jaggaer dedup, pattern flags, send_email channel, e-invoice PII, pairwise timing,
+H1 approval sweep), and the two new B9d source-side destructive sign-offs (RE-TAG #347, MIS-TAG #40).
+
+### JWT-audience errors
+
+None. Tenant `ma@adenin.com` throughout.

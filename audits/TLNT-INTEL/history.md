@@ -363,3 +363,36 @@ Note on schema vs loader-idiom doc: `handoffs` uses `trigger_event_id` (FK to tr
 ### Post-fix status
 
 `status: feedback_needed`; `next_action_by: user` (B2-T1/T2/T3 decisions + B1A-SELF-CONTAIN destructive sign-off + B1B-S4 confirmation gate the remaining structural chain; B1A-PHASE-P personas deferred).
+
+---
+
+## 2026-06-13 - Audit (state-driven execute; B9d verify)
+
+### Summary
+
+State-driven Validate pass (SKILL.md Rule #21), driven from the open state.yaml worklist. The one agent-executable open item was B1A-B9D-VERIFY (B9d had never run on this domain). Executed it; resolved it. Every other open item is genuinely user-gated (open b2 decisions in the current q-file) or deferred/destructive. No catalog writes this pass beyond the verify run (which found nothing to write).
+
+### Executed (agent-doable)
+
+- **B1A-B9D-VERIFY (B9d band, BOTH directions):** ran `bun run scripts/analytics/b9d_resolver.ts TLNT-INTEL --dry-run`. Result: **0 boundary tags, 0 (process,owner) findings, empty verdicts**. Confirmed against live state: TLNT-INTEL has zero cross-domain handoffs in either direction (only the 3 intra-domain `lifecycle_progression` rows 1426-1428 from the 2026-06-07 pass; outbound cross-domain = `[]`, inbound cross-domain = `[]`). B9d is therefore **vacuously clean**: there are no handoff payloads on any boundary to classify (no RESOLVED/ROLL-UP/MIS-TAG/ORPHAN to act on), so no re-points, no MIS-TAG arbitrations, and no ORPHAN owner-side q-items were owed. The reason the boundary is empty is the genuine upstream block: the outbound handoffs (B1B-S2) are gated on the user's B2-T3 integration_pattern decision (q1 in the current q-file). Once those land, B9d will have payloads to classify and re-runs on the next pass. **Item resolved and removed from state.yaml.**
+
+### Confirmed clean (no fix owed)
+
+- **B13 (entity_type):** all 7 masters typed (859/860/864 operational_workflow, 861/862/863 computed, 865 operational_record). No `unclassified`.
+- **B15 (no pattern flag on computed/catalog/junction):** 861/862/863 (computed) carry all three pattern flags false. No violation.
+
+### Left (user-gated / deferred / destructive -- all in the current q-TLNT-INTEL.md, q1-q8)
+
+- **b1a B1A-PHASE-P (personas/RACI, E1):** still 0 `domain_roles` reach modules 175/176/177. DEFERRED and gated on B2-T2 (q4 -- whether to add a Marketplace Ops role shapes the persona set). Not auto-authored; multi-module persona authoring waits on the role-shape decision.
+- **b1a B1A-SELF-CONTAIN (M9, DESTRUCTIVE):** 11 contributor/required-consumer DMDO rows break self-containment; rewriting role/necessity on existing rows is destructive -> surfaced as q5, awaiting sign-off.
+- **b1b:** B1B-S2 (outbound handoffs, blocked on B2-T3/q1); B1B-S4 (master 865 users-edge, default-no confirmation); B1B-S5 (outbound cross-domain rels, blocked on B1B-S2 + ATS/HCM id verification); B1B-S7 (lifecycle editorial, blocked on B2-T1/q2; passes B12 structurally via typed columns); B1B-S8 (APQC tags, blocked on B1B-S2 cross-domain handoffs existing); B1B-S9 (roles, blocked on B2-T2/q4).
+- **b2:** B2-T1 (q2/q3), B2-T2 (q4), B2-T3 (q1).
+- **b3:** B3-T1 talent_pools, B3-T2 model_fairness_audits, B3-T3 skill_inferences (q6/q7/q8, optional, non-blocking).
+
+### Report-only (owed by other domains)
+
+Unchanged from prior pass: consumer DMDOs + inbound handoffs owed by ATS / HCM / TALENT-MGMT / SWP / SKILLS-MGMT.
+
+### Post-fix status
+
+`status: feedback_needed`; `next_action_by: user`. No agent-executable work remains: B9d verify done, all remaining items gated on the open q1-q8 decisions or deferred/destructive. The current q-TLNT-INTEL.md (q1-q8) is accurate and unchanged; no new questions surfaced this pass (B9d produced no ORPHAN owner-side items). No JWT errors; no Semantius writes attempted.

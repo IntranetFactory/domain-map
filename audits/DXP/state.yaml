@@ -72,6 +72,16 @@ b2:
     why: |
       Recording it now means that the moment Digital Experience Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-DXP.md q11.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1822
+    summary: "Digital Experience Platform: name an owner for \"Carry out post launch analytics to test the acceptability in the market\" (no one is responsible for it today)"
+    question: |
+      Product Management forwards a/b test to Digital Experience Platform to carry out post launch analytics to test the acceptability in the market, but Digital Experience Platform does not yet have anyone assigned to carry out post launch analytics to test the acceptability in the market, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Digital Experience Platform owns, and assign a named owner once Digital Experience Platform sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Digital Experience Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-DXP.md q12.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-1

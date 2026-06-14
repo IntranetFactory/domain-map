@@ -49,9 +49,29 @@ a4:
 
 ---
 
+q5: Two outbound goal handoffs to the talent-management domain were tagged with an employee-performance process code, but the goals they carry are actually realized under an organizational-objectives process. Fixing the tag means editing existing records, so I need your call.
+
+- a) Re-point the tag to the organizational-objectives process on both handoffs (keeps the process coverage, just corrects the category).
+- b) Remove the process tag from both handoffs entirely.
+- c) Leave them as-is.
+
+Recommended: a. The goals are already correctly realized as organizational objectives elsewhere, so re-pointing fixes the mismatch without losing coverage.
+
+a5:
+
+---
+
+q6: One outbound goal handoff to the product-management domain is tagged at a more specific sub-step than where the work is actually realized. Should I move the tag up to the matching parent step? (yes/no) This edits an existing record, so it needs your sign-off.
+
+Recommended: yes. The parent step is where this goal work is realized, so the tag should sit there.
+
+a6:
+
+---
+
 ## Optional (will not hold up the build)
 
-q5: A market-surface scan against the leading work-management vendors (Asana, monday.com, ClickUp, Wrike, Smartsheet) found 12 candidate entities not yet modeled, grouped by confidence. Should I research and load the ones that hold up? (yes/no)
+q7: A market-surface scan against the leading work-management vendors (Asana, monday.com, ClickUp, Wrike, Smartsheet) found 12 candidate entities not yet modeled, grouped by confidence. Should I research and load the ones that hold up? (yes/no)
 
 - a) Tier 1 (backs a capability that has no master today): proofing sessions plus annotations, work dashboards.
 - b) Tier 2 (confident market gaps): work views, non-billable time entries, work portfolios, work-to-goal links, work statuses, work status updates.
@@ -59,8 +79,8 @@ q5: A market-surface scan against the leading work-management vendors (Asana, mo
 
 Recommended: load Tier 1 and Tier 2, hold Tier 3. Additive only, can happen after the modules exist, and market-audit findings are never auto-loaded without your pick.
 
-a5:
+a7:
 
 ---
 
-<!-- agent map, ignore: q1=B2-ENTITY-TYPE-AMBIGUOUS q2=B2-LEGACY-DDO-ROLLUP-DRIFT q3=B2-CAPABILITY-NEAR-DUP q4=B2-HANDOFF-787-KEEP-OR-DELETE q5=B1A-PHASE0-MISSING | domain_id=135 -->
+<!-- agent map, ignore: q1=B2-ENTITY-TYPE-AMBIGUOUS q2=B2-LEGACY-DDO-ROLLUP-DRIFT q3=B2-CAPABILITY-NEAR-DUP q4=B2-HANDOFF-787-KEEP-OR-DELETE q5=B2-B9D-MISTAG-OKR-PERF q6=B2-B9D-ROLLUP-OKR-PROD q7=B1A-PHASE0-MISSING | domain_id=135 -->

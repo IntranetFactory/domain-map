@@ -490,3 +490,13 @@ UI links for tables written:
 - https://tests.semantius.app/domain_map/domains
 - https://tests.semantius.app/domain_map/data_object_aliases
 - https://tests.semantius.app/domain_map/business_function_domains
+
+## 2026-06-13, Audit pass (B9d realization + Phase 0 for the build gate)
+
+- **B1A-B9D-VERIFY resolved.** Ran `scripts/analytics/b9d_resolver.ts VSDP` in BOTH directions across all 19 boundary tags (8 distinct (process,owner) findings). Verdicts: 3 RESOLVED (pids 52, 1262, 1265 - no action), 1 ORPHAN, 4 UNOWNED, 0 ROLL-UP, 0 MIS-TAG.
+  - ORPHAN (pid 1135, "Manage IT projects and services interdependencies", payload dependency_chains, handoff 794 SPM->VSDP): owner is SPM (unbuilt). Wrote the additive owner-side b2 item `B2-B9D-OWN-1135` into `audits/SPM/state.yaml` plus a plain-language q (q5) into `audits/SPM/q-SPM.md` via `--write` (state.yaml hygiene carve-out (b)). No catalog writes, no record_status touched.
+  - 4 UNOWNED (pids 85, 170, 281, 1939 carrying value_stream_metrics, test_runs/ci_pipeline_runs, pull_requests, paas_build_records): structural consequence of VSDP being UNBUILT. value_stream_metrics, ci_pipeline_runs, and pull_requests are payloads VSDP itself will master once the build runs, so these resolve automatically when B2-1 unblocks the build. Not actionable now; nothing to delete or re-point.
+  - Item deleted from state.yaml per Rule #22 (open items only).
+- **Phase 0 vendor-surface report produced** at `.tmp_deploy/VSDP-phase0-2026-06-13.md` (Rule #22 forcing step: an UNBUILT domain whose build is gated entirely on market-shape b2 decisions must have a current Phase 0 backing the q-file). 11 flagship vendors, a 23-row x 11-vendor union surface matrix, module-shape evidence, and per-decision verdicts. Every verdict CONFIRMS the standing q-file recommendations: module split = b (2-split), solutions = c (full set), test_runs = a (TEST-MGMT canonical), software_deployments = a (umbrella master), Bitbucket/Bamboo = a (same load), regulations = a (none on VSDP).
+- **q-VSDP.md recommendations rewritten** to embed the named-vendor evidence inline (q1-q6), replacing the prior build-convenience-flavored reasoning ("matches GitLab Ultimate's positioning", "minimal shape that clears the floor"). The 2-split now cites the upstream-build-vs-downstream-deliver seam shared by Atlassian (Pipelines vs Bamboo), Harness (CI vs CD), Octopus/Argo (deploy-only), and Plandek/LinearB (measure-only). No decisions changed; only the grounding strengthened.
+- Net state: every agent-executable item is done. The domain remains feedback_needed, gated on the b2 decisions (B2-1 the build gate, B2-2..B2-7) that the user must answer in q-VSDP.md. All b1a/b1b items below b2 cascade from the build, which is gated on B2-1.

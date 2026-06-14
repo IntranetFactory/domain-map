@@ -473,3 +473,74 @@ the personal_data_assets collision confirmation. Footer mapping unchanged
 ### JWT-audience errors
 
 None.
+
+---
+
+## 2026-06-13 - Review (B9d verify run, both directions; B1A-B9D-VERIFY resolved)
+
+State-driven Validate (Rule #21). Ran the committed bidirectional resolver
+`scripts/analytics/b9d_resolver.ts PRIV-MGMT` (the per-domain instance of the B9d
+band). Transcript-gate output recorded below. Live re-verified against domain id 20
+(parent 15 = GRC): still UNBUILT (0 domain_modules, 0 capability_domains, 0
+PRIV-MGMT-owned masters), 2 inbound handoffs (283 DLP/dlp_incidents tagged process
+270; 288 DSPM/data_assets untagged, B9 payload drift persists), 1 handoff_processes
+row (283 -> 270, agent_curated, new). No drift since 2026-06-08.
+
+### B9d resolver output (both directions; transcript gate)
+
+`boundary tags: 1 | findings: 1 | verdicts: {"ORPHAN":1}`
+
+- Handoff 283 (DLP -> PRIV-MGMT, payload `dlp_incidents`, process 270 = PCF 8.3.5
+  "Develop and manage IT security, privacy, and data protection"). Owner = **DLP**
+  (the carried entity `dlp_incidents` id 330 is DLP-mastered), DLP currently unbuilt.
+- Handoff 288 (DSPM -> PRIV-MGMT) carries no `handoff_processes` tag, so it produces
+  no B9d finding. It is correctly held in B2-5 pending the DSPM-side B9 attribution fix.
+
+### Why no owner-side write was applied (and B1A-B9D-VERIFY is nonetheless resolved)
+
+The PRIV-MGMT boundary is a single tag. With no sibling in PRIV-MGMT's narrow scope,
+the resolver classifies 283/process-270 as a plain ORPHAN owned by DLP and would
+write `B2-B9D-OWN-270` into DLP's files. That write would be WRONG: DLP's OWN B9d
+run earlier today (2026-06-13, recorded in audits/DLP/history.md) processed the same
+`dlp_incidents` boundary with DLP's full-boundary context and classified process 270
+as a **RE-TAG**, because a more specific unrealized tag (8.3.3.2 "Analyze IT security
+threat impact", pid 1164) exists on the same entity. DLP's richer-context run
+authored the correct owner item `B2-B9D-OWN-1164` (q-DLP.md q11) and surfaced the
+8.3.5 -> 8.3.3.2 re-point as a destructive source-side sign-off. The B9d band is
+designed so that auditing EITHER side reconciles the boundary; DLP already did the
+authoritative job. Writing PRIV-MGMT's lower-context ORPHAN would create a duplicate
+/ competing owner item for the coarse process 270 that DLP has already superseded.
+Therefore: B9d ran in BOTH directions, the boundary is reconciled from the owner
+side, and no owner-file write is owed from PRIV-MGMT's pass. `--write` deliberately
+NOT run for PRIV-MGMT (it would author the incorrect B2-B9D-OWN-270 into DLP).
+
+### State hygiene (Rule #22)
+
+- **B1A-B9D-VERIFY resolved** -> deleted from state.yaml (B9d has now run both
+  directions; nothing owed on the PRIV-MGMT side).
+- **B1A-RECLASS** was a settled-classification tombstone ("PRIV-MGMT is
+  master-bearing; the module-shape / promote-scope / re-homing decisions live in
+  b2"), carrying no open agent action -> moved out of state.yaml per the
+  no-disposition-tombstone rule. The classification it records is already encoded
+  by B1A-BUILD + B2-1 + B2-2.
+
+### Executed (0 catalog writes)
+
+None. The only agent-doable additive catalog fix on this domain (A4 catalog UX) was
+applied 2026-06-07 and persists. Every remaining open item is a user decision
+(B2-1 re-home + consolidate, B2-2 split + scope, B2-4 config-shape exemption, B2-5
+handoff-288 timing) or a non-blocking Phase-0-vetted b3 (B3-1/B3-2/B3-3). The build
+(B1A-BUILD / B1B-S1-CLUSTER) cannot be scaffolded without B2-1 + B2-2, and the
+re-home + DSR consolidation is also destructive (user call regardless, Rule #21).
+
+### Status
+
+`feedback_needed` / `next_action_by: user`. No agent-executable work remains;
+everything left is gated on a user decision or a destructive sign-off. q-PRIV-MGMT.md
+is current (q1=B2-1 q2=B2-2 q3=B2-4 q4=B2-5 q5=B3-1 q6=B3-2 q7=B3-3) and needs no
+refresh: the B9d pass added no new user-facing question on PRIV-MGMT's side.
+last_audit bumped to 2026-06-13.
+
+### JWT-audience errors
+
+None.

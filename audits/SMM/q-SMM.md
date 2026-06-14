@@ -54,6 +54,16 @@ a4:
 
 ---
 
+q6: Customer Service Management forwards social message to Social Media Management to monitor and respond to social media activity, but Social Media Management does not yet have anyone assigned to monitor and respond to social media activity, so this step has no owner. How should it be handled?
+- a) Record it now as work Social Media Management owns, and assign a named owner once Social Media Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Social Media Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a6:
+
+---
+
 ## Optional (will not hold up the build)
 
 q5: Four deeper market areas are not modeled yet: employee advocacy (per-employee share tracking and gamification), the full influencer workflow (briefs, contracts, deliverables, payments), a richer social-listening substrate (queries, alerts, share of voice, crisis signals), and paid social (ad campaigns, creatives, targeting, budget pacing). Should I research these and either extend the existing modules or stand them up as their own domains where the market justifies it? (yes/no)
@@ -64,4 +74,4 @@ a5:
 
 ---
 
-<!-- agent map, ignore: q1=B2-PATTERN-FLAGS q2=B2-NOTES-DDO q3=B2-PARENT-DOMAIN q4=B2-REGULATION-SET q5=B3-EMPLOYEE-SHARE-RECORDS+B3-INFLUENCER-WORKFLOW+B3-SOCIAL-LISTENING-SUBSTRATE+B3-PAID-SOCIAL | domain_id=106 -->
+<!-- agent map, ignore: q1=B2-PATTERN-FLAGS q2=B2-NOTES-DDO q3=B2-PARENT-DOMAIN q4=B2-REGULATION-SET q5=B3-EMPLOYEE-SHARE-RECORDS+B3-INFLUENCER-WORKFLOW+B3-SOCIAL-LISTENING-SUBSTRATE+B3-PAID-SOCIAL q6=B2-B9D-OWN-674 | domain_id=106 -->

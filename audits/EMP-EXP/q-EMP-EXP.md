@@ -148,6 +148,16 @@ a16:
 
 ---
 
+q17: Work Management forwards engagement action plan to Employee Experience and Engagement to manage employee assistance and retention, but Employee Experience and Engagement does not yet have anyone assigned to manage employee assistance and retention, so this step has no owner. How should it be handled?
+- a) Record it now as work Employee Experience and Engagement owns, and assign a named owner once Employee Experience and Engagement sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Employee Experience and Engagement decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a17:
+
+---
+
 ## Optional (will not hold up the build)
 
 q14: Nine extra entities show up across the flagship employee-experience vendors (survey templates, engagement themes, survey invitations, sentiment topics, manager action recommendations, 360 review cycles, recognition events, pulse cohorts, engagement score snapshots). Should I research and add the ones that hold up? (yes/no)
@@ -158,4 +168,4 @@ a14:
 
 ---
 
-<!-- agent map, ignore: q1=B1B-S1 q2=B1A-S7 q3=B1A-SELF-CONTAIN q4=B2-S4 q5=B2-S5 q6=B2-S2 q7=B2-S3 q8=B2-S1.engdrivers q9=B2-S1.pulsequestions q10=B2-S1.surveyresponses q11=B2-S1.actionplanpii q12=B2-S1.actionplanapprover q13=B1A-S13-RES q14=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5+B3-S6+B3-S7+B3-S8+B3-S9 q15=B2-B9D-OWN-1048 q16=B2-B9D-RETAG | domain_id=62 -->
+<!-- agent map, ignore: q1=B1B-S1 q2=B1A-S7 q3=B1A-SELF-CONTAIN q4=B2-S4 q5=B2-S5 q6=B2-S2 q7=B2-S3 q8=B2-S1.engdrivers q9=B2-S1.pulsequestions q10=B2-S1.surveyresponses q11=B2-S1.actionplanpii q12=B2-S1.actionplanapprover q13=B1A-S13-RES q14=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5+B3-S6+B3-S7+B3-S8+B3-S9 q15=B2-B9D-OWN-1048 q16=B2-B9D-RETAG q17=B2-B9D-OWN-235 | domain_id=62 -->

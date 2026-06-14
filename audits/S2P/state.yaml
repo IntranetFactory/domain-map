@@ -11,21 +11,21 @@
 schema_version: 2
 domain: S2P
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # All agent-doable additive/corrective work for S2P is executed (record_status='new', awaiting
 # your approval): entity_type classification on the 5 masters, domain catalog UX copy (Rule #20),
 # 16 aliases, 7 trigger_event category backfills, 4 purchase_requisitions trigger_events, and the
-# 2 missing intra-domain relationship rows. What remains for S2P is the one structural decision
-# (the module split) that gates the entire b1b cascade, plus a handful of surfaced judgment /
-# destructive items. The domain is UNBUILT (0 domain_modules); the build itself is the b2 split.
-
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+# 2 missing intra-domain relationship rows. B9d (handoff payload realization) has now run in BOTH
+# directions on all 36 boundary tags: 7 ORPHANs routed to their OWNER domains' audit files as
+# additive b2 + q items (SMP, VMS, PLM, SPEND-MGMT, HAM, SAM, AGENCY-MGMT), 1 RESOLVED, and the
+# destructive source-side edits (1 RE-TAG on #347, 1 MIS-TAG on #40) surfaced below as b2 for
+# sign-off. The 16 UNOWNED B9d findings (carried entities with no master row anywhere) share the
+# module-split root cause and resolve once S2P authors domain_module_data_objects masters. What
+# remains for S2P is the one structural decision (the module split) that gates the entire b1b
+# cascade, plus the surfaced judgment / destructive items. The domain is UNBUILT (0 domain_modules);
+# the build itself is the b2 split.
 
 b1b:
   - id: B1B-S2P-MODULE-SPLIT
@@ -90,6 +90,15 @@ b1b:
       retirement plan are governed by the 2026-06-06 supersession header. Skill re-authoring is the
       domain-grain system skill + domain_module_tools, executed as part of the module-split build, not
       a separate per-module-skill task. No skill_tools work is owed.
+    note_b9d_unowned: >-
+      B9d (2026-06-13) surfaced 16 UNOWNED payloads on S2P boundaries (both directions) where the
+      carried entity has no master row anywhere in the catalog: sourcing_events (#565, #602), suppliers
+      (#127, #170, #586), purchase_orders (#41, #1050, #581, #582, #583), supplier_invoices (#198, #584,
+      #585), goods_receipts (#586), purchase_requisitions (#39, #45, #132), supplier_qualifications (#546,
+      #548), invoice_matches (#545). These are the SAME root cause as M1: S2P is unbuilt (0 domain_modules
+      => 0 domain_module_data_objects master rows), so its own masters have no master-role DMDO row. They
+      resolve automatically once the module split lands and DMDO master rows are authored; not a separate
+      open item.
   - id: B1B-A2-CAPABILITIES
     summary: "Authoring 5 to 8 market-specific S2P capabilities (B1-A2) gated on module-shape decision."
     finding: >-
@@ -216,6 +225,32 @@ b2:
       - "sweep-approve all 23 agent_curated rows (including pre-existing)"
       - "leave at record_status='new' for normal reviewer flow"
       - "name specific rows to approve"
+  - id: B2-B9D-RETAG-347
+    summary: "B9d RE-TAG (destructive): re-point handoff 347's APQC tag from 9.6.1 (process 315) to the more specific 9.6.1.3 (process 1433). S2P authored the coarse tag."
+    question: >-
+      Handoff 347 (S2P -> AGENCY-MGMT, payload insertion_orders) is tagged with the coarse APQC
+      process 9.6.1 'Process accounts payable (AP)' (process_id 315). A more specific child code
+      9.6.1.3 'Audit invoices and key data in AP system' (process_id 1433) already exists on the
+      same carried entity and is the realized grain. S2P authored the coarse tag, so re-pointing it
+      is a source-side edit. On approval: PATCH the handoff_processes row for handoff 347 from
+      process_id 315 to 1433 (record_status='new'). Destructive (overwrites an existing tag), so
+      surfaced for sign-off.
+    options:
+      - "re-point handoff 347 tag 9.6.1 (315) -> 9.6.1.3 (1433)"
+      - "leave the coarse tag as-is"
+  - id: B2-B9D-MISTAG-40
+    summary: "B9d MIS-TAG (destructive): handoff 40's tag 4.2.1 (process 163) is wrong-category for its payload; re-point to 12.4.9 (process 398) or delete. S2P authored the tag."
+    question: >-
+      Handoff 40 (S2P -> CLM, payload legal_contracts) is tagged with APQC process 4.2.1 'Provide
+      sourcing governance' (process_id 163), but the carried entity legal_contracts is already
+      realized under 12.4.9 'Negotiate and document agreements/contracts' (process_id 398). The
+      4.2.1 tag is a mis-tag on this boundary. S2P authored it, so the fix is a source-side edit.
+      On approval: either PATCH the handoff_processes row for handoff 40 from process_id 163 to 398
+      (record_status='new'), or DELETE the mis-tagged row. Destructive, so surfaced for sign-off.
+    options:
+      - "re-point handoff 40 tag 4.2.1 (163) -> 12.4.9 (398)"
+      - "delete the mis-tagged handoff_processes row on handoff 40"
+      - "leave the tag as-is"
 
 b3:
   - id: B3-CATALOGS

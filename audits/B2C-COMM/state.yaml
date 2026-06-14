@@ -170,6 +170,28 @@ b2:
     why: |
       Digital Commerce already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-B2C-COMM.md q14.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-735
+    summary: "Digital Commerce: name an owner for \"Accept and validate sales orders\" (no one is responsible for it today)"
+    question: |
+      Order Management hands work to Digital Commerce, but Digital Commerce has no one assigned to accept and validate sales orders, so that step currently has nobody responsible for it. Who should own it?
+    options:
+      - "The a named owner runs it and approves it."
+      - "Someone else you name runs and approves it."
+      - "Leave it unassigned for now."
+    why: |
+      Digital Commerce already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-B2C-COMM.md q15.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-113
+    summary: "Digital Commerce: name an owner for \"Manage product and service life cycle\" (no one is responsible for it today)"
+    question: |
+      Product Information Management hands work to Digital Commerce, but Digital Commerce has no one assigned to manage product and service life cycle, so that step currently has nobody responsible for it. Who should own it?
+    options:
+      - "The a named owner runs it and approves it."
+      - "Someone else you name runs and approves it."
+      - "Leave it unassigned for now."
+    why: |
+      Digital Commerce already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-B2C-COMM.md q16.
+    extra_b9d_added: "2026-06-13"
 b3:
   - id: B3-S1
     candidate: catalog substrate cluster (product_variants, product_categories, catalog_attributes)

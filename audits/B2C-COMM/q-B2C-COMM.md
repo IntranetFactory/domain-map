@@ -117,6 +117,28 @@ a14:
 
 ---
 
+q15: Order Management hands work to Digital Commerce, but Digital Commerce has no one assigned to accept and validate sales orders, so that step currently has nobody responsible for it. Who should own it?
+- a) The a named owner runs it and approves it.
+- b) Someone else you name runs and approves it.
+- c) Leave it unassigned for now.
+
+Recommended: a. Digital Commerce already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
+
+a15:
+
+---
+
+q16: Product Information Management hands work to Digital Commerce, but Digital Commerce has no one assigned to manage product and service life cycle, so that step currently has nobody responsible for it. Who should own it?
+- a) The a named owner runs it and approves it.
+- b) Someone else you name runs and approves it.
+- c) Leave it unassigned for now.
+
+Recommended: a. Digital Commerce already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
+
+a16:
+
+---
+
 ## Optional (will not hold up the build)
 
 q5: Every flagship vendor catalog carries SKU-level rows under products (product variants), a category tree, and a catalog attribute schema, which we do not model yet. Should I research and add this catalog substrate cluster? (yes/no)
@@ -151,4 +173,4 @@ a8:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S3 q2=B2-S1 q3=B2-S4 q4=B2-S8 q5=B3-S1 q6=B3-S2 q7=B3-S3 q8=B3-S4 q9=B2-B9D-OWN-100 q10=B2-B9D-OWN-115 q11=B2-B9D-OWN-738 q12=B2-B9D-OWN-1359 q13=B2-B9D-OWN-1422 q14=B2-B9D-OWN-23 | domain_id=71 -->
+<!-- agent map, ignore: q1=B2-S3 q2=B2-S1 q3=B2-S4 q4=B2-S8 q5=B3-S1 q6=B3-S2 q7=B3-S3 q8=B3-S4 q9=B2-B9D-OWN-100 q10=B2-B9D-OWN-115 q11=B2-B9D-OWN-738 q12=B2-B9D-OWN-1359 q13=B2-B9D-OWN-1422 q14=B2-B9D-OWN-23 q15=B2-B9D-OWN-735 q16=B2-B9D-OWN-113 | domain_id=71 -->

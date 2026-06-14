@@ -382,3 +382,30 @@ No DELETE, no overwrite of any non-empty value, nothing stamped approved (Rule #
 ### JWT errors
 
 None.
+
+## 2026-06-13 - Audit (state-driven execute; B9d verify)
+
+### Summary
+
+State-driven pass against `state.yaml` (was `next_action_by: agent`). Confirmed live: SUP-LIFE (domain_id=28) is still UNBUILT (0 `domain_modules`; M1 hard fail). The only genuinely agent-executable outstanding item was B1A-B9D-VERIFY (run B9d handoff-payload realization in BOTH directions); the entire b1b build cascade remains gated on the build (B1B-M1), itself gated on the B2-S1 module-count decision (user), so it is not scaffolded per the unbuilt-domain rule. No JWT errors. No catalog/database writes.
+
+### Executed
+
+- **B1A-B9D-VERIFY done.** Ran `scripts/analytics/b9d_resolver.ts SUP-LIFE --write`. It classified all 22 boundary tags across both directions: 0 ROLL-UP, 0 MIS-TAG, 3 ORPHAN, 7 UNOWNED. Additive owner-side edits were written to the OWNER domains' audit files (cross-domain carve-out (b)):
+  - VMS: + `b2` B2-B9D-OWN-167 ("Manage suppliers", pid 167) + blocking q (q12). Owner = VMS (built), masters `staffing_suppliers`; handoff 591 VMS->SUP-LIFE.
+  - VET-PRACT-MGMT: + `b2` B2-B9D-OWN-815 ("Monitor/Manage supplier information", pid 815) + blocking q (q12). Owner unbuilt; handoff 336 VET-PRACT-MGMT->SUP-LIFE.
+  - FOOD-TRACE: B2-B9D-OWN-815 already present from a prior run (idempotent, "exists"); handoff 362 FOOD-TRACE->SUP-LIFE.
+  No `record_status` touched, no catalog writes, nothing stamped approved (Rule #1).
+
+### Surfaced (not applied; sign-off / build-gated)
+
+- **7 UNOWNED B9d dependencies.** Every SUP-LIFE-mastered payload (`suppliers`, `supplier_qualifications`, `supplier_scorecards`, `supplier_onboardings`, `supplier_risk_assessments`, plus `sourcing_events` / `goods_receipts` / `invoice_matches` / `supplier_esg_assessments` carried inbound) classifies UNOWNED because SUP-LIFE has zero `domain_module_data_objects` master rows (it is unbuilt). These are NOT a SUP-LIFE-side B9d fix: they resolve automatically once B1B-M1 lands modules + DMDO masters (which makes SUP-LIFE the master and re-classifies these as RESOLVED/ROLL-UP on the next pass). Surfaced for the record; no write.
+- **B2-S1 / B2-S2 / B2-S4 / B2-H1** (q-SUP-LIFE.md q1-q9) and **b3** candidates (q10) unchanged; the existing `q-SUP-LIFE.md` remains current. No SUP-LIFE-side q regeneration needed (the B9d ORPHANs were routed to the OWNER domains' q-files, not SUP-LIFE's).
+
+### Post-fix status
+
+`next_action_by: user` (status `feedback_needed`). B1A-B9D-VERIFY removed from `b1a` (resolved). Remaining: B1A-BUILD (blocked on B2-S1) and the b1b build cascade (gated on B1B-M1 / B2-S1). The B2-S1 module-count decision unblocks the build and the entire b1b cascade. `last_audit: 2026-06-13`.
+
+### JWT errors
+
+None.

@@ -331,3 +331,47 @@ Loader: [.tmp_deploy/ps_lic_state_execute_2026_06_07.ts](../../.tmp_deploy/ps_li
   and, for B10b target FKs, on GRC M1 + FIN M1. No agent action until the build lands.
 - **B1B-F2**: RETIRED per the 2026-06-06 supersession (per-module skill grain canceled). No action.
 - **b3** (B3-1 through B3-10): Phase-0 speculative entity backlog, non-blocking, untouched.
+
+## 2026-06-13, B9d handoff payload realization (resolver, both directions)
+
+### Summary
+
+Ran the one open agent-executable item, B1A-B9D-VERIFY, via the committed resolver
+`scripts/analytics/b9d_resolver.ts PS-LIC` (dry-run then `--write`) in BOTH directions. Boundary:
+6 outbound handoffs, 0 inbound. Outbound: 921 (`regulatory_fee.assessed`, payload regulatory_fees) ->
+FIN; 922 (`code_violation.issued`, code_violations) -> GRC; 923 (`permit_inspection.failed`,
+permit_inspections) -> CSM; 924 (`license_renewal.due`, license_renewals) -> CSM; 925 (`license.issued`,
+license_records) -> FIN; 926 (`permit_inspection.failed`, permit_inspections) -> GRC. All 6 carry an
+`agent_curated` `handoff_processes` tag at `record_status='new'` (authored in the 2026-05-31
+Continuation). Classification output is in the audit transcript (B9d transcript gate satisfied).
+
+### Result: no agent-executable owner-side work (cold-start, gated on M1)
+
+The resolver classified all 6 boundary tags as UNOWNED at the module grain, because PS-LIC has zero
+`domain_module_data_objects` rows (UNBUILT domain). At the legacy `domain_data_objects` grain all 6
+payloads ARE PS-LIC-mastered (role=master, domain 46), so the true owner is PS-LIC itself, not "no
+master anywhere". But PS-LIC is unbuilt: zero personas (`domain_roles`), zero realized processes (no
+`process_id`-wired lifecycle gates), so there is no R/A persona pool to draw from, and the realization
+rows (`process_raci` + gated lifecycle `process_id`) all gate on the M1 build (user decision B2-1 /
+B2-2). This is exactly the cold-start ORPHAN case the B9d band documents. The resolver therefore
+applied ZERO additive owner-file edits and wrote NOTHING to the catalog or any audit file (confirmed:
+clean working tree after `--write`).
+
+- **No ROLL-UP** re-points owed (no payload has a realized ancestor/descendant; nothing is realized
+  anywhere yet).
+- **No MIS-TAG**: 921/925 (9.x finance) -> FIN and 922/926 (11.2.2 regulatory compliance) -> GRC fit
+  their boundaries. 923/924 (9.2.2.x billing codes) -> CSM are borderline, but the deterministic engine
+  did not flag them as MIS-TAG, and a `handoff_processes` re-point/delete is destructive (Rule #21), so
+  left untouched (no unprompted sign-off).
+- **No ORPHAN q authored** on any owner: the only owner is PS-LIC (unbuilt), and its realization is the
+  same M1-gated build already tracked by B1B-B12 / B1B-B9-MISSING. A separate B2-B9D-OWN item would
+  duplicate the existing parked build rather than add new information.
+
+### State change
+
+- Removed resolved **B1A-B9D-VERIFY** from `state.yaml` (B9d has now run in both directions; b1a is
+  empty).
+- `next_action_by: agent -> user`; `status` stays `feedback_needed`; `last_audit` -> 2026-06-13.
+- Everything still open is a user decision (b2: B2-1, B2-2, B2-3, B2-4, B2-6) or gates on the build /
+  on FIN+GRC M1 (b1b cascade). No agent-executable work remains. The existing `q-PS-LIC.md` already
+  carries all five b2 questions and stays current (no regeneration needed).

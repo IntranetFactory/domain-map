@@ -550,3 +550,62 @@ partner_management / deal_and_pipeline / funds_and_incentives (MDF + co-op + cha
 ### Status
 
 Still `feedback_needed` / `next_action_by: user`. No catalog rows written this pass (research + audit-file updates only). Awaiting `a-PRM.md` with the 6 decisions; build executes on receipt per Rule #21.
+
+## 2026-06-13, B9d handoff-payload realization (resolve B1A-B9D-VERIFY)
+
+### Why this pass ran
+
+`state.yaml` carried `next_action_by: agent` solely because of the open b1a item
+`B1A-B9D-VERIFY`: B9d (handoff payload realization) had never run on PRM. Executed it
+this pass per the SKILL.md B9d band (both directions), via the committed resolver
+`scripts/analytics/b9d_resolver.ts`.
+
+### B9d result (both directions)
+
+PRM has only outbound handoffs: 211 (`co_sell.opportunity_created` -> CRM-PIPELINE-MGT,
+payload `crm_opportunities`) and 212 (`partner_referral.qualified` -> CRM-LEAD-MGT, payload
+`crm_leads`). No inbound handoffs. Both payloads carry one `handoff_processes` tag, process
+151 "Manage sales partners and alliances" (APQC code 3.5.5, agent_curated, record_status='new').
+
+- `bun run scripts/analytics/b9d_resolver.ts PRM --dry-run` then `--write`.
+- boundary tags: 2 | distinct (process, owner) findings: 1 | verdicts: {ORPHAN: 1}.
+- **Classification: ORPHAN.** Process 151 is unrealized (no gated `data_object_lifecycle_states.process_id`
+  + no `process_raci`), and its category (3.x = sales/CRM) fits the boundary, so it is real
+  missing work, not a MIS-TAG. Not a ROLL-UP (no ancestor/descendant realized).
+- **Owner = CRM.** CRM masters both carried entities (`crm_opportunities`, `crm_leads`). CRM is
+  unbuilt, so the realized-nearest-sibling cross-check is correctly SKIPPED (an unbuilt owner
+  realizes nothing and must never downgrade a correctly-tagged ORPHAN). Finding grain is per
+  (process, owner); here both payloads collapse to the single (151, CRM) finding.
+
+### Routed to the OWNER (CRM), additive only
+
+Per the B9d band + state.yaml hygiene carve-out (b), the ORPHAN was written into the OWNER's
+audit files:
+
+- `audits/CRM/state.yaml`: + b2 item `B2-B9D-OWN-151`.
+- `audits/CRM/q-CRM.md`: + blocking question q17 (token `q17=B2-B9D-OWN-151`), agent-map footer
+  updated.
+
+CRM already carried 11 prior `B2-B9D-OWN-*` items from other boundaries; `B2-B9D-OWN-151` was
+not among them, so this is a net-new additive item. No overwrite of CRM data. No catalog/DB
+writes. No `record_status` touched (Rule #1). No MIS-TAG (none found, so no destructive
+`handoff_processes` deletion to surface). No ROLL-UP re-point.
+
+### State recompute
+
+- Removed `B1A-B9D-VERIFY` from `state.yaml` (resolved; this note is its history record).
+- `B1A-BUILD` remains: PRM is UNBUILT (0 modules / 0 caps / 0 masters / 0 solutions) and the
+  build is gated on the 6 open b2 decisions (B2-M1 / B2-R1 / B2-T1 / B2-T2 / B2-S1 / B2-S2). No
+  `a-PRM.md` exists, so those remain unanswered. The build is not agent-executable until they are.
+- `next_action_by` -> `user` (b1a now empty of agent-executable items; the only remaining b1a,
+  B1A-BUILD, is blocked on user b2 decisions; q-PRM.md is current).
+
+### JWT errors
+
+None encountered this pass.
+
+### Files written
+
+- `audits/PRM/state.yaml` (dropped B1A-B9D-VERIFY; header note; `next_action_by` user; `last_audit` 2026-06-13).
+- `audits/PRM/history.md` (this section).
+- `audits/CRM/state.yaml` + `audits/CRM/q-CRM.md` (additive B2-B9D-OWN-151 owner-routing, carve-out (b)).

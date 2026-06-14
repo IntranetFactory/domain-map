@@ -133,6 +133,16 @@ b2:
     why: |
       Recording it now means that the moment Real Estate Brokerage and Agent Operations decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-RE-BROKERAGE.md q4.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1860
+    summary: "Real Estate Brokerage and Agent Operations: name an owner for \"Close the sale\" (no one is responsible for it today)"
+    question: |
+      Commercial Real Estate Operations forwards real estate listing to Real Estate Brokerage and Agent Operations to close the sale, but Real Estate Brokerage and Agent Operations does not yet have anyone assigned to close the sale, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Real Estate Brokerage and Agent Operations owns, and assign a named owner once Real Estate Brokerage and Agent Operations sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Real Estate Brokerage and Agent Operations decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-RE-BROKERAGE.md q5.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-PHASE0-MARKET-GAPS

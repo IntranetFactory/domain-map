@@ -1,8 +1,8 @@
 schema_version: 2
 domain: PRM
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-08"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # State-driven Validate execute ran 2026-06-07 (Rule #21, bulk batch). PRM is UNBUILT:
 # 0 domain_modules (M1 hard fail), 0 capability_domains, 0 masters, 0 solution_domains.
@@ -25,12 +25,18 @@ last_audit: "2026-06-08"
 # [MDF+co-op+commissions/rebates/SPIFs], enablement_and_performance [training+certs+scorecards+QBR+JBP]);
 # TCMA / ECOSYSTEM-LED-GROWTH / AFFILIATE-MGMT promote to sibling domains (B2-S1/B2-S2/B3-3 = promote).
 # q-PRM.md regenerated with inline vendor evidence. Still feedback_needed: 6 b2 open, awaiting a-PRM.md.
+#
+# 2026-06-13 B9d ran (was B1A-B9D-VERIFY, now resolved + moved to history.md). PRM has only
+# outbound handoffs (211, 212 -> CRM), both tagged process 151 "Manage sales partners and
+# alliances" (APQC 3.5.5). Resolver (scripts/analytics/b9d_resolver.ts PRM, both directions):
+# 1 finding, classified ORPHAN, owner=CRM (CRM masters both crm_opportunities + crm_leads;
+# CRM unbuilt so the realized-sibling cross-check is correctly skipped). Routed additively to
+# the OWNER per the B9d band + state.yaml hygiene carve-out (b): added b2 item B2-B9D-OWN-151
+# + q17 into audits/CRM/{state.yaml,q-CRM.md}. No catalog writes, no record_status touched, no
+# MIS-TAG, no ROLL-UP. No agent-executable work now remains on PRM: B1A-BUILD is gated on the
+# 6 open b2 decisions (q-PRM.md current), so next_action_by -> user.
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capabilities awaiting a build."
     finding: "Live re-verify 2026-06-07: domain 96 has 0 domain_modules rows (M1 fail), 0 capability_domains, 0 masters, 0 solution_domains, so it is not deployable today. It must be built before any persona / RACI work applies. The catalog UX fields (tagline + description) are now populated; business_logic and the whole structural surface remain unbuilt."

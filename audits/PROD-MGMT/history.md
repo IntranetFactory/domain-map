@@ -459,3 +459,17 @@ E1 PASS (4 personas reach the multi-module domain; zero-persona finding cleared)
 ### Decisions
 
 _(none yet; b2 forks + destructive steps awaiting user)_
+
+## 2026-06-13, B9d handoff-payload realization (bidirectional)
+
+Ran `scripts/analytics/b9d_resolver.ts PROD-MGMT` in both directions over every boundary (27 boundary tags, 20 distinct (process,owner) findings). Resolves B1A-B9D-VERIFY. Verdicts: 8 RESOLVED, 1 ROLL-UP, 7 MIS-TAG, 2 ORPHAN, 2 UNOWNED.
+
+- **RESOLVED (8):** product_features under 2.1.2.1 (#1001), product_roadmaps + work_items + roadmap_items under 3.2.4.8 (#1011/#1252/#1012/#1322/#243), product_releases under 8.6.4.5 / 8.6.4.8 (#1009/#1008/#1250/#1010/#1251), okr_objectives under 1.2.6 (#1323), pull_requests under 8.6.4.5 (#775). No action.
+- **ORPHAN (2), additive owner-side writes applied (record_status untouched):**
+  - pid 956 "Provide customer feedback to product management on customer service experience" (customer_feedback_items, #998 CSM->PROD-MGMT). Owner = PROD-MGMT (built). Wrote b2 `B2-B9D-OWN-956` + q13 into this domain's files.
+  - pid 1822 "Carry out post launch analytics..." (ab_tests, #813 DXP->PROD-MGMT). Owner = DXP (unbuilt). Wrote b2 `B2-B9D-OWN-1822` + q12 into `audits/DXP/` (cross-domain ORPHAN carve-out).
+- **ROLL-UP (1), surfaced (source owns):** #1324 okr_objectives tagged 1.2.6.3, realized at parent 1.2.6. Re-point is WORK-MGMT's (the source's) sign-off, surfaced on WORK-MGMT's side, not PROD-MGMT's.
+- **MIS-TAG (6 PROD-MGMT-authored), surfaced as DESTRUCTIVE b2 `B2-B9D-MISTAG-REPOINT` + q14:** #997/#1004 (2.3 -> 2.1.2.1), #1003 (6.2.2 -> 2.1.2.2), #1006 (9.1.3 -> 2.1.2.2), #999 (1.4.2.3 -> 2.1.1.3), #1000 (6.5.3.5 -> 2.1.1.3), #1002 (9.2.2.1 -> 2.1.2.2). Re-point/delete needs user sign-off (not executed). (A 7th MIS-TAG, #184/#784 13.4.3.2 -> 13.1.3.2, is BPA-authored and surfaced on BPA's side.)
+- **UNOWNED (2), report-only:** #775 pull_requests (no master anywhere; VSDP's fix), #781 requirements_to_test_traceability (no master; TEST-MGMT's fix). Recorded as `B2-B9D-UNOWNED-DEPS`.
+
+B1A-B9D-VERIFY moved out of state.yaml (executed). No catalog/DB writes; all owner-side edits are local audit-file additions. Domain stays `feedback_needed` / `next_action_by: user` (pre-existing q1-q12 plus new q13/q14).

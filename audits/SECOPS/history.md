@@ -437,3 +437,40 @@ No loader required (single deterministic PATCH via semantius CLI). No JWT-audien
 
 - domains (catalog copy written): <https://tests.semantius.app/domain_map/domains> (row id 11)
 - handoffs (target FKs remain NULL pending the build): <https://tests.semantius.app/domain_map/handoffs> (rows 280, 282, 284, 287, 290)
+
+## 2026-06-13, Audit (state-driven execute: B9d verification)
+
+### Summary
+
+State-driven Validate pass (Rule #21). The one agent-executable open item was B1A-B9D-VERIFY (run B9d in both directions on every boundary). Live verification 2026-06-13 against domain id 11: SECOPS still UNBUILT (0 domain_modules, 0 capability_domains, 0 skills, 0 mastered data_objects); 5 inbound handoffs (3 from DLP id 139, 2 from DSPM id 140), 0 outbound; DLP/DSPM source_domain_module_id now backfilled (232 / 235), all 5 target_domain_module_id still NULL (SECOPS side, blocked on the build / B2-1).
+
+### Executed
+
+| Item | Type | Action | Result |
+| --- | --- | --- | --- |
+| B1A-B9D-VERIFY | Run `scripts/analytics/b9d_resolver.ts SECOPS` (dry-run then --write) | Classified all 5 inbound payloads on the DLP and DSPM boundaries in BOTH directions. Verdicts: 2 ORPHAN, 2 RE-TAG. | B9d reconciled. RESOLVED, item removed from state.yaml. |
+
+B9d classification (boundary tags: 5; distinct (process,owner) findings: 4):
+
+- ORPHAN 8.3.3.2 "Analyze IT security threat impact" (pid 1164), owner=DLP (unbuilt, masters dlp_incidents id 330 + data_exfiltration_attempts id 332) - handoffs 280, 284.
+- ORPHAN 8.3.3.2 "Analyze IT security threat impact" (pid 1164), owner=DSPM (unbuilt, masters sensitive_data_incidents id 341) - handoff 287.
+- RE-TAG 8.3.3 -> 8.3.3.2, owner=DLP - handoff 282 (DLP tagged coarsely; more specific child tag exists on same entity).
+- RE-TAG 8.3.3 -> 8.3.3.2, owner=DSPM - handoff 290 (same shape).
+
+Owner determination: every payload is mastered by DLP or DSPM, never by SECOPS (SECOPS masters nothing). So all owner-side realization routes to DLP / DSPM, not here. The resolver --write confirmed the additive owner-side b2 items (B2-B9D-OWN-1164) and q-file questions already EXIST in both audits/DLP and audits/DSPM (written by a prior B9d run when those owners were audited); nothing new was written and git shows audits/DLP and audits/DSPM unchanged (idempotent). No catalog/database writes; no record_status touched (Rule #1). No JWT-audience errors.
+
+### Surfaced (returned to user, not applied)
+
+- 2 RE-TAG re-points (handoff_processes 8.3.3 -> 8.3.3.2 on handoffs 282 and 290) are DESTRUCTIVE source edits on rows DLP / DSPM authored. The source side owns the tag edit, so these are surfaced for sign-off on the DLP and DSPM side, never applied from SECOPS' pass.
+- B1A-D1 (DESTRUCTIVE em-dash overwrite in business_logic) still open, awaiting sign-off (q5).
+- b2 forks B2-1 (classification gate), B2-2, B2-3, B2-5 still open. The build (B1A-BUILD, the whole b1b cascade, all 14 b3 candidates) remains gated on B2-1.
+
+### State
+
+No agent-executable work remains. Every remaining item is either a user b2 decision or a destructive step needing sign-off. state.yaml: next_action_by -> user, status stays feedback_needed. The existing q-SECOPS.md already carries all open questions (q1=B2-1, q2=B2-2, q3=B2-3, q4=B2-5, q5=B1A-D1, q6=b3 candidates); it remains current and was not regenerated (no new questions surfaced).
+
+### Report-only owed by other domains
+
+- DLP / DSPM each owe the owner-side answer to B2-B9D-OWN-1164 (assign a persona to "Analyze IT security threat impact") and the RE-TAG re-point sign-off; both already recorded in their own audit files.
+- ITOM B5 owes a domain_module_data_objects role='master' row on monitoring_events (id 84).
+- ITSM B8 inbound mirror owed once SECOPS masters security_incidents (b3 candidate, gated on B2-1).

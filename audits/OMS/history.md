@@ -1,5 +1,15 @@
 # OMS audit history
 
+## 2026-06-13, B9d handoff-payload realization (both directions) + state hygiene
+
+Ran `scripts/analytics/b9d_resolver.ts OMS` in BOTH directions (the band is not outbound-only), resolving B1A-B9D-VERIFY. Output: 19 boundary payload tags, 13 distinct (process, owner) findings. Verdicts: 1 ORPHAN, 2 REFERENCE-READ, 10 UNOWNED.
+
+- **ORPHAN (1, realized via owner-routing):** `3.5.4.1 Accept and validate sales orders` (pid 735), carried entities `commerce_orders` + `order_lines` on the inbound B2C-COMM->OMS handoffs (322, 502). Owner is B2C-COMM (masters both, and is built). Per the carve-out, the resolver wrote a durable `B2-B9D-OWN-735` b2 item into `audits/B2C-COMM/state.yaml` plus a plain-language blocking question (q15) into `audits/B2C-COMM/q-B2C-COMM.md`. No OMS-side or catalog write; B2C-COMM owns the persona assignment.
+- **REFERENCE-READ (2):** `4.4.3.1 Manage and track inventory deployment` (pid 852) and `4.4.3.3 Track product availability` (pid 854), both carrying `inventory_locations`, owned by INV-MGMT as embedded_master reference/config data. No action beyond the one-line INV-MGMT reference-read note (already present). Not ownable work unless INV-MGMT runs a workflow on locations.
+- **UNOWNED (10):** every remaining payload carries an OMS master (`order_allocations`, `sourcing_decisions`, `return_authorizations`, `store_pickup_orders`) that has NO DMDO `role='master'` row anywhere in the catalog, because OMS has zero `domain_modules` (M1 hard fail). These are surfaced on the sender (OMS), not droppable, and are NOT a new item: they are a direct symptom of the already-tracked build gap (B1A-S1 / B1A-BUILD, gated on user decision B2-S4). They reclassify to RESOLVED/ROLL-UP automatically once OMS is built and its DMDO master rows land. The resolver listed them as "NOT APPLIED -- need sign-off" (review-only); no fix is possible pre-build.
+
+State hygiene this pass: removed the resolved `B1A-B9D-VERIFY` and the superseded tombstone `B1A-S9` (skill_tools PATCH, retired by the 2026-06-06 per-module-skill supersession; state.yaml carries open items only, no disposition tombstones). No other OMS b1a/b2/b3 item changed; the existing `q-OMS.md` remains current and was not regenerated (B9d routed its only actionable question into B2C-COMM, not OMS). No agent-executable work remains on OMS: every open b1a item is gated on B2-S4 (the build decision), a prerequisite entity (B1A-S1), or is report-only on another domain (B1A-S10). `next_action_by` flipped agent -> user. No catalog/database writes; no `record_status` touched (Rule #1).
+
 ## 2026-05-30, Validate b1 (full 4-pass)
 
 ### Summary

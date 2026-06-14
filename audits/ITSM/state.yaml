@@ -234,6 +234,26 @@ b2:
     why: |
       Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q18.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1257
+    summary: "IT Service Management: name an owner for \"Document IT change/release outcome\" (no one is responsible for it today)"
+    question: |
+      Remote Monitoring and Management forwards change to IT Service Management to document IT change or release outcome, but IT Service Management does not yet have anyone assigned to document IT change or release outcome, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q19.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1312
+    summary: "IT Service Management: name an owner for \"Maintain IT asset records\" (no one is responsible for it today)"
+    question: |
+      Telecommunications OSS/BSS forwards incident to IT Service Management to maintain IT asset records, but IT Service Management does not yet have anyone assigned to maintain IT asset records, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q20.
+    extra_b9d_added: "2026-06-13"
 b3:
   - id: B3-SERVICE-OUTAGES
     candidate: service_outages

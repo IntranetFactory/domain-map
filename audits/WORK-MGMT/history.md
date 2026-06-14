@@ -759,3 +759,50 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-13 — B9d band run (resolves B1A-B9D-VERIFY)
+
+Ran `scripts/analytics/b9d_resolver.ts WORK-MGMT` (dry-run then `--write`) per the non-skippable B9d band. Both-directions classification over every WORK-MGMT boundary: 33 boundary tags, 23 distinct (process, owner) findings.
+
+Verdict tally: RESOLVED 9, ORPHAN 5, MIS-TAG 4, ROLL-UP 2, UNOWNED 3.
+
+### Additive owner-side edits APPLIED (`--write`, local audit files only, no catalog writes)
+
+For each ORPHAN, the resolver wrote a durable `b2` (`B2-B9D-OWN-<pid>`) into the OWNER domain's `state.yaml` plus a plain-language blocking question into its `q-` file (state.yaml hygiene carve-out (b)). The owner is the domain that masters the carried entity, on whichever side of the boundary it sits.
+
+| Owner | item | process (pid) | carried entity | handoff(s) |
+| --- | --- | --- | --- | --- |
+| EMP-EXP (unbuilt) | B2-B9D-OWN-235 | 7.5.3 Manage employee assistance and retention | action_plans | 445, 1248 (EMP-EXP→WM) |
+| SEM (unbuilt) | B2-B9D-OWN-409 | 13.2.1 Manage portfolio | strategic_initiatives | 240 (SPM→WM) |
+| SPM (unbuilt) | B2-B9D-OWN-409 | 13.2.1 Manage portfolio | strategic_portfolios, business_value_assessments | 244, 796 (SPM→WM) |
+| ITSM (unbuilt) | B2-B9D-OWN-1299 | 8.7.5.9 Triage IT service delivery incidents | service_incidents | 788 (WM→ITSM) — q-item already existed |
+| BPA (built) | B2-B9D-OWN-1708 | 13.4.3.2 Reengineer business processes and systems | process_simulation_runs | 786 (BPA→WM) |
+
+These are additive `record_status='new'`-equivalent audit-file writes only (no catalog rows touched). The ITSM item was already present from a prior pass (`q-file:exists`).
+
+### Destructive / judgment items SURFACED (not applied — Rule #21 / Rule #1 sign-off)
+
+Where WORK-MGMT is the SOURCE/owner of the tag (so the row-level edit is recorded against WM's audit), added two `b2` items + q-file questions (q5/q6):
+- **B2-B9D-MISTAG-OKR-PERF** — handoffs 1320/1321 (WM okr_objective.committed/.scored → TALENT-MGMT) tagged 7.3.2 "Manage employee performance"; carried entity okr_objectives is realized under 1.2.6. Re-point 7.3.2 → 1.2.6 or delete (destructive).
+- **B2-B9D-ROLLUP-OKR-PROD** — handoff 1324 (WM okr_objective.scored → PROD-MGMT) tagged child 1.2.6.3; re-point to realized parent 1.2.6 (destructive).
+
+Report-only (the `handoff_processes` row is owned by the SOURCE domain's audit), recorded as `b1b`:
+- **B1B-B9D-SOURCE-OWNED-TAGS** — 175 (CRM ROLL-UP), 999 (PROD-MGMT MIS-TAG, feature_requests), 1249 (PSA MIS-TAG, project_assignments), 1433 (INTRANET-GOV MIS-TAG, work_items). Each fixed on the source domain's own audit; the realized work is already RESOLVED on the WM side.
+- **B1B-B9D-UNOWNED-DEPENDENCIES** — 776 (VSDP pull_requests), 780 (TEST-MGMT test_defects), 769 (IPAAS webhook_subscriptions): carried entity has no master row anywhere; surfaced on the sender, not droppable from WM.
+
+### B13 re-verified (non-skippable)
+
+All 22 WORK-MGMT masters across modules 149/150/183 carry a typed `entity_type` (0 unclassified). No B13 work owed.
+
+### state.yaml changes
+
+- Removed B1A-B9D-VERIFY (resolved: B9d ran in both directions; additive owner-side edits applied, destructive items surfaced).
+- Added b2: B2-B9D-MISTAG-OKR-PERF, B2-B9D-ROLLUP-OKR-PROD (WM-sourced destructive tag fixes, need sign-off).
+- Added b1b: B1B-B9D-SOURCE-OWNED-TAGS, B1B-B9D-UNOWNED-DEPENDENCIES (blocked on partner-domain audits).
+- Refreshed q-WORK-MGMT.md (added q5/q6 for the WM-sourced sign-offs; renumbered Phase-0 optional to q7).
+- `next_action_by: user` — no agent-executable work remains. The two surviving b1a carries (B1A-H1-APQC-DEFERRED, B1A-PHASE0-MISSING) are non-agent-actionable (catalog-wide Discover Pass 3, and a user tier-pick under Rule #1).
+- `last_audit: "2026-06-13"`.
+
+No catalog/database writes this pass; only local audit files (WM + the 5 owner domains) were edited.

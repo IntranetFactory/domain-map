@@ -93,6 +93,16 @@ a11:
 
 ---
 
+q12: Product Management forwards a/b test to Digital Experience Platform to carry out post launch analytics to test the acceptability in the market, but Digital Experience Platform does not yet have anyone assigned to carry out post launch analytics to test the acceptability in the market, so this step has no owner. How should it be handled?
+- a) Record it now as work Digital Experience Platform owns, and assign a named owner once Digital Experience Platform sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Digital Experience Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a12:
+
+---
+
 ## Optional (will not hold up the build)
 
 q9: Flagship DXP vendors carry deeper authoring and capture substrate that DXP does not yet model: a multi-site or multi-brand master (site definitions), page templates and layouts and content blocks, a split of A/B tests into experiment, variant, and result, a form-authoring stack (forms, fields, submissions), and a B2B portal stack (portal pages, widgets, user profiles). Should I research these and add the ones that hold up? (yes/no)
@@ -103,4 +113,4 @@ a9:
 
 ---
 
-<!-- agent map, ignore: q1=B2-2.weblock q2=B2-2.complock q3=B2-2.dxlock q4=B2-2.seglock q5=B2-2.ablock q6=B2-2.ruleapprover q7=B2-2.journeypii q8=B2-4+B3-7 q9=B3-1+B3-2+B3-3+B3-4+B3-5 q10=B2-B9D-OWN-100 q11=B2-B9D-OWN-665 | domain_id=77 -->
+<!-- agent map, ignore: q1=B2-2.weblock q2=B2-2.complock q3=B2-2.dxlock q4=B2-2.seglock q5=B2-2.ablock q6=B2-2.ruleapprover q7=B2-2.journeypii q8=B2-4+B3-7 q9=B3-1+B3-2+B3-3+B3-4+B3-5 q10=B2-B9D-OWN-100 q11=B2-B9D-OWN-665 q12=B2-B9D-OWN-1822 | domain_id=77 -->

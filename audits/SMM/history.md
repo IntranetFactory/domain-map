@@ -496,3 +496,55 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-13 - B9d verify (B1A-B9D-VERIFY executed)
+
+Ran the committed B9d resolver in BOTH directions for SMM (domain 106):
+`bun run scripts/analytics/b9d_resolver.ts SMM --dry-run` then `--write`.
+
+### Classification (transcript gate satisfied)
+
+8 boundary payload tags classified across every SMM boundary, both directions.
+Verdicts: **4 ORPHAN, 0 ROLL-UP, 0 MIS-TAG, 0 RESOLVED.** No destructive proposals
+(no re-points, no mis-tag deletions, no legacy migration). The four ORPHANs (finding
+grain = per (process, owner); owner = domain that masters the carried entity):
+
+| process | pid | owner | owner built? | payload(s) | handoffs |
+|---|---|---|---|---|---|
+| 3.3.6 Analyze and respond to customer insight | 138 | CRM | unbuilt | customers | 89 SMM->CDP, 512 SMM->CRM |
+| 3.3.4.5 Execute promotional activities | 665 | MA | built | marketing_campaigns | 91 SMM->MA, 90 SMM->MA |
+| 3.3.6.1 Monitor and respond to social media activity | 674 | SMM | unbuilt | social_messages, social_mentions | 86/87/511 SMM->CSM |
+| 3.5.1.2 Identify/receive leads/opportunities | 708 | CRM | unbuilt | crm_leads | 88 SMM->CRM |
+
+### Owner-side edits applied (additive only; no catalog/DB writes; record_status untouched)
+
+The resolver wrote durable `b2` items + plain-language q-file questions into each
+OWNER domain's audit files (state.yaml hygiene carve-out (b)):
+
+- **CRM** state.yaml + q-CRM.md: B2-B9D-OWN-138 (q9), B2-B9D-OWN-708 (q11).
+- **MA** state.yaml + q-MA.md: B2-B9D-OWN-665 (q8).
+- **SMM** state.yaml + q-SMM.md: B2-B9D-OWN-674 (q6) -- the one ORPHAN SMM owns
+  (it masters social_messages/social_mentions on the inbound CSM->SMM boundary).
+
+All four lands as `b2` (a user decision on who owns the unrealized work), never `b1b`.
+SMM now carries B2-B9D-OWN-674 as an open b2; the other three are the neighbors' calls.
+
+### state.yaml hygiene this pass
+
+- **B1A-B9D-VERIFY**: RESOLVED (executed). Removed from `b1a`; b1a is now empty.
+- **B2-NOTES-SKILLTOOLS (B2-S2)**: SUPERSEDED, removed from `b2`. It asked whether to
+  carry legacy skill 18's `skill_tools` notes forward to per-module system skills. Live
+  state confirms skill 18 is deleted, the per-module skills 358-361 are retired, and
+  `skill_tools` is dropped entirely (per-domain-skill restoration, 2026-06-06); a single
+  domain-grain `smm-system` (id 426, domain_module_id=null) now exists. The question has
+  no live referent. The q-SMM.md regenerated this pass already omits it.
+
+### Resulting status
+
+`status: feedback_needed`, `next_action_by: user`. No agent-executable work remains:
+b1a empty; every b1b item is blocked on a user_decision (B2-PATTERN-FLAGS, B1-S10-NAMING,
+B2-REGULATION-SET) or depends_on chain; b2 items (B2-NOTES-DDO, B2-PATTERN-FLAGS,
+B2-PARENT-DOMAIN, B2-REGULATION-SET, B2-B9D-OWN-674) all need user judgment; b3 are
+deferred Phase-0 research. q-SMM.md is current (q1-q4 + q6 blocking, q5 optional).

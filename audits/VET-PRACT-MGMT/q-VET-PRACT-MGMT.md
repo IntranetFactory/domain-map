@@ -122,6 +122,16 @@ a11:
 
 ---
 
+q12: Supplier Lifecycle Management forwards controlled substance ledger entry to Veterinary Practice Management to monitor or Manage supplier information, but Veterinary Practice Management does not yet have anyone assigned to monitor or Manage supplier information, so this step has no owner. How should it be handled?
+- a) Record it now as work Veterinary Practice Management owns, and assign a named owner once Veterinary Practice Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Veterinary Practice Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a12:
+
+---
+
 ## Optional (will not hold up the build)
 
 q10: Several vendor-universal entities are missing from the current footprint: appointments, client invoices and payments, prescriptions and drug inventory and DEA reports, exam (SOAP) notes and reminder protocols, lab test orders and a species/breed config table, and boarding reservations. Should the agent research and add the ones that hold up? (yes/no)
@@ -132,4 +142,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MODULE-RESHAPE-ON-B3 q2=B2-CATALOG-COPY q3=B2-PET-OWNER-PERSONAL-CONTENT q4=B2-CONTROLLED-SUBSTANCE-SUBMIT-LOCK q5=B2-CONFIG-SHAPE-CHECK q6=B2-CAPABILITY-FUNCTION-OVERRIDES q7=B2-VACCINATION-ADMIN-PATTERN q8=B2-CLIENT-ALIAS-POSTURE q9=B2-FIN-APQC q10=B3-VETERINARY-APPOINTMENTS+B3-INVOICES-PAYMENTS+B3-PRESCRIPTIONS-INVENTORY-DEA-REPORTS+B3-EXAM-NOTES-REMINDER-PROTOCOLS+B3-LAB-TEST-ORDERS-SPECIES-BREEDS+B3-BOARDING-RESERVATIONS q11=B2-B9D-OWN-199 | domain_id=151 -->
+<!-- agent map, ignore: q1=B2-MODULE-RESHAPE-ON-B3 q2=B2-CATALOG-COPY q3=B2-PET-OWNER-PERSONAL-CONTENT q4=B2-CONTROLLED-SUBSTANCE-SUBMIT-LOCK q5=B2-CONFIG-SHAPE-CHECK q6=B2-CAPABILITY-FUNCTION-OVERRIDES q7=B2-VACCINATION-ADMIN-PATTERN q8=B2-CLIENT-ALIAS-POSTURE q9=B2-FIN-APQC q10=B3-VETERINARY-APPOINTMENTS+B3-INVOICES-PAYMENTS+B3-PRESCRIPTIONS-INVENTORY-DEA-REPORTS+B3-EXAM-NOTES-REMINDER-PROTOCOLS+B3-LAB-TEST-ORDERS-SPECIES-BREEDS+B3-BOARDING-RESERVATIONS q11=B2-B9D-OWN-199 q12=B2-B9D-OWN-815 | domain_id=151 -->

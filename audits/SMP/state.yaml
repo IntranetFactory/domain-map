@@ -165,6 +165,17 @@ b2:
     why: |
       SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-SMP.md q14.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-53
+    summary: "SaaS Management Platforms: name an owner for \"Create and manage support services/solutions\" (no one is responsible for it today)"
+    question: |
+      Source-to-Pay hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to create and manage support services or solutions, so that step currently has nobody responsible for it. Who should own it?
+    options:
+      - "The a named owner runs it and approves it."
+      - "The a named owner runs it and the HR Business Partner approves."
+      - "Leave it unassigned for now."
+    why: |
+      SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-SMP.md q15.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-DEFERRED-COMPLIANCE-ENTITIES

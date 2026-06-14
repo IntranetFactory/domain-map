@@ -125,6 +125,36 @@ a13:
 
 ---
 
+q15: Real Estate Investment Management forwards tenant credit record to Commercial Real Estate Operations to analyze credit scoring history, but Commercial Real Estate Operations does not yet have anyone assigned to analyze credit scoring history, so this step has no owner. How should it be handled?
+- a) Record it now as work Commercial Real Estate Operations owns, and assign a named owner once Commercial Real Estate Operations sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Commercial Real Estate Operations decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a15:
+
+---
+
+q16: Real Estate Investment Management forwards commercial lease to Commercial Real Estate Operations to confirm alignment of property requirements with business strategy, but Commercial Real Estate Operations does not yet have anyone assigned to confirm alignment of property requirements with business strategy, so this step has no owner. How should it be handled?
+- a) Record it now as work Commercial Real Estate Operations owns, and assign a named owner once Commercial Real Estate Operations sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Commercial Real Estate Operations decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a16:
+
+---
+
+q17: Audit Management forwards building certification to Commercial Real Estate Operations to evaluate environmental impact of products, services, and operations, but Commercial Real Estate Operations does not yet have anyone assigned to evaluate environmental impact of products, services, and operations, so this step has no owner. How should it be handled?
+- a) Record it now as work Commercial Real Estate Operations owns, and assign a named owner once Commercial Real Estate Operations sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Commercial Real Estate Operations decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a17:
+
+---
+
 ## Optional (will not hold up the build)
 
 q14: Six additional CRE entities show up across the flagship vendors (rent rolls, tenant improvement allowances, percentage-rent calculations, lease abstracts, market comparables, letters of intent). Should I research and add the ones that hold up? (yes/no)
@@ -135,4 +165,4 @@ a14:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S3 q2=B2-S2 q3=B2-S4 q4=B2-S5.cl_submit_lock q5=B2-S5.cl_single_approver q6=B2-S5.tcr_personal_content q7=B2-S5.tcr_single_approver q8=B2-S5.sub_submit_lock q9=B2-S5.sub_single_approver q10=B2-S5.bc_submit_lock q11=B2-S5.cam_submit_lock q12=B2-S7 q13=B1B-H1 q14=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5+B3-S6 | domain_id=145 -->
+<!-- agent map, ignore: q1=B2-S3 q2=B2-S2 q3=B2-S4 q4=B2-S5.cl_submit_lock q5=B2-S5.cl_single_approver q6=B2-S5.tcr_personal_content q7=B2-S5.tcr_single_approver q8=B2-S5.sub_submit_lock q9=B2-S5.sub_single_approver q10=B2-S5.bc_submit_lock q11=B2-S5.cam_submit_lock q12=B2-S7 q13=B1B-H1 q14=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5+B3-S6 q15=B2-B9D-OWN-1345 q16=B2-B9D-OWN-1511 q17=B2-B9D-OWN-1783 | domain_id=145 -->

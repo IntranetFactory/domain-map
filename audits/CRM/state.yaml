@@ -158,6 +158,36 @@ b2:
     why: |
       Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CRM.md q16.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-151
+    summary: "Customer Relationship Management: name an owner for \"Manage sales partners and alliances\" (no one is responsible for it today)"
+    question: |
+      Partner Relationship Management forwards opportunity to Customer Relationship Management to manage sales partners and alliances, but Customer Relationship Management does not yet have anyone assigned to manage sales partners and alliances, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Customer Relationship Management owns, and assign a named owner once Customer Relationship Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CRM.md q17.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-686
+    summary: "Customer Relationship Management: name an owner for \"Analyze sales trends and patterns\" (no one is responsible for it today)"
+    question: |
+      Revenue Intelligence forwards opportunity to Customer Relationship Management to analyze sales trends and patterns, but Customer Relationship Management does not yet have anyone assigned to analyze sales trends and patterns, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Customer Relationship Management owns, and assign a named owner once Customer Relationship Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CRM.md q18.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-713
+    summary: "Customer Relationship Management: name an owner for \"Determine sales resource allocation\" (no one is responsible for it today)"
+    question: |
+      Revenue Intelligence forwards opportunity to Customer Relationship Management to determine sales resource allocation, but Customer Relationship Management does not yet have anyone assigned to determine sales resource allocation, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Customer Relationship Management owns, and assign a named owner once Customer Relationship Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Customer Relationship Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-CRM.md q19.
+    extra_b9d_added: "2026-06-13"
 b3:
   # --- GROUP A: confirmed CRM-native, additive, fits an existing module (q1) ---
   - id: B3-CRM-COMPETITORS

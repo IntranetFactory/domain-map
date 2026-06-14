@@ -1,21 +1,19 @@
 schema_version: 2
 domain: REV-INTEL
-status: passed
-next_action_by: agent
-last_audit: "2026-06-02"
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-13"
 
-# 2026-06-02 completion pass (see history.md). The domain was built out since the prior
-# audit (5-module hybrid, ~16 masters, 5 system skills); the stale "unbuilt" backlog is
-# resolved. This pass closed the last five gaps (A4, M8, B9, B9b, E-band) and resolved
-# B2-C1 (RevOps contributor). REV-INTEL passes every in-scope band. Remaining items are
-# neighbor-owed (CRM / SALES-ENG / SALES-PERF) or revisit-if-a-new-domain-ships; none is a
-# REV-INTEL gap, so next_action_by = blocked (waiting on other domains).
+# 2026-06-13 B9d pass (see history.md). Ran B9d (handoff payload realization) in both
+# directions via scripts/analytics/b9d_resolver.ts; this closed the last b1a item
+# (B1A-B9D-VERIFY). 7 boundary tags -> 1 RESOLVED, 3 ORPHAN, 0 ROLL-UP, 0 MIS-TAG. Two
+# CRM-owned ORPHANs (686, 713 on crm_opportunities) were routed into CRM's own backlog.
+# One REV-INTEL-owned ORPHAN (686 over conversation_intelligence_records) is a real R/A
+# judgment call -> b2 B2-B9D-OWN-686, surfaced in q-REV-INTEL.md q1. No destructive steps,
+# no catalog writes. next_action_by = user (one b2 decision). The b1b backlog is unchanged:
+# neighbor-owed (CRM / SALES-ENG / SALES-PERF) or revisit-if-a-new-domain-ships.
 
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+b1a: []
 
 b1b:
   - id: B1B-N1
@@ -87,6 +85,25 @@ b1b:
     blocked_by:
       - {type: catalog_addition, scope: domains, trigger: "PMM domain ships"}
 
-b2: []
+b2:
+  - id: B2-B9D-OWN-686
+    summary: "Name R/A for unrealized process 686 'Analyze sales trends and patterns' on REV-INTEL (B9d ORPHAN, payload conversation_intelligence_records via handoff 476 SALES-ENG->REV-INTEL)."
+    question: |
+      Sales Engagement publishes conversation insights into REV-INTEL (handoff 476,
+      conversation_intelligence.insight_published, payload conversation_intelligence_records). That feeds
+      APQC process 686 "Analyze sales trends and patterns" (3.4.1.2), which is unrealized on REV-INTEL:
+      no gated lifecycle state, no process_raci. Who is Responsible / Accountable?
+    options:
+      - "Revenue Operations Analyst is R and A."
+      - "Revenue Operations Analyst is R; Sales Manager is A. (recommended)"
+      - "Sales Enablement Coach is R (primary user of REV-INTEL-CONVERSATION); Sales Manager is A."
+      - "Leave unassigned for now."
+    why: |
+      Trend/pattern analysis is analytical RevOps work, so the Revenue Operations Analyst is the natural
+      Responsible owner; flagship RI vendors (Gong, Clari, BoostUp) surface trend analysis to the manager
+      for sign-off, mapping to Sales Manager Accountable. On the answer, author process_raci R/A rows
+      (record_status='new') and, if a gate is wanted, wire data_object_lifecycle_states.process_id=686 on
+      a conversation_intelligence_records state. Surfaced as q-REV-INTEL.md q1.
+    extra_b9d_added: "2026-06-13"
 
 b3: []

@@ -432,3 +432,43 @@ Loader: `.tmp_deploy/2026-06-07_threat_intel_state_driven_execute.ts` (bun run, 
 ### JWT errors
 
 None.
+
+## 2026-06-13, Audit (B9d verify)
+
+### Summary
+
+State-driven pass continuing from the committed worklist. The single agent-executable item
+was B1A-B9D-VERIFY (run the B9d handoff-payload-realization band, which had never run on this
+domain). Ran the committed resolver `scripts/analytics/b9d_resolver.ts THREAT-INTEL --dry-run`:
+**0 boundary tags, 0 distinct (process, owner) findings, empty verdicts, no intended owner-file
+edits.** Verified against live state: `/domain_modules?domain_id=eq.14` = [], outbound
+`/handoffs?source_domain_id=eq.14` = [], inbound `/handoffs?target_domain_id=eq.14` = [],
+`/domain_data_objects?domain_id=eq.14` = []. THREAT-INTEL is unbuilt and has zero handoff
+substrate in either direction, so B9d is vacuously clean: nothing to classify, no ROLL-UP to
+re-point, no MIS-TAG to surface, no ORPHAN to route to an owner. B1A-B9D-VERIFY is resolved and
+removed from state.yaml per the hygiene rule.
+
+### Resolved (moved out of state.yaml)
+
+| ID | Disposition |
+|---|---|
+| B1A-B9D-VERIFY | Executed. B9d resolver ran in both directions; 0 handoffs on every boundary, so the band is vacuously satisfied. No writes. Removed from b1a. |
+
+### Remaining (all non-agent-executable)
+
+- **B1A-RECLASS** (surface only; classification settled as master-bearing, no write).
+- **B1A-T14** (DESTRUCTIVE: replace British "operationalisation" with American
+  "operationalization" in domains.id=14.description; surfaced as q6, needs user sign-off).
+- **B1A-BUILD** + the whole B1B cascade (UNBUILT; SURFACED not scaffolded; gated on B2-T1 and
+  dependent picks).
+- **b2 decisions B2-T1..B2-T5** (module split, catalog UX wording approval, lifecycle
+  exemptions, cross-cutting capability promotion, MITRE-ATTACK master architecture).
+- **b3** (12 discretionary candidates; backlog).
+
+No agent-executable work remains; `next_action_by` flips to `user`. The existing
+`q-THREAT-INTEL.md` already covers every open b2 + the destructive PATCH (q1-q8) and is current,
+so it is left in place.
+
+### JWT errors
+
+None.

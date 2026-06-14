@@ -365,3 +365,71 @@ chunked insert + stdin idiom).
 ### JWT errors
 
 None this pass.
+
+## 2026-06-13 - Audit (state-driven execute: B9d + Phase 0 for the build gate)
+
+State-driven Validate (SKILL.md Rule #21), working the open agent-executable
+items in state.yaml. Re-verified live: domains id 12 still 0 domain_modules,
+0 capability_domains, 0 handoffs (both directions), 0 trigger_events. SOAR
+remains master-bearing and UNBUILT; the M/B/F/H cascade is gated on the user
+build decision B2-S3.
+
+### Executed (agent work)
+
+- **B1A-B9D-VERIFY (resolved, dropped from state.yaml).** Ran the committed
+  resolver `scripts/analytics/b9d_resolver.ts SOAR --dry-run`. Both-directions
+  classification output in transcript: boundary tags 0, distinct (process,owner)
+  findings 0, verdicts {}. Confirmed by direct read: 0 handoffs touching id 12
+  in either direction, so 0 handoff_processes to classify. B9d is vacuous for an
+  unbuilt zero-handoff domain; nothing to re-point, surface, or route. Item
+  resolved (no ORPHAN/MIS-TAG/ROLL-UP found).
+- **Phase 0 vendor-surface research (Rule #22 forcing step for the market-shape
+  gate B2-S3).** The prior q-SOAR.md surfaced B2-S3 with a narrative basis and no
+  Phase 0 report, which Rule #22 calls out as an incomplete review. Ran a Phase 0
+  pass this audit; report saved to .tmp_deploy/SOAR-phase0-2026-06-13.md (flagship
+  vendors: Splunk SOAR, Cortex XSOAR, Tines, Torq, Swimlane Turbine, ServiceNow
+  SIR, ThreatConnect; vendor-by-entity surface matrix; per-question verdicts).
+  Findings: market is three-shaped (alert-centric / incident-centric /
+  workflow-DAG-centric), so the authoring master is named generically. The
+  eyeball 3-module split mostly holds with two evidence-driven corrections:
+  (1) integration_connectors lives INSIDE SOAR-PLAYBOOK-AUTHORING (XSOAR Content
+  Packs, Splunk Apps, Torq/Swimlane catalogs version connectors as authored
+  units), not its own module; (2) security_cases FOLDS INTO security_incidents
+  (XSOAR Incident, ServiceNow SIR Security Incident, Splunk Container each serve
+  as both case and incident in one record), so module 3 has one master.
+- **q-SOAR.md regenerated.** q1 (B2-S3 gate) reworded as a build go/no-go on the
+  researched shape, with named-vendor evidence inline per Rule #22. q2-q4 carried
+  forward unchanged (em-dash fix, functional ownership, regulations).
+- **state.yaml refined.** B2-S3 updated (Phase 0 DONE, report path + corrected
+  shape recorded); B1-S1 and B1-S7 proposed shapes updated to the corrected
+  module/master set (connectors in authoring; security_cases dropped; verb
+  override closed -> close_security_incident). last_audit -> 2026-06-13,
+  next_action_by -> user.
+
+### Surfaced (NOT written; user decision or sign-off)
+
+- **B2-S3 (keystone build gate):** approve the researched 3-module shape and
+  build, or change it (q1).
+- **B1A-RULE-EMDASH (DESTRUCTIVE):** domains.business_logic for id 12 still
+  contains a U+2014 em-dash. Overwriting a non-empty value needs sign-off (q2).
+- **B2-S1 / B2-S2:** functional ownership additions and regulation rows (q3/q4).
+
+### Left (untouched, all gated on the build / user)
+
+- b1b cascaded on the build: B1-S1 (modules + capabilities), B1-S4
+  (trigger_events), B1-S6 (domain-grain system skill + domain_module_tools),
+  B1-S7 (lifecycle states), B1-S8 (APQC handoff_processes; vacuous, 0 handoffs).
+- b1b owed by other domains: B1-S5 publisher-side fan-out of handoffs
+  280/282/284 (DLP) and 287/290 (DATA-SEC) into SOAR modules once they exist.
+- B1A-RECLASS (classification settled, no write), B1A-BUILD (surfaced, gated on
+  B2-S3), B1-S9 (record_status meta-reminder). b3 empty.
+
+### Outcome
+
+No agent-executable work remains. The build cascade is gated on the user's
+B2-S3 build decision (now backed by Phase 0). status feedback_needed,
+next_action_by user, q-SOAR.md current.
+
+### JWT errors
+
+None this pass.

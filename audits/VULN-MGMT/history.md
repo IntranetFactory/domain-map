@@ -440,3 +440,16 @@ B3-VM-EXPLOIT-INTEL-HANDOFF (inbound THREAT-INTEL once it masters an exploit ent
 ### Result
 
 b1a empty; next_action_by: user; status feedback_needed. q-VULN-MGMT.md present with vendor-grounded recommendations (Tenable, Qualys VMDR, Rapid7 InsightVM, Microsoft Defender Vulnerability Management, CrowdStrike Falcon Spotlight, Wiz cited by name on every market-shape recommendation).
+
+## 2026-06-13, B9d handoff-payload realization (both directions)
+
+Ran the committed B9d resolver (`scripts/analytics/b9d_resolver.ts VULN-MGMT --write`) in both directions, resolving the open agent item B1A-B9D-VERIFY. VULN-MGMT touches exactly one cross-domain boundary: inbound handoff 36 (SAM 52 -> VULN-MGMT 13, trigger `software_install.detected`, payload `software_installations` 59; `target_domain_module_id=332` already backfilled, `source_domain_module_id` NULL = SAM-owed report-only). It carries one APQC payload tag.
+
+- **Verdict: 1 ORPHAN.** Process `8.7.7.4 "Maintain IT asset records"` (pid 1312) is unrealized; its owner is **SAM** (the domain that masters the carried entity `software_installations`). SAM is unbuilt (realizes no sibling), so the owner signal is taken from mastery alone per the band. No RESOLVED / ROLL-UP / MIS-TAG payloads; nothing to re-point or delete here, no destructive step.
+- **Owner-side routing (carve-out (b)).** The resolver wrote one additive `b2` item `B2-B9D-OWN-1312` into `audits/SAM/state.yaml` and one blocking question (q13) into `audits/SAM/q-SAM.md` asking SAM to assign an owner for "Maintain IT asset records". Purely additive; no `record_status` flip; no catalog/database writes. SAM's audit files were already feedback_needed, so this lands cleanly on its existing q-file.
+
+B9d is complete for VULN-MGMT (the only boundary is processed in both directions). No agent-executable work remains. The remaining open items are all `b2` user decisions (B2-VM-MODULE-SPLIT, B2-VM-REMEDIATION-OWNERSHIP, B2-VM-CVE-INTEL-SOURCE, B2-VM-EXCEPTION-FREEZE) and parked `b3` ideas, surfaced in the current q-VULN-MGMT.md.
+
+### Result
+
+B1A-B9D-VERIFY resolved (moved to history); b1a empty; next_action_by: user; status feedback_needed; last_audit 2026-06-13. q-VULN-MGMT.md unchanged (still current, vendor-grounded). No catalog writes, no record_status changes, no destructive steps. JWT errors: none.

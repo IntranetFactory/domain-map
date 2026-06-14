@@ -616,3 +616,28 @@ Total writes: 8 PATCHes + 10 INSERTs = 18 rows touched. No JWT errors.
 - https://tests.semantius.app/domain_map/data_object_aliases?data_object_id=in.(653,655,657,658,659)
 
 ### No JWT errors observed.
+
+## 2026-06-13, Audit (B9d run, resolve B1A-B9D-VERIFY)
+
+Ran the B9d resolver (`scripts/analytics/b9d_resolver.ts TELCO-BSS`) in both directions on every boundary, the prescribed execution of B1A-B9D-VERIFY. The domain remains unbuilt (0 modules, M1 fail), so no other agent-executable work is possible; the entire build is gated on q1 (B2-2 modularization) in the existing q-file.
+
+### B9d classification (7 boundary payload tags, 6 distinct (process, owner) findings)
+
+- **RESOLVED (1):** `Invoice customer` (pid 302) on handoff 929 (TELCO-BSS -> FIN, `telco_customer_bill.issued`).
+- **ORPHAN owned by ITSM (2):** `Triage IT service delivery incidents` (pid 1299) on handoffs 927/928; `Maintain IT asset records` (pid 1312) on handoff 932. Both target ITSM `service_incidents`, mastered by ITSM (unbuilt). Routed this pass into ITSM's audit files as additive `b2` items (B2-B9D-OWN-1299 already existed; B2-B9D-OWN-1312 newly added with its q-ITSM.md question). No catalog writes; owner-side files only, per the state.yaml hygiene carve-out (b).
+- **Resolver-UNOWNED, actually TELCO-BSS-owned, blocked on build (3):** `Manage customer service problems...` (pid 196) on handoff 930 carrying `telco_subscriptions`; `Handle sales order inquiries...` (pid 740) on handoff 931 carrying `telco_service_orders`; `Generate customer billing data` (pid 1351) on handoff 933 carrying `telco_subscriptions`. The resolver flagged these UNOWNED only because it reads `domain_module_data_objects` (module-grain), which is empty while TELCO-BSS is unbuilt. These entities ARE mastered by TELCO-BSS at the legacy `domain_data_objects` grain (`telco_service_orders` 654, `telco_subscriptions` 655), confirmed live. So they are NOT genuine unowned dependencies: once the build lands and module-grain masters exist, the resolver will see TELCO-BSS as owner and route persona/RACI realization here. Recorded as new `b1b` item B1B-B9D-REALIZE, blocked on B1B-S2 (modules) + B2-2.
+
+### state.yaml changes
+
+- Resolved and removed `B1A-B9D-VERIFY` (B9d ran this pass).
+- Added `b1b` item `B1B-B9D-REALIZE` (the 3 build-blocked payload realizations above).
+- Relabeled the build item `B1A-BUILD` -> `b1b` item `B1B-BUILD` (it is user-decision-blocked on B2-2, not agent-executable, so it does not belong in `b1a`).
+- `b1a` now holds only `B1A-H2` (the destructive `record_status='approved'` sign-off on the 7 handoff_processes rows, surfaced as q8 in the existing q-file).
+- Flipped `next_action_by: agent -> user`. No agent-executable work remains: every open item is either a pending user decision (q-file q1-q10) or a destructive sign-off (B1A-H2 / q8). The build cascade (capabilities, modules, lifecycle, intra-domain + user edges, source-module backfill, per-module skills) all wait on q1 (B2-2).
+
+### Files touched (no catalog/database writes)
+
+- `audits/TELCO-BSS/state.yaml`, `audits/TELCO-BSS/history.md`
+- `audits/ITSM/state.yaml`, `audits/ITSM/q-ITSM.md` (additive B9d owner-side b2 + q, cross-domain carve-out)
+
+### No JWT errors observed.

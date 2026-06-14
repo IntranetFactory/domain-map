@@ -11,25 +11,23 @@
 schema_version: 2
 domain: SOAR
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # SOAR (domain 12, sub-domain under SECOPS id 11) is UNBUILT and master-bearing
-# under the overlay test. Live 2026-06-07: 0 domain_modules (M1 fail),
+# under the overlay test. Live 2026-06-13: 0 domain_modules (M1 fail),
 # 0 capability_domains, 0 skills, 0 DMDOs, 0 handoffs, 0 trigger_events, and it
 # masters ZERO data_objects of its own. The build is SURFACED (not scaffolded)
-# per the UNBUILT rule; the M/B/F/H cascade is LEFT. Build precision is gated on
-# the user decision B2-S3 (Phase 0 vendor research vs eyeball-mode).
+# per the UNBUILT rule; the M/B/F/H cascade is LEFT. Build is now gated on the
+# user go/no-go decision B2-S3 (Phase 0 vendor research DONE 2026-06-13:
+# .tmp_deploy/SOAR-phase0-2026-06-13.md; researched 3-module shape recommended).
 #
-# Executed 2026-06-07 (state-driven, dropped below): B1-S2 catalog UX (domain
-# catalog_tagline + catalog_description authored into empty fields); B1-S3
-# domain_aliases (8 synonym rows, record_status='new').
+# Executed 2026-06-07: B1-S2 catalog UX (catalog_tagline + catalog_description);
+# B1-S3 domain_aliases (8 synonym rows). Executed 2026-06-13: B1A-B9D-VERIFY
+# (B9d resolver run both directions, vacuous: 0 handoffs => 0 findings; dropped)
+# and Phase 0 vendor research for the B2-S3 build gate.
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-RECLASS
     summary: "Leadership-tier zero-master exemption rescinded 2026-06-02; SOAR is master-bearing (overlay test). Build needed, not an exemption. Classification settled."
     finding: >
@@ -88,10 +86,14 @@ b1b:
       Live 2026-06-07: /domain_modules?domain_id=eq.12 and
       /capability_domains?domain_id=eq.12 both return 0 rows.
       Rule #14 requires >=1 module_kind='full' domain_modules row; A2 requires
-      >=3 capabilities (typical 5-8). Proposed Phase A shape carried forward:
+      >=3 capabilities (typical 5-8). Phase A shape REFINED by Phase 0
+      (.tmp_deploy/SOAR-phase0-2026-06-13.md): connectors fold into authoring,
+      security_cases folds into security_incidents (one master), authoring master
+      named generically to cover Splunk Playbook / XSOAR Playbook / Tines Story /
+      Torq Workflow / Swimlane Playbook:
         Modules: SOAR-PLAYBOOK-AUTHORING (security_playbooks, playbook_steps, playbook_versions, integration_connectors),
                  SOAR-AUTOMATION-RUNTIME (automation_runs, automation_run_steps, automation_artifacts, automation_run_logs),
-                 SOAR-CASE-MGMT (security_cases, security_incidents, case_tasks, case_evidence, case_timelines, case_notes).
+                 SOAR-CASE-MGMT (security_incidents [single case+incident master], case_tasks, case_evidence, case_timelines, case_notes, indicator_of_compromise_records).
         Capabilities (5-8 floor): PLAYBOOK-DESIGN, INTEGRATION-CONNECTORS, AUTOMATION-EXEC-ORCH,
                                   CASE-MGMT-SEC, INCIDENT-RESPONSE-WORKFLOW, IOC-ENRICHMENT,
                                   RESPONSE-METRICS-MTTR, SOC-PLAYBOOK-LIBRARY.
@@ -101,7 +103,7 @@ b1b:
     affected_entities: []
     extra_proposed_modules: [SOAR-PLAYBOOK-AUTHORING, SOAR-AUTOMATION-RUNTIME, SOAR-CASE-MGMT]
     extra_proposed_capabilities: [PLAYBOOK-DESIGN, INTEGRATION-CONNECTORS, AUTOMATION-EXEC-ORCH, CASE-MGMT-SEC, INCIDENT-RESPONSE-WORKFLOW, IOC-ENRICHMENT, RESPONSE-METRICS-MTTR, SOC-PLAYBOOK-LIBRARY]
-    extra_proposed_masters: [security_playbooks, playbook_steps, playbook_versions, integration_connectors, automation_runs, automation_run_steps, automation_artifacts, automation_run_logs, security_cases, security_incidents, case_tasks, case_evidence, case_timelines, case_notes]
+    extra_proposed_masters: [security_playbooks, playbook_steps, playbook_versions, integration_connectors, automation_runs, automation_run_steps, automation_artifacts, automation_run_logs, security_incidents, case_tasks, case_evidence, case_timelines, case_notes, indicator_of_compromise_records]
 
   - id: B1-S4
     summary: "B9 hard-fail (cascaded): zero trigger_events for SOAR; cannot author until masters exist (gated on B1-S1)."
@@ -156,22 +158,22 @@ b1b:
   - id: B1-S7
     summary: "B12 hard-fail (cascaded): lifecycle states for workflow-bearing SOAR masters blocked on masters existing (gated on B1-S1)."
     finding: |
-      Workflow-bearing masters (per the proposed Phase A surface) need
-      data_object_lifecycle_states:
+      Workflow-bearing masters (per the Phase-0-refined Phase A surface) need
+      data_object_lifecycle_states. security_cases is folded into
+      security_incidents (Phase 0 verdict D), so the single incident/case master
+      carries the investigation workflow:
       security_playbooks: draft -> in_review -> approved -> active -> retired
       automation_runs: queued -> running -> completed | failed | cancelled | timed_out
       security_incidents: new -> investigating -> contained -> eradicated -> recovered -> closed
-      security_cases: open -> assigned -> in_progress -> on_hold -> resolved -> closed
       integration_connectors (config-shape candidate): registered -> active -> degraded -> disabled.
       Pre-specified permission_verb_overrides: contained -> contain_security_incident,
-      eradicated -> eradicate_security_incident, closed -> close_security_case.
+      eradicated -> eradicate_security_incident, closed -> close_security_incident.
     blocked_by:
       - {type: depends_on, ref: B1-S1, reason: "no data_objects rows to attach lifecycle states to"}
     affected_masters:
       - {data_object_id: null, name: security_playbooks, target_module_id: null, workflow: "draft|in_review|approved|active|retired"}
       - {data_object_id: null, name: automation_runs, target_module_id: null, workflow: "queued|running|completed|failed|cancelled|timed_out"}
       - {data_object_id: null, name: security_incidents, target_module_id: null, workflow: "new|investigating|contained|eradicated|recovered|closed"}
-      - {data_object_id: null, name: security_cases, target_module_id: null, workflow: "open|assigned|in_progress|on_hold|resolved|closed"}
       - {data_object_id: null, name: integration_connectors, target_module_id: null, workflow: "registered|active|degraded|disabled"}
 
   - id: B1-S8
@@ -228,19 +230,36 @@ b2:
     why: "No SOAR-specific regulator; the question is whether to inherit substrate obligations onto the SOAR row for downstream filtering."
 
   - id: B2-S3
-    summary: "Phase 0 vendor research vs eyeball-mode before B1-S1 Phase-A authoring? Keystone gate for the build."
+    summary: "Keystone build gate: approve the researched 3-module shape (Phase 0 DONE 2026-06-13), or change it?"
     question: |
-      Splunk SOAR (alert-centric), Cortex XSOAR (playbook-centric), and
-      Tines / Torq (workflow-DAG-centric) diverge enough in canonical schema that
-      the agent's eyeball-mode entity list will mis-shape the modularization
-      (specifically: should security_cases master in a third module or fold into
-      security_incidents? does integration_connectors warrant its own module per
-      the marketplace-shape of the vendor app stores?). A formal Phase 0 subagent
-      pass against public schemas + API references is the recommended gate.
+      Phase 0 vendor-surface research has been RUN this pass (report:
+      .tmp_deploy/SOAR-phase0-2026-06-13.md). The remaining decision is the
+      build go/no-go on the researched shape, not whether to research. The
+      market is genuinely three-shaped (Splunk SOAR alert/Container-centric;
+      Cortex XSOAR + ServiceNow SIR incident-centric; Tines Stories / Torq
+      Workflows workflow-DAG-centric), so the authoring master is named
+      generically (security_playbooks with a workflow/story alias). Two
+      eyeball-shape corrections the evidence forces:
+        1. integration_connectors lives INSIDE SOAR-PLAYBOOK-AUTHORING (a
+           first-class versioned authored surface: XSOAR Marketplace Content
+           Packs, Splunk Apps, Torq/Swimlane integration catalogs all version
+           connectors), NOT its own top-level module and NOT loose playbook
+           config. Tines is the lone thin-connector exception.
+        2. security_cases FOLDS INTO security_incidents (one master). XSOAR
+           Incident, ServiceNow SIR Security Incident, and Splunk Container each
+           serve as both case and incident in one record; the literal-Cases
+           vendors (Tines, Torq HyperSOC, ThreatConnect) use Cases as the primary
+           investigation container, not a tier below an incident. Drop the
+           separate security_cases entity.
+      SEC 8-K / breach-notification trails are Compliance-class field sets +
+      tasks on the incident plus an audit-log entity, not new masters.
     options:
-      - "(a) Vetted route: spawn a formal Phase 0 subagent against the leading SOAR vendor public docs, save the surface JSON, then run Phase A"
-      - "(b) Eyeball route: accept the agent's proposed 3-module split (SOAR-PLAYBOOK-AUTHORING / SOAR-AUTOMATION-RUNTIME / SOAR-CASE-MGMT) and load"
-      - "(c) Defer Phase A authoring entirely until Phase 0 lands"
-    why: "Vendor schema divergence is large enough to shape modularization differently per chosen reference."
+      - "(a) Build the researched 3-module shape now (Authoring with connectors folded in; Runtime; Case-Mgmt with one security_incidents master)"
+      - "(b) Keep researching / defer the build"
+      - "(c) Build a different shape (user specifies)"
+    why: "Vendor schema divergence shaped the modularization; the research (named-vendor evidence inline in q-SOAR.md q1) settles connectors-placement and case-vs-incident. Now a go/no-go on the shape."
+    extra_phase0_report: ".tmp_deploy/SOAR-phase0-2026-06-13.md"
+    extra_corrected_modules: [SOAR-PLAYBOOK-AUTHORING, SOAR-AUTOMATION-RUNTIME, SOAR-CASE-MGMT]
+    extra_corrected_masters: [security_playbooks, playbook_steps, playbook_versions, integration_connectors, automation_runs, automation_run_steps, automation_artifacts, automation_run_logs, security_incidents, case_tasks, case_evidence, case_timelines, case_notes, indicator_of_compromise_records]
 
 b3: []

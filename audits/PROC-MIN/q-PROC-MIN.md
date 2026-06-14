@@ -81,6 +81,18 @@ a7:
 
 ---
 
+q9: One process-mapping tag points at the wrong process. The "conformance deviation detected" handoff to the business-process-automation team is labeled "Manage non-conformance", but the business-process-model record it ships is actually handled under "Publish processes". How should the tag be fixed?
+
+- a) Re-point the tag to "Publish processes" (13.1.3.5), where the record's work actually lives.
+- b) Delete the tag and leave the handoff untagged (a later discovery pass picks a fresh one).
+- c) Leave the "Manage non-conformance" tag as is.
+
+Recommended: a. The record this handoff carries is published-process work, so "Publish processes" is the correct home; the existing label was a low-confidence automatic substring match. Re-pointing overwrites the existing tag, so it needs your sign-off.
+
+a9:
+
+---
+
 ## Optional (will not hold up the build)
 
 q8: Eight additional market-surface objects show up across the flagship process-mining vendors (data-source connections, event-log extraction runs, event-log quality findings, process KPIs, improvement opportunities, automation flows that fire from a finding, compliance-control evaluations, and industry benchmarks). Should I research and add the ones that hold up? (yes/no)
@@ -91,4 +103,4 @@ a8:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MODULARIZATION q2=B2-CAPABILITIES q3=B2-NAMING-RULES q4=B2-PATTERN-FLAGS.eventlogs q5=B2-PATTERN-FLAGS.discoveredmodels q6=B2-PATTERN-FLAGS.conformance q7=B2-EM-DASHES q8=B3-DATA-SOURCE-CONNECTIONS,B3-EVENT-LOG-EXTRACTIONS,B3-EVENT-LOG-QUALITY,B3-PROCESS-KPIS,B3-IMPROVEMENT-OPPORTUNITIES,B3-PROCESS-AUTOMATIONS,B3-COMPLIANCE-CONTROLS-EVALUATIONS,B3-PROCESS-BENCHMARKS | domain_id=40 -->
+<!-- agent map, ignore: q1=B2-MODULARIZATION q2=B2-CAPABILITIES q3=B2-NAMING-RULES q4=B2-PATTERN-FLAGS.eventlogs q5=B2-PATTERN-FLAGS.discoveredmodels q6=B2-PATTERN-FLAGS.conformance q7=B2-EM-DASHES q9=B2-B9D-MISTAG-183 q8=B3-DATA-SOURCE-CONNECTIONS,B3-EVENT-LOG-EXTRACTIONS,B3-EVENT-LOG-QUALITY,B3-PROCESS-KPIS,B3-IMPROVEMENT-OPPORTUNITIES,B3-PROCESS-AUTOMATIONS,B3-COMPLIANCE-CONTROLS-EVALUATIONS,B3-PROCESS-BENCHMARKS | domain_id=40 -->

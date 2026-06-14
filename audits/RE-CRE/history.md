@@ -411,3 +411,35 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-13 - B9d handoff-payload realization (both directions)
+
+Ran `scripts/analytics/b9d_resolver.ts RE-CRE --write`, resolving the open b1a item
+B1A-B9D-VERIFY (B9d had never run on this domain). The resolver classified all 10 boundary
+payload tags across every RE-CRE boundary in BOTH directions; 9 distinct (process, owner)
+findings: 2 RESOLVED, 1 RE-TAG, 6 ORPHAN.
+
+- **RESOLVED (no action):** process 398 "Negotiate and document agreements/contracts" on
+  handoff 309 (RE-CRE->CLM, commercial_leases) and handoff 297 (RE-BROKERAGE->RE-CRE,
+  real_estate_transactions) - both gated + RACI'd at the exact code.
+- **ORPHAN -> additive owner-side b2 + q (record_status untouched):** the resolver wrote a
+  durable `b2` item plus a plain-language q-file question into whichever side OWNS each
+  unrealized payload (state.yaml hygiene carve-out (b)):
+  - RE-CRE (owns the carried master): B2-B9D-OWN-1345 (Analyze credit scoring history,
+    tenant_credit_records, handoff 859); B2-B9D-OWN-1511 (Confirm alignment of property
+    requirements, commercial_leases, handoff 303); B2-B9D-OWN-1783 (Evaluate environmental
+    impact, building_certifications, handoff 860). Surfaced as q-RE-CRE.md q15/q16/q17.
+  - REAL-EST: B2-B9D-OWN-1511 (real_estate_properties, handoff 856) -> q-REAL-EST.md.
+  - RE-BROKERAGE: B2-B9D-OWN-1860 "Close the sale" (real_estate_listings /
+    real_estate_transactions, handoffs 861 / 297) -> q-RE-BROKERAGE.md.
+  - RE-PROP-MGMT: B2-B9D-OWN-824 "Request unplanned maintenance" (tenant_maintenance_requests,
+    handoff 304) -> already present on q-RE-PROP-MGMT.md (q12).
+- **RE-TAG (destructive re-point, NOT applied - needs sign-off, owned by REAL-EST as source):**
+  re-point handoff 856 tag 10.1.1 -> 10.1.1.1 (more specific code on the same entity). This
+  edits the handoff REAL-EST authored, so it is a REAL-EST-side source edit, surfaced for the
+  user's sign-off, not an RE-CRE action.
+
+No catalog/database writes (B9d edits only local audit files). No record_status flips. Resolved
+B1A-B9D-VERIFY removed from state.yaml; last_audit bumped to 2026-06-13. The remaining b1b items
+stay blocked on the workflow-substrate pass / cross-domain audits, and the b2 items (including the
+3 new B9d owner-questions) await user decisions. next_action_by: user.

@@ -11,8 +11,8 @@
 schema_version: 2
 domain: TELCO-BSS
 status: feedback_needed
-next_action_by: agent
-last_audit: "2026-06-07"
+next_action_by: user
+last_audit: "2026-06-13"
 
 # UNBUILT domain: 0 domain_modules, 0 capability_domains (confirmed live 2026-06-07).
 # Per Validate Rule #21 the build cascade is LEFT (do not scaffold). The 2026-06-07 pass
@@ -21,10 +21,6 @@ last_audit: "2026-06-07"
 # or blocked on the build (b1b) or backlog (b3).
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-H2
     summary: "Surface the 7 `handoff_processes` rows for reviewer sign-off (destructive: flip record_status to approved)."
     finding: "All 7 `handoff_processes` rows on TELCO-BSS outbound handoffs (ids 458-464; handoffs 927-933) carry `proposal_source='agent_curated'`, `record_status='new'` (confirmed live 2026-06-07). H1 coverage = 7/7 = 100%. Catalog-quality side-bar (`record_status='approved'` count) = 0 until reviewer signs off. Rule #1 forbids agent-side approve; this is a destructive PATCH that only the user may authorize."
@@ -38,14 +34,20 @@ b1a:
       - {handoff_id: 932, process_id: 1312, target_domain: ITSM, trigger_event: network_inventory.updated}
       - {handoff_id: 933, process_id: 1351, target_domain: FIN, trigger_event: telco_subscription.activated}
 
-  - id: B1A-BUILD
+b1b:
+  - id: B1B-BUILD
     summary: "Unbuilt domain: 0 domain_modules (M1 fail), 0 capability_domains awaiting a build."
-    finding: "Live triage 2026-06-07 (re-confirmed): this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI / lifecycle / module-FK work applies. The build itself is a user decision (modularization shape, B2-2)."
-    action: "On B2-2 decision, run Phase A then M then B then (per the post-2026-06-06 skill model) ONE domain-grain system skill that derives its toolset from `domain_module_tools`. If multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. The 7 masters now carry `entity_type` (2026-06-07), so B12 lifecycle authoring is ready to ride the build for the 6 `operational_workflow` masters."
+    finding: "Live triage re-confirmed: this domain has 0 domain_modules rows (M1 fail) and 0 capability_domains rows, so it is not deployable today. It must be built before any persona / RACI / lifecycle / module-FK work applies. The build itself is a user decision (modularization shape, B2-2)."
+    action: "On B2-2 decision, run Phase A then M then B then (per the post-2026-06-06 skill model) ONE domain-grain system skill that derives its toolset from `domain_module_tools`. If multi-module, run Phase P (personas, role_modules, process_raci, lifecycle.process_id) afterward. The 7 masters now carry `entity_type`, so B12 lifecycle authoring is ready to ride the build for the 6 `operational_workflow` masters."
     blocked_by:
       - {type: user_decision, ref: B2-2}
-
-b1b:
+  - id: B1B-B9D-REALIZE
+    summary: "Realize 3 outbound handoff payloads as TELCO-BSS-owned work once the build lands (B9d ORPHANs blocked on module-grain masters)."
+    finding: "B9d resolver ran 2026-06-13 in both directions on every boundary. Results: 1 RESOLVED (`Invoice customer` pid 302, handoff 929 to FIN); 2 ORPHANs owned by ITSM (`Triage IT service delivery incidents` pid 1299 on handoffs 927/928, `Maintain IT asset records` pid 1312 on handoff 932) routed to ITSM's audit files this pass; 3 payloads (`telco_subscriptions` on handoffs 930 to CSM and 933 to FIN, `telco_service_orders` on handoff 931 to CSM) classified UNOWNED by the resolver ONLY because it reads `domain_module_data_objects` (module-grain), which is empty while this domain is unbuilt (M1 fail). These 3 entities ARE mastered by TELCO-BSS at the legacy `domain_data_objects` grain (ids 654/655), so they are NOT genuine unowned dependencies: once the build lands and module-grain master rows exist, the resolver will see TELCO-BSS as owner and these resolve to TELCO-BSS-owned ORPHANs needing persona/RACI here."
+    action: "On the next audit pass AFTER the build lands (B1B-S2 modules + B1B-S6 lifecycle gates), re-run `scripts/analytics/b9d_resolver.ts TELCO-BSS --write`; it will route the 3 payloads to TELCO-BSS as owner and author the persona/RACI realization here at record_status='new'. No agent action possible before modules exist."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-S2, reason: "resolver owner detection reads module-grain master rows; none exist until B1B-S2 lands"}
+      - {type: user_decision, ref: B2-2}
   - id: B1B-S1
     summary: "Author 5-8 `capability_domains` rows aligned to TM Forum eTOM Level 2."
     finding: "A2 fails: 0 `capability_domains` rows on `domain_id=42`. Required floor is >=3."

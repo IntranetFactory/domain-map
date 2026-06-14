@@ -237,6 +237,26 @@ b2:
     why: |
       Recording it now means that the moment Software Asset Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SAM.md q12.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1312
+    summary: "Software Asset Management: name an owner for \"Maintain IT asset records\" (no one is responsible for it today)"
+    question: |
+      Remote Monitoring and Management forwards software installation to Software Asset Management to maintain IT asset records, but Software Asset Management does not yet have anyone assigned to maintain IT asset records, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Software Asset Management owns, and assign a named owner once Software Asset Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Software Asset Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SAM.md q13.
+    extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-809
+    summary: "Software Asset Management: name an owner for \"Approve requisitions\" (no one is responsible for it today)"
+    question: |
+      Source-to-Pay forwards software license to Software Asset Management to approve requisitions, but Software Asset Management does not yet have anyone assigned to approve requisitions, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Software Asset Management owns, and assign a named owner once Software Asset Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Software Asset Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SAM.md q14.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-S1

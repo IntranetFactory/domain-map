@@ -98,6 +98,17 @@ a11:
 
 ---
 
+q12: Supplier Lifecycle Management hands work to Vendor Management System, but Vendor Management System has no one assigned to manage suppliers, so that step currently has nobody responsible for it. Who should own it?
+- a) The a named owner runs it and approves it.
+- b) Someone else you name runs and approves it.
+- c) Leave it unassigned for now.
+
+Recommended: a. Vendor Management System already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
+
+a12:
+
+---
+
 ## Optional (will not hold up the build)
 
 q10: Three extra master records show up across the flagship VMS vendors (Workday VNDLY, SAP Fieldglass, Beeline, Magnit, Utmost): candidate submissions (suppliers slate candidates against a requisition), worker assignments (a worker anchored to a winning requisition with start, end, and billable rate), and worker classifications (the typed IR35 / AB5 / EU Platform Work determination per worker per engagement). Should I research and add the ones that hold up? (yes/no)
@@ -108,4 +119,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-1 q2=B2-4 q3=B2-3.workerpii q4=B2-3.supplierapprover q5=B2-3.rateapprover q6=B2-3.187approver q7=B2-3.invoiceapprover q8=B2-2 q9=B2-5 q10=B3-CANDIDATE-SUBMISSIONS+B3-WORKER-ASSIGNMENTS+B3-WORKER-CLASSIFICATIONS q11=B2-B9D-OWN-315 | domain_id=64 -->
+<!-- agent map, ignore: q1=B2-1 q2=B2-4 q3=B2-3.workerpii q4=B2-3.supplierapprover q5=B2-3.rateapprover q6=B2-3.187approver q7=B2-3.invoiceapprover q8=B2-2 q9=B2-5 q10=B3-CANDIDATE-SUBMISSIONS+B3-WORKER-ASSIGNMENTS+B3-WORKER-CLASSIFICATIONS q11=B2-B9D-OWN-315 q12=B2-B9D-OWN-167 | domain_id=64 -->

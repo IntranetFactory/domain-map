@@ -86,6 +86,26 @@ a8:
 
 ---
 
+q12: Hardware Asset Management forwards rmm agent to Remote Monitoring and Management to decommission productive assets, but Remote Monitoring and Management does not yet have anyone assigned to decommission productive assets, so this step has no owner. How should it be handled?
+- a) Record it now as work Remote Monitoring and Management owns, and assign a named owner once Remote Monitoring and Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Remote Monitoring and Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a12:
+
+---
+
+q13: IT Asset Management forwards automation script to Remote Monitoring and Management to update work and asset records, but Remote Monitoring and Management does not yet have anyone assigned to update work and asset records, so this step has no owner. How should it be handled?
+- a) Record it now as work Remote Monitoring and Management owns, and assign a named owner once Remote Monitoring and Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Remote Monitoring and Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a13:
+
+---
+
 ## Optional (will not hold up the build)
 
 q9: Flagship RMM vendors model several endpoint records that RMM does not carry yet: agent groups, per-metric monitoring thresholds, patch-approval policies, maintenance windows, remote-control sessions, script runs (the execution event, distinct from the script definition), compliance baselines (CIS, NIST), agent install packages, and customer tenants. Should I research and add the ones that hold up? Script runs is the highest-priority gap, since the automation module currently masters only the script definition and has no record of what actually ran where. (yes/no)
@@ -112,4 +132,4 @@ a11:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S3 q2=B2-S4 q3=B2-S5.agentpii q4=B2-S5.patchlock q5=B2-S5.scriptlock q6=B2-S6 q7=B2-S7 q8=B2-S8 q9=B3-AGENT-GROUPS+B3-MONITORING-THRESHOLDS+B3-PATCH-APPROVAL-POLICIES+B3-MAINTENANCE-WINDOWS+B3-REMOTE-SESSIONS+B3-SCRIPT-RUNS+B3-COMPLIANCE-BASELINES+B3-AGENT-INSTALL-PACKAGES+B3-CUSTOMER-TENANTS+B3-MISSING-MASTER-RMM-AUTOMATION q10=B3-MOD-RMM-COMPLIANCE+B3-MOD-RMM-REPORTING q11=B3-REG-SOC2+B3-REG-HIPAA-PASSTHROUGH+B3-REG-CMMC+B3-REG-NIS2 | domain_id=130 -->
+<!-- agent map, ignore: q1=B2-S3 q2=B2-S4 q3=B2-S5.agentpii q4=B2-S5.patchlock q5=B2-S5.scriptlock q6=B2-S6 q7=B2-S7 q8=B2-S8 q9=B3-AGENT-GROUPS+B3-MONITORING-THRESHOLDS+B3-PATCH-APPROVAL-POLICIES+B3-MAINTENANCE-WINDOWS+B3-REMOTE-SESSIONS+B3-SCRIPT-RUNS+B3-COMPLIANCE-BASELINES+B3-AGENT-INSTALL-PACKAGES+B3-CUSTOMER-TENANTS+B3-MISSING-MASTER-RMM-AUTOMATION q10=B3-MOD-RMM-COMPLIANCE+B3-MOD-RMM-REPORTING q11=B3-REG-SOC2+B3-REG-HIPAA-PASSTHROUGH+B3-REG-CMMC+B3-REG-NIS2 q12=B2-B9D-OWN-355 q13=B2-B9D-OWN-1552 | domain_id=130 -->

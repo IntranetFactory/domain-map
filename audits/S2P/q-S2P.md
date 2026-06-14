@@ -95,14 +95,37 @@ a7:
 
 ---
 
-## Optional (will not hold up the build)
+q8: One S2P handoff (purchase-order/invoice data flowing to Agency Management) was tagged with a broad "Process accounts payable" process when a more specific "Audit invoices and key data in AP system" process already fits the same data better. Re-point it to the more specific tag?
 
-q8: Should I research and add procurement catalog masters (catalogs and catalog items, likely decomposing into roughly 5 to 8 entities such as catalog versions, item attributes, supplier-content versus buyer-content, punch-out sessions, and item-master sync) for a Catalog Management module? (yes/no)
+- a) Re-point the tag to the more specific "Audit invoices and key data in AP system".
+- b) Leave the broad tag as-is.
 
-Recommended: yes, but additive and only meaningful if the Catalog Management module in q1 is approved; it can happen after the modules exist.
+Recommended: a. The more specific process is a better description of what actually happens on this handoff, and the specific process already exists. This overwrites an existing tag, so it needs your sign-off before it runs.
 
 a8:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MODULE-SPLIT q2=B2-JAGGAER q3=B2-PATTERN-FLAGS q4=B2-SEND-EMAIL q5=B2-EINVOICE-PII q6=B2-PAIRWISE-TIMING q7=B2-H1-APPROVAL q8=B3-CATALOGS | domain_id=27 -->
+q9: One S2P handoff (contract data flowing to Contract Lifecycle Management) was tagged with a "Provide sourcing governance" process, but the contract itself is already covered by a "Negotiate and document agreements/contracts" process; the current tag is in the wrong category for what flows across this handoff. How should it be fixed?
+
+- a) Re-point the tag to "Negotiate and document agreements/contracts".
+- b) Delete the wrong tag from this handoff.
+- c) Leave the tag as-is.
+
+Recommended: a. The contract data is already realized under the agreements/contracts process, so re-pointing keeps the handoff correctly described. This overwrites (or removes) an existing tag, so it needs your sign-off.
+
+a9:
+
+---
+
+## Optional (will not hold up the build)
+
+q10: Should I research and add procurement catalog masters (catalogs and catalog items, likely decomposing into roughly 5 to 8 entities such as catalog versions, item attributes, supplier-content versus buyer-content, punch-out sessions, and item-master sync) for a Catalog Management module? (yes/no)
+
+Recommended: yes, but additive and only meaningful if the Catalog Management module in q1 is approved; it can happen after the modules exist.
+
+a10:
+
+---
+
+<!-- agent map, ignore: q1=B2-MODULE-SPLIT q2=B2-JAGGAER q3=B2-PATTERN-FLAGS q4=B2-SEND-EMAIL q5=B2-EINVOICE-PII q6=B2-PAIRWISE-TIMING q7=B2-H1-APPROVAL q8=B2-B9D-RETAG-347 q9=B2-B9D-MISTAG-40 q10=B3-CATALOGS | domain_id=27 -->

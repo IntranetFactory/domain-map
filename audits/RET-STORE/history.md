@@ -431,3 +431,63 @@ UI links:
 ### JWT errors
 
 None.
+
+## 2026-06-13 - B9d handoff-payload realization (B1A-B9D-VERIFY)
+
+### Scope
+
+Ran the B9d band (handoff payload realization) on RET-STORE in BOTH directions
+via `scripts/analytics/b9d_resolver.ts RET-STORE --dry-run`, the open
+agent-executable item that left state at next_action_by: agent. RET-STORE
+(domain id 48) is still UNBUILT (0 domain_modules, M1 hard fail); the resolver
+output and the live boundary reads below are the both-directions verification.
+
+### B9d classification (both directions)
+
+- **Inbound: zero handoffs into RET-STORE.** `/handoffs?target_domain_id=eq.48`
+  returns []. Nothing to classify on the inbound half.
+- **Outbound: 5 handoffs**, every one sourced by RET-STORE: 934 -> WFM
+  (retail_labour_schedules), 935 -> HCM (store_audits), 936 -> CRM
+  (mystery_shopper_records), 937 -> WFM (store_associate_checklists), 938 -> WFM
+  (store_tasks).
+- **All 5 payloads are owned by RET-STORE itself.** RET-STORE masters every
+  carried entity in legacy `domain_data_objects` (647, 648, 649, 650, 652, plus
+  651 planogram). The resolver reports them as no-master / UNOWNED only because it
+  reads the module junction (`domain_module_data_objects`), which is empty for an
+  unbuilt domain. Per the B9d band the owner signal is "the domain that masters
+  the carried entity": that is RET-STORE on all 5, and the owner is unbuilt.
+- **No neighbor-owned ORPHAN to route.** Because RET-STORE owns each payload, no
+  durable b2 / q item is written into a neighbor's (WFM / HCM / CRM) backlog. The
+  realization (a gated `data_object_lifecycle_states.process_id` + `process_raci`
+  with R/A on a RET-STORE persona) cannot be authored: RET-STORE has zero modules
+  and zero personas, so it is gated behind the build (B1A-BUILD) and the module
+  shape (B2-1). Per the B9d unbuilt-owner rule the realized-nearest-sibling
+  cross-check is skipped; the correctly-tagged ORPHANs are not downgraded.
+- **No MIS-TAGs.** Each payload's PCF category fits an endpoint (time-and-attendance
+  / scheduling -> WFM; customer feedback -> CRM; health-and-safety audit -> HCM).
+- **No ROLL-UPs to re-point.** The resolver found no realized ancestor / descendant
+  for any of the 5 codes; the existing handoff_processes tags (set 2026-05-31) stand.
+
+### Executed
+
+- No additive owner-side writes were produced. B9d is correctly a no-op realization
+  pass for an unbuilt source domain that owns all its own outbound payloads: there
+  is no neighbor to route to and the in-domain realization is build-gated. The
+  resolver dry-run "INTENDED OWNER-FILE EDITS" section was (none).
+- Resolved B1A-B9D-VERIFY: deleted from state.yaml (this entry is its disposition).
+
+### Result
+
+- state.yaml: B1A-B9D-VERIFY removed; B9d is verified in both directions.
+- next_action_by recomputed to `user`: no agent-executable work remains. Everything
+  left is gated behind the user build decision (B1A-BUILD) and the b2 questions
+  already surfaced in q-RET-STORE.md (module split, pattern flags, state gates,
+  legacy skill disposition, verb forms, embedded masters). The b1b cascade
+  (B1B-M1 / CAPS / B10B-SOURCE / LIFECYCLE / EMBED / PATTERN-FLAGS / VERB-RENAME)
+  stays blocked_by the build per Rule #14 (unbuilt domain: agent does not scaffold).
+- q-RET-STORE.md unchanged and current: B9d added no user-facing item, so the
+  existing q-file (q1..q11) already covers every open decision.
+
+### JWT errors
+
+None.

@@ -38,6 +38,16 @@ a4:
 
 ---
 
+q5: Commercial Real Estate Operations forwards real estate listing to Real Estate Brokerage and Agent Operations to close the sale, but Real Estate Brokerage and Agent Operations does not yet have anyone assigned to close the sale, so this step has no owner. How should it be handled?
+- a) Record it now as work Real Estate Brokerage and Agent Operations owns, and assign a named owner once Real Estate Brokerage and Agent Operations sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Real Estate Brokerage and Agent Operations decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a5:
+
+---
+
 ## Optional (will not hold up the build)
 
 q3: Ten data objects flagged as missing against the flagship brokerage vendors are still unloaded (buyer representation agreements, listing agreements, compliance checklists, escrow accounts and deposits, referral agreements, open houses, MLS syndication logs, MLS feeds, agent pipelines). Should I research and add the ones that hold up? (yes/no)
@@ -48,4 +58,4 @@ a3:
 
 ---
 
-<!-- agent map, ignore: q1=B1A-SELF-CONTAIN q2=B2-H1-APPROVAL q3=B3-PHASE0-MARKET-GAPS q4=B2-B9D-OWN-207 | domain_id=143 -->
+<!-- agent map, ignore: q1=B1A-SELF-CONTAIN q2=B2-H1-APPROVAL q3=B3-PHASE0-MARKET-GAPS q4=B2-B9D-OWN-207 q5=B2-B9D-OWN-1860 | domain_id=143 -->

@@ -451,3 +451,43 @@ None. All verification reads succeeded.
 ### Post-fix status
 
 `next_action_by = user`. The build and the entire b1b / b3 cascade remain gated on the keystone B2-1 decision (leadership-tier vs promote), best resolved jointly with the BCM B2-1.
+
+## 2026-06-13 - Audit (B9d both-directions + Phase 0, state-driven execute)
+
+### Summary
+
+State-driven Validate execute pass against the open items in `audits/OP-RES/state.yaml`. The one agent-executable item flagged (`B1A-B9D-VERIFY`, B9d never run on this domain) was executed. Live state re-confirmed 2026-06-13: OP-RES (domain 18, parent_domain_id 15 / GRC) is still UNBUILT (0 `domain_modules`, 0 `capability_domains`, 0 module DMDOs, 0 skills) and masters zero data_objects of its own. The build remains SURFACED, not scaffolded, because it is gated on the keystone market-shape decision B2-1 (= q1). A4 catalog UX is already populated (prior pass) and re-confirmed non-empty.
+
+### Executed
+
+- **B9d (handoff payload realization, BOTH directions) via `scripts/analytics/b9d_resolver.ts OP-RES`** (dry-run then `--write`). OP-RES has exactly one boundary tag: handoff 252 (GRC -> OP-RES), payload `risk_assessments` (id 291), existing `discovery_substring` tag at pid 271. Classification: **UNOWNED** at module grain. The carried entity `risk_assessments` has no module-grain `master` row anywhere (GRC masters it at the legacy `domain_data_objects` grain, role=master, but GRC is itself unbuilt with 0 modules, so no realizable owner module/persona exists). Per the B9d band, an UNOWNED dependency is surfaced on the SENDER (GRC), not authored as an owner-side ORPHAN realization. Resolver produced no owner-file edits (correct: nobody can host realization yet). GRC's audit (2026-06-13) already recorded this same boundary as 1 of its 20 UNOWNED findings. No catalog writes, no `record_status` touched, no owner-file edits. `B1A-B9D-VERIFY` resolved and removed from state.yaml.
+
+- **Phase 0 vendor-surface research (Rule #22 forcing step)** at `.tmp_deploy/OP-RES-phase0-2026-06-13.md`. Required because the keystone open b2 (B2-1, leadership-tier vs promote) is a market-shape decision and the prior q-file recommendations rested on a narrative basis, not a Phase 0 report with named-vendor-by-entity evidence. Flagship vendors surveyed: Fusion Framework System (Fusion Risk Management), Castellan Solutions, Riskonnect Platform, ServiceNow IRM/ORM, Archer Suite. Verdict: **OP-RES is master-bearing per the vendor evidence** (Fusion, Castellan, Archer persist the mapping triad `important_business_services` / `impact_tolerances` / `service_dependency_maps` and the testing/incident band as first-class, historized, attested records, because regulators audit a defensible point-in-time record a query-time view cannot satisfy; only ServiceNow IRM leans overlay, embedding from platform CMDB/CSDM). Hybrid in posture: owns the resilience register + testing/incident lifecycle, consumes CMDB `business_services`, the TPRM third-party master, and SECOPS TLPT execution.
+
+- **q-OP-RES.md refreshed** with the named-vendor evidence inline (Rule #22): q1 (B2-1) recommendation moved from hybrid (c) to **promote (b)**, grounded in Fusion/Castellan/Archer mastering the substrate vs ServiceNow's overlay; q2 (B2-2) strengthened to "OP-RES masters important_business_services as a resilience register with an FK to CMDB business_services" per the Fusion/Castellan-vs-ServiceNow split; q3 (B2-3) strengthened to a by-artifact split anchored to the owning master (ICT register references TPRM, TLPT references SECOPS execution, major-incident reports reference the source incident), with named-vendor packaging cited.
+
+### Surfaced (not written, owed to the user)
+
+- **B2-1 / q1** (keystone): keep OP-RES leadership-tier vs promote to master-bearing. Phase 0 now recommends **promote**. Gates the entire build (modules, capabilities, masters, consumer DMDOs, domain skill, personas) and the 11 b3 candidates. Couple with the BCM B2-1.
+- **B2-2 / q2**: Important Business Service register ownership. Recommended: OP-RES masters it as a resilience register FK-referencing CMDB. Depends on B2-1.
+- **B2-3 / q3**: DORA/NIS2 substrate split across OP-RES / BCM / TPRM / SECOPS. Recommended: split by artifact, anchored to the owning master. Independent of B2-1; couple with BCM B2-3.
+
+### Left (untouched, gated on B2-1)
+
+- **Build cascade (B1A-RECLASS, B1A-BUILD; B1B-S1 modules, B1B-S2 capabilities, B1B-S4 skill, B1B-S6 consumer DMDOs):** UNBUILT domain; surfaced, not scaffolded. Gated on B2-1.
+- **B1B-S5 (DESTRUCTIVE, foreign-blocked):** repointing handoff 252 off defective trigger 227. Owed by GRC first (GRC B9 owes a non-defective trigger; GRC owns `risk_assessments` only at domain grain and is unbuilt). Recommended fix recorded, not applied.
+- **B1B-A1** (agent_curated `handoff_processes` row on handoff 252, process 272): blocked behind B1B-S5. Left.
+- **b3** (11 candidate masters): backlog, all gated on B2-1. Phase 0 now provides the vendor vetting for most of them.
+
+### JWT errors
+
+None. All verification reads and the resolver run succeeded.
+
+### Loader / artifact paths
+
+- `.tmp_deploy/OP-RES-phase0-2026-06-13.md` (Phase 0 report).
+- `scripts/analytics/b9d_resolver.ts` (B9d, committed; no new loader needed).
+
+### Post-fix status
+
+`next_action_by = user`. B9d is verified (resolved). No agent-executable work remains: the build and the b1b / b3 cascade are gated on the keystone B2-1 (promote, per Phase 0), best resolved jointly with the BCM B2-1.

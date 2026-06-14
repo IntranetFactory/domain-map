@@ -130,6 +130,16 @@ a16:
 
 ---
 
+q17: Commercial Real Estate Operations forwards real estate property to Real Estate and Workplace Management to confirm alignment of property requirements with business strategy, but Real Estate and Workplace Management does not yet have anyone assigned to confirm alignment of property requirements with business strategy, so this step has no owner. How should it be handled?
+- a) Record it now as work Real Estate and Workplace Management owns, and assign a named owner once Real Estate and Workplace Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Real Estate and Workplace Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a17:
+
+---
+
 ## Optional (will not hold up the build)
 
 q11: Five extra entity candidates show up across the flagship facilities vendors (building systems, preventive maintenance schedules, space classifications, move requests, and chargebacks). Should I research and add the ones that hold up? (yes/no)
@@ -159,4 +169,4 @@ a13:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S5 q2=B2-S4 q3=B2-S6 q4=B2-S7 q5=B2-S3.leaseslock q6=B2-S3.leaseapprover q7=B2-S3.capitalcharter q8=B2-S3.capitalapprover q9=B2-S3.workorderpii q10=B2-S3.occupancypii q11=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5 q12=B3-S7 q13=B3-S6 q14=B2-B9D-OWN-1412 q15=B2-B9D-OWN-1783 q16=B2-B9D-OWN-824 | domain_id=141 -->
+<!-- agent map, ignore: q1=B2-S5 q2=B2-S4 q3=B2-S6 q4=B2-S7 q5=B2-S3.leaseslock q6=B2-S3.leaseapprover q7=B2-S3.capitalcharter q8=B2-S3.capitalapprover q9=B2-S3.workorderpii q10=B2-S3.occupancypii q11=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5 q12=B3-S7 q13=B3-S6 q14=B2-B9D-OWN-1412 q15=B2-B9D-OWN-1783 q16=B2-B9D-OWN-824 q17=B2-B9D-OWN-1511 | domain_id=141 -->

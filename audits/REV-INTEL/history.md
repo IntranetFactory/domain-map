@@ -664,3 +664,20 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-13 - B9d (handoff payload realization), both directions
+
+Ran the B9d band via `scripts/analytics/b9d_resolver.ts REV-INTEL` (dry-run then --write). This closed the only open b1a item, B1A-B9D-VERIFY (B9d had never run on REV-INTEL; the domain was last audited before the band existed). Both directions of every boundary were classified; no destructive proposals surfaced.
+
+7 boundary handoff_processes tags -> 4 distinct (process, owner) findings: 1 RESOLVED, 3 ORPHAN, 0 ROLL-UP, 0 MIS-TAG.
+
+- **RESOLVED:** 712 "Manage opportunity pipeline" (3.5.1.6), owner CRM, payload crm_opportunities (handoffs 473, 477, 207, 208). Exact code realized with R/A. No action.
+- **ORPHAN (owner CRM, unbuilt):** 686 "Analyze sales trends and patterns" (3.4.1.2), payload crm_opportunities, handoff 201 (CRM->REV-INTEL). Owner CRM masters crm_opportunities. Routed: added B2-B9D-OWN-686 to audits/CRM/state.yaml + q-CRM.md (q18). Owner-decides; resolves when CRM is audited.
+- **ORPHAN (owner CRM, unbuilt):** 713 "Determine sales resource allocation" (3.5.1.7), payload crm_opportunities, handoff 208 (REV-INTEL->SALES-PERF). Owner CRM. Routed: added B2-B9D-OWN-713 to audits/CRM/state.yaml + q-CRM.md (q19).
+- **ORPHAN (owner REV-INTEL, built):** 686 "Analyze sales trends and patterns" (3.4.1.2), payload conversation_intelligence_records, handoff 476 (SALES-ENG->REV-INTEL). REV-INTEL masters/embeds conversation_intelligence_records (REV-INTEL-CONVERSATION 186). pid 686 is unrealized on REV-INTEL (no gated lifecycle state, no process_raci). This is a real R/A decision -> kept as b2 B2-B9D-OWN-686 on REV-INTEL, surfaced in q-REV-INTEL.md q1. The resolver's auto-wording carried a placeholder ("the a named owner") because REV-INTEL has no realized sibling for pid 686; rewrote the question with the real reachable personas (Revenue Operations Analyst, Sales Manager, Sales Enablement Coach) and a vendor-grounded Recommended (RevOps Analyst R / Sales Manager A).
+
+No `handoff_processes` re-points (no ROLL-UP) and no deletions (no MIS-TAG), so no destructive sign-off needed. No catalog writes (B9d ownership routing is audit-file-only until the owner answers). B1A-B9D-VERIFY executed and removed from b1a.
+
+### Disposition
+
+B9d agent-executable work is complete. One owner-decision remains for REV-INTEL: B2-B9D-OWN-686 (q1), a user judgment call on who is R/A for "Analyze sales trends and patterns" over the inbound conversation-intelligence payload. status -> feedback_needed, next_action_by -> user. The b1b neighbor/revisit backlog (CRM / SALES-ENG / SALES-PERF source-side catch-up; EPM / PMM revisit-if-ships) is unchanged. The two CRM-owned ORPHANs were written into CRM's own backlog this pass.

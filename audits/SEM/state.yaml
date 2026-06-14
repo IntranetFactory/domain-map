@@ -198,6 +198,16 @@ b2:
     why: |
       Recording it now means that the moment Strategy Execution Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SEM.md q7.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-409
+    summary: "Strategy Execution Management: name an owner for \"Manage portfolio\" (no one is responsible for it today)"
+    question: |
+      Strategic Portfolio Management forwards strategic initiative to Strategy Execution Management to manage portfolio, but Strategy Execution Management does not yet have anyone assigned to manage portfolio, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Strategy Execution Management owns, and assign a named owner once Strategy Execution Management sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Strategy Execution Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-SEM.md q8.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-KPIS

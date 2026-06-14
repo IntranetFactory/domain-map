@@ -79,6 +79,17 @@ a7:
 
 ---
 
+q11: Work Management hands work to Business Process Architecture, but Business Process Architecture has no one assigned to reengineer business processes and systems, so that step currently has nobody responsible for it. Who should own it?
+- a) The a named owner runs it and approves it.
+- b) The a named owner runs it and the Process Owner approves.
+- c) Leave it unassigned for now.
+
+Recommended: a. Business Process Architecture already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
+
+a11:
+
+---
+
 ## Optional (will not hold up the build)
 
 q8: Several deeper objects show up across the flagship BPA vendors. Should I research and add the ones that hold up (published process documentation pages, process KPIs and metric definitions, reference framework libraries, decision (DMN) models, process review and governance cycles, model revision diffs, process change requests, and ArchiMate/TOGAF artifacts)? (yes/no)
@@ -105,4 +116,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-CAPMAP-OWNER q2=B2-PATTERN-FLAGS.247 q3=B2-PATTERN-FLAGS.248 q4=B2-PATTERN-FLAGS.250 q5=B2-B9D-RETAG q6=B2-EA-SOLUTION-SPLIT q7=B2-PROC-MIN-RECONCILE q8=B3-PROCESS-DOC-PAGES+B3-PROCESS-KPIS+B3-REF-FRAMEWORK-LIB+B3-DECISION-MODELS+B3-PROCESS-REVIEW-CYCLES+B3-MODEL-REVISION-DIFFS+B3-PROCESS-CHANGE-REQS+B3-ARCHIMATE-MODELS q9=B3-EA-PROMOTION q10=B3-IBPMS-PROMOTION | domain_id=136 -->
+<!-- agent map, ignore: q1=B2-CAPMAP-OWNER q2=B2-PATTERN-FLAGS.247 q3=B2-PATTERN-FLAGS.248 q4=B2-PATTERN-FLAGS.250 q5=B2-B9D-RETAG q6=B2-EA-SOLUTION-SPLIT q7=B2-PROC-MIN-RECONCILE q8=B3-PROCESS-DOC-PAGES+B3-PROCESS-KPIS+B3-REF-FRAMEWORK-LIB+B3-DECISION-MODELS+B3-PROCESS-REVIEW-CYCLES+B3-MODEL-REVISION-DIFFS+B3-PROCESS-CHANGE-REQS+B3-ARCHIMATE-MODELS q9=B3-EA-PROMOTION q10=B3-IBPMS-PROMOTION q11=B2-B9D-OWN-1708 | domain_id=136 -->

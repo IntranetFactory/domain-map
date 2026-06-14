@@ -127,6 +127,16 @@ a17:
 
 ---
 
+q18: Source-to-Pay forwards spend policy to Corporate Spend Management to develop procurement plan, but Corporate Spend Management does not yet have anyone assigned to develop procurement plan, so this step has no owner. How should it be handled?
+- a) Record it now as work Corporate Spend Management owns, and assign a named owner once Corporate Spend Management sets up who does this work.
+- b) Leave it off the list for now.
+
+Recommended: a. Recording it now means that the moment Corporate Spend Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
+
+a18:
+
+---
+
 ## Optional (will not hold up the build)
 
 q12: Corporate travel management shows up as a pure-play market of its own (Navan, Egencia, SAP Concur Travel, Spotnana, and others), and a travel-booking object already exists with no domain owning the booking flow. Should I research and stand up a separate Travel Management domain? (yes/no)
@@ -164,4 +174,4 @@ a15:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3.cardauth_pii q4=B2-S3.spendreq_lock q5=B2-S3.vpa_lock q6=B2-S3.cardacct_pii q7=B2-S3.vpa_single_approver q8=B2-S4 q9=B2-S5 q10=B2-S6 q11=B2-APQC q12=B3-DOMAIN-TRAVEL-MGMT q13=B3-DOMAIN-CORP-CARD-PROGRAM q14=B3-MASTERLESS-FX-TREASURY+B3-MASTERLESS-ANALYTICS+B3-MERCHANT-CATEGORY-RULES+B3-CARD-DISPUTES+B3-RECEIPT-RECORDS+B3-VENDOR-PAYMENT-METHODS+B3-VIRTUAL-CARDS q15=B3-MASTERLESS-CORP-CARD-EXPENSE-POLICY q16=B2-B9D-OWN-1323 q17=B2-B9D-OWN-315 | domain_id=133 -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3.cardauth_pii q4=B2-S3.spendreq_lock q5=B2-S3.vpa_lock q6=B2-S3.cardacct_pii q7=B2-S3.vpa_single_approver q8=B2-S4 q9=B2-S5 q10=B2-S6 q11=B2-APQC q12=B3-DOMAIN-TRAVEL-MGMT q13=B3-DOMAIN-CORP-CARD-PROGRAM q14=B3-MASTERLESS-FX-TREASURY+B3-MASTERLESS-ANALYTICS+B3-MERCHANT-CATEGORY-RULES+B3-CARD-DISPUTES+B3-RECEIPT-RECORDS+B3-VENDOR-PAYMENT-METHODS+B3-VIRTUAL-CARDS q15=B3-MASTERLESS-CORP-CARD-EXPENSE-POLICY q16=B2-B9D-OWN-1323 q17=B2-B9D-OWN-315 q18=B2-B9D-OWN-793 | domain_id=133 -->

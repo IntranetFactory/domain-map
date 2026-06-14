@@ -521,3 +521,31 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-13 - B9d execution (resolves B1A-B9D-VERIFY)
+
+Ran `scripts/analytics/b9d_resolver.ts RMM` (dry-run then --write), the committed per-domain B9d band, in BOTH directions across all 12 boundary payloads on RMM's boundaries. Result: 11 distinct (process, owner) findings = 10 ORPHAN + 1 UNOWNED. ZERO ROLL-UP re-points, ZERO MIS-TAGs, ZERO destructive proposals. All ORPHAN owners are currently unbuilt (owner-by-master-row is the unbuilt-safe signal; the realized-nearest-sibling cross-check is skipped for unbuilt owners per the band).
+
+ORPHAN routing (additive owner-side b2 + q, record_status untouched per Rule #1):
+- B2-B9D-OWN-355  "Decommission productive assets" (pid 355) -> owner RMM (inbound 150 HAM->RMM, payload rmm_agents). Added to RMM state.yaml b2 + q-RMM.md q12.
+- B2-B9D-OWN-1552 "Update work and asset records" (pid 1552) -> owner RMM (outbound 645 RMM->ITAM, payload automation_scripts). Added to RMM state.yaml b2 + q-RMM.md q13.
+- B2-B9D-OWN-1241 "Define IT change/release standards" -> owner ITSM (142). Added to ITSM q19; state.yaml item added.
+- B2-B9D-OWN-1257 "Document IT change/release outcome" -> owner ITSM (143). Already present in ITSM (q9 / state.yaml exists).
+- B2-B9D-OWN-1299 "Triage IT service delivery incidents" -> owner ITSM (140, 644). Already present (q8 / state.yaml exists).
+- B2-B9D-OWN-1301 "Operate and monitor online systems" -> owner ITOM (141). Already present (q11 / state.yaml exists).
+- B2-B9D-OWN-1309 "Manage infrastructure configuration" -> owner CMDB (146). Already present (q14 / state.yaml exists).
+- B2-B9D-OWN-1312 "Maintain IT asset records" -> owner HAM (144). Already present (q14 / state.yaml exists).
+- B2-B9D-OWN-1312 "Maintain IT asset records" -> owner SAM (145). Added to SAM q13; state.yaml item added.
+- B2-B9D-OWN-927  "Resolve customer problems, requests, and inquiries" -> owner MSP-PSA (159). Already present (q19 / state.yaml exists).
+
+Idempotency: many neighbor items already existed from prior cross-domain reconciliation passes; the resolver added only the missing ones (2 into RMM, 1 into ITSM, 1 into SAM). No catalog/DB writes (all edits are local audit files).
+
+UNOWNED dependency (surfaced on the sender, not dropped per the band): outbound handoff 147 (RMM network_device.discovered -> DISCOVERY, PCF 8.7.7.1) carries payload discovered_devices, which has NO role='master' row anywhere in the catalog, so it cannot route to an owner. Recorded as RMM b1b item B1B-B9D-UNOWNED-DISC-DEVICES, blocked on DISCOVERY mastering discovered_devices. Not RMM's structural fix to author.
+
+state.yaml: B1A-B9D-VERIFY deleted from b1a (b1a now empty); B1B-B9D-UNOWNED-DISC-DEVICES added to b1b; two B2-B9D-OWN-* added to b2. status stays feedback_needed / next_action_by user (open b2 decisions + q-RMM.md present). No agent-executable work remains on RMM.
+
+### JWT errors
+
+None.

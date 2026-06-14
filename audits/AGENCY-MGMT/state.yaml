@@ -202,6 +202,16 @@ b2:
     why: |
       Recording it now means that the moment Agency Management Software decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-AGENCY-MGMT.md q16.
     extra_b9d_added: "2026-06-13"
+  - id: B2-B9D-OWN-1433
+    summary: "Agency Management Software: name an owner for \"Audit invoices and key data in AP system\" (no one is responsible for it today)"
+    question: |
+      Source-to-Pay forwards insertion order to Agency Management Software to audit invoices and key data in AP system, but Agency Management Software does not yet have anyone assigned to audit invoices and key data in AP system, so this step has no owner. How should it be handled?
+    options:
+      - "Record it now as work Agency Management Software owns, and assign a named owner once Agency Management Software sets up who does this work."
+      - "Leave it off the list for now."
+    why: |
+      Recording it now means that the moment Agency Management Software decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-AGENCY-MGMT.md q17.
+    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-AGENCY-RATE-CARDS
