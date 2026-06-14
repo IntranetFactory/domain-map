@@ -16,14 +16,22 @@ This skill delegates all CLI mechanics to `use-semantius`. Without it, the disco
 
 ---
 
-## Check 2: `semantius` CLI is installed and on PATH
+## Check 2: `semantius` CLI is installed, on PATH, and authenticated
 
-**How to check:** run `semantius --version` via Bash. If the command is not found, or returns a non-zero exit code, halt with:
+`scripts/phase1-environment.ts` folds the install check and the auth check (Check 3) into a
+single `getCurrentUser` call: if the binary is missing, `Bun.spawn` returns a "command not
+found" result and the script halts with `can_offer_install: true`.
 
-> The `semantius` CLI is not installed or not on PATH. Install instructions: https://semantius.app/docs/cli/install
->
-> On Windows: `npm install -g @semantius/cli` then restart your shell.
-> Verify with: `semantius --version`
+**The CLI ships as a native installer, NOT an npm package.** When the script halts with
+`reason: "semantius CLI is not installed or not on PATH."`, it also returns:
+
+- `install_command` — the one-liner for the user's platform (Windows PowerShell `irm ... | iex`, or Linux/macOS `curl ... | bash`).
+- `install_docs` — https://github.com/semantius/semantius-cli#1-installation
+
+**OFFER to run `install_command` for the user.** Ask their go-ahead first (it modifies their
+system); never auto-install silently. On "yes", run the exact `install_command`, tell them to
+restart the shell if PATH was just updated, then re-run `scripts/bootstrap.ts`. On "no",
+surface `install_docs` and stop.
 
 ---
 
@@ -45,31 +53,44 @@ This skill delegates all CLI mechanics to `use-semantius`. Without it, the disco
 
 ---
 
-## Check 4: at least one of the domain's modules is deployed
+## Check 4: the domain is deployed (entity-first)
 
-**How to check:** enumerate the domain's modules by the `catalog_module_code` domain axis (provenance, core v0.1.2), reading the module codes from `spec.modules[].code`. This survives a renamed `module_slug`; the slug query is a fallback only for pre-provenance modules whose `catalog_module_code` is still `''` (empty, never NULL).
+**Resolve domain membership ENTITY-FIRST, not by module code.** A deployment may package the
+whole domain under one module whose `catalog_module_code` is not a domain code at all (e.g. a
+"hiring-starter" bundle that hosts the ATS entities). Keying presence on module codes would
+hide such a deployment even though its entities are present and canonically stamped. The
+strongest identity signal is the entity's `catalog_entity_code`, so resolve the **domain
+slice** (the live `module_id`s that host the domain's entities) from the canonical master
+codes, and treat `catalog_module_code` / `module_slug` only as hints.
 
 ```bash
-# primary: the domain axis
-semantius call crud postgrestRequest '{"method":"GET","path":"/modules?catalog_module_code=in.(<spec.modules[].code>)&select=id,module_slug,module_name,catalog_module_code"}'
-# fallback for pre-provenance modules (catalog_module_code == '')
-semantius call crud postgrestRequest '{"method":"GET","path":"/modules?module_slug=in.(<slugs>)&select=id,module_slug,module_name,catalog_module_code"}'
+# PRIMARY: entity-first. Master codes = the entities the domain OWNS
+# (spec.data_objects[].name == the union of every module's masters[]).
+semantius call crud postgrestRequest '{"method":"GET","path":"/entities?catalog_entity_code=in.(<spec.data_objects[].name>)&select=module_id,catalog_entity_code"}'
+# HINT/fallback: module catalog_module_code + module_slug (for a canonically-coded deployment,
+# or a pre-provenance one whose catalog_module_code is still '').
+semantius call crud postgrestRequest '{"method":"GET","path":"/modules?catalog_module_code=in.(<spec.modules[].code>)&select=id,module_slug,catalog_module_code"}'
+semantius call crud postgrestRequest '{"method":"GET","path":"/modules?module_slug=in.(<slugs>)&select=id,module_slug,catalog_module_code"}'
 ```
 
-The present `module_id`s form the **domain slice** that scopes ladder step 2 (see [discovery.md](discovery.md)).
+The **domain slice** = the de-duplicated union of every `module_id` returned by those three
+queries. Keying the entity query on OWNED masters (not every referenced concept) keeps a
+foreign module that merely hosts a shared/embedded master (e.g. an HR `org_units`) out of the
+slice. `scripts/phase1-environment.ts` emits the slice as `domain_slice` and the per-spec-module
+hint as `modules`.
 
-- If at least one module is present, record the present `module_id`s in `state.yaml` under `deployment` and proceed. A spec module that is absent is a deployment choice, not a failure.
-- If **no** module is present, halt with the error template below, substituting the configured domain at runtime:
+- If the slice is **non-empty**, record its `module_id`s in `state.yaml` under `deployment` and proceed. A spec module that does not appear is a deployment choice (or a bundled package), not a failure.
+- If the slice is **empty**, halt with the error template below, substituting the configured domain at runtime:
 
-> The `<spec.domain.name>` domain is not deployed in your platform. Deploy the domain blueprint first:
+> The `<spec.domain.name>` domain is not deployed in your platform. No live module hosts its entities, and no module carries its catalog codes. Deploy the domain blueprint first:
 >
 > 1. Pull the blueprint: `https://semantius.app/catalog/<spec.domain.code lowercase>/blueprint`
 > 2. Run the semantic-model-deployer skill against the blueprint
-> 3. Verify with: `semantius call crud postgrestRequest '{"method":"GET","path":"/modules?module_slug=eq.<slug>"}'`
+> 3. Verify with: `semantius call crud postgrestRequest '{"method":"GET","path":"/entities?catalog_entity_code=in.(<a few master codes>)&select=module_id"}'`
 >
-> Re-run this skill once the module is live.
+> Re-run this skill once the domain is live.
 
-- Multiple rows are **expected** (a domain has several modules); each present module joins the domain slice. `catalog_module_code` is non-unique by design (clone-and-customize), so two modules sharing a code is not an error.
+- Multiple slice modules are **expected** (a domain has several modules, or its masters were cloned). `catalog_module_code` is non-unique by design (clone-and-customize), so collect **all** matching `module_id`s; never collapse by code into one row.
 
 ---
 

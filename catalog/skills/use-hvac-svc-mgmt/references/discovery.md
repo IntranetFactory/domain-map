@@ -26,19 +26,26 @@ never `IS NULL`:
 
 ---
 
-## Pass 1: module presence (the domain axis)
+## Pass 1: domain membership (entity-first)
 
-The domain's modules are enumerated by `catalog_module_code` (the domain axis), not by guessing a
-slug. `phase1-environment.ts` does this; the slugs are a fallback only for pre-provenance modules
-whose `catalog_module_code` is still `''`.
+Domain membership is resolved **entity-first**, not by module code. The deployed module that
+hosts the domain may carry any `catalog_module_code` (a "hiring-starter" bundle hosts the ATS
+entities under `catalog_module_code = hiring-starter`), so the **domain slice** is the set of
+live `module_id`s that host the domain's OWNED entities, resolved from the canonical master
+codes (`spec.data_objects[].name`). `catalog_module_code` / `module_slug` are hints only.
 
 ```bash
-semantius call crud postgrestRequest '{"method":"GET","path":"/modules?catalog_module_code=in.(<spec.modules[].code>)&select=id,module_slug,module_name,catalog_module_code"}'
+# PRIMARY: entity-first (owned master codes -> the modules that host them).
+semantius call crud postgrestRequest '{"method":"GET","path":"/entities?catalog_entity_code=in.(<spec.data_objects[].name>)&select=module_id,catalog_entity_code"}'
+# HINT/fallback: module codes + slugs.
+semantius call crud postgrestRequest '{"method":"GET","path":"/modules?catalog_module_code=in.(<spec.modules[].code>)&select=id,module_slug,catalog_module_code"}'
 ```
 
-Record each spec module as `present: true` with its live `module_id`, or `present: false`
-(`reason: "not part of this deployment"`). The set of present `module_id`s is the **domain slice**
-that scopes ladder step 2. An absent module is a deployment choice, not a failure.
+`phase1-environment.ts` does this and emits the de-duplicated union of `module_id`s as the
+**domain slice** (`domain_slice`), which scopes ladder step 2. Keying the entity query on OWNED
+masters (not embedded masters / consumers) keeps a foreign module that merely hosts a shared
+master out of the slice. An absent spec module is a deployment choice (or a bundled package),
+not a failure.
 
 ---
 
@@ -79,10 +86,20 @@ never `alias_code` alone, so the domain matches only its own merge, not another 
 identically-named one. This catches the reuse/merge where `X` was renamed onto an existing host and
 left no FK shadow. The host's `name` is the live table; record `entity_renames[X] = name`.
 
-### Step 4 — absent (true omission)
+### Step 4 — absent (true omission vs external context)
 
-None of the above resolved `X` → `X` is genuinely not deployed in this domain. Record in
-`omitted_entities`; the skill must not generate queries against it.
+None of the above resolved `X`. Split by whether the domain OWNS `X`:
+
+- **Owned** (`X` is one of the domain's masters): genuinely not deployed here. Record in
+  `omitted_entities`; the skill must not generate queries against it.
+- **External** (`X` is only an `embedded_master` / `consumer` — a concept another domain
+  masters that this deployment did not bring along): record in `external_entities`, not
+  `omitted_entities`. It was never this domain's to deploy, so do not report it as an ATS
+  omission. The skill still cannot query it here; the distinction is for accurate explanation.
+
+(A `step 0` precedes step 1: any resolution the user already recorded in `state.yaml` from a
+prior Phase 2b — `entity_renames`, `omitted_entities`, `custom_entities` — is applied first, so
+the bootstrap loop converges. See Phase 2b below.)
 
 > The danger the ladder removes: without step 3 (and with no FK shadow) a reuse/merge looks like
 > **absence**, so a live, renamed concept is mis-filed as omitted and every workflow it drives is
@@ -115,6 +132,22 @@ trust canonical field names and let a runtime failure become a lesson.
 `phase2a` emits an `ambiguities[]` list. A fully-stamped deployment yields none. Each remaining one
 is a real judgment call. Default to ASK; a wrong resolution propagates into every later run.
 
+**How the loop terminates (read this).** The cycle is: phase2a emits ambiguities → the agent
+asks the user → the agent records the resolutions in `state.yaml` → the agent re-invokes
+`bootstrap.ts`. This converges **because `phase2a` reads `state.yaml` back on every run** (step 0
+of the ladder) and drops anything already resolved from the `ambiguities[]` it emits. Record
+each resolution under the matching flat top-level key so phase2a can consume it:
+
+| Resolution | Record in `state.yaml` as | Effect on next phase2a run |
+|---|---|---|
+| rename confirmed / multi_owner pick | `entity_renames:` flat map, `concept: live_table` | concept resolves via `state_resolution`; ambiguity gone |
+| row confirmed custom | `custom_entities:` flat list of live table names | row recorded as custom; no `custom_entity` ambiguity |
+| concept confirmed omitted | `omitted_entities:` flat list of concept names | concept forced absent; no ambiguity |
+| user said "skip" | `unresolved_questions:` flat list of concept/live names | downgraded to non-blocking `deferred[]`; surfaced next session |
+
+Keep these keys **flat** (a map of `concept: table`, or a list of bare names). phase2a's
+state reader is intentionally minimal and only understands the flat shapes above.
+
 | Ambiguity `kind` | When phase2a emits it | Agent action |
 |---|---|---|
 | `rename_candidate` | a live row with **empty** `catalog_entity_code` whose name/label matches an otherwise-unresolved concept | ASK: *"`<live_name>` has no catalog lineage but looks like your `<concept>`. Same thing?"* On yes, record the rename in `state.yaml`; on no, treat as custom. |
@@ -139,12 +172,15 @@ provenance reads:
 {
   "discovered_at": "2026-06-12",
   "domain_code": "ATS",
+  "slice_module_ids": [0],
   "resolution": {
-    "<concept>": { "via": "fk_reachability|owned_code|alias|absent", "live_table": "<name>", "renamed": false }
+    "<concept>": { "via": "state_resolution|fk_reachability|owned_code|alias|absent|external_absent", "live_table": "<name>", "renamed": false }
   },
   "entity_renames": { "<canonical_concept>": "<live_table>" },
-  "omitted_entities": ["<concept>"],
+  "omitted_entities": ["<owned_concept_not_deployed>"],
+  "external_entities": ["<concept_owned_by_another_domain>"],
   "custom_entities": [{ "live_name": "<name>", "module_id": 0, "catalog_entity_code": "" }],
+  "fetch_errors": [],
   "entities": {
     "<live_table>": {
       "catalog_entity_code": "<canonical>", "canonical_owner_module": "", "entity_type": "operational_record",

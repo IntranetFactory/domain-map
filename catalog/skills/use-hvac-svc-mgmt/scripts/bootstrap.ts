@@ -85,9 +85,12 @@ async function main() {
     process.exit(1);
   }
 
-  const ambiguities = (phase2a.ambiguities ?? []) as Array<{ kind: string; module: string; live_name?: string; spec_name?: string; reason: string }>;
+  const ambiguities = (phase2a.ambiguities ?? []) as Array<{ kind: string; concept?: string; live_name?: string; reason: string }>;
+  const deferred = (phase2a.deferred ?? []) as Array<{ kind: string; concept?: string; live_name?: string; reason: string }>;
   if (ambiguities.length > 0) {
-    // Phase 2b is required before ready.flag can be written.
+    // Phase 2b is required before ready.flag can be written. Only ambiguities the user has
+    // NOT yet resolved in state.yaml reach here (phase2a consumes recorded resolutions), so
+    // the loop converges: each pass the agent resolves, records, and re-invokes.
     if (existsSync(readyFlagPath)) unlinkSync(readyFlagPath);
     console.log(JSON.stringify({
       ok: false,
@@ -95,7 +98,8 @@ async function main() {
       phase: "2b-required",
       reason: `Phase 2a discovered ${ambiguities.length} ambiguities that need user resolution. ready.flag NOT written.`,
       ambiguities,
-      next: "Agent runs Phase 2b (see references/discovery.md) to surface each ambiguity to the user, records resolutions in state.yaml, then re-invokes bootstrap.ts.",
+      deferred,
+      next: "Agent runs Phase 2b (see references/discovery.md) to surface each ambiguity to the user, records resolutions in state.yaml (entity_renames / omitted_entities / custom_entities / unresolved_questions), then re-invokes bootstrap.ts. phase2a reads those back so resolved items do not re-appear.",
     }, null, 2));
     process.exit(0);
   }
@@ -109,15 +113,18 @@ async function main() {
     .digest("hex")
     .slice(0, 16);
 
+  const sliceModuleIds = (phase1.domain_slice ?? []).map((m: any) => m.module_id);
   const flag = {
     ok: true,
     written_at: new Date().toISOString(),
     valid_through_emitted: spec.emitted,
     valid_through_major: spec.facts_major,
     schema_hash: schemaHash,
-    modules_present: phase1.summary.present,
-    modules_total: phase1.summary.total,
+    slice_module_ids: sliceModuleIds,
+    modules_present: sliceModuleIds.length || phase1.summary?.present || 0,
+    modules_total: phase1.summary?.total ?? phase1.summary?.spec_modules_total ?? 0,
     entities_discovered: phase2a.entities_discovered,
+    deferred_questions: deferred.length,
   };
   writeFileSync(readyFlagPath, JSON.stringify(flag, null, 2));
 
@@ -125,7 +132,10 @@ async function main() {
     ok: true,
     stage: "bootstrap",
     summary: flag,
-    next: "Skill is ready. Subsequent invocations only need to verify ready.flag exists and that valid_through_emitted matches spec.emitted.",
+    deferred,
+    next: deferred.length
+      ? "Skill is ready (ready.flag written). Some questions were deferred ('skip'); surface them at the start of the next session."
+      : "Skill is ready. Subsequent invocations only need to verify ready.flag exists and that valid_through_emitted matches spec.emitted.",
   }, null, 2));
   process.exit(0);
 }

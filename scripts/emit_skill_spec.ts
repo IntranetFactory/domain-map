@@ -32,7 +32,7 @@
 
 export {};
 
-import { writeFileSync, mkdirSync, existsSync, readdirSync, rmSync, cpSync } from "node:fs";
+import { writeFileSync, readFileSync, mkdirSync, existsSync, readdirSync, rmSync, cpSync } from "node:fs";
 import { dirname } from "node:path";
 import { argv } from "node:process";
 import { pg } from "./lib/catalog";
@@ -82,6 +82,85 @@ const todayIso = () => new Date().toISOString().slice(0, 10);
 function clean<T>(v: T): T {
   // Spaced em-dash ("a — b") -> ", "; bare em-dash -> "-". Keeps single spacing.
   return (typeof v === "string" ? (v.replace(/\s*—\s*/g, ", ") as unknown as T) : v);
+}
+
+// ---------- SKILL.md description: authored catalog.yaml -> routing description ----------
+//
+// The SKILL.md `description` is the AGENT-ROUTING surface (what the model reads to decide
+// whether to load the skill), distinct from catalog.yaml's `catalog_description` (buyer
+// prose for the catalog site). The authored, maintained trigger material already lives in
+// catalog.yaml: `catalog_tagline` (the one-line "what") and `search_keywords` (curated
+// trigger terms, explicitly "for agent triggering"). We compose the description from those.
+// When a domain's catalog.yaml has not been filled in (placeholder tagline / empty
+// keywords), we fall back to a spec-derived line (aliases + capability names).
+
+function unquoteYaml(s: string): string {
+  let v = s.trim();
+  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
+  return v.trim();
+}
+
+// Minimal reader for the two catalog.yaml fields the description needs. Not a general YAML
+// parser: `catalog_tagline` is a scalar; `search_keywords` is a flat list (block or inline).
+function readCatalogYaml(dir: string): { tagline: string; searchKeywords: string[] } {
+  let text: string;
+  try {
+    text = readFileSync(`${dir}/catalog.yaml`, "utf8");
+  } catch {
+    return { tagline: "", searchKeywords: [] };
+  }
+  let tagline = "";
+  const searchKeywords: string[] = [];
+  let inKw = false;
+  for (const raw of text.split(/\r?\n/)) {
+    const trimmed = raw.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue; // skip blanks + comments
+    const top = /^([A-Za-z0-9_]+):(.*)$/.exec(raw);
+    if (top && !/^\s/.test(raw)) {
+      inKw = false;
+      if (top[1] === "catalog_tagline") {
+        tagline = unquoteYaml(top[2]);
+      } else if (top[1] === "search_keywords") {
+        const inline = top[2].trim();
+        const m = /^\[(.*)\]$/.exec(inline);
+        if (m) for (const x of m[1].split(",").map((s) => unquoteYaml(s)).filter(Boolean)) searchKeywords.push(x);
+        else inKw = true;
+      }
+      continue;
+    }
+    if (inKw) {
+      const item = /^\s*-\s*(.*)$/.exec(raw);
+      if (item && item[1].trim()) searchKeywords.push(unquoteYaml(item[1]));
+    }
+  }
+  return { tagline, searchKeywords };
+}
+
+// Compose the routing description. Authored catalog.yaml wins; spec-derived is the fallback.
+function composeDescription(args: {
+  name: string;
+  code: string;
+  tagline: string;
+  searchKeywords: string[];
+  aliases: string[];
+  capNames: string[];
+}): string {
+  const haveTagline = !!args.tagline && !/^todo/i.test(args.tagline);
+  const haveKw = args.searchKeywords.length > 0;
+  let d: string;
+  if (haveTagline || haveKw) {
+    d = `${args.name} (${args.code}).`;
+    if (haveTagline) {
+      const t = args.tagline.trim();
+      d += ` ${t}${/[.!?]$/.test(t) ? "" : "."}`;
+    }
+    if (haveKw) d += ` Use for: ${args.searchKeywords.join(", ")}.`;
+  } else {
+    const triggers = args.aliases.length ? args.aliases : [args.code.toLowerCase()];
+    d = `${args.name} (${args.code}) in this Semantius deployment. Triggers: ${triggers.join(", ")}.`;
+    if (args.capNames.length) d += ` Workflows: ${args.capNames.join(", ")}.`;
+  }
+  return clean(d); // strip any em-dash that slipped into authored copy (project rule)
 }
 
 // Best-effort org slug for catalog_snapshot. Never throws; falls back to "catalog".
@@ -650,11 +729,13 @@ type RenderCtx = {
   entityPluralLabels: string[];
   capNames: string[];
   adjacentDomainCodes: string[];
+  description: string;
 };
 
 function renderSkillMd(template: string, r: RenderCtx): string {
   const code = r.code;
   const subs: Record<string, string> = {
+    SKILL_DESCRIPTION: r.description,
     DOMAIN_CODE_LOWER: code.toLowerCase(),
     DOMAIN_CODE: code,
     DOMAIN_NAME: r.name,
@@ -743,6 +824,7 @@ async function emitOne(code: string, lk: Lookups, template: string): Promise<voi
     process.stdout.write(specJson);
     return;
   }
+  const cat = readCatalogYaml(`${SKILL_SPECS_DIR}/${code}`);
   const skillMd = renderSkillMd(template, {
     code: spec.domain.code,
     name: spec.domain.name,
@@ -750,6 +832,14 @@ async function emitOne(code: string, lk: Lookups, template: string): Promise<voi
     entityPluralLabels: masters.map((m) => m.plural_label),
     capNames,
     adjacentDomainCodes,
+    description: composeDescription({
+      name: spec.domain.name,
+      code: spec.domain.code,
+      tagline: cat.tagline,
+      searchKeywords: cat.searchKeywords,
+      aliases: spec.aliases,
+      capNames,
+    }),
   });
   const yamlNote = writeFolder(code, spec.domain.name, specJson, skillMd);
   const skillName = assembleInstalledSkill(code);
@@ -765,6 +855,7 @@ async function emitBundle(code: string, lk: Lookups, template: string): Promise<
     process.stdout.write(specJson);
     return;
   }
+  const cat = readCatalogYaml(`${SKILL_SPECS_DIR}/${code}`);
   const skillMd = renderSkillMd(template, {
     code: spec.bundle.code,
     name: spec.bundle.name,
@@ -772,6 +863,14 @@ async function emitBundle(code: string, lk: Lookups, template: string): Promise<
     entityPluralLabels,
     capNames,
     adjacentDomainCodes,
+    description: composeDescription({
+      name: spec.bundle.name,
+      code: spec.bundle.code,
+      tagline: cat.tagline,
+      searchKeywords: cat.searchKeywords,
+      aliases: [],
+      capNames,
+    }),
   });
   const yamlNote = writeFolder(code, spec.bundle.name, specJson, skillMd);
   const skillName = assembleInstalledSkill(code);

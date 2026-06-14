@@ -16,7 +16,7 @@ q1: (answer this first) Runbook automation and job scheduling (workload automati
 
 Recommended: a. Workload automation is a distinct market with its own buyers: Gartner gives it a dedicated Magic Quadrant (Service Orchestration and Automation Platforms), whose leaders, BMC Control-M, Stonebranch UAC, Redwood RunMyJobs, Broadcom AutoSys, and Tidal, are standalone products with their own scheduler engine and license, none of them a feature of an ITOM monitoring suite. They master job definitions as first-class objects (Control-M Job and Folder objects; AutoSys defines jobs in JIL). Runbook / IT-process automation is the opposite case: ServiceNow and BMC Helix both ship runbook and automation policies natively, as remediation attached to events, so it genuinely belongs inside ITOM and gives the Ops Automation module the master data it is missing today. So job scheduling moves out to its own domain, runbook stays. This sets the ITOM module count, so answer it first.
 
-a1:
+a1: a
 
 ---
 
@@ -28,7 +28,7 @@ q2: Both ITOM and the Remote Monitoring and Management (RMM) domain currently cl
 
 Recommended: a. RMM products model these as device-agent-scoped objects: in NinjaOne, ConnectWise RMM, Datto RMM, and Kaseya VSA a monitoring policy is an agent configuration bundle (CPU, RAM, disk, and SMART thresholds plus patch/AV/backup settings) pushed to an endpoint, and an alert is a per-device threshold breach (ConnectWise ships 1100+ out-of-box conditions). Enterprise ITOM (ServiceNow event-to-alert, BMC Helix) instead correlates multi-source events to service and CI impact through the CMDB. The nouns are the same and the underlying record is the same; only the scope and field semantics differ. So ITOM stays canonical and RMM keeps a read-only embedded copy. Pick (c) only if a later RMM review shows its device-agent policy needs structurally different child records (agent bindings, patch settings) that would pollute the shared master.
 
-a2:
+a2: a
 
 ---
 

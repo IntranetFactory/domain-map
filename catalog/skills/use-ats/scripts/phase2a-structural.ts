@@ -5,35 +5,38 @@
  * against the live deployment using the resolution ladder (deterministic platform
  * reads against the provenance columns shipped in core v0.1.2). First hit wins:
  *
+ *   step 0  state resolution  — a resolution the user already made in a prior Phase 2b
+ *                               (recorded in state.yaml: entity_renames / omitted /
+ *                               custom_entities). Consumed here so the bootstrap loop
+ *                               terminates instead of re-emitting the same ambiguity.
  *   step 1  FK reachability   — a live FK in the domain's own entities whose
  *                               reference_table resolves to an entity carrying
  *                               catalog_entity_code = X  ->  that entity IS X for D.
- *                               Reseating is universal (silo, same-name share, and
- *                               reuse/merge all repoint the FK), so this resolves all
- *                               topologies whenever X has a surviving consumer in D.
  *   step 2  owned canonical   — catalog_entity_code = X AND module_id in the domain's
- *                               catalog_module_code slice. Catches masters D owns and
- *                               D's own silos (table_name is X-renamed), incl. an X
- *                               with no incoming FK.
+ *                               slice. Catches masters D owns and D's own silos.
  *   step 3  alias             — an entity whose catalog_entity_aliases contains
- *                               { alias_code: X, source_domain: D } (JSONB containment;
- *                               resolve on the pair, never alias_code alone). Catches the
- *                               reuse/merge where X was renamed onto a differently-named
- *                               host and left no FK shadow.
- *   step 4  absent            — none of the above -> X is genuinely not deployed in D.
+ *                               { alias_code: X, source_domain: D } (JSONB containment).
+ *   step 4  absent            — none of the above. A concept D OWNS is a true omission;
+ *                               a concept D only references (embedded_master / consumer)
+ *                               that is owned elsewhere is EXTERNAL context, not omitted
+ *                               (IMPROVE 9: do not conflate "not deployed" with "owned
+ *                               by another domain").
+ *
+ * The domain SLICE comes from Phase 1's entity-first resolution (the module_ids that
+ * actually host the domain's entities), read from .phase1-cache.json; if the cache is
+ * missing it is re-derived here from the canonical master codes.
  *
  * catalog_entity_code stamps the CANONICAL uber-model code (D6); table_name holds the
  * deployed name and may drift (silo/dialect). A resolution whose live table_name differs
- * from X is a rename, recorded deterministically — no name heuristic, no user prompt.
+ * from X is a rename, recorded deterministically.
  *
  * The name/alias/label heuristic survives ONLY as a fallback for live rows whose
- * catalog_entity_code is EMPTY ('' — created outside the deploy pipeline: hand-built,
- * pre-provenance, or simply not yet stamped by the modeler). Those raise an ambiguity for
- * Phase 2b (agent + user). A fully stamped deployment resolves with zero ambiguities.
+ * catalog_entity_code is EMPTY ('' — created outside the deploy pipeline). Those raise an
+ * ambiguity for Phase 2b (agent + user) UNLESS the user already resolved them in
+ * state.yaml. A fully stamped deployment resolves with zero ambiguities.
  *
  * Platform schema notes (core v0.1.2, verified live):
- *   - `entities` is keyed by `table_name` (no `name`, no `id` column). Entity identity is
- *     the table_name; module_id locates it.
+ *   - `entities` is keyed by `table_name` (no `name`, no `id` column).
  *   - Empties are '' (text) / '{}' (json object) / '[]' (json array) / 'unclassified'
  *     (entity_type). NEVER SQL NULL — test against the empty value, never `IS NULL`.
  *
@@ -50,32 +53,81 @@
 import { readFileSync, writeFileSync } from "fs";
 import { resolve } from "path";
 
+type LabelEntry = {
+  name: string;
+  singular_label?: string;
+  plural_label?: string;
+  aliases?: Array<{ name: string; source: string }>;
+};
+
 type Spec = {
-  domain: { code: string; name: string };
-  modules: Array<{
+  // Domain specs carry `domain` + `modules` + `data_objects`; domain-less bundles carry
+  // `bundle` + `composes`. normalize() folds both into one view.
+  domain?: { code: string; name: string };
+  modules?: Array<{
     code: string;
     name: string;
     masters: string[];
     embedded_masters?: string[];
     consumers?: string[];
   }>;
-  data_objects: Array<{
-    name: string;
-    singular_label?: string;
-    plural_label?: string;
-    aliases?: Array<{ name: string; source: string }>;
-  }>;
+  data_objects?: LabelEntry[];
+  bundle?: { code: string; name: string };
+  composes?: Array<{ name: string; singular_label?: string; plural_label?: string; role?: string; owning_domain?: string | null }>;
 };
+
+// Fold a domain spec OR a domain-less bundle spec into one model.
+//   concepts      = every concept the unit assumes (resolved against the live deployment).
+//   ownedConcepts = the concepts the unit MASTERS (drives the omitted-vs-external split and
+//                   the domain slice). A bundle masters nothing, so ownedConcepts is empty
+//                   and every composed entity it does not resolve is external, never omitted.
+//   sliceCodes    = entity codes for the fallback slice re-derivation (matches phase1).
+//   labelEntries  = name/label/alias rows for the empty-code name-fallback heuristic.
+function normalize(spec: Spec): {
+  code: string;
+  isBundle: boolean;
+  concepts: Set<string>;
+  ownedConcepts: Set<string>;
+  sliceCodes: string[];
+  labelEntries: LabelEntry[];
+} {
+  if (spec.bundle) {
+    const concepts = new Set<string>();
+    const ownedConcepts = new Set<string>();
+    const labelEntries: LabelEntry[] = [];
+    for (const c of spec.composes ?? []) {
+      concepts.add(c.name);
+      if (c.role === "master") ownedConcepts.add(c.name);
+      labelEntries.push({ name: c.name, singular_label: c.singular_label, plural_label: c.plural_label });
+    }
+    return { code: spec.bundle.code, isBundle: true, concepts, ownedConcepts, sliceCodes: [...concepts], labelEntries };
+  }
+  const concepts = new Set<string>();
+  const ownedConcepts = new Set<string>();
+  for (const m of spec.modules ?? []) {
+    for (const n of m.masters ?? []) {
+      concepts.add(n);
+      ownedConcepts.add(n);
+    }
+    for (const n of [...(m.embedded_masters ?? []), ...(m.consumers ?? [])]) concepts.add(n);
+  }
+  for (const o of spec.data_objects ?? []) {
+    concepts.add(o.name);
+    ownedConcepts.add(o.name);
+  }
+  return {
+    code: spec.domain?.code ?? "<unknown>",
+    isBundle: false,
+    concepts,
+    ownedConcepts,
+    sliceCodes: [...ownedConcepts],
+    labelEntries: spec.data_objects ?? [],
+  };
+}
 
 type Phase1Result = {
   ok: boolean;
-  modules: Array<{
-    code: string;
-    name: string;
-    catalog_module_code?: string;
-    present: boolean;
-    module_id: number | null;
-  }>;
+  domain_slice?: Array<{ module_id: number; module_slug?: string | null; catalog_module_code?: string | null }>;
 };
 
 type AliasElement = { alias_code: string; source_domain: string; [k: string]: any };
@@ -95,11 +147,16 @@ type LiveEntity = {
 type CmdResult = { ok: boolean; data: any; stderr: string; code: number };
 
 async function call(server: string, tool: string, payload: any): Promise<CmdResult> {
-  const proc = Bun.spawn(["semantius", "call", server, tool], {
-    stdin: "pipe",
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+  let proc: ReturnType<typeof Bun.spawn>;
+  try {
+    proc = Bun.spawn(["semantius", "call", server, tool], {
+      stdin: "pipe",
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+  } catch (e: any) {
+    return { ok: false, data: null, stderr: `command not found: semantius (${e?.message ?? e})`, code: 127 };
+  }
   proc.stdin.write(JSON.stringify(payload));
   proc.stdin.end();
   const [out, err] = await Promise.all([
@@ -117,73 +174,205 @@ async function get(path: string): Promise<any> {
   return r.data;
 }
 
+function chunk<T>(arr: T[], n: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
+  return out;
+}
+
 // Empty-value tests (core v0.1.2): never IS NULL.
 const codeEmpty = (v: unknown): boolean => !v || v === "";
 const asAliases = (v: unknown): AliasElement[] => (Array.isArray(v) ? (v as AliasElement[]) : []);
 const asFlags = (v: unknown): Record<string, boolean> =>
   v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, boolean>) : {};
 
+// ---------- minimal state.yaml reader (SERIOUS 2: loop termination) ----------
+//
+// Phase 2b records the user's resolutions in state.yaml; phase2a must read them back so
+// the bootstrap loop converges instead of re-emitting the same ambiguities forever. This
+// is NOT a general YAML parser: it reads only the FLAT top-level keys phase2a consumes:
+//   entity_renames:      flat map  concept -> live_table   (rename_candidate "yes" / multi_owner pick)
+//   omitted_entities:    flat list of concept names        (user-confirmed omissions)
+//   custom_entities:     flat list of live table names     (user-confirmed custom rows)
+//   unresolved_questions: flat list of concept/live names  (user said "skip")
+// Object-shaped or deeply nested entries under these keys are out of contract.
+type StateResolutions = {
+  entityRenames: Map<string, string>;
+  omitted: Set<string>;
+  customNames: Set<string>;
+  deferred: Set<string>;
+};
+
+function parseScalar(s: string): string {
+  let v = s.trim();
+  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
+  return v.trim();
+}
+function flowList(s: string): string[] {
+  const m = /^\[(.*)\]$/.exec(s.trim());
+  if (!m) return [];
+  return m[1].split(",").map(parseScalar).filter(Boolean);
+}
+function flowMap(s: string): [string, string][] {
+  const m = /^\{(.*)\}$/.exec(s.trim());
+  if (!m) return [];
+  return m[1]
+    .split(",")
+    .map((kv): [string, string] | null => {
+      const i = kv.indexOf(":");
+      return i < 0 ? null : [parseScalar(kv.slice(0, i)), parseScalar(kv.slice(i + 1))];
+    })
+    .filter((x): x is [string, string] => x !== null);
+}
+
+function readState(path: string): StateResolutions {
+  const res: StateResolutions = { entityRenames: new Map(), omitted: new Set(), customNames: new Set(), deferred: new Set() };
+  let text: string;
+  try {
+    text = readFileSync(path, "utf-8");
+  } catch {
+    return res;
+  }
+  const lines = text.split(/\r?\n/);
+
+  type Block = { key: string; inline: string; body: string[] };
+  const blocks: Block[] = [];
+  let cur: Block | null = null;
+  for (const raw of lines) {
+    if (!raw.trim() || raw.trimStart().startsWith("#")) continue;
+    const top = /^([A-Za-z0-9_]+):(.*)$/.exec(raw);
+    if (top && !/^\s/.test(raw)) {
+      cur = { key: top[1], inline: top[2].trim(), body: [] };
+      blocks.push(cur);
+    } else if (cur) {
+      cur.body.push(raw);
+    }
+  }
+
+  for (const b of blocks) {
+    const body = b.body.map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
+    const listMode = b.inline.startsWith("[") || body.some((l) => l.startsWith("- "));
+    const listVals: string[] = [];
+    const mapVals: [string, string][] = [];
+
+    if (b.inline.startsWith("[")) listVals.push(...flowList(b.inline));
+    if (b.inline.startsWith("{")) mapVals.push(...flowMap(b.inline));
+
+    if (listMode) {
+      for (const l of body) {
+        if (!l.startsWith("- ")) continue; // ignore object-continuation lines
+        const item = l.slice(2).trim();
+        if (item.startsWith("{")) {
+          const fm = flowMap(item);
+          const pick = fm.find(([k]) => ["live_name", "name", "concept"].includes(k));
+          if (pick) listVals.push(pick[1]);
+          continue;
+        }
+        const m = /^(live_name|name|concept):\s*(.+)$/.exec(item);
+        listVals.push(m ? parseScalar(m[2]) : parseScalar(item));
+      }
+    } else {
+      for (const l of body) {
+        const m = /^([A-Za-z0-9_.\- ]+):\s*(.*)$/.exec(l);
+        if (m && m[2].trim() && !m[2].trim().startsWith("{") && !m[2].trim().startsWith("[")) {
+          mapVals.push([parseScalar(m[1]), parseScalar(m[2])]);
+        }
+      }
+    }
+
+    switch (b.key) {
+      case "entity_renames":
+        for (const [k, v] of mapVals) if (k && v) res.entityRenames.set(k, v);
+        break;
+      case "omitted_entities":
+        for (const x of listVals) res.omitted.add(x);
+        break;
+      case "custom_entities":
+        for (const x of listVals) res.customNames.add(x);
+        break;
+      case "unresolved_questions":
+        for (const x of listVals) res.deferred.add(x);
+        break;
+    }
+  }
+  return res;
+}
+
 async function main() {
   const skillDir = resolve(import.meta.dir, "..");
   const specPath = resolve(skillDir, "spec.json");
   const phase1Path = resolve(skillDir, ".phase1-cache.json");
+  const statePath = resolve(skillDir, "state.yaml");
   const discoveredPath = resolve(skillDir, "discovered.json");
 
   const spec: Spec = JSON.parse(readFileSync(specPath, "utf-8"));
-  const domainCode = (spec.domain.code || "").toLowerCase();
+  const view = normalize(spec);
+  const domainCode = view.code.toLowerCase();
+  const state = readState(statePath);
 
-  // Module presence from the Phase 1 cache, or re-derived by the catalog_module_code
-  // domain axis (NOT slug guessing).
-  let phase1: Phase1Result;
+  // The concept set (every entity the unit assumes) and the owned subset (drives the
+  // omitted-vs-external split and the slice). Each name IS its canonical code (D6).
+  const concepts = view.concepts;
+  const ownedConcepts = view.ownedConcepts;
+  const masterCodes = view.sliceCodes;
+
+  // ---- Resolve the domain slice (from Phase 1 cache, else re-derive entity-first). ----
+  let sliceModuleIds: number[] = [];
   try {
-    phase1 = JSON.parse(readFileSync(phase1Path, "utf-8"));
+    const phase1: Phase1Result = JSON.parse(readFileSync(phase1Path, "utf-8"));
+    sliceModuleIds = (phase1.domain_slice ?? []).map((m) => m.module_id).filter((x) => typeof x === "number");
   } catch {
-    const codes = spec.modules.map((m) => m.code);
-    const live = await get(
-      `/modules?catalog_module_code=in.(${codes.join(",")})&select=id,module_slug,module_name,catalog_module_code`,
-    );
-    const byCode = new Map((live as any[]).map((m) => [m.catalog_module_code, m]));
-    phase1 = {
-      ok: true,
-      modules: spec.modules.map((m) => {
-        const hit = byCode.get(m.code);
-        return { code: m.code, name: m.name, catalog_module_code: m.code, present: !!hit, module_id: hit?.id ?? null };
-      }),
-    };
+    /* re-derive below */
   }
-
-  const presentModules = phase1.modules.filter((m) => m.present && m.module_id !== null);
-  const presentModuleIds = new Set(presentModules.map((m) => m.module_id as number));
-
-  // The domain's uber-model concept set: every entity the domain's modules reference
-  // (masters + embedded_masters + consumers). Each name IS its canonical code (D6).
-  const concepts = new Set<string>();
-  for (const m of spec.modules) {
-    for (const n of [...(m.masters ?? []), ...(m.embedded_masters ?? []), ...(m.consumers ?? [])]) concepts.add(n);
+  if (sliceModuleIds.length === 0) {
+    const ids = new Set<number>();
+    for (const part of chunk(masterCodes, 100)) {
+      if (!part.length) continue;
+      const rows = (await get(`/entities?catalog_entity_code=in.(${part.join(",")})&select=module_id`)) as any[];
+      for (const r of rows ?? []) ids.add(r.module_id as number);
+    }
+    sliceModuleIds = [...ids];
   }
-  for (const o of spec.data_objects ?? []) concepts.add(o.name);
+  const presentModuleIds = new Set(sliceModuleIds);
 
-  // ---- Pull live entities (with provenance) for the domain's present modules. ----
-  // entities is keyed by table_name; there is no `name`/`id` column.
+  // ---- Pull live entities (with provenance) for the domain's slice modules. ----
   const ENT_SELECT =
     "table_name,singular_label,plural_label,module_id,catalog_entity_code," +
     "canonical_owner_module,pattern_flags,catalog_entity_aliases,entity_type";
   const FLD_SELECT =
-    "field_name,catalog_field_code,format,is_nullable,default_value,reference_table,enum_values";
+    "table_name,field_name,catalog_field_code,format,is_nullable,default_value,reference_table,enum_values,field_order";
 
-  const liveByTable = new Map<string, LiveEntity>(); // in-domain entities, by table_name
-  const fieldsByTable = new Map<string, any[]>();
-  for (const mod of presentModules) {
-    const ents = (await get(`/entities?module_id=eq.${mod.module_id}&select=${ENT_SELECT}`)) as LiveEntity[];
-    for (const e of ents) {
-      liveByTable.set(e.table_name, e);
-      const fields = await get(`/fields?table_name=eq.${e.table_name}&select=${FLD_SELECT}&order=field_order.asc`);
-      fieldsByTable.set(e.table_name, fields as any[]);
+  const fetchErrors: string[] = [];
+  const liveByTable = new Map<string, LiveEntity>();
+  for (const mid of sliceModuleIds) {
+    try {
+      const ents = (await get(`/entities?module_id=eq.${mid}&select=${ENT_SELECT}`)) as LiveEntity[];
+      for (const e of ents ?? []) liveByTable.set(e.table_name, e);
+    } catch (e: any) {
+      // IMPROVE 7: a transient failure on one module must not abort the whole run.
+      fetchErrors.push(`entities for module ${mid}: ${e.message}`);
     }
   }
   const inDomain = [...liveByTable.values()];
 
-  // ---- Build the three ladder indices. ----
+  // Fields: ONE batched call per chunk of table names (IMPROVE 6), not one per entity.
+  const fieldsByTable = new Map<string, any[]>();
+  for (const e of inDomain) fieldsByTable.set(e.table_name, []); // default empty (fault tolerance)
+  for (const part of chunk(inDomain.map((e) => e.table_name), 100)) {
+    if (!part.length) continue;
+    try {
+      const rows = (await get(`/fields?table_name=in.(${part.join(",")})&select=${FLD_SELECT}&order=table_name.asc,field_order.asc`)) as any[];
+      for (const f of rows ?? []) {
+        const t = f.table_name as string;
+        (fieldsByTable.get(t) ?? fieldsByTable.set(t, []).get(t)!).push(f);
+      }
+    } catch (e: any) {
+      fetchErrors.push(`fields chunk [${part[0]}..(${part.length})]: ${e.message}`);
+      // entities in this chunk keep their empty field list; run continues.
+    }
+  }
+
+  // ---- Build the ladder indices. ----
 
   // step 2: catalog_entity_code -> in-domain entities owning that canonical code.
   const byOwnedCode = new Map<string, LiveEntity[]>();
@@ -201,20 +390,23 @@ async function main() {
     }
   }
 
-  // step 1: FK reachability. Walk every FK on the domain's entities, resolve its
-  // reference_table to the target's catalog_entity_code. The target may live in another
-  // module (same-name share), so resolve any table not already pulled.
-  const codeByTable = new Map<string, string>(); // table_name -> catalog_entity_code
+  // step 1: FK reachability. Resolve every FK's reference_table to its catalog_entity_code.
+  const codeByTable = new Map<string, string>();
   for (const e of inDomain) if (!codeEmpty(e.catalog_entity_code)) codeByTable.set(e.table_name, e.catalog_entity_code);
   const refTables = new Set<string>();
   for (const fields of fieldsByTable.values()) for (const f of fields) if (f.reference_table) refTables.add(f.reference_table);
   const unresolved = [...refTables].filter((t) => !codeByTable.has(t));
-  if (unresolved.length > 0) {
-    const rows = (await get(`/entities?table_name=in.(${unresolved.join(",")})&select=table_name,catalog_entity_code`)) as Array<{
-      table_name: string;
-      catalog_entity_code: string;
-    }>;
-    for (const r of rows) if (!codeEmpty(r.catalog_entity_code)) codeByTable.set(r.table_name, r.catalog_entity_code);
+  for (const part of chunk(unresolved, 100)) {
+    if (!part.length) continue;
+    try {
+      const rows = (await get(`/entities?table_name=in.(${part.join(",")})&select=table_name,catalog_entity_code`)) as Array<{
+        table_name: string;
+        catalog_entity_code: string;
+      }>;
+      for (const r of rows ?? []) if (!codeEmpty(r.catalog_entity_code)) codeByTable.set(r.table_name, r.catalog_entity_code);
+    } catch (e: any) {
+      fetchErrors.push(`fk-target entities [${part[0]}..]: ${e.message}`);
+    }
   }
   const fkReach = new Map<string, string>(); // catalog_entity_code -> reachable table_name
   for (const fields of fieldsByTable.values()) {
@@ -228,11 +420,33 @@ async function main() {
   // ---- Run the ladder per concept. ----
   const resolutions: Record<string, any> = {};
   const entityRenames: Record<string, string> = {};
-  const omitted: string[] = [];
+  const omitted: string[] = []; // concepts the domain OWNS that are not deployed
+  const externalEntities: string[] = []; // concepts owned by another domain, not present here
   const resolvedTables = new Set<string>();
   const ambiguities: Array<{ kind: string; concept?: string; live_name?: string; reason: string }> = [];
+  const deferred: Array<{ kind: string; concept?: string; live_name?: string; reason: string }> = [];
+  let stateResolvedCount = 0;
 
   for (const X of concepts) {
+    // step 0 — a resolution the user already recorded in state.yaml.
+    if (state.entityRenames.has(X)) {
+      const table = state.entityRenames.get(X) as string;
+      if (liveByTable.has(table) || byOwnedCode.has(X)) {
+        resolutions[X] = { via: "state_resolution", live_table: table, renamed: table !== X };
+        if (table !== X) entityRenames[X] = table;
+        resolvedTables.add(table);
+        stateResolvedCount++;
+        continue;
+      }
+      // stale state (the named table is gone): fall through to the live ladder.
+    }
+    if (state.omitted.has(X)) {
+      resolutions[X] = { via: "absent", confirmed_by_user: true };
+      (ownedConcepts.has(X) ? omitted : externalEntities).push(X);
+      stateResolvedCount++;
+      continue;
+    }
+
     // step 1 — FK reachability
     if (fkReach.has(X)) {
       const table = fkReach.get(X) as string;
@@ -251,11 +465,13 @@ async function main() {
       continue;
     }
     if (owned.length > 1) {
-      ambiguities.push({
+      // Not pre-resolved in state -> still a genuine multi_owner choice (or a "skip").
+      const amb = {
         kind: "multi_owner",
         concept: X,
         reason: `Concept "${X}" resolves to ${owned.length} entities in this domain (${owned.map((e) => e.table_name).join(", ")}). Cannot pick one deterministically.`,
-      });
+      };
+      (state.deferred.has(X) ? deferred : ambiguities).push(amb);
       continue;
     }
     // step 3 — alias (reuse/merge into a differently-named host)
@@ -263,23 +479,24 @@ async function main() {
     if (aliased.length >= 1) {
       const e = aliased[0];
       resolutions[X] = { via: "alias", live_table: e.table_name, module_id: e.module_id, renamed: true };
-      entityRenames[X] = e.table_name; // X merged into e.table_name
+      entityRenames[X] = e.table_name;
       resolvedTables.add(e.table_name);
       continue;
     }
-    // step 4 — absent (true omission)
-    resolutions[X] = { via: "absent" };
-    omitted.push(X);
+    // step 4 — absent. Owned -> true omission; external -> owned by another domain (IMPROVE 9).
+    if (ownedConcepts.has(X)) {
+      resolutions[X] = { via: "absent" };
+      omitted.push(X);
+    } else {
+      resolutions[X] = { via: "external_absent" };
+      externalEntities.push(X);
+    }
   }
 
   // ---- Custom / unstamped entities: in-domain live rows not claimed by any concept. ----
-  // A row with EMPTY catalog_entity_code is outside the pipeline (hand-built, pre-provenance,
-  // or not yet stamped) — fall back to name/alias/label to guess a pre-provenance rename of an
-  // unresolved concept (confirm) or a genuine custom entity (classify). A non-empty code that no
-  // concept claimed is a stamped-but-not-this-domain entity (record, no prompt).
   const conceptLower = new Map<string, string>();
   for (const X of concepts) conceptLower.set(X.toLowerCase(), X);
-  for (const o of spec.data_objects ?? []) {
+  for (const o of view.labelEntries) {
     for (const a of o.aliases ?? []) conceptLower.set(a.name.toLowerCase(), o.name);
     if (o.singular_label) conceptLower.set(o.singular_label.toLowerCase(), o.name);
     if (o.plural_label) conceptLower.set(o.plural_label.toLowerCase(), o.name);
@@ -289,37 +506,46 @@ async function main() {
   for (const e of inDomain) {
     if (resolvedTables.has(e.table_name)) continue;
     if (!codeEmpty(e.catalog_entity_code)) {
+      // Stamped but not claimed by a concept: a neighbor-domain master reused here. Record, no prompt.
       customEntities.push({ live_name: e.table_name, module_id: e.module_id, catalog_entity_code: e.catalog_entity_code });
+      continue;
+    }
+    // Empty-code row. If the user already classified/confirmed it, suppress the ambiguity.
+    if (state.customNames.has(e.table_name)) {
+      customEntities.push({ live_name: e.table_name, module_id: e.module_id, catalog_entity_code: "" });
       continue;
     }
     const guess =
       conceptLower.get(e.table_name.toLowerCase()) ||
       conceptLower.get((e.singular_label || "").toLowerCase()) ||
       conceptLower.get((e.plural_label || "").toLowerCase());
+    let amb: { kind: string; live_name: string; concept?: string; reason: string };
     if (guess && resolutions[guess]?.via === "absent") {
-      ambiguities.push({
+      amb = {
         kind: "rename_candidate",
         live_name: e.table_name,
         concept: guess,
-        reason: `Live entity "${e.table_name}" has no catalog_entity_code (outside the deploy pipeline / not yet stamped) but its name/label matches the unresolved concept "${guess}". Possible rename — confirm.`,
-      });
+        reason: `Live entity "${e.table_name}" has no catalog_entity_code (outside the deploy pipeline / not yet stamped) but its name/label matches the unresolved concept "${guess}". Possible rename, confirm.`,
+      };
     } else {
-      ambiguities.push({
+      amb = {
         kind: "custom_entity",
         live_name: e.table_name,
         reason: `Live entity "${e.table_name}" (${e.singular_label}/${e.plural_label}) has no catalog_entity_code and matches no concept. Classify its role (master, log, reference data) or confirm it is custom.`,
-      });
+      };
     }
+    // "skip" recorded against the live_name (or matched concept) downgrades to non-blocking.
+    (state.deferred.has(e.table_name) || (amb.concept && state.deferred.has(amb.concept)) ? deferred : ambiguities).push(amb);
     customEntities.push({ live_name: e.table_name, module_id: e.module_id, catalog_entity_code: "" });
   }
 
   // ---- Build discovered.json (full snapshot), keyed by table_name. ----
   const discoveredEntities: Record<string, any> = {};
   for (const e of inDomain) {
-    const fields = fieldsByTable.get(e.table_name) ?? [];
+    const fields = (fieldsByTable.get(e.table_name) ?? []).slice().sort((a, b) => (a.field_order ?? 0) - (b.field_order ?? 0));
     const lifecycleField = fields.find((f: any) => ["status", "state", "lifecycle_state"].includes(f.field_name));
     discoveredEntities[e.table_name] = {
-      catalog_entity_code: e.catalog_entity_code || "", // canonical code; '' = outside pipeline
+      catalog_entity_code: e.catalog_entity_code || "",
       canonical_owner_module: e.canonical_owner_module || "",
       entity_type: e.entity_type || "unclassified",
       pattern_flags: asFlags(e.pattern_flags),
@@ -329,7 +555,7 @@ async function main() {
       plural_label: e.plural_label,
       fields: fields.map((f: any) => ({
         name: f.field_name,
-        catalog_field_code: f.catalog_field_code || "", // '' = outside pipeline
+        catalog_field_code: f.catalog_field_code || "",
         format: f.format,
         is_nullable: f.is_nullable,
         default_value: f.default_value,
@@ -345,30 +571,38 @@ async function main() {
     discovered_at: new Date().toISOString().slice(0, 10),
     discovered_against_emitted: (spec as any).emitted,
     discovered_against_major: (spec as any).facts_major,
-    domain_code: spec.domain.code,
+    domain_code: view.code,
+    slice_module_ids: sliceModuleIds,
     resolution: resolutions, // per-concept: { via, live_table, renamed }
     entity_renames: entityRenames, // canonical concept -> live table_name
-    omitted_entities: omitted,
+    omitted_entities: omitted, // concepts the domain owns that are not deployed here
+    external_entities: externalEntities, // concepts owned by another domain, not present here
     custom_entities: customEntities,
     entities: discoveredEntities,
+    fetch_errors: fetchErrors,
   };
 
   writeFileSync(discoveredPath, JSON.stringify(discovered, null, 2));
 
-  const resolvedCount = Object.values(resolutions).filter((r: any) => r.via !== "absent").length;
+  const resolvedCount = Object.values(resolutions).filter((r: any) => r.via !== "absent" && r.via !== "external_absent").length;
   console.log(JSON.stringify({
     ok: true,
     phase: "2a",
     entities_discovered: Object.keys(discoveredEntities).length,
+    slice_module_ids: sliceModuleIds,
     concepts_total: concepts.size,
     concepts_resolved: resolvedCount,
     renames: Object.keys(entityRenames).length,
     omitted: omitted.length,
+    external: externalEntities.length,
     custom: customEntities.length,
+    state_resolved: stateResolvedCount,
+    fetch_errors: fetchErrors,
     ambiguities,
+    deferred,
     next: ambiguities.length === 0
-      ? "Phase 2a resolved every concept deterministically via the provenance ladder. bootstrap.ts can write ready.flag."
-      : `Phase 2a left ${ambiguities.length} genuine ambiguities (empty-code rows or multi-recurrence). Phase 2b (agent-driven) must surface these to the user before ready.flag is written.`,
+      ? "Phase 2a resolved every concept deterministically (ladder + recorded state). bootstrap.ts can write ready.flag."
+      : `Phase 2a left ${ambiguities.length} genuine ambiguities (empty-code rows or multi-recurrence not yet resolved in state.yaml). Phase 2b (agent-driven) must surface these to the user, record the resolutions in state.yaml, then re-invoke bootstrap.ts.`,
   }, null, 2));
   process.exit(0);
 }

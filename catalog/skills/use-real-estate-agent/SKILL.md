@@ -1,15 +1,7 @@
 ---
 name: use-real-estate-agent
 description: >-
-  Use this skill for any task involving the Real Estate Agent (solo / small firm bundle) domain (REAL-ESTATE-AGENT)
-  in this Semantius deployment. Trigger phrases: real-estate-agent.
-  Entities covered: Contacts, Leads, Disclosure Documents, Contracts, Real Estate Listings, Real Estate Transactions, Tour Appointments, Users.
-  Workflows covered: Contract Repository, Account and Contact Management, Lead Management, Real Estate Agent CRM, Real Estate Lead Capture and Routing, MLS and Listing Syndication, Showing and Tour Scheduling, Real Estate Transaction Management.
-  Adjacent skills (use them instead for their own scope): use-clm, use-crm, use-re-brokerage.
-  Covers entity discovery, lifecycle awareness, cross-domain handoffs, APQC
-  process context, and deployment-specific renames or omissions. Loads the
-  discovered state automatically; runs a discovery pass on first invocation. Pairs with
-  `use-semantius` for CLI mechanics.
+  Real Estate Agent (solo / small firm bundle) (REAL-ESTATE-AGENT) in this Semantius deployment. Triggers: real-estate-agent. Workflows: Contract Repository, Account and Contact Management, Lead Management, Real Estate Agent CRM, Real Estate Lead Capture and Routing, MLS and Listing Syndication, Showing and Tour Scheduling, Real Estate Transaction Management.
 ---
 
 # use-real-estate-agent skill
@@ -17,6 +9,11 @@ description: >-
 This skill knows the **Real Estate Agent (solo / small firm bundle)** domain as shipped from the catalog at HQ and as discovered in this deployment. It avoids re-discovering the domain shape on every conversation by persisting deployment-specific findings to local state.
 
 For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the `use-semantius` skill, which is expected to load alongside.
+
+**Domain inventory** (as-designed, from `spec.json`; the deployment may have renamed or omitted some):
+
+- Entities: Contacts, Leads, Disclosure Documents, Contracts, Real Estate Listings, Real Estate Transactions, Tour Appointments, Users
+- Workflows / capabilities: Contract Repository, Account and Contact Management, Lead Management, Real Estate Agent CRM, Real Estate Lead Capture and Routing, MLS and Listing Syndication, Showing and Tour Scheduling, Real Estate Transaction Management
 
 ---
 
@@ -47,6 +44,7 @@ Before doing any domain work, the skill follows this sequence:
 1. **Verify `use-semantius` is loaded in the session.** Look at the available-skills list in the system reminder. If `use-semantius` is not present, halt with: *"This skill delegates all Semantius CLI mechanics to `use-semantius`. Install it from the catalog and reload the session: https://semantius.app/catalog/use-semantius"*. This is an agent-level check (no script can see what's loaded in the Claude Code session); the agent performs it on every invocation as the cheapest gate.
 2. **Verify Bun is installed.** Run `bun --version`. If exit code is non-zero, halt with the install link (`https://bun.sh/install`). All scripts in `scripts/` are TypeScript on Bun (no Python, ever, see hard rules). The skill cannot proceed without Bun.
 3. **Read `lessons.md` and `improvements.md`** in full. Lessons are tactical pitfalls (one specific call that failed; the corrected form). Improvements are procedural meta-patterns (a class of operation that needs a different approach). Both apply on every operation: lessons prevent specific mistakes; improvements OVERRIDE the procedure in `references/` when their trigger matches. Format docs: [references/lessons-format.md](references/lessons-format.md), [references/improvements-format.md](references/improvements-format.md).
+   - If bootstrap halts Phase 1 with `can_offer_install: true` (the `semantius` CLI is not installed), **offer to run the install for the user.** The result carries `install_command` (the one-liner for their platform) and `install_docs`. Ask their go-ahead first (it modifies their system); never auto-install silently. On "yes", run the exact `install_command`, have them restart the shell if PATH changed, then re-run bootstrap. On "no", surface `install_docs` and stop.
 4. **Check `ready.flag`.** Single-file check. The skill is ready when:
    - `ready.flag` exists, AND
    - `ready.flag.valid_through_emitted == spec.emitted`, AND
@@ -61,12 +59,13 @@ To force a fresh discovery: delete `ready.flag` (or also `discovered.json` and `
 
 ## How discovery resolves concepts (the provenance ladder)
 
-As of core v0.1.2 the live platform carries provenance columns, so discovery reads identity instead of guessing it. For each uber-model concept `X` the domain assumes, Phase 2a resolves it against the live deployment in this order (first hit wins), and a live `table_name` that differs from `X` is a deterministic rename:
+As of core v0.1.2 the live platform carries provenance columns, so discovery reads identity instead of guessing it. The **domain slice** (the modules Phase 2a scans) is resolved **entity-first** by Phase 1: the live `module_id`s that host the domain's owned master codes, plus any module that carries a spec module code/slug. For each uber-model concept `X` the domain assumes, Phase 2a resolves it against the live deployment in this order (first hit wins), and a live `table_name` that differs from `X` is a deterministic rename:
 
+0. **State resolution**, a resolution the user already recorded in `state.yaml` from a prior Phase 2b (rename, omission, or custom classification). Applied first so the bootstrap loop converges instead of re-asking.
 1. **FK reachability**, a live FK on the domain's own entities whose `reference_table` resolves to an entity carrying `catalog_entity_code = X`. Reseating is universal, so this catches silo, same-name share, and reuse/merge whenever `X` still has a consumer in the domain.
-2. **Owned canonical code**, `catalog_entity_code = X` AND the entity's module is in the domain's `catalog_module_code` slice. Catches masters the domain owns and its own silos (`table_name` is the `X`-rename).
+2. **Owned canonical code**, `catalog_entity_code = X` AND the entity's module is in the domain slice. Catches masters the domain owns and its own silos (`table_name` is the `X`-rename).
 3. **Alias**, an entity whose `catalog_entity_aliases` contains `{ alias_code: X, source_domain: <this domain> }` (JSONB containment; resolve on the **pair**, never `alias_code` alone). Catches a reuse/merge that renamed `X` onto a differently-named host.
-4. **Absent**, none of the above → `X` is genuinely not deployed (a true omission).
+4. **Absent**, none of the above. If the domain OWNS `X` it is a true omission (`omitted_entities`); if `X` is only referenced (embedded master / consumer owned by another domain) it is external context (`external_entities`), not an omission.
 
 The provenance columns and their **empty** values (core v0.1.2 stores NOT NULL with an empty default, so test against the empty value, **never `IS NULL`**):
 
@@ -78,7 +77,7 @@ The provenance columns and their **empty** values (core v0.1.2 stores NOT NULL w
 | `catalog_entity_aliases` (`entities`, json) | `'[]'` | never a merge target |
 | `entity_type` (`entities`) | `'unclassified'` | unclassified upstream |
 | `catalog_field_code` (`fields`) | `''` | outside the pipeline |
-| `catalog_module_code` (`modules`) | `''` | greenfield; also the **domain axis** Pass 1 enumerates by |
+| `catalog_module_code` (`modules`) | `''` | greenfield; a **hint** for the domain slice (membership is resolved entity-first, not by this code) |
 
 `catalog_entity_code` stamps the **canonical** uber-model code (so the join is clean across dialect and silo renames); the deployed name lives in `table_name`. The name/alias/label heuristic survives only as a fallback for rows whose `catalog_entity_code` is empty. Full procedure and query shapes: [references/discovery.md](references/discovery.md).
 
@@ -114,31 +113,28 @@ discovered_against_major: 1
 discovered_against_emitted: 2026-05-30
 
 deployment:
-  module_slug: <slug from /modules>
-  module_id: <id>
+  module_ids: [<slice module_ids from Phase 1>]   # the entity-first domain slice
   org: <from getCurrentUser>
 
-modules:                          # which facts-listed modules are live
-  ATS-CANDIDATE-CRM: { present: true,  entity_renames: {} }
-  ATS-REQUISITION-PIPELINE: { present: true, entity_renames: { application_notes: candidate_notes } }
-  ATS-INTERVIEW-MGMT: { present: false, reason: "not part of this deployment" }
-  ATS-OFFERS: { present: true, entity_renames: {} }
+# The four keys below are the loop-termination contract: phase2a READS them back on every
+# run (ladder step 0) and drops anything already resolved from its ambiguities[]. Keep them
+# FLAT (a map of concept: table, or a list of bare names) so the minimal state reader sees them.
 
-entity_renames:                   # global renames applied in this deployment
+entity_renames:                   # rename confirmations + multi_owner picks (concept: live_table)
   job_applications: applications  # this deployment prefers the bare-word form
   recruitment_sources: sources
 
-omitted_entities:                 # facts-listed entities not configured in this deployment
-  - cost_centers                  # no finance integration in this deployment
+omitted_entities:                 # OWNED concepts the user confirmed are not deployed here
   - background_checks             # handled in a separate vendor system
 
-custom_entities: []               # entities added in this deployment, not in facts
+external_entities:                # concepts owned by ANOTHER domain, not present here (informational)
+  - org_units
+  - job_profiles
 
-field_renames: {}                 # within an entity (rare)
-field_omissions: {}
+custom_entities: []               # live table names confirmed custom (flat list of names)
 
-unresolved_questions: []          # things the skill asked the user about during discovery
-                                  # populated when the user says "skip for now"
+unresolved_questions: []          # concept/live names the user said "skip for now"
+                                  # downgraded to non-blocking deferred[]; surfaced next session
 ```
 
 ---
@@ -156,9 +152,9 @@ Both are local to this deployment by default. If either is genuinely universal, 
 
 The full discovered schema written by the discovery procedure. Loaded on demand (not on every conversation) when the skill needs field-level detail. It carries:
 
-- `resolution`, per concept, how the ladder resolved it (`via: fk_reachability | owned_code | alias | absent`, the `live_table`, and whether it `renamed`).
+- `resolution`, per concept, how the ladder resolved it (`via: state_resolution | fk_reachability | owned_code | alias | absent | external_absent`, the `live_table`, and whether it `renamed`).
 - `entity_renames`, canonical concept → live `table_name` (deterministic, from the ladder).
-- `omitted_entities` / `custom_entities`, true omissions, and live rows not claimed by a concept.
+- `omitted_entities`, OWNED concepts not deployed here; `external_entities`, concepts owned by another domain and not present; `custom_entities`, live rows not claimed by a concept.
 - `entities`, per live table: its `catalog_entity_code`, `canonical_owner_module`, `entity_type`, `pattern_flags`, `catalog_entity_aliases`, fields (each with `catalog_field_code`, `format`, `reference_table`, `enum_values`), and the lifecycle field/values.
 
 Together with `state.yaml` this gives the complete picture of what this deployment actually has, no live re-query needed.
