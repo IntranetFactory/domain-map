@@ -1,183 +1,184 @@
 # Discovery procedure
 
-Reconciles the HQ-emitted spec.json against what's actually deployed in this deployment. Runs in two modes:
+Reconciles the HQ-emitted `spec.json` (the uber-model this domain assumes) against what is
+actually deployed in this deployment. Discovery is **read-only** against the platform; it never
+inserts, updates, or deletes. Its outputs are `discovered.json` (full snapshot + per-concept
+resolution) and `state.yaml` (lean deltas).
 
-- **Full discovery** (cold start, or `state.discovered_against_major < spec.facts_major`): every entity in the spec.json is verified against the live deployment.
-- **Incremental reconciliation** (`state.discovered_at < spec.emitted`, same major): diff spec against existing state; only verify what changed.
+As of core v0.1.2 the live platform carries **provenance columns**, so discovery is a set of
+deterministic reads, not name guessing. `scripts/phase2a-structural.ts` runs the resolution ladder
+below for every concept and resolves a fully-stamped deployment with **zero** user prompts. This doc
+is (a) the contract phase2a implements and (b) the **Phase 2b** procedure the agent runs for the
+genuine ambiguities phase2a could not resolve.
 
-Both modes share the same per-entity check; full discovery is just the incremental case with an empty starting state.
+## Empties are never NULL (core v0.1.2)
 
-Discovery is read-only against the deployment. It never inserts, updates, or deletes catalog data. Its output is `state.yaml`.
+Every provenance column is NOT NULL with an empty default. Test emptiness against the empty value,
+never `IS NULL`:
+
+| Column | Empty value | Empty means |
+|---|---|---|
+| `catalog_entity_code`, `catalog_field_code`, `catalog_module_code`, `catalog_role_code` | `''` | created outside the deploy pipeline (hand-built / pre-provenance) |
+| `canonical_owner_module` | `''` | this module owns it, or the entity is local |
+| `pattern_flags` | `'{}'` | no special behavior |
+| `catalog_entity_aliases` | `'[]'` | never a merge target |
+| `entity_type` | `'unclassified'` | unclassified upstream; derive locally |
 
 ---
 
-## Pass 1: module presence
+## Pass 1: module presence (the domain axis)
 
-For each module listed in `spec.modules`:
+The domain's modules are enumerated by `catalog_module_code` (the domain axis), not by guessing a
+slug. `phase1-environment.ts` does this; the slugs are a fallback only for pre-provenance modules
+whose `catalog_module_code` is still `''`.
 
 ```bash
-semantius call crud postgrestRequest '{"method":"GET","path":"/modules?module_slug=eq.<module_slug>&select=id,module_slug,module_name"}'
+semantius call crud postgrestRequest '{"method":"GET","path":"/modules?catalog_module_code=in.(<spec.modules[].code>)&select=id,module_slug,module_name,catalog_module_code"}'
 ```
 
-The module slug derives from the module code (lowercase, dashes -> underscores: `ATS-CANDIDATE-CRM` -> `ats_candidate_crm`).
-
-Record in `state.modules`:
-- `present: true` with the live `module_id` and `module_name`, OR
-- `present: false` with `reason: "not part of this deployment"`
-
-A module being absent is not a failure; it's a deployment choice. Note it in state and skip its entities in subsequent passes.
+Record each spec module as `present: true` with its live `module_id`, or `present: false`
+(`reason: "not part of this deployment"`). The set of present `module_id`s is the **domain slice**
+that scopes ladder step 2. An absent module is a deployment choice, not a failure.
 
 ---
 
-## Pass 2: entity (data_object) discovery
+## Pass 2: the resolution ladder (per uber-model concept)
 
-For each `data_objects` entry in the spec.json whose owning module is `present: true`, search the deployment's `entities` table by candidate names. The search order matters: catalog name first, then known aliases, then a fuzzy fallback if neither matches.
+For each concept `X` the domain assumes (the union of every module's `masters`,
+`embedded_masters`, and `consumers`; each name **is** its canonical code under D6), resolve `X`
+against the live deployment in this order. **First hit wins.**
+
+### Step 1 — FK reachability (most robust)
+
+Walk the FK fields on the domain's own entities. For each field with a non-empty `reference_table`,
+resolve the target entity's `catalog_entity_code`. Whatever a domain FK points at, carrying
+`catalog_entity_code = X`, **is** `X` for this domain. Reseating is universal (silo, same-name
+share, and reuse/merge all repoint the FK), so this resolves every topology whenever `X` still has a
+consumer in the domain, including a concept owned by another module that this domain only references.
+
+### Step 2 — owned canonical code, scoped to the domain slice
 
 ```bash
-# Step 2a: exact match on the catalog name
-semantius call crud postgrestRequest '{"method":"GET","path":"/entities?module_id=eq.<id>&name=eq.<facts_name>&select=id,name,singular_label,plural_label"}'
-
-# Step 2b: if zero rows, try each alias from the spec.json
-semantius call crud postgrestRequest '{"method":"GET","path":"/entities?module_id=eq.<id>&name=in.(<alias_names>)&select=id,name,singular_label,plural_label"}'
-
-# Step 2c: if still zero rows, fuzzy search on singular_label / plural_label
-semantius call crud postgrestRequest '{"method":"GET","path":"/entities?module_id=eq.<id>&or=(singular_label.ilike.<facts_singular>,plural_label.ilike.<facts_plural>)&select=id,name,singular_label,plural_label"}'
+# entities is keyed by table_name (no name/id column); module_id IN the domain's present modules.
+semantius call crud postgrestRequest '{"method":"GET","path":"/entities?catalog_entity_code=eq.<X>&module_id=in.(<domain_module_ids>)&select=table_name,module_id,catalog_entity_code"}'
 ```
 
-Four outcomes per entity:
+Catches masters the domain owns and the domain's own silos (where `table_name` is an `X`-rename,
+e.g. `erp_vendors` carrying `catalog_entity_code = vendors`), including an `X` with no incoming FK.
+A hit whose `name` differs from `X` is a deterministic **rename** (record `entity_renames[X] = name`).
+Exactly one in-slice hit resolves; more than one is a genuine `multi_owner` ambiguity (Phase 2b).
 
-1. **Exact match** (2a hit): record in `state.modules.<module>.entities.<facts_name> = { live_name: <facts_name>, entity_id: <id> }`. No rename.
-2. **Alias match** (2b hit): record the rename — `state.entity_renames[<facts_name>] = <live_name>` — and proceed.
-3. **Fuzzy match** (2c hit): **ASK THE USER.** Surface the candidate match with the spec description side-by-side, substituting the configured domain name at runtime: *"The spec lists `suppliers` for the `<spec.domain.name>` domain. I found an entity called `vendors` with description matching closely. Treat them as the same?"* On yes, record as a rename. On no, treat as omitted plus a custom entity (Pass 4).
-4. **No match** (2c miss): record in `state.omitted_entities`. Ask the user once whether this is intentional; record their answer in `state.unresolved_questions` if they defer.
-
-Never auto-rename without user confirmation. False positives here corrupt every subsequent skill run.
-
----
-
-## Pass 3: field discovery per discovered entity
-
-For each entity discovered in Pass 2, pull its fields:
+### Step 3 — alias (reuse/merge onto a differently-named host)
 
 ```bash
-semantius call crud postgrestRequest '{"method":"GET","path":"/fields?entity_id=eq.<id>&select=name,data_type,is_required,reference_table&order=field_order.asc"}'
+semantius call crud postgrestRequest '{"method":"GET","path":"/entities?catalog_entity_aliases=cs.[{\"alias_code\":\"<X>\",\"source_domain\":\"<D>\"}]&select=table_name,module_id,catalog_entity_aliases"}'
 ```
 
-Compare against `spec.data_objects.<name>.lifecycle_states` (which implies a `status` or `state` field exists). The skill cares about field-level shape mainly for:
+(`cs` is PostgREST JSONB containment, `@>`.) Resolve on the **`(alias_code, source_domain)` pair**,
+never `alias_code` alone, so the domain matches only its own merge, not another domain's
+identically-named one. This catches the reuse/merge where `X` was renamed onto an existing host and
+left no FK shadow. The host's `name` is the live table; record `entity_renames[X] = name`.
 
-- Lifecycle fields the spec.json implies (`status`, `state`, or whatever this deployment named it). If absent, record in `state.field_omissions` and note the lifecycle states can't be tracked.
-- FK fields to other facts-listed entities. If this deployment dropped a FK (e.g. removed the `cost_center_id` link on `job_requisitions`), record the omission so the skill doesn't generate queries referencing it.
+### Step 4 — absent (true omission)
 
-Field-by-field rename discovery is expensive and usually not worth it. Default behavior: trust catalog field names. Add a per-field reconciliation only if a later runtime call fails because of a missing field (the failure becomes a lesson, see [lessons-format.md](lessons-format.md)).
+None of the above resolved `X` → `X` is genuinely not deployed in this domain. Record in
+`omitted_entities`; the skill must not generate queries against it.
+
+> The danger the ladder removes: without step 3 (and with no FK shadow) a reuse/merge looks like
+> **absence**, so a live, renamed concept is mis-filed as omitted and every workflow it drives is
+> silently dropped. Step 1 mitigates; step 3 makes it deterministic.
 
 ---
 
-## Pass 4: custom entities added in this deployment
+## Pass 3: fields (per discovered entity)
 
-After Pass 2, query the module for any entities NOT in the facts list:
+`phase2a` pulls each entity's fields with the field-level provenance key:
 
 ```bash
-semantius call crud postgrestRequest '{"method":"GET","path":"/entities?module_id=eq.<id>&name=not.in.(<all_facts_names>)&select=id,name,singular_label,plural_label,description"}'
+semantius call crud postgrestRequest '{"method":"GET","path":"/fields?table_name=eq.<live_table>&select=field_name,catalog_field_code,format,is_nullable,default_value,reference_table,enum_values&order=field_order.asc"}'
 ```
 
-Record in `state.custom_entities`. Ask the user for each, substituting the configured domain name at runtime: *"I found a custom entity `<name>` in your `<spec.domain.name>` module that the spec doesn't know about. Should I include it when reasoning about this domain? You can describe its role (master, log, reference data)."* Record the answer in `state.custom_entities.<name>`.
+- **Field renames are a join:** `catalog_field_code` holds the canonical/blueprint field name (e.g.
+  `status`) even when `field_name` drifted (e.g. `stage`). The lifecycle column is the field whose
+  `catalog_field_code` is the spec's lifecycle field; do not guess among `status`/`state`. (A bare
+  `''` code is a pre-provenance/custom field — fall back to the name.)
+- **FK omissions:** if the spec expects an FK on `X` and no live field carries that
+  `catalog_field_code`, record the omission so the skill does not reference it.
+
+Field-by-field reconciliation beyond the lifecycle column and FK shapes is not worth it up front;
+trust canonical field names and let a runtime failure become a lesson.
 
 ---
 
-## Pass 5: relationship and handoff sanity
+## Phase 2b: resolve the genuine ambiguities only
 
-The spec.json lists intra-domain relationships and outbound handoffs. The skill does not verify each one structurally during discovery; that's the catalog's job at emit time. The skill only flags relationships whose endpoints are missing from this deployment:
+`phase2a` emits an `ambiguities[]` list. A fully-stamped deployment yields none. Each remaining one
+is a real judgment call. Default to ASK; a wrong resolution propagates into every later run.
 
-- If a relationship references an omitted entity, suppress it from the live model.
-- If an outbound handoff's source module is absent, suppress the handoff.
+| Ambiguity `kind` | When phase2a emits it | Agent action |
+|---|---|---|
+| `rename_candidate` | a live row with **empty** `catalog_entity_code` whose name/label matches an otherwise-unresolved concept | ASK: *"`<live_name>` has no catalog lineage but looks like your `<concept>`. Same thing?"* On yes, record the rename in `state.yaml`; on no, treat as custom. |
+| `custom_entity` | an **empty-code** row matching no concept | ASK to classify its role (master / log / reference data), or confirm it is custom. Record in `state.custom_entities`. |
+| `multi_owner` | more than one in-slice entity shares `catalog_entity_code = X` | ASK which is the one the domain means; record the choice. |
 
-Record suppressions in `state.suppressed_relationships` and `state.suppressed_handoffs`.
+Everything phase2a resolved via steps 1–3 is deterministic and needs **no** prompt. Stamped-but-not-
+this-domain rows (a neighbor-domain master reused here, non-empty code matching no concept) are
+recorded informationally, not prompted.
+
+If the user says "skip" / "I don't know", record the question in `state.unresolved_questions` and
+proceed; surface unresolved questions at the start of the next session.
 
 ---
 
-## Pass 6: write `state.yaml`, write `discovered.json`, report
+## Pass 4: write `discovered.json` + `state.yaml`, report
 
-Write BOTH files. They serve different load patterns and shouldn't be combined.
-
-**`state.yaml`** — lean deltas and summary, loaded on every invocation. Structure shown in the parent [SKILL.md](../SKILL.md#whats-in-stateyaml): module presence flags, entity renames, omitted entities, custom entities, field renames, unresolved questions.
-
-**`discovered.json`** — full discovered schema, loaded on demand when field-level detail is needed. Structure:
+`phase2a` writes `discovered.json` (full snapshot, loaded on demand). Per entity it records the
+provenance reads:
 
 ```json
 {
-  "discovered_at": "2026-05-30",
-  "discovered_against_major": 1,
-  "discovered_against_emitted": "2026-05-30",
+  "discovered_at": "2026-06-12",
+  "domain_code": "ATS",
+  "resolution": {
+    "<concept>": { "via": "fk_reachability|owned_code|alias|absent", "live_table": "<name>", "renamed": false }
+  },
+  "entity_renames": { "<canonical_concept>": "<live_table>" },
+  "omitted_entities": ["<concept>"],
+  "custom_entities": [{ "live_name": "<name>", "module_id": 0, "catalog_entity_code": "" }],
   "entities": {
-    "<live_entity_name>": {
-      "spec_name": "<spec.json entity name, may differ if renamed>",
-      "entity_id": 123,
-      "module_id": 45,
-      "singular_label": "<live label>",
-      "plural_label": "<live label>",
-      "fields": [
-        {
-          "name": "<live field name>",
-          "format": "string|int|enum|...",
-          "is_nullable": true,
-          "default_value": "",
-          "reference_table": "",
-          "enum_values": []
-        }
-      ],
-      "relationships_out": [
-        { "to_entity": "<name>", "via_field": "<fk_field>", "cardinality": "one_to_many" }
-      ],
-      "lifecycle_field": "status",
-      "lifecycle_values": ["new", "active", "..."]
+    "<live_table>": {
+      "catalog_entity_code": "<canonical>", "canonical_owner_module": "", "entity_type": "operational_record",
+      "pattern_flags": { "personal_content": true }, "catalog_entity_aliases": [],
+      "module_id": 0, "singular_label": "", "plural_label": "",
+      "fields": [{ "name": "", "catalog_field_code": "", "format": "", "reference_table": "", "enum_values": null }],
+      "lifecycle_field": "status", "lifecycle_values": ["new", "..."]
     }
   }
 }
 ```
 
-Discovered schema is what makes "what fields does X have?" cheap on subsequent runs — no live re-query needed.
-
-Then surface a one-screen summary to the user:
+The agent then writes the lean `state.yaml` deltas (module presence, `entity_renames`,
+`omitted_entities`, `custom_entities`, `unresolved_questions`, plus any Phase 2b resolutions), and
+surfaces a one-screen summary:
 
 ```
-<spec.domain.name> discovery complete.
-  Modules: 3 of 4 deployed (<module-code> not deployed)
-  Entities: 11 found, 1 renamed (job_applications -> applications), 2 omitted (cost_centers, background_checks)
-  Custom entities: 1 (referral_bonuses, classified as: master)
-  Unresolved questions: 0
-  State written to: state.yaml + discovered.json
+<domain> discovery complete (deterministic).
+  Modules: 3 of 4 deployed (<code> not deployed)
+  Concepts: 11 resolved (1 rename: job_applications -> applications via owned_code), 2 omitted
+  Custom / empty-code rows: 1 (referral_bonuses -> classify)
+  Ambiguities needing you: 0
+  Written to: discovered.json + state.yaml
 ```
-
-If there are unresolved questions, surface them as a numbered list and ask whether the user wants to resolve them now or defer.
 
 ---
 
-## Incremental reconciliation
+## When discovery should ASK vs ASSUME
 
-When `state.discovered_against_major == spec.facts_major` but `state.discovered_at < spec.emitted`:
+The ladder makes most of this moot: steps 1–3 are deterministic and never ASK. ASK only on the
+Phase 2b ambiguities above, all of which arise from **empty** provenance (rows outside the deploy
+pipeline) or genuine multi-recurrence. Specifically:
 
-1. Diff `facts` against `state` to produce a change list:
-   - New modules in facts not in state -> run Pass 1 for them, then Pass 2-3 if present
-   - New entities in facts (in modules already discovered) -> run Pass 2-3 for them
-   - Removed entities in facts (still in state) -> mark state.modules.<module>.entities.<name> as `removed_by_catalog: true`, ask user whether to keep their custom-usage notes
-   - Changed lifecycle states / pattern flags / aliases -> update state record, no live re-discovery needed
-
-2. Skip every entity the diff didn't touch. The point of incremental is to NOT pay the full-discovery cost.
-
-3. Update `state.discovered_at` to the current date and `state.discovered_against_emitted` to `spec.emitted`.
-
----
-
-## When discovery should ASK vs. ASSUME
-
-Default to ASK on ambiguity. The cost of one user question is low; the cost of a wrong rename baked into `state.yaml` propagates into every subsequent skill run until the user notices.
-
-Specifically:
-- **Fuzzy entity match** (Pass 2c): always ASK
-- **Custom entity found** (Pass 4): always ASK (to classify its role)
-- **Field omissions detected**: log to state, don't ASK upfront — let runtime failures drive it
-- **Module not deployed**: ASSUME deployment choice, don't ASK
-- **Exact-match entity**: ASSUME, don't ASK
-- **Alias match**: ASSUME (alias was authored at HQ, it's a known synonym), don't ASK
-
-If the user says "skip" or "I don't know" to any question, record it in `state.unresolved_questions` and proceed. The skill surfaces unresolved questions at the start of the next session.
+- **`rename_candidate` / `custom_entity` / `multi_owner`**: ASK.
+- **Deterministic resolution (steps 1–3)**: ASSUME (it is a platform read, not a guess).
+- **Module not deployed**: ASSUME deployment choice, don't ASK.
+- **Field omissions**: log to state, don't ASK upfront; let runtime failures drive it.

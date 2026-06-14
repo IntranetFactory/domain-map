@@ -89,34 +89,49 @@ async function main() {
   const tenantOrg = ver.data?.semantius_org ?? "<unknown>";
   const tenantEmail = ver.data?.email ?? "<unknown>";
 
-  // Check 2: at least one module from spec is deployed.
-  const slugs = spec.modules.map((m) => moduleSlug(m.code));
-  const slugFilter = slugs.join(",");
-  const modules = await call("crud", "postgrestRequest", {
+  // Check 3: at least one of the domain's modules is deployed. Enumerate by the
+  // catalog_module_code domain axis (provenance, core v0.1.2) so a renamed module_slug
+  // no longer hides a module; fall back to the legacy module_slug match for
+  // pre-provenance modules whose catalog_module_code is still '' (empty, never NULL).
+  type LiveModule = { id: number; module_slug: string; module_name: string; catalog_module_code: string };
+  const codes = spec.modules.map((m) => m.code);
+  const byCode = await call("crud", "postgrestRequest", {
     method: "GET",
-    path: `/modules?module_slug=in.(${slugFilter})&select=id,module_slug,module_name`,
+    path: `/modules?catalog_module_code=in.(${codes.join(",")})&select=id,module_slug,module_name,catalog_module_code`,
   });
-
-  if (!modules.ok) {
-    halt(`Could not query /modules: ${modules.stderr}`,
+  if (!byCode.ok) {
+    halt(`Could not query /modules: ${byCode.stderr}`,
          "If this is a JWT error, surface verbatim. Otherwise check platform connectivity.");
   }
+  const slugs = spec.modules.map((m) => moduleSlug(m.code));
+  const bySlug = await call("crud", "postgrestRequest", {
+    method: "GET",
+    path: `/modules?module_slug=in.(${slugs.join(",")})&select=id,module_slug,module_name,catalog_module_code`,
+  });
+  const byCodeMap = new Map<string, LiveModule>(((byCode.data ?? []) as LiveModule[]).map((m) => [m.catalog_module_code, m]));
+  const bySlugMap = new Map<string, LiveModule>((((bySlug.ok ? bySlug.data : null) ?? []) as LiveModule[]).map((m) => [m.module_slug, m]));
 
-  const present = (modules.data ?? []) as Array<{ id: number; module_slug: string; module_name: string }>;
-  if (present.length === 0) {
+  const moduleStatus = spec.modules.map((m) => {
+    const hit = byCodeMap.get(m.code) ?? bySlugMap.get(moduleSlug(m.code)) ?? null;
+    return {
+      code: m.code,
+      name: m.name,
+      slug: moduleSlug(m.code),
+      catalog_module_code: m.code,
+      present: !!hit,
+      module_id: hit?.id ?? null,
+      matched_by: byCodeMap.has(m.code)
+        ? "catalog_module_code"
+        : bySlugMap.has(moduleSlug(m.code))
+          ? "module_slug"
+          : null,
+    };
+  });
+  const presentCount = moduleStatus.filter((m) => m.present).length;
+  if (presentCount === 0) {
     halt(`No modules from the ${spec.domain.name} (${spec.domain.code}) spec are present in this deployment (${tenantOrg}).`,
          `Deploy at least one of the domain modules: ${spec.modules.map((m) => m.code).join(", ")}. Blueprint: https://semantius.app/catalog/${spec.domain.code.toLowerCase()}/blueprint`);
   }
-
-  // Pass: report what's present.
-  const presentSlugs = new Set(present.map((m) => m.module_slug));
-  const moduleStatus = spec.modules.map((m) => ({
-    code: m.code,
-    name: m.name,
-    slug: moduleSlug(m.code),
-    present: presentSlugs.has(moduleSlug(m.code)),
-    module_id: present.find((p) => p.module_slug === moduleSlug(m.code))?.id ?? null,
-  }));
 
   console.log(JSON.stringify({
     ok: true,
@@ -126,8 +141,8 @@ async function main() {
     modules: moduleStatus,
     summary: {
       total: spec.modules.length,
-      present: present.length,
-      absent: spec.modules.length - present.length,
+      present: presentCount,
+      absent: spec.modules.length - presentCount,
     },
   }, null, 2));
   process.exit(0);

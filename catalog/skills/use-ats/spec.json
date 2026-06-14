@@ -1,7 +1,7 @@
 {
   "facts_major": 1,
-  "emitted": "2026-06-08",
-  "catalog_snapshot": "catalog-2026-06-08",
+  "emitted": "2026-06-14",
+  "catalog_snapshot": "catalog-2026-06-14",
   "domain": {
     "code": "ATS",
     "name": "Applicant Tracking and Recruiting",
@@ -20,9 +20,12 @@
       "Recruiting"
     ],
     "contributors": [
+      "Human Resources",
       "Legal"
     ],
-    "consumers": []
+    "consumers": [
+      "Finance"
+    ]
   },
   "capabilities": [
     {
@@ -76,6 +79,7 @@
         "background_check_disputes",
         "background_check_packages",
         "background_checks",
+        "drug_health_screenings",
         "fcra_disclosures",
         "fcra_summary_of_rights_acknowledgements",
         "pre_adverse_action_notices"
@@ -99,6 +103,7 @@
       "masters": [
         "candidate_consents",
         "candidate_documents",
+        "candidate_emails",
         "candidate_engagements",
         "candidate_notes",
         "candidate_nurture_campaigns",
@@ -579,7 +584,9 @@
         {
           "name": "completed_clear",
           "order": 3,
-          "is_terminal": true
+          "is_terminal": true,
+          "requires_permission": true,
+          "permission_verb_override": "clear_background_check"
         },
         {
           "name": "completed_consider",
@@ -720,6 +727,29 @@
         "has_single_approver": false
       },
       "aliases": [],
+      "lifecycle_states": []
+    },
+    {
+      "name": "candidate_emails",
+      "singular_label": "Candidate Email",
+      "plural_label": "Candidate Emails",
+      "description": "Persisted email correspondence with a candidate as a first-class threaded record, distinct from free-text application notes and engagement summaries. Captures sent and received messages, the template used, and delivery status across the candidate relationship.",
+      "is_canonical_bare_word": false,
+      "pattern_flags": {
+        "has_personal_content": true,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      },
+      "aliases": [
+        {
+          "name": "Candidate Correspondence",
+          "source": "synonym"
+        },
+        {
+          "name": "Candidate Messages",
+          "source": "synonym"
+        }
+      ],
       "lifecycle_states": []
     },
     {
@@ -993,6 +1023,60 @@
           "is_terminal": true,
           "requires_permission": true,
           "permission_verb_override": "reject_dsr"
+        }
+      ]
+    },
+    {
+      "name": "drug_health_screenings",
+      "singular_label": "Drug and Health Screening",
+      "plural_label": "Drug and Health Screenings",
+      "description": "Pre-employment drug test or occupational health screening ordered as a check distinct from the criminal and employment background check. Tracks the order, provider, result, and any adverse-finding review, and handles sensitive medical data subject to ADA and state-law restrictions.",
+      "is_canonical_bare_word": false,
+      "pattern_flags": {
+        "has_personal_content": true,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      },
+      "aliases": [
+        {
+          "name": "Drug Test",
+          "source": "synonym"
+        },
+        {
+          "name": "Occupational Health Screening",
+          "source": "synonym"
+        },
+        {
+          "name": "Pre-Employment Drug Screening",
+          "source": "synonym"
+        }
+      ],
+      "lifecycle_states": [
+        {
+          "name": "ordered",
+          "order": 1,
+          "is_initial": true
+        },
+        {
+          "name": "in_progress",
+          "order": 2
+        },
+        {
+          "name": "passed",
+          "order": 3,
+          "is_terminal": true
+        },
+        {
+          "name": "failed",
+          "order": 4,
+          "is_terminal": true,
+          "requires_permission": true,
+          "permission_verb_override": "review_failed_screening"
+        },
+        {
+          "name": "cancelled",
+          "order": 5,
+          "is_terminal": true
         }
       ]
     },
@@ -1650,8 +1734,8 @@
       "is_canonical_bare_word": false,
       "pattern_flags": {
         "has_personal_content": false,
-        "has_submit_lock": true,
-        "has_single_approver": true
+        "has_submit_lock": false,
+        "has_single_approver": false
       },
       "aliases": [],
       "lifecycle_states": [
@@ -1863,7 +1947,7 @@
       "description": "Junction between candidates and recruitment_events recording registration, check-in, attendance, and conversion outcome.",
       "is_canonical_bare_word": false,
       "pattern_flags": {
-        "has_personal_content": true,
+        "has_personal_content": false,
         "has_submit_lock": false,
         "has_single_approver": false
       },
@@ -2134,7 +2218,7 @@
       "description": "Junction between candidates and talent_pools. Carries added timestamp, source, status_in_pool (cold/warm/hot), match score, and last_engagement timestamp.",
       "is_canonical_bare_word": false,
       "pattern_flags": {
-        "has_personal_content": true,
+        "has_personal_content": false,
         "has_submit_lock": false,
         "has_single_approver": false
       },
@@ -3023,6 +3107,34 @@
       "to": "users",
       "cardinality": "one_to_many",
       "required": true
+    },
+    {
+      "from": "candidates",
+      "verb": "corresponds_via",
+      "to": "candidate_emails",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "candidate_emails",
+      "verb": "has sender",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "candidates",
+      "verb": "screened_via",
+      "to": "drug_health_screenings",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "drug_health_screenings",
+      "verb": "has coordinator",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
     }
   ],
   "handoffs": {
@@ -3067,8 +3179,8 @@
         "source_module": "ATS-CANDIDATE-CRM",
         "apqc_processes": [
           {
-            "external_id": "10440",
-            "name": "Recruit/Source candidates"
+            "external_id": "10443",
+            "name": "Manage new hire/re-hire"
           }
         ]
       },
@@ -3127,8 +3239,8 @@
         "source_module": "ATS-CANDIDATE-CRM",
         "apqc_processes": [
           {
-            "external_id": "10440",
-            "name": "Recruit/Source candidates"
+            "external_id": "10443",
+            "name": "Manage new hire/re-hire"
           }
         ]
       },
@@ -3307,8 +3419,8 @@
         "source_module": "ATS-INTERVIEWS",
         "apqc_processes": [
           {
-            "external_id": "20123",
-            "name": "Screen and select candidates"
+            "external_id": "10457",
+            "name": "Interview candidates"
           }
         ]
       },
@@ -3322,8 +3434,8 @@
         "source_module": "ATS-INTERVIEWS",
         "apqc_processes": [
           {
-            "external_id": "20123",
-            "name": "Screen and select candidates"
+            "external_id": "10457",
+            "name": "Interview candidates"
           }
         ]
       },
@@ -3337,8 +3449,8 @@
         "source_module": "ATS-INTERVIEWS",
         "apqc_processes": [
           {
-            "external_id": "20123",
-            "name": "Screen and select candidates"
+            "external_id": "10457",
+            "name": "Interview candidates"
           }
         ]
       },
@@ -3455,10 +3567,6 @@
     {
       "external_id": "17052",
       "name": "Manage employee relations"
-    },
-    {
-      "external_id": "20123",
-      "name": "Screen and select candidates"
     },
     {
       "external_id": "20599",
