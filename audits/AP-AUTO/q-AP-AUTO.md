@@ -13,7 +13,7 @@ q1: (answer this first) How should Accounts Payable Automation be split into mod
 - b) Three modules: Invoice Capture (pull invoices in and read them), Matching (three-way match against PO and receipt), and Payment Runs (batch and pay).
 - c) Four modules: the three in (b) plus a Supplier Portal, if the supplier self-service portal belongs inside this domain rather than in Supplier Lifecycle.
 
-Recommended: b. Matches how the leading AP-automation platforms separate capture from matching from payment, and keeps each area small enough to own cleanly. This choice drives every part of the build below it (which module owns each capability, where the payment-method records live, how the workflow stages connect), so it unlocks the rest.
+Recommended: b. The flagship pure-plays all separate the same three stages: Tipalti, AvidXchange, and Stampli each split invoice capture from three-way matching from payment execution, so three modules (Invoice Capture, Matching, Payment Runs) mirror how the leaders package the market. This choice drives every part of the build below it: which module owns each capability, where the payment-method records live, and how the workflow stages connect.
 
 a1:
 

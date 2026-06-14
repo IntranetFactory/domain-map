@@ -89,7 +89,7 @@ q8: Where does Conversation Intelligence (Gong, Chorus) sit relative to CCaaS re
 - b) A separate vendor surface (its own domain) that overlaps CCaaS quality management.
 - c) A feature of Sales Engagement, where the sales call_recordings master already lives.
 
-Recommended: b. Gong and Chorus are pure-play revenue-intelligence vendors that ingest recordings and produce deal and coaching insight, which is a distinct surface from the contact-center QM market (Genesys, NICE, Verint, and Calabrio score interactions against evaluation forms). Modeling Conversation Intelligence as its own domain that consumes recordings from both CCaaS and Sales Engagement is the cleanest fit; it is already at mention_count=2 in the missing-domains backlog. This decision affects q7 (whether the two recording masters stay split).
+Recommended: b. Gong, Chorus, and ExecVision are pure-play revenue/conversation-intelligence vendors that ingest recordings and produce deal and coaching insight, a distinct vendor surface from the contact-center QM market where Genesys, NICE, Verint, and Calabrio score interactions against evaluation forms; the CONV-INTEL candidate (Gong, Chorus, ExecVision, CallRail, Refract) is already queued at mention_count=2 in the missing-domains backlog. So a standalone domain consuming recordings from both CCaaS and Sales Engagement is the right fit. This decision affects q7 (whether the two recording masters stay split).
 
 a8:
 

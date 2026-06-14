@@ -14,7 +14,7 @@ q1: (answer this first) How should remote sessions be shaped: one master record 
 - b) Split into two masters: rename the current one to attended_sessions and add unattended_sessions (the BeyondTrust pattern), re-shaping the modules and possibly adding a third.
 - c) Defer: keep the shipped single-master shape for now and revisit once you have real deployments to learn from.
 
-Recommended: a. It matches the build that already shipped, stays inside the current 2-master ceiling, and avoids re-shaping modules before real usage justifies it. This choice drives the lifecycle states, the cross-domain links, and any future re-modularization, so it unlocks the rest of the build.
+Recommended: a. TeamViewer and AnyDesk both treat attended and unattended access as one session entity with a mode field, which is the single-master shape; only BeyondTrust splits them into separate attended and unattended surfaces with distinct access-policy and consent flows. The single-master pattern matches the build that already shipped and stays inside the current 2-master ceiling. This choice drives the lifecycle states, the cross-domain links, and any future re-modularization, so it unlocks the rest of the build.
 
 a1:
 

@@ -108,7 +108,7 @@ a10:
 
 q11: Two optional module splits are possible once the new entities exist: a dedicated engagement-quoting module (estimates, rate cards, pursuit tracking) and a profitability-analytics module (project profit plus utilization), pulling those out of project delivery and financials. Should I plan for these splits? (yes/no)
 
-Recommended: yes in principle, but only worth doing once the underlying entities from q10 are loaded; until then the current four modules are fine.
+Recommended: yes in principle. Certinia and Kantata both separate engagement quoting (Certinia "Project Estimator", Kantata "Project Pricing", Deltek "Pursuit / Estimate") from delivery, and split billing from analytics (Certinia and Kantata "Project Profitability" / margin tracking), which is exactly the PSA-ENGAGEMENT-QUOTING and PSA-PROFITABILITY-ANALYTICS shape; but it is only worth doing once the underlying entities from q10 are loaded, until then the current four modules are fine.
 
 a11:
 

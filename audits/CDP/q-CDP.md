@@ -58,7 +58,7 @@ q5: How should Composable / warehouse-native CDP (reverse-ETL) be classified? It
 - b) Split it into a separate REVERSE-ETL domain (Hightouch, Census, RudderStack, Polytomic, and Grouparoo pass the 3-vendor point-solution test).
 - c) Treat it as its own CDP module (CDP-COMPOSABLE) but not a separate domain.
 
-Recommended: b. Reverse-ETL vendors have a fundamentally different deployment model (zero-copy, warehouse-native) and clear the 3-vendor test, so a separate domain is the cleanest fit; pick (a) if you want to keep CDP broad for now.
+Recommended: b. Hightouch, Census, and RudderStack Reverse-ETL (with Polytomic and Grouparoo) are pure-play warehouse-native vendors that clear the 3-vendor point-solution test, and their zero-copy deployment model is fundamentally unlike the suite CDPs (Segment, mParticle, Tealium, Adobe), so a separate REVERSE-ETL domain is the right fit; pick (a) if you want to keep CDP broad for now.
 
 a5:
 
@@ -228,7 +228,7 @@ a16:
 
 q17: Should REVERSE-ETL be queued as a standalone candidate domain in the missing-domains list (this is the domain-tier version of the q5 classification)? (yes/no)
 
-Recommended: yes, pending your q5 answer; if you keep composable CDP as a CDP capability, this entry can be retracted.
+Recommended: yes, pending your q5 answer. Hightouch, Census, RudderStack Reverse-ETL, Polytomic, and Grouparoo are pure-play warehouse-activation vendors that pass the 3-vendor test, so REVERSE-ETL warrants a standalone candidate entry; if you keep composable CDP as a CDP capability, this entry can be retracted.
 
 a17:
 

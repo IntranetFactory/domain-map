@@ -13,7 +13,7 @@ q1: (answer this first) Is Utility Operations the right single domain, or should
 - b) Demote Utility Operations to a leadership-tier landing domain (no data of its own, just cross-domain utility KPIs like SAIDI and SAIFI), and promote four separate domains that take the data over: a utility customer information system, advanced metering and meter data management, an outage management system, and utility work and asset management.
 - c) Hybrid: keep Utility Operations but pull only the customer information system out as its own domain.
 
-Recommended: a. The four-module umbrella is the shape that unblocks the build now without spinning up four new domains; the promote path (b) only pays off if you confirm each is bought as a standalone product in its own right. This choice drives the entire build, every module assignment, and whether the optional candidates below even apply, so it unlocks the rest of the build.
+Recommended: a. Oracle Utilities ships exactly these four as one suite (Customer Care and Billing, the NMS outage front office, Work and Asset Management, and Opower), and Schneider Electric ArcFM / EcoStruxure ADMS treats outage, distribution control, and asset-network as distinct modules, so the four-module umbrella maps onto how the broadest utility vendors package meter-to-cash, outage, and work-and-asset together; the promote path (b) only pays off if you confirm each is bought as a standalone product in its own right. This choice drives the entire build, every module assignment, and whether the optional candidates below even apply, so it unlocks the rest of the build.
 
 a1:
 

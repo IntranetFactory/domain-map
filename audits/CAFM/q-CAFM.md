@@ -13,7 +13,7 @@ q1: (answer this first) CAFM today has zero modules and masters its own data, an
 - b) Fold CAFM into IWMS as a small-business deployment tier, then queue the CAFM domain for retirement.
 - c) Keep both, but rename the shared capabilities to domain-neutral names first, then load each domain's tier-specific data separately.
 
-Recommended: a. CAFM serves a real smaller-buyer tier that IWMS does not (CAFM targets 20 to 500 seats at the $$ cost band, IWMS targets larger orgs at $$$, and the CAFM market is sized separately), so keeping it distinct is justified. This is the gate for the entire build: every module, owner, master, role, and skill below depends on it.
+Recommended: a. SMB-focused CAFM specialists, FMX (k12 and mid-market facilities, no lease accounting at all), Officespace, and Tango Workplace, sell a credible smaller-buyer product distinct from the enterprise IWMS platforms (IBM TRIRIGA, Planon, MRI OnCore, Spacewell), while Archibus, Nuvolo, Eptura, and Accruent package both tiers; that vendor split tracks CAFM's 20 to 500 seats at the $$ band versus IWMS at $$$, which justifies keeping it distinct. This is the gate for the entire build: every module, owner, master, role, and skill below depends on it.
 
 a1:
 

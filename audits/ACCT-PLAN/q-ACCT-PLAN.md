@@ -13,7 +13,7 @@ q1: (answer this first) ACCT-PLAN persists its own records (account plans, mutua
 - b) Keep it as a pure overlay: the proposed masters move to a separate ABM-Planning or KAM domain, and the existing vendor solutions become coverage of the overlay.
 - c) Hybrid: keep account health and growth metrics as derived signals, but load account plans, mutual action plans, relationship maps, white-space maps, and QBRs as real masters.
 
-Recommended: a. The classification is already settled toward master-bearing (the overlay test confirms it persists independently authored records), so this is mostly a confirm of (a) versus (c). This choice gates the module shape, every master load, the roles, and the handoff attribution below it, so it unlocks the rest of the build.
+Recommended: a. The five loaded pure-plays (Upland Altify, Revegy, DemandFarm, Prolifiq CRUSH, Demandbase Account Planning) all master independently authored records (account plans, mutual action plans, relationship maps, white-space maps, QBRs) that reference the CRM substrate rather than being derived from it, which is why the early leadership-tier (derived-overlay) classification looks misapplied. The overlay test confirms it persists its own records, so this is a confirm of (a) versus (c), and it gates the module shape, every master load, the roles, and the handoff attribution below it.
 
 a1:
 
@@ -25,7 +25,7 @@ q2: If you build it (q1 = a or c), how should the ACCT-PLAN module surface be sp
 - b) 4 modules (clustered): Core / Relationship-Whitespace / Execution / Metrics.
 - c) 3 modules (lean): Core / Execution / Metrics (folds relationship and whitespace into core).
 
-Recommended: a. The 6-module shape maps cleanly onto the 7 capabilities and keeps each area small enough to own; pick (b) or (c) for a leaner deployment. This decides which module every master lands in.
+Recommended: a. The vendor surface splits along these lines: Altify and Revegy lead on the relationship and political map, DemandFarm leads on white-space, and Prolifiq and Demandbase position around the unified planning surface, so a granular 6-module shape mirrors how the specialists actually package the market and realizes all 7 capabilities. Pick (b) or (c) for a leaner deployment. This decides which module every master lands in.
 
 a2:
 

@@ -11,7 +11,7 @@ q1: (answer this first) The Configuration and Application Delivery module curren
 - b) Keep it merged as one Configuration and Application Delivery module.
 - c) Decide later, after the new entities are vetted.
 
-Recommended: c. The boundary is cheap to change today and the split only pays off once the new config entities actually exist, so decide it together with that research. This is the build-shape call that the module-config questions hang on, so settle it first.
+Recommended: c. The config entities that would justify a standalone Policy and Configuration module (device groups, device scripts, device certificates) are near-universal across Intune, Jamf Pro, Workspace ONE, Kandji, and Hexnode and map to UEM-POLICY-CONFIG, distinct from the app-delivery surface; but the split only pays off once those entities actually land, so decide it together with that research. This is the build-shape call that the module-config questions hang on, so settle it first.
 
 a1:
 

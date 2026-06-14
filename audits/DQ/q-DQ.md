@@ -11,7 +11,7 @@ q1: (answer this first) How should Data Quality be split into modules (the sub-a
 - b) Two modules: Rules plus Observability (fold incident management into observability since both raise incidents).
 - c) One module: a single Data Quality module. This becomes non-viable once the 5-7 capabilities load, because a domain that size needs at least two modules.
 
-Recommended: a. It matches how the market is actually split (legacy profiling and rule tools versus modern data-observability vendors) and keeps each area small enough to own cleanly. This choice drives the build, capability-to-module mapping, lifecycle anchoring, and source-module attribution below it, so it unlocks the rest of the build.
+Recommended: a. The vendor cohorts divide the same way: the legacy DQ tools (Informatica IDQ, Talend Data Quality, Ataccama ONE) own profiling and rule authoring, while the data-observability vendors (Monte Carlo, Bigeye, Anomalo) own monitoring, anomaly detection, and SLA enforcement, so a Rules module plus a Monitoring module mirror that split directly, with Incident Management as the triage surface both cohorts feed. This choice drives the build, capability-to-module mapping, lifecycle anchoring, and source-module attribution below it, so it unlocks the rest of the build.
 
 a1:
 

@@ -107,7 +107,7 @@ a9:
 
 q10: Editorial planning and content lifecycle plans may really belong to a separate Content Marketing Platform domain that the flagship vendors position as its own market. Should I queue a Content Marketing Platform domain candidate for later triage? (yes/no)
 
-Recommended: yes, queue it as a non-blocking candidate. If it later promotes, the editorial-planning area either moves out or becomes a consumer of that domain; queuing it now does not change today's build.
+Recommended: yes, queue it as a non-blocking candidate. Optimizely Content Marketing Platform (formerly Welcome Software) positions editorial workflow and content-marketing operations as its own market, forming the editorial pole of the vendor surface alongside GatherContent and distinct from the compliance-and-audit and technical-SEO poles, so editorial planning plausibly belongs in a separate Content Marketing Platform domain. If it later promotes, the editorial-planning area either moves out or becomes a consumer of that domain; queuing it now does not change today's build.
 
 a10:
 

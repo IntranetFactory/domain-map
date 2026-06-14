@@ -12,7 +12,7 @@ q1: (answer this first) How should Third-Party Risk Management be split into mod
 - a) Single module covering the full vendor-risk lifecycle (assessment, ongoing monitoring, and remediation in one place). Simpler, and it defers any split until the capability count forces it.
 - b) Split into two modules: Vendor Due Diligence (onboarding, questionnaires, tier classification, the go or no-go before signing) and Vendor Ongoing Monitoring (re-assessment cadence, security-rating and breach signals, remediation tracking).
 
-Recommended: b. The flagship pure-plays expose this onboarding-versus-continuous-monitoring split as separate product lines, and it satisfies the two-module floor up front. This decision gates the entire build and every fix below it, so it unlocks the rest of the work.
+Recommended: b. OneTrust Third-Party Risk, ProcessUnity, and Prevalent all carry separate Onboarding versus Continuous Monitoring product lines, so the due-diligence-versus-ongoing-monitoring split mirrors how the flagship pure-plays package the market, and it satisfies the two-module floor up front. This decision gates the entire build and every fix below it, so it unlocks the rest of the work.
 
 a1:
 

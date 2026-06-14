@@ -99,7 +99,7 @@ a8:
 
 q9: A Marketplace Operations / Channel Listing domain (vendors like ChannelEngine, Rithum, Mirakl Connect, Productsup, Feedonomics) sits adjacent to PIM, commerce, and order management and is queued as a missing-domain candidate. Should I research and stand it up as a new domain? (yes/no)
 
-Recommended: yes, as a separate domain, but it is a non-blocking idea and does not gate PIM finishing.
+Recommended: yes, as a separate domain. ChannelEngine, Rithum (ChannelAdvisor), Mirakl Connect, Productsup, and Feedonomics run channel-listing and marketplace-feed management as their own pure-play category, distinct from the PIM authoring vendors (Akeneo, Salsify, inRiver), and the candidate is already queued as MARKETPLACE-OPS in _missing-domains.md; it is a non-blocking idea and does not gate PIM finishing.
 
 a9:
 

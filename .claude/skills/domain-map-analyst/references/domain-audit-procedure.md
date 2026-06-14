@@ -188,6 +188,7 @@ Numbered list. Each item carries:
 - The question being asked
 - Why the agent can't answer it alone
 - Options the user might pick
+- **For any market-shape item (module split/count, scope, master-vs-consume, promote-to-domain, where an entity is mastered): the named-vendor grounding for the recommendation, inline with the item** (which flagship vendors package it which way, by name; what each masters vs consumes). This is the text that becomes the `b2.evidence` field in `state.yaml` and is copied verbatim into the q-file's `Recommended:` reason (SKILL.md Rule #22). Do NOT leave the grounding only in the "Vendor surface basis" section: evidence decoupled from the question is exactly how thin, unanswerable q-questions get produced. If the grounding isn't in hand, the item isn't ready, run Phase 0.
 - Whether the answer is independent or has a Bucket 3 dependency
 
 ### Bucket 3 — Phase 0 pending (speculative)

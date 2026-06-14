@@ -13,7 +13,7 @@ q1: (answer this first) How should Test Management be split into modules (the su
 - b) Two modules: Authoring (test cases, suites, plans, requirement traceability) and Execution (test runs, defects, environments, automation scripts).
 - c) Four modules: Case Management; Plan Management; Execution; Defects.
 
-Recommended: b. It mirrors how the major test tools present an authoring tier versus an execution tier, and it keeps each module small enough to own cleanly. This choice is unbuilt today and drives every module, capability, lifecycle, and per-module link below it, so it unlocks the rest of the build.
+Recommended: b. It mirrors the Xray-versus-TestRail surface split, where Xray leads with a case-authoring and requirement-traceability tier and TestRail leads with a run-and-result execution tier, so the two-module authoring-versus-execution shape tracks how these flagship tools actually package the market. This choice is unbuilt today and drives every module, capability, lifecycle, and per-module link below it, so it unlocks the rest of the build.
 
 a1:
 

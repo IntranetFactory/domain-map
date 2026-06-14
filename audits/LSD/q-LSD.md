@@ -14,7 +14,7 @@ q1: (answer this first) How should Legal Service Delivery be split into modules 
 - c) Six modules: same as (a) plus a separate Knowledge module for legal knowledge management.
 - d) One module: a single Legal Service Delivery module (only viable if the legal-specific capability count also stays below three).
 
-Recommended: a. Matches how the flagship in-house legal platforms present the product and keeps each area small enough to own. This choice drives every module, capability, lifecycle state, and handoff fix below it, so it unlocks the rest of the build. Nothing is scaffolded until you answer.
+Recommended: a. The flagship in-house legal platforms package these five legs distinctly: ServiceNow Legal Service Delivery and LawVu lead with an intake portal feeding matter management, Onit Enterprise Legal Management anchors the outside-counsel engagement and e-billing leg, and legal hold / ediscovery is sold as its own module (Onna, Exterro, Zapproved standalone) while regulatory response stays an in-house workflow distinct from GRC. That vendor packaging is exactly the Intake Portal, Matter Management, Legal Hold, Outside Counsel, and Regulatory Response set. This choice drives every module, capability, lifecycle state, and handoff fix below it, so it unlocks the rest of the build. Nothing is scaffolded until you answer.
 
 a1:
 

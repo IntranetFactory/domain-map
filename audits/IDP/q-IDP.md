@@ -13,7 +13,7 @@ q1: (answer this first) How should Intelligent Document Processing be split into
 - b) Three modules: same as (a) but pull the data-science workflow (extraction models, training datasets) out into its own Model Management module.
 - c) One module: the whole pipeline as a single module (this breaks the rule that a domain with 3 or more capabilities needs at least 2 modules, once the 7 capabilities land).
 
-Recommended: b. It cleanly separates the model lifecycle (the data-scientist persona) from the runtime pipeline (validator and ops personas), matching how the specialist vendors split a model studio from the operator workspace. IDP is currently unbuilt, so this choice gates every module, capability, role, lifecycle state, and handoff link below it: it unlocks the rest of the build.
+Recommended: b. Hyperscience and Rossum both separate the model studio (where the data-scientist persona trains and tunes extraction models) from the operator workspace (where validators and ops staff work the runtime pipeline), so a dedicated Model Management module isolating the extraction models and training datasets mirrors how those specialist vendors actually package the two workflows. IDP is currently unbuilt, so this choice gates every module, capability, role, lifecycle state, and handoff link below it: it unlocks the rest of the build.
 
 a1:
 

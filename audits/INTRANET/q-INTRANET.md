@@ -71,7 +71,7 @@ q6: The advocacy capability here overlaps a separate employee-advocacy domain ca
 - b) Keep advocacy inside this domain as a capability and module, and reject the standalone domain.
 - c) Promote the standalone domain but keep a thin read-side advocacy feed embedded inside the News module.
 
-Recommended: a. The standalone employee-advocacy candidate is past the typical promotion threshold and is surfaced by multiple domains, so consolidating advocacy there avoids duplicating the workflow in two places.
+Recommended: a. Employee advocacy is a dedicated specialist market owned by Hootsuite Amplify, Sprinklr, Sociabble, GaggleAMP, and EveryoneSocial (only Haiilo and Sociabble truly master it among intranet players), and the standalone EMP-ADVOCACY candidate is already at mention_count=4, past the typical promotion threshold; consolidating advocacy there matches where the workflow really lives and avoids duplicating it in two places.
 
 a6:
 

@@ -15,7 +15,7 @@ q1: (answer this first) How should Integration Platform as a Service be split in
 - d) A single module.
 - e) Other (specify).
 
-Recommended: a. The two-module split matches the vendor surface (Boomi, MuleSoft, Workato) and is the minimal shape that unblocks the build today. This choice drives the build and every capability, lifecycle owner, handoff attribution, and per-module link below it, so it unlocks the rest of the build.
+Recommended: a. Boomi, MuleSoft, and Workato all separate the design-time authoring surface (recipes, connectors, data mappings, triggers, and webhook subscriptions) from the run-time execution surface (recipe execution and run history), so a Recipe Design module plus a Runtime module map onto how those flagship vendors split their own products. This choice drives the build and every capability, lifecycle owner, handoff attribution, and per-module link below it, so it unlocks the rest of the build.
 
 a1:
 

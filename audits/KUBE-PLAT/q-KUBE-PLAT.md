@@ -10,7 +10,7 @@ q1: (answer this first) How should Kubernetes Platform be split into modules (th
 - a) Two modules: Distribution Ops (clusters, node pools, add-ons, upgrades, registries) and Workload Ops (container workloads, Helm releases, operators, service meshes, pipelines). Mirrors the natural cluster-versus-workload split most vendors use.
 - b) One module covering the whole eight-object surface. Simpler, but the capability count will land at five to seven and force a two-module split anyway.
 
-Recommended: a. Two modules match how the major distributions present the product and keep each area small enough to own cleanly; one module is unstable because the capability count will trip the two-module rule. This choice drives the whole unbuilt build (capabilities, solutions, lifecycle states, per-handoff module links, roles), so it unlocks everything below it.
+Recommended: a. Red Hat OpenShift, Rancher (SUSE), VMware Tanzu, and Mirantis Kubernetes Engine all present a cluster/control-plane substrate (clusters, node pools, addons via cluster operators, OTA upgrades, etcd backups, registries) separately from the workload layer (container workloads, Helm releases, operators, service meshes), which is exactly the Distribution Ops versus Workload Ops boundary, and the cluster-level objects divide the same way (upgrade plans, etcd backups, storage classes to Distribution Ops; namespaces, RBAC, network policies, resource quotas to Workload Ops). One module is unstable because the capability count (5 to 7) will trip the two-module rule. This choice drives the whole unbuilt build (capabilities, solutions, lifecycle states, per-handoff module links, roles), so it unlocks everything below it.
 
 a1:
 

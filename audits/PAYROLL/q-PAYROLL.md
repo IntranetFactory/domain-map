@@ -71,7 +71,7 @@ q7: How should multi-country tax configuration (per-country statutory kernels: r
 - b) Defer to a later research pass.
 - c) Reject it as out of scope, keeping PAYROLL US-centric by intent.
 
-Recommended: b. The global-payroll capability has no entity today, but whether to model per-country kernels depends on whether PAYROLL is meant to serve non-US jurisdictions, which is your call. Pick (a) if global payroll is in scope, (c) if it is firmly not.
+Recommended: b. CloudPay, Papaya Global, ADP GlobalView, Deel, and Remote all model per-country statutory kernels (rate tables, calendar rules, filing schemas) as a first-class jurisdiction_tax_configs entity, so the entity shape is real and the PAYROLL-GLOBAL capability has no entity-level representation today; but loading it depends on whether PAYROLL is meant to serve non-US jurisdictions, which is your call. Pick (a) if global payroll is in scope, (c) if it is firmly not.
 
 a7:
 

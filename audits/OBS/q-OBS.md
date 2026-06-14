@@ -15,7 +15,7 @@ q1: (answer this first) Observability has not been built out into modules yet, a
 - b) Two modules: a telemetry pipeline (collecting and indexing metrics, logs, and traces) plus reliability insights (objectives, error tracking, dashboards).
 - c) One module bundling everything. Simplest, but likely too broad to be a valid split once we count three or more capabilities.
 
-Recommended: a. It mirrors the flagship vendors and keeps the three distinct markets cleanly separated, which is the most defensible long-term shape. This is the gate: it decides the module set, capabilities, lifecycle states, the cross-domain handoff wiring, and the rest of the build.
+Recommended: a. Datadog, Dynatrace, and New Relic each market application performance monitoring (metrics, traces, dashboards), log analytics, and reliability (SLOs, error tracking, on-call) as distinct products on a shared backplane, which is precisely the three-module split (OBS-APM, OBS-LOG-ANALYTICS, OBS-SLO-RELIABILITY); the expected 5 to 7 capabilities also force at least two modules, ruling out a single bundle. This is the gate: it decides the module set, capabilities, lifecycle states, the cross-domain handoff wiring, and the rest of the build.
 
 a1:
 

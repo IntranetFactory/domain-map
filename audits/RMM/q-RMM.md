@@ -118,7 +118,7 @@ a9:
 
 q10: If the compliance and patch-approval records above get added, two extra modules start to make sense rather than overloading the existing ones: an RMM-COMPLIANCE module (baselines, patch-approval policies, drift detection) and an RMM-REPORTING module (customer-facing dashboards and scheduled reports). Should I research and add either? (yes/no)
 
-Recommended: yes in principle, but only once the underlying records land; both are non-blocking.
+Recommended: yes in principle, but only once the underlying records land; both are non-blocking. An RMM-COMPLIANCE module is grounded in the security-baseline records Action1, ManageEngine, and N-able expose (CIS / NIST baselines, drift detection) plus the patch-approval-policy records Kaseya, Datto, and ManageEngine model as first-class; an RMM-REPORTING module is grounded in the customer-facing dashboard and scheduled-report surfaces NinjaOne and ConnectWise ship as a separate client portal.
 
 a10:
 

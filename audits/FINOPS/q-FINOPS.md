@@ -35,7 +35,7 @@ q3: A cloud-spend threshold-breach event is currently attached to supplier invoi
 - b) Leave the event mis-attributed and accept the inconsistency.
 - c) Deprecate the event and its outbound handoff as mis-modeled, replacing them with a supplier-invoice event published from procurement with FINOPS as the receiver. This deprecation is destructive and needs your sign-off.
 
-Recommended: a. No upstream domain canonically owns normalized cloud-cost rows (cloud-provider billing exports are external feeds), so FINOPS owning this record is empirically correct and the FOCUS spec formalizes the shape.
+Recommended: a. Every flagship FinOps platform builds itself around this normalized record (Cloudability cost_records, CloudHealth Detail Records, Vantage cost_reports, CloudZero cost_data, Finout MegaBill), and the FinOps Foundation FOCUS spec formalizes its columns (BilledCost, EffectiveCost, ChargeCategory, ServiceName, ResourceId, Tags). No upstream domain canonically owns these rows (cloud-provider billing exports are external feeds), so FINOPS owning the record matches the vendor surface.
 
 a3:
 

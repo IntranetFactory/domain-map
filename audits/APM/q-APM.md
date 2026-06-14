@@ -145,7 +145,7 @@ a15:
 
 q8: Flagship portfolio tools (LeanIX, ServiceNow APM, MEGA HOPEX, Ardoq, Apptio) model a deeper technology and risk layer than we carry today: the single technology platform record is split into products, services, and platforms, and there is a dedicated risk and compliance surface (vulnerabilities, application risks, lifecycles, standards, controls, obligations) that would fit a new third module. Should I research and add the parts that hold up? (yes/no)
 
-Recommended: yes, but additive and can happen after the modules exist. The three-way technology split and a tech-risk module are consistent across the vendor set, though they still want a verification pass first.
+Recommended: yes, but additive and can happen after the modules exist. The market-audit pass against LeanIX, ServiceNow APM, MEGA HOPEX, Ardoq, and Apptio found the three-way technology split (products, services, platforms) and a dedicated tech-risk surface consistent across the set: ServiceNow models CVE-style records as `sn_vul_vulnerability` and Ardoq carries a Vulnerability entity, which is what an APM-TECH-RISK module would own (vulnerabilities, application risks, lifecycles, standards, controls, obligations). It still wants a verification pass first.
 
 a8:
 

@@ -102,7 +102,7 @@ a8:
 
 q9: Should I research promoting Enterprise Architecture (EA) into its own domain? Four of nine BPA solutions are also EA leaders, and a promotion would cascade into the capability-map owner and solution-split decisions above. (yes/no)
 
-Recommended: yes to research it, but it stays a non-blocking idea until you decide to promote. It does not hold up the BPA build.
+Recommended: yes to research it, but it stays a non-blocking idea until you decide to promote. The EA market is anchored by a clear pure-play set (LeanIX, Ardoq, Software AG Alfabet, BiZZdesign Horizzon, MEGA HOPEX, plus Avolution ABACUS and Sparx EA), and four of those (MEGA HOPEX, BiZZdesign Horizzon, Software AG ARIS, SAP Signavio) are already loaded as BPA solutions, which is the overlap that argues for promotion. It does not hold up the BPA build.
 
 a9:
 
@@ -110,7 +110,7 @@ a9:
 
 q10: Should I research promoting iBPMS (Intelligent Business Process Management Suite) into its own domain? It is the execution-side counterpart to BPA's authoring side, and it decides whether decision (DMN) models belong in BPA or there. (yes/no)
 
-Recommended: yes to research it, but it stays a non-blocking idea until you decide to promote. It does not hold up the BPA build.
+Recommended: yes to research it, but it stays a non-blocking idea until you decide to promote. The iBPMS market is anchored by a distinct execution-side pure-play set (Camunda Platform, Pega Platform, IBM Business Automation Workflow, Appian, Bonita) that runs processes rather than authoring them, and whether decision (DMN) models belong in BPA or there depends on this candidate's status. It does not hold up the BPA build.
 
 a10:
 

@@ -128,7 +128,7 @@ a12:
 
 q6: Every major PLM vendor ships a program and portfolio surface above engineering core (engineering projects, deliverables, program milestones), which PLM does not have today. Should I research and add a 6th module for this program / portfolio surface? (yes/no)
 
-Recommended: yes in principle, but it needs a vendor-research pass first, and it is additive, so it never blocks the build. It could also be a deliberate scope choice to leave program management to a separate domain.
+Recommended: yes in principle. Teamcenter (Program Planning), Windchill (Project Link), 3DEXPERIENCE ENOVIA (Project Management), and Aras Innovator (Program Management) all ship a program and portfolio surface above engineering core (engineering projects, deliverables, program milestones), so a 6th PLM-PORTFOLIO module has flagship backing; it needs a vendor-research pass to confirm the surface is core PLM rather than adjacent SPM, and it is additive, so it never blocks the build. It could also be a deliberate scope choice to leave program management to a separate domain.
 
 a6:
 

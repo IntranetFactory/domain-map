@@ -231,7 +231,16 @@ in `audits/README.md`:
 STRUCTURAL / BOUNDARY / APQC-TAGGING]
 
 ### Bucket 2 — Surface-for-user (judgment calls)
-[numbered list or table; one entry per open question with options]
+[numbered list or table; one entry per open question with options. For any
+market-shape item (module split/count, scope, master-vs-consume,
+promote-to-domain, where an entity is mastered) the entry MUST carry the
+named-vendor grounding inline: which flagship vendors package it which way, by
+name, and what each masters vs consumes. That grounding becomes the b2 item's
+`evidence` field and is copied verbatim into the q-file's `Recommended:` reason
+(SKILL.md Rule #22). Do NOT put the grounding only in the Vendor-surface-basis
+Summary bullet, evidence decoupled from the question produces thin,
+unanswerable q-questions. If you don't have the named-vendor grounding for a
+market-shape question, you have not finished Pass 2 for it.]
 
 ### Bucket 3 — Phase 0 pending (speculative)
 [numbered list; candidates needing vendor-research vetting]

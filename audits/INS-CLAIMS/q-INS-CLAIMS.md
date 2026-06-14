@@ -25,7 +25,7 @@ q2: insurance_policies and policy_coverages are mastered on this domain today, b
 - b) Move them now to a stub Insurance Policy Administration that carries only those two masters until the rest is loaded.
 - c) Embed them in claims as a local shell, with Insurance Policy Administration as the canonical owner once it lands.
 
-Recommended: a. It is the honest reflection of the current catalog scope and avoids shipping a sparse stub domain before its time.
+Recommended: a. The flagship vendors all carry these masters on a separate policy-administration platform (Guidewire PolicyCenter versus ClaimCenter, Duck Creek Policy versus Claims, Sapiens IDIT Policy), so the correct long-term home is the queued INS-POLICY-ADMIN domain; keeping insurance_policies and policy_coverages on Insurance Claims Management until that domain ships is the honest reflection of the current catalog scope and avoids shipping a sparse stub domain before its time.
 
 a2:
 

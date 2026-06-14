@@ -136,7 +136,7 @@ a13:
 
 q14: Flagship vendors model several equity instruments and records the catalog does not have yet (SAFEs, convertible notes, warrants, tax-form records like 3921/3922, board consents, share certificates, ESPP records, phantom-share/SAR/profits-interest grants, beneficial-owner/KYC records, voting/proxy records), some of which would warrant new modules (convertibles, tax-reporting, ESPP, compliance, board-consents). Should I research and add the ones that hold up? (yes/no)
 
-Recommended: yes, but additive and after the modules settle. These come from analyst vendor knowledge and still want a verification pass first.
+Recommended: yes, but additive and after the modules settle. Carta, Pulley, and AngelList Stack model SAFEs, convertible notes, and warrants as first-class instruments (warranting a CAP-TABLE-CONVERTIBLES module); Carta and Shareworks generate 3921/3922/1099 tax forms (CAP-TABLE-TAX-REPORTING) and run ESPP offerings (CAP-TABLE-ESPP); Carta, Pulley, and Shoobx model board consents and share certificates; FinCEN Corporate Transparency Act beneficial-owner/KYC records map to a CAP-TABLE-COMPLIANCE module. These come from vendor knowledge and still want a verification pass first.
 
 a14:
 

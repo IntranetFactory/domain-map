@@ -144,7 +144,7 @@ a12:
 
 q13: Should I add an FSA / HSA / commuter claims ledger (claim submitted, adjudicated, paid or rejected), which the spending-account specialists model as a distinct ledger and which could become its own spending-accounts module? (yes/no)
 
-Recommended: yes, but additive and non-blocking. The contribution side is already captured via payroll deduction codes; only the claim and disbursement side is missing.
+Recommended: yes, but additive and non-blocking. Alegeus, WEX Health, HealthEquity, Discovery Benefits, and P&A Group all master FSA / HSA / commuter claims as a distinct ledger (claim submitted, adjudicated, paid or rejected), and that vendor cluster operates as its own point-solution market, which is why a loaded claims ledger could become a BEN-SPENDING-ACCOUNTS module. The contribution side is already captured via payroll deduction codes; only the claim and disbursement side is missing.
 
 a13:
 

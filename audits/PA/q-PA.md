@@ -159,7 +159,7 @@ a12:
 
 q13: Talent Intelligence (Eightfold, Phenom, Beamery, SeekOut) is a distinct buyer profile (talent acquisition plus internal mobility plus a skills graph). Should I research whether it warrants its own domain rather than folding into ATS, Skills Management, or Talent Management? (yes/no)
 
-Recommended: yes, but additive and non-blocking. It is already queued as a candidate domain; a scoping pass decides promote-as-domain versus fold-in.
+Recommended: yes, but additive and non-blocking. Eightfold AI, Phenom, Beamery, SeekOut, and Plum run a distinct buyer profile (talent acquisition plus internal mobility plus a skills graph) from the people-analytics vendors (Visier, Crunchr, Workday People Analytics), and the audit has already queued TALENT-INTEL-PLATFORM in _missing-domains.md; a scoping pass against Eightfold, Phenom, and Beamery decides promote-as-domain versus fold into ATS / Skills Management / Talent Management.
 
 a13:
 
