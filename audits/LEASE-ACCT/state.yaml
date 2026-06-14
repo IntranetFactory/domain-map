@@ -1,0 +1,48 @@
+schema_version: 2
+domain: LEASE-ACCT
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-14"
+
+# 2026-06-14 BUILD. Promoted from the triage queue (Phase 0:
+# .tmp_deploy/LEASE-ACCT-phase0-2026-06-14.md). Point-solution test PASSES: >=3
+# independent flagship pure-plays whose flagship IS lease accounting (FinQuery/LeaseQuery,
+# Trullion, Occupier). Built domain_id 175 with 2 full modules (LEASE-ACCT-ACCOUNTING 356,
+# LEASE-ACCT-ADMINISTRATION 357), 7 capabilities, 10 masters, 7 solutions, 3 regulations
+# (ASC 842, IFRS 16, SOX), 5 handoffs, 1 domain-grain system skill, 3 personas + RACI on
+# real cross-industry PCF finance nodes (9.3.x). All rows at record_status='new'.
+# Two market-shape b2 calls remain open (scope boundary + administration overlap); they did
+# not gate the build (the accounting kernel is unambiguous), but they govern whether the
+# ADMINISTRATION module stays in LEASE-ACCT or cross-references REAL-EST/RE-CRE.
+
+b2:
+  - id: B2-SCOPE
+    summary: "Accounting-vs-administration scope: keep the ADMINISTRATION module in LEASE-ACCT, or thin it to cross-reference REAL-EST/RE-CRE lease records?"
+    question: "The accounting kernel (LEASE-ACCT-ACCOUNTING: ROU assets, lease liabilities, classifications, payment/amortization schedules, modifications, disclosures, journal entries) is unambiguously distinct and was built as-is. The open call is the administration layer: should LEASE-ACCT-ADMINISTRATION master its own lease_agreements / lease_critical_dates / lease_documents (built this way now), or should it instead embedded_master / consume the existing REAL-EST property_leases and RE-CRE commercial_leases records and keep only the lessee-accounting-specific fields?"
+    options:
+      - "(a) Keep LEASE-ACCT-ADMINISTRATION mastering lease_agreements / lease_critical_dates / lease_documents (current build)."
+      - "(b) Thin the administration module: make lease_agreements an embedded_master/consumer of REAL-EST property_leases (and RE-CRE commercial_leases), keeping only the accounting-subledger view."
+      - "(c) Drop LEASE-ACCT-ADMINISTRATION entirely; LEASE-ACCT becomes accounting-only and consumes lease records from REAL-EST/RE-CRE."
+    why: "Market-shape decision: determines whether the lessee lease record is mastered here or read from the real-estate domains. Governs module count (Rule #14: dropping ADMINISTRATION would leave a 7-capability domain with 1 module, which would force re-homing the LEASE-ADMINISTRATION capability into the accounting module)."
+    evidence: "Every flagship lease-accounting vendor exposes BOTH layers internally, but the independent pure-plays bundle them as one product on the LESSEE/tenant side: FinQuery (LeaseQuery) masters the lease record AND the accounting subledger in one product; Trullion abstracts the lease record from source documents into its own accounting objects; Occupier explicitly markets lease ADMINISTRATION + transaction management + accounting as one tenant-side platform. The suite players keep administration in the RE platform: CoStar Real Estate Manager and Nakisa carry the lease record in the RE/IWMS layer and the accounting as a subledger on top. The existing REAL-EST domain lists 'leases' as workplace-occupancy records (id 141, property_leases 345) and RE-CRE owns landlord-side commercial_leases (id 363, 145), neither as an ASC 842/IFRS 16 audited subledger. So the accounting kernel is unowned and clearly belongs here; the lessee administration record genuinely overlaps REAL-EST/RE-CRE and is the contested layer. The pure-plays (the 3 that pass the point-solution test) keep administration WITH accounting on the tenant side, which is why option (a) was built; (b)/(c) match the suite shape where a separate RE platform already masters the lease record."
+  - id: B2-OVERLAP
+    summary: "REAL-EST / RE-CRE administration overlap: cross-reference edges only, or co-mastership rows?"
+    question: "If the ADMINISTRATION module stays (B2-SCOPE = a or b), how should LEASE-ACCT relate to the REAL-EST/RE-CRE lease records? The build already added cross-domain reference edges (lease_agreements 'accounts for' commercial_leases and property_leases; asc842_journal_entries 'posts to' the GL journal_entries). Should LEASE-ACCT additionally hold a contributor/consumer DMDO row on property_leases / commercial_leases (to make the data-silo overlap explicit in Signal 1), or are the reference edges sufficient?"
+    options:
+      - "(a) Reference edges only (current build): the relationship is recorded as data_object_relationships, no shared-DMDO co-mastership."
+      - "(b) Add LEASE-ACCT consumer DMDO rows on REAL-EST property_leases and RE-CRE commercial_leases (makes the lessee-vs-occupancy silo explicit)."
+    why: "Market-shape decision about where the lease record is co-mastered vs merely referenced; affects the platform-vs-silos Signal 1 (multi-master / consumer rollup) for the lease-record concept."
+    evidence: "REAL-EST (id 141) masters property_leases (345) as a workplace-occupancy record and RE-CRE (id 145) masters commercial_leases (363) as a landlord-side record; LEASE-ACCT models lease_agreements as the lessee accounting-subledger view. These are three legitimately different masters of the same real-world lease (the multi-master pattern the catalog exists to surface), so a consumer DMDO from LEASE-ACCT onto the RE records would make the lessee-accounting-reads-the-occupancy-record silo explicit. The pure-plays (FinQuery, Trullion, Occupier) do not consume an external RE record at all (they master the lease themselves), so reference-edges-only (a) matches the pure-play shape; (b) matches a deployment where a CoStar/Nakisa-style RE platform already masters the lease and LEASE-ACCT reads it."
+
+b3:
+  - id: B3-SUBSTRATE
+    summary: "Phase 0 vendor surface lists deeper administration/accounting substrate masters not yet loaded; additive only."
+    candidate: "Additional lease substrate masters (lease_renewals, lease_terminations, lease_payment_terms, lease_components, leased_assets, gl_account_mappings, discount_rate_tables, index_rate_tables, accounting_period_closes, sox_control_evidences)."
+    rationale: "The 10 loaded masters cover the certification-grade kernel and the headline administration records. Phase 0 surfaced a deeper substrate that flagship vendors model: renewals/terminations as first-class events, separable payment terms and components, the leased_assets master (equipment leasing), GL mapping and discount/index rate tables (config catalogs), accounting_period_closes (close control), and explicit SOX control-evidence objects. These are additive and fit the existing two-module shape; they do not change market shape. Some (gl_account_mappings, discount_rate_tables, index_rate_tables) are catalog/config entity_type; accounting_period_closes and sox_control_evidences are SOX-conditional (Rule #16 optional). Load on user greenlight, not auto-executed (Rule #21 research carve-out)."
+    vendor_evidence:
+      - FinQuery (LeaseQuery)
+      - Trullion
+      - Occupier
+      - CoStar Real Estate Manager
+      - Nakisa Lease Administration
+    proposed_module: "lease_renewals/terminations/payment_terms/components/leased_assets -> LEASE-ACCT-ADMINISTRATION; gl_account_mappings/discount_rate_tables/index_rate_tables/accounting_period_closes/sox_control_evidences -> LEASE-ACCT-ACCOUNTING."

@@ -1,0 +1,73 @@
+schema_version: 2
+domain: FRONTLINE-COMMS
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-14"
+
+# 2026-06-14 PHASE 0 + BUILD. Verdict promote-as-domain (Phase 0 report:
+# .tmp_deploy/FRONTLINE-COMMS-phase0-2026-06-14.md). Point-solution test PASS (5 independent
+# pure-plays: WorkJam, YOOBIC, Speakap, Flip, Blink). Built domain 180 live at record_status='new':
+# 5 capabilities, 2 full modules (BROADCAST-ENGAGEMENT 366, TASK-EXECUTION 367), 5 vendors + 5
+# solutions, 10 masters, 13 DMDO, 14 lifecycle states, 6 trigger_events, 4 outbound handoffs,
+# 1 handoff_processes tag, 4 business_function_domains, 1 system skill, 16 tools + 20
+# domain_module_tools, 3 personas + 6 role_modules + 3 process_raci. Notes verified clean
+# (Rule #15). The build is done; the two b2 below are confirmations the user must sign off on
+# (the promote-vs-fold market-shape call and the destructive WorkJam re-shelving). b3 is a
+# non-blocking research idea.
+
+b2:
+  - id: B2-S1
+    summary: "Confirm promote-as-domain vs fold frontline comms into INTRANET / EMP-EXP / WFM."
+    question: "Should frontline / deskless worker communication stand as its own domain (FRONTLINE-COMMS, built), or fold into INTRANET (which already has a Frontline and Deskless Worker Communications capability)?"
+    options:
+      - "(a) Keep as its own domain FRONTLINE-COMMS (built)"
+      - "(b) Fold into INTRANET and delete the new domain"
+    why: "INTRANET already claims the comms slice as a capability; the distinct angle is the broader ops-led frontline platform (task push + shift-swap conversations + microlearning + recognition) with a store/plant-ops buyer."
+    evidence: >-
+      Five INDEPENDENT pure-plays sell the unified frontline platform as one product: WorkJam
+      (comms + task + scheduling + shift swap + training + recognition), YOOBIC (comms + task/ops
+      execution + microlearning), Speakap (white-label frontline app), Flip (frontline comms +
+      shift-plan + onboarding + surveys), Blink (frontline app). All five master broadcasts +
+      message channels + tasks; four master shift-swap and recognition. None of INTRANET / EMP-EXP /
+      WFM / RET-STORE fuses comms + task execution + shift-swap conversations + microlearning +
+      recognition: INTRANET masters office-comms publishing (buyer Internal Comms / HR), WFM masters
+      the shift record and swap approval, RET-STORE masters retail-only task execution, EMP-EXP
+      masters survey listening only. WorkJam (solution 256) is already in the catalog described as a
+      "Frontline digital workplace, communications, and WFM" but is mis-shelved on WFM + RET-STORE;
+      its flagship IS this market. Suite absorptions (Beekeeper -> LumApps 2025, Workvivo -> Zoom,
+      Crew -> Square/Block, Workpop -> Cornerstone) show suites buying INTO the category, not
+      collapsing it.
+  - id: B2-S2
+    summary: "Approve re-shelving WorkJam (solution 256) onto FRONTLINE-COMMS as primary coverage."
+    question: "Should the existing WorkJam solution row (256), currently linked primary to WFM and RET-STORE, gain a primary solution_domains edge to FRONTLINE-COMMS (keeping its existing WFM / RET-STORE edges)?"
+    options:
+      - "(a) Add a primary FRONTLINE-COMMS edge, keep existing WFM / RET-STORE edges"
+      - "(b) Add a primary FRONTLINE-COMMS edge and downgrade WFM / RET-STORE edges to secondary"
+      - "(c) Leave WorkJam where it is"
+    why: "WorkJam's flagship is the frontline digital workplace; its primary market is FRONTLINE-COMMS. Adding the edge is additive (no overwrite); option (b) re-points existing edges and is the only destructive variant."
+    evidence: >-
+      WorkJam (vendor 165, solution 256, catalog description "Frontline digital workplace,
+      communications, and WFM") is THE category leader of FRONTLINE-COMMS (~$167M raised, retail /
+      hospitality / healthcare deskless). It is currently primary on WFM (59) and RET-STORE (48)
+      only. The frontline-platform leaders (WorkJam, YOOBIC, Speakap, Flip, Blink) all sell the
+      unified mobile app as their flagship, so FRONTLINE-COMMS is WorkJam's primary market and WFM /
+      store ops are adjacencies. Option (a) is additive and safe; (b) downgrades two existing rows
+      (destructive, needs explicit sign-off).
+
+b3:
+  - id: B3-S1
+    summary: "Phase 0 substrate entities flagship frontline vendors also model."
+    candidate: "open_shifts, frontline_surveys, frontline_document_libraries"
+    rationale: >-
+      The 10 loaded masters are the headline set. Flagship vendors also model open_shifts as a
+      first-class object distinct from shift_swap_requests (WorkJam open-shift marketplace, Flip
+      shift-plan integration), frontline_surveys / pulse polls in the feed (WorkJam, YOOBIC, Flip,
+      Speakap), and frontline_document_libraries / SOPs reachable from the worker app (YOOBIC, Flip,
+      theEMPLOYEEapp). These are additive and fit the existing two-module shape; non-blocking.
+    vendor_evidence:
+      - WorkJam
+      - YOOBIC
+      - Speakap
+      - Flip
+      - Blink
+    proposed_module: "open_shifts + frontline_surveys -> TASK-EXECUTION; frontline_document_libraries -> BROADCAST-ENGAGEMENT"

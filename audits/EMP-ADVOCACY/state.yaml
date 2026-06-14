@@ -1,0 +1,112 @@
+schema_version: 2
+domain: EMP-ADVOCACY
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-14"
+
+# 2026-06-14 NEW-DOMAIN BUILD (promote-as-domain from triage queue).
+# Phase 0 (.tmp_deploy/EMP-ADVOCACY-phase0-2026-06-14.md) cleared the point-solution test:
+# DSMN8, GaggleAMP, EveryoneSocial are flagship-advocacy products (two fully independent,
+# one acquired-but-standalone), plus Oktopost (independent, advocacy core pillar); Gartner
+# Peer Insights runs a dedicated "Employee Advocacy Tools" market category. SMM names
+# "influencer/advocacy programs" in one clause but does not model the advocacy entity surface
+# (advocate profiles, leaderboards, employee broadcast, share-to-revenue); SMM also already
+# has an SMM-INFLUENCER module (302) for external creators, confirming its clause is
+# influencer-flavored. Verdict: promote. Domain id 181.
+#
+# Built live at record_status='new':
+#   Phase A: domain (7 metadata + 2 catalog UX), 7 capabilities, 2 full modules
+#     (EMP-ADVOCACY-CONTENT-DISTRIBUTION 368, EMP-ADVOCACY-GAMIFICATION-ANALYTICS 369),
+#     7 domain_module_capabilities, 5 new vendors (EveryoneSocial, Seismic, GaggleAMP, DSMN8,
+#     Oktopost) + 6 reused (Hootsuite, Sprinklr, Sprout, Sociabble, Haiilo, Poppulo),
+#     7 new solutions + reused Sociabble, 8 solution_domains.
+#   Phase B: 14 data_objects (all entity_type-classified), 20 DMDO, 9 aliases, 28 lifecycle
+#     states (5 operational_workflow masters + leaderboards + rewards), 4 trigger_events,
+#     22 data_object_relationships (intra + 4 users edges + 2 cross-domain outbound), 4 handoffs.
+#   Phase C: 3 business_function_domains (Marketing owner; Marketing Communications + HR contributors).
+#   Phase S: 1 domain system skill (emp-advocacy-system 468) + 14 new tools (5 query, 5 mutate,
+#     2 compute, 1 side_effect post_to_social_network, 1 fetch fetch_social_share_engagement)
+#     + reused notify_person/notify_team, 16 domain_module_tools.
+#   Phase E: 3 domain_roles (Advocacy Program Manager, Advocacy Content Curator, Employee Advocate),
+#     6 role_modules, 3 PCF-wired gates (665 Execute promotional activities x2, 666 Evaluate
+#     promotional performance metrics), 4 process_raci.
+#
+# Verified: A1 metadata complete; every record_status=new; zero notes on every touched table;
+# M7 single-master (each master in exactly one module; shares + advocate_profiles embedded_master
+# in the gamification module for standalone deploy); B12 lifecycle on all 7 workflow masters with
+# well-formed state machines; B13 all 14 entity_types classified; F2 one system skill; F3 16 tools;
+# F4 operation_kind<->data_object_id invariant holds; M8 module catalog UX populated.
+#
+# next_action_by flips to USER: the gate (distinct-vs-fold) is settled in the build, but three
+# review decisions remain (pattern-flag confirmations, regulation set, SMM description narrowing).
+# All are b2; the agent did every additive/corrective thing it can. No destructive step pending.
+
+b1a: []
+
+b1b: []
+
+b2:
+  - id: B2-GATE
+    summary: "Confirm EMP-ADVOCACY is a distinct domain and not a fold into SMM."
+    question: "Keep Employee Advocacy as its own domain (built), or fold it into SMM as a capability of the SMM-INFLUENCER module?"
+    options:
+      - "(a) Keep as distinct domain EMP-ADVOCACY (recommended; built this way)"
+      - "(b) Fold into SMM-INFLUENCER and delete the EMP-ADVOCACY domain"
+    why: "The promote/fold gate. Built as distinct per Phase 0 evidence; surfaced for sign-off because it is a market-shape decision."
+    evidence: >-
+      Independent flagship pure-plays: DSMN8 (UK, independent, flagship IS employee advocacy),
+      GaggleAMP (founder-owned, exclusively advocacy), EveryoneSocial (standalone advocacy flagship,
+      now Seismic), Oktopost (independent B2B social; advocacy a first-class pillar), Sociabble
+      (now Poppulo). Gartner Peer Insights runs a dedicated "Employee Advocacy Tools" market category.
+      SMM's "influencer/advocacy programs" clause is influencer-flavored (SMM already has the
+      SMM-INFLUENCER module 302 for external creators) and SMM models none of the advocacy entity
+      surface (advocate_profiles, advocacy_leaderboards, advocacy_shares, advocacy_attribution_records).
+      Distinct buyer split: Marketing/MarComms own it, with an HR/employer-brand contributor seam.
+  - id: B2-PATTERN-FLAGS
+    summary: "Confirm the three positive pattern-flag flips authored on advocacy masters."
+    question: "Approve the pattern flags set during the build? (1) advocacy_content.has_submit_lock=true + has_single_approver=true (published content freezes; one curator/owner approves); (2) advocate_profiles.has_personal_content=true; (3) advocacy_social_accounts.has_personal_content=true (personal social account tokens/handles are personal data, GDPR)."
+    options:
+      - "Approve all"
+      - "Approve subset (specify)"
+      - "Reject all"
+    why: "Pattern flags are workflow-shape judgments (Rule #12); recorded here, never in notes (Rule #15). They were authored at build time and land at record_status='new'."
+    evidence: >-
+      Advocacy platforms freeze published content so a share pins to an approved revision and
+      route content through one approver (EveryoneSocial, DSMN8, GaggleAMP content approval flows).
+      Advocate identity and the linked LinkedIn/X/Facebook account tokens are personal data subject
+      to GDPR across every flagship.
+  - id: B2-REGULATIONS
+    summary: "Pick the regulation set for EMP-ADVOCACY (currently none attached)."
+    question: "Which regulations should attach? (a) GDPR only; (b) GDPR + FINRA (supervised-social for financial services); (c) leave empty."
+    options:
+      - "(a) GDPR only (recommended)"
+      - "(b) GDPR + FINRA (conditional, financial services)"
+      - "(c) leave empty"
+    why: "domain_regulations is empty. Advocacy is not a regulation-mandated market, but advocate PII + linked social accounts make GDPR load-bearing; FINRA/social-supervision applies only to regulated financial-services advocacy estates."
+    evidence: >-
+      Every flagship developer/advocate record stores personal contact and social-account data
+      (GDPR retention/erasure). The advocacy_content_approvals/brand-review surface is the
+      FINRA supervised-social hook, conditional on financial-services deployment only.
+
+b3:
+  - id: B3-CUSTOMER-ADVOCACY
+    summary: "Customer/partner advocacy (Influitive / PostBeyond seam) as a separate idea."
+    candidate: "customer_advocacy / partner_advocacy entities"
+    rationale: >-
+      PostBeyond was absorbed by Influitive (customer advocacy/community). Customer and partner
+      advocacy (referrals, reviews, references, community) is an adjacent but distinct market from
+      EMPLOYEE advocacy. Not part of this domain; surface as a candidate domain or REF-MGMT extension.
+    vendor_evidence:
+      - Influitive
+      - PostBeyond
+    proposed_module: "Separate domain candidate (CUSTOMER-ADVOCACY), not a module here."
+  - id: B3-SMM-DESCRIPTION-NARROW
+    summary: "Narrow SMM's description clause from 'influencer/advocacy programs' to influencer-only now that EMP-ADVOCACY exists."
+    candidate: "SMM domains.description edit"
+    rationale: >-
+      SMM (106) description currently reads 'engagement (unified inbox), listening, analytics, and
+      influencer/advocacy programs.' With EMP-ADVOCACY built, the 'advocacy' word should be removed
+      so the catalog boundary is clean. This is a DESTRUCTIVE overwrite of a non-empty value on
+      another domain and needs explicit user approval before editing.
+    vendor_evidence: []
+    proposed_module: "SMM domain row (overwrite, requires sign-off)."

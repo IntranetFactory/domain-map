@@ -1,0 +1,77 @@
+schema_version: 2
+domain: LIVESTOCK-MGMT
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-14"
+
+# 2026-06-14 BUILD. Promote-as-domain verdict from Phase 0
+# (.tmp_deploy/LIVESTOCK-MGMT-phase0-2026-06-14.md): the general livestock / grazing
+# management market (beef, sheep, cattle, mixed grazing) is a distinct SMB-farm software
+# market with >=3 independent flagship pure-plays, separate from DAIRY-MGMT (dairy vertical)
+# and FMIS (crop / whole-farm). Built domain 176 with 2 full modules (HERD 358, GRAZING 359),
+# 8 capabilities, 11 masters, 24 lifecycle states, 4 trigger_events, 4 handoffs (2 outbound to
+# FOOD-TRACE), 1 domain-grain system skill (463), 18 tools, 3 personas. All rows record_status='new'.
+# Remaining open items are user decisions (b2) and one non-blocking research idea (b3).
+
+b2:
+  - id: B2-S1
+    summary: "Confirm LIVESTOCK-MGMT as a distinct domain vs fold into FMIS."
+    question: "Should general livestock / grazing management stand as its own domain, or fold into FMIS (the crop / whole-farm Farm Management Information System)?"
+    options:
+      - "(a) Keep LIVESTOCK-MGMT as a distinct domain (built)"
+      - "(b) Fold the herd + grazing modules into FMIS as additional modules"
+    why: "The candidate surfaced with only 1 mention (FMIS audit), so the fold-vs-promote call is the gate. Research resolves it as distinct; this b2 records the decision for the controller."
+    evidence: >
+      Distinct market is grounded in >=3 INDEPENDENT flagship pure-plays whose whole product is
+      general livestock / grazing management, not a crop FMIS feature: AgriWebb (beef + sheep mob
+      management, grazing, weights, treatments, traceability; being acquired by URUS Group, a bovine-
+      genetics group, close expected Q3 2026), Herdwatch (cattle + sheep + pasture records, breeding,
+      medicine, compliance; 20,000+ farmers, independent and itself acquisitive), MaiaGrazing (now
+      Atlas Ag; rotational grazing, stocking rate vs carrying capacity), CattleMax (cattle records +
+      EID/USDA traceability since 1999), and Performance Beef / Performance Livestock Analytics
+      (feedlot feeding + health records; owned by Zoetis). FMIS flagships (crop FMIS) center on field
+      mapping, crop planning, planting/application, harvest, equipment telemetry, and yield analytics;
+      none of these livestock pure-plays master crop fields, and none of the crop FMIS leaders master
+      individual-animal records, mobs, breeding, treatment withholding periods, or EID/NLIS/840
+      traceability. The shared paddock / whole-farm substrate is real (hence the FMIS edge and the b3
+      below) but the animal-centric system of record is its own market. DAIRY-MGMT is a separate
+      sibling: its workflows (milking, lactation, milk quality, Grade A regulation) are, per its own
+      description, fundamentally different from beef / sheep. Recommended: (a) keep distinct.
+
+  - id: B2-S2
+    summary: "Treatment / EID withholding gate handoff to FOOD-TRACE: confirm direction and ownership."
+    question: "Two outbound handoffs to FOOD-TRACE were authored (animal.sold -> carcass lot genealogy; treatment.recorded -> withholding gate). Confirm FOOD-TRACE is the correct downstream owner, vs FSQM, for the withholding / food-chain-eligibility gate."
+    options:
+      - "(a) FOOD-TRACE owns both (built)"
+      - "(b) Route the treatment/withholding gate to FSQM instead, keep the sale->lot handoff on FOOD-TRACE"
+    why: "Withholding periods are a food-safety control as well as a traceability input; FSQM is the food-safety system-of-record while FOOD-TRACE is the lot-genealogy specialist."
+    evidence: >
+      The sale -> carcass-lot genealogy handoff is unambiguously FOOD-TRACE (lot/batch genealogy +
+      FSMA-204 CTE/KDE is its core, per its live description). The treatment -> withholding gate is the
+      borderline call: a veterinary-medicine withholding period (USDA / Codex withdrawal time; AU NLIS
+      and EU residue rules) blocks an animal from entering the food chain until the period clears, which
+      is both a traceability key-data-element AND a food-safety control. FSQM's live description owns
+      HACCP / CCP monitoring and is "the broader safety-system-of-record while Traceability is the lot-
+      genealogy / CTE-capture specialist." Built as FOOD-TRACE for both because the withholding date and
+      animal identity travel with the carcass lot; the controller may prefer FSQM for the safety-gate
+      semantics. Recommended: (a) keep both on FOOD-TRACE; the lot payload carries the withholding clear
+      date, and FSQM consumes it downstream if needed.
+
+b3:
+  - id: B3-S1
+    summary: "Phase 0 deferred entities: pasture_measurements, rainfall_records, feedlot ration/closeout."
+    candidate: "pasture_measurements, rainfall_records, feedlot_rations, closeout_summaries"
+    rationale: >
+      Phase 0 surfaced four Specialist (single-vendor / sub-segment) entities not loaded, each additive
+      and fitting the existing module shape, none a split. pasture_measurements (pasture cover / forage
+      mass) is MaiaGrazing-specific and would extend the GRAZING module; rainfall_records is FMIS-
+      adjacent field-condition data (likely better mastered by FMIS and consumed here); feedlot_rations
+      and closeout_summaries are the Performance Beef feedlot sub-segment (feeding rations, lot close-out
+      performance) that would extend HERD only if the feedlot vertical is in scope. All are non-blocking
+      ideas; surface once, do not gate finished.
+    vendor_evidence:
+      - MaiaGrazing
+      - Performance Beef
+      - AgriWebb
+    proposed_module: "pasture_measurements -> GRAZING; rainfall_records -> route to FMIS; feedlot_rations + closeout_summaries -> HERD (only if feedlot vertical in scope)"
+    extra_cross_check: "rainfall_records overlaps FMIS field-condition data; coordinate ownership with FMIS before loading here."

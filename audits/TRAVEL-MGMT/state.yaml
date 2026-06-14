@@ -1,0 +1,112 @@
+schema_version: 2
+domain: TRAVEL-MGMT
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-14"
+
+# 2026-06-14 BUILD. TRAVEL-MGMT (domain_id 172) built and loaded at record_status='new'.
+# Phase 0 verdict promote-as-domain (.tmp_deploy/TRAVEL-MGMT-phase0-2026-06-14.md) realized:
+#   Phase A: domain row + 7 metadata fields + catalog UX (pre-existing); 4 full modules
+#     (346 BOOKING-SOURCING, 347 TRIP-ITINERARY, 348 PROFILE-POLICY, 349 DUTY-OF-CARE) +
+#     domain_module_capabilities (8 capabilities, every capability realized, every module
+#     realizes >=1); 5 primary solutions (Navan, SAP Concur Travel, Spotnana, Amex GBT
+#     Egencia, BCD Travel) reusing existing vendors; domain_regulations GDPR(mandatory) +
+#     SOX(recommended).
+#   Phase B: 9 mastered data_objects + 1 embedded_master (employees) + users consumer rows;
+#     entity_type classified; pattern flags considered (trip_bookings.submit_lock,
+#     trip_approvals.single_approver, traveler_profiles.personal_content); 20
+#     data_object_relationships (intra-domain + users edges + cross-domain to EXPENSE/SPEND +
+#     HCM employees->traveler_profiles); 14 aliases; lifecycle states on all 6 workflow
+#     masters; 9 trigger_events; 7 handoffs (3 outbound to EXPENSE/SPEND pre-existing,
+#     3 intra-domain cross-module B9b, 1 outbound to HCM on duty_of_care_alert.raised).
+#   Phase C: business_function_domains (Business Operations owner, Finance + Security
+#     contributors, Human Resources consumer).
+#   Phase S: one travel-mgmt-system system skill (domain_id=172, domain_module_id NULL);
+#     21 distinct tools (query/mutate per master at coverage_tier=platform, 3 fetch tools
+#     for external air/hotel inventory + destination risk, notify_person/notify_team
+#     abstractions); 24 domain_module_tools. Semantius score computable: strict 17/21=0.81,
+#     operational 17/21=0.81 (the 4 non-platform tools are the 3 external fetch tools +
+#     the notify abstraction; they flip to platform when Semantius ships outbound + fetch).
+#   Phase E: 3 personas (TRAVEL-MANAGER, TRAVEL-ARRANGER, cross-functional TRAVELER) +
+#     11 role_modules (each persona >=2 modules).
+# All open items below are user decisions; the build is agent-finished otherwise.
+
+b2:
+  - id: B2-PCIDSS
+    summary: "Should PCI-DSS attach to TRAVEL-MGMT (it is conditional)?"
+    question: "Attach PCI-DSS to TRAVEL-MGMT? GDPR (mandatory) and SOX (recommended) are loaded. PCI-DSS applies only when the platform stores cardholder data for booking."
+    options:
+      - "yes, attach PCI-DSS (conditional/recommended)"
+      - "no, leave it off (the platform tokenizes or defers card data to a payment partner)"
+    why: "Phase 0 classified PCI-DSS as Conditional: applies only where the booking platform stores card data; many platforms tokenize or defer to a card/payment partner, so it is often inherited rather than owned."
+    evidence: >-
+      Phase 0 vendor surface: card capture for booking is commonly tokenized or pushed to a
+      payment partner rather than stored by the travel platform. Navan and SAP Concur Travel
+      bundle a corporate-card / payment layer (so card data is in scope where they hold it);
+      Spotnana is API-first infrastructure that defers payment to the embedding platform
+      (Brex, Expensify, Center), so it does not own cardholder data. Because at least one
+      flagship (Spotnana) never stores card data and the larger TMCs (Amex GBT, BCD) route
+      payment through a card partner, PCI-DSS is genuinely conditional, not universal.
+  - id: B2-MARKET-SIZE
+    summary: "usa_market_size_usd_m is a Phase-0 placeholder (~3500) needing a sourced figure."
+    question: "Is the ~$3,500M US TAM placeholder for usa_market_size_usd_m acceptable, or should it be re-sourced before review?"
+    options:
+      - "accept the ~3500 placeholder for now (flag for a later sizing pass)"
+      - "block on a sourced Gartner/IDC/Forrester (or vendor-revenue-triangulated) figure first"
+    why: "Rule #8 requires usa_market_size_usd_m to be populated; it is set to 3500 (year 2025) but Phase 0 explicitly flagged it as an order-of-magnitude placeholder, not a sourced figure."
+    evidence: >-
+      Phase 0 anchored 3500 to Navan IPO disclosures (~$613M TTM revenue on ~$7.6B gross
+      bookings, Oct 2025) as a vendor-revenue sense of scale for US corporate travel
+      management software/TMC tech spend (booking + program tooling, excluding the underlying
+      travel spend itself). No Gartner/IDC/Forrester TAM was located in Phase 0; the figure is
+      a planning placeholder pending a dedicated market-sizing pass.
+  - id: B2-DOC-MODULE
+    summary: "Duty of Care built as its own full module (349) vs folding into another module."
+    question: "Keep Duty of Care and Traveler Risk as its own full module, or fold it into Trip and Itinerary Management?"
+    options:
+      - "keep it as its own module (TRAVEL-MGMT-DUTY-OF-CARE, current build)"
+      - "fold duty-of-care into Trip and Itinerary Management"
+    why: "Phase 0 modeled Module D (Duty of Care and Risk) as a distinct module; it is built that way. It is the one module split that is genuinely arguable since some orgs treat traveler safety as a feature of trip tracking, while others (and standalone vendors) treat it as its own surface."
+    evidence: >-
+      Phase 0: duty-of-care / traveler-safety is a legal and contractual obligation with its
+      own entity surface (traveler tracking, risk alerts, destination intelligence) present in
+      Navan, SAP Concur, Amex GBT, and BCD as a first-class capability, and sold standalone by
+      specialists (e.g. International SOS). Spotnana exposes it only partially (infrastructure).
+      Because four of five flagships model it as a first-class surface and at least one vendor
+      sells it standalone, the build keeps it as its own module; the fold-in option exists
+      because smaller programs experience it as a feature of trip tracking.
+  - id: B2-RACI-PROCESS
+    summary: "No APQC PCF process cleanly maps to corporate travel, so Phase-E process_raci gates are unwired."
+    question: "Author a custom APQC process (CUSTOM-TRAVEL-*) for the gated travel transitions so persona RACI can resolve to gates, or leave RACI gate-wiring open?"
+    options:
+      - "author custom travel processes + wire data_object_lifecycle_states.process_id + process_raci R/A on the personas"
+      - "leave it open for now (personas + reach are loaded; RACI gate-wiring deferred)"
+    why: "The cross-industry APQC PCF has no clean corporate-travel process node (the closest rows are expense-reimbursement processes 9.6 / 9.6.2). Authoring custom processes is net-new structure, which is a b2 (research carve-out), not a corrective-additive auto-load."
+    evidence: >-
+      PCF lookup over apqc_pcf_cross_industry for travel/expense returned only AP and expense
+      reimbursement processes (9.6 Process accounts payable and expense reimbursements; 9.6.2
+      Process expense reimbursements; 9.6.2.1 expense reimbursement policies). None of these
+      gates pre-trip booking, approval, or duty-of-care, which are the travel-specific gated
+      transitions. Corporate travel program management is its own value stream that the
+      cross-industry PCF does not enumerate, so a custom process node is the only faithful
+      anchor; per Rule #21 net-new processes are surfaced before loading.
+
+b3:
+  - id: B3-EXPANDED-SUBSTRATE
+    summary: "Phase 0 b3 ideas: standalone duty-of-care capability node, embedded-travel/travel-API channel pattern, EXPENSE description reconciliation."
+    candidate: "Discretionary additive travel substrate"
+    rationale: >-
+      Phase 0 surfaced three non-blocking ideas: (1) a distinct DUTY-OF-CARE / travel-risk
+      capability node that could span travel and broader employee-safety tooling (some vendors,
+      e.g. International SOS, sell it standalone); (2) an embedded-travel / travel-API channel
+      capability tracking the Spotnana "travel-as-a-service" pattern (Brex, Expensify, Center
+      all embed it); (3) reconcile the EXPENSE domain description's "travel-booking integration"
+      phrase now that TRAVEL-MGMT exists so the two domains reference each other cleanly at the
+      spend seam. All three are additive, fit the existing shape, and never gate "finished".
+    vendor_evidence:
+      - Navan
+      - SAP Concur
+      - Spotnana
+      - Amex GBT
+      - BCD Travel
+      - International SOS

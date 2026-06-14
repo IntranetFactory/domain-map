@@ -1,0 +1,78 @@
+schema_version: 2
+domain: SOCIAL-ADS
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-14"
+
+# 2026-06-14 BUILD. Promoted from triage candidate (mention count 2, SMM audit). Phase 0
+# (.tmp_deploy/SOCIAL-ADS-phase0-2026-06-14.md) confirmed: no existing home (SMM=organic,
+# MA=lifecycle, ADV-AD-TECH does NOT exist in catalog), point-solution test PASSES with 4
+# independent flagship pure-plays (Smartly.io, Madgicx, Strike Social, Adsmurai) plus an
+# enterprise omnichannel reference (Skai). Verdict promote-as-domain. Built live at
+# record_status='new': domain 177, 2 full modules (360 Campaign Orchestration, 361 Creative
+# Optimization), 6 capabilities, 5 vendors + 5 solutions, 13 masters, lifecycle states,
+# relationships incl. users + cross-domain to SMM/MA/REV-INTEL, aliases, 5 trigger_events,
+# 4 handoffs, business_function_domains (Marketing owner), 1 domain-grain system skill
+# (social-ads-system, id 464), 14 tools incl. ad-platform fetch tools, 3 personas + role_modules
+# + process_raci. The build is agent-finished; only the open user decisions below remain.
+
+b2:
+  - id: B2-S1
+    summary: "Confirm SOCIAL-ADS as a distinct paid-social domain vs folding paid social into SMM."
+    question: "Should paid social advertising stay a distinct domain (SOCIAL-ADS, as built), or fold into SMM (Social Media Management)?"
+    options:
+      - "(a) Keep SOCIAL-ADS distinct (as built)"
+      - "(b) Fold paid social into SMM as a module"
+    why: "The triage gate question. The build assumes distinct; this is the one market-shape call the user owns."
+    evidence: >-
+      Paid social ad management is served by independent flagship PURE-PLAYS whose flagship product
+      IS paid social campaign orchestration / DCO / budget optimization, not organic publishing:
+      Smartly.io (cross-channel paid social OS + DCO across Meta/TikTok/Snapchat/Pinterest),
+      Madgicx (AI Meta-ads optimization super app), Strike Social (AI-optimized paid social + YouTube
+      ad management), Adsmurai (paid social + product-feed DCO). Skai adds an enterprise omnichannel
+      reference (paid social as a dedicated product line alongside search + retail media). By contrast
+      the SMM flagships (Sprinklr, Hootsuite, Sprout Social) master organic publishing / scheduling /
+      engagement / listening; their paid surface is a secondary module (Hootsuite ACQUIRED AdEspresso
+      to add paid, then folded it into the suite). The paid entity surface (ad accounts, ad sets,
+      budget reallocation, audiences, server-side conversion events, DCO, creative variants) is not
+      modeled by SMM. ADV-AD-TECH does NOT exist in the catalog, so there is no broader ad-tech home
+      to fold into either. Recommendation: keep distinct (option a).
+  - id: B2-S2
+    summary: "Approve the catalog UX copy and record_status='new' content for SOCIAL-ADS (domain + 2 modules)."
+    question: "Approve the buyer-voice tagline + description on the domain and both modules, and the new content load, for stamping to approved?"
+    options:
+      - "Approve all"
+      - "Approve subset (specify)"
+      - "Request edits"
+    why: >-
+      Rule #1 leaves everything at record_status='new'; the user reviews and stamps. The copy was
+      authored buyer-voice into empty fields per Rule #20. Non-market-shape gate (Rule #21 approval).
+
+b3:
+  - id: B3-S1
+    summary: "Discretionary additive measurement entities for SOCIAL-ADS (attribution_models, incrementality_tests)."
+    candidate: "attribution_models, incrementality_tests"
+    rationale: >-
+      Skai models incrementality / conversion-lift testing and attribution as first-class; Smartly.io
+      exposes attribution and measurement. Today the domain captures the conversion signal
+      (ad_conversion_events) and emits it to REV-INTEL for attribution, but does not master an
+      attribution_models config or an incrementality_tests operational entity. These are additive
+      (fit the existing Campaign Orchestration module shape, do not require a split) and non-blocking.
+      Could equally be argued to live in REV-INTEL; flagged for a decision on where they master.
+    vendor_evidence:
+      - Skai
+      - Smartly.io
+    proposed_module: SOCIAL-ADS-CAMPAIGN-ORCHESTRATION
+  - id: B3-S2
+    summary: "Discretionary additive: bid_strategies as a separable config master."
+    candidate: "bid_strategies"
+    rationale: >-
+      Smartly.io, Madgicx, Strike Social, and Skai all expose bid strategy as a configurable object
+      separable from the ad set. Today bid strategy is folded into social_ad_sets. Promoting it to its
+      own catalog/config master is additive and non-blocking; deferred pending demand.
+    vendor_evidence:
+      - Smartly.io
+      - Madgicx
+      - Strike Social
+      - Skai
+    proposed_module: SOCIAL-ADS-CAMPAIGN-ORCHESTRATION

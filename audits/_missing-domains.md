@@ -86,37 +86,6 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
-### TALENT-INTEL-PLATFORM — Talent Intelligence Platform
-
-- **Mention count:** 2
-- **First surfaced:** 2026-05-30 (PA audit 2026-05-30)
-- **Most recent:** 2026-05-30 (SKILLS-MGMT audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 PA audit 2026-05-30
-  - 2026-05-30 SKILLS-MGMT audit 2026-05-30
-- **Vendor evidence:** Eightfold AI, Phenom, Beamery, SeekOut
-- **Adjacency:** PA, ATS, TALENT-MGMT, SWP, SKILLS-MGMT
-- **Candidate capabilities:** talent rediscovery, internal-mobility matching, skills-graph inference, career-pathway recommendation
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
-### EMP-LISTENING — Employee Listening Platform
-
-- **Mention count:** 3
-- **First surfaced:** 2026-05-30 (PA audit 2026-05-30)
-- **Most recent:** 2026-05-30 (INTRANET audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 PA audit 2026-05-30
-  - 2026-05-30 EMP-EXP audit 2026-05-30
-  - 2026-05-30 INTRANET audit 2026-05-30
-- **Vendor evidence:** Culture Amp, Lattice Engagement, Glint, Peakon, Qualtrics EmployeeXM
-- **Adjacency:** PA, EMP-EXP, HCM, TALENT-MGMT
-- **Candidate capabilities:** pulse-survey design, engagement-driver modeling, manager-action planning, employee-NPS
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
 ### WMS — Warehouse Management
 
 - **Mention count:** 2
@@ -142,21 +111,6 @@ the bottom are the resolved history.
 - **Vendor evidence:** o9, Kinaxis, Anaplan SCP, Blue Yonder Demand, Logility, ToolsGroup
 - **Adjacency:** INV-MGMT, SUPPLY-CHAIN, MFG, FIN
 - **Candidate capabilities:** demand forecasting, S&OP, MRP-light, inventory optimization, supply planning
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
-### TRAVEL-MGMT — Corporate Travel Management
-
-- **Mention count:** 2
-- **First surfaced:** 2026-05-30 (SPEND-MGMT audit 2026-05-30)
-- **Most recent:** 2026-05-30 (EXPENSE audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 SPEND-MGMT audit 2026-05-30
-  - 2026-05-30 EXPENSE audit 2026-05-30
-- **Vendor evidence:** Navan, Egencia, SAP Concur Travel, TripActions, Spotnana, AmTrav, BCD Travel, CWT
-- **Adjacency:** SPEND-MGMT, EXPENSE, HCM
-- **Candidate capabilities:** travel booking, itinerary management, traveler safety / duty-of-care, hotel and air sourcing, policy-aware shopping, trip approvals, traveler profile management
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -445,21 +399,6 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
-### MRM — Marketing Resource Management
-
-- **Mention count:** 2
-- **First surfaced:** 2026-05-30 (AGENCY-MGMT audit 2026-05-30)
-- **Most recent:** 2026-05-30 (DAM audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 AGENCY-MGMT audit 2026-05-30
-  - 2026-05-30 DAM audit 2026-05-30
-- **Vendor evidence:** Aprimo Marketing Productivity, Workfront for Marketing, Hive9, Allocadia, Plannuh
-- **Adjacency:** AGENCY-MGMT, PMM, ADV-AD-TECH
-- **Candidate capabilities:** marketing campaign planning, marketing budget allocation, marketing project orchestration, brand asset workflow, marketing performance measurement
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
 ### SMS-MARKETING — SMS Marketing Platform
 
 - **Mention count:** 1
@@ -665,21 +604,6 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
-### EHS-MGMT — Environmental, Health and Safety Management
-
-- **Mention count:** 2
-- **First surfaced:** 2026-05-30 (REAL-EST audit 2026-05-30)
-- **Most recent:** 2026-05-30 (FSQM audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 REAL-EST audit 2026-05-30
-  - 2026-05-30 FSQM audit 2026-05-30
-- **Vendor evidence:** Cority, Intelex, Sphera, Enablon, VelocityEHS, Gensuite, ETQ Reliance
-- **Adjacency:** REAL-EST, ESG, IWMS, GRC, FSQM
-- **Candidate capabilities:** incident management, hazard analysis, regulatory permit tracking, health surveillance, OSHA/EU-OSHA reporting, contractor safety, audit and inspections
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
 ### BMS-BAS — Building Management and Automation Systems
 
 - **Mention count:** 1
@@ -690,35 +614,6 @@ the bottom are the resolved history.
 - **Vendor evidence:** Siemens Desigo CC, Johnson Controls Metasys, Honeywell Niagara, Schneider EcoStruxure, ABB Ability Building Ecosystem
 - **Adjacency:** REAL-EST, IWMS, ESG, OT
 - **Candidate capabilities:** HVAC control, lighting automation, energy submetering, BACnet/Modbus integration, fault detection and diagnostics, occupancy-driven setpoint adjustment
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
-### LEASE-ACCT — Lease Accounting and Administration
-
-- **Mention count:** 2
-- **First surfaced:** 2026-05-30 (REAL-EST audit 2026-05-30)
-- **Most recent:** 2026-05-30 (RE-CRE audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 REAL-EST audit 2026-05-30
-  - 2026-05-30 RE-CRE audit 2026-05-30
-- **Vendor evidence:** LeaseQuery, Visual Lease, CoStar Real Estate Manager, Lucernex, Nakisa Lease Administration
-- **Adjacency:** REAL-EST, FINOPS, ACCT-PLAN, RECRD-MGMT
-- **Candidate capabilities:** ASC 842 compliance, IFRS 16 compliance, lease classification, ROU asset calculation, lease modification accounting, disclosure reporting
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
-### LIVESTOCK-MGMT — Livestock Management
-
-- **Mention count:** 1
-- **First surfaced:** 2026-05-30 (FMIS audit 2026-05-30)
-- **Most recent:** 2026-05-30 (FMIS audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 FMIS audit 2026-05-30
-- **Vendor evidence:** AgriWebb, Herdwatch, Cattle Manager, BeefCentral, Performance Beef, MaiaGrazing
-- **Adjacency:** FMIS, FOOD-TRACE, FSQM
-- **Candidate capabilities:** paddock and mob management, individual-animal records, mob movements, weight gains, pasture allocation, breeding records, treatment records, livestock-traceability identifiers
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -836,22 +731,6 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
-### EMP-ADVOCACY — Employee Advocacy Platform
-
-- **Mention count:** 4
-- **First surfaced:** 2026-05-30 (SMM audit 2026-05-30)
-- **Most recent:** 2026-05-30 (INTRANET audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 SMM audit 2026-05-30
-  - 2026-05-30 EMP-EXP audit 2026-05-30
-  - 2026-05-30 INTRANET audit 2026-05-30
-- **Vendor evidence:** Hootsuite Amplify, Sprinklr Advocacy, Smarp (Sociabble), Bambu, EveryoneSocial, GaggleAMP, Oktopost
-- **Adjacency:** SMM, EMP-EXP, HCM, INTRANET
-- **Candidate capabilities:** curated content broadcast to employees, employee social share tracking, gamification and leaderboards, employee influencer scoring, internal newsletter generation, social-share attribution to revenue
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
 ### SOCIAL-LISTENING — Social Listening and Brand Intelligence
 
 - **Mention count:** 2
@@ -862,20 +741,6 @@ the bottom are the resolved history.
 - **Vendor evidence:** Brandwatch, Talkwalker, Meltwater, NetBase Quid, Sprinklr Insights, Synthesio (Ipsos), Awario
 - **Adjacency:** SMM, CDP, REV-INTEL, GRC
 - **Candidate capabilities:** boolean query authoring across social, news and forums, sentiment classification at scale, share-of-voice tracking, crisis early-warning, image and video brand-logo detection, audience demographics inference
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
-### SOCIAL-ADS — Paid Social Advertising
-
-- **Mention count:** 2
-- **First surfaced:** 2026-05-30 (SMM audit 2026-05-30)
-- **Most recent:** 2026-05-30 (SMM audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 SMM audit 2026-05-30
-- **Vendor evidence:** Smartly.io, Sprinklr Ads, AdEspresso (Hootsuite), Strike Social, Stackla (Nosto), Madgicx
-- **Adjacency:** SMM, ADV-AD-TECH, MA, REV-INTEL
-- **Candidate capabilities:** cross-channel paid social campaign orchestration, dynamic creative optimization, ad-set auto-budget reallocation, social-ad creative versioning, social attribution and incrementality testing
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -904,21 +769,6 @@ the bottom are the resolved history.
 - **Vendor evidence:** Chili Piper, Calendly, Outreach Meetings, Salesloft Calendar, HubSpot Meetings, Cal.com
 - **Adjacency:** SALES-ENG, CRM, MA, CSM
 - **Candidate capabilities:** availability window publishing, round-robin routing, lead-to-rep matching, meeting confirmation and reminders, scheduling-link distribution, calendar federation
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
-### IRM — Insider Risk Management
-
-- **Mention count:** 2
-- **First surfaced:** 2026-05-30 (DLP audit 2026-05-30)
-- **Most recent:** 2026-05-30 (OBS audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 DLP audit 2026-05-30
-  - 2026-05-30 OBS audit 2026-05-30
-- **Vendor evidence:** Code42 Incydr, Microsoft Insider Risk Management, DTEX InTERCEPT, Proofpoint Insider Threat Management, Securonix UEBA, Cyberhaven, Forcepoint Risk-Adaptive Protection
-- **Adjacency:** DLP, SECOPS, IGA, HCM, DSPM
-- **Candidate capabilities:** user behavior risk scoring, insider-threat investigation, file lineage tracking, indicator-of-compromise correlation, employee exit risk, anomalous data movement, departing-user monitoring, evidence collection for HR/Legal
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1003,22 +853,6 @@ the bottom are the resolved history.
 - **Vendor evidence:** NAVEX EthicsPoint, OneTrust Ethics, Convercent (OneTrust), Whispli, Speakfully, EQS Integrity Line, Syntrio, Lighthouse Services
 - **Adjacency:** GRC, HRSD, AUDIT, LSD
 - **Candidate capabilities:** anonymous reporting intake, case triage and investigation, retaliation protection workflow, regulatory hotline compliance (EU Whistleblower Directive, SOX 806), case-outcome analytics, hotline-to-investigation handoff
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
-### FRONTLINE-COMMS — Frontline / Deskless Worker Communication Platform
-
-- **Mention count:** 3
-- **First surfaced:** 2026-05-30 (WFM audit 2026-05-30)
-- **Most recent:** 2026-05-30 (RET-STORE audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 WFM audit 2026-05-30
-  - 2026-05-30 INTRANET audit 2026-05-30
-  - 2026-05-30 RET-STORE audit 2026-05-30
-- **Vendor evidence:** WorkJam, Beekeeper, Crew, Yoobic, Microsoft Teams Frontline, Workvivo
-- **Adjacency:** WFM, INTRANET, EMP-EXP, RET-STORE
-- **Candidate capabilities:** broadcast messaging to deskless workforce, task and checklist push, shift swap conversations, frontline learning, frontline recognition
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1248,21 +1082,6 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
-### CMP — Content Marketing Platform
-
-- **Mention count:** 2
-- **First surfaced:** 2026-05-30 (WEB-CONTOPS audit 2026-05-30)
-- **Most recent:** 2026-05-30 (PRIV-MGMT audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 WEB-CONTOPS audit 2026-05-30
-  - 2026-05-30 PRIV-MGMT audit 2026-05-30
-- **Vendor evidence:** Optimizely Content Marketing Platform, Welcome Software, Skyword, NewsCred, Contently, ContentCal
-- **Adjacency:** WEB-CONTOPS, MA, HCMS, DXP
-- **Candidate capabilities:** editorial workflow, content briefs, production calendar, content marketing operations, multi-channel publishing orchestration, editorial task management
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
 ### AG-TELEMATICS — Agricultural Machinery Telematics
 
 - **Mention count:** 1
@@ -1315,20 +1134,6 @@ the bottom are the resolved history.
 - **Vendor evidence:** LeanIX, Ardoq, BiZZdesign Horizzon, MEGA HOPEX, Avolution Abacus, Software AG Alfabet, Sparx Enterprise Architect
 - **Adjacency:** BPA, APM, BUSINESS-CAPABILITY-MAP
 - **Candidate capabilities:** TOGAF/ArchiMate modeling, application landscape rationalization, business architecture, technology standards governance, EA repository and reporting
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
-### IBPMS — Intelligent Business Process Management Suite
-
-- **Mention count:** 2
-- **First surfaced:** 2026-05-30 (BPA audit 2026-05-30)
-- **Most recent:** 2026-05-30 (BPA audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 BPA audit 2026-05-30
-- **Vendor evidence:** Pega Platform, Appian BPM, IBM Cloud Pak for Business Automation, Bizagi Automation, Camunda Platform, Software AG webMethods BPM
-- **Adjacency:** BPA, RPA, LCAP, PROC-MIN
-- **Candidate capabilities:** BPMN process execution engine, case management, decision modeling (DMN), human task orchestration, process automation runtime
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3545,7 +3350,137 @@ the bottom are the resolved history.
 
 ## Promoted
 
-_(none yet)_
+> Note: "promote-as-domain" here means research is complete and the candidate passes the point-solution-market test. It is a RECOMMENDATION. No Phase A load has been performed. Per Rule #21, new domains are market-shape decisions and are never auto-loaded; loading awaits explicit user approval.
+
+### TRAVEL-MGMT: Corporate Travel Management
+
+- **Mention count:** 2
+- **Surfaced by:** SPEND-MGMT audit 2026-05-30, EXPENSE audit 2026-05-30
+- **Vendor evidence:** Navan (formerly TripActions; IPO Nasdaq NAVN Oct 2025), SAP Concur Travel (SAP since 2014), Spotnana (pure-play travel infrastructure), American Express Global Business Travel (NYSE GBTG; absorbed Egencia 2021, completed CWT acquisition Sep 2025), BCD Travel. Egencia and CWT are no longer independent (both inside Amex GBT).
+- **Adjacency:** SPEND-MGMT, EXPENSE, HCM
+- **Candidate capabilities:** travel booking, itinerary management, traveler safety / duty-of-care, hotel and air sourcing, policy-aware shopping, trip approvals, traveler profile management
+- **Point-solution-market test:** PASSES. At least four independent vendors field a flagship corporate-travel product, including pure-play infrastructure vendor Spotnana with zero expense functionality (Navan, SAP Concur, Spotnana, Amex GBT).
+- **Decision:** promote-as-domain (2026-06-14). Proposed domain_code TRAVEL-MGMT. NOT yet loaded; Phase A awaits explicit user approval.
+- **Rationale:** Corporate travel has a core entity surface (trips, itineraries, bookings, fare/hotel inventory, traveler profiles, travel policies, duty-of-care alerts) that exists in no current catalog domain and is not reducible to EXPENSE (consumes the resulting charges only) or SPEND-MGMT (card authorization). T&E bundling at Navan / SAP Concur is go-to-market packaging, not market identity, exactly as the catalog already separates EXPENSE from SPEND-MGMT. Duty-of-care, GDPR traveler data, and IATA NDC form a market-defining compliance surface with no home elsewhere.
+- **Proposed domains metadata:** full Phase 0 estimates in the report. Caveat: usa_market_size_usd_m (~3500) is an unsourced order-of-magnitude placeholder and needs a dedicated market-sizing pass before any value is loaded.
+- **Non-blocking follow-ups (b3, not executed):** standalone duty-of-care / travel-risk capability node (spans travel plus broader employee safety, e.g. International SOS); embedded-travel / travel-API capability pattern (Spotnana model); reconcile EXPENSE's existing "travel-booking integration" phrasing against the new domain at the spend seam.
+- **Phase 0 report:** .tmp_deploy/TRAVEL-MGMT-phase0-2026-06-14.md
+- **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 172 (4 full modules). Audit artifacts at audits/TRAVEL-MGMT/ (state.yaml, history.md, q-TRAVEL-MGMT.md). Open q-file forks: duty-of-care module split, PCI-DSS, TAM sourcing, custom travel APQC processes for RACI.
+
+### MRM: Marketing Resource Management
+
+- **Mention count:** 2
+- **Surfaced by:** AGENCY-MGMT audit 2026-05-30, DAM audit 2026-05-30
+- **Vendor evidence:** Uptempo (BrandMaker + Allocadia + Hive9, rebranded 2022), Aprimo (now positions as agentic DAM / content lifecycle), Planful for Marketing (formerly Plannuh, acquired by Planful 2022), Adobe Workfront (positioned as Work Management), Sitecore Content Hub MRM module, Wedia / Infor MRM. Correction to the original candidate note: Allocadia and Plannuh did NOT merge; Uptempo = BrandMaker + Allocadia + Hive9, while Plannuh went to Planful separately.
+- **Adjacency:** AGENCY-MGMT, WORK-MGMT, DAM, MA (the PMM and ADV-AD-TECH adjacencies are not in the catalog)
+- **Candidate capabilities:** marketing campaign planning, marketing budget allocation, marketing project orchestration, brand asset workflow, marketing performance measurement
+- **Point-solution-market test:** BORDERLINE-PASS on a narrow reading. Only Uptempo is unambiguously an independent vendor whose flagship is MRM today; Planful for Marketing is now an FP&A module, Aprimo has repositioned toward DAM, and Workfront / Sitecore Content Hub / Infor MRM are suite modules.
+- **Decision:** promote-as-domain (2026-06-14), scoped narrowly to the marketing planning + budget kernel. Fallback if the kernel proves too thin: fold-into-existing:WORK-MGMT. Proposed domain_code MRM. NOT yet loaded; Phase A awaits explicit user approval.
+- **Rationale:** A defensible kernel (marketing plan + budget allocation + spend-to-plan reconciliation) is owned by no current domain: WORK-MGMT covers only the marketing-work half, DAM only the asset half, MA the execution half. At least one independent flagship (Uptempo) sells exactly the budget-orchestration kernel. Gartner-observed convergence is pulling the work and asset halves into WORK-MGMT and DAM-led suites, so MRM should be promoted scoped tightly to the planning/budget core, referencing DAM for assets and MA for execution rather than re-implementing generic work management.
+- **Proposed domains metadata:** see the Phase 0 report for the seven-field estimate.
+- **Non-blocking follow-ups (b3, not executed):** (1) PMM (Product Marketing Management) is a separate uncatalogued candidate that warrants its own Phase 0. (2) Data-hygiene flag: ADV-AD-TECH is listed as an adjacency but is absent from the catalog. (3) On load, encode MRM to DAM (asset) and MRM to MA (execution) cross-references to mark the convergence boundary.
+- **Phase 0 report:** .tmp_deploy/MRM-phase0-2026-06-14.md
+- **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 173 (modules MRM-PLANNING, MRM-BUDGET). Audit artifacts at audits/MRM/. GATE decision still open in q-MRM.md: keep narrow-kernel MRM vs fold into WORK-MGMT.
+
+### EHS: Environmental, Health and Safety Management
+
+- **Mention count:** 2 (queued as candidate code EHS-MGMT; built with the shorter domain_code EHS to match the ESG / GRC short-code convention)
+- **Surfaced by:** REAL-EST audit 2026-05-30, FSQM audit 2026-05-30
+- **Vendor evidence:** Cority (Thoma Bravo), Intelex (Fortive), Sphera (Blackstone), Enablon (Wolters Kluwer), VelocityEHS, Benchmark Gensuite. ETQ Reliance (Hexagon) is QMS-flagship with EHS secondary, counted as adjacent evidence.
+- **Adjacency:** REAL-EST, ESG, IWMS, GRC, FSQM
+- **Candidate capabilities:** incident management, hazard analysis, regulatory permit tracking, health surveillance, OSHA/EU-OSHA reporting, contractor safety, audit and inspections
+- **Point-solution-market test:** PASSES decisively (Cority, VelocityEHS, Benchmark Gensuite independent flagships; Enablon / Sphera / Intelex sponsor-owned flagships; Verdantix benchmarks 22 vendors).
+- **Decision:** promote-as-domain (2026-06-14). Built with domain_code EHS.
+- **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 174. 11 capabilities, 4 full modules (SAFETY-INCIDENT, INDUSTRIAL-HYGIENE, ENV-COMPLIANCE, AUDIT-INSPECTION), 15 masters, 5 regulations (OSHA, ISO 45001, ISO 14001, REACH, EPA-EPCRA), system skill ehs-system, 4 personas with RACI wired to real PCF nodes. Audit artifacts at audits/EHS/. Open b2 forks (module split, owner function, EHS to ESG edge) in q-EHS.md.
+- **Rationale:** EHS is a long-standing, separately benchmarked enterprise market upstream of ESG (supplies incident / environmental data to disclosure), not a subset of it; distinct buyer and regulated-entity set; does not fold into ESG / GRC / FSQM.
+- **Phase 0 report:** .tmp_deploy/EHS-MGMT-phase0-2026-06-14.md
+
+### LEASE-ACCT: Lease Accounting and Administration
+
+- **Mention count:** 2
+- **Surfaced by:** REAL-EST audit 2026-05-30, RE-CRE audit 2026-05-30
+- **Vendor evidence:** FinQuery (product still sold as LeaseQuery; company rebranded from LeaseQuery 2024-02), Trullion, Occupier (three independent pure-plays). Suite players CoStar Real Estate Manager, Nakisa / SAP, Accruent Lucernex, IBM TRIRIGA are modules. M&A: Visual Lease to CoStar (2024-11); EZLease + LeaseAccelerator to insightsoftware (2024-07).
+- **Adjacency:** REAL-EST, RE-CRE, FINOPS, ACCT-PLAN, RECRD-MGMT
+- **Candidate capabilities:** ASC 842 compliance, IFRS 16 compliance, lease classification, ROU asset calculation, lease modification accounting, disclosure reporting
+- **Point-solution-market test:** PASSES (FinQuery, Trullion, Occupier are independent pure-plays whose flagship IS lease accounting).
+- **Decision:** promote-as-domain (2026-06-14).
+- **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 175 (modules LEASE-ACCT-ACCOUNTING, LEASE-ACCT-ADMINISTRATION). 7 capabilities, 10 masters, regulations ASC-842 / IFRS-16 / SOX, system skill lease-acct-system, 3 personas with RACI on real PCF finance nodes (9.3.x). Audit artifacts at audits/LEASE-ACCT/. Open q-file forks: lease-administration mastering vs thinning to consume REAL-EST / RE-CRE; whether to add consumer DMDO links to REAL-EST / RE-CRE leases.
+- **Rationale:** The ASC 842 / IFRS 16 accounting kernel (ROU assets, lease liabilities, classification, disclosures) is owned by no existing domain: REAL-EST holds leases as workplace records, RE-CRE is landlord-side commercial leases, FINOPS is cloud spend, ACCT-PLAN is a name collision (sales account planning). Distinct compliance-driven market.
+- **Phase 0 report:** .tmp_deploy/LEASE-ACCT-phase0-2026-06-14.md
+
+### LIVESTOCK-MGMT: Livestock Management
+
+- **Mention count:** 1
+- **Surfaced by:** FMIS audit 2026-05-30
+- **Vendor evidence:** AgriWebb (URUS Group, close Q3 2026), Herdwatch (independent; acquired VetDrive Jan 2026), MaiaGrazing (Atlas Ag, succeeded by Atlas Grazing), CattleMax, Performance Beef / Performance Livestock Analytics (Zoetis 2020). Datamars / Tru-Test + Gallagher supply the EID / weigh data layer.
+- **Adjacency:** FMIS, FOOD-TRACE, FSQM, DAIRY-MGMT
+- **Candidate capabilities:** paddock and mob management, individual-animal records, mob movements, weight gains, pasture allocation, breeding records, treatment records, livestock-traceability identifiers
+- **Point-solution-market test:** PASSES. General livestock / grazing management (beef, sheep, cattle, mixed grazing) is a distinct SMB-farm software market, not a fold into FMIS (crop / whole-farm) or DAIRY-MGMT (dairy vertical).
+- **Decision:** promote-as-domain (2026-06-14).
+- **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 176 (modules LIVESTOCK-MGMT-HERD, LIVESTOCK-MGMT-GRAZING). 8 capabilities, 11 masters, system skill livestock-mgmt-system, 3 personas. process_raci deferred (no cross-industry PCF node fits a farm / livestock gated process). Audit artifacts at audits/LIVESTOCK-MGMT/. Open q-file forks: distinct-domain vs fold-into-FMIS (gate); whether FOOD-TRACE vs FSQM owns the treatment / withholding gate.
+- **Phase 0 report:** .tmp_deploy/LIVESTOCK-MGMT-phase0-2026-06-14.md
+
+### SOCIAL-ADS: Paid Social Advertising
+
+- **Mention count:** 2
+- **Surfaced by:** SMM audit 2026-05-30
+- **Vendor evidence:** Smartly.io (absorbed Ad-Lib.io), Madgicx, Strike Social, Adsmurai (independent pure-plays); Skai (formerly Kenshoo) as enterprise omnichannel reference. AdEspresso is a Hootsuite SMM-suite paid module (not independent).
+- **Adjacency:** SMM, MA, REV-INTEL (ADV-AD-TECH was listed as an adjacency but does NOT exist in the catalog)
+- **Candidate capabilities:** cross-channel paid social campaign orchestration, dynamic creative optimization, ad-set auto-budget reallocation, social-ad creative versioning, social attribution and incrementality testing
+- **Point-solution-market test:** PASSES. Four independent flagship pure-plays (Smartly.io, Madgicx, Strike Social, Adsmurai). SMM is organic publishing, MA is lifecycle, and no ad-tech domain exists, so paid social had no home.
+- **Decision:** promote-as-domain (2026-06-14).
+- **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 177 (modules SOCIAL-ADS-CAMPAIGN-ORCHESTRATION, SOCIAL-ADS-CREATIVE-OPTIMIZATION). 6 capabilities, 13 masters, system skill social-ads-system, 3 personas with RACI. Audit artifacts at audits/SOCIAL-ADS/. Open q-file gate: keep distinct vs fold into SMM.
+- **Phase 0 report:** .tmp_deploy/SOCIAL-ADS-phase0-2026-06-14.md
+
+### INSIDER-RISK: Insider Risk Management (queued as IRM)
+
+- **Mention count:** 2
+- **Surfaced by:** DLP audit 2026-05-30, OBS audit 2026-05-30
+- **Vendor evidence:** DTEX InTERCEPT (pure-play), Teramind, Proofpoint ITM (built on ObserveIT, acq. 2019), Mimecast Incydr (formerly Code42 Incydr; Mimecast acquired Code42 2024), Microsoft Purview Insider Risk, Cyberhaven, Forcepoint (insider / gov unit spun out as Everfox 2023).
+- **Adjacency:** DLP, SECOPS, IGA, HCM, DSPM
+- **Candidate capabilities:** user behavior risk scoring, insider-threat investigation, file lineage tracking, indicator-of-compromise correlation, employee exit risk, anomalous data movement, departing-user monitoring, evidence collection for HR/Legal
+- **Point-solution-market test:** PASSES. Three-plus independent flagships (DTEX, Teramind, Proofpoint ITM); Gartner publishes a dedicated Market Guide for Insider Risk Management Solutions (Mar 2025).
+- **Decision:** promote-as-domain (2026-06-14). CODE CHANGED: built as domain_code INSIDER-RISK, not IRM. "IRM" is overloaded (GRC id 15 already carries the Integrated Risk Management meaning), so the insider-risk market uses INSIDER-RISK to avoid the collision.
+- **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 178 (modules INSIDER-RISK-MONITORING-DETECTION, INSIDER-RISK-INVESTIGATION-CASE-MGMT). 7 capabilities, 7 masters (consumes DLP / DSPM / HCM signals), system skill insider-risk-system, 3 personas with RACI. Audit artifacts at audits/INSIDER-RISK/. Open q-file forks: distinct vs fold into DLP / DSPM; PCF anchor choice. Known gap: 3 of 4 outbound handoffs have NULL target_domain_module_id because SECOPS / HCM / IGA are not modularized at the consuming grain (backfill later).
+- **Phase 0 report:** .tmp_deploy/IRM-phase0-2026-06-14.md
+
+### PROCESS-ORCHESTRATION: Process Orchestration / Durable Execution (queued as IBPMS)
+
+- **Mention count:** 2
+- **Surfaced by:** BPA audit 2026-05-30
+- **Vendor evidence:** Camunda (Camunda 8 / Zeebe), Temporal Technologies (durable execution, ~$5B Series D Feb 2026), Orkes (Netflix-origin Conductor), Flowable (BPMN / DMN / CMMN). BOAT-suite runtimes Pega / Appian / Bizagi already in catalog under LCAP (edged secondary here). AWS Step Functions as hyperscaler entrant.
+- **Adjacency:** BPA, RPA, LCAP, PROC-MIN
+- **Candidate capabilities:** BPMN process execution engine, case management, decision modeling (DMN), human task orchestration, process automation runtime
+- **Point-solution-market test:** PASSES, but only after splitting the candidate. The iBPMS SUITE name folds (its low-code leaders Pega / Appian are already mapped to LCAP, and LCAP-WORKFLOW-AUTO is annotated "Where LCAP overlaps with BPM/iBPMS"). The distinct, unowned kernel is the durable execution RUNTIME, with three-plus independent pure-play flagships that are NOT low-code suites: Camunda, Temporal, Orkes, Flowable.
+- **Decision:** promote-as-domain (2026-06-14). CODE CHANGED: built as domain_code PROCESS-ORCHESTRATION, not IBPMS (an IBPMS code would duplicate LCAP). Note: catalog BPA = "Business Process Architecture" (modeling / governance), not Automation, and LCAP masters design-time workflows only, so the execution runtime had no home.
+- **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 179 (modules PROCESS-ORCHESTRATION-EXECUTION, PROCESS-ORCHESTRATION-CASE-DECISION). 6 capabilities, 10 masters (process_instances state machine, human_tasks, runtime DMN, case_records, process_events), system skill process-orchestration-system, 3 personas with RACI. Audit artifacts at audits/PROCESS-ORCHESTRATION/. Open q-file forks: distinct vs fold into LCAP / BPA; module split.
+- **Phase 0 report:** .tmp_deploy/IBPMS-phase0-2026-06-14.md
+
+### FRONTLINE-COMMS: Frontline / Deskless Worker Communication Platform
+
+- **Mention count:** 3
+- **Surfaced by:** WFM audit 2026-05-30, INTRANET audit 2026-05-30, RET-STORE audit 2026-05-30
+- **Vendor evidence:** WorkJam, Beekeeper (LumApps merger Jul 2025), YOOBIC, Speakap, Flip, Blink (independent pure-plays). Workvivo (Zoom 2023) and Microsoft Teams Frontline are suite modules. Candidate-note correction: Crew was acquired by Square / Block 2019 (not Cornerstone).
+- **Adjacency:** WFM, INTRANET, EMP-EXP, RET-STORE
+- **Candidate capabilities:** broadcast messaging to deskless workforce, task and checklist push, shift swap conversations, frontline learning, frontline recognition
+- **Point-solution-market test:** PASSES. Five independent pure-play flagships (WorkJam, YOOBIC, Speakap, Flip, Blink). The unified frontline digital-workplace wedge (mobile-first comms + task / checklist + shift-swap + microlearning + recognition for workers with no corporate email, bought by store / plant ops) is owned by no existing domain.
+- **Decision:** promote-as-domain (2026-06-14).
+- **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 180 (modules FRONTLINE-COMMS-BROADCAST-ENGAGEMENT, FRONTLINE-COMMS-TASK-EXECUTION). 5 capabilities, 10 masters, system skill frontline-comms-system, 3 personas with RACI. Audit artifacts at audits/FRONTLINE-COMMS/. Strong signal: WorkJam (solution 256) was already in the catalog mis-shelved on WFM + RET-STORE. Open q-file forks: distinct vs fold into INTRANET (gate); re-shelving WorkJam to FRONTLINE-COMMS primary (additive done, destructive downgrade surfaced).
+- **Rationale:** INTRANET is the office-comms publishing platform (buyer Internal Comms / HR), WFM owns the shift record + swap approval, RET-STORE owns retail-only task, EMP-EXP owns survey listening. None fuses the five deskless capabilities for the non-desk worker. Distinct buyer (store / plant ops) and a mobile-first, no-corporate-email substrate.
+- **Phase 0 report:** .tmp_deploy/FRONTLINE-COMMS-phase0-2026-06-14.md
+
+### EMP-ADVOCACY: Employee Advocacy Platform
+
+- **Mention count:** 4
+- **Surfaced by:** SMM audit 2026-05-30, EMP-EXP audit 2026-05-30, INTRANET audit 2026-05-30
+- **Vendor evidence:** DSMN8, GaggleAMP, EveryoneSocial (Seismic 2024), Oktopost, plus Haiilo (absorbed Smarp; COYO + Smarp + Jubiwee merger 2022), Sociabble (Poppulo 2024/25). Suite modules: Hootsuite Amplify, Sprinklr Advocacy, Bambu (Sprout Social). Candidate-note corrections: Smarp is now Haiilo (not Sociabble); EveryoneSocial acquired by Seismic.
+- **Adjacency:** SMM, EMP-EXP, HCM, INTRANET
+- **Candidate capabilities:** curated content broadcast to employees, employee social share tracking, gamification and leaderboards, employee influencer scoring, internal newsletter generation, social-share attribution to revenue
+- **Point-solution-market test:** PASSES. Independent flagships whose flagship IS employee advocacy: DSMN8, GaggleAMP, EveryoneSocial (plus Oktopost, Sociabble). Dedicated Gartner Peer Insights "Employee Advocacy Tools" category.
+- **Decision:** promote-as-domain (2026-06-14).
+- **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 181 (modules EMP-ADVOCACY-CONTENT-DISTRIBUTION, EMP-ADVOCACY-GAMIFICATION-ANALYTICS). 7 capabilities, 14 masters, system skill emp-advocacy-system, 3 personas with RACI. Audit artifacts at audits/EMP-ADVOCACY/. Open q-file forks: distinct vs fold into SMM (gate); pattern-flag flips; regulation set.
+- **Rationale:** SMM names "influencer / advocacy programs" in one clause, but that is influencer scope (SMM already has the SMM-INFLUENCER module 302 for external creators) and SMM models none of the advocacy entity surface. INTRANET / EMP-EXP / HCM are internal-audience or HRIS, not external-reach. Distinct buyer (Marketing / MarComms with an HR contributor seam): employees resharing curated brand content to their personal social networks.
+- **Phase 0 report:** .tmp_deploy/EMP-ADVOCACY-phase0-2026-06-14.md
 
 ---
 
@@ -3561,8 +3496,55 @@ _(none yet)_
 - **Rationale:** The activation half of the Composable CDP market is already first-class in CDP via capability CDP-ACTIVATION ("Push audiences and traits... via reverse-ETL"), capability CDP-COMPOSABLE-WH (warehouse-native, zero-copy ingestion and activation), and the CDP-SEGMENTATION-ACTIVATION module. Hightouch already links to CDP at coverage_level=primary. The inbound ELT/ETL/replication side stays in DI (id 89). Promoting a separate domain would overlap CDP's activation module and contend for Hightouch's home.
 - **Non-blocking follow-ups (b3, not executed):** (1) add Census/Fivetran Activations, Polytomic, and RudderStack as `solutions` linked to CDP (none are in the catalog yet; only Hightouch is). (2) Optionally broaden DI's inbound-only description to acknowledge the reverse-ETL "last mile" of data movement (Fivetran Activations, Polytomic); this edits a non-empty `domains.description` and needs explicit sign-off.
 
+### PPM: Project and Portfolio Management
+
+- **Mention count:** 0 (direct research request 2026-06-14; never surfaced by an audit, was not in the pending queue)
+- **Surfaced by:** Direct user research request 2026-06-14
+- **Vendor evidence:** Broadcom Clarity (formerly CA PPM / Niku), Planview (acquired Sciforma Feb 2025), ServiceNow SPM, Planisware (Euronext Paris listing 2024), Microsoft Project / Planner
+- **Adjacency:** SPM, APM, PORT-MONIT, WORK-MGMT, PROD-MGMT
+- **Point-solution-market test:** PASSES the three-independent-vendors bar (Broadcom Clarity, Planview, Planisware are dedicated portfolio-management products), but passing only confirms PPM is a real market, not one distinct from SPM. Gartner retired the standalone PPM Magic Quadrant and renamed it Strategic Portfolio Management; the identical flagship set is judged in the single SPM quadrant.
+- **Decision:** fold-into-existing:SPM (2026-06-14)
+- **Rationale:** PPM and SPM are the same enterprise market under two names. The live catalog already carries SPM ("Top-down planning of investments, demand, resources, and agile delivery across portfolios", crud 85, l <10000, $$$$, USA TAM 2500 / 2025), whose entity surface (demand, project, resource, outcome records plus capacity / scenario / roadmap engines) is exactly what a PPM domain would claim. A separate PPM domain would duplicate SPM, not extend coverage. PORT-MONIT (private-capital portfolio monitoring) and APM (application portfolio management) are name collisions, not the same market.
+- **Non-blocking follow-ups (b3, not executed):** (1) Add "PPM" and "Project and Portfolio Management" as aliases of SPM so future intake auto-resolves. (2) Verify SPM's solution coverage includes Planview, Broadcom Clarity, ServiceNow SPM, Planisware, and Microsoft.
+- **Phase 0 report:** .tmp_deploy/PPM-phase0-2026-06-14.md
+
+### CMP: Content Marketing Platform
+
+- **Mention count:** 2
+- **Surfaced by:** WEB-CONTOPS audit 2026-05-30, PRIV-MGMT audit 2026-05-30
+- **Vendor evidence:** Optimizely Content Marketing Platform, Welcome (formerly NewsCred), Skyword, Contently, ContentCal (Adobe, discontinued 2023), GatherContent (Bynder).
+- **Adjacency:** WEB-CONTOPS, MA, HCMS, DXP, MRM
+- **Point-solution-market test:** FAILS the three-independent-pure-play bar. Only Skyword and Contently survive as independents, and both are services-plus-platform hybrids, not pure SaaS. The CMP Magic Quadrant persists but is dominated by DXP / CMS / suite vendors (Optimizely, Sitecore, Sprinklr), not editorial-ops pure-plays.
+- **Decision:** fold-into-existing:WEB-CONTOPS (2026-06-14)
+- **Rationale:** The editorial-content-ops kernel (editorial workflow, content briefs, production calendar, editorial task management) is already owned by WEB-CONTOPS. Decisively, the two flagship CMP vendors already in the catalog (Optimizely CMP id 483, GatherContent id 479) both map solution_domains.coverage_level=primary to WEB-CONTOPS today. The production-calendar slice overlaps the just-built MRM; multi-channel publishing overlaps MA / DXP. Promoting CMP would duplicate WEB-CONTOPS and split its solution set.
+- **Ambiguity flagged (separate candidate):** "CMP" in the PRIV-MGMT surfacing most likely meant Consent Management Platform (OneTrust, Didomi, Usercentrics, Sourcepoint, TrustArc, Cookiebot), a distinct privacy market. NOT researched or built here; should be re-triaged on its own near a privacy / consent / GRC cluster.
+- **Non-blocking follow-ups (b3):** optionally add Skyword / Contently / DivvyHQ as solutions under WEB-CONTOPS (flag the two as services + platform hybrids).
+- **Phase 0 report:** .tmp_deploy/CMP-phase0-2026-06-14.md
+
+### EMP-LISTENING: Employee Listening Platform
+
+- **Mention count:** 3
+- **Surfaced by:** PA audit 2026-05-30, EMP-EXP audit 2026-05-30, INTRANET audit 2026-05-30
+- **Vendor evidence:** Culture Amp, Lattice, Glint (Microsoft Viva Glint), Peakon (Workday Peakon), Qualtrics EmployeeXM (Silver Lake take-private 2023), plus Perceptyx, Medallia EX, WorkTango.
+- **Adjacency:** EMP-EXP (home), PA (consumer), HCM (source), TALENT-MGMT (sibling)
+- **Point-solution-market test:** PASSES as a standalone market (Culture Amp, Qualtrics EmployeeXM, Perceptyx, Medallia EX, WorkTango are independent flagships), but the test confirms the market is real, not that it is NEW. The kernel is already claimed by EMP-EXP, so the passing test is a fold signal.
+- **Decision:** fold-into-existing:EMP-EXP (2026-06-14)
+- **Rationale:** EMP-EXP (id 62, "Employee Experience and Engagement") already carries all five listening capabilities (engagement surveys, pulse surveys, 360 feedback, lifecycle listening, survey action planning) and the exact flagship vendors cited as EMP-LISTENING evidence. The candidate's capabilities (pulse-survey design, engagement-driver modeling, manager-action planning, eNPS) map 1:1 onto EMP-EXP. Gartner ("Voice of the Employee Solutions") and Forrester ("Employee Listening Solutions Landscape") scope listening as a component of employee experience, same buyer. PA consumes listening output as an analytics input but does not run surveys; INTRANET's own description disclaims engagement listening to EMP-EXP.
+- **Non-blocking follow-ups (b3):** optionally add Perceptyx, Medallia EX, WorkTango, Quantum Workplace as EMP-EXP solution rows; optionally surface eNPS / engagement-driver analytics as finer EMP-EXP sub-capabilities; optionally add "employee listening / Voice of the Employee" as a synonym in EMP-EXP's description (a non-empty-field overwrite, needs sign-off).
+- **Phase 0 report:** .tmp_deploy/EMP-LISTENING-phase0-2026-06-14.md
+
 ---
 
 ## Rejected
 
-_(none yet)_
+### TALENT-INTEL-PLATFORM: Talent Intelligence Platform
+
+- **Mention count:** 2
+- **Surfaced by:** PA audit 2026-05-30, SKILLS-MGMT audit 2026-05-30
+- **Vendor evidence:** Eightfold AI, Phenom, Beamery, SeekOut, Gloat, Fuel50
+- **Adjacency:** PA, ATS, TALENT-MGMT, SWP, SKILLS-MGMT, TLNT-INTEL
+- **Point-solution-market test:** PASSES the three-independent-vendors bar (Eightfold AI, SeekOut, Beamery, Phenom, Gloat all carry a talent intelligence platform as flagship), but the market is already in the catalog.
+- **Decision:** reject (duplicate of TLNT-INTEL) (2026-06-14)
+- **Rationale:** Near-verbatim restatement of the existing live domain TLNT-INTEL ("Talent Intelligence", crud 50, m <2500, $$$$$), which already owns the AI matching / recommendation layer, the talent marketplace, and the model-inference audit trail while deferring person and skill mastership upstream. All four candidate capabilities (talent rediscovery, internal-mobility matching, skills-graph inference, career-pathway recommendation) fall inside TLNT-INTEL's existing scope. A new domain would duplicate TLNT-INTEL and split the same vendor set across two codes. The action is enrichment of TLNT-INTEL, not a new domain.
+- **Non-blocking follow-ups (b3, not executed):** enrich TLNT-INTEL with rediscovery-candidate and internal-mobility-opportunity entities if missing; add responsible-AI compliance entities (NYC LL144 / state AEDT bias-audit artifact, EU AI Act oversight log, GDPR Art. 22 explanation); capture the 2026 autonomous talent-agent surface; confirm the SKILLS-MGMT vs TLNT-INTEL ownership boundary for skills-graph inference.
+- **Phase 0 report:** .tmp_deploy/TALENT-INTEL-PLATFORM-phase0-2026-06-14.md

@@ -1,0 +1,73 @@
+schema_version: 2
+domain: INSIDER-RISK
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-14"
+
+# 2026-06-14 BUILD. Promoted candidate "Insider Risk Management" (queue code IRM) as a new
+# domain. Code-collision check: no domain literally coded IRM, but GRC (id 15) already carries
+# the "Integrated Risk Management" meaning in its description, so IRM is overloaded; chose the
+# non-colliding code INSIDER-RISK. domain_id=178. Two full modules: MONITORING-DETECTION (362),
+# INVESTIGATION-CASE-MGMT (363). 7 capabilities, 7 masters, 7 solutions, 3 personas, 1 system
+# skill (insider-risk-system, id 465). All rows record_status=new, zero notes populated.
+# The build is structurally complete; the open items below are market-shape decisions for the user.
+
+b2:
+  - id: B2-S1
+    summary: "Confirm Insider Risk Management is a distinct domain vs folding into DLP / DSPM / UEBA."
+    question: "Keep Insider Risk Management as its own domain (INSIDER-RISK), or fold it into DLP / DSPM as a module?"
+    options:
+      - "(a) Keep as its own domain INSIDER-RISK (built this way)"
+      - "(b) Fold into DLP as a module"
+      - "(c) Fold into DSPM as a module"
+    why: "Gate decision for the whole build. The domain was built as (a); this surfaces the call for confirmation."
+    evidence: >-
+      Insider Risk Management is a recognized standalone market: Gartner publishes a dedicated
+      Market Guide for Insider Risk Management Solutions (March 12, 2025) and a dedicated Peer
+      Insights market. At least three INDEPENDENT vendors run insider risk / insider threat as
+      their FLAGSHIP product: DTEX (InTERCEPT markets explicitly as an insider risk management
+      solution), Teramind (dedicated insider threat / employee monitoring), and Proofpoint ITM
+      (dedicated Insider Threat Management line, ex-ObserveIT). Code42 Incydr (acquired by
+      Mimecast in 2024, now Mimecast Incydr) and Microsoft Purview Insider Risk Management round
+      out the surface. DLP enforces content egress at the perimeter (one signal), DSPM secures
+      data at rest, and UEBA (Securonix, Gurucul) scores anomalies generically; insider risk is
+      the human-centric case-and-investigation discipline that fuses those signals around the
+      person (cases, alerts, user risk scores, investigation evidence, exit-risk assessments).
+      It CONSUMES DLP/DSPM/UEBA signals but masters its own nouns, which is why it is modeled as
+      a distinct domain rather than a DLP/DSPM module.
+
+  - id: B2-S2
+    summary: "DLP / DSPM / UEBA boundary: which signals INSIDER-RISK consumes vs re-masters."
+    question: "Is the consumed-signal boundary correct, where INSIDER-RISK consumes (never re-masters) dlp_incidents and dlp_user_activity_logs from DLP, data_risk_scores from DSPM, and employees from HCM, and masters only its own scores/activities/alerts/cases/evidence/exit-assessments?"
+    options:
+      - "(a) Yes, the consume-not-master boundary as built is correct"
+      - "(b) Adjust (specify which signal should be re-mastered or dropped)"
+    why: "Confirms the cross-domain footprint and that no signal is double-mastered."
+    evidence: >-
+      The flagship vendors split the same way. Mimecast Incydr is itself a DLP+CASB+UEBA blend
+      and consumes egress + endpoint telemetry; DTEX and Teramind ingest endpoint/email/cloud
+      activity; Microsoft Purview Insider Risk consumes M365 signals and DLP policy matches
+      rather than re-defining DLP. Forcepoint Risk-Adaptive Protection reads the user risk score
+      to drive DLP enforcement (the user_risk_score.threshold_breached -> DLP handoff modeled
+      here). So the catalog boundary is: DLP masters egress incidents and activity logs, DSPM
+      masters sensitive-data risk scores, HCM masters employees; INSIDER-RISK consumes all of
+      these as optional signals (graceful degradation) and masters only the insider-risk-specific
+      records. Single-master integrity holds: each of the 7 INSIDER-RISK masters has exactly one
+      master row catalog-wide.
+
+  - id: B2-S3
+    summary: "Confirm the cross-industry PCF node for the insider-threat investigation process."
+    question: "Is APQC PCF 8.3.5 'Develop and manage IT security, privacy, and data protection' (id 270, L3) the right process anchor for the insider-risk investigation RACI, or should it be the narrower 8.7.6.7 'Monitor IT infrastructure security' (id 1307, L4)?"
+    options:
+      - "(a) Keep 8.3.5 'Develop and manage IT security, privacy, and data protection' (built this way)"
+      - "(b) Re-anchor to 8.7.6.7 'Monitor IT infrastructure security' (L4)"
+      - "(c) Other / propose a custom process node"
+    why: "Cross-industry PCF has no insider-risk-specific node; 8.3.5 was selected as the closest security-program home. The RACI (Investigator=R, Manager=A, Analyst=C) is authored against it and re-points trivially if (b) is chosen."
+    evidence: >-
+      The APQC cross-industry PCF carries no insider-risk-specific activity. The closest fits are
+      8.3.5 'Develop and manage IT security, privacy, and data protection' (a program-level L3 home)
+      and the narrower monitoring node 8.7.6.7 'Monitor IT infrastructure security' (L4). 8.3.5 was
+      chosen because insider risk spans both the always-on monitoring plane and the program/policy
+      governance plane (exit-risk policy, HR/Legal escalation discipline), which is broader than
+      infrastructure-security monitoring alone. If the program prefers a tighter monitoring anchor,
+      (b) re-points the three process_raci rows to 1307.

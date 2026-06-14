@@ -8,7 +8,11 @@ If the working tree looks wrong, messy, or "cascaded", **do not try to fix it by
 
 This binds **every subagent** too. When dispatching subagents:
 - Tell each subagent it may edit ONLY its own assigned files, and that running `git checkout`/`reset`/`clean`/`restore`/`stash drop` is forbidden.
-- When multiple writers run in parallel against the shared tree, **commit after each batch** before starting the next, so no later command can wipe earlier uncommitted work. Never leave a wave's output uncommitted while launching another wave of writers.
+- When multiple writers run in parallel against the shared tree, never run any command that could wipe an earlier wave's uncommitted output (Rule #1 above already covers this). The protection is the ban on destructive commands, **not** an auto-commit. If you think a checkpoint is warranted before the next wave, stop and ask the user to review and commit; do not commit on your own.
+
+## Never commit without explicit instruction
+
+Do **not** run `git commit` (or `git push`, `git merge`, `git rebase`, `git tag`, or any other history-writing command) unless the user has told you to **in that moment**. The normal workflow is: the agent makes changes and leaves them uncommitted in the working tree; **the user reviews the work and commits it.** Approval to make an edit is never approval to commit it, and finishing a task is never a cue to commit. This binds every subagent too. If you believe a commit or checkpoint is warranted, say so and let the user decide.
 
 ## Memory is off-limits
 

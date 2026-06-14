@@ -1,0 +1,76 @@
+schema_version: 2
+domain: MRM
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-14"
+
+# 2026-06-14 BUILD. New domain built from Phase 0 (.tmp_deploy/MRM-phase0-2026-06-14.md),
+# scoped TIGHTLY to the marketing planning + budget kernel that no existing domain owns.
+# Loaded live at record_status='new': domain 173 (+ 7 metadata fields + catalog UX), 5
+# capabilities, 2 full modules (MRM-PLANNING 350, MRM-BUDGET 351), 5 solutions linked
+# (Uptempo + Planful for Marketing + Sitecore Content Hub new; Aprimo + Adobe Workfront reused),
+# 7 masters, 3 cross-domain consumers (marketing_campaigns/MA, work_items + work_projects/WORK-MGMT),
+# 18 data_object_relationships (intra + 5 users edges + 4 cross-domain incl. a DAM digital_assets
+# reference), 14 aliases, 17 lifecycle states (4 workflow masters), 6 trigger_events, 4 handoffs
+# (2 cross-domain to MA + WORK-MGMT, 2 intra-domain), 2 handoff_processes (PCF 3.3, 3.4.2.10),
+# 1 domain-grain system skill (mrm-system 460), 14 tools (12 new + notify_person/team reused),
+# 16 domain_module_tools, 3 personas, 6 role_modules, 9 process_raci (PCF 3.3 / 3.3.2 / 3.3.2.3,
+# each R+A), 4 gated lifecycle states wired to PCF process_id. Strict Semantius score 13/14 (~0.93),
+# the lone non-platform tool is notify_team.
+# DELIBERATELY NOT MASTERED (kernel scoping): brand/creative assets (DAM digital_assets, referenced
+# via relationship only), generic tasks/projects (WORK-MGMT work_items/work_projects, consumed),
+# campaign execution (MA marketing_campaigns, consumed + handoff target).
+# The whole build is a market-shape decision per Rule #21/#22, so it is SURFACED for the gate (B2-S1)
+# rather than presumed; the additive corrective bands (A/M/B/C/S/E) all passed in this pass.
+
+b2:
+  - id: B2-S1
+    summary: "GATE: keep MRM as a narrow promoted domain, or fold the kernel into WORK-MGMT."
+    question: "MRM was a BORDERLINE promote in Phase 0. Keep it as the narrowly-scoped marketing planning + budget domain just built (2 modules, 7 masters), or fold the planning/budget kernel into WORK-MGMT as a marketing extension and reference DAM for assets?"
+    options:
+      - "(a) Keep MRM as a narrow promoted domain (as built)"
+      - "(b) Fold the kernel into WORK-MGMT; retire the MRM domain"
+    why: "Phase 0 verdict was promote-as-domain but borderline; the work/asset halves are converging into WORK-MGMT and DAM-led suites. This gate decides whether the built domain stays."
+    evidence: "Uptempo (BrandMaker + Allocadia + Hive9) is the lone unambiguous INDEPENDENT flagship whose product IS marketing planning + budget allocation + spend-to-plan orchestration. Planful for Marketing (ex-Plannuh) sells exactly the budget kernel but as a module of the Planful FP&A platform, not a standalone company. Aprimo retains MRM (planning/budget/workflow) lineage but has repositioned its flagship toward agentic DAM / content lifecycle. Adobe Workfront, Sitecore Content Hub, Infor MRM are all modules of larger suites (Adobe, Sitecore, Infor) and Adobe markets Workfront as 'Work Management', not MRM. The defensible kernel that NO existing catalog domain owns is the marketing-budget object: plan-line hierarchy + top-down allocation + committed/actual spend reconciled to plan. WORK-MGMT (the closest functional overlap, explicitly named as bought by marketing) covers the marketing-work half (tasks, projects, calendar, approvals) but has NO marketing-budget-allocation or spend-to-plan semantics; DAM owns the brand asset store; MA owns campaign execution. So the work/asset/execution halves correctly fold to WORK-MGMT/DAM/MA (which is exactly how this build references them, not re-masters them), and the budget kernel is the only part that resists folding."
+
+  - id: B2-S2
+    summary: "Confirm the DAM / MA / WORK-MGMT boundary as built (reference, not re-master)."
+    question: "Approve the kernel boundary: MRM consumes marketing_campaigns from Marketing Automation, consumes work_items/work_projects from Work Management, and references DAM digital_assets via relationship only (no MRM master for any of them)?"
+    options:
+      - "Approve the boundary as built"
+      - "Adjust (specify which object MRM should master instead)"
+    why: "Rule #21 boundary call. The build deliberately did not re-implement campaign execution, task management, or the asset store; it references them. Surfaced so the boundary is a conscious decision, not an accident of the build."
+    evidence: "marketing_campaigns is mastered by MA-CAMPAIGN-AUTHORING (MA), work_items + work_projects by WORK-MGMT-TASK-EXEC (WORK-MGMT); digital_assets has no module master yet (DAM is unbuilt at module grain), so MRM references it via a data_object_relationship rather than a consumer DMDO (a consumer row needs a canonical master to defer to). Phase 0 surface matrix classes brand assets as Specialist-owned-by-DAM and campaigns as MA execution; both are correctly outside the MRM kernel."
+
+  - id: B2-S3
+    summary: "Regulation set for MRM (domain_regulations is empty)."
+    question: "Which compliance frameworks, if any, should attach to MRM? Phase 0 found no dedicated compliance entity is required (internal planning/ops category)."
+    options:
+      - "(a) None (leave domain_regulations empty)"
+      - "(b) SOX only (marketing spend as financial-controls evidence for public companies)"
+      - "(c) GDPR + SOX"
+    why: "Phase 0 verdict: no dedicated compliance entities required; MRM is an internal planning/ops market, not a regulated-data category. domain_regulations is empty by design. Surfaced as a low-stakes optional decision, does not block the build."
+    evidence: "Phase 0 section 3 concluded MRM needs no compliance entity: personal-data handling lives in MA/CRM where audience data sits, brand/legal review is a DAM/workflow concern, and budget approval chains are lightweight governance modeled as approval workflow on budget lines, not a regulated compliance regime. SOX is the only plausible attach (marketing spend records can be financial-controls evidence for public companies), and even that is conditional on the org being public."
+
+b3:
+  - id: B3-S1
+    summary: "Phase 0 PMM follow-up: Product Marketing Management is a separate, absent candidate."
+    candidate: "PMM (Product Marketing Management) as its own domain"
+    rationale: "Phase 0 B3 note: PMM was named as a separate candidate in the triage metadata and is NOT in the catalog. It is a distinct buyer (product marketers) from MRM (marketing ops/finance) and warrants its own Phase 0 + triage. Non-blocking; does not gate MRM finished."
+    vendor_evidence:
+      - "(needs its own Phase 0 — PMM tools differ from MRM flagships)"
+  - id: B3-S2
+    summary: "Phase 0 ADV-AD-TECH data-hygiene follow-up: queried as an adjacency but absent from the catalog."
+    candidate: "ADV-AD-TECH catalog row / triage"
+    rationale: "Phase 0 B3 note: ADV-AD-TECH was queried during the overlap check and is absent from the catalog despite being listed as a candidate-metadata adjacency. If it is a real intended candidate it needs its own row and triage; flagged only as a data-hygiene note. Non-blocking."
+    vendor_evidence:
+      - "(needs its own Phase 0)"
+  - id: B3-S3
+    summary: "Deeper MRM substrate entities flagship vendors model beyond the kernel-7."
+    candidate: "Marketing-planning substrate entities (forecasts/scenarios, vendor/PO light, plan templates)"
+    rationale: "Uptempo, Aprimo, and Planful for Marketing model substrate beneath the kernel-7: marketing forecast/scenario records (re-plan math), light vendor/PO rows for spend attribution, and marketing plan templates. These are additive and fit the existing module shape; they can land after the gate without changing the kernel. Non-blocking; never a split."
+    vendor_evidence:
+      - Uptempo
+      - Aprimo
+      - Planful for Marketing
+    proposed_module: "forecasts/scenarios + light vendor/PO -> MRM-BUDGET; plan templates -> MRM-PLANNING"

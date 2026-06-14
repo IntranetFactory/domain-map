@@ -1,0 +1,93 @@
+schema_version: 2
+domain: PROCESS-ORCHESTRATION
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-14"
+
+# 2026-06-14 NEW-DOMAIN BUILD. Promoted from the IBPMS triage candidate. The iBPMS *name* folds
+# (its low-code suite leaders Pega/Appian/Bizagi are already in the catalog under LCAP, and
+# LCAP-WORKFLOW-AUTO already claims "Where LCAP overlaps with BPM/iBPMS"); the *execution-runtime*
+# market is distinct and was unowned. Phase 0: .tmp_deploy/IBPMS-phase0-2026-06-14.md. Built domain
+# 179 with 2 full modules (PROCESS-ORCHESTRATION-EXECUTION 364, PROCESS-ORCHESTRATION-CASE-DECISION
+# 365), 6 capabilities, 10 masters, 24 lifecycle states, 6 trigger_events, 4 outbound handoffs,
+# 15 intra+user relationships, 15 aliases, 1 system skill (466) + 14 tools + 16 domain_module_tools,
+# 3 personas + 6 role_modules + 3 process_raci on PCF 13.1.2 (405). New vendors: Camunda, Temporal
+# Technologies, Orkes, Flowable. New solutions: Camunda 8, Temporal, Orkes Conductor, Flowable
+# Platform (primary); Pega/Appian/Bizagi edged secondary. All record_status='new'; zero notes anywhere
+# (verified by sweep). The build is agent-finished; the open items below are user judgments only.
+
+b2:
+  - id: B2-S1
+    summary: "Confirm PROCESS-ORCHESTRATION is a distinct domain, not a fold into LCAP or BPA."
+    question: "Keep PROCESS-ORCHESTRATION as its own domain (the execution runtime), or fold it into LCAP or BPA?"
+    options:
+      - "(a) Keep as a distinct domain (built)"
+      - "(b) Fold into LCAP"
+      - "(c) Fold into BPA"
+    why: "Gate decision. The build assumes (a). If the user prefers a fold, the masters re-home and the domain row retires."
+    evidence: >-
+      The retired Gartner iBPMS market split into LCAP (low-code suites) and the BOAT orchestration
+      runtime (2025 Gartner BOAT Magic Quadrant, Oct 2025). The catalog already owns the LCAP half:
+      Pegasystems Pega Platform and Appian Platform are mapped to LCAP, Bizagi to BPA+LCAP, and
+      capability LCAP-WORKFLOW-AUTO is described as "Where LCAP overlaps with BPM/iBPMS". LCAP masters
+      lcap_workflows as a DESIGN artifact inside an app (alongside lcap_pages, lcap_business_objects);
+      it does NOT master a live runtime substrate. BPA masters design-time process MODELS (BPMN
+      authoring, value streams, simulation, publishing) and explicitly disclaims execution. The
+      distinct, unowned market is the execution KERNEL with >=3 independent pure-play flagships that
+      are NOT low-code suites: Camunda (Camunda 8 / Zeebe engine, BOAT Visionary), Temporal (pure-play
+      durable execution, $5B valuation Feb 2026), Orkes (Conductor, Netflix-origin, powers Netflix /
+      Tesla / Amex), Flowable (standalone BPMN/DMN/CMMN engine). These sell a stateful runtime, not an
+      app builder. The kernel none of LCAP/BPA/RPA/PROC-MIN master: durable process_instances +
+      human_tasks inbox + runtime decision_tables + case_records + process_events stream.
+  - id: B2-S2
+    summary: "Confirm the module split (2 modules: Execution vs Case-and-Decision)."
+    question: "Is the 2-module split right: Process Execution Engine (the durable kernel) vs Case and Decision Management (human tasks + cases + DMN)?"
+    options:
+      - "(a) Keep 2 modules as built"
+      - "(b) Split into 3 (separate human-task module from decision/DMN module)"
+      - "(c) Collapse into 1 module"
+    why: "Editorial / product-shape. 6 capabilities make M2 require >=2 full modules; the build chose 2."
+    evidence: >-
+      The flagships package the engine and the human/decision layer as distinct surfaces. Camunda
+      ships Zeebe (execution) separately from Tasklist (human tasks) and from its DMN decision engine;
+      Pega separates Process Fabric (runtime) from case management from Decision Hub; Flowable ships
+      BPMN (execution) + CMMN (case) + DMN (decision) as separable engines. Code-first engines
+      (Temporal, Orkes) implement only the execution kernel and have NO human-task / case surface at
+      all, which is exactly why human_tasks / case_records / decision_tables (Common, present in
+      Camunda / Pega / Appian / Flowable but absent in Temporal / Orkes) sit in a separate module from
+      the universal execution kernel (process_definitions / process_instances / process_events, Core
+      across all six). A 3-way split (b) would separate DMN from human tasks, but Flowable / Camunda /
+      Pega bundle case + decision tightly, so 2 modules matches the dominant packaging.
+
+b3:
+  - id: B3-S1
+    summary: "Discretionary substrate entities the flagships also model (additive, fit existing modules)."
+    candidate: "Deeper orchestration substrate"
+    rationale: >-
+      The 10 masters loaded are the structural kernel. Flagship engines also model a finer substrate
+      that fits the two existing modules without a split: process_messages / process_signals
+      (correlation artifacts, Camunda/Zeebe/Temporal), process_timers (scheduled events, all engines),
+      process_jobs (the dispatch unit to task workers, distinct from process_activities, Zeebe/Temporal),
+      decision_definitions / decision_requirement_graphs (DMN DRG above bare decision_tables), and
+      case_milestones / case_stages (CMMN sub-structure of case_records, Flowable/Pega). All additive,
+      none a new module. Non-blocking.
+    vendor_evidence:
+      - Camunda
+      - Temporal
+      - Orkes Conductor
+      - Flowable
+      - Pega Platform
+      - Appian Platform
+    proposed_module: "process_messages / process_signals / process_timers / process_jobs to PROCESS-ORCHESTRATION-EXECUTION; decision_definitions / case_milestones / case_stages to PROCESS-ORCHESTRATION-CASE-DECISION"
+  - id: B3-S2
+    summary: "Cross-domain relationship edge to PROC-MIN was deferred (no clean target master)."
+    candidate: "process_events -> PROC-MIN event-log master relationship edge"
+    rationale: >-
+      The process_events -> PROC-MIN handoff (event stream) is loaded, but the payload->target
+      data_object_relationship edge was NOT authored because PROC-MIN does not master a single
+      canonical event-log data_object (it masters discovered_process_models, process_conformance_results,
+      process_variants, process_bottleneck_findings, which are derived from logs, not the log itself).
+      Revisit when PROC-MIN gains an event_logs master, or confirm the handoff alone is sufficient.
+    vendor_evidence:
+      - Celonis
+    proposed_module: "n/a (cross-domain relationship edge)"
