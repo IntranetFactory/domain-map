@@ -1,22 +1,22 @@
 /**
- * Phase 2a — script-driven structural discovery via the provenance resolution ladder.
+ * Phase 2a, script-driven structural discovery via the provenance resolution ladder.
  *
  * Runs after Phase 1. For each uber-model concept the domain assumes, resolves it
  * against the live deployment using the resolution ladder (deterministic platform
  * reads against the provenance columns shipped in core v0.1.2). First hit wins:
  *
- *   step 0  state resolution  — a resolution the user already made in a prior Phase 2b
+ *   step 0  state resolution, a resolution the user already made in a prior Phase 2b
  *                               (recorded in state.jsonc: entity_renames / omitted /
  *                               custom_entities). Consumed here so the bootstrap loop
  *                               terminates instead of re-emitting the same ambiguity.
- *   step 1  FK reachability   — a live FK in the domain's own entities whose
+ *   step 1  FK reachability, a live FK in the domain's own entities whose
  *                               reference_table resolves to an entity carrying
  *                               catalog_entity_code = X  ->  that entity IS X for D.
- *   step 2  owned canonical   — catalog_entity_code = X AND module_id in the domain's
+ *   step 2  owned canonical, catalog_entity_code = X AND module_id in the domain's
  *                               slice. Catches masters D owns and D's own silos.
- *   step 3  alias             — an entity whose catalog_entity_aliases contains
+ *   step 3  alias, an entity whose catalog_entity_aliases contains
  *                               { alias_code: X, source_domain: D } (JSONB containment).
- *   step 4  absent            — none of the above. A concept D OWNS is a true omission;
+ *   step 4  absent, none of the above. A concept D OWNS is a true omission;
  *                               a concept D only references (embedded_master / consumer)
  *                               that is owned elsewhere is EXTERNAL context, not omitted
  *                               (IMPROVE 9: do not conflate "not deployed" with "owned
@@ -31,18 +31,18 @@
  * from X is a rename, recorded deterministically.
  *
  * The name/alias/label heuristic survives ONLY as a fallback for live rows whose
- * catalog_entity_code is EMPTY ('' — created outside the deploy pipeline). Those raise an
+ * catalog_entity_code is EMPTY ('', created outside the deploy pipeline). Those raise an
  * ambiguity for Phase 2b (agent + user) UNLESS the user already resolved them in
  * state.jsonc. A fully stamped deployment resolves with zero ambiguities.
  *
  * Platform schema notes (core v0.1.2, verified live):
  *   - `entities` is keyed by `table_name` (no `name`, no `id` column).
  *   - Empties are '' (text) / '{}' (json object) / '[]' (json array) / 'unclassified'
- *     (entity_type). NEVER SQL NULL — test against the empty value, never `IS NULL`.
+ *     (entity_type). NEVER SQL NULL, test against the empty value, never `IS NULL`.
  *
  * Output:
- *   - discovered.json (sibling of spec.json) — full snapshot + per-concept resolution map.
- *   - stdout JSON — pass/fail + ambiguities list for the agent (Phase 2b).
+ *   - discovered.json (sibling of spec.json), full snapshot + per-concept resolution map.
+ *   - stdout JSON, pass/fail + ambiguities list for the agent (Phase 2b).
  *
  * Exit code: 0 on success (even with ambiguities), non-zero on hard failure.
  *
@@ -464,7 +464,7 @@ async function main() {
   let stateResolvedCount = 0;
 
   for (const X of concepts) {
-    // step 0 — a resolution the user already recorded in state.jsonc.
+    // step 0, a resolution the user already recorded in state.jsonc.
     if (state.entityRenames.has(X)) {
       const table = state.entityRenames.get(X) as string;
       if (liveByTable.has(table) || byOwnedCode.has(X)) {
@@ -483,7 +483,7 @@ async function main() {
       continue;
     }
 
-    // step 1 — FK reachability
+    // step 1, FK reachability
     if (fkReach.has(X)) {
       const table = fkReach.get(X) as string;
       resolutions[X] = { via: "fk_reachability", live_table: table, renamed: table !== X };
@@ -491,7 +491,7 @@ async function main() {
       resolvedTables.add(table);
       continue;
     }
-    // step 2 — owned canonical code in the domain's module slice
+    // step 2, owned canonical code in the domain's module slice
     const owned = (byOwnedCode.get(X) ?? []).filter((e) => presentModuleIds.has(e.module_id));
     if (owned.length === 1) {
       const e = owned[0];
@@ -516,7 +516,7 @@ async function main() {
       }
       continue;
     }
-    // step 3 — alias (reuse/merge into a differently-named host)
+    // step 3, alias (reuse/merge into a differently-named host)
     const aliased = byAlias.get(X) ?? [];
     if (aliased.length >= 1) {
       const e = aliased[0];
@@ -525,7 +525,7 @@ async function main() {
       resolvedTables.add(e.table_name);
       continue;
     }
-    // step 4 — absent. Owned -> true omission; external -> owned by another domain (IMPROVE 9).
+    // step 4, absent. Owned -> true omission; external -> owned by another domain (IMPROVE 9).
     if (ownedConcepts.has(X)) {
       resolutions[X] = { via: "absent" };
       omitted.push(X);

@@ -1,5 +1,5 @@
 /**
- * Phase 1 — environment bootstrap check.
+ * Phase 1, environment bootstrap check.
  *
  * Runs at bootstrap (when ready.flag is missing). Verifies the technical
  * prerequisites the skill needs before Phase 2 (structural discovery) can run.
@@ -12,11 +12,11 @@
  *      values (fallback).
  *
  * Domain membership is the UNION of two deterministic signals:
- *   (a) settings.domain_code — the deploy pipeline stamps every module it provisions
+ *   (a) settings.domain_code, the deploy pipeline stamps every module it provisions
  *       with { domain_code: <CODE>, module_kind, ... } in its `settings` JSONB. This is
  *       the authoritative membership marker and, unlike the entity probe, holds even when
  *       a deployment's entities were created WITHOUT catalog_entity_code stamps.
- *   (b) ENTITY-FIRST — the module_ids that host the domain's OWNED entities, resolved
+ *   (b) ENTITY-FIRST, the module_ids that host the domain's OWNED entities, resolved
  *       from the canonical master codes (catalog_entity_code). This catches a deployment
  *       that packages the domain under any module name (e.g. a "hiring-starter" bundle)
  *       and a hand-built module whose settings were never stamped.

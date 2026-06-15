@@ -25,8 +25,8 @@ found" result and the script halts with `can_offer_install: true`.
 **The CLI ships as a native installer, NOT an npm package.** When the script halts with
 `reason: "semantius CLI is not installed or not on PATH."`, it also returns:
 
-- `install_command` — the one-liner for the user's platform (Windows PowerShell `irm ... | iex`, or Linux/macOS `curl ... | bash`).
-- `install_docs` — https://github.com/semantius/semantius-cli#1-installation
+- `install_command`, the one-liner for the user's platform (Windows PowerShell `irm ... | iex`, or Linux/macOS `curl ... | bash`).
+- `install_docs`, https://github.com/semantius/semantius-cli#1-installation
 
 **OFFER to run `install_command` for the user.** Ask their go-ahead first (it modifies their
 system); never auto-install silently. On "yes", run the exact `install_command`, tell them to

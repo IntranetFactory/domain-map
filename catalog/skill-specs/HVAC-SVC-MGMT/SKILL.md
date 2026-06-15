@@ -10,9 +10,8 @@ This skill knows the **HVAC Service Management (small-org starter)** domain as s
 
 For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the `use-semantius` skill, which is expected to load alongside.
 
-**Domain inventory** (as-designed, from `spec.json`; the deployment may have renamed or omitted some):
+**Domain inventory** (as-designed, from `spec.json`, orientation only). The actual deployed entities, with renames and omissions already resolved, live in `discovered.json`; operate from that, never from this list:
 
-- Entities: Contacts, Customer Invoices, Customer Sites, Customers, Dispatch Records, Field Visits, Installed Equipment, Sales Quotes, Service Contracts, Service PM Schedules, Service Work Orders, Spare Part Inventory Items, Users
 - Workflows / capabilities: Dispatch and Routing Optimization, Installed Equipment Management, Mobile Technician Enablement, Field Parts and Truck Stock Management, Preventive Maintenance Planning, Service Contract and SLA Management
 
 ---
@@ -48,7 +47,7 @@ Before doing any domain work, the skill follows this sequence:
    - `ready.flag` exists, AND
    - `ready.flag.valid_through_emitted == spec.emitted`, AND
    - `ready.flag.valid_through_major == spec.facts_major`.
-   If any condition fails, run `bun run scripts/bootstrap.ts` from the project root. Bootstrap orchestrates Phase 1 (environment) → Phase 2a (runs the provenance resolution ladder, writes `discovered.json`) → ready.flag. Phase 2a resolves every uber-model concept against the live deployment by **deterministic platform reads** (no name guessing): see the ladder below. If Phase 2a leaves genuine ambiguities (a live row with an **empty** `catalog_entity_code`, i.e. created outside the deploy pipeline, or a concept that resolves to more than one in-domain entity), bootstrap DOES NOT write `ready.flag`; the agent runs Phase 2b ([references/discovery.md](references/discovery.md)) to surface only those to the user, records resolutions in `state.jsonc`, then re-invokes `bootstrap.ts`. A fully provenance-stamped deployment yields zero ambiguities and no prompts.
+   If any condition fails, run `bun run scripts/bootstrap.ts` from the project root. Bootstrap orchestrates Phase 1 (environment) → Phase 2a (runs the provenance resolution ladder, writes `discovered.json`) → ready.flag. Phase 2a resolves every uber-model concept against the live deployment by **deterministic platform reads** (no name guessing): see the ladder below. If Phase 2a leaves genuine ambiguities (a live row with an **empty** `catalog_entity_code`, i.e. created outside the deploy pipeline, or a concept that resolves to more than one in-domain entity), bootstrap DOES NOT write `ready.flag`; the agent runs Phase 2b ([references/discovery.md](references/discovery.md)) to surface only those to the user, records resolutions in `state.jsonc`, then re-invokes `bootstrap.ts`. A fully provenance-stamped deployment yields zero ambiguities and no prompts. **Run all of this silently:** the user must never see bootstrap mechanics, internal file names, module IDs, version numbers, or read-by-read narration (see [How to talk about the deployment](#how-to-talk-about-the-deployment)).
 5. **Once `ready.flag` is current,** answer the user's request from the persisted discovery, not from live re-queries. `discovered.json` already holds the full operational shape of this deployment, captured once at bootstrap: per entity the deployed `table_name`, `id_column` and `label_column` (read, never assumed: the label column is entity-specific, e.g. `candidate_name` vs `application_ref`), `description`, view/edit permissions, and per field the `name`, `title`, `format`, `ctype`, `enum_values` (live lifecycle/enum vocab), `reference_table` + `reference_delete_mode` + `relationship_label` (the relationship shape), and `is_pk`/`is_nullable`/`unique_value`. `state.jsonc` holds the deployment deltas (renames, omissions). Read those files; do NOT re-discover field names, formats, enums, or relationships per request, that is what the one-time discovery is for. **Before any write, apply the entity's operating contract from `discovered.json`**: `validation_rules` (live write guards, each with a human `message`), `input_type_rule` (conditional field editability), and `select_rule` (row-level read visibility, so you know what a query returns vs. what the UI shows). Never assume catalog names hold; this deployment may have renamed `suppliers` to `vendors`, dropped `cost_centers`, or split a master into two entities. Operational failures from semantius calls surface verbatim (Rule #6); the skill does NOT pre-flight authentication on every invocation; trust the CLI to error when it errors.
 6. **When something is earned during the run, write it to `learnings.jsonc`** so it is not re-derived next session: a call that failed in a non-obvious way plus the working form (`error_fix`), a correction or rule the user supplied (`user_input`), a validated multi-step or multi-table operation (`recipe`), or a deployment-specific fact the schema cannot express (`quirk`). `user_input` is `active` immediately; a `recipe` is `active` only after it actually ran and returned the expected result; `error_fix`/`quirk` are `proposed` until reconfirmed or user-approved. Re-encountered knowledge bumps `confidence`/`last_seen` rather than duplicating; contradicted knowledge is marked `obsolete`, never deleted. Do NOT record what `discovered.json` already holds (a plain rename is fixed by re-discovery, not remembered here). These feed back into step 3 on the next invocation. See [references/learnings-format.md](references/learnings-format.md).
 
@@ -168,10 +167,34 @@ Use the words the customer knows. They experience Semantius as **the platform**,
 
 This governs every explanation you give about renames, omitted modules, or why a table is not present:
 
-- Good: *"Your platform runs the Hiring Starter package, so the Candidate CRM, Interviews, and Offers tables are not part of it."*
+- Good: *"Your platform runs the Hiring Starter package. The broader Candidate CRM, talent pools, and compliance modules are available in the catalog and can be added whenever you need them."*
 - Bad: *"This tenant runs the lightweight Hiring Starter bundle rather than the full catalog ATS module set."*
 
 The word "tenant" may still appear in internal mechanics the customer never sees: state files, field names, script diagnostics, and these procedure docs. Only what the user reads is governed by this rule.
+
+### Keep the machinery invisible
+
+Everything in "On every invocation" (the `use-semantius`/Bun checks, `ready.flag`, bootstrap, the provenance ladder, `discovered.json`/`state.jsonc`/`learnings.jsonc`, module IDs, version numbers) is internal plumbing the user must NEVER see narrated. Run it silently. Do not announce file reads, "bootstrapping", "provenance-stamped", "discovery resolved", "module 1033", Bun versions, "on-invocation checks", or "6 of 8 entities, let me read the rest". If discovery has to run and will take a beat, say at most one plain line, e.g. *"One moment, taking stock of how your platform is set up..."*, then deliver the answer. The user asked a question; show them the answer, not the build log.
+
+- Good: *"One moment, checking your setup... Your platform runs the Hiring Starter package, a slim recruiting pipeline. Here is what you can do."*
+- Bad: *"There is no `ready.flag` or `discovered.json` yet, so I will run bootstrap. Bun 1.3.12 is present. Bootstrap succeeded with zero deferred questions; the deployment is fully provenance-stamped. Let me read `discovered.json`..."*
+
+### Lead with what they can DO, then what they have
+
+When the user asks an open question ("what can I do?", "help", "what is this?"), answer jobs-first: the workflows this deployment supports (post a job, screen candidates, schedule interviews, send offers), and only then the entities behind them. The entity and lifecycle detail is supporting material, not the headline. A data-model tour answers "show me the schema", not "what can I do".
+
+### Use the human labels, hide the table names
+
+In anything the user reads, use the entity `singular_label`/`plural_label` and field `title` from `discovered.json` (Candidates, Job Postings, Applications), never the raw `table_name`/`field_name` (`job_applications`, `interview_scorecards`, `workflow_state`). Raw names belong only in code blocks, copy-pasteable queries, or a block explicitly marked as the technical view. Do not mix the two in one sentence or diagram: a user-facing flow diagram uses labels; a diagram that shows raw table names is a technical view and should be labeled as such.
+
+### Frame what is not deployed as available, not missing
+
+`omitted_entities` and `external_entities`, and the capabilities they would power, are **optional features that exist in the broader catalog and can be added to this deployment**. They are not limitations, gaps, or anything broken. Describe them as opportunities to enable, never as a wall of "no X, no Y, no Z" that ends in "I cannot do that". Turning one on is a configuration / deployment change (a quick admin step), not a dead end.
+
+- Good: *"Your platform runs the slim Hiring Starter pipeline. You can optionally add background checks, compliance (FCRA/EEO/OFCCP), requisitions and approvals, offer letter templates, talent pools, referrals, and assessments. These are available in the ATS catalog and can be switched on for your deployment whenever you need them. Want me to outline how to add one?"*
+- Bad: *"No background checks, no compliance, no requisitions, no offer letters, no talent pools. Those are not deployed here and not something I can query."*
+
+Stay honest: they are not active right now, but the framing is "available to enable", not "you do not have this", and you offer the next step (how to add it) rather than closing the door.
 
 ---
 

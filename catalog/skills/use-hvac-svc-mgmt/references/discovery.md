@@ -30,12 +30,12 @@ never `IS NULL`:
 
 Domain membership is the **union of two deterministic signals**, never module code alone:
 
-1. **Deploy stamp (`settings.domain_code`)** — the deploy pipeline writes
+1. **Deploy stamp (`settings.domain_code`)**, the deploy pipeline writes
    `{ domain_code, module_kind, naming_mode, catalog_snapshot }` into each provisioned module's
    `settings` JSONB. Querying `settings->>domain_code = <CODE>` resolves the slice directly and is
    the authoritative marker. It holds even when a deployment's entities were created WITHOUT
    `catalog_entity_code` stamps (hand-built tables), which the entity probe alone would miss.
-2. **Entity-first** — the live `module_id`s that host the domain's OWNED entities, resolved from
+2. **Entity-first**, the live `module_id`s that host the domain's OWNED entities, resolved from
    the canonical master codes (`spec.data_objects[].name`). This catches a deployment that packages
    the domain under any module name (a "hiring-starter" bundle hosts the ATS entities under
    `catalog_module_code = hiring-starter`) and a module whose `settings` were never stamped.
@@ -65,7 +65,7 @@ For each concept `X` the domain assumes (the union of every module's `masters`,
 `embedded_masters`, and `consumers`; each name **is** its canonical code under D6), resolve `X`
 against the live deployment in this order. **First hit wins.**
 
-### Step 1 — FK reachability (most robust)
+### Step 1, FK reachability (most robust)
 
 Walk the FK fields on the domain's own entities. For each field with a non-empty `reference_table`,
 resolve the target entity's `catalog_entity_code`. Whatever a domain FK points at, carrying
@@ -73,7 +73,7 @@ resolve the target entity's `catalog_entity_code`. Whatever a domain FK points a
 share, and reuse/merge all repoint the FK), so this resolves every topology whenever `X` still has a
 consumer in the domain, including a concept owned by another module that this domain only references.
 
-### Step 2 — owned canonical code, scoped to the domain slice
+### Step 2, owned canonical code, scoped to the domain slice
 
 ```bash
 # entities is keyed by table_name (no name/id column); module_id IN the domain's present modules.
@@ -85,7 +85,7 @@ e.g. `erp_vendors` carrying `catalog_entity_code = vendors`), including an `X` w
 A hit whose `name` differs from `X` is a deterministic **rename** (record `entity_renames[X] = name`).
 Exactly one in-slice hit resolves; more than one is a genuine `multi_owner` ambiguity (Phase 2b).
 
-### Step 3 — alias (reuse/merge onto a differently-named host)
+### Step 3, alias (reuse/merge onto a differently-named host)
 
 ```bash
 semantius call crud postgrestRequest '{"method":"GET","path":"/entities?catalog_entity_aliases=cs.[{\"alias_code\":\"<X>\",\"source_domain\":\"<D>\"}]&select=table_name,module_id,catalog_entity_aliases"}'
@@ -96,19 +96,19 @@ never `alias_code` alone, so the domain matches only its own merge, not another 
 identically-named one. This catches the reuse/merge where `X` was renamed onto an existing host and
 left no FK shadow. The host's `name` is the live table; record `entity_renames[X] = name`.
 
-### Step 4 — absent (true omission vs external context)
+### Step 4, absent (true omission vs external context)
 
 None of the above resolved `X`. Split by whether the domain OWNS `X`:
 
 - **Owned** (`X` is one of the domain's masters): genuinely not deployed here. Record in
   `omitted_entities`; the skill must not generate queries against it.
-- **External** (`X` is only an `embedded_master` / `consumer` — a concept another domain
+- **External** (`X` is only an `embedded_master` / `consumer`, a concept another domain
   masters that this deployment did not bring along): record in `external_entities`, not
   `omitted_entities`. It was never this domain's to deploy, so do not report it as an ATS
   omission. The skill still cannot query it here; the distinction is for accurate explanation.
 
 (A `step 0` precedes step 1: any resolution the user already recorded in `state.jsonc` from a
-prior Phase 2b — `entity_renames`, `omitted_entities`, `custom_entities` — is applied first, so
+prior Phase 2b, `entity_renames`, `omitted_entities`, `custom_entities`, is applied first, so
 the bootstrap loop converges. See Phase 2b below.)
 
 > The danger the ladder removes: without step 3 (and with no FK shadow) a reuse/merge looks like
@@ -126,12 +126,12 @@ label column is entity-specific and must be read, not assumed), governance flags
 `is_child`, `audit_log`, `cube_mode`, `managed`, `searchable`, `updated_at`), and the **operating
 contract**:
 
-- **`validation_rules`** — live jsonlogic write guards, each with a human `message` + `description`
+- **`validation_rules`**, live jsonlogic write guards, each with a human `message` + `description`
   (e.g. moving an application to `hired` requires `hiring-starter:hire_candidate`; an edit-scope rule
   limiting writes to the owner). Honor these before any write; surface the `message` on a block.
-- **`select_rule`** — row-level read visibility (RLS). A query may over- or under-return relative to
+- **`select_rule`**, row-level read visibility (RLS). A query may over- or under-return relative to
   what the UI shows; the rule tells you the actual scope (e.g. own rows unless `view_all_*`).
-- **`computed_fields`** — server-derived/virtual fields; never write them, and do not assume they are
+- **`computed_fields`**, server-derived/virtual fields; never write them, and do not assume they are
   present on a naive read.
 
 Fields are pulled with the provenance key plus the operational columns (including the per-field
