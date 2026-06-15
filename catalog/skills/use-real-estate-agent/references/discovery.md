@@ -26,26 +26,36 @@ never `IS NULL`:
 
 ---
 
-## Pass 1: domain membership (entity-first)
+## Pass 1: domain membership (deploy stamp + entity-first)
 
-Domain membership is resolved **entity-first**, not by module code. The deployed module that
-hosts the domain may carry any `catalog_module_code` (a "hiring-starter" bundle hosts the ATS
-entities under `catalog_module_code = hiring-starter`), so the **domain slice** is the set of
-live `module_id`s that host the domain's OWNED entities, resolved from the canonical master
-codes (`spec.data_objects[].name`). `catalog_module_code` / `module_slug` are hints only.
+Domain membership is the **union of two deterministic signals**, never module code alone:
+
+1. **Deploy stamp (`settings.domain_code`)** — the deploy pipeline writes
+   `{ domain_code, module_kind, naming_mode, catalog_snapshot }` into each provisioned module's
+   `settings` JSONB. Querying `settings->>domain_code = <CODE>` resolves the slice directly and is
+   the authoritative marker. It holds even when a deployment's entities were created WITHOUT
+   `catalog_entity_code` stamps (hand-built tables), which the entity probe alone would miss.
+2. **Entity-first** — the live `module_id`s that host the domain's OWNED entities, resolved from
+   the canonical master codes (`spec.data_objects[].name`). This catches a deployment that packages
+   the domain under any module name (a "hiring-starter" bundle hosts the ATS entities under
+   `catalog_module_code = hiring-starter`) and a module whose `settings` were never stamped.
+
+`catalog_module_code` / `module_slug` are weak hints folded into the same union.
 
 ```bash
-# PRIMARY: entity-first (owned master codes -> the modules that host them).
+# (a) AUTHORITATIVE: the deploy stamp.
+semantius call crud postgrestRequest '{"method":"GET","path":"/modules?settings->>domain_code=eq.<CODE>&select=id,module_slug,module_name,catalog_module_code,settings"}'
+# (b) entity-first (owned master codes -> the modules that host them).
 semantius call crud postgrestRequest '{"method":"GET","path":"/entities?catalog_entity_code=in.(<spec.data_objects[].name>)&select=module_id,catalog_entity_code"}'
-# HINT/fallback: module codes + slugs.
+# HINT: module codes + slugs.
 semantius call crud postgrestRequest '{"method":"GET","path":"/modules?catalog_module_code=in.(<spec.modules[].code>)&select=id,module_slug,catalog_module_code"}'
 ```
 
 `phase1-environment.ts` does this and emits the de-duplicated union of `module_id`s as the
-**domain slice** (`domain_slice`), which scopes ladder step 2. Keying the entity query on OWNED
-masters (not embedded masters / consumers) keeps a foreign module that merely hosts a shared
-master out of the slice. An absent spec module is a deployment choice (or a bundled package),
-not a failure.
+**domain slice** (`domain_slice`, each entry tagged with `matched_by` and its `settings`), which
+scopes ladder step 2. Keying the entity query on OWNED masters (not embedded masters / consumers)
+keeps a foreign module that merely hosts a shared master out of the slice. An absent spec module is
+a deployment choice (or a bundled package), not a failure.
 
 ---
 
@@ -109,21 +119,48 @@ the bootstrap loop converges. See Phase 2b below.)
 
 ## Pass 3: fields (per discovered entity)
 
-`phase2a` pulls each entity's fields with the field-level provenance key:
+`phase2a` pulls each entity's full operational shape ONCE and persists it, so the skill never
+re-queries field names, formats, enums, relationships, or write rules at runtime. The entity read
+captures `id_column`, `label_column`, `label_parent`, `description`, `view`/`edit_permission` (the
+label column is entity-specific and must be read, not assumed), governance flags (`edit_mode`,
+`is_child`, `audit_log`, `cube_mode`, `managed`, `searchable`, `updated_at`), and the **operating
+contract**:
+
+- **`validation_rules`** — live jsonlogic write guards, each with a human `message` + `description`
+  (e.g. moving an application to `hired` requires `hiring-starter:hire_candidate`; an edit-scope rule
+  limiting writes to the owner). Honor these before any write; surface the `message` on a block.
+- **`select_rule`** — row-level read visibility (RLS). A query may over- or under-return relative to
+  what the UI shows; the rule tells you the actual scope (e.g. own rows unless `view_all_*`).
+- **`computed_fields`** — server-derived/virtual fields; never write them, and do not assume they are
+  present on a naive read.
+
+Fields are pulled with the provenance key plus the operational columns (including the per-field
+`input_type_rule`, the conditional required/readonly/visibility jsonlogic):
 
 ```bash
-semantius call crud postgrestRequest '{"method":"GET","path":"/fields?table_name=eq.<live_table>&select=field_name,catalog_field_code,format,is_nullable,default_value,reference_table,enum_values&order=field_order.asc"}'
+# entity: identity + governance + operating contract
+semantius call crud postgrestRequest '{"method":"GET","path":"/entities?table_name=eq.<live_table>&select=table_name,id_column,label_column,label_parent,description,view_permission,edit_permission,validation_rules,select_rule,computed_fields,edit_mode,is_child,audit_log,cube_mode,managed,searchable,updated_at"}'
+# fields: provenance + operational shape
+semantius call crud postgrestRequest '{"method":"GET","path":"/fields?table_name=eq.<live_table>&select=field_name,catalog_field_code,format,ctype,cube_type,is_pk,is_nullable,unique_value,searchable,precision,input_type,input_type_rule,default_value,reference_table,reference_delete_mode,relationship_label,singular_label_parent,plural_label_parent,enum_values,title,description,field_order&order=field_order.asc"}'
 ```
 
-- **Field renames are a join:** `catalog_field_code` holds the canonical/blueprint field name (e.g.
-  `status`) even when `field_name` drifted (e.g. `stage`). The lifecycle column is the field whose
-  `catalog_field_code` is the spec's lifecycle field; do not guess among `status`/`state`. (A bare
-  `''` code is a pre-provenance/custom field — fall back to the name.)
+- **Field renames are a join:** `catalog_field_code` holds the canonical/blueprint field name even
+  when `field_name` drifted. Match a spec field to its live field by `catalog_field_code`, not by
+  name. (A bare `''` code is a pre-provenance/custom field, fall back to the name.)
+- **Lifecycle column is invariant:** the lifecycle column is ALWAYS named `workflow_state`
+  (`field_name`) on every deployment, never `status`/`state`/`stage`/`disposition`. Match it
+  exactly; never guess among synonyms. If a master whose spec declares `lifecycle_states` has no
+  live `workflow_state` column, that is drift: phase2a flags it as a `lifecycle_field_missing`
+  ambiguity rather than silently recording `lifecycle_field: null`.
+- **Lifecycle / enum vocabulary is live:** `enum_values` on the lifecycle field IS the current set
+  of states. A customer who adds or removes a state changes this row; the persisted `lifecycle_values`
+  reflect the deployment, not the frozen `spec.json`.
+- **Relationship shape is live:** each FK field carries `reference_table` (target),
+  `reference_delete_mode` (`restrict` / `clear` / `cascade`), and `relationship_label` (the verb the
+  UI renders). All three are persisted so the skill knows the relationship and its delete behavior
+  without re-deriving them.
 - **FK omissions:** if the spec expects an FK on `X` and no live field carries that
   `catalog_field_code`, record the omission so the skill does not reference it.
-
-Field-by-field reconciliation beyond the lifecycle column and FK shapes is not worth it up front;
-trust canonical field names and let a runtime failure become a lesson.
 
 ---
 
@@ -173,9 +210,15 @@ provenance reads:
 
 ```json
 {
-  "discovered_at": "2026-06-12",
+  "discovered_at": "2026-06-15",
   "domain_code": "ATS",
-  "slice_module_ids": [0],
+  "slice_module_ids": [1033],
+  "modules": {
+    "1033": {
+      "module_slug": "hiring-starter", "module_name": "Hiring Starter", "catalog_module_code": "hiring-starter",
+      "settings": { "domain_code": "ATS", "module_kind": "starter", "naming_mode": "agent-optimized" }
+    }
+  },
   "resolution": {
     "<concept>": { "via": "state_resolution|fk_reachability|owned_code|alias|absent|external_absent|deferred", "live_table": "<name>", "renamed": false }
   },
@@ -185,12 +228,36 @@ provenance reads:
   "custom_entities": [{ "live_name": "<name>", "module_id": 0, "catalog_entity_code": "" }],
   "fetch_errors": [],
   "entities": {
-    "<live_table>": {
-      "catalog_entity_code": "<canonical>", "canonical_owner_module": "", "entity_type": "operational_record",
+    "job_applications": {
+      "catalog_entity_code": "job_applications", "canonical_owner_module": "", "entity_type": "operational_workflow",
       "pattern_flags": { "personal_content": true }, "catalog_entity_aliases": [],
-      "module_id": 0, "singular_label": "", "plural_label": "",
-      "fields": [{ "name": "", "catalog_field_code": "", "format": "", "reference_table": "", "enum_values": null }],
-      "lifecycle_field": "status", "lifecycle_values": ["new", "..."]
+      "module_id": 1033, "singular_label": "Application", "plural_label": "Applications",
+      "description": "...", "id_column": "id", "label_column": "application_ref", "label_parent": "candidate_id",
+      "view_permission": "hiring-starter:read", "edit_permission": "hiring-starter:manage",
+      "edit_mode": "auto", "is_child": false, "audit_log": true, "cube_mode": "auto", "managed": true, "searchable": true, "updated_at": "...",
+      "validation_rules": [
+        { "code": "hire_via_application_requires_permission",
+          "message": "Only users with the hire-candidate permission can move an application to hired.",
+          "description": "Gates the transition into the hired terminal state.",
+          "jsonlogic": { "if": ["...status==hired...", { "require_permission": "hiring-starter:hire_candidate" }, true] } }
+      ],
+      "select_rule": { "or": [{ "==": [{ "var": "owner_user_id" }, { "var": "$user_id" }] }, { "has_permission": "hiring-starter:view_all_applications" }] },
+      "computed_fields": [],
+      "fields": [
+        { "name": "candidate_id", "title": "Candidate", "catalog_field_code": "candidate_id",
+          "format": "reference", "ctype": "", "cube_type": "dimension", "is_pk": false, "is_nullable": true, "unique_value": false,
+          "searchable": true, "precision": null, "field_order": 30, "input_type": "required", "input_type_rule": {}, "default_value": "",
+          "reference_table": "candidates", "reference_delete_mode": "restrict", "relationship_label": "submits",
+          "singular_label_parent": "", "plural_label_parent": "", "enum_values": null },
+        { "name": "workflow_state", "title": "Status", "catalog_field_code": "workflow_state",
+          "format": "enum", "ctype": "", "cube_type": "dimension", "is_pk": false, "is_nullable": false, "unique_value": false,
+          "searchable": false, "precision": 2, "field_order": 60, "input_type": "required", "input_type_rule": {}, "default_value": "applied",
+          "reference_table": "", "reference_delete_mode": "", "relationship_label": "has",
+          "singular_label_parent": "", "plural_label_parent": "",
+          "enum_values": ["applied", "screening", "interviewing", "offer_extended", "hired", "rejected", "withdrawn"] }
+      ],
+      "lifecycle_field": "workflow_state",
+      "lifecycle_values": ["applied", "screening", "interviewing", "offer_extended", "hired", "rejected", "withdrawn"]
     }
   }
 }

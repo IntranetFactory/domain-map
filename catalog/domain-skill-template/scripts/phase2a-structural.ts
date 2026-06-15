@@ -127,7 +127,13 @@ function normalize(spec: Spec): {
 
 type Phase1Result = {
   ok: boolean;
-  domain_slice?: Array<{ module_id: number; module_slug?: string | null; catalog_module_code?: string | null }>;
+  domain_slice?: Array<{
+    module_id: number;
+    module_slug?: string | null;
+    module_name?: string | null;
+    catalog_module_code?: string | null;
+    settings?: any;
+  }>;
 };
 
 type AliasElement = { alias_code: string; source_domain: string; [k: string]: any };
@@ -142,6 +148,27 @@ type LiveEntity = {
   pattern_flags: Record<string, boolean>;
   entity_type: string;
   catalog_entity_aliases: AliasElement[];
+  // Operational shape (persisted so the skill never re-queries it at runtime).
+  id_column: string;
+  label_column: string;
+  description: string;
+  view_permission: string;
+  edit_permission: string;
+  icon_url: string;
+  // Operating contract: the deployment's live write guards + read visibility. These ship with
+  // human-readable message/description and are the highest-value "how to operate safely" data.
+  validation_rules: any[]; // jsonlogic write guards: { code, message, jsonlogic, description }
+  select_rule: any; // jsonlogic row-level read visibility (RLS); null = no row filter
+  computed_fields: any[]; // server-derived/virtual fields (do not write; may be missing on naive read)
+  // Governance / behavior.
+  edit_mode: string; // auto | manual: whether & how the entity is writable
+  is_child: string | boolean; // sub-entity: edited via a parent, not standalone
+  label_parent: string; // parent FK used to compose the display label
+  audit_log: string | boolean; // writes audit-logged (compliance-relevant)
+  cube_mode: string; // analytics (cube) exposure
+  managed: string | boolean;
+  searchable: string | boolean;
+  updated_at: string; // last-modified; a cheap drift signal vs discovered_at
 };
 
 type CmdResult = { ok: boolean; data: any; stderr: string; code: number };
@@ -304,6 +331,11 @@ async function main() {
   }
   if (sliceModuleIds.length === 0) {
     const ids = new Set<number>();
+    // Authoritative deploy stamp first (mirrors phase1): modules tagged for this domain.
+    try {
+      const rows = (await get(`/modules?settings->>domain_code=eq.${view.code}&select=id`)) as any[];
+      for (const r of rows ?? []) ids.add(r.id as number);
+    } catch { /* best-effort; entity-first below still resolves the slice */ }
     for (const part of chunk(masterCodes, 100)) {
       if (!part.length) continue;
       const rows = (await get(`/entities?catalog_entity_code=in.(${part.join(",")})&select=module_id`)) as any[];
@@ -313,12 +345,38 @@ async function main() {
   }
   const presentModuleIds = new Set(sliceModuleIds);
 
-  // ---- Pull live entities (with provenance) for the domain's slice modules. ----
+  // Module detail (slug/name/settings) from the Phase 1 cache, keyed by module_id. Persisted in
+  // discovered.json so the skill builds correct UI URLs from the DEPLOYED slug (e.g. hiring-starter),
+  // not the catalog code, and can read the deploy stamp (domain_code, module_kind, naming_mode).
+  const sliceModules: Record<string, any> = {};
+  try {
+    const phase1: Phase1Result = JSON.parse(readFileSync(phase1Path, "utf-8"));
+    for (const m of phase1.domain_slice ?? []) {
+      sliceModules[String(m.module_id)] = {
+        module_slug: m.module_slug ?? null,
+        module_name: m.module_name ?? null,
+        catalog_module_code: m.catalog_module_code ?? null,
+        settings: m.settings ?? null,
+      };
+    }
+  } catch { /* cache absent (re-derived slice); module detail simply omitted */ }
+
+  // ---- Pull live entities (with provenance + operational shape) for the slice modules. ----
+  // The operational columns (id_column/label_column/description/permissions, and the field-level
+  // title/ctype/input_type/reference_delete_mode/relationship_label/unique_value below) are
+  // persisted once here so the skill operates from discovered.json and never re-queries the
+  // platform per request. id_column/label_column are NOT assumable (usually `id`, but the label
+  // column is entity-specific: candidate_name, application_ref, ...), so they are read, not guessed.
   const ENT_SELECT =
     "table_name,singular_label,plural_label,module_id,catalog_entity_code," +
-    "canonical_owner_module,pattern_flags,catalog_entity_aliases,entity_type";
+    "canonical_owner_module,pattern_flags,catalog_entity_aliases,entity_type," +
+    "id_column,label_column,description,view_permission,edit_permission,icon_url," +
+    "validation_rules,select_rule,computed_fields,edit_mode,is_child,label_parent," +
+    "audit_log,cube_mode,managed,searchable,updated_at";
   const FLD_SELECT =
-    "table_name,field_name,catalog_field_code,format,is_nullable,default_value,reference_table,enum_values,field_order";
+    "table_name,field_name,catalog_field_code,format,is_nullable,default_value,reference_table,enum_values,field_order," +
+    "title,description,ctype,is_pk,input_type,reference_delete_mode,relationship_label,unique_value," +
+    "input_type_rule,cube_type,precision,searchable,singular_label_parent,plural_label_parent";
 
   const fetchErrors: string[] = [];
   const liveByTable = new Map<string, LiveEntity>();
@@ -523,11 +581,44 @@ async function main() {
     customEntities.push({ live_name: e.table_name, module_id: e.module_id, catalog_entity_code: "" });
   }
 
+  // ---- Lifecycle-field check (D3): the lifecycle column is invariantly `workflow_state`. ----
+  // The spec carries each master's lifecycle_states but NOT the column name. When a concept's
+  // spec declares lifecycle states, its resolved live entity MUST expose a `workflow_state`
+  // column. A missing one is real drift (renamed or undeployed lifecycle), surfaced as an
+  // ambiguity for Phase 2b instead of silently emitting lifecycle_field: null. Bundles carry no
+  // lifecycle_states, so this is a no-op for them.
+  const specLifecycleByConcept = new Map<string, string[]>();
+  for (const o of spec.data_objects ?? []) {
+    const states = (Array.isArray((o as any).lifecycle_states) ? (o as any).lifecycle_states : [])
+      .map((s: any) => (typeof s === "string" ? s : s?.name))
+      .filter((n: any): n is string => typeof n === "string" && n.length > 0);
+    if (states.length) specLifecycleByConcept.set(o.name, states);
+  }
+  for (const [concept, states] of specLifecycleByConcept) {
+    const liveTable = resolutions[concept]?.live_table as string | undefined;
+    if (!liveTable) continue; // not deployed here; absence handled by the omitted/external split.
+    const hasWorkflowState = (fieldsByTable.get(liveTable) ?? []).some((f: any) => f.field_name === "workflow_state");
+    if (hasWorkflowState) continue;
+    const amb = {
+      kind: "lifecycle_field_missing",
+      concept,
+      live_name: liveTable,
+      reason: `Spec declares lifecycle states for "${concept}" (${states.join(", ")}) but live entity "${liveTable}" has no "workflow_state" column. The lifecycle column is invariably named workflow_state; confirm which column carries the lifecycle here, or record that the lifecycle is not deployed.`,
+    };
+    // "skip" recorded against the concept or the live name downgrades to non-blocking.
+    (state.deferred.has(concept) || state.deferred.has(liveTable) ? deferred : ambiguities).push(amb);
+  }
+
   // ---- Build discovered.json (full snapshot), keyed by table_name. ----
   const discoveredEntities: Record<string, any> = {};
   for (const e of inDomain) {
     const fields = (fieldsByTable.get(e.table_name) ?? []).slice().sort((a, b) => (a.field_order ?? 0) - (b.field_order ?? 0));
-    const lifecycleField = fields.find((f: any) => ["status", "state", "lifecycle_state"].includes(f.field_name));
+    // The lifecycle column is INVARIANTLY named `workflow_state` across every Semantius
+    // deployment, never status/state/stage/disposition. Match it exactly; do not heuristically
+    // guess. A concept whose spec declares lifecycle_states but whose live entity lacks this
+    // column is real drift, surfaced as a `lifecycle_field_missing` ambiguity above, never a
+    // silent null here.
+    const lifecycleField = fields.find((f: any) => f.field_name === "workflow_state");
     discoveredEntities[e.table_name] = {
       catalog_entity_code: e.catalog_entity_code || "",
       canonical_owner_module: e.canonical_owner_module || "",
@@ -537,13 +628,50 @@ async function main() {
       module_id: e.module_id,
       singular_label: e.singular_label,
       plural_label: e.plural_label,
+      description: e.description || "",
+      // Operational identity (read, never assumed): the PK column and the human label column.
+      id_column: e.id_column || "id",
+      label_column: e.label_column || "",
+      label_parent: e.label_parent || "", // parent FK that composes the display label
+      view_permission: e.view_permission || "",
+      edit_permission: e.edit_permission || "",
+      icon_url: e.icon_url || "",
+      // Operating contract (live): write guards + read visibility + virtual fields. Each
+      // validation rule carries a human `message`/`description`; honor these before any write.
+      validation_rules: asArray(e.validation_rules),
+      select_rule: e.select_rule ?? null,
+      computed_fields: asArray(e.computed_fields),
+      // Governance / behavior.
+      edit_mode: e.edit_mode || "",
+      is_child: Boolean(e.is_child),
+      audit_log: Boolean(e.audit_log),
+      cube_mode: e.cube_mode || "",
+      managed: Boolean(e.managed),
+      searchable: Boolean(e.searchable),
+      updated_at: e.updated_at || "",
       fields: fields.map((f: any) => ({
         name: f.field_name,
+        title: f.title ?? "",
+        description: f.description ?? "",
         catalog_field_code: f.catalog_field_code || "",
         format: f.format,
+        ctype: f.ctype ?? "",
+        cube_type: f.cube_type ?? "",
+        is_pk: Boolean(f.is_pk),
         is_nullable: f.is_nullable,
+        unique_value: Boolean(f.unique_value),
+        searchable: Boolean(f.searchable),
+        precision: f.precision ?? null,
+        field_order: f.field_order ?? null,
+        input_type: f.input_type ?? "",
+        input_type_rule: f.input_type_rule ?? {}, // conditional required/readonly/visibility jsonlogic
         default_value: f.default_value,
+        // Relationship shape: target table + how a delete cascades + the verb the UI renders.
         reference_table: f.reference_table || "",
+        reference_delete_mode: f.reference_delete_mode || "",
+        relationship_label: f.relationship_label || "",
+        singular_label_parent: f.singular_label_parent ?? "",
+        plural_label_parent: f.plural_label_parent ?? "",
         enum_values: f.enum_values || null,
       })),
       lifecycle_field: lifecycleField?.field_name ?? null,
@@ -557,6 +685,7 @@ async function main() {
     discovered_against_major: (spec as any).facts_major,
     domain_code: view.code,
     slice_module_ids: sliceModuleIds,
+    modules: sliceModules, // per module_id: { module_slug, module_name, catalog_module_code, settings }
     resolution: resolutions, // per-concept: { via, live_table, renamed }
     entity_renames: entityRenames, // canonical concept -> live table_name
     omitted_entities: omitted, // concepts the domain owns that are not deployed here

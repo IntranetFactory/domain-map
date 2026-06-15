@@ -25,15 +25,14 @@ For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the 
 | `spec.json` | HQ catalog emit (structured per-domain data) | HQ on skill upgrade |
 | `state.jsonc` | deployment discovery run | this skill |
 | `discovered.json` | deployment discovery run (full discovered schema) | this skill |
-| `lessons.md` | deployment runtime | this skill (append-only) |
-| `improvements.md` | deployment runtime | this skill (append-only) |
+| `learnings.jsonc` | deployment runtime | this skill (earned-knowledge store) |
 | `ready.flag` | written by `scripts/bootstrap.ts` | bootstrap (single producer) |
 | `references/` | generic, no per-domain content | HQ on skill upgrade |
 | `scripts/` | generic Bun/TypeScript bootstrap scripts | HQ on skill upgrade |
 
-The skill **learns** locally through three append-only files: `state.jsonc` (deltas vs. spec), `lessons.md` (tactical pitfalls), and `improvements.md` (procedural meta-patterns). All three are read on every invocation and applied to subsequent operations. `SKILL.md` itself stays untouched — the procedure manual is stable; the learning layer grows around it.
+The skill **learns** locally through two files: `state.jsonc` (structural deltas vs. spec) and `learnings.jsonc` (earned knowledge: error fixes, user corrections, validated recipes, deployment quirks). Both are read on every invocation and applied to subsequent operations. `SKILL.md` itself stays untouched: the procedure manual is stable; the learning layer grows around it.
 
-The installer preserves `state.jsonc` and `lessons.md` across upgrades. Teams should commit both alongside the skill if they want shared discovery and lessons.
+The installer preserves `state.jsonc` and `learnings.jsonc` across upgrades. Teams should commit both alongside the skill if they want shared discovery and earned knowledge.
 
 ---
 
@@ -43,15 +42,15 @@ Before doing any domain work, the skill follows this sequence:
 
 1. **Verify `use-semantius` is loaded in the session.** Look at the available-skills list in the system reminder. If `use-semantius` is not present, halt with: *"This skill delegates all Semantius CLI mechanics to `use-semantius`. Install it from the catalog and reload the session: https://semantius.app/catalog/use-semantius"*. This is an agent-level check (no script can see what's loaded in the Claude Code session); the agent performs it on every invocation as the cheapest gate.
 2. **Verify Bun is installed.** Run `bun --version`. If exit code is non-zero, halt with the install link (`https://bun.sh/install`). All scripts in `scripts/` are TypeScript on Bun (no Python, ever — see hard rules). The skill cannot proceed without Bun.
-3. **Read `lessons.md` and `improvements.md`** in full. Lessons are tactical pitfalls (one specific call that failed; the corrected form). Improvements are procedural meta-patterns (a class of operation that needs a different approach). Both apply on every operation: lessons prevent specific mistakes; improvements OVERRIDE the procedure in `references/` when their trigger matches. Format docs: [references/lessons-format.md](references/lessons-format.md), [references/improvements-format.md](references/improvements-format.md).
+3. **Read `learnings.jsonc`** in full (it is small). It is the **earned-knowledge** store: knowledge the skill had to work out or was told, that neither the CLI nor re-discovery can give back. Each entry is a `trigger` + `resolution` of kind `error_fix`, `user_input`, `recipe`, or `quirk`. Before solving a non-trivial operation or after a failure, match by `trigger` and apply `active` resolutions instead of re-deriving them; surface `proposed` ones for one-tap confirmation. Format and trust/decay rules: [references/learnings-format.md](references/learnings-format.md).
    - If bootstrap halts Phase 1 with `can_offer_install: true` (the `semantius` CLI is not installed), **offer to run the install for the user.** The result carries `install_command` (the one-liner for their platform) and `install_docs`. Ask their go-ahead first (it modifies their system); never auto-install silently. On "yes", run the exact `install_command`, have them restart the shell if PATH changed, then re-run bootstrap. On "no", surface `install_docs` and stop.
 4. **Check `ready.flag`.** Single-file check. The skill is ready when:
    - `ready.flag` exists, AND
    - `ready.flag.valid_through_emitted == spec.emitted`, AND
    - `ready.flag.valid_through_major == spec.facts_major`.
    If any condition fails, run `bun run scripts/bootstrap.ts` from the project root. Bootstrap orchestrates Phase 1 (environment) → Phase 2a (runs the provenance resolution ladder, writes `discovered.json`) → ready.flag. Phase 2a resolves every uber-model concept against the live deployment by **deterministic platform reads** (no name guessing): see the ladder below. If Phase 2a leaves genuine ambiguities (a live row with an **empty** `catalog_entity_code`, i.e. created outside the deploy pipeline, or a concept that resolves to more than one in-domain entity), bootstrap DOES NOT write `ready.flag`; the agent runs Phase 2b ([references/discovery.md](references/discovery.md)) to surface only those to the user, records resolutions in `state.jsonc`, then re-invokes `bootstrap.ts`. A fully provenance-stamped deployment yields zero ambiguities and no prompts.
-5. **Once `ready.flag` is current,** answer the user's request using the discovered entity names, relationships, and lifecycle from `state.jsonc` (and `discovered.json` for field-level detail when needed). Never assume catalog names hold; this deployment may have renamed `suppliers` to `vendors`, dropped `cost_centers`, or split a master into two entities. Operational failures from semantius calls surface verbatim (Rule #6) — the skill does NOT pre-flight authentication on every invocation; trust the CLI to error when it errors.
-6. **When a non-obvious pitfall is observed** during the run, append a `lessons.md` entry. **When a recurring procedural pattern is identified** that warrants a different approach than the procedure docs, propose the improvement at end-of-session for user approval before appending to `improvements.md` (improvements OVERRIDE procedure docs, so they need human review — see [references/improvements-format.md](references/improvements-format.md)). Both feed back into step 3 on the next invocation.
+5. **Once `ready.flag` is current,** answer the user's request from the persisted discovery, not from live re-queries. `discovered.json` already holds the full operational shape of this deployment, captured once at bootstrap: per entity the deployed `table_name`, `id_column` and `label_column` (read, never assumed: the label column is entity-specific, e.g. `candidate_name` vs `application_ref`), `description`, view/edit permissions, and per field the `name`, `title`, `format`, `ctype`, `enum_values` (live lifecycle/enum vocab), `reference_table` + `reference_delete_mode` + `relationship_label` (the relationship shape), and `is_pk`/`is_nullable`/`unique_value`. `state.jsonc` holds the deployment deltas (renames, omissions). Read those files; do NOT re-discover field names, formats, enums, or relationships per request, that is what the one-time discovery is for. **Before any write, apply the entity's operating contract from `discovered.json`**: `validation_rules` (live write guards, each with a human `message`), `input_type_rule` (conditional field editability), and `select_rule` (row-level read visibility, so you know what a query returns vs. what the UI shows). Never assume catalog names hold; this deployment may have renamed `suppliers` to `vendors`, dropped `cost_centers`, or split a master into two entities. Operational failures from semantius calls surface verbatim (Rule #6); the skill does NOT pre-flight authentication on every invocation; trust the CLI to error when it errors.
+6. **When something is earned during the run, write it to `learnings.jsonc`** so it is not re-derived next session: a call that failed in a non-obvious way plus the working form (`error_fix`), a correction or rule the user supplied (`user_input`), a validated multi-step or multi-table operation (`recipe`), or a deployment-specific fact the schema cannot express (`quirk`). `user_input` is `active` immediately; a `recipe` is `active` only after it actually ran and returned the expected result; `error_fix`/`quirk` are `proposed` until reconfirmed or user-approved. Re-encountered knowledge bumps `confidence`/`last_seen` rather than duplicating; contradicted knowledge is marked `obsolete`, never deleted. Do NOT record what `discovered.json` already holds (a plain rename is fixed by re-discovery, not remembered here). These feed back into step 3 on the next invocation. See [references/learnings-format.md](references/learnings-format.md).
 
 To force a fresh discovery: delete `ready.flag` (or also `discovered.json` and `.phase1-cache.json` for a fully cold rebuild). The next invocation will re-run bootstrap.
 
@@ -59,7 +58,7 @@ To force a fresh discovery: delete `ready.flag` (or also `discovered.json` and `
 
 ## How discovery resolves concepts (the provenance ladder)
 
-As of core v0.1.2 the live platform carries provenance columns, so discovery reads identity instead of guessing it. The **domain slice** (the modules Phase 2a scans) is resolved **entity-first** by Phase 1: the live `module_id`s that host the domain's owned master codes, plus any module that carries a spec module code/slug. For each uber-model concept `X` the domain assumes, Phase 2a resolves it against the live deployment in this order (first hit wins), and a live `table_name` that differs from `X` is a deterministic rename:
+As of core v0.1.2 the live platform carries provenance columns, so discovery reads identity instead of guessing it. The **domain slice** (the modules Phase 2a scans) is resolved by Phase 1 as the UNION of two deterministic signals: **(a) the deploy stamp**, modules whose `settings.domain_code` equals this domain's code (the deploy pipeline writes `{ domain_code, module_kind, naming_mode, catalog_snapshot }` into each provisioned module's `settings` JSONB; this is the authoritative marker and holds even when a deployment's entities were never `catalog_entity_code`-stamped), and **(b) entity-first**, the live `module_id`s that host the domain's owned master codes. A module carrying a spec module code/slug is a weak hint folded into the same union. For each uber-model concept `X` the domain assumes, Phase 2a resolves it against the live deployment in this order (first hit wins), and a live `table_name` that differs from `X` is a deterministic rename:
 
 0. **State resolution** — a resolution the user already recorded in `state.jsonc` from a prior Phase 2b (rename, omission, or custom classification). Applied first so the bootstrap loop converges instead of re-asking.
 1. **FK reachability** — a live FK on the domain's own entities whose `reference_table` resolves to an entity carrying `catalog_entity_code = X`. Reseating is universal, so this catches silo, same-name share, and reuse/merge whenever `X` still has a consumer in the domain.
@@ -77,7 +76,8 @@ The provenance columns and their **empty** values (core v0.1.2 stores NOT NULL w
 | `catalog_entity_aliases` (`entities`, json) | `'[]'` | never a merge target |
 | `entity_type` (`entities`) | `'unclassified'` | unclassified upstream |
 | `catalog_field_code` (`fields`) | `''` | outside the pipeline |
-| `catalog_module_code` (`modules`) | `''` | greenfield; a **hint** for the domain slice (membership is resolved entity-first, not by this code) |
+| `catalog_module_code` (`modules`) | `''` | greenfield; a weak **hint** for the slice (membership is resolved by `settings.domain_code` + entity-first, not by this code) |
+| `settings` (`modules`, json) | `null` | not provisioned by the deploy pipeline (hand-built); its `domain_code` key is the authoritative slice marker when present |
 
 `catalog_entity_code` stamps the **canonical** uber-model code (so the join is clean across dialect and silo renames); the deployed name lives in `table_name`. The name/alias/label heuristic survives only as a fallback for rows whose `catalog_entity_code` is empty. Full procedure and query shapes: [references/discovery.md](references/discovery.md).
 
@@ -136,25 +136,29 @@ Written by the skill during discovery. Records the deployment-specific reality:
 
 ---
 
-## What's in `lessons.md` and `improvements.md`
+## What's in `learnings.jsonc`
 
-Both are append-only learning surfaces the skill grows over time. They differ in shape:
+The **earned-knowledge** store: only knowledge the CLI exit codes and re-discovery cannot give back, what the schema does NOT tell us. It is NOT a drift detector and NOT a schema cache (those are `discovered.json` + re-discovery). A single JSONC array of entries, each a `trigger` (the situation it matches) + `resolution` (what to do), of one kind:
 
-- **`lessons.md`** — tactical: ONE specific call failed in a way that wasn't obvious, here's the correct form. Format: [references/lessons-format.md](references/lessons-format.md).
-- **`improvements.md`** — procedural: a CLASS of operation needs a different approach than the procedure docs. Improvements override `references/*.md` when their trigger matches. Format: [references/improvements-format.md](references/improvements-format.md).
+- **`error_fix`** — a call that failed in a non-obvious way, plus the working form found.
+- **`user_input`** — a correction, confirmation, or rule the user supplied that is not in the schema.
+- **`recipe`** — a validated multi-step or multi-table operation/query (e.g. a 3-table cube join for a metric), so a solution found once is not re-derived.
+- **`quirk`** — a deployment-specific fact the schema cannot express (e.g. this deployment leaves `source_id` null and tracks source on the candidate).
 
-Both are local to this deployment by default. If either is genuinely universal, you can choose to upstream via the catalog's contribution channel; the skill does NOT auto-publish.
+The point is persistence: match by `trigger` before a non-trivial op, apply the known `resolution` instead of working it out again. Trust and decay (`proposed`/`active`/`obsolete`, confidence bumps, never-delete) are in [references/learnings-format.md](references/learnings-format.md). Local to this deployment by default; a genuinely universal learning can be upstreamed via the catalog's contribution channel (never automatic). `learnings.jsonc` REPLACES the former `lessons.md` + `improvements.md`.
 
 ## What's in `discovered.json`
 
-The full discovered schema written by the discovery procedure. Loaded on demand (not on every conversation) when the skill needs field-level detail. It carries:
+The full discovered schema written by the discovery procedure. This is the **operational source of truth** the skill works from: the entire deployed shape is captured once at bootstrap so no field name, format, enum, or relationship is ever re-queried or guessed at runtime. Loaded on demand (not on every conversation). It carries:
 
 - `resolution` — per concept, how the ladder resolved it (`via: state_resolution | fk_reachability | owned_code | alias | absent | external_absent | deferred`, the `live_table`, and whether it `renamed`).
 - `entity_renames` — canonical concept → live `table_name` (deterministic, from the ladder).
 - `omitted_entities` — OWNED concepts not deployed here; `external_entities` — concepts owned by another domain and not present; `custom_entities` — live rows not claimed by a concept.
-- `entities` — per live table: its `catalog_entity_code`, `canonical_owner_module`, `entity_type`, `pattern_flags`, `catalog_entity_aliases`, fields (each with `catalog_field_code`, `format`, `reference_table`, `enum_values`), and the lifecycle field/values.
+- `modules` — per `module_id` in the slice: `module_slug`, `module_name`, `catalog_module_code`, and the deploy `settings` (`domain_code`, `module_kind`, `naming_mode`). Use `module_slug` for UI URLs (the DEPLOYED slug, e.g. `hiring-starter`, not the catalog code).
+- `entities` — per live table: identity and provenance (`catalog_entity_code`, `canonical_owner_module`, `entity_type`, `pattern_flags`, `catalog_entity_aliases`); the operational shape: `id_column`, `label_column`, `label_parent`, `description`, `view_permission`, `edit_permission`; governance: `edit_mode`, `is_child`, `audit_log`, `cube_mode`, `managed`, `searchable`, `updated_at`; and `fields`. Each field carries `name`, `title`, `description`, `catalog_field_code`, `format`, `ctype`, `cube_type`, `is_pk`, `is_nullable`, `unique_value`, `searchable`, `precision`, `field_order`, `input_type`, `input_type_rule`, `default_value`, `reference_table`, `reference_delete_mode`, `relationship_label`, `singular_label_parent`/`plural_label_parent`, and `enum_values`, plus the entity's `lifecycle_field`/`lifecycle_values`.
+- **The operating contract** (honor before any write): `validation_rules` (live jsonlogic write guards, each with a human `message` + `description`, e.g. moving an application to `hired` requires a permission), `select_rule` (row-level read visibility / RLS, so you know what a query actually returns vs. what the UI shows), `computed_fields` (server-derived, never write them), and per-field `input_type_rule` (conditional required/readonly/visibility). These are the deployment's live "how to operate safely" rules and are captured so the skill applies them without re-deriving.
 
-Together with `state.jsonc` this gives the complete picture of what this deployment actually has, no live re-query needed.
+Together with `state.jsonc` this gives the complete picture of what this deployment actually has, no live re-query needed. When a customer edits a lifecycle state, renames a field, tightens a validation rule, or adds an entity, a fresh discovery (delete `ready.flag`) re-captures it; the live platform, not the frozen `spec.json`, is the source of truth.
 
 ---
 
@@ -195,15 +199,12 @@ Spec file: [`spec.json`](./spec.json)
 
 State file: `./state.jsonc` (created on first discovery)
 
-Lessons file: `./lessons.md` (created on first lesson)
+Learnings file: `./learnings.jsonc` (earned knowledge; created on first learning)
 
 Discovered schema: `./discovered.json` (full entity/field/relationship snapshot)
-
-Improvements file: `./improvements.md` (procedural meta-pattern learnings)
 
 Procedure references:
 - [Bootstrap checks](references/bootstrap.md)
 - [Discovery procedure](references/discovery.md)
-- [Lessons format](references/lessons-format.md)
-- [Improvements format](references/improvements-format.md)
+- [Learnings format](references/learnings-format.md)
 - [Skill changelog](references/skill-changelog.md)

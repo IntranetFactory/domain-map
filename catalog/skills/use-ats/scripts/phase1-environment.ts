@@ -6,20 +6,23 @@
  *
  * Checks in order (halt on first failure):
  *   1. semantius CLI installed, on PATH, and able to authenticate (getCurrentUser).
- *   2. The domain is deployed: at least one live module hosts an entity stamped with
- *      one of the domain's canonical master codes (ENTITY-FIRST), or a live module
- *      carries one of the spec's catalog_module_code / module_slug values (fallback).
+ *   2. The domain is deployed: a live module is stamped settings.domain_code = <CODE>,
+ *      OR hosts an entity stamped with one of the domain's canonical master codes
+ *      (ENTITY-FIRST), OR carries one of the spec's catalog_module_code / module_slug
+ *      values (fallback).
  *
- * Domain membership is resolved ENTITY-FIRST. A deployment may package the domain
- * under any module name (e.g. a "hiring-starter" bundle whose catalog_module_code is
- * not an ATS-* code), so keying presence on module codes alone hides the domain even
- * though its entities are present and canonically stamped. The strongest identity
- * signal in the platform is the entity's catalog_entity_code, so Phase 1 resolves the
- * domain SLICE (the set of module_ids that actually host the domain's OWNED entities)
- * from the canonical master codes, and treats catalog_module_code / module_slug only
- * as hints. Keying on OWNED masters (not every referenced concept) keeps a foreign
- * module that merely hosts a shared/embedded master (e.g. an HR `org_units`) out of
- * the slice.
+ * Domain membership is the UNION of two deterministic signals:
+ *   (a) settings.domain_code — the deploy pipeline stamps every module it provisions
+ *       with { domain_code: <CODE>, module_kind, ... } in its `settings` JSONB. This is
+ *       the authoritative membership marker and, unlike the entity probe, holds even when
+ *       a deployment's entities were created WITHOUT catalog_entity_code stamps.
+ *   (b) ENTITY-FIRST — the module_ids that host the domain's OWNED entities, resolved
+ *       from the canonical master codes (catalog_entity_code). This catches a deployment
+ *       that packages the domain under any module name (e.g. a "hiring-starter" bundle)
+ *       and a hand-built module whose settings were never stamped.
+ * catalog_module_code / module_slug are kept only as weak hints. Keying the entity probe
+ * on OWNED masters (not every referenced concept) keeps a foreign module that merely hosts
+ * a shared/embedded master (e.g. an HR `org_units`) out of the slice.
  *
  * Output: structured JSON on stdout (machine-parseable for the agent + Phase 2a).
  *   { ok, phase, tenant, domain, domain_slice: [{module_id, ...}], modules, summary }
@@ -84,7 +87,8 @@ function normalize(spec: Spec): { code: string; name: string; isBundle: boolean;
   };
 }
 
-type LiveModule = { id: number; module_slug: string; module_name: string; catalog_module_code: string };
+type LiveModule = { id: number; module_slug: string; module_name: string; catalog_module_code: string; settings: any };
+const MODULE_SELECT = "id,module_slug,module_name,catalog_module_code,settings";
 type CmdResult = { ok: boolean; data: any; stderr: string; code: number };
 
 async function call(server: string, tool: string, payload: any): Promise<CmdResult> {
@@ -216,6 +220,18 @@ async function main() {
          "Check platform connectivity. If this is a JWT error, surface it verbatim.");
   }
 
+  // ---- Authoritative deploy stamp: settings.domain_code = <CODE>. ----
+  // The deploy pipeline writes { domain_code, module_kind, naming_mode, catalog_snapshot }
+  // into each provisioned module's `settings` JSONB. Querying it resolves the slice directly,
+  // and (unlike the entity probe) survives a deployment whose entities carry no
+  // catalog_entity_code. Best-effort: a hand-built module may have settings = null, in which
+  // case the entity-first union below still finds it.
+  let byDomainCode: LiveModule[] = [];
+  try {
+    byDomainCode = (await get(`/modules?settings->>domain_code=eq.${view.code}&select=${MODULE_SELECT}`)) as LiveModule[];
+  } catch { /* best-effort; entity-first + code/slug still resolve the slice */ }
+  const settingsModuleIds = new Set<number>(byDomainCode.map((m) => m.id));
+
   // ---- Fallback / hint: module catalog_module_code + module_slug match. ----
   // SERIOUS 3: catalog_module_code is non-unique by design (clone-and-customize), so we
   // collect ALL matching module_ids; never collapse by code into a single row.
@@ -224,31 +240,31 @@ async function main() {
   let byCode: LiveModule[] = [];
   let bySlug: LiveModule[] = [];
   try {
-    if (codes.length) byCode = (await get(`/modules?catalog_module_code=in.(${codes.join(",")})&select=id,module_slug,module_name,catalog_module_code`)) as LiveModule[];
+    if (codes.length) byCode = (await get(`/modules?catalog_module_code=in.(${codes.join(",")})&select=${MODULE_SELECT}`)) as LiveModule[];
   } catch { /* hints are best-effort; entity-first is the source of truth */ }
   try {
-    if (slugs.length) bySlug = (await get(`/modules?module_slug=in.(${slugs.join(",")})&select=id,module_slug,module_name,catalog_module_code`)) as LiveModule[];
+    if (slugs.length) bySlug = (await get(`/modules?module_slug=in.(${slugs.join(",")})&select=${MODULE_SELECT}`)) as LiveModule[];
   } catch { /* best-effort */ }
   const codeModuleIds = new Set<number>(byCode.map((m) => m.id));
   const slugModuleIds = new Set<number>(bySlug.map((m) => m.id));
 
-  const sliceIds = [...new Set<number>([...entityModuleIds, ...codeModuleIds, ...slugModuleIds])];
+  const sliceIds = [...new Set<number>([...settingsModuleIds, ...entityModuleIds, ...codeModuleIds, ...slugModuleIds])];
 
   if (sliceIds.length === 0) {
     halt(
-      `The ${view.name} (${view.code}) ${view.isBundle ? "bundle" : "domain"} is not deployed in this platform (${tenantOrg}). No live module hosts its entities, and no module carries its catalog codes.`,
+      `The ${view.name} (${view.code}) ${view.isBundle ? "bundle" : "domain"} is not deployed in this platform (${tenantOrg}). No live module is stamped settings.domain_code = ${view.code}, hosts its entities, or carries its catalog codes.`,
       `Deploy the blueprint first, then re-run this skill. Blueprint: https://semantius.app/catalog/${view.code.toLowerCase()}/blueprint`,
     );
   }
 
   // Resolve module detail for any slice members discovered only via entity codes.
   const sliceModuleById = new Map<number, LiveModule>();
-  for (const m of [...byCode, ...bySlug]) sliceModuleById.set(m.id, m);
+  for (const m of [...byDomainCode, ...byCode, ...bySlug]) sliceModuleById.set(m.id, m);
   const missing = sliceIds.filter((id) => !sliceModuleById.has(id));
   if (missing.length) {
     try {
       for (const part of chunk(missing, 100)) {
-        const rows = (await get(`/modules?id=in.(${part.join(",")})&select=id,module_slug,module_name,catalog_module_code`)) as LiveModule[];
+        const rows = (await get(`/modules?id=in.(${part.join(",")})&select=${MODULE_SELECT}`)) as LiveModule[];
         for (const m of rows) sliceModuleById.set(m.id, m);
       }
     } catch { /* best-effort labels; module_id is what downstream needs */ }
@@ -258,6 +274,7 @@ async function main() {
     .map((id) => {
       const m = sliceModuleById.get(id);
       const matchedBy: string[] = [];
+      if (settingsModuleIds.has(id)) matchedBy.push("settings_domain_code");
       if (entityModuleIds.has(id)) matchedBy.push("entity_code");
       if (codeModuleIds.has(id)) matchedBy.push("catalog_module_code");
       if (slugModuleIds.has(id)) matchedBy.push("module_slug");
@@ -266,6 +283,7 @@ async function main() {
         module_slug: m?.module_slug ?? null,
         module_name: m?.module_name ?? null,
         catalog_module_code: m?.catalog_module_code ?? null,
+        settings: m?.settings ?? null,
         matched_by: matchedBy,
         entity_hits: entityHits.get(id) ?? 0,
       };
