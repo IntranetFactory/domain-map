@@ -10,9 +10,8 @@ This skill knows the **HVAC Service Management (small-org starter)** domain as s
 
 For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the `use-semantius` skill, which is expected to load alongside.
 
-**Domain inventory** (as-designed, from `spec.json`; the deployment may have renamed or omitted some):
+**Domain inventory** (as-designed, from `spec.json`, orientation only). The actual deployed entities, with renames and omissions already resolved, live in `discovered.json`; operate from that, never from this list:
 
-- Entities: Contacts, Customer Invoices, Customer Sites, Customers, Dispatch Records, Field Visits, Installed Equipment, Sales Quotes, Service Contracts, Service PM Schedules, Service Work Orders, Spare Part Inventory Items, Users
 - Workflows / capabilities: Dispatch and Routing Optimization, Installed Equipment Management, Mobile Technician Enablement, Field Parts and Truck Stock Management, Preventive Maintenance Planning, Service Contract and SLA Management
 
 ---

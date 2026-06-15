@@ -10,9 +10,8 @@ This skill knows the **{{DOMAIN_NAME}}** domain as shipped from the catalog at H
 
 For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the `use-semantius` skill, which is expected to load alongside.
 
-**Domain inventory** (as-designed, from `spec.json`; the deployment may have renamed or omitted some):
+**Domain inventory** (as-designed, from `spec.json`, orientation only). The actual deployed entities, with renames and omissions already resolved, live in `discovered.json`; operate from that, never from this list:
 
-- Entities: {{ENTITY_NOUNS_COMMA_LIST}}
 - Workflows / capabilities: {{CAPABILITY_NAMES_COMMA_LIST}}
 
 ---

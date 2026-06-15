@@ -10,9 +10,8 @@ This skill knows the **Applicant Tracking and Recruiting** domain as shipped fro
 
 For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the `use-semantius` skill, which is expected to load alongside.
 
-**Domain inventory** (as-designed, from `spec.json`; the deployment may have renamed or omitted some):
+**Domain inventory** (as-designed, from `spec.json`, orientation only). The actual deployed entities, with renames and omissions already resolved, live in `discovered.json`; operate from that, never from this list:
 
-- Entities: Adverse Action Notices, Applicant Flow Records, Application Dispositions, Application Screening Answers, Application Screening Questions, Application Stage Transitions, Application Stages, Background Check Adjudications, Background Check Components, Background Check Disputes, Background Check Packages, Background Checks, Candidate Assessment Templates, Assessments, Candidate Consents, Candidate Documents, Candidate Emails, Candidate Engagements, Candidate Notes, Candidate Nurture Campaigns, Referrals, Candidate Tag Assignments, Candidate Tags, Candidates, Data Subject Requests, Drug and Health Screenings, EEO Responses, FCRA Disclosures, FCRA Summary of Rights Acknowledgements, Hiring Team Assignments, Interview Kits, Interview Panels, Interview Questions, Interview Scorecards, Interviewer Availability Slots, Interviews, Applications, Offers, Job Posting Distributions, Job Postings, Job Requisitions, OFCCP Audit Trails, Offer Approvals, Offer Letter Documents, Offer Letter Templates, Offer Versions, Pre-Adverse Action Notices, Pre-Employees, Recruiter Interactions, Recruiter Saved Searches, Recruiting Event Attendances, Recruitment Agencies, Recruitment Events, Recruitment Sources, Referral Campaigns, Referral Payouts, Referral Rewards, Requisition Approvals, Talent Pool Memberships, Talent Pools, Talent Segments, Voluntary Self-Identifications
 - Workflows / capabilities: AI-Driven Matching and Screening, Background Screening, Candidate Experience, Interview Management, Offer Management, Requisition Management, Candidate Sourcing
 
 ---

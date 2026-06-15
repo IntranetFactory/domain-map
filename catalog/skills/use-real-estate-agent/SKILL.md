@@ -10,9 +10,8 @@ This skill knows the **Real Estate Agent (solo / small firm bundle)** domain as 
 
 For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the `use-semantius` skill, which is expected to load alongside.
 
-**Domain inventory** (as-designed, from `spec.json`; the deployment may have renamed or omitted some):
+**Domain inventory** (as-designed, from `spec.json`, orientation only). The actual deployed entities, with renames and omissions already resolved, live in `discovered.json`; operate from that, never from this list:
 
-- Entities: Contacts, Leads, Disclosure Documents, Contracts, Real Estate Listings, Real Estate Transactions, Tour Appointments, Users
 - Workflows / capabilities: Contract Repository, Account and Contact Management, Lead Management, Real Estate Agent CRM, Real Estate Lead Capture and Routing, MLS and Listing Syndication, Showing and Tour Scheduling, Real Estate Transaction Management
 
 ---
