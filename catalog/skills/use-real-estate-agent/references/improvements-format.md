@@ -25,7 +25,7 @@ Rule of thumb: if the same insight applies to the next 5 operations of the same 
 
 ## When NOT to append
 
-- The improvement is actually a tenant-specific schema fact → record in `state.yaml` or `discovered.json` instead.
+- The improvement is actually a tenant-specific schema fact → record in `state.jsonc` or `discovered.json` instead.
 - The improvement is "the spec.json is wrong" → that's still an improvement, but ALSO worth flagging for HQ if universal (see "Upstream contribution" below).
 - One-off user clarification ("user prefers shorter answers") → that's session-scoped, not a procedural pattern about the domain.
 - The improvement contradicts a hard rule in `SKILL.md` (e.g. attempts to weaken Rule #20 overwrite protection). Hard rules are inviolable; improvements work within them, not around them.

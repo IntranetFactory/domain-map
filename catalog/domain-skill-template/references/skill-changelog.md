@@ -2,7 +2,7 @@
 
 Per-skill audit trail. Append-only. Captures decisions, dated context, and the "why" behind notable changes — content that doesn't belong in `SKILL.md` (which stays lean and stable) but that a future agent or maintainer needs to understand the skill's evolution at this tenant.
 
-Loaded on demand, not on every invocation. The skill reads this when context is needed to interpret older state, lessons, or improvements — for example, when a `state.yaml` entry references a decision made months ago, or when a recurring lesson seems to contradict the procedure docs.
+Loaded on demand, not on every invocation. The skill reads this when context is needed to interpret older state, lessons, or improvements — for example, when a `state.jsonc` entry references a decision made months ago, or when a recurring lesson seems to contradict the procedure docs.
 
 ---
 
@@ -19,7 +19,7 @@ Loaded on demand, not on every invocation. The skill reads this when context is 
 
 - Tactical pitfalls (one failed call, one fix) → `lessons.md`
 - Procedural meta-patterns (a class of operation needs a different approach) → `improvements.md`
-- Tenant-specific schema renames / omissions → `state.yaml`
+- Tenant-specific schema renames / omissions → `state.jsonc`
 - Full discovered schema → `discovered.json`
 - Routine successful discoveries — no need to log when everything just works.
 
@@ -54,7 +54,7 @@ The changelog is append-only by default. However, entries that have been superse
 ```markdown
 ## ~~2026-03-10 — Treat `applications` and `job_applications` as the same entity~~
 
-Superseded 2026-05-20: tenant migrated to consistent `job_applications` naming during the v2 upgrade. Rename is no longer active in `state.yaml`.
+Superseded 2026-05-20: tenant migrated to consistent `job_applications` naming during the v2 upgrade. Rename is no longer active in `state.jsonc`.
 ```
 
 Strike-through preserves the history (a future maintainer can see the prior decision and when it was reversed) while making the current state legible.
@@ -68,7 +68,7 @@ Strike-through preserves the history (a future maintainer can see the prior deci
 | `lessons.md` | tactical, one failed call | as observed (frequent) |
 | `improvements.md` | procedural, recurring patterns | when a pattern is recognized (occasional) |
 | `skill-changelog.md` | narrative audit trail | when a decision or migration warrants it (rare) |
-| `state.yaml` | structured tenant deltas | every discovery run |
+| `state.jsonc` | structured tenant deltas | every discovery run |
 | `discovered.json` | structured tenant schema | every discovery run |
 
 If a changelog entry is purely "this lesson recurred and we found a workaround," the workaround belongs in `lessons.md` or `improvements.md`. The changelog records "we decided," not "we learned."

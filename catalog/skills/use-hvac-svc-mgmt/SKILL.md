@@ -23,7 +23,7 @@ For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the 
 |---|---|---|
 | `SKILL.md` | rendered from template + spec at HQ | HQ on skill upgrade |
 | `spec.json` | HQ catalog emit (structured per-domain data) | HQ on skill upgrade |
-| `state.yaml` | deployment discovery run | this skill |
+| `state.jsonc` | deployment discovery run | this skill |
 | `discovered.json` | deployment discovery run (full discovered schema) | this skill |
 | `lessons.md` | deployment runtime | this skill (append-only) |
 | `improvements.md` | deployment runtime | this skill (append-only) |
@@ -31,9 +31,9 @@ For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the 
 | `references/` | generic, no per-domain content | HQ on skill upgrade |
 | `scripts/` | generic Bun/TypeScript bootstrap scripts | HQ on skill upgrade |
 
-The skill **learns** locally through three append-only files: `state.yaml` (deltas vs. spec), `lessons.md` (tactical pitfalls), and `improvements.md` (procedural meta-patterns). All three are read on every invocation and applied to subsequent operations. `SKILL.md` itself stays untouched, the procedure manual is stable; the learning layer grows around it.
+The skill **learns** locally through three append-only files: `state.jsonc` (deltas vs. spec), `lessons.md` (tactical pitfalls), and `improvements.md` (procedural meta-patterns). All three are read on every invocation and applied to subsequent operations. `SKILL.md` itself stays untouched, the procedure manual is stable; the learning layer grows around it.
 
-The installer preserves `state.yaml` and `lessons.md` across upgrades. Teams should commit both alongside the skill if they want shared discovery and lessons.
+The installer preserves `state.jsonc` and `lessons.md` across upgrades. Teams should commit both alongside the skill if they want shared discovery and lessons.
 
 ---
 
@@ -49,8 +49,8 @@ Before doing any domain work, the skill follows this sequence:
    - `ready.flag` exists, AND
    - `ready.flag.valid_through_emitted == spec.emitted`, AND
    - `ready.flag.valid_through_major == spec.facts_major`.
-   If any condition fails, run `bun run scripts/bootstrap.ts` from the project root. Bootstrap orchestrates Phase 1 (environment) → Phase 2a (runs the provenance resolution ladder, writes `discovered.json`) → ready.flag. Phase 2a resolves every uber-model concept against the live deployment by **deterministic platform reads** (no name guessing): see the ladder below. If Phase 2a leaves genuine ambiguities (a live row with an **empty** `catalog_entity_code`, i.e. created outside the deploy pipeline, or a concept that resolves to more than one in-domain entity), bootstrap DOES NOT write `ready.flag`; the agent runs Phase 2b ([references/discovery.md](references/discovery.md)) to surface only those to the user, records resolutions in `state.yaml`, then re-invokes `bootstrap.ts`. A fully provenance-stamped deployment yields zero ambiguities and no prompts.
-5. **Once `ready.flag` is current,** answer the user's request using the discovered entity names, relationships, and lifecycle from `state.yaml` (and `discovered.json` for field-level detail when needed). Never assume catalog names hold; this deployment may have renamed `suppliers` to `vendors`, dropped `cost_centers`, or split a master into two entities. Operational failures from semantius calls surface verbatim (Rule #6), the skill does NOT pre-flight authentication on every invocation; trust the CLI to error when it errors.
+   If any condition fails, run `bun run scripts/bootstrap.ts` from the project root. Bootstrap orchestrates Phase 1 (environment) → Phase 2a (runs the provenance resolution ladder, writes `discovered.json`) → ready.flag. Phase 2a resolves every uber-model concept against the live deployment by **deterministic platform reads** (no name guessing): see the ladder below. If Phase 2a leaves genuine ambiguities (a live row with an **empty** `catalog_entity_code`, i.e. created outside the deploy pipeline, or a concept that resolves to more than one in-domain entity), bootstrap DOES NOT write `ready.flag`; the agent runs Phase 2b ([references/discovery.md](references/discovery.md)) to surface only those to the user, records resolutions in `state.jsonc`, then re-invokes `bootstrap.ts`. A fully provenance-stamped deployment yields zero ambiguities and no prompts.
+5. **Once `ready.flag` is current,** answer the user's request using the discovered entity names, relationships, and lifecycle from `state.jsonc` (and `discovered.json` for field-level detail when needed). Never assume catalog names hold; this deployment may have renamed `suppliers` to `vendors`, dropped `cost_centers`, or split a master into two entities. Operational failures from semantius calls surface verbatim (Rule #6), the skill does NOT pre-flight authentication on every invocation; trust the CLI to error when it errors.
 6. **When a non-obvious pitfall is observed** during the run, append a `lessons.md` entry. **When a recurring procedural pattern is identified** that warrants a different approach than the procedure docs, propose the improvement at end-of-session for user approval before appending to `improvements.md` (improvements OVERRIDE procedure docs, so they need human review, see [references/improvements-format.md](references/improvements-format.md)). Both feed back into step 3 on the next invocation.
 
 To force a fresh discovery: delete `ready.flag` (or also `discovered.json` and `.phase1-cache.json` for a fully cold rebuild). The next invocation will re-run bootstrap.
@@ -61,7 +61,7 @@ To force a fresh discovery: delete `ready.flag` (or also `discovered.json` and `
 
 As of core v0.1.2 the live platform carries provenance columns, so discovery reads identity instead of guessing it. The **domain slice** (the modules Phase 2a scans) is resolved **entity-first** by Phase 1: the live `module_id`s that host the domain's owned master codes, plus any module that carries a spec module code/slug. For each uber-model concept `X` the domain assumes, Phase 2a resolves it against the live deployment in this order (first hit wins), and a live `table_name` that differs from `X` is a deterministic rename:
 
-0. **State resolution**, a resolution the user already recorded in `state.yaml` from a prior Phase 2b (rename, omission, or custom classification). Applied first so the bootstrap loop converges instead of re-asking.
+0. **State resolution**, a resolution the user already recorded in `state.jsonc` from a prior Phase 2b (rename, omission, or custom classification). Applied first so the bootstrap loop converges instead of re-asking.
 1. **FK reachability**, a live FK on the domain's own entities whose `reference_table` resolves to an entity carrying `catalog_entity_code = X`. Reseating is universal, so this catches silo, same-name share, and reuse/merge whenever `X` still has a consumer in the domain.
 2. **Owned canonical code**, `catalog_entity_code = X` AND the entity's module is in the domain slice. Catches masters the domain owns and its own silos (`table_name` is the `X`-rename).
 3. **Alias**, an entity whose `catalog_entity_aliases` contains `{ alias_code: X, source_domain: <this domain> }` (JSONB containment; resolve on the **pair**, never `alias_code` alone). Catches a reuse/merge that renamed `X` onto a differently-named host.
@@ -99,42 +99,39 @@ The HQ-emitted structured snapshot of this domain. Read on demand (not loaded in
 - Expected role personas with their module footprints
 - Catalog enum vocabularies for any column the skill might write
 
-**Treat `spec.json` as the read-only "as-designed" shape.** What this deployment actually configured lives in `state.yaml`.
+**Treat `spec.json` as the read-only "as-designed" shape.** What this deployment actually configured lives in `state.jsonc`.
 
 ---
 
-## What's in `state.yaml`
+## What's in `state.jsonc`
 
 Written by the skill during discovery. Records the deployment-specific reality:
 
-```yaml
-discovered_at: 2026-05-30
-discovered_against_major: 1
-discovered_against_emitted: 2026-05-30
+`state.jsonc` is **JSONC** (JSON plus `//` and `/* */` comments and trailing commas), parsed by `phase2a` with Bun's built-in `Bun.JSONC.parse`. Comments are safe, so you can annotate decisions inline:
 
-deployment:
-  module_ids: [<slice module_ids from Phase 1>]   # the entity-first domain slice
-  org: <from getCurrentUser>
+```jsonc
+{
+  "discovered_at": "2026-05-30",
+  "discovered_against_major": 1,
+  "discovered_against_emitted": "2026-05-30",
 
-# The four keys below are the loop-termination contract: phase2a READS them back on every
-# run (ladder step 0) and drops anything already resolved from its ambiguities[]. Keep them
-# FLAT (a map of concept: table, or a list of bare names) so the minimal state reader sees them.
+  "deployment": {
+    "module_ids": [1033],          // the entity-first domain slice (from Phase 1)
+    "org": "<from getCurrentUser>"
+  },
 
-entity_renames:                   # rename confirmations + multi_owner picks (concept: live_table)
-  job_applications: applications  # this deployment prefers the bare-word form
-  recruitment_sources: sources
-
-omitted_entities:                 # OWNED concepts the user confirmed are not deployed here
-  - background_checks             # handled in a separate vendor system
-
-external_entities:                # concepts owned by ANOTHER domain, not present here (informational)
-  - org_units
-  - job_profiles
-
-custom_entities: []               # live table names confirmed custom (flat list of names)
-
-unresolved_questions: []          # concept/live names the user said "skip for now"
-                                  # downgraded to non-blocking deferred[]; surfaced next session
+  // The four keys below are the loop-termination contract: phase2a reads them back on every
+  // run (ladder step 0) and drops anything already resolved from its ambiguities[].
+  "entity_renames": {              // rename confirmations + multi_owner picks (concept -> live table)
+    "job_applications": "applications",   // this deployment prefers the bare-word form
+    "recruitment_sources": "sources"
+  },
+  "omitted_entities": ["background_checks"],   // OWNED concepts the user confirmed not deployed here
+  "custom_entities": [],           // live table names confirmed custom
+  "unresolved_questions": []       // concept/live names the user said "skip" (-> non-blocking deferred)
+  // Note: external_entities is NOT recorded here; phase2a computes it into discovered.json.
+  // Only the four keys above are read back by phase2a (ladder step 0).
+}
 ```
 
 ---
@@ -152,12 +149,12 @@ Both are local to this deployment by default. If either is genuinely universal, 
 
 The full discovered schema written by the discovery procedure. Loaded on demand (not on every conversation) when the skill needs field-level detail. It carries:
 
-- `resolution`, per concept, how the ladder resolved it (`via: state_resolution | fk_reachability | owned_code | alias | absent | external_absent`, the `live_table`, and whether it `renamed`).
+- `resolution`, per concept, how the ladder resolved it (`via: state_resolution | fk_reachability | owned_code | alias | absent | external_absent | deferred`, the `live_table`, and whether it `renamed`).
 - `entity_renames`, canonical concept → live `table_name` (deterministic, from the ladder).
 - `omitted_entities`, OWNED concepts not deployed here; `external_entities`, concepts owned by another domain and not present; `custom_entities`, live rows not claimed by a concept.
 - `entities`, per live table: its `catalog_entity_code`, `canonical_owner_module`, `entity_type`, `pattern_flags`, `catalog_entity_aliases`, fields (each with `catalog_field_code`, `format`, `reference_table`, `enum_values`), and the lifecycle field/values.
 
-Together with `state.yaml` this gives the complete picture of what this deployment actually has, no live re-query needed.
+Together with `state.jsonc` this gives the complete picture of what this deployment actually has, no live re-query needed.
 
 ---
 
@@ -196,7 +193,7 @@ UI base: `https://<org>.semantius.app/hvac-svc-mgmt/<table>`
 
 Spec file: [`spec.json`](./spec.json)
 
-State file: `./state.yaml` (created on first discovery)
+State file: `./state.jsonc` (created on first discovery)
 
 Lessons file: `./lessons.md` (created on first lesson)
 

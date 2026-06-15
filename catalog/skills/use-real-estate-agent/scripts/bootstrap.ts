@@ -4,7 +4,7 @@
  * Runs Phase 1 (environment check), then Phase 2a (structural discovery), then
  * decides whether to write ready.flag. If Phase 2a reported ambiguities, the
  * flag is NOT written: Phase 2b (agent-driven ambiguity resolution) must run
- * first, and bootstrap must be re-invoked after the agent updates state.yaml.
+ * first, and bootstrap must be re-invoked after the agent updates state.jsonc.
  *
  * Run from project root:
  *   bun run .claude/skills/use-<domain>/scripts/bootstrap.ts
@@ -15,7 +15,7 @@
  *   - Halts on Phase 2a hard failure (cannot reach CLI, malformed spec).
  *   - On Phase 2a soft outcome (ambiguities): writes nothing, surfaces the
  *     ambiguities list to stdout for the agent. The agent runs Phase 2b
- *     (interactive resolution) and re-invokes bootstrap when state.yaml is ready.
+ *     (interactive resolution) and re-invokes bootstrap when state.jsonc is ready.
  *   - On Phase 2a clean outcome: writes ready.flag with schema fingerprint.
  *
  * The skill itself only ever checks for the existence (and freshness) of
@@ -61,7 +61,7 @@ async function main() {
 
   if (!existsSync(specPath)) {
     halt(`spec.json missing at ${specPath}`,
-         "The skill bundle is incomplete. Reinstall via npx semantius-skill install use-<domain>.");
+         "The skill bundle is incomplete. Reinstall the skill from the Semantius catalog.");
   }
   const spec = JSON.parse(readFileSync(specPath, "utf-8"));
 
@@ -89,7 +89,7 @@ async function main() {
   const deferred = (phase2a.deferred ?? []) as Array<{ kind: string; concept?: string; live_name?: string; reason: string }>;
   if (ambiguities.length > 0) {
     // Phase 2b is required before ready.flag can be written. Only ambiguities the user has
-    // NOT yet resolved in state.yaml reach here (phase2a consumes recorded resolutions), so
+    // NOT yet resolved in state.jsonc reach here (phase2a consumes recorded resolutions), so
     // the loop converges: each pass the agent resolves, records, and re-invokes.
     if (existsSync(readyFlagPath)) unlinkSync(readyFlagPath);
     console.log(JSON.stringify({
@@ -99,7 +99,7 @@ async function main() {
       reason: `Phase 2a discovered ${ambiguities.length} ambiguities that need user resolution. ready.flag NOT written.`,
       ambiguities,
       deferred,
-      next: "Agent runs Phase 2b (see references/discovery.md) to surface each ambiguity to the user, records resolutions in state.yaml (entity_renames / omitted_entities / custom_entities / unresolved_questions), then re-invokes bootstrap.ts. phase2a reads those back so resolved items do not re-appear.",
+      next: "Agent runs Phase 2b (see references/discovery.md) to surface each ambiguity to the user, records resolutions in state.jsonc (entity_renames / omitted_entities / custom_entities / unresolved_questions), then re-invokes bootstrap.ts. phase2a reads those back so resolved items do not re-appear.",
     }, null, 2));
     process.exit(0);
   }

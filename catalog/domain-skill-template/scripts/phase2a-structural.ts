@@ -6,7 +6,7 @@
  * reads against the provenance columns shipped in core v0.1.2). First hit wins:
  *
  *   step 0  state resolution  — a resolution the user already made in a prior Phase 2b
- *                               (recorded in state.yaml: entity_renames / omitted /
+ *                               (recorded in state.jsonc: entity_renames / omitted /
  *                               custom_entities). Consumed here so the bootstrap loop
  *                               terminates instead of re-emitting the same ambiguity.
  *   step 1  FK reachability   — a live FK in the domain's own entities whose
@@ -33,7 +33,7 @@
  * The name/alias/label heuristic survives ONLY as a fallback for live rows whose
  * catalog_entity_code is EMPTY ('' — created outside the deploy pipeline). Those raise an
  * ambiguity for Phase 2b (agent + user) UNLESS the user already resolved them in
- * state.yaml. A fully stamped deployment resolves with zero ambiguities.
+ * state.jsonc. A fully stamped deployment resolves with zero ambiguities.
  *
  * Platform schema notes (core v0.1.2, verified live):
  *   - `entities` is keyed by `table_name` (no `name`, no `id` column).
@@ -186,43 +186,47 @@ const asAliases = (v: unknown): AliasElement[] => (Array.isArray(v) ? (v as Alia
 const asFlags = (v: unknown): Record<string, boolean> =>
   v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, boolean>) : {};
 
-// ---------- minimal state.yaml reader (SERIOUS 2: loop termination) ----------
+// ---------- state.jsonc reader (SERIOUS 2: loop termination) ----------
 //
-// Phase 2b records the user's resolutions in state.yaml; phase2a must read them back so
-// the bootstrap loop converges instead of re-emitting the same ambiguities forever. This
-// is NOT a general YAML parser: it reads only the FLAT top-level keys phase2a consumes:
-//   entity_renames:      flat map  concept -> live_table   (rename_candidate "yes" / multi_owner pick)
-//   omitted_entities:    flat list of concept names        (user-confirmed omissions)
-//   custom_entities:     flat list of live table names     (user-confirmed custom rows)
-//   unresolved_questions: flat list of concept/live names  (user said "skip")
-// Object-shaped or deeply nested entries under these keys are out of contract.
+// Phase 2b records the user's resolutions in state.jsonc; phase2a reads them back so the
+// bootstrap loop converges instead of re-emitting the same ambiguities forever. The file is
+// JSONC (JSON + // and /* */ comments + trailing commas), parsed with Bun's built-in
+// Bun.JSONC.parse: a real parser, so comments and key ordering can never corrupt a value
+// (the rev-2 failure of the old hand-rolled YAML reader). It is human-editable and
+// committable, needs zero dependencies, and matches spec.json's JSON.parse. phase2a consumes
+// four keys:
+//   entity_renames:       { concept: live_table }          (rename "yes" / multi_owner pick)
+//   omitted_entities:     ["concept", ...]                 (user-confirmed omissions)
+//   custom_entities:      ["live_table", ...]              (user-confirmed custom rows)
+//   unresolved_questions: ["concept_or_live_name", ...]    (user said "skip")
 type StateResolutions = {
   entityRenames: Map<string, string>;
   omitted: Set<string>;
   customNames: Set<string>;
   deferred: Set<string>;
+  warning?: string; // non-fatal: a state.jsonc was present but could not be parsed
 };
 
-function parseScalar(s: string): string {
-  let v = s.trim();
-  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
-  return v.trim();
+// Parse JSONC via Bun's built-in. The skill already gates on Bun; if this build predates
+// Bun.JSONC, throw a tagged error so readState can fail clear (NOT silently swallow it).
+const JSONC_UNAVAILABLE = "JSONC_UNAVAILABLE";
+function parseJsonc(text: string): any {
+  const jsonc = (globalThis as any).Bun?.JSONC;
+  if (jsonc && typeof jsonc.parse === "function") return jsonc.parse(text);
+  throw new Error(JSONC_UNAVAILABLE);
 }
-function flowList(s: string): string[] {
-  const m = /^\[(.*)\]$/.exec(s.trim());
-  if (!m) return [];
-  return m[1].split(",").map(parseScalar).filter(Boolean);
-}
-function flowMap(s: string): [string, string][] {
-  const m = /^\{(.*)\}$/.exec(s.trim());
-  if (!m) return [];
-  return m[1]
-    .split(",")
-    .map((kv): [string, string] | null => {
-      const i = kv.indexOf(":");
-      return i < 0 ? null : [parseScalar(kv.slice(0, i)), parseScalar(kv.slice(i + 1))];
-    })
-    .filter((x): x is [string, string] => x !== null);
+
+const asArray = (v: unknown): any[] => (Array.isArray(v) ? v : []);
+// Pull a name out of a string item or an object item (key order does not matter).
+function itemName(item: unknown, keys: string[]): string | null {
+  if (typeof item === "string") return item || null;
+  if (item && typeof item === "object") {
+    for (const k of keys) {
+      const v = (item as any)[k];
+      if (typeof v === "string" && v) return v;
+    }
+  }
+  return null;
 }
 
 function readState(path: string): StateResolutions {
@@ -231,69 +235,43 @@ function readState(path: string): StateResolutions {
   try {
     text = readFileSync(path, "utf-8");
   } catch {
+    return res; // no state file yet (first run / no Phase 2b)
+  }
+  let data: any;
+  try {
+    data = parseJsonc(text);
+  } catch (e: any) {
+    if (e?.message === JSONC_UNAVAILABLE) {
+      // A state.jsonc EXISTS but this Bun cannot parse JSONC. Swallowing would silently
+      // re-open the Phase 2b loop (the bug the JSONC switch removed), so fail clear: this
+      // propagates to main().catch -> bootstrap halts phase2a with the message.
+      throw new Error(
+        `state.jsonc exists but Bun.JSONC.parse is unavailable in this Bun (${(globalThis as any).Bun?.version ?? "unknown"}). ` +
+          "Upgrade Bun so recorded Phase 2b resolutions are honored.",
+      );
+    }
+    // Genuine malformed JSONC: do not abort discovery, but do not fail SILENTLY either, surface
+    // a warning so the ignored resolutions are visible rather than a quiet loop re-open.
+    res.warning = `state.jsonc could not be parsed as JSONC (${e?.message ?? e}); recorded resolutions were ignored this run.`;
     return res;
   }
-  const lines = text.split(/\r?\n/);
+  if (!data || typeof data !== "object") return res;
 
-  type Block = { key: string; inline: string; body: string[] };
-  const blocks: Block[] = [];
-  let cur: Block | null = null;
-  for (const raw of lines) {
-    if (!raw.trim() || raw.trimStart().startsWith("#")) continue;
-    const top = /^([A-Za-z0-9_]+):(.*)$/.exec(raw);
-    if (top && !/^\s/.test(raw)) {
-      cur = { key: top[1], inline: top[2].trim(), body: [] };
-      blocks.push(cur);
-    } else if (cur) {
-      cur.body.push(raw);
-    }
+  const er = data.entity_renames;
+  if (er && typeof er === "object" && !Array.isArray(er)) {
+    for (const [k, v] of Object.entries(er)) if (typeof v === "string" && v) res.entityRenames.set(k, v);
   }
-
-  for (const b of blocks) {
-    const body = b.body.map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
-    const listMode = b.inline.startsWith("[") || body.some((l) => l.startsWith("- "));
-    const listVals: string[] = [];
-    const mapVals: [string, string][] = [];
-
-    if (b.inline.startsWith("[")) listVals.push(...flowList(b.inline));
-    if (b.inline.startsWith("{")) mapVals.push(...flowMap(b.inline));
-
-    if (listMode) {
-      for (const l of body) {
-        if (!l.startsWith("- ")) continue; // ignore object-continuation lines
-        const item = l.slice(2).trim();
-        if (item.startsWith("{")) {
-          const fm = flowMap(item);
-          const pick = fm.find(([k]) => ["live_name", "name", "concept"].includes(k));
-          if (pick) listVals.push(pick[1]);
-          continue;
-        }
-        const m = /^(live_name|name|concept):\s*(.+)$/.exec(item);
-        listVals.push(m ? parseScalar(m[2]) : parseScalar(item));
-      }
-    } else {
-      for (const l of body) {
-        const m = /^([A-Za-z0-9_.\- ]+):\s*(.*)$/.exec(l);
-        if (m && m[2].trim() && !m[2].trim().startsWith("{") && !m[2].trim().startsWith("[")) {
-          mapVals.push([parseScalar(m[1]), parseScalar(m[2])]);
-        }
-      }
-    }
-
-    switch (b.key) {
-      case "entity_renames":
-        for (const [k, v] of mapVals) if (k && v) res.entityRenames.set(k, v);
-        break;
-      case "omitted_entities":
-        for (const x of listVals) res.omitted.add(x);
-        break;
-      case "custom_entities":
-        for (const x of listVals) res.customNames.add(x);
-        break;
-      case "unresolved_questions":
-        for (const x of listVals) res.deferred.add(x);
-        break;
-    }
+  for (const x of asArray(data.omitted_entities)) {
+    const n = itemName(x, ["concept", "name"]);
+    if (n) res.omitted.add(n);
+  }
+  for (const x of asArray(data.custom_entities)) {
+    const n = itemName(x, ["live_name", "name", "table_name", "concept"]);
+    if (n) res.customNames.add(n);
+  }
+  for (const x of asArray(data.unresolved_questions)) {
+    const n = itemName(x, ["concept", "live_name", "name"]);
+    if (n) res.deferred.add(n);
   }
   return res;
 }
@@ -302,7 +280,7 @@ async function main() {
   const skillDir = resolve(import.meta.dir, "..");
   const specPath = resolve(skillDir, "spec.json");
   const phase1Path = resolve(skillDir, ".phase1-cache.json");
-  const statePath = resolve(skillDir, "state.yaml");
+  const statePath = resolve(skillDir, "state.jsonc");
   const discoveredPath = resolve(skillDir, "discovered.json");
 
   const spec: Spec = JSON.parse(readFileSync(specPath, "utf-8"));
@@ -428,7 +406,7 @@ async function main() {
   let stateResolvedCount = 0;
 
   for (const X of concepts) {
-    // step 0 — a resolution the user already recorded in state.yaml.
+    // step 0 — a resolution the user already recorded in state.jsonc.
     if (state.entityRenames.has(X)) {
       const table = state.entityRenames.get(X) as string;
       if (liveByTable.has(table) || byOwnedCode.has(X)) {
@@ -466,12 +444,18 @@ async function main() {
     }
     if (owned.length > 1) {
       // Not pre-resolved in state -> still a genuine multi_owner choice (or a "skip").
+      const candidates = owned.map((e) => e.table_name);
       const amb = {
         kind: "multi_owner",
         concept: X,
-        reason: `Concept "${X}" resolves to ${owned.length} entities in this domain (${owned.map((e) => e.table_name).join(", ")}). Cannot pick one deterministically.`,
+        reason: `Concept "${X}" resolves to ${owned.length} entities in this domain (${candidates.join(", ")}). Cannot pick one deterministically.`,
       };
-      (state.deferred.has(X) ? deferred : ambiguities).push(amb);
+      if (state.deferred.has(X)) {
+        deferred.push(amb);
+        resolutions[X] = { via: "deferred", candidates }; // observable: a skipped multi_owner is not dropped
+      } else {
+        ambiguities.push(amb);
+      }
       continue;
     }
     // step 3 — alias (reuse/merge into a differently-named host)
@@ -580,11 +564,12 @@ async function main() {
     custom_entities: customEntities,
     entities: discoveredEntities,
     fetch_errors: fetchErrors,
+    state_warning: state.warning ?? null,
   };
 
   writeFileSync(discoveredPath, JSON.stringify(discovered, null, 2));
 
-  const resolvedCount = Object.values(resolutions).filter((r: any) => r.via !== "absent" && r.via !== "external_absent").length;
+  const resolvedCount = Object.values(resolutions).filter((r: any) => !["absent", "external_absent", "deferred"].includes(r.via)).length;
   console.log(JSON.stringify({
     ok: true,
     phase: "2a",
@@ -598,11 +583,12 @@ async function main() {
     custom: customEntities.length,
     state_resolved: stateResolvedCount,
     fetch_errors: fetchErrors,
+    state_warning: state.warning ?? null,
     ambiguities,
     deferred,
     next: ambiguities.length === 0
       ? "Phase 2a resolved every concept deterministically (ladder + recorded state). bootstrap.ts can write ready.flag."
-      : `Phase 2a left ${ambiguities.length} genuine ambiguities (empty-code rows or multi-recurrence not yet resolved in state.yaml). Phase 2b (agent-driven) must surface these to the user, record the resolutions in state.yaml, then re-invoke bootstrap.ts.`,
+      : `Phase 2a left ${ambiguities.length} genuine ambiguities (empty-code rows or multi-recurrence not yet resolved in state.jsonc). Phase 2b (agent-driven) must surface these to the user, record the resolutions in state.jsonc, then re-invoke bootstrap.ts.`,
   }, null, 2));
   process.exit(0);
 }

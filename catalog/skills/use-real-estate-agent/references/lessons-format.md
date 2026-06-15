@@ -17,8 +17,8 @@ Append a lesson when ALL of the following are true:
 Do NOT append a lesson for:
 - Errors already covered by the spec.json's `enums` section. The spec.json is the right place for catalog enum values; lessons are for things facts can't capture.
 - One-off user mistakes ("user gave me a malformed JSON, I asked, they fixed it"). Lessons describe the platform or tenant, not the conversation.
-- Anything that should be a fix to `state.yaml` instead (e.g. "entity X was renamed to Y" -> belongs in `state.entity_renames`, not in lessons).
-- Errors caused by stale `state.yaml`. Trigger a rediscovery instead.
+- Anything that should be a fix to `state.jsonc` instead (e.g. "entity X was renamed to Y" -> belongs in `state.entity_renames`, not in lessons).
+- Errors caused by stale `state.jsonc`. Trigger a rediscovery instead.
 
 ---
 

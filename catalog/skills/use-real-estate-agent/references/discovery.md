@@ -3,7 +3,7 @@
 Reconciles the HQ-emitted `spec.json` (the uber-model this domain assumes) against what is
 actually deployed in this deployment. Discovery is **read-only** against the platform; it never
 inserts, updates, or deletes. Its outputs are `discovered.json` (full snapshot + per-concept
-resolution) and `state.yaml` (lean deltas).
+resolution) and `state.jsonc` (lean deltas).
 
 As of core v0.1.2 the live platform carries **provenance columns**, so discovery is a set of
 deterministic reads, not name guessing. `scripts/phase2a-structural.ts` runs the resolution ladder
@@ -97,7 +97,7 @@ None of the above resolved `X`. Split by whether the domain OWNS `X`:
   `omitted_entities`. It was never this domain's to deploy, so do not report it as an ATS
   omission. The skill still cannot query it here; the distinction is for accurate explanation.
 
-(A `step 0` precedes step 1: any resolution the user already recorded in `state.yaml` from a
+(A `step 0` precedes step 1: any resolution the user already recorded in `state.jsonc` from a
 prior Phase 2b — `entity_renames`, `omitted_entities`, `custom_entities` — is applied first, so
 the bootstrap loop converges. See Phase 2b below.)
 
@@ -133,24 +133,27 @@ trust canonical field names and let a runtime failure become a lesson.
 is a real judgment call. Default to ASK; a wrong resolution propagates into every later run.
 
 **How the loop terminates (read this).** The cycle is: phase2a emits ambiguities → the agent
-asks the user → the agent records the resolutions in `state.yaml` → the agent re-invokes
-`bootstrap.ts`. This converges **because `phase2a` reads `state.yaml` back on every run** (step 0
-of the ladder) and drops anything already resolved from the `ambiguities[]` it emits. Record
-each resolution under the matching flat top-level key so phase2a can consume it:
+asks the user → the agent records the resolutions in `state.jsonc` → the agent re-invokes
+`bootstrap.ts`. This converges **because `phase2a` reads `state.jsonc` back on every run** (step 0
+of the ladder) and drops anything already resolved from the `ambiguities[]` it emits. `state.jsonc`
+is JSONC (JSON + `//` / `/* */` comments + trailing commas), parsed with `Bun.JSONC.parse`, so
+comments and key ordering can never corrupt a value. Record each resolution under the matching key:
 
-| Resolution | Record in `state.yaml` as | Effect on next phase2a run |
+| Resolution | Record in `state.jsonc` as | Effect on next phase2a run |
 |---|---|---|
-| rename confirmed / multi_owner pick | `entity_renames:` flat map, `concept: live_table` | concept resolves via `state_resolution`; ambiguity gone |
-| row confirmed custom | `custom_entities:` flat list of live table names | row recorded as custom; no `custom_entity` ambiguity |
-| concept confirmed omitted | `omitted_entities:` flat list of concept names | concept forced absent; no ambiguity |
-| user said "skip" | `unresolved_questions:` flat list of concept/live names | downgraded to non-blocking `deferred[]`; surfaced next session |
+| rename confirmed / multi_owner pick | `"entity_renames": { "concept": "live_table" }` | concept resolves via `state_resolution`; ambiguity gone |
+| row confirmed custom | `"custom_entities": ["live_table", ...]` | row recorded as custom; no `custom_entity` ambiguity |
+| concept confirmed omitted | `"omitted_entities": ["concept", ...]` | concept forced absent; no ambiguity |
+| user said "skip" | `"unresolved_questions": ["concept_or_live_name", ...]` | downgraded to non-blocking `deferred[]`; surfaced next session |
 
-Keep these keys **flat** (a map of `concept: table`, or a list of bare names). phase2a's
-state reader is intentionally minimal and only understands the flat shapes above.
+Values are matched verbatim against concept codes / live table names, so write the bare code
+(`"background_checks"`), not a decorated phrase. List items may also be objects
+(`{ "concept": "background_checks", "note": "..." }`); phase2a reads `concept` / `live_name` /
+`name` keys in any order.
 
 | Ambiguity `kind` | When phase2a emits it | Agent action |
 |---|---|---|
-| `rename_candidate` | a live row with **empty** `catalog_entity_code` whose name/label matches an otherwise-unresolved concept | ASK: *"`<live_name>` has no catalog lineage but looks like your `<concept>`. Same thing?"* On yes, record the rename in `state.yaml`; on no, treat as custom. |
+| `rename_candidate` | a live row with **empty** `catalog_entity_code` whose name/label matches an otherwise-unresolved concept | ASK: *"`<live_name>` has no catalog lineage but looks like your `<concept>`. Same thing?"* On yes, record the rename in `state.jsonc`; on no, treat as custom. |
 | `custom_entity` | an **empty-code** row matching no concept | ASK to classify its role (master / log / reference data), or confirm it is custom. Record in `state.custom_entities`. |
 | `multi_owner` | more than one in-slice entity shares `catalog_entity_code = X` | ASK which is the one the domain means; record the choice. |
 
@@ -163,7 +166,7 @@ proceed; surface unresolved questions at the start of the next session.
 
 ---
 
-## Pass 4: write `discovered.json` + `state.yaml`, report
+## Pass 4: write `discovered.json` + `state.jsonc`, report
 
 `phase2a` writes `discovered.json` (full snapshot, loaded on demand). Per entity it records the
 provenance reads:
@@ -174,7 +177,7 @@ provenance reads:
   "domain_code": "ATS",
   "slice_module_ids": [0],
   "resolution": {
-    "<concept>": { "via": "state_resolution|fk_reachability|owned_code|alias|absent|external_absent", "live_table": "<name>", "renamed": false }
+    "<concept>": { "via": "state_resolution|fk_reachability|owned_code|alias|absent|external_absent|deferred", "live_table": "<name>", "renamed": false }
   },
   "entity_renames": { "<canonical_concept>": "<live_table>" },
   "omitted_entities": ["<owned_concept_not_deployed>"],
@@ -193,7 +196,7 @@ provenance reads:
 }
 ```
 
-The agent then writes the lean `state.yaml` deltas (module presence, `entity_renames`,
+The agent then writes the lean `state.jsonc` deltas (module presence, `entity_renames`,
 `omitted_entities`, `custom_entities`, `unresolved_questions`, plus any Phase 2b resolutions), and
 surfaces a one-screen summary:
 
@@ -203,7 +206,7 @@ surfaces a one-screen summary:
   Concepts: 11 resolved (1 rename: job_applications -> applications via owned_code), 2 omitted
   Custom / empty-code rows: 1 (referral_bonuses -> classify)
   Ambiguities needing you: 0
-  Written to: discovered.json + state.yaml
+  Written to: discovered.json + state.jsonc
 ```
 
 ---

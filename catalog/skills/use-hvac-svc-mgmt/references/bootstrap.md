@@ -1,8 +1,8 @@
 # Bootstrap checks
 
-Run these in order on every invocation where `state.yaml` is missing or stale. Each check halts with a specific, actionable error message on failure. Do not continue past a failed check; do not auto-install or auto-configure.
+Run these in order on every invocation where `state.jsonc` is missing or stale. Each check halts with a specific, actionable error message on failure. Do not continue past a failed check; do not auto-install or auto-configure.
 
-The four checks are cheap (single CLI call each), so they run sequentially on every cold start. They do NOT run on warm starts where `state.yaml` is current.
+The four checks are cheap (single CLI call each), so they run sequentially on every cold start. They do NOT run on warm starts where `state.jsonc` is current.
 
 ---
 
@@ -79,7 +79,7 @@ foreign module that merely hosts a shared/embedded master (e.g. an HR `org_units
 slice. `scripts/phase1-environment.ts` emits the slice as `domain_slice` and the per-spec-module
 hint as `modules`.
 
-- If the slice is **non-empty**, record its `module_id`s in `state.yaml` under `deployment` and proceed. A spec module that does not appear is a deployment choice (or a bundled package), not a failure.
+- If the slice is **non-empty**, record its `module_id`s in `state.jsonc` under `deployment` and proceed. A spec module that does not appear is a deployment choice (or a bundled package), not a failure.
 - If the slice is **empty**, halt with the error template below, substituting the configured domain at runtime:
 
 > The `<spec.domain.name>` domain is not deployed in your platform. No live module hosts its entities, and no module carries its catalog codes. Deploy the domain blueprint first:
@@ -96,13 +96,17 @@ hint as `modules`.
 
 ## After all four checks pass
 
-Record the deployment metadata in `state.yaml`:
+Record the deployment metadata in `state.jsonc` (JSONC: JSON with `//` comments and trailing
+commas, parsed by `phase2a` via `Bun.JSONC.parse`):
 
-```yaml
-deployment:
-  module_ids: [<present module_ids from check 4>]   # the domain slice
-  org: <from check 3 getCurrentUser response>
-  bootstrap_passed_at: <ISO timestamp>
+```jsonc
+{
+  "deployment": {
+    "module_ids": [/* present module_ids from check 4 */],   // the domain slice
+    "org": "<from check 3 getCurrentUser response>",
+    "bootstrap_passed_at": "<ISO timestamp>"
+  }
+}
 ```
 
 Then continue to the discovery procedure ([discovery.md](discovery.md)).
