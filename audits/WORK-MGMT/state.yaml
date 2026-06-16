@@ -12,7 +12,7 @@ schema_version: 2
 domain: WORK-MGMT
 status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-13"
+last_audit: "2026-06-16"
 
 # Resolved on 2026-06-02 (now live only in history.md, dropped here):
 #   B13 entity_type (22 masters), E1/E2/E3 personas (4 + 9 reach), E4 RACI+gate wiring,
@@ -46,32 +46,6 @@ b1a:
       - {handoff_id: 1253, direction: outbound, target_domain: PROD-MGMT, trigger_event: work_automation.disabled}
       - {handoff_id: 700, direction: inbound, source_domain: NCDB, trigger_event: nocode_automation.triggered}
       - {handoff_id: 742, direction: inbound, source_domain: PROC-MIN, trigger_event: business_rule_extracted.identified}
-
-  - id: B1A-PHASE0-MISSING
-    summary: "Phase 0 (2026-06-02) surfaced 12 MISSING entities (0 wrong-ownership, 0 actual scope-creep); pending user pick for Phase-B load"
-    finding: >-
-      Vendor surface (Asana, monday.com, ClickUp, Wrike, Smartsheet) diffed against 22 masters.
-      Tier 1 (backs an orphaned capability): proofing_sessions (+proofing_annotations) for
-      CREATIVE-REVIEW 446; work_dashboards for WORK-DASHBOARDS 331. Tier 2 (confident market
-      gaps): work_views, time_entries (non-billable only; PSA keeps billable worklog),
-      work_portfolios, work_goal_links (GOALS-OKR work->goal link table), work_statuses,
-      work_status_updates. Tier 3 (lower / likely-attribute): form_routing_rules,
-      work_item_assignees, creative_assets (DAM consumer not WM master), work_subtasks,
-      work_recurrences, work_docs. Modularization verdict partial: fill masters inside TASK-EXEC,
-      do NOT add a CREATIVE-OPS module, no renames.
-    action: >-
-      User picks which tiers/entities to load. Accepted entities -> Phase-B insert (data_objects +
-      domain_module_data_objects master rows on the right module + lifecycle/entity_type + users
-      edges + relationships). proofing_sessions/work_dashboards/work_views/time_entries/work_statuses
-      -> TASK-EXEC (149); work_goal_links -> GOALS-OKR (150); form_routing_rules -> INTAKE (183).
-      Rule #1: never auto-load market-audit findings.
-    # SKIPPED in the 2026-06-06 b1a pass: blocked_by user_decision (tier selection) AND Rule #1
-    # forbids auto-loading market-audit findings. Awaits user tier pick.
-    blocked_by:
-      - {type: user_decision, ref: "phase0-missing-tier-selection"}
-    artifacts:
-      - "c:/tmp/WORK-MGMT-market-surface-2026-06-02.json"
-      - "c:/tmp/WORK-MGMT-market-surface-2026-06-02.md"
 
 b1b:
   - id: B1B-PSA-787-TARGET-NULL
@@ -162,77 +136,26 @@ b2:
       (vs operational_workflow), work_sections(975)=catalog, work_milestones(969)=operational_record
       (vs operational_workflow), okr_key_results(966)=operational_record. Each is a single-column
       PATCH to change. Confirm, or name overrides?
+    # OPEN: a1 (2026-06-16) answered with a question ("how do other vendors handle that"), not a
+    # decision. The vendor evidence below was researched in response and folded into the q-file;
+    # the user still needs to confirm or override the 4 classifications.
+    evidence: >-
+      How flagship WM vendors treat each entity. work_automations: Asana Rules, monday.com
+      Automations, ClickUp Automations, and Wrike are configured-once / fire-many rule definitions
+      a buyer authors and toggles on or off - a configuration object, not a per-run case record.
+      That reads as catalog (the rule template) even though each FIRING is an event; the gated
+      enable/disable lifecycle is permission control over a config object, which catalog permits.
+      work_sections: Asana sections, monday.com groups, ClickUp lists/statuses-as-columns are
+      structural containers a buyer defines per project to organize tasks - a configuration object,
+      not a workflow case. catalog fits. work_milestones: Smartsheet, Wrike, monday.com, and MS
+      Project model a milestone as a zero-duration dated gate that is reached or missed - it has a
+      reached/missed state pair but no permission-gated transitions a buyer steers, so
+      operational_record (a dated record with light state) rather than operational_workflow.
+      okr_key_results: Asana Goals, monday.com, ClickUp, and Workfront/Adobe treat a KR as a
+      measurable record that is updated and scored on a cadence; it carries a committed/achieved/
+      missed lifecycle realized on module 150, so the call sits between operational_record and
+      operational_workflow. If the user weights the committed/achieved/missed gates as a steered
+      workflow, okr_key_results (and arguably work_milestones) flip to operational_workflow.
     affected_entities: [data_objects:246, data_objects:975, data_objects:969, data_objects:966]
 
-  - id: B2-LEGACY-DDO-ROLLUP-DRIFT
-    summary: "Legacy domain_data_objects rollup shows 4 masters; domain_module_data_objects shows 22"
-    question: >-
-      The legacy domain_data_objects rollup for WORK-MGMT was never regenerated after the
-      Phase-B expansion — it lists the original 4 masters while DMDO holds 22. Any audit keying
-      the B-band off the legacy table silently sees 4/22. Regenerate the rollup from DMDO, or
-      formally declare it vestigial (audits key off DMDO)? Likely a catalog-wide decision.
-    affected_entities: [domains:135]
-
-  - id: B2-CAPABILITY-NEAR-DUP
-    summary: "WORK-GOALS-OKR (329) + GOAL-MGMT (25) both on module 150 describe the same concept"
-    question: >-
-      Module 150 realizes both the WM-prefixed WORK-GOALS-OKR (329) and the cross-cutting
-      GOAL-MGMT (25). Per the cross-cutting convention this is a near-duplicate. Dedup into the
-      cross-cutting GOAL-MGMT (drop 329's domain_module_capabilities link), or keep both?
-    affected_entities: [capabilities:329, capabilities:25]
-
-  # RESOLVED 2026-06-02: B2-H1-APPROVAL-POSTURE -> user chose "approve now"; all 31
-  #   WM agent_curated cross-domain tags promoted to record_status='approved'. (in history.md)
-  # RESOLVED 2026-06-06: B2-RULE20-WORDING -> moot. Revised Rule #20 rescinded the pre-write
-  #   approval gate for empty catalog UX fields; the 8 drafted strings were written straight into
-  #   the empty fields on domain 135 + modules 149/150/183 (record_status=new carries the review
-  #   signal, reviewed in-record/catalog UI). Overwrite of these now-non-empty values requires
-  #   explicit per-row user approval.
-
-  - id: B2-HANDOFF-787-KEEP-OR-DELETE
-    summary: "PSA hasn't scoped/deleted speculative handoff 787; drive PSA audit, defer, or delete from WM side?"
-    question: >-
-      Handoff 787 (work_automation.triggered → PSA) has been carried as structurally-speculative
-      since 2026-05-29. PSA hasn't audited. Queue PSA audit, keep deferring, or delete the row
-      from the WM side as out-of-scope speculation?
-    options:
-      - "Queue PSA audit (preferred under the audit workflow)"
-      - "Continue deferring"
-      - "Delete handoff 787 from WORK-MGMT side"
-    affected_handoffs:
-      - {handoff_id: 787, direction: outbound, target_domain: PSA, trigger_event: work_automation.triggered, null_field: target_domain_module_id}
-
-  - id: B2-B9D-MISTAG-OKR-PERF
-    summary: "WM mis-tagged okr_objectives handoffs to TALENT-MGMT with a perf-mgmt PCF code; re-point or delete (destructive)"
-    question: >-
-      B9d found handoffs 1320 + 1321 (WORK-MGMT okr_objective.committed/.scored → TALENT-MGMT)
-      tagged with PCF 7.3.2 "Manage employee performance" (pid 225). The carried entity
-      (okr_objectives) is already realized under PCF 1.2.6 "Develop and set organizational
-      objectives" (pid 98). The 7.3.2 tag is a mis-tag authored on the WM side. Fix is to
-      re-point handoff_processes 7.3.2 -> 1.2.6 on both rows, OR delete the tags. Both are
-      destructive edits to existing non-empty handoff_processes rows and need your sign-off.
-    options:
-      - "Re-point the tag from 7.3.2 to 1.2.6 on handoffs 1320 + 1321 (keeps APQC coverage, corrects the category)"
-      - "Delete the 7.3.2 handoff_processes rows on 1320 + 1321 (drops the tags entirely)"
-      - "Leave as-is"
-    affected_handoffs:
-      - {handoff_id: 1320, direction: outbound, target_domain: TALENT-MGMT, trigger_event: okr_objective.committed, payload: okr_objectives}
-      - {handoff_id: 1321, direction: outbound, target_domain: TALENT-MGMT, trigger_event: okr_objective.scored, payload: okr_objectives}
-
-  - id: B2-B9D-ROLLUP-OKR-PROD
-    summary: "WM outbound handoff 1324 tag sits at a child PCF grain; re-point to the realized parent (destructive)"
-    question: >-
-      B9d found handoff 1324 (WORK-MGMT okr_objective.scored → PROD-MGMT) tagged with PCF
-      1.2.6.3 "Monitor performance against objective" (pid 506). The carried entity
-      (okr_objectives) is realized at the parent grain 1.2.6 "Develop and set organizational
-      objectives" (pid 98). This is a ROLL-UP: re-point handoff_processes 1.2.6.3 -> 1.2.6 to
-      match the realized grain. It overwrites an existing non-empty handoff_processes row, so it
-      needs your sign-off.
-    options:
-      - "Re-point the tag from 1.2.6.3 to 1.2.6 on handoff 1324"
-      - "Leave as-is"
-    affected_handoffs:
-      - {handoff_id: 1324, direction: outbound, target_domain: PROD-MGMT, trigger_event: okr_objective.scored, payload: okr_objectives}
-
 b3: []
-# B3-PHASE0 resolved 2026-06-02: subagent ran; findings promoted to B1A-PHASE0-MISSING (under b1a above).

@@ -11,8 +11,8 @@
 schema_version: 2
 domain: CLM
 status: feedback_needed
-next_action_by: user  # b3 research was LOADED without surfacing first (process error); decisions now in q-CLM.md 2026-06-11
-last_audit: "2026-06-11"
+next_action_by: user  # a-CLM.md processed 2026-06-16: b3 load KEPT (q1=a), counterparties kept (q2=a), playbook alias removed (q3=a), negotiation split declined (q5=b), regulations kept (q6=yes). One b2 stays OPEN: CLM-COMPLIANCE, re-asked as optional-module per a4.
+last_audit: "2026-06-16"
 # B9d reference-read (2026-06-11): "Contract Template" is reference/config data of CLM; it becomes ownable work only if CLM later runs a workflow on it.
 
 # b1a (agent-actionable) fully executed 2026-06-06; see history.md 2026-06-06 entry.
@@ -25,9 +25,15 @@ last_audit: "2026-06-11"
 #   B1A-SELF-CONTAIN : NOT executed (destructive). Converting the saas_subscriptions
 #                      contributor row to embedded_master or necessity=optional rewrites an
 #                      existing non-empty row -> moved to the destructive-awaiting-approval list.
-b1a: []  # B1A-B9D-VERIFY executed 2026-06-11. The b3-masters tooling follow-up moved to b1b
-         # (B1B-B3-MASTERS-COMPLETE): it is blocked on the q-CLM.md load-review decision (q1 keep/revert),
-         # since the entity set itself is now awaiting user sign-off.
+b1a:  # B1A-B9D-VERIFY executed 2026-06-11. The b3 load was KEPT (a-CLM.md q1=a, 2026-06-16), so the
+      # b3-masters tooling follow-up is UNBLOCKED and moves back to b1a as agent-actionable additive work.
+  - id: B1A-B3-MASTERS-COMPLETE
+    summary: "Finish the 9 kept b3 masters' Phase-B/S surface (trigger_events, intra/cross-domain handoffs, Phase-S tools + domain_module_tools, CLM Semantius re-score)."
+    finding: >
+      The 9 b3 masters (1048-1056) loaded 2026-06-11 and KEPT by the user (a-CLM.md q1=a, 2026-06-16) still owe
+      trigger_events for their gated states, intra/cross-domain handoffs, Phase-S tools (query_/mutate_ per master)
+      + domain_module_tools, and a CLM Semantius re-score for full Phase-B/S completeness.
+    action: "Author the tooling/handoffs additively at record_status='new'. Non-blocking; does not gate feedback_needed."
 
 b1a_destructive_awaiting_approval: []  # B1A-SELF-CONTAIN EXECUTED 2026-06-11 via a-CLM.md q1=a
   # ("delete both, but be sure they are embed master, optional on the other side").
@@ -151,55 +157,35 @@ b1b:
       - {data_object_id: 66, name: legal_contracts, target_module_id: null, workflow: signed-contract-consumption}
       - {data_object_id: 69, name: contract_templates, target_module_id: null, workflow: template-published-consumption}
       - {data_object_id: 67, name: contract_obligations, target_module_id: null, workflow: obligation-state-consumption}
-  - id: B1B-B3-MASTERS-COMPLETE
-    summary: "Finish the 9 new b3 masters' Phase-B/S surface (trigger_events, handoffs, Phase-S tools, Semantius re-score)."
-    finding: >
-      The 9 b3 masters (1048-1056) loaded 2026-06-11 still owe trigger_events for their gated states, intra/cross-domain
-      handoffs, Phase-S tools (query_/mutate_ per master) + domain_module_tools, and a CLM Semantius re-score.
-    action: "Author the tooling/handoffs once the entity set is approved (additive, record_status='new')."
-    blocked_by:
-      - {type: user_decision, milestone: "q-CLM.md q1 (keep/revert the b3 load) + q2-q3 (which entities stay)"}
 
 b2:
-  # B2-S2 / S3 / S4 / S5 / S6 resolved or closed via a-CLM.md 2026-06-11 (see history.md "Answer processing").
-  # 2026-06-11 b3-load review: the b3 research was LOADED into the catalog WITHOUT first surfacing it as a q-file
-  # (process error, Rule #21/#22: research-derived additions are decisions to surface, not silent writes). The
-  # load is now surfaced for sign-off in q-CLM.md (q1 keep/revert + per-entity calls). The two module-split items
-  # are now LIVE q-file questions (q4/q5): their precondition entities exist, so they are no longer blocked.
-  - id: B2-B3-LOAD-REVIEW
-    summary: "9 b3 entities + 5 regulation links were loaded at record_status='new' without surfacing first; keep or revert wholesale (q1)."
-    options:
-      - "a: keep the load as drafts; decide per-entity calls below"
-      - "b: revert the whole load (delete the 9 entities + dependent lifecycle/relationship/alias rows + the 5 regulation links + FAR/DFARS rows), reload only what is approved"
-    recommended: "a (all record_status='new', nothing approved; per-entity calls below let you reject individually)."
-    affected: "data_objects 1048-1056; domain_regulations CLM x {GDPR,SOX,HIPAA,FAR,DFARS}; regulations FAR 99 + DFARS 100"
-  - id: B2-B3-COUNTERPARTIES
-    summary: "contract_counterparties (1053): keep as a new master, or model the party as a consumer of crm_accounts/vendors (q2)."
-    recommended: "a (keep master). Icertis/LinkSquares/Agiloft master counterparties distinctly; a contract party is not always a CRM account."
-  - id: B2-B3-PLAYBOOKS
-    summary: "negotiation_playbooks (1051) vs the existing 'playbook' synonym alias on contract_templates (q3)."
-    options:
-      - "a: keep the master, remove the stale 'playbook' alias on contract_templates"
-      - "b: keep both"
-      - "c: drop the master, playbooks stay a template alias"
-    recommended: "a. Ironclad/LinkSquares treat a playbook as distinct from a document template."
-  - id: B2-B3-REGULATIONS
-    summary: "Keep the 5 conditional regulation links (GDPR/SOX/HIPAA/FAR/DFARS) + the new FAR/DFARS rows (q6)."
-    recommended: "yes (all conditional, jurisdiction/sector-gated)."
+  # a-CLM.md processed 2026-06-16. RESOLVED + removed (see history.md "Answer processing 2026-06-16"):
+  #   B2-B3-LOAD-REVIEW (q1=a keep), B2-B3-COUNTERPARTIES (q2=a keep master),
+  #   B2-B3-PLAYBOOKS (q3=a: master kept + stale alias deleted), B2-B3-REGULATIONS (q6=recommended/yes),
+  #   B2-MOD-CLM-NEGOTIATION-SPLIT (q5=b do-not-split). One item stays OPEN below: a4 was a QUESTION,
+  #   not a decision, and re-frames the compliance module as an OPTIONAL/add-on shape rather than OOTB.
   - id: B2-MOD-CLM-COMPLIANCE
-    summary: "New CLM-COMPLIANCE module (re-home data_protection_addenda 1055 + contract_risk_assessments 1052 + compliance obligations). Reclassified from b3 per Rule #21."
-    user_decision: "a11=yes in principle. Now a LIVE q-file question (q-CLM.md q4): precondition entities exist, so it is surfaced for a concrete sign-off."
-    recommended: "b (do not create yet). Specialist compliance modules are an enterprise pattern; most CLM keeps DPAs/risk in the repository. Revisit at heavy regulated-contract volume."
+    summary: "Stand up a CLM-COMPLIANCE module as an OPTIONAL add-on (not OOTB-for-everyone), re-homing data_protection_addenda 1055 + contract_risk_assessments 1052 + compliance obligations? Or leave those in CLM-REPOSITORY/CLM-NEGOTIATION as today."
+    user_decision: "a4 (2026-06-16) was a question, not a decision: 'do most installations use compliance? if not, isn't OOTB compliance just ballast, wouldn't an optional CLM-COMPLIANCE be better?'. Item stays OPEN, re-asked in q-CLM.md as the three-way optional-module choice."
+    options:
+      - "a: add CLM-COMPLIANCE as an OPTIONAL/add-on module (tenants that need it opt in; re-home DPAs + risk assessments + compliance obligations there)"
+      - "b: do not create the module; DPAs/risk stay in CLM-REPOSITORY / CLM-NEGOTIATION (today's shape)"
+      - "c: create it as a standard full module that ships for every CLM tenant"
+    recommended: "a (optional add-on). The user's read is correct: most CLM deployments do NOT run a dedicated compliance surface, so making it OOTB-for-all (option c) would be ballast for the majority. A separate compliance/DPA surface is a real enterprise pattern but a heavy-regulated-contract one, so the right shape is an opt-in module, not omission and not a forced default."
     vendor_evidence: [Icertis Contract Intelligence, Sirion CLM, OneTrust]
-  - id: B2-MOD-CLM-NEGOTIATION-SPLIT
-    summary: "Split CLM-NEGOTIATION into CLM-REDLINING + CLM-CLAUSE-RISK-DETECT. Reclassified from b3 per Rule #21."
-    user_decision: "a11=yes in principle. Now a LIVE q-file question (q-CLM.md q5): precondition entities exist, surfaced for sign-off."
-    recommended: "b (do not split). The two surfaces (redlining vs AI risk) are distinct in the market but splitting one module into two is heavy for most deployments."
-    vendor_evidence: [Ironclad, DocuSign CLM, Icertis Contract Intelligence]
+    answer_to_a4: >
+      Answer folded into q-file: dedicated compliance/DPA/risk surfaces are NOT the norm. Most CLM deployments
+      (Ironclad, DocuSign CLM, Agiloft, LinkSquares, the CLM modules inside Salesforce Revenue Cloud / ServiceNow)
+      keep DPAs and risk records inside the repository/negotiation surface and do NOT ship a separate compliance
+      module. A dedicated compliance product surface is the heavy-regulated pattern (Icertis Contract Intelligence
+      risk/compliance, Sirion compliance score, OneTrust DPA management). So OOTB compliance for every tenant would
+      indeed be ballast for the majority; an OPTIONAL add-on module (the user's suggested shape) is the better fit
+      than either omitting it or forcing it on everyone. Requires a Phase 0 report before any module is stood up.
 
-b3: []  # ALL b3 candidates LOADED 2026-06-11 (greenlit a9 entities=yes, a10 regulations=yes); moved to history.
+b3: []  # ALL b3 candidates LOADED 2026-06-11 and KEPT by the user 2026-06-16 (a-CLM.md q1=a keep, q2=a, q6=yes).
   # Phase 0 report: .tmp_deploy/CLM-phase0-2026-06-11.md. Loaders: load_clm_b3_entities_2026_06_11.ts +
   # load_clm_b3_regulations_2026_06_11.ts. 9 masters (1048-1056) + 5 domain_regulations links (GDPR/SOX/HIPAA/FAR/DFARS,
   # all conditional) + 2 new regulation rows (FAR 99, DFARS 100). All record_status='new'. Naming-arbitrated (Rule #9):
   # risk_assessments->contract_risk_assessments, counterparties->contract_counterparties, playbooks->negotiation_playbooks.
-  # Remaining completion tracked as b1a B1A-B3-MASTERS-COMPLETE (tooling/handoffs). See history.md 2026-06-11 b3-load entry.
+  # 2026-06-16: stale "playbook" synonym alias (203) on contract_templates (69) DELETED per q3=a. Remaining tooling/handoff
+  # completion tracked as b1a B1A-B3-MASTERS-COMPLETE (now unblocked). See history.md 2026-06-16 answer-processing entry.

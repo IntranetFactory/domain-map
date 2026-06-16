@@ -806,3 +806,34 @@ All 22 WORK-MGMT masters across modules 149/150/183 carry a typed `entity_type` 
 - `last_audit: "2026-06-13"`.
 
 No catalog/database writes this pass; only local audit files (WM + the 5 owner domains) were edited.
+
+---
+
+## 2026-06-16 - a-file execution (Rule #22 a-file workflow)
+
+Processed `a-WORK-MGMT.md`. Loader: [.tmp_deploy/2026-06-16_work_mgmt_a_file_execute.ts](../../.tmp_deploy/2026-06-16_work_mgmt_a_file_execute.ts). All additive content landed `record_status='new'` (omitted on insert); no `record_status` flips; no `notes` columns written; no em-dash.
+
+### Decided and executed
+
+- **a3 (B2-CAPABILITY-NEAR-DUP) = yes, RESOLVED (destructive, q-file approved).** Deduplicated the capability near-dup on module 150 into the cross-cutting GOAL-MGMT (25). DELETE `domain_module_capabilities` 284 (WORK-GOALS-OKR 329 on mod 150) and `capability_domains` 362 (cap 329 <-> domain 135), fully retiring 329's WM footprint so no orphaned (M4-failing) capability is left behind. Module 150 keeps GOAL-MGMT (25) via `domain_module_capabilities` 285. Verified: capability 329 now has 0 links catalog-wide.
+- **a5 (B2-B9D-MISTAG-OKR-PERF) = a, RESOLVED (destructive, q-file approved).** Re-pointed `handoff_processes` 878 (handoff 1320) and 879 (handoff 1321) from process 225 (PCF 7.3.2 "Manage employee performance") to process 98 (PCF 1.2.6 "Develop and set organizational objectives"). Both rows stayed `record_status='new'`.
+- **a6 (B2-B9D-ROLLUP-OKR-PROD) = recommended (yes), RESOLVED (destructive, q-file approved).** Re-pointed `handoff_processes` 880 (handoff 1324) from process 506 (PCF 1.2.6.3 "Monitor performance against objective") to process 98 (PCF 1.2.6, the realized parent grain). Row stayed `record_status='new'`.
+- **a7 (B1A-PHASE0-MISSING) = recommended (load Tier 1 + Tier 2, hold Tier 3), RESOLVED (expansive additive, q-file approved).** Loaded 9 new masters with full Phase-B wiring (data_objects + DMDO master rows at `necessity='optional'` per Rule #16 + aliases + relationships + Rule #10 users edges; `proofing_sessions` also got a 5-state lifecycle and 3 trigger_events as the only gated master). New data_objects: proofing_sessions (1287, operational_workflow, mod 149), proofing_annotations (1288, operational_record, mod 149), work_dashboards (1289, catalog, mod 149), work_views (1290, catalog, mod 149), work_time_entries (1291, operational_record, mod 149), work_portfolios (1292, catalog, mod 149), work_goal_links (1293, junction, mod 150), work_statuses (1294, catalog, mod 149), work_status_updates (1295, operational_record, mod 149). WM master DMDO count 22 -> 31. proofing_sessions backs CREATIVE-REVIEW (446); work_dashboards backs WORK-DASHBOARDS (331), both already realized on mod 149 (capabilities no longer master-less). Tier 1 candidate `time_entries` was renamed to `work_time_entries` per Rule #9: the bare `time_entries` (162) already exists and is WFM-mastered (clock-in/out for payroll) on module 194, a different concept from WM non-billable effort tracking. Tier 3 entities (form_routing_rules, work_item_assignees, creative_assets, work_subtasks, work_recurrences, work_docs) HELD per the user's recommended pick; not loaded, not carried (a settled "hold" decision, not a deferred action).
+
+### Routed
+
+- **a4 (B2-HANDOFF-787-KEEP-OR-DELETE) = recommended (a, queue PSA audit), RESOLVED by routing.** The user did not pick delete, so no WM-side row is touched. Handoff 787 resolution is already tracked as the partner-domain blocker B1B-PSA-787-TARGET-NULL (PSA loads a consumer DMDO on work_automations or deletes the speculative handoff). B2-HANDOFF-787-KEEP-OR-DELETE dropped from b2; the b1b PSA blocker carries it.
+
+### Kept OPEN
+
+- **a1 (B2-ENTITY-TYPE-AMBIGUOUS), STILL OPEN.** The answer was a question ("how do other vendors handle that"), not a decision, so the item stays open per Rule #22. Researched the flagship-vendor treatment of all four entities (Asana, monday.com, ClickUp, Wrike, Smartsheet, Smartsheet/MS Project for milestones) and folded that evidence into the `b2.evidence` field and the regenerated q-file so the user can confirm or override from vendor facts. No catalog write.
+
+### state.yaml changes
+
+- Removed (resolved/routed) from b2: B2-LEGACY-DDO-ROLLUP-DRIFT (a2 = recommended b: declared the legacy domain_data_objects rollup vestigial; audits key the B-band off domain_module_data_objects. This is a catalog-wide convention, not a per-WM row write, so nothing to PATCH on the WM side), B2-CAPABILITY-NEAR-DUP (a3 executed), B2-HANDOFF-787-KEEP-OR-DELETE (a4 routed to PSA), B2-B9D-MISTAG-OKR-PERF (a5 executed), B2-B9D-ROLLUP-OKR-PROD (a6 executed).
+- Removed from b1a: B1A-PHASE0-MISSING (a7 tier pick made; Tier 1+2 loaded, Tier 3 held).
+- Kept: b2 B2-ENTITY-TYPE-AMBIGUOUS (a1 question, now carries vendor evidence); b1a B1A-H1-APQC-DEFERRED (catalog-wide Discover Pass 3 carry); all b1b partner-domain blockers (PSA-787, SPM nulls, other unmodularized sources, CRM B8, B9D source-owned tags, B9D unowned dependencies), unchanged, blocked on partner audits.
+- Deleted a-WORK-MGMT.md and the stale q-WORK-MGMT.md; regenerated q-WORK-MGMT.md with the single surviving question (entity_type confirm/override, q1).
+- `status: feedback_needed` / `next_action_by: user` (one open b2 remains). `last_audit: "2026-06-16"`.
+
+UI for spot-check: https://adenin.semantius.app/domain_map/data_objects and https://adenin.semantius.app/domain_map/domain_module_data_objects

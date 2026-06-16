@@ -84,15 +84,14 @@ function clean<T>(v: T): T {
   return (typeof v === "string" ? (v.replace(/\s*—\s*/g, ", ") as unknown as T) : v);
 }
 
-// ---------- SKILL.md description: authored catalog.yaml -> routing description ----------
+// ---------- catalog.yaml: DB projection + SKILL.md render variables ----------
 //
-// The SKILL.md `description` is the AGENT-ROUTING surface (what the model reads to decide
-// whether to load the skill), distinct from catalog.yaml's `catalog_description` (buyer
-// prose for the catalog site). The authored, maintained trigger material already lives in
-// catalog.yaml: `catalog_tagline` (the one-line "what") and `search_keywords` (curated
-// trigger terms, explicitly "for agent triggering"). We compose the description from those.
-// When a domain's catalog.yaml has not been filled in (placeholder tagline / empty
-// keywords), we fall back to a spec-derived line (aliases + capability names).
+// catalog.yaml is a pure projection of live catalog DB values. It carries (1) the buyer copy
+// persisted from the domains table (catalog_tagline / catalog_description) and (2) the variables
+// the SKILL.md template ({{...}}) renders. No hand-authored content lives in it, so it is
+// regenerated from the DB on every emit. The skills-folder render reads these variables back
+// from catalog.yaml (template + catalog.yaml -> SKILL.md), so this file is the render input,
+// not just site copy.
 
 function unquoteYaml(s: string): string {
   let v = s.trim();
@@ -100,67 +99,63 @@ function unquoteYaml(s: string): string {
   return v.trim();
 }
 
-// Minimal reader for the two catalog.yaml fields the description needs. Not a general YAML
-// parser: `catalog_tagline` is a scalar; `search_keywords` is a flat list (block or inline).
-function readCatalogYaml(dir: string): { tagline: string; searchKeywords: string[] } {
+// Reads the render variables the SKILL.md template consumes back out of an emitted catalog.yaml,
+// so assembling the skills folder is genuinely "template + catalog.yaml". Scalars:
+// domain_code_lower, module_slug, domain_name, skill_description. List: capability_names.
+// (catalog_description is a multi-line block the template does not render, so it is not parsed.)
+function readRenderVars(dir: string): {
+  domainCodeLower: string;
+  moduleSlug: string;
+  domainName: string;
+  skillDescription: string;
+  capabilityNames: string[];
+} {
   let text: string;
   try {
     text = readFileSync(`${dir}/catalog.yaml`, "utf8");
   } catch {
-    return { tagline: "", searchKeywords: [] };
+    return { domainCodeLower: "", moduleSlug: "", domainName: "", skillDescription: "", capabilityNames: [] };
   }
-  let tagline = "";
-  const searchKeywords: string[] = [];
-  let inKw = false;
+  const scalar: Record<string, string> = {};
+  const capabilityNames: string[] = [];
+  let inCaps = false;
   for (const raw of text.split(/\r?\n/)) {
     const trimmed = raw.trim();
     if (!trimmed || trimmed.startsWith("#")) continue; // skip blanks + comments
     const top = /^([A-Za-z0-9_]+):(.*)$/.exec(raw);
     if (top && !/^\s/.test(raw)) {
-      inKw = false;
-      if (top[1] === "catalog_tagline") {
-        tagline = unquoteYaml(top[2]);
-      } else if (top[1] === "search_keywords") {
-        const inline = top[2].trim();
-        const m = /^\[(.*)\]$/.exec(inline);
-        if (m) for (const x of m[1].split(",").map((s) => unquoteYaml(s)).filter(Boolean)) searchKeywords.push(x);
-        else inKw = true;
+      inCaps = false;
+      const key = top[1];
+      const rest = top[2].trim();
+      if (key === "capability_names") {
+        const m = /^\[(.*)\]$/.exec(rest);
+        if (m) for (const x of m[1].split(",").map((s) => unquoteYaml(s)).filter(Boolean)) capabilityNames.push(x);
+        else inCaps = true; // block list follows
+      } else {
+        scalar[key] = unquoteYaml(rest);
       }
       continue;
     }
-    if (inKw) {
+    if (inCaps) {
       const item = /^\s*-\s*(.*)$/.exec(raw);
-      if (item && item[1].trim()) searchKeywords.push(unquoteYaml(item[1]));
+      if (item && item[1].trim()) capabilityNames.push(unquoteYaml(item[1]));
     }
   }
-  return { tagline, searchKeywords };
+  return {
+    domainCodeLower: scalar.domain_code_lower ?? "",
+    moduleSlug: scalar.module_slug ?? "",
+    domainName: scalar.domain_name ?? "",
+    skillDescription: scalar.skill_description ?? "",
+    capabilityNames,
+  };
 }
 
-// Compose the routing description. Authored catalog.yaml wins; spec-derived is the fallback.
-function composeDescription(args: {
-  name: string;
-  code: string;
-  tagline: string;
-  searchKeywords: string[];
-  aliases: string[];
-  capNames: string[];
-}): string {
-  const haveTagline = !!args.tagline && !/^todo/i.test(args.tagline);
-  const haveKw = args.searchKeywords.length > 0;
-  let d: string;
-  if (haveTagline || haveKw) {
-    d = `${args.name} (${args.code}).`;
-    if (haveTagline) {
-      const t = args.tagline.trim();
-      d += ` ${t}${/[.!?]$/.test(t) ? "" : "."}`;
-    }
-    if (haveKw) d += ` Use for: ${args.searchKeywords.join(", ")}.`;
-  } else {
-    const triggers = args.aliases.length ? args.aliases : [args.code.toLowerCase()];
-    d = `${args.name} (${args.code}) in this Semantius deployment. Triggers: ${triggers.join(", ")}.`;
-    if (args.capNames.length) d += ` Workflows: ${args.capNames.join(", ")}.`;
-  }
-  return clean(d); // strip any em-dash that slipped into authored copy (project rule)
+// Compose the SKILL.md routing description from DB-projected values only: the domain name +
+// code, then the buyer one-liner (catalog_tagline). No keywords, no hand-authored content.
+function composeSkillDescription(name: string, code: string, tagline: string): string {
+  const t = tagline.trim();
+  const head = `${name} (${code}).`;
+  return clean(t ? `${head} ${t}${/[.!?]$/.test(t) ? "" : "."}` : head);
 }
 
 // Best-effort org slug for catalog_snapshot. Never throws; falls back to "catalog".
@@ -242,7 +237,7 @@ async function loadLookups(): Promise<Lookups> {
 
 async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; masters: any[]; capNames: string[]; adjacentDomainCodes: string[] }> {
   const [domainRow] = await get(
-    `/domains?domain_code=eq.${domainCode}&select=id,domain_code,domain_name,description,parent_domain_id,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year&limit=1`,
+    `/domains?domain_code=eq.${domainCode}&select=id,domain_code,domain_name,description,parent_domain_id,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year,catalog_tagline,catalog_description&limit=1`,
   );
   if (!domainRow) throw new Error(`domain ${domainCode} not found in /domains`);
   const domainId = domainRow.id as number;
@@ -526,6 +521,8 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
       certification_required: Boolean(domainRow.certification_required),
       usa_market_size_usd_m: domainRow.usa_market_size_usd_m ?? null,
       market_size_source_year: domainRow.market_size_source_year ?? null,
+      catalog_tagline: clean(domainRow.catalog_tagline ?? ""),
+      catalog_description: clean(domainRow.catalog_description ?? ""),
     },
 
     aliases,
@@ -705,6 +702,7 @@ async function buildBundleSpec(
       kind: "industry_starter",
       domain_attached: false,
       tagline: clean(bundleDomain?.catalog_tagline ?? mod.catalog_tagline ?? ""),
+      catalog_description: clean(bundleDomain?.catalog_description ?? ""),
       description: clean(mod.description ?? ""),
       host_domains: hostDomainCodes,
     },
@@ -726,162 +724,176 @@ async function buildBundleSpec(
   };
 }
 
-// ---------- SKILL.md rendering ----------
+// ---------- SKILL.md rendering (template + catalog.yaml render variables) ----------
 
-type RenderCtx = {
-  code: string;
-  name: string;
-  aliases: string[];
-  entityPluralLabels: string[];
-  capNames: string[];
-  adjacentDomainCodes: string[];
-  description: string;
-};
-
-function renderSkillMd(template: string, r: RenderCtx): string {
-  const code = r.code;
+function renderSkillMd(
+  template: string,
+  v: { domainCodeLower: string; moduleSlug: string; domainName: string; skillDescription: string; capabilityNames: string[] },
+): string {
   const subs: Record<string, string> = {
-    SKILL_DESCRIPTION: r.description,
-    DOMAIN_CODE_LOWER: code.toLowerCase(),
-    DOMAIN_CODE: code,
-    DOMAIN_NAME: r.name,
-    ALIASES_COMMA_LIST: r.aliases.length ? r.aliases.join(", ") : code.toLowerCase(),
-    ENTITY_NOUNS_COMMA_LIST: r.entityPluralLabels.join(", "),
-    CAPABILITY_NAMES_COMMA_LIST: r.capNames.join(", "),
-    ADJACENT_DOMAIN_SKILLS: r.adjacentDomainCodes.length ? r.adjacentDomainCodes.map((c) => `use-${c.toLowerCase()}`).join(", ") : "none",
-    MODULE_SLUG: code.toLowerCase(),
+    SKILL_DESCRIPTION: v.skillDescription,
+    DOMAIN_CODE_LOWER: v.domainCodeLower,
+    DOMAIN_NAME: v.domainName,
+    CAPABILITY_NAMES_COMMA_LIST: v.capabilityNames.join(", "),
+    MODULE_SLUG: v.moduleSlug,
   };
   let out = template;
-  for (const [k, v] of Object.entries(subs)) out = out.replaceAll(`{{${k}}}`, v);
+  for (const [k, val] of Object.entries(subs)) out = out.replaceAll(`{{${k}}}`, val);
   // Safety net: strip any em-dash that slipped through from a substituted DB value.
   return out.replace(/\s*—\s*/g, ", ");
 }
 
-// ---------- scaffolds ----------
+// ---------- catalog.yaml builder (the single owner of catalog.yaml's shape) ----------
 
-function catalogYamlScaffold(code: string, name: string): string {
+// Emits catalog.yaml as a pure projection of DB-derived values. No category / search_keywords /
+// icon (we never had those as DB columns); no hand-authored content. New variables get added
+// here only when the DB actually carries them, never invented.
+function buildCatalogYaml(v: {
+  code: string;
+  name: string;
+  tagline: string;
+  description: string;
+  skillDescription: string;
+  capabilityNames: string[];
+  relatedSkills: string[];
+}): string {
+  const codeLower = v.code.toLowerCase();
+  const q = (s: string) => `"${s.replace(/"/g, "'")}"`;
+  const yamlList = (key: string, items: string[]) =>
+    items.length ? `${key}:\n${items.map((i) => `  - ${i}`).join("\n")}` : `${key}: []`;
+  // catalog_description is a literal block: one paragraph per line, blank line between paragraphs.
+  const descBlock = v.description
+    .split(/\n{2,}/)
+    .map((p) => p.replace(/\s*\n\s*/g, " ").trim())
+    .filter(Boolean)
+    .map((p) => `  ${p}`)
+    .join("\n\n");
   return [
-    `# Catalog UX data for the use-${code.toLowerCase()} skill.`,
-    `# SCAFFOLD emitted by emit_skill_spec.ts because no catalog.yaml existed.`,
-    `# Rule #20: buyer voice (workflow + value). Marketing edits these freely; AI loaders`,
-    `# must NOT regenerate without per-row review. The emitter never overwrites this file.`,
+    `# Projection of live catalog DB values for the use-${codeLower} skill.`,
+    `# Emitted by scripts/emit_skill_spec.ts. The database is the source of truth; do NOT hand-edit.`,
+    `# DB-derived only: buyer copy persisted from the domains table + the variables the SKILL.md`,
+    `# template ({{...}}) renders. No hand-authored / original content lives in this file.`,
     ``,
-    `domain_code: ${code}`,
-    `skill_name: use-${code.toLowerCase()}`,
+    `domain_code: ${v.code}`,
+    `domain_code_lower: ${codeLower}`,
+    `domain_name: ${q(v.name)}`,
+    `module_slug: ${codeLower}`,
+    `skill_name: use-${codeLower}`,
     ``,
-    `catalog_tagline: "TODO buyer-facing one-liner for ${name}."`,
-    ``,
+    `# Buyer copy, persisted from domains.catalog_tagline / domains.catalog_description.`,
+    `catalog_tagline: ${q(v.tagline)}`,
     `catalog_description: |`,
-    `  TODO buyer-facing description.`,
+    descBlock,
     ``,
-    `category: TODO`,
+    `# Rendered into the SKILL.md frontmatter description:.`,
+    `skill_description: ${q(v.skillDescription)}`,
     ``,
-    `search_keywords: []`,
-    ``,
-    `icon: ""`,
+    `# Rendered into the SKILL.md "Workflows / capabilities" line (domain_module_capabilities).`,
+    yamlList("capability_names", v.capabilityNames),
     ``,
     `depends_on_skills:`,
     `  - use-semantius`,
-    `related_skills: []`,
+    yamlList("related_skills", v.relatedSkills),
     ``,
   ].join("\n");
 }
 
+// catalog.yaml is a DB projection, so missing buyer copy is an ERROR, not a placeholder: a stub
+// that silently ships missing text is exactly the bug being fixed. Stop the emit for this code.
+function assertBuyerCopy(code: string, tagline: string, description: string): void {
+  const missing: string[] = [];
+  if (!tagline.trim()) missing.push("catalog_tagline");
+  if (!description.trim()) missing.push("catalog_description");
+  if (missing.length) {
+    throw new Error(
+      `${code}: empty ${missing.join(" + ")} on the domains row. catalog.yaml is a DB projection, so the ` +
+        `emit STOPS here instead of writing a placeholder. Populate the field(s) in the database, then re-emit.`,
+    );
+  }
+}
+
 // ---------- writers ----------
 
-// Writes spec.json + SKILL.md into the folder; scaffolds catalog.yaml only when absent
-// (Rule #20: never overwrite buyer-facing marketing copy). Returns a one-line note.
-function writeFolder(code: string, name: string, specJson: string, skillMd: string): string {
+// skill-specs/<CODE>/ holds DATA only: spec.json (DB facts) + catalog.yaml (DB projection). The
+// rendered SKILL.md is NOT stored here; it is rendered into the installable skill folder from
+// template + catalog.yaml. Any stale SKILL.md from the old behavior is removed.
+function writeFolder(code: string, specJson: string, catalogYaml: string): void {
   const dir = `${SKILL_SPECS_DIR}/${code}`;
   mkdirSync(dir, { recursive: true });
   writeFileSync(`${dir}/spec.json`, specJson, "utf8");
-  writeFileSync(`${dir}/SKILL.md`, skillMd, "utf8");
-  const catalogYamlPath = `${dir}/catalog.yaml`;
-  if (!existsSync(catalogYamlPath)) {
-    writeFileSync(catalogYamlPath, catalogYamlScaffold(code, name), "utf8");
-    return "scaffolded catalog.yaml (was missing; fill in the TODOs)";
-  }
-  return "kept existing catalog.yaml (Rule #20: never overwritten)";
+  writeFileSync(`${dir}/catalog.yaml`, catalogYaml, "utf8");
+  rmSync(`${dir}/SKILL.md`, { force: true }); // skill-specs no longer stores an expanded SKILL.md
 }
 
-// Assembles the INSTALLABLE skill folder <SKILLS_DIR>/use-<code>/ for local testing:
-//   (a) delete any existing folder of that name, (b) copy the generic domain-skill-template
-//   files (references/, scripts/, the template SKILL.md), (c) copy this entry's skill-specs
-//   files (spec.json, catalog.yaml, and the rendered SKILL.md, which overwrites the template's).
-// This duplicates what the catalog site generator will eventually do; for now both the spec
-// source and the ready-to-install skill are emitted side by side so we can test. Returns the
-// skill folder name (use-<code>).
-function assembleInstalledSkill(specCode: string): string {
+// Assembles the INSTALLABLE skill folder <SKILLS_DIR>/use-<code>/:
+//   (a) delete any existing folder, (b) copy the generic domain-skill-template (references/,
+//   scripts/, the template SKILL.md with {{...}} placeholders), (c) copy this entry's data
+//   (spec.json + catalog.yaml), (d) render the template SKILL.md IN PLACE from the copied
+//   catalog.yaml. The expanded SKILL.md exists ONLY in the installable skill folder.
+function assembleInstalledSkill(specCode: string, template: string): string {
   const skillName = `use-${specCode.toLowerCase()}`;
   const dest = `${SKILLS_DIR}/${skillName}`;
   rmSync(dest, { recursive: true, force: true }); // (a)
   mkdirSync(dest, { recursive: true });
-  cpSync(TEMPLATE_DIR, dest, { recursive: true }); // (b)
-  cpSync(`${SKILL_SPECS_DIR}/${specCode}`, dest, { recursive: true }); // (c) overwrites template SKILL.md
+  cpSync(TEMPLATE_DIR, dest, { recursive: true }); // (b) template SKILL.md + references/ + scripts/
+  for (const f of ["spec.json", "catalog.yaml"]) {
+    cpSync(`${SKILL_SPECS_DIR}/${specCode}/${f}`, `${dest}/${f}`); // (c)
+  }
+  writeFileSync(`${dest}/SKILL.md`, renderSkillMd(template, readRenderVars(dest)), "utf8"); // (d)
   return skillName;
 }
 
 // ---------- driver ----------
 
 async function emitOne(code: string, lk: Lookups, template: string): Promise<void> {
-  const { spec, masters, capNames, adjacentDomainCodes } = await buildSpec(code, lk);
+  const { spec, capNames, adjacentDomainCodes } = await buildSpec(code, lk);
   const specJson = JSON.stringify(spec, null, 2) + "\n";
   if (STDOUT) {
     process.stdout.write(specJson);
     return;
   }
-  const cat = readCatalogYaml(`${SKILL_SPECS_DIR}/${code}`);
-  const skillMd = renderSkillMd(template, {
+  const tagline = spec.domain.catalog_tagline ?? "";
+  const description = spec.domain.catalog_description ?? "";
+  assertBuyerCopy(code, tagline, description);
+  const catalogYaml = buildCatalogYaml({
     code: spec.domain.code,
     name: spec.domain.name,
-    aliases: spec.aliases,
-    entityPluralLabels: masters.map((m) => m.plural_label),
-    capNames,
-    adjacentDomainCodes,
-    description: composeDescription({
-      name: spec.domain.name,
-      code: spec.domain.code,
-      tagline: cat.tagline,
-      searchKeywords: cat.searchKeywords,
-      aliases: spec.aliases,
-      capNames,
-    }),
+    tagline,
+    description,
+    skillDescription: composeSkillDescription(spec.domain.name, spec.domain.code, tagline),
+    capabilityNames: capNames,
+    relatedSkills: adjacentDomainCodes.map((c) => `use-${c.toLowerCase()}`),
   });
-  const yamlNote = writeFolder(code, spec.domain.name, specJson, skillMd);
-  const skillName = assembleInstalledSkill(code);
+  writeFolder(code, specJson, catalogYaml);
+  const skillName = assembleInstalledSkill(code, template);
   console.log(
-    `wrote ${SKILL_SPECS_DIR}/${code}/ [domain] ${spec.modules.length} modules, ${spec.data_objects.length} masters, ${spec.handoffs.outbound.length} handoffs, ${spec.system_skills.length} system skill, ${spec.roles.length} roles -> installed ${SKILLS_DIR}/${skillName}/; ${yamlNote}`,
+    `wrote ${SKILL_SPECS_DIR}/${code}/ [domain] ${spec.modules.length} modules, ${spec.data_objects.length} masters, ${spec.handoffs.outbound.length} handoffs -> installed ${SKILLS_DIR}/${skillName}/ (catalog.yaml + SKILL.md projected from DB)`,
   );
 }
 
 async function emitBundle(code: string, lk: Lookups, template: string): Promise<void> {
-  const { spec, entityPluralLabels, capNames, adjacentDomainCodes } = await buildBundleSpec(code, lk);
+  const { spec, capNames, adjacentDomainCodes } = await buildBundleSpec(code, lk);
   const specJson = JSON.stringify(spec, null, 2) + "\n";
   if (STDOUT) {
     process.stdout.write(specJson);
     return;
   }
-  const cat = readCatalogYaml(`${SKILL_SPECS_DIR}/${code}`);
-  const skillMd = renderSkillMd(template, {
+  const tagline = spec.bundle.tagline ?? "";
+  const description = spec.bundle.catalog_description ?? "";
+  assertBuyerCopy(code, tagline, description);
+  const catalogYaml = buildCatalogYaml({
     code: spec.bundle.code,
     name: spec.bundle.name,
-    aliases: [],
-    entityPluralLabels,
-    capNames,
-    adjacentDomainCodes,
-    description: composeDescription({
-      name: spec.bundle.name,
-      code: spec.bundle.code,
-      tagline: cat.tagline,
-      searchKeywords: cat.searchKeywords,
-      aliases: [],
-      capNames,
-    }),
+    tagline,
+    description,
+    skillDescription: composeSkillDescription(spec.bundle.name, spec.bundle.code, tagline),
+    capabilityNames: capNames,
+    relatedSkills: adjacentDomainCodes.map((c) => `use-${c.toLowerCase()}`),
   });
-  const yamlNote = writeFolder(code, spec.bundle.name, specJson, skillMd);
-  const skillName = assembleInstalledSkill(code);
+  writeFolder(code, specJson, catalogYaml);
+  const skillName = assembleInstalledSkill(code, template);
   console.log(
-    `wrote ${SKILL_SPECS_DIR}/${code}/ [bundle] ${spec.composes.length} composed entities, ${spec.system_skill ? spec.system_skill.tools.length : 0} tools, hosts: ${spec.bundle.host_domains.join("/") || "none"} -> installed ${SKILLS_DIR}/${skillName}/; ${yamlNote}`,
+    `wrote ${SKILL_SPECS_DIR}/${code}/ [bundle] ${spec.composes.length} composed entities, hosts: ${spec.bundle.host_domains.join("/") || "none"} -> installed ${SKILLS_DIR}/${skillName}/ (catalog.yaml + SKILL.md projected from DB)`,
   );
 }
 

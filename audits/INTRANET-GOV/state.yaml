@@ -4,8 +4,13 @@ status: feedback_needed
 next_action_by: user
 last_audit: 2026-06-10
 
-# No open b1a: all agent-doable additive fixes were executed this pass
+# No open b1a: all agent-doable additive fixes were executed in the 2026-06-10 pass
 # (H1 APQC tag on handoff 1433; ADA + Section 508 domain_regulations). See history.md.
+#
+# a-file processed 2026-06-16: all four answers were the user's own questions
+# (a1, a3, a4) or a recommendation blocked on the unresolved gate (a2), so no
+# catalog writes were executed. Every item stays OPEN and loops back into a fresh
+# q-file with the user's questions folded in. See history.md (2026-06-16).
 
 b1b:
   - id: B1B-EVENTS
@@ -30,22 +35,40 @@ b1b:
 
 b2:
   - id: B2-S1
-    summary: Add the recertification-campaign + governance-policy engine (the cadence driver) to the Governance module, or keep the thin MVP.
+    summary: Add the recertification-campaign + governance-policy engine (the cadence driver) to the Governance module, or keep the thin MVP. User asked (2026-06-16) whether the config half of the split could be an optional, volume-gated module.
     question: >-
       The build shipped per-record attestations but no entity that drives recertification on
       a cadence across many records. Every adjacent flagship runs attestation from a recurring
       policy that spawns a batch of attestations (SharePoint "Site Attestation Policy", Orchestry
       "Review Recurrence", Simpplr validation windows). Add a governance_policies master (cadence/
       thresholds/scope/archive-action config) plus a recertification_campaigns master (the cadence-
-      driven batch that spawns attestations and rolls up completion)?
+      driven batch that spawns attestations and rolls up completion)? Open sub-question from the
+      user: if Governance is split, can the Policy & Campaign config layer ship as an OPTIONAL
+      module (module_kind='starter' / deploy-time opt-in) that you turn on once content volume
+      justifies running scheduled cycles, leaving day-to-day attestation in the base module?
     options:
-      - "a) Add both masters to the existing Governance module (336)"
-      - "b) Add both AND split Governance into a Policy & Campaign config module vs an Attestation & Remediation execution module"
-      - "c) Keep the thin MVP: per-record attestation only, no campaign/policy engine"
+      - "a) Add both masters to the existing Governance module (336), no split"
+      - "b) Add both AND split Governance into a Policy & Campaign config module vs an Attestation & Remediation execution module (both always deployed)"
+      - "c) Add both AND make the Policy & Campaign config layer an OPTIONAL module (volume-gated opt-in), keeping attestation + remediation in the base module"
+      - "d) Keep the thin MVP: per-record attestation only, no campaign/policy engine"
     why: >-
       This is the domain's stated value ("run recertification cycles") and gates B2-S2/B2-S3 and
       B1B-EVENTS. The market is white-space (no pure-play; see build phase0), so the substrate is
       borrowed from M365-bound neighbors - hence a depth choice rather than a forced add.
+    evidence: >-
+      Orchestry runs "Review Recurrence" review campaigns and archival/renewal policies (1st-class);
+      Microsoft SharePoint Advanced Management ships a recurring "Site Attestation Policy" plus
+      inactive-site policies (1st-class); ShareGate Protect runs recurring access reviews (1st-class);
+      Simpplr expresses the cadence as per-page validation periods with expiration states (secondary).
+      All package the cadence driver as a policy (rules: cadence/thresholds/scope/archive-action) that
+      spawns a batch (campaign/review) of per-record attestations - the pair we lack. The 2-module split
+      (Inventory+Sources vs Ownership+Lifecycle+Planning) already matches vendor packaging; a further
+      split of Governance into config vs execution only pays off once policy+campaign+findings exist
+      (otherwise one module carries everything, heavy). On the optional-module sub-question: in this
+      catalog module_kind='starter'/optional is exactly the volume-gating mechanism, and the config
+      (policy/campaign) layer is the deferrable half (you do not need scheduled cycles until volume
+      and owner turnover exceed manual tractability), so making it the opt-in module is consistent
+      with how the vendors phase it (per-page validation first, campaign engine when scale demands).
     vendor_evidence:
       - {vendor: Orchestry, evidence: 1st_class}
       - {vendor: Microsoft SharePoint Advanced Management, evidence: 1st_class}
@@ -62,25 +85,55 @@ b2:
       - "a) Add content_governance_findings (stale/orphan/inactivity), health score aggregates it"
       - "b) Add it and also include permissions/oversharing findings"
       - "c) Keep score-only (no findings entity)"
-    why: 5 of 6 surveyed vendors model findings first-class; depends on B2-S1 (findings are policy-generated).
+    why: >-
+      5 of 6 surveyed vendors model findings first-class; depends on B2-S1 (findings are
+      policy-generated). User left a2 empty (= recommended, option a) in the 2026-06-16 a-file, but
+      this item is BLOCKED on B2-S1: the findings master's home depends on whether Governance splits
+      (B2-S1 option b/c) or stays one module (option a/d). Once B2-S1 lands, execute option (a):
+      add content_governance_findings (stale/orphan/inactivity), health score recomputed as a rollup.
+    blocked_by:
+      - {type: user_decision, ref: B2-S1}
+    user_preference: "a (from empty a2 = recommended, 2026-06-16); apply once B2-S1 resolves"
+    evidence: >-
+      Orchestry, Microsoft SharePoint Advanced Management, ShareGate Protect, Acquia Optimize and
+      Siteimprove all model findings (orphaned/inactivity/stale, plus oversharing/permissions for the
+      M365 trio) as a first-class assignable/closable record; all treat the score as a VIEW over
+      findings, not a replacement. A bare score routes nothing. Start with content-quality findings we
+      already detect (a); oversharing/permissions (b) overlaps COLLAB-GOV tooling and can wait.
     vendor_evidence:
       - {vendor: Orchestry, evidence: 1st_class}
       - {vendor: Microsoft SharePoint Advanced Management, evidence: 1st_class}
       - {vendor: ShareGate, evidence: 1st_class}
       - {vendor: Acquia Optimize, evidence: 1st_class}
   - id: B2-S3
-    summary: Add accessibility_conformance_records master + WCAG/EN 301 549/EAA regulations, keeping accessibility statute-anchored.
+    summary: Add accessibility_conformance_records master + WCAG/EN 301 549/EAA regulations, keeping accessibility statute-anchored. User asked (2026-06-16) whether this would be an optional module.
     question: >-
       INTGOV-A11Y (Accessibility Governance) is realized only as a scan tool; there is no statute-
       anchored conformance record (target, standard, level, pass/fail, finding linkage, statement
       reference). The EAA has been enforceable since June 2025. Add accessibility_conformance_records
       and add WCAG 2.2 / EN 301 549 / EAA as regulations + domain_regulations links (ADA + Section 508
-      domain_regulations were already loaded this pass)?
+      domain_regulations were already loaded in the 2026-06-10 pass)? Open sub-question from the user:
+      should the conformance record ship as its own OPTIONAL module (deploy-time opt-in for orgs that
+      need accessibility governance), or live in the base Inventory module alongside the existing
+      a11y scan that realizes INTGOV-A11Y?
     options:
-      - "a) Add the conformance entity AND the WCAG/EN 301 549/EAA regulation rows"
-      - "b) Add only the regulation rows (keep accessibility as scan-only, no conformance entity)"
-      - "c) Neither (accept scan-tool-only accessibility coverage)"
-    why: Both accessibility specialists (Siteimprove, Acquia Optimize) model conformance first-class; EAA makes it audit-bound.
+      - "a) Add the conformance entity AND the WCAG/EN 301 549/EAA regulation rows, in the base Inventory module (335) where the a11y scan already lives"
+      - "b) Add the conformance entity AND the regulations, but as its own OPTIONAL accessibility module (deploy-time opt-in)"
+      - "c) Add only the regulation rows (keep accessibility as scan-only, no conformance entity)"
+      - "d) Neither (accept scan-tool-only accessibility coverage)"
+    why: >-
+      Both accessibility specialists (Siteimprove, Acquia Optimize) model conformance first-class; EAA
+      makes it audit-bound. User asked whether it is an optional module; folding that as a vs b.
+    evidence: >-
+      Both accessibility specialists model conformance as a first-class, audited record evaluated
+      against WCAG / ACT rules and EN 301 549: Siteimprove tracks accessibility conformance + QA issues
+      + content policies; Acquia Optimize keeps an accessibility tracker with an audit log, PDF audits,
+      and remediation requests. The European Accessibility Act has been enforceable since June 2025, so
+      "we scanned it once" is no longer "we can show conformance over time". On the optional-module
+      sub-question: the conformance record is realized by the existing INTGOV-A11Y capability whose scan
+      already lives in the base Inventory module, so the natural home is there (a); making it a separate
+      opt-in module (b) only pays off if accessibility governance is deployed selectively. Neither vendor
+      packages conformance as a separable SKU - it sits inside the same governance product as the scan.
     vendor_evidence:
       - {vendor: Siteimprove, evidence: 1st_class}
       - {vendor: Acquia Optimize, evidence: 1st_class}
@@ -89,11 +142,14 @@ b3:
   - id: B3-S1
     candidate: intranet_improvement_items (typed remediation / improvement master)
     rationale: >-
-      Improvements currently hand off to a generic work_items embed (mastered by WORK-MGMT). The
-      build's own phase0 originally proposed a domain-typed intranet_improvement_items and dropped it.
-      A thin typed remediation/improvement master would back the INTGOV-PLAN capability and link
-      findings -> remediation -> attestation closure. Discretionary: the generic work_item handoff
-      already works; add only if B2-S2 (findings) lands. Fits the existing Governance module; not a split.
+      Improvements currently hand off to a generic work_items embed (243, mastered by
+      WORK-MGMT-TASK-EXEC 149, held embedded_master + optional in Governance 336) - so a basic
+      embedded Work Management ALREADY exists today (this answers the user's 2026-06-16 a4 question).
+      The build's own phase0 originally proposed a domain-typed intranet_improvement_items and dropped
+      it in favor of that generic embed. A thin typed remediation/improvement master would back the
+      INTGOV-PLAN capability and link findings -> remediation -> attestation closure. Discretionary:
+      the generic work_item embed already works; add only if B2-S2 (findings) lands. Fits the existing
+      Governance module; not a split.
     vendor_evidence:
       - {vendor: Acquia Optimize, evidence: 1st_class}
       - {vendor: Siteimprove, evidence: 1st_class}

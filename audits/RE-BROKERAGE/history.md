@@ -244,3 +244,85 @@ b1b and b3 left as-is.
 
 `next_action_by: user`. All agent-doable additive/corrective work is done. Remaining open items
 are user decisions (b2 + destructive M9 + persona Phase-P) or blocked on neighbor audits (b1b).
+
+---
+
+## 2026-06-16 - a-file processing (Rule #22 go signal)
+
+### Summary
+
+Processed `a-RE-BROKERAGE.md` (the user's answers to `q-RE-BROKERAGE.md`). Five answers:
+q1=a (gate, destructive, applied), q2=a (record_status approval, out of band, re-surfaced),
+q3=empty/recommended (b3 research idea, kept open), q4=a and q5=empty/recommended=a (two B9d
+ORPHAN ownership decisions, accepted and folded into Phase-P). One destructive structural edit
+applied (the a-file is its approval); no record_status flip performed; B9d positively run both
+directions this pass.
+
+### a1 -> B1A-SELF-CONTAIN (q1=a): EXECUTED (DESTRUCTIVE, a-file approved)
+
+Converted the two M9 self-containment violations on module 151 (RE-BROK-AGENT-OPS) from
+`role=contributor` to `role=embedded_master`: DMDO 776 (crm_leads, data_object 99) and DMDO 777
+(crm_contacts, data_object 98). Necessity left `required` (matches the other embedded_master rows
+780/781). Module 151 now carries the two CRM-mastered entities as local embedded shells, so it is
+self-contained (M9 satisfied) without loosening the data requirement. CRM (domain 69) still
+masters the canonical rows, so B1B-CRM-INBOUND (CRM owes inbound handoffs on lead/contact events)
+stays open and unchanged. `domain_module_data_objects` has no record_status column, so nothing
+to stamp. Item resolved and removed from state.yaml b2.
+
+### a2 -> B2-H1-APPROVAL (q2=a): KEPT OPEN (record_status flip is out of band)
+
+The user answered "approve all seven" for the 7 agent_curated APQC tags (handoff_processes ids
+187-192, 457) sitting at record_status='new'. Per Rule #1 and Rule #22, an a-file answer is NEVER
+authorization for a record_status change: approving records is out of band and needs the separate,
+direct, in-band user request, not the q-/a- rename. Did NOT stamp 'approved'. Item kept OPEN in
+b2 (reworded to make clear the user must approve in the record / catalog UI) and re-surfaced in
+the regenerated q-file.
+
+### a3 -> B3-PHASE0-MARKET-GAPS (q3=empty -> recommended "yes"): KEPT OPEN (research carve-out)
+
+The user answered yes (research and add the ones that hold up; additive, can happen later). Per
+Rule #21 the research carve-out, a "yes / add the ones that hold up" greenlight authorizes
+producing the Phase 0 analysis and a q-file, never writing the net-new data_objects straight to
+the catalog. b3 is non-blocking and never gates "finished". Kept as a parked additive idea (b3),
+annotated with the user's "yes"; the actual load remains a separate Phase-0-backed q-file step.
+
+### a4 -> B2-B9D-OWN-207 (q4=a) and a5 -> B2-B9D-OWN-1860 (q5=empty -> recommended a): DECISION RESOLVED, realization deferred to Phase-P
+
+The user accepted RE-BROKERAGE ownership of two B9d ORPHAN processes:
+- pid 207 "Submit regulatory reports" (6.4.4), carried on disclosure_documents (356) via handoff
+  311 (RE-BROKERAGE -> GRC).
+- pid 1860 "Close the sale" (3.5.1.8.4), carried on real_estate_transactions (353) +
+  real_estate_listings (352) via handoffs 296/297/861/862.
+Both answers were "a" = record it now as owned, assign a named owner once RE-BROKERAGE sets up who
+does this work. RE-BROKERAGE has 0 personas reaching modules 151/152
+(role_modules?domain_module_id=in.(151,152) returns zero rows; Phase-P deferred), so the
+realization (a process_id-wired gated lifecycle state plus process_raci R/A) cannot be authored
+now: it needs a persona pool that does not yet exist. Per the AIOPS / ACCT-PRACT-MGMT precedent,
+the realizing write is gated on the same persona work as Phase-P. The two b2 decision items are
+therefore resolved (the ownership question is answered) and removed from b2; the realization tasks
+are folded into B1A-PHASE-P (deferred), each with its candidate gate state recorded
+(disclosure_documents 'delivered' 1001 for pid 207; real_estate_transactions 'closed' 998 for pid
+1860) so the Phase-P run wires the gate + R/A in one pass.
+
+### B9d both-directions verification (B1A-B9D-VERIFY resolved)
+
+Ran `bun run scripts/analytics/b9d_resolver.ts RE-BROKERAGE --dry-run`: 7 boundary tags, 4 distinct
+(process, owner) findings, verdicts {ORPHAN:3, RESOLVED:1}. The one RESOLVED is pid 398 "Negotiate
+and document agreements/contracts" (realized by CLM via legal_contracts gate, module 126). Of the 3
+ORPHANs: pid 207 and pid 1860 are RE-BROKERAGE-owned (handled above); pid 709 "Validate and qualify
+leads/opportunities" is CRM-owned (carried on crm_leads via handoff 308 RE-BROKERAGE -> CRM) and is
+ALREADY routed to CRM's backlog (B2-B9D-OWN-709 present in audits/CRM/state.yaml, CRM already
+feedback_needed) - no write owed by this pass, and out of this domain's edit scope. B9d has now
+positively run in both directions on this domain, so B1A-B9D-VERIFY is resolved and removed from
+b1a.
+
+### Files / state
+
+- Catalog writes: 2 PATCHes on domain_module_data_objects (776, 777 -> embedded_master). No
+  record_status touched anywhere.
+- Deleted a-RE-BROKERAGE.md and the stale q-RE-BROKERAGE.md; regenerated q-RE-BROKERAGE.md
+  (1 question: B2-H1-APPROVAL; plus the Optional b3 market-gaps item).
+- state.yaml: removed B1A-B9D-VERIFY (resolved), B1A-SELF-CONTAIN (executed), B2-B9D-OWN-207 and
+  B2-B9D-OWN-1860 (resolved, realization folded into B1A-PHASE-P). Kept B1A-PHASE-P (deferred, now
+  carrying the two B9d realizations), the 5 b1b neighbor-blocked items, B2-H1-APPROVAL, and the b3
+  market-gaps idea. status: feedback_needed, next_action_by: user.

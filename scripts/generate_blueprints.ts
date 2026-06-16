@@ -672,6 +672,39 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
     out.push("");
   }
 
+  // Specification requirements - AUTHORED, not derived. The one body section that is not a
+  // projection of the catalog graph: it carries `domain_modules.specification_requirements`, the
+  // architect's hand-off to the modeler / deployer. Motivating case: a starter / bundle that
+  // collapses a multi-entity pattern from the full module into a flat field on a surviving embedded
+  // shell (e.g. showback-lite cost: the full SMP/ITAM modules carry spend across separate entities
+  // the starter omits, so it must denormalize a flat cost field onto its shells or its renewal/cost
+  // view cannot resolve). A prose directive, NOT a copy of the field contract (that lives on the
+  // deployed entities; see SKILL.md field-boundary note).
+  //
+  // Placed at the overview->detail boundary: AFTER §2 (the entity list + mermaid, which with §1 form
+  // the high-level overview a casual reader scans) and BEFORE §3 Entities catalog (where the entity
+  // detail begins). Spec requirements are specialist detail for the architect / analyst, so they
+  // head the detailed sections rather than interrupt the overview. UNNUMBERED on purpose: authored
+  // intent, not part of the derived §1-§9 schema, so staying unnumbered avoids cascade-renumbering
+  // §3-§9. CONDITIONAL: emitted only when >=1 in-scope module carries a non-empty value, so the
+  // field-less majority of blueprints stay byte-identical (no spurious drift / no mass regenerate).
+  const specModules = modules.filter((m) => (m.specification_requirements ?? "").trim().length > 0);
+  if (specModules.length > 0) {
+    out.push("## Additional Requirements Specification");
+    out.push("");
+    if (specModules.length === 1) {
+      out.push(specModules[0].specification_requirements.trim());
+      out.push("");
+    } else {
+      for (const m of specModules) {
+        out.push(`### \`${m.domain_module_code}\``);
+        out.push("");
+        out.push(m.specification_requirements.trim());
+        out.push("");
+      }
+    }
+  }
+
   // §3 Entities catalog
   out.push("## 3. Entities catalog");
   out.push("");

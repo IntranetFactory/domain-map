@@ -11,7 +11,7 @@ domain_modules:
   - it-ops-starter
 domain_code: IT-OPS-STARTER
 related_modules: [aiops-event-correlation, aiops-predictive-intelligence, apm-portfolio-registry, clm-repository, data-ai-plat-ml, dcim-asset-space, dcim-power-env, dlp-enforcement-runtime, ham-asset-registry, hcm-core-worker, hrsd-employee-portal, iga-access-request, iga-auto-provisioning, iga-entitlement-catalog, itam-contracts, itam-lifecycle, itom-infra-mon, itsm-incident-mgmt, itsm-service-request, lcap-visual-composition, remote-access-session, rmm-agent-mgmt, rmm-automation, rmm-monitoring, sam-entitlement-mgmt, smp-discovery, smp-renewal-vendor, uem-compliance-posture, uem-config-apps, uem-device-lifecycle, work-mgmt-task-exec, wsc-channels-conversations]
-persona: []
+persona: [IT-SAAS-ADMIN, ITAM-SAAS-PORTFOLIO-MANAGER, PROCUREMENT-SAAS-RENEWAL-OWNER]
 created_at: 2026-06-16
 ---
 
@@ -62,6 +62,7 @@ flowchart TD
   saas_applications -->|"has"| saas_subscriptions
   users -->|"owns"| saas_applications
   users -->|"manages"| saas_subscriptions
+  saas_applications -->|"raises_incident"| service_incidents
   class asset_contracts embedded_master;
   class saas_subscriptions embedded_master;
   class service_incidents embedded_master;
@@ -77,13 +78,22 @@ flowchart TD
   style software_licenses stroke-dasharray:5 5;
 ```
 
+## Additional Requirements Specification
+
+Cost fields on the embedded shells. For the standalone renewal-and-cost view to resolve, two embedded masters each need a flat cost figure plus a currency code:
+
+- `asset_contracts`: a flat `renewal_cost` (or `annual_value`) numeric field.
+- `saas_subscriptions`: a flat `annual_spend` (or MRR/ARR) numeric field.
+
+Coexistence: these flat fields are a standalone-only denormalization. They are not needed when the full asset-management and SaaS-management modules are already installed (those carry cost on their own spend entities); when such a full module is added later, the flat field must be deduplicated and reconciled against the canonical source so cost is not double-counted.
+
 ## 3. Entities catalog
 
 | # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | pattern flags | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `asset_contracts` | `asset_contracts` | Asset Contract | Asset Contracts | embedded_master | `itam-contracts` | Cross-Asset Contract Management | required | submit_lock, single_approver | operational_workflow | `:manage` | - |
 | 2 | `hardware_assets` | `hardware_assets` | Hardware Asset | Hardware Assets | embedded_master | `ham-asset-registry` | Hardware Asset Registry | optional | - | operational_workflow | `:manage` | - |
-| 3 | `service_incidents` | `service_incidents` | Incident | Incidents | embedded_master | `itsm-incident-mgmt` | Incident Management | optional | - | operational_workflow | `:manage` | - |
+| 3 | `service_incidents` | `service_incidents` | Incident | Incidents | embedded_master | `itsm-incident-mgmt` | Incident Management | optional | personal_content | operational_workflow | `:manage` | - |
 | 4 | `saas_applications` | `saas_applications` | SaaS Application | SaaS Applications | embedded_master | `smp-discovery` | SMP Discovery and Catalog | optional | - | operational_workflow | `:manage` | - |
 | 5 | `saas_subscriptions` | `saas_subscriptions` | SaaS Subscription | SaaS Subscriptions | embedded_master | `smp-renewal-vendor` | SMP Renewal and Vendor Management | required | - | operational_workflow | `:manage` | - |
 | 6 | `service_requests` | `service_requests` | Service Request | Service Requests | embedded_master | `itsm-service-request` | Service Request Fulfillment | optional | single_approver | operational_workflow | `:manage` | - |
@@ -104,6 +114,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `service_requests` | routes_to | `service_incidents` | one_to_many | reference | optional | source | clear | reference | - |
 | `service_requests` | triggers | `service_incidents` | one_to_many | reference | optional | target | clear | reference | - |
 | `saas_applications` | has | `saas_subscriptions` | one_to_many | reference | optional | source | clear | reference | - |
+| `saas_applications` | raises_incident | `service_incidents` | one_to_many | reference | optional | source | clear | reference | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
@@ -401,6 +412,8 @@ _This scope holds `service_requests` as **embedded_master**; the canonical state
 | `it-ops-starter:approve_renewal` | workflow-gate (lifecycle) | Transition `saas_subscriptions` into state `renewed` | ✓ |
 | `it-ops-starter:cancel_subscription` | workflow-gate (lifecycle) | Transition `saas_subscriptions` into state `cancelled` | ✓ |
 | `it-ops-starter:submit_asset_contract` | override (submit_lock) | Submit and lock a `asset_contracts` row (post-submit edits gated) | ✓ |
+| `it-ops-starter:view_all_incidents` | override (personal_content) | View all `service_incidents` rows beyond row-scope | ✓ |
+| `it-ops-starter:manage_all_incidents` | override (personal_content) | Manage all `service_incidents` rows beyond row-scope | ✓ |
 
 ### 8.2 Business rules
 
@@ -408,6 +421,7 @@ _This scope holds `service_requests` as **embedded_master**; the canonical state
 | --- | --- | --- | --- |
 | `submit_restricted_to_asset_contract_owner` | `asset_contracts` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `it-ops-starter:manage_all_asset_contracts` |
 | `approve_asset_contract_requires_approver` | `asset_contracts` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`it-ops-starter:approve_asset_contract` if surfaced as a lifecycle workflow gate). |
+| `incident_edit_scope` | `service_incidents` | has_personal_content | Row-scope by default; override via `it-ops-starter:view_all_incidents` / `it-ops-starter:manage_all_incidents` |
 | `approve_service_request_requires_approver` | `service_requests` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`it-ops-starter:approved_service_request`). |
 
 ## 9. Roles, RACI, and responsibilities (derived)
@@ -441,10 +455,27 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `it-ops-starter:admin` | `it-ops-starter:approve_renewal` |
 | `it-ops-starter:admin` | `it-ops-starter:cancel_subscription` |
 | `it-ops-starter:admin` | `it-ops-starter:submit_asset_contract` |
+| `it-ops-starter:admin` | `it-ops-starter:view_all_incidents` |
+| `it-ops-starter:admin` | `it-ops-starter:manage_all_incidents` |
+
+**Processes wired:**
+
+| process_key | process_name | PCF code | PCF ID | level | description |
+| --- | --- | --- | --- | --- | --- |
+| `manage_it_portfolio_strategy` | Manage IT portfolio strategy | 8.2.2 | 20660 | 3 | Strategy for systematic management of IT investments, projects, and activities. Analyze and examine the value of the IT portfolio and allocate resources based on business objectives. |
+| `manage_it_user_identity` | Manage IT user identity and authorization | 8.3.8 | 20756 | 3 | The process of identifying, authenticating, and authorizing IT users to have access to applications, systems, IT components, or networks by associating user rights and restrictions with established identities. |
+| `manage_demand_products` | Manage demand for products | 4.1.2 | 10222 | 3 | Forecasting demand for products using secondary research and customer feedback. Refine these forecasts. Inspect the approach used in creating forecasts, and determine its accuracy. |
 
 **RACI realization:**
 
-_(none: no process_raci assignments wired to this module's gated processes yet)_
+| actor | kind | raci | process_key | realization |
+| --- | --- | --- | --- | --- |
+| `ITAM-SAAS-PORTFOLIO-MANAGER` | persona | responsible | `manage_it_portfolio_strategy` | grant gates [it-ops-starter:sanction_application, it-ops-starter:deprecate_application] + the gated entities' write tier |
+| `ITAM-SAAS-PORTFOLIO-MANAGER` | persona | accountable | `manage_it_portfolio_strategy` | approval gate |
+| `IT-SAAS-ADMIN` | persona | responsible | `manage_it_user_identity` | grant gates [it-ops-starter:deprovision_application] + the gated entities' write tier |
+| `IT-SAAS-ADMIN` | persona | accountable | `manage_it_user_identity` | approval gate |
+| `PROCUREMENT-SAAS-RENEWAL-OWNER` | persona | responsible | `manage_demand_products` | grant gates [it-ops-starter:initiate_renewal, it-ops-starter:approve_renewal, it-ops-starter:cancel_subscription] + the gated entities' write tier |
+| `PROCUREMENT-SAAS-RENEWAL-OWNER` | persona | accountable | `manage_demand_products` | approval gate |
 
 ### 9.2 Functional ownership and default grants
 

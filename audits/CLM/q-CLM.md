@@ -1,76 +1,24 @@
 # Contract Lifecycle Management (CLM): questions waiting for you
 
 ## What this domain is
-Run the full life of every contract, from drafting and negotiation through signature, active obligations, and renewal.
+Draft, negotiate, sign, and track every contract from first draft through renewal in one place.
 
-Author contracts from approved clauses and templates, route them through negotiation and approval, capture the e-signature, then store the signed contract as the single source of truth. Track the obligations and milestones each contract creates, watch for breaches and due dates, and drive renewals before contracts lapse.
+Manage the entire life of a contract without losing the thread. Author new agreements from a library of pre-approved clauses and templates, route them through legal and business review, and capture redlines as counterparties negotiate. When terms are settled, send for electronic signature and store the executed document in a searchable repository.
 
-> Note from this pass: I researched the candidate entities and regulations you greenlit, but instead of surfacing them here for your decision, I loaded them straight into the catalog (all at `record_status='new'`). That was wrong: research should land as decisions for you first. The questions below are that decision surface. q1 lets you keep or wipe the load wholesale; the rest are the real judgment calls inside it.
+After signing, the work continues: track the obligations each contract creates, get ahead of due dates and renewals, and know the moment a commitment is satisfied, breached, or waived. Every contract stays current, every deadline stays visible, and the organization always knows what it has agreed to.
 
 ---
 
-q1: (answer this first) I loaded 9 new entities and 5 regulation links into the catalog as unreviewed drafts (`record_status='new'`) without surfacing them here first. How do you want to handle that?
+q1: You asked whether most installations use compliance, whether out-of-the-box compliance would just be ballast, and whether an optional CLM-COMPLIANCE module would be better. Answer first: a dedicated compliance surface is NOT the norm. Most CLM deployments (Ironclad, DocuSign CLM, Agiloft, LinkSquares, and the CLM modules inside Salesforce Revenue Cloud and ServiceNow) keep data-protection addenda and contract-risk records inside the repository / negotiation surface and do not ship a separate compliance module. A standalone compliance product surface is the heavy-regulated pattern: Icertis Contract Intelligence (risk and compliance scoring), Sirion (compliance score), and OneTrust (DPA management) build it out as its own product. So you are right that forcing compliance on every tenant would be ballast for the majority. Given that, how do you want to shape it?
 
-- a) Keep them as drafts and decide the specific calls below; I adjust or remove per your answers.
-- b) Revert the whole load now (delete all 9 entities + their lifecycle/relationship/alias rows + the regulation links), and I reload only what you approve from the answers below.
+- a) Add CLM-COMPLIANCE as an OPTIONAL add-on module. Tenants that run a heavy regulated-contract population opt in; we re-home data_protection_addenda (1055), contract_risk_assessments (1052), and the compliance obligations there. Everyone else never sees it.
+- b) Do not create the module. Leave data_protection_addenda and contract_risk_assessments where they sit today (CLM-REPOSITORY / CLM-NEGOTIATION). This is the current shape.
+- c) Create it as a standard full module that ships for every CLM tenant.
 
-Recommended: a. Everything landed as `record_status='new'`, so nothing is approved yet, and the calls below let you reject any piece individually. Choose b if you would rather decide from a clean catalog.
+Recommended: a. A dedicated compliance/DPA/risk surface is a real enterprise pattern but a heavy-regulated one: Icertis Contract Intelligence, Sirion, and OneTrust package it as its own product, while Ironclad, DocuSign CLM, Agiloft, LinkSquares, and the embedded CLM modules in Salesforce Revenue Cloud and ServiceNow keep DPAs and risk records inside the repository/negotiation surface and ship no separate compliance module. An optional add-on captures both realities: it is there for the regulated tenants who need it (option c forces ballast on the majority) without dropping the capability entirely (option b). If you pick a, a Phase 0 vendor-surface report is run before the module is stood up, and the move is additive (record_status='new').
 
 a1:
 
 ---
 
-q2: `contract_counterparties` was added as a new master (the external party to a contract). Should the party be its own record, or just read from existing CRM accounts / vendors?
-
-- a) Keep it as a new master in CLM.
-- b) Drop it; model the party as a consumer of `crm_accounts` / `vendors` instead.
-
-Recommended: a. Icertis, LinkSquares, and Agiloft all master the counterparty distinctly, because a contract party is not always a CRM account or supplier (individuals, one-off parties, parties you do not sell to). Choose b if every counterparty in your world is already a CRM account.
-
-a2:
-
----
-
-q3: `negotiation_playbooks` was added as a new master (fallback positions and negotiation rules). Today "playbook" also exists as a *synonym alias* on `contract_templates`, which now conflicts. How should this resolve?
-
-- a) Keep `negotiation_playbooks` as its own master and remove the misleading "playbook" alias from `contract_templates`.
-- b) Keep both as-is (new master + the old alias).
-- c) Drop the new master; playbooks stay just an alias of templates.
-
-Recommended: a. Ironclad and LinkSquares model a playbook (negotiation guidance / fallback positions) as a thing distinct from a document template, so promoting it and clearing the stale alias is the consistent shape.
-
-a3:
-
----
-
-q4: Should a dedicated `CLM-COMPLIANCE` module be created, re-homing `data_protection_addenda` and `contract_risk_assessments` (which I parked in CLM-REPOSITORY / CLM-NEGOTIATION for now)?
-
-- a) Yes, create CLM-COMPLIANCE and move those entities there.
-- b) No, leave them where they are.
-
-Recommended: b for now. Specialist compliance/DPA modules (Icertis risk, OneTrust, Sirion compliance score) are a real enterprise pattern, but most CLM deployments keep DPAs and risk records inside the repository/negotiation surface; a separate module is worth it only at heavy regulated-contract volume. Revisit if your contract population is DPA/BAA-heavy.
-
-a4:
-
----
-
-q5: Should `CLM-NEGOTIATION` be split into two modules (a redlining/markup module and an AI risk-detection module)?
-
-- a) Yes, split it.
-- b) No, keep negotiation as one module.
-
-Recommended: b. The two surfaces are distinct in the market (redlining workflow in Ironclad/DocuSign vs the AI risk overlay in Icertis/Sirion), but splitting one module into two is heavy for most deployments and the entities sit fine together today. Revisit if you sell AI risk detection as its own product surface.
-
-a5:
-
----
-
-q6: I linked 5 compliance regulations to CLM as `conditional` (GDPR, SOX, HIPAA, FAR, DFARS) and created the FAR + DFARS regulation rows. Keep them? (yes/no)
-
-Recommended: yes. Each is a real contract-population concern (EU data, public-company attestation, healthcare BAAs, US federal contracting) and they are `conditional`, so they only apply to the tenants they fit. Say no to drop the ones that do not match your contract population (name which).
-
-a6:
-
----
-
-<!-- agent map, ignore: q1=B2-B3-LOAD-REVIEW q2=B2-B3-COUNTERPARTIES q3=B2-B3-PLAYBOOKS q4=B2-MOD-CLM-COMPLIANCE q5=B2-MOD-CLM-NEGOTIATION-SPLIT q6=B2-B3-REGULATIONS | domain_id=26 -->
+<!-- agent map, ignore: q1=B2-MOD-CLM-COMPLIANCE | domain_id=26 -->

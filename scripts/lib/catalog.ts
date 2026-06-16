@@ -90,6 +90,7 @@ export type ModuleRow = {
   catalog_tagline: string;
   catalog_description: string;
   module_kind: "full" | "starter";
+  specification_requirements: string;
 };
 
 export type CatalogIndex = {
@@ -198,7 +199,7 @@ export async function loadCatalogIndex(): Promise<CatalogIndex> {
     pg("GET", "/industries?select=id,industry_name&limit=10000") as Promise<IndustryRow[]>,
     pg(
       "GET",
-      "/domain_modules?select=id,domain_module_code,domain_module_name,domain_id,description,catalog_tagline,catalog_description,module_kind&order=domain_module_code.asc&limit=10000",
+      "/domain_modules?select=id,domain_module_code,domain_module_name,domain_id,description,catalog_tagline,catalog_description,module_kind,specification_requirements&order=domain_module_code.asc&limit=10000",
     ) as Promise<ModuleRow[]>,
   ]);
 

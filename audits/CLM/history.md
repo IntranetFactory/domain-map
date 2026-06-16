@@ -726,3 +726,57 @@ Domain set back to `feedback_needed` / `next_action_by: user`. The loaded rows r
 (unapproved) pending those answers; q1=b reverts the load wholesale. The Phase-B/S tooling follow-up moved to b1b
 `B1B-B3-MASTERS-COMPLETE`, blocked on the q1 keep/revert decision. The two module-splits became live q-file
 questions (q4/q5) instead of "held until tooling settles". No `record_status` touched.
+
+---
+
+## 2026-06-16 - Answer processing (a-CLM.md, the b3-load review)
+
+User answered the 6 q-CLM.md questions via `a-CLM.md`. Each `a<N>` mapped to its decision ID via the q-file
+footer (domain_id=26) and was executed under Rule #21 / Rule #22. One catalog write (a destructive DELETE the
+a-file approved); four no-op confirmations of already-loaded `record_status='new'` rows; one item kept OPEN
+because the user answered it with a question. No `record_status` flip anywhere (Rule #1: out of band).
+
+### Resolved
+
+- **B2-B3-LOAD-REVIEW (a1 = "keep them as new", option a).** The 9 b3 masters (1048-1056), the 5 conditional
+  domain_regulations links, and the FAR/DFARS rows are KEPT as drafts at `record_status='new'`. The user's
+  trailing "isn't that the SOP?" is correct and rhetorical: yes, the q-/a- loop keeps research-derived
+  additions at `record_status='new'` for review, and approval (any non-`new` flip) is a separate out-of-band
+  step (Rule #1). No catalog write; item removed from b2. The Phase-B/S tooling follow-up is now UNBLOCKED and
+  moved from b1b back to b1a as `B1A-B3-MASTERS-COMPLETE` (additive, non-blocking).
+- **B2-B3-COUNTERPARTIES (a2 = a).** contract_counterparties (1053) kept as its own CLM-REPOSITORY master.
+  Already loaded at `record_status='new'`; no write. Removed from b2. Grounding: Icertis / LinkSquares / Agiloft
+  master the counterparty distinctly (a contract party is not always a CRM account or supplier).
+- **B2-B3-PLAYBOOKS (a3 = a).** negotiation_playbooks (1051) kept as the CLM-NEGOTIATION master AND the stale
+  "playbook" synonym alias on contract_templates (69) was DELETED (the destructive step option a explicitly
+  enumerates, so the a-file IS the approval; Rule #21 / Rule #1). DELETE `data_object_aliases` id=203
+  (alias_name='playbook', synonym, data_object_id=69); only the "template" synonym (202) remains on 69. Loader:
+  [.tmp_deploy/fix_clm_2026_06_16_playbook_alias.ts](../../.tmp_deploy/fix_clm_2026_06_16_playbook_alias.ts)
+  (idempotent). Removed from b2. Grounding: Ironclad / LinkSquares model a negotiation playbook (fallback
+  positions / negotiation guidance) as distinct from a document template.
+- **B2-B3-REGULATIONS (a6 = empty -> Recommended = yes).** The 5 conditional regulation links (GDPR 1, SOX 5,
+  HIPAA 4, FAR 99, DFARS 100, all `applicability='conditional'`) and the FAR (99) + DFARS (100) regulation rows
+  are kept. Already loaded at `record_status='new'`; no write. Removed from b2.
+- **B2-MOD-CLM-NEGOTIATION-SPLIT (a5 = b).** Do NOT split CLM-NEGOTIATION into CLM-REDLINING +
+  CLM-CLAUSE-RISK-DETECT. The two surfaces (redlining workflow vs the AI risk overlay) are distinct in the
+  market (Ironclad / DocuSign CLM redlining vs Icertis / Sirion AI risk), but splitting one module into two is
+  heavy for most deployments and the entities sit fine together today. No write. Removed from b2.
+
+### Kept open (carried into regenerated q-CLM.md)
+
+- **B2-MOD-CLM-COMPLIANCE (a4 = a question, not a decision).** User asked: "do most installations use
+  compliance? if not, isn't OOTB compliance just ballast, wouldn't an optional CLM-COMPLIANCE be better?".
+  ANSWER (folded into the regenerated q-file): a dedicated compliance/DPA/risk surface is NOT the norm. Most CLM
+  deployments (Ironclad, DocuSign CLM, Agiloft, LinkSquares, the CLM modules in Salesforce Revenue Cloud /
+  ServiceNow) keep DPAs and risk records inside the repository/negotiation surface; a standalone compliance
+  product is the heavy-regulated pattern (Icertis Contract Intelligence risk/compliance, Sirion compliance
+  score, OneTrust DPA management). So OOTB-for-all compliance would be ballast for the majority, the user's
+  optional-add-on instinct is the better shape. The item stays OPEN and is re-asked as a three-way choice
+  (a: optional add-on module / b: leave in repository as today / c: standard full module for every tenant),
+  recommendation = a. A Phase 0 report is required before standing any module up.
+
+### Files
+
+`a-CLM.md` and the stale `q-CLM.md` deleted. A fresh `q-CLM.md` regenerated with the single open question
+(CLM-COMPLIANCE, re-framed per a4). Domain stays `status: feedback_needed` / `next_action_by: user`. No
+`record_status` touched anywhere this pass.

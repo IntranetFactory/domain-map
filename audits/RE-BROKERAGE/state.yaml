@@ -2,19 +2,18 @@ schema_version: 2
 domain: RE-BROKERAGE
 status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-07"
+last_audit: "2026-06-16"
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-PHASE-P
-    summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED this pass."
-    finding: "Live 2026-06-07: 2 domain_modules hosted on 143 (151 RE-BROK-AGENT-OPS, 152 RE-BROK-BROKERAGE-OPS; 153 REAL-ESTATE-AGENT is now a cross-cutting starter with domain_id=null, hosted on 143 via domain_module_host_domains alongside CRM 69 and CLM 26) and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
+    summary: "Multi-module (2 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED this pass. Now also carries the two B9d-owned processes whose realization waits on these personas."
+    finding: "Live 2026-06-16: 2 domain_modules hosted on 143 (151 RE-BROK-AGENT-OPS, 152 RE-BROK-BROKERAGE-OPS; 153 REAL-ESTATE-AGENT is now a cross-cutting starter with domain_id=null, hosted on 143 via domain_module_host_domains alongside CRM 69 and CLM 26) and 0 domain_roles reaching this domain via role_modules (role_modules?domain_module_id=in.(151,152) returns zero rows). Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. The user (a-RE-BROKERAGE.md 2026-06-16) accepted RE-BROKERAGE ownership of two B9d ORPHAN processes (pid 207 \"Submit regulatory reports\" carried on disclosure_documents via handoff 311 from GRC; pid 1860 \"Close the sale\" carried on real_estate_transactions + real_estate_listings via handoffs 296/297/861/862), but the realization of each (a process_id-wired gated lifecycle state plus process_raci R/A) requires a persona pool that does not yet exist, so both are deferred to this same Phase-P run."
+    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. As part of the same Phase-P pass, realize the two accepted B9d-owned processes at record_status='new': (a) pid 207 'Submit regulatory reports' (process_code 6.4.4) gated on a disclosure_documents lifecycle state (candidate gate: 'delivered' id 1001 on module 151, or a module-152 compliance gate if a 152 owner persona is authored) with R/A from the new persona pool; (b) pid 1860 'Close the sale' (process_code 3.5.1.8.4) gated on the real_estate_transactions 'closed' state (id 998, module 151, requires_permission=true) with R/A from the new persona pool. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
     status: deferred
-    deferred_note: "Persona / RACI authoring is deferred per the Phase-P discipline (do not author personas in a state-driven execute pass). Candidate operational personas for RE-BROKERAGE: Listing Agent, Buyer Agent, Transaction Coordinator, Designated Broker (the four roles that existed pre-Plan-3). Bring to a dedicated Phase-P run."
+    deferred_note: "Persona / RACI authoring is deferred per the Phase-P discipline (do not author personas in a state-driven execute pass). Candidate operational personas for RE-BROKERAGE: Listing Agent, Buyer Agent, Transaction Coordinator, Designated Broker (the four roles that existed pre-Plan-3). The two B9d realizations (pid 207, pid 1860) ride this run because each needs an R/A persona from this pool. Bring to a dedicated Phase-P run."
+    extra_b9d_owned_processes:
+      - {process_id: 207, process_code: "6.4.4", process_name: "Submit regulatory reports", carried_entity: disclosure_documents, via_handoff: 311, candidate_gate_state_id: 1001}
+      - {process_id: 1860, process_code: "3.5.1.8.4", process_name: "Close the sale", carried_entity: "real_estate_transactions, real_estate_listings", via_handoffs: [296, 297, 861, 862], candidate_gate_state_id: 998}
 
 b1b:
   - id: B1B-CRM-INBOUND
@@ -26,7 +25,9 @@ b1b:
       and got no rows). CRM B9 is expected to publish at minimum
       crm_contact.synced, crm_lead.scored_above_threshold, and
       crm_lead.converted into RE-BROKERAGE, but those rows have not been
-      authored yet.
+      authored yet. (Note: as of 2026-06-16 these two consumer rows are now
+      embedded_master on module 151 per the M9 self-containment fix; CRM still
+      masters the canonical rows and owes the inbound handoffs.)
     blocked_by:
       - {type: domain_audit, blocking_domain: CRM, milestone: B9_outbound_to_RE-BROKERAGE}
     affected_entities: [crm_contacts, crm_leads]
@@ -80,41 +81,26 @@ b1b:
       - {handoff_id: 862, direction: outbound, source_domain: RE-BROKERAGE, target_domain: RE-INVEST, trigger_event: listing.sold, payload: real_estate_listings, null_field: target_domain_module_id}
 
 b2:
-  - id: B1A-SELF-CONTAIN
-    summary: "2 contributor/required-consumer rows break module self-containment (M9): embed or relax each. DESTRUCTIVE (rewrites role/necessity on existing rows) - surfaced, not applied."
-    question: >-
-      Each fix overwrites role/necessity on an existing DMDO row, which is a
-      destructive edit the agent does not apply unapproved. Per row, should the
-      agent convert role to embedded_master (carry a local shell of the
-      CRM-mastered entity inside RE-BROK-AGENT-OPS) OR set necessity to optional
-      (presence-conditional)? references/modules.md section 5 + SKILL.md M9.
-    finding: >-
-      Live 2026-06-07: 2 domain_module_data_objects rows on module 151
-      (RE-BROK-AGENT-OPS) are role=contributor with necessity=required, pointing
-      at entities mastered by CRM (domain 69) and not embedded_master here:
-      DMDO 777 = crm_contacts (98), DMDO 776 = crm_leads (99). Each is an M9
-      self-containment violation.
-    options:
-      - per_row_convert_to_embedded_master
-      - per_row_set_necessity_optional
-    extra_m9_shapes:
-      - {dmdo_id: 777, entity: crm_contacts, module: RE-BROK-AGENT-OPS, role: contributor, necessity: required, master_domain: CRM}
-      - {dmdo_id: 776, entity: crm_leads, module: RE-BROK-AGENT-OPS, role: contributor, necessity: required, master_domain: CRM}
   - id: B2-H1-APPROVAL
-    summary: 7 handoff_processes rows still sit at record_status='new'.
+    summary: 7 handoff_processes rows still sit at record_status='new'; approving them is a record_status flip the agent cannot perform.
     question: >-
-      Should the user approve the 7 agent_curated APQC tags on the 6
-      cross-domain handoffs published by RE-BROKERAGE? Rule #1 forbids the
-      agent from auto-stamping record_status='approved'.
+      The 7 agent_curated APQC tags on the 6 cross-domain handoffs published by
+      RE-BROKERAGE are still at record_status='new'. The user answered 'approve
+      all 7' in a-RE-BROKERAGE.md (2026-06-16), but a record_status flip is out
+      of band: Rule #1 / Rule #22 forbid the agent stamping 'approved' on the
+      basis of an a-file answer, and the q-/a- mechanism never carries a
+      record_status change. The user must approve these in the record / catalog
+      UI directly. Re-surfaced so the approval is not lost.
     options:
-      - approve_all_7
+      - approve_all_7_directly_in_ui
       - approve_subset_after_spot_check
       - defer_review
     why: >-
-      The H1 coverage check passes (every cross-domain handoff has at least
-      one tag, verified live 2026-06-07) but the catalog-quality headline
-      (approved count) is still 0 of 7 because Rule #1 requires explicit user
-      sign-off on each tag.
+      The H1 coverage check passes (every cross-domain handoff has at least one
+      tag, verified live; mappings match the recorded assignments) but the
+      catalog-quality headline (approved count) is still 0 of 7 because Rule #1
+      requires an explicit, direct, in-band user sign-off on each tag, separate
+      from the a-file.
     extra_pcf_assignments:
       - {handoff_process_id: 187, handoff_id: 296, pcf_external_id: "10192", pcf_name: "Close the sale"}
       - {handoff_process_id: 188, handoff_id: 297, pcf_external_id: "10192", pcf_name: "Close the sale"}
@@ -123,26 +109,6 @@ b2:
       - {handoff_process_id: 190, handoff_id: 311, pcf_external_id: "20114", pcf_name: "Submit regulatory reports"}
       - {handoff_process_id: 191, handoff_id: 861, pcf_external_id: "10192", pcf_name: "Close the sale"}
       - {handoff_process_id: 192, handoff_id: 862, pcf_external_id: "10192", pcf_name: "Close the sale"}
-  - id: B2-B9D-OWN-207
-    summary: "Real Estate Brokerage and Agent Operations: name an owner for \"Submit regulatory reports\" (no one is responsible for it today)"
-    question: |
-      Governance, Risk and Compliance forwards disclosure document to Real Estate Brokerage and Agent Operations to submit regulatory reports, but Real Estate Brokerage and Agent Operations does not yet have anyone assigned to submit regulatory reports, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work Real Estate Brokerage and Agent Operations owns, and assign a named owner once Real Estate Brokerage and Agent Operations sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment Real Estate Brokerage and Agent Operations decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-RE-BROKERAGE.md q4.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-1860
-    summary: "Real Estate Brokerage and Agent Operations: name an owner for \"Close the sale\" (no one is responsible for it today)"
-    question: |
-      Commercial Real Estate Operations forwards real estate listing to Real Estate Brokerage and Agent Operations to close the sale, but Real Estate Brokerage and Agent Operations does not yet have anyone assigned to close the sale, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work Real Estate Brokerage and Agent Operations owns, and assign a named owner once Real Estate Brokerage and Agent Operations sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment Real Estate Brokerage and Agent Operations decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-RE-BROKERAGE.md q5.
-    extra_b9d_added: "2026-06-13"
 
 b3:
   - id: B3-PHASE0-MARKET-GAPS
@@ -151,7 +117,11 @@ b3:
       unloaded: buyer_representation_agreements, listing_agreements,
       compliance_checklists, escrow_accounts, escrow_deposits,
       referral_agreements, open_houses, mls_syndication_logs, mls_feeds,
-      agent_pipelines.
+      agent_pipelines. User answered yes (research and add the ones that hold
+      up, additive, can happen later, a-RE-BROKERAGE.md 2026-06-16): this
+      confirms the direction but the actual load still requires a Phase-0-backed
+      q-file approving the specific entities (research carve-out, Rule #21), so
+      it stays a parked additive idea, not auto-loaded by the a-file.
     rationale: >-
       Five compliance-cluster entities (listing_agreements,
       buyer_representation_agreements, compliance_checklists,

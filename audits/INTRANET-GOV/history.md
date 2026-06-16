@@ -133,3 +133,36 @@ Single cross-domain edge: handoff 1433 (flagged_stale -> create work_item in WOR
 | domain_regulations | 287 | INTRANET-GOV -> Section 508 (62), conditional |
 
 Outcome: **waiting on user** for B2-S1/S2/S3 (engine depth) and the B3-S1 optional. No open b1a.
+
+## 2026-06-16 — a-file processed (all answers were questions; nothing executed, all items loop back)
+
+The user renamed q-INTRANET-GOV.md to a-INTRANET-GOV.md and answered. Three of the four
+answers were the user's OWN questions (not decisions), and the fourth is a recommendation
+blocked on the unresolved gate, so under Rule #22 ("a question or request keeps that item
+open") no catalog write was authorized this pass. Verified the live catalog first: domain 171
+present; none of content_governance_findings / governance_policies / recertification_campaigns
+/ accessibility_conformance_records / intranet_improvement_items exist yet (nothing to reconcile
+or de-dup). All four items stay OPEN and were folded into a regenerated q-file.
+
+- **a1 -> B2-S1 (gate):** Question, not a decision: "could one part of the split become an
+  optional module, used when volume justifies it?" Kept OPEN. Answer folded in: yes, the
+  Policy & Campaign config layer is the natural volume-gated opt-in (module_kind='starter'),
+  leaving day-to-day attestation in the base module; added as new option (c) to B2-S1. Still a
+  B2 structural decision for the user to confirm.
+- **a2 -> B2-S2:** Empty = recommended = option (a) (add content_governance_findings, health
+  score aggregates it). Recorded as the user's preference, but NOT executed: B2-S2 is blocked on
+  B2-S1 (the findings master's home depends on whether/how Governance splits, which a1 reopened).
+  Added blocked_by B2-S1 + user_preference; it auto-applies once B2-S1 lands. Kept OPEN.
+- **a3 -> B2-S3:** Question, not a decision: "would that be an optional module?" Kept OPEN.
+  Answer folded in: the conformance record's natural home is the base Inventory module (335)
+  where the INTGOV-A11Y scan already lives; an optional accessibility module only pays off if
+  a11y governance is deployed selectively. Surfaced as options (a) base module vs (b) optional module.
+- **a4 -> B3-S1:** Question/request, not a decision: "can we have a basic embedded Work
+  Management?" Kept OPEN. Answer folded in: a basic embedded Work Management ALREADY exists,
+  work_items (243, mastered by WORK-MGMT-TASK-EXEC 149) is held embedded_master + optional in
+  Governance (336); B3-S1 is the discretionary question of adding a domain-typed
+  intranet_improvement_items master on top, only if B2-S2 findings lands.
+
+No additive/corrective or destructive catalog work was performed (no rows inserted, updated, or
+deleted). No record_status flips. Deleted a-INTRANET-GOV.md; the q-file was already absent on
+disk, so it was regenerated fresh (4 questions). Domain stays **feedback_needed / user**.
