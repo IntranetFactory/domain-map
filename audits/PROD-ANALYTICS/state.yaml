@@ -1,0 +1,120 @@
+schema_version: 2
+domain: PROD-ANALYTICS
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-16"
+
+# PROD-ANALYTICS is NOT in the live catalog. This is a domain CANDIDATE, scoped 2026-06-16
+# (the gap was flagged by DAP scoping, DAP q3 / B2-DAP-ANALYTICS-SPLIT).
+# Phase 0 vendor surface: .tmp_deploy/PROD-ANALYTICS-phase0-2026-06-16.md
+# Backlog entry: audits/_missing-domains.md (## Pending review, "PROD-ANALYTICS — Product Analytics").
+# Coupled: B2-PA-DAP-MASTER reconciles single-mastery with the DAP candidate
+# (DAP B2-DAP-ANALYTICS-SPLIT + B2-DAP-SCOPE). B2-PA-EXPERIMENTATION and
+# B2-PA-SESSION-REPLAY may each spawn a further candidate domain.
+
+b1a: []
+
+b2:
+  - id: B2-PA-PROMOTE
+    summary: "Promote PROD-ANALYTICS (Product Analytics) as its own domain, fold it into BI, or keep queued."
+    question: |
+      PROD-ANALYTICS passes the point-solution-market test. Should it be created as its own domain
+      (bounded to the in-product behavioral event stream + analysis + segmentation, consuming events from
+      CDP, exporting aggregates to BI, handing off signals to PROD-MGMT), folded into Business
+      Intelligence (BI), or left queued? This is the gate: nothing is written to the catalog until it is
+      answered.
+    options:
+      - "Promote-as-domain: create PROD-ANALYTICS mastering events, funnels, retention/cohorts, paths, and user_segments across three core modules (instrumentation; analysis; segmentation); consume the event pipe from CDP, export aggregates to BI, hand off feature-usage signals to PROD-MGMT."
+      - "Fold into BI: treat product analytics as a capability/module of Business Intelligence."
+      - "Keep queued: leave in the backlog and revisit later."
+    evidence: |
+      Five pure-play flagships sell a product built around instrumenting a digital product and analyzing
+      in-product behavior: Amplitude, Mixpanel, Heap (retroactive autocapture), PostHog (open-source
+      product OS), and June (B2B SaaS analytics); Pendo straddles into DAP. They master their own
+      event/user/session data model and purpose-built funnel/retention/path/cohort analysis, and exist
+      independently of BI vendors (Tableau, Power BI, Looker). BI (id 74) masters generic governed
+      dashboards over MODELED warehouse data, a different artifact; product analytics is a recognized
+      standalone Gartner/G2 category. Phase 0: .tmp_deploy/PROD-ANALYTICS-phase0-2026-06-16.md.
+    why: |
+      New domain = a market-shape b2 (not b3). Creating PROD-ANALYTICS is structural; surfaced for the
+      user's go/no-go. Gates every other PROD-ANALYTICS item and resolves DAP B2-DAP-ANALYTICS-SPLIT.
+
+  - id: B2-PA-CDP-IDENTITY
+    summary: "Set the event/identity-mastering boundary between PROD-ANALYTICS and CDP (id 72)."
+    question: |
+      A Customer Data Platform unifies cross-channel identity and activates segments; it pipes events
+      into product analytics. Who masters the unified customer profile and the identity graph, and who
+      masters the in-product event stream and product-scoped user record?
+    options:
+      - "Split by lens: CDP masters the unified cross-channel customer profile, the identity-resolution golden record, and audience_segments; PROD-ANALYTICS masters the in-product behavioral event stream (events, sessions, feature_events), a product-scoped identified_users projection, and identity_merges for in-product stitching, with audience_syncs as the activation handoff PA -> CDP."
+      - "CDP masters it all: CDP owns identity, events, and segments; PROD-ANALYTICS consumes the event store rather than mastering it."
+    evidence: |
+      Segment, mParticle, and Tealium (CDP pure-plays) PIPE events INTO Amplitude/Mixpanel; the CDP's job
+      is unify-and-route, the analytics tool's job is analyze. audience_segments (id 113) is already
+      CDP/marketing-mastered. But Amplitude added CDP features and Heap/PostHog ingest first-party events
+      directly, so a product-scoped user/event store distinct from the CDP golden profile is real. The
+      recommended split keeps one master per concept (CDP = golden profile + cross-channel segments; PA =
+      in-product event store + product-analytics user_segments) and avoids double-mastering identity (M7).
+    why: |
+      Market-shape (where identity + the event stream are mastered). Conditional on B2-PA-PROMOTE = promote.
+
+  - id: B2-PA-DAP-MASTER
+    summary: "Reconcile single-mastery of the analytics entities with the DAP candidate: PA masters feature_events/funnels/paths/cohorts/goals/session_replays, DAP consumes; resolve the user_segments tension."
+    question: |
+      The DAP candidate's adoption_analytics module was flagged for extraction into Product Analytics.
+      Should PROD-ANALYTICS be the canonical master of the shared analytics entities, with DAP consuming
+      them, and how is the user_segments overlap resolved (both candidates want it)?
+    options:
+      - "PA masters, DAP consumes: PROD-ANALYTICS is canonical master of feature_events, funnels, user_paths, retention_cohorts, goals, and session_replays; DAP keeps only flow_engagement_stats (per-flow completion, intrinsic to overlays) and consumes the rest. PA masters user_segments / behavioral_cohorts; DAP consumes PA segments (or keeps a DAP-local audience_rules / tracked_users substrate)."
+      - "DAP keeps its own copies: DAP re-masters the analytics entities locally and PA masters a parallel set (rejected by the single-master rule, listed only for completeness)."
+    evidence: |
+      Both candidates surfaced the same entities from the same vendor surface (Pendo sells DAP and product
+      analytics as one product; Amplitude/Mixpanel/Heap/PostHog own the deep funnel/retention/path/cohort
+      engine). Phase 0 deliberately used aligned names (PA bare-word funnels vs DAP usage_funnels;
+      session_replays shared verbatim) so there is one master, not two. The single-master rule (M7) forbids
+      two masters on feature_events / funnels / user_segments. Recommended: PA owns the analytics engine,
+      DAP consumes and retains only flow_engagement_stats; PA masters user_segments and DAP references them.
+    why: |
+      Market-shape (where the shared analytics entities are mastered). Coupled to DAP B2-DAP-ANALYTICS-SPLIT
+      and B2-DAP-SCOPE. Conditional on B2-PA-PROMOTE = promote.
+
+  - id: B2-PA-EXPERIMENTATION
+    summary: "Decide whether experimentation / A-B testing / feature flags is in-scope of PROD-ANALYTICS or a separate domain."
+    question: |
+      Should PROD-ANALYTICS include an experimentation module (experiments, variants, assignments, feature
+      flags, metric lifts), or should experimentation / feature management be a separate domain that PA
+      links to?
+    options:
+      - "Separate domain: experimentation / feature management is its own domain (feature flags + experiments + assignments); PROD-ANALYTICS gets a consumer edge (experiment exposure logged as events, metric lifts computed on PA's stream)."
+      - "In-scope: PROD-ANALYTICS ships a conditional experimentation module mastering experiments, experiment_variants, experiment_assignments, feature_flags, metric_lifts."
+    evidence: |
+      Evidence is split. Amplitude (Experiment), PostHog, and Pendo bundle experiments; Mixpanel, Heap, and
+      June do NOT (3/6 vendors). LaunchDarkly and Statsig are a distinct feature-management / experimentation
+      market, and feature_flags belong with feature management, not analytics. Recommended: keep
+      experimentation a separate domain with a PA consumer edge; build the conditional in-PA module only if
+      the user wants a wide scope.
+    why: |
+      Market-shape (scope boundary + a possible separate experimentation/feature-management domain).
+      Conditional on B2-PA-PROMOTE = promote.
+
+  - id: B2-PA-SESSION-REPLAY
+    summary: "Decide whether session replay / experience analytics (replay, heatmaps) is in-scope of PROD-ANALYTICS or a separate domain."
+    question: |
+      Should PROD-ANALYTICS include a session-analytics module (session replays, replay events, heatmaps),
+      or should session replay / digital-experience analytics be a separate domain that PA links to from
+      funnel drop-off?
+    options:
+      - "Separate domain: a digital-experience-analytics domain masters session_replays / heatmaps; PROD-ANALYTICS consumes/links replays from a funnel drop-off."
+      - "In-scope: PROD-ANALYTICS ships a conditional session_analytics module mastering session_replays, replay_events, heatmaps."
+    evidence: |
+      Session replay is present in only 3/6 surveyed PA vendors (Amplitude, PostHog, Pendo add it; Mixpanel,
+      Heap, June omit it), and there is a robust standalone experience-analytics market (FullStory, Hotjar,
+      Contentsquare, LogRocket). The neutral name session_replays is used because session_recordings (id 239)
+      is mastered by a remote-support domain. Recommended: keep session replay a separate
+      digital-experience-analytics domain with a PA link from funnel drop-off; build the conditional in-PA
+      module only if the user wants a wide scope.
+    why: |
+      Market-shape (scope boundary + a possible separate digital-experience-analytics domain).
+      Conditional on B2-PA-PROMOTE = promote.
+
+b3: []

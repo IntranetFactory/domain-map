@@ -577,7 +577,8 @@ async function buildBundleSpec(
   if (mod.module_kind !== "starter") throw new Error(`${code} is module_kind='${mod.module_kind}', not a starter bundle`);
   const moduleId = mod.id as number;
 
-  const [hosts, dmdo, caps, skillRows, moduleTools, roleModules, outboundRaw] = await Promise.all([
+  const [bundleDomainRows, hosts, dmdo, caps, skillRows, moduleTools, roleModules, outboundRaw] = await Promise.all([
+    get(`/domains?domain_code=eq.${code}&domain_kind=eq.bundle&select=id,domain_code,catalog_tagline,catalog_description&limit=1`),
     get(`/domain_module_host_domains?domain_module_id=eq.${moduleId}&select=domain_id`),
     get(`/domain_module_data_objects?domain_module_id=eq.${moduleId}&select=data_object_id,role,necessity`),
     get(`/domain_module_capabilities?domain_module_id=eq.${moduleId}&select=capability_id,capabilities(capability_code,capability_name)`),
@@ -586,6 +587,11 @@ async function buildBundleSpec(
     get(`/role_modules?domain_module_id=eq.${moduleId}&select=role_id,interaction_level`),
     get(`/handoffs?source_domain_module_id=eq.${moduleId}&select=integration_pattern,friction_level,target_domain_id,target_domain_module_id,data_objects(data_object_name),trigger_events(event_name),handoff_processes(processes(external_id,process_name))&order=id.asc`),
   ]);
+
+  // After §3 the bundle is promoted to a domain_kind='bundle' domain that carries the buyer
+  // catalog copy; read the tagline from there so it survives the §5 module-catalog CLEAR. Pre-§3
+  // (no bundle-domain yet) bundleDomain is null and spec.bundle.tagline falls back to the module.
+  const bundleDomain = bundleDomainRows[0] ?? null;
 
   const hostDomainCodes = hosts
     .map((h) => lk.domainCodeById.get(h.domain_id as number))
@@ -698,7 +704,7 @@ async function buildBundleSpec(
       name: mod.domain_module_name,
       kind: "industry_starter",
       domain_attached: false,
-      tagline: clean(mod.catalog_tagline ?? ""),
+      tagline: clean(bundleDomain?.catalog_tagline ?? mod.catalog_tagline ?? ""),
       description: clean(mod.description ?? ""),
       host_domains: hostDomainCodes,
     },
@@ -890,12 +896,32 @@ type Task = { code: string; kind: "domain" | "bundle" };
 async function domainCodesWithModules(): Promise<string[]> {
   const withModules = await get("/domain_modules?select=domain_id&limit=20000");
   const ids = new Set(withModules.map((r) => r.domain_id as number));
-  const allDomains = await get("/domains?select=id,domain_code&limit=10000");
-  return allDomains.filter((d) => ids.has(d.id as number)).map((d) => d.domain_code as string).sort();
+  // Exclude domain_kind='bundle': a promoted bundle-domain (plan §3) has a module (its starter),
+  // so without this filter it would be emitted BOTH as a domain folder here and as a bundle
+  // folder via domainLessBundleCodes() (double-emit, plan §4 Finding 4). Bundles dispatch ONLY
+  // through the bundle path.
+  const allDomains = await get("/domains?select=id,domain_code,domain_kind&limit=10000");
+  return allDomains
+    .filter((d) => ids.has(d.id as number) && d.domain_kind !== "bundle")
+    .map((d) => d.domain_code as string)
+    .sort();
 }
 async function domainLessBundleCodes(): Promise<string[]> {
-  const rows = await get("/domain_modules?module_kind=eq.starter&domain_id=is.null&select=domain_module_code");
-  return rows.map((r) => r.domain_module_code as string).sort();
+  // A bundle is a domain_kind='bundle' domain (post-promotion, plan §3) OR — during the
+  // transition before §3 sets the starters' domain_id — a legacy starter module with
+  // domain_id=null. The legacy clause returns nothing once §3 runs (and §6 flips the column
+  // NOT NULL); it is a removable shim kept so `--regenerate` keeps recognizing the committed
+  // bundle folders mid-migration. The two key spaces coincide: a promoted bundle's domain_code
+  // equals its starter's domain_module_code (§3 copies the code).
+  const [bundleDomains, legacy] = await Promise.all([
+    get("/domains?domain_kind=eq.bundle&select=domain_code"),
+    get("/domain_modules?module_kind=eq.starter&domain_id=is.null&select=domain_module_code"),
+  ]);
+  const codes = new Set<string>([
+    ...bundleDomains.map((r) => r.domain_code as string),
+    ...legacy.map((r) => r.domain_module_code as string),
+  ]);
+  return [...codes].sort();
 }
 
 let tasks: Task[];

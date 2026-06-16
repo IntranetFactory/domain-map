@@ -12,7 +12,7 @@ domain_modules:
 domain_code: RE-BROKERAGE
 related_modules: [crm-acct-mgt, crm-lead-mgt, re-brok-brokerage-ops, re-invest-portfolio-val, real-estate-agent]
 persona: []
-created_at: 2026-06-13
+created_at: 2026-06-16
 ---
 
 # Real Estate Agent Operations
@@ -153,11 +153,11 @@ _(none: no context cross-scope edges on this scope's embedded shells or consumed
 | data_object | other module / domain | role | necessity | notes |
 | --- | --- | --- | --- | --- |
 | `disclosure_documents` | RE-BROK-BROKERAGE-OPS (Brokerage Oversight and Commission Management) - RE-BROKERAGE | embedded_master | required | - |
-| `disclosure_documents` | REAL-ESTATE-AGENT (Real Estate Agent (solo / small firm bundle)) | embedded_master | required | - |
-| `real_estate_listings` | REAL-ESTATE-AGENT (Real Estate Agent (solo / small firm bundle)) | embedded_master | required | - |
+| `disclosure_documents` | REAL-ESTATE-AGENT (Real Estate Agent (solo / small firm bundle)) - REAL-ESTATE-AGENT | embedded_master | required | - |
+| `real_estate_listings` | REAL-ESTATE-AGENT (Real Estate Agent (solo / small firm bundle)) - REAL-ESTATE-AGENT | embedded_master | required | - |
 | `real_estate_transactions` | RE-BROK-BROKERAGE-OPS (Brokerage Oversight and Commission Management) - RE-BROKERAGE | embedded_master | required | - |
-| `real_estate_transactions` | REAL-ESTATE-AGENT (Real Estate Agent (solo / small firm bundle)) | embedded_master | required | - |
-| `tour_appointments` | REAL-ESTATE-AGENT (Real Estate Agent (solo / small firm bundle)) | embedded_master | required | - |
+| `real_estate_transactions` | REAL-ESTATE-AGENT (Real Estate Agent (solo / small firm bundle)) - REAL-ESTATE-AGENT | embedded_master | required | - |
+| `tour_appointments` | REAL-ESTATE-AGENT (Real Estate Agent (solo / small firm bundle)) - REAL-ESTATE-AGENT | embedded_master | required | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 

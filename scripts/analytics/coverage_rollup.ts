@@ -87,12 +87,14 @@ async function main() {
     }
   } else {
     const [domains, modules, hosts, dmt] = await Promise.all([
-      get(`/domains?select=id,domain_code&limit=${LIMIT}`),
+      get(`/domains?select=id,domain_code,domain_kind&limit=${LIMIT}`),
       get(`/domain_modules?select=id,domain_id&limit=${LIMIT}`),
       get(`/domain_module_host_domains?select=domain_module_id,domain_id&limit=${LIMIT}`),
       get(`/domain_module_tools?select=domain_module_id,tool_id,requirement_level&limit=${LIMIT}`) as Promise<(TR & { domain_module_id: number })[]>,
     ]);
     const domainCode = new Map(domains.map(d => [d.id, d.domain_code]));
+    // bundle-domains master nothing; exclude them from the coverage rollup (plan §4). Inert until §3.
+    const bundleDomainIds = new Set(domains.filter((d: any) => d.domain_kind === "bundle").map((d: any) => d.id));
     // module -> set of domain_ids (primary + host) - the m11_rollup_probe.ts idiom.
     const modToDomains = new Map<number, Set<number>>();
     for (const m of modules) { const s = modToDomains.get(m.id) ?? new Set<number>(); if (m.domain_id != null) s.add(m.domain_id); modToDomains.set(m.id, s); }
@@ -108,6 +110,7 @@ async function main() {
       }
     }
     for (const did of unitDomains) {
+      if (bundleDomainIds.has(did)) continue; // exclude bundle-domains (plan §4)
       const code = domainCode.get(did) ?? `?#${did}`;
       if (DOMAIN_FILTER && code !== DOMAIN_FILTER) continue;
       rows.push(rollup(code, code, trByDomain.get(did) ?? [], toolKind, toolName));

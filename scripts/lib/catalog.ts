@@ -62,6 +62,11 @@ export type Domain = {
   domain_code: string;
   domain_name: string;
   description: string;
+  // Nature of the row (plan: domain-kind taxonomy). 'bundle' = owns no masters,
+  // embeds/consumes only; exempt from market-shape floors and the market-research
+  // metadata fields (usa_market_size_usd_m / market_size_source_year / crud_percentage /
+  // business_logic are N/A for a bundle, not zero). See domain-kind-taxonomy-plan.md.
+  domain_kind: "established_market" | "emerging_market" | "bundle";
   catalog_release: string | null;
   catalog_tagline: string;
   catalog_description: string;
@@ -184,7 +189,7 @@ export async function loadCatalogIndex(): Promise<CatalogIndex> {
   const [domains, dataObjects, industries, modules] = await Promise.all([
     pg(
       "GET",
-      "/domains?select=id,domain_code,domain_name,description,catalog_release,catalog_tagline,catalog_description,crud_percentage,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year&order=domain_code.asc&limit=10000",
+      "/domains?select=id,domain_code,domain_name,description,domain_kind,catalog_release,catalog_tagline,catalog_description,crud_percentage,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year&order=domain_code.asc&limit=10000",
     ) as Promise<Domain[]>,
     pg(
       "GET",

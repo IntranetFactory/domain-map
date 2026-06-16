@@ -347,6 +347,25 @@ b2:
     options: [a_keep_808, b_switch_to_826_and_201, c_keep_808_plus_stack_distinct_tags]
     why: APQC mapping judgment; affects review-triage quality of the H-band coverage.
 
+  - id: B2-HVAC-HOST
+    summary: "HVAC-SVC-MGMT starter (module 171) is host-linked to HAM via domain_module_host_domains; likely a mis-host. DESTRUCTIVE removal, surfaced."
+    question: |
+      Module 171 (HVAC-SVC-MGMT, module_kind='starter') is host-linked to HAM through
+      domain_module_host_domains, but its embedded entities are an HVAC field-service business
+      (technician scheduling, dispatch, servicing customer-owned installed_equipment, quoting and
+      invoicing), not IT hardware. The starter is host-linked to 6 domains (FSM, CRM, CPQ, SUB-MGMT,
+      HAM, FIN); its natural home is FSM and the HAM link is the anomaly. Remove the HAM host-link?
+    options:
+      - "(a) DELETE the domain_module_host_domains row linking module 171 to HAM (recommended). DESTRUCTIVE, needs sign-off."
+      - "(b) Keep the link (HAM legitimately hosts the HVAC starter)."
+    evidence: |
+      Module 171's embedded_master entities model an HVAC field-service workflow (installed_equipment's
+      own description calls it a field-service asset register that work orders are performed against),
+      which is the FSM market (ServiceTitan, Jobber, Housecall Pro), not the hardware-asset-management
+      market (Lansweeper, Device42, Snipe-IT, ServiceNow HAM). No HAM flagship hosts an HVAC servicing
+      business. Discovered by the 2026-06-16 market re-audit.
+    extra_reaudit: "2026-06-16"
+
 # ------------------------------------------------------------------
 # b3: discretionary additive entity candidates. Non-blocking backlog.
 # ------------------------------------------------------------------

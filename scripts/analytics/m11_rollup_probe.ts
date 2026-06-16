@@ -29,12 +29,15 @@ async function pg(path: string): Promise<any[]> {
   return out.trim() ? JSON.parse(out.trim()) : [];
 }
 
-const [modules, hosts, dmdo, ddo] = await Promise.all([
+const [domainsKind, modules, hosts, dmdo, ddo] = await Promise.all([
+  pg("/domains?select=id,domain_kind&limit=20000"),
   pg("/domain_modules?select=id,domain_id&limit=20000"),
   pg("/domain_module_host_domains?select=domain_module_id,domain_id&limit=20000"),
   pg("/domain_module_data_objects?select=domain_module_id,data_object_id,role,necessity&limit=20000"),
   pg("/domain_data_objects?select=domain_id,data_object_id,role,necessity&limit=20000"),
 ]);
+// bundle-domains master nothing; exclude them from the rollup reconciliation (plan §4). Inert until §3.
+const bundleDomainIds = new Set<number>(domainsKind.filter((d: any) => d.domain_kind === "bundle").map((d: any) => Number(d.id)));
 
 // module -> set of domain_ids (primary + host domains)
 const modToDomains = new Map<number, Set<number>>();
@@ -49,7 +52,7 @@ for (const h of hosts) {
   modToDomains.set(Number(h.domain_module_id), s);
 }
 const modularizedDomains = new Set<number>();
-for (const s of modToDomains.values()) for (const d of s) modularizedDomains.add(d);
+for (const s of modToDomains.values()) for (const d of s) if (!bundleDomainIds.has(d)) modularizedDomains.add(d);
 
 // derive rollup: (domain_id, data_object_id) -> strongest {role, necessity}
 const derived = new Map<string, { role: string; necessity: string | null }>();
@@ -57,6 +60,7 @@ for (const r of dmdo) {
   const domains = modToDomains.get(Number(r.domain_module_id));
   if (!domains) continue;
   for (const dom of domains) {
+    if (bundleDomainIds.has(dom)) continue; // exclude bundle-domains (plan §4)
     const key = `${dom}|${r.data_object_id}`;
     const cur = derived.get(key);
     if (!cur || (RANK[r.role] ?? 99) < (RANK[cur.role] ?? 99)) {

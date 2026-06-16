@@ -4,229 +4,170 @@ status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-06"
 
-# 2026-06-07 a-LMS.md processing. User answered the 2026-06-06 q-file. Resolved:
-#   a3 (B2-M9-DECISION="a"): flipped the last M9 row policy_attestations (DMDO 295,
-#     module 33) to necessity=optional. All 4 cross-domain consumer rows now optional;
-#     M9 part 1 clean. -> moved to history.
-#   a5 (B2-CATALOG-COPY): the q-file framing was stale. Under Rule #20/#21 empty catalog
-#     UX fields are WRITTEN without a pre-write gate. Authored + wrote catalog_tagline +
-#     catalog_description on domain 57 + all 8 modules (all were empty; record_status=new
-#     carries the review signal). A4 + M8 now pass. -> moved to history.
-#   a6 (B2-PERSONAS): already authored in the 2026-06-06 b1a pass (6 personas reach the 8
-#     modules, 21 process_raci rows, E1/E4 pass). The decision was already taken; a6 was a
-#     conceptual question, answered in chat. -> moved to history.
-#   a10 (b3 ideas): user said "yes" to researching the 4 b3 candidates. Recorded as
-#     user-approved but GATED on the module-shape decision (q1 / Refactor C). b3 never
-#     auto-executes and never blocks "finished".
-# 2026-06-10 a-LMS.md processing (user answered 2 of the round's questions):
-#   q7 (B2-B9D-OWN-1041 = "a"): authored process_raci R=Instructional Designer (23) +
-#     A=Learning Administrator (22) on process 1041 'Monitor and evaluate learning programs'
-#     (ids 145, 146). Decision executed. NOTE: 1041 still surfaces as a B9d ORPHAN because it
-#     has no gated lifecycle state (a monitoring activity, not a permissioned transition); the
-#     RACI is the persona the question asked for, accepted as a non-gated process. -> history.
-#   q8 (B2-B9D-MISTAG-REPOINT = "a"): re-pointed 15 mis-tagged handoff_processes rows to their
-#     verified realized codes (1312->1829; 434/435/1047/1049/1308/1309/1310->1829; 1079/1288->
-#     1039; 1080/1295/1303/1304/1305->1040). All stayed record_status='new'. -> history.
-# Still open (all user-gated; in q-LMS.md): q1 Refactor C (B2-REFACTOR-C), q2 Refactor A
-# (B2-REFACTOR-A), q3 skills-mgmt attribution (B2-SKILLS-MGMT-ATTRIBUTION), q4 handoff-1121
-# routing (B2-1121-ROUTING), q5 missing-entity routing (B2-MISSING-ROUTING), q6 domain-
-# regulations (B2-DOMAIN-REGULATIONS), q7 B9d privacy mis-tags (B2-B9D-MISTAG-PRIVACY, gated on
-# q2); optional q8 = the 4 b3 candidates.
+# 2026-06-16 a-LMS.md processing (Rule #22). User answered the 2026-06-10 round.
+# Loader: .tmp_deploy/2026-06-16_lms_a_processing.ts (idempotent, read-before-write).
+# Executed (all writes record_status='new', Rule #1):
+#   a1 (B2-REFACTOR-C = q-file option "a", the 3-entity shape): created master
+#     compliance_regulations (data_object 1268; master in mod 33, embedded_master in 182,
+#     rollup master/required); wired reg FK relationship compliance_regulations -> 940
+#     training_evidence_records (one_to_many, FK on the 940 side); DELETED the 5 completion
+#     entities 944 hipaa / 945 osha / 946 sox / 947 ferpa / 949 bsa_aml and ALL dependents
+#     (10 tools, 15 domain_module_tools, 15 lifecycle states, 3 aliases, 10 relationships,
+#     11 DMDO, 5 rollup rows). 948 fda_part11_audit_trails KEPT (its own audit-trail shape).
+#     Destructive steps approved by q-file option (a). -> history.
+#   a5 (B2-MISSING-ROUTING = rec "a"): loaded 18 net-new MISSING masters (ids 1269-1286) by
+#     module group with DMDO + rollup + 24 lifecycle states + entity_type. data_retention_
+#     policies reconciled to existing records_retention_policies (433): wired 433 as consumer/
+#     optional into LMS-CT-GDPR (180), no duplicate. Resolves B1B-MISSING-ENTITIES. -> history.
+#   a6 (B2-DOMAIN-REGULATIONS = rec "a"): added GDPR(1) + HIPAA(4) + OSHA(101) + SOX(5) to
+#     domain_regulations(57); FERPA already present. -> history.
+#   B1B-B14-NECESSITY (was gated on Refactor C, now unblocked): 949 deleted by a1; 948
+#     fda_part11_audit_trails flipped necessity required->optional (DMDO 1043 + rollup 1265),
+#     Rule #16 case B sector-bound master. Corrective-additive. -> history.
+# Decided-but-blocked (kept open):
+#   a2 (B2-REFACTOR-A = "b", build PRIV-MGMT then demote): direction settled, but the build is
+#     a cross-domain PRIV-MGMT initiative (out of this LMS pass's edit scope) AND the LMS
+#     demotion cannot happen until PRIV-MGMT masters the canonical privacy entities (demoting
+#     950/951/952 first would strand standalone training-data erasure). Reclassified b2->b1b,
+#     blocked on the PRIV-MGMT build. NOT a q-file question anymore.
+#   a7 (B2-B9D-MISTAG-PRIVACY = rec "a", hold): the 2 privacy mis-tags (handoff_processes 867
+#     /868 on handoffs 1313/1314, process 369) stay as-is; their correct APQC home follows
+#     where privacy lands, which is gated on the PRIV-MGMT build (a2). Postpone -> stays b1b.
+# Re-opened by a question (user did NOT decide; Rule #22 "a question keeps it open"):
+#   a3 (B2-SKILLS-MGMT-ATTRIBUTION): user asked the GENERAL pattern (one entity linking to an
+#     optional entity in another domain -> isn't that the optional embedded-master pattern?).
+#     Answered + folded into the regenerated q-file; decision still open.
+#   a4 (B2-1121-ROUTING): user asked how other vendors handle HR-case-category -> LMS. Answered
+#     (ServiceNow HRSD Case Lifecycle Configurator + Workday Learning: case category drives
+#     compliance-training assignment) + folded into the q-file; decision still open.
+# a8 (b3 candidates = rec "a"): q1 now settled, so the 4 b3 ideas are eligible; they remain
+#   parked (never auto-execute, never gate finished). Surfaced in the q-file Optional section.
 
 b1a: []
-# 2026-06-10 review: B1A-B9D-VERIFY resolved. B9d ran (scripts/analytics/b9d_resolver.ts LMS,
-#   both directions): 28 boundary tags, 14 (process,owner) findings -> 7 RESOLVED, 3 ORPHAN,
-#   4 MIS-TAG. ORPHANs routed additively (record_status untouched): B2-B9D-OWN-1041 (owner LMS,
-#   below), B2-B9D-OWN-224 (owner ONBOARDING, unbuilt - written to its backlog), B2-B9D-OWN-1873
-#   (owner SKILLS-MGMT, unbuilt - written to its backlog). MIS-TAGs are destructive sender edits
-#   -> surfaced for sign-off as B2-B9D-MISTAG-REPOINT + B2-B9D-MISTAG-PRIVACY (below). No other
-#   agent-doable work open; everything remaining is user-gated. -> moved to history.
 
 b1b:
-  - id: B1B-B14-NECESSITY
-    summary: "Flip fda_part11_audit_trails (948) + bsa_aml_training_records (949) to necessity=optional, UNLESS Refactor C deletes/collapses them."
-    finding: >-
-      Both are master+required but sector-bound (life-sciences / banking) -> Rule #16 case B -> optional.
-      Superseded if Refactor C (shell collapse) is adopted (the masters get collapsed). Gated on the
-      Refactor C decision (q1).
-    blocked_by:
-      - {type: user_decision, ref: B2-REFACTOR-C}
-    affected_masters:
-      - {data_object_id: 948, name: fda_part11_audit_trails, target_module_id: 33, workflow: "life-sciences evidence (audit-log shape)"}
-      - {data_object_id: 949, name: bsa_aml_training_records, target_module_id: 33, workflow: "banking AML evidence"}
-
   - id: B1B-M4-SKILLS-MGMT
     summary: "Resolve LMS x SKILLS-MGMT capability orphan (capability id 20)."
     finding: >-
-      capability_domains carries an LMS x SKILLS-MGMT (id 20) link but no LMS module realizes it
-      (M4 fail). Likely fix: DELETE the LMS capability_domains row (SKILLS-MGMT domain 169 owns it).
+      capability_domains row 20 carries an LMS x SKILLS-MGMT (capability id 20 'Skills Management')
+      link but no LMS module realizes it (M4 fail). Fix is either DELETE the LMS capability_domains
+      row (SKILLS-MGMT domain 169 owns it; the capability shows on LMS only because LMS-COURSE-DELIVERY
+      consumes course_tags for skill tagging) or realize it in LMS-PATHS after skill_targets (now
+      loaded, id 1277) is wired with a proficiency edge. Destructive either way the delete needs
+      sign-off; the realize-here path is additive but a market-shape choice.
     blocked_by:
       - {type: user_decision, ref: B2-SKILLS-MGMT-ATTRIBUTION}
-
-  - id: B1B-MISSING-ENTITIES
-    summary: "Load the vendor-surface MISSING entities (prior 19 + new market items) per user routing."
-    finding: >-
-      Prior 19 (question_banks, cmi5_assignable_units, lrs_statement_endpoints, observation_checklists
-      + results, training_room_bookings, session_rosters, session_cancellations, skill_targets,
-      learning_recommendations, credential_verifications, certification_renewals, gxp_training_signoffs,
-      phishing_simulations + results, dpo_training_acknowledgements, pci_dss_awareness_records,
-      data_retention_policies [note: records_retention_policies 433 already exists; reconcile],
-      reminder_schedules) plus the new market items in b3. None loaded.
-    blocked_by:
-      - {type: user_decision, ref: B2-MISSING-ROUTING}
 
   - id: B1B-B10b-INBOUND-1121
     summary: "PATCH target_domain_module_id on inbound handoff 1121 (HRSD -> LMS, case_category.updated) or retire it."
     finding: >-
-      Handoff 1121 has target_domain_module_id=null AND no LMS module declares any role on
-      case_categories. Endpoint ambiguous (COMPLIANCE-TRAINING vs PATHS) or the handoff is mis-modeled.
+      Handoff 1121 has target_domain_module_id=null AND no LMS module declares a role on case_categories.
+      Endpoint is a routing choice (LMS-COMPLIANCE-TRAINING vs LMS-PATHS) or the handoff is mis-modeled.
     blocked_by:
       - {type: user_decision, ref: B2-1121-ROUTING}
     affected_handoffs:
       - {handoff_id: 1121, direction: inbound, source_domain: HRSD, target_domain: LMS, trigger_event: case_category.updated, payload: case_categories, null_field: target_domain_module_id}
 
+  - id: B1B-PRIV-EMBEDDED-MASTER
+    summary: "Demote LMS privacy masters (950 gdpr_consent_records, 951 subject_access_requests, 952 data_deletion_requests) to embedded_master once PRIV-MGMT masters the canonical privacy entities."
+    finding: >-
+      User decided B2-REFACTOR-A = (b): build the PRIV-MGMT canonical owner, then demote LMS (and ATS)
+      privacy records to embedded_master that defer to it. The direction is settled, but PRIV-MGMT
+      (domain 20) masters nothing today (its own build is gated on its B2-1/B2-2). Demoting LMS 950/951/
+      952 from master before that owner exists would strand standalone training-data erasure, so this is
+      blocked on the cross-domain PRIV-MGMT build, NOT executable from an LMS-only pass. When PRIV-MGMT
+      ships the canonical masters, the LMS demotion (master -> embedded_master on 950/951/952) is a
+      destructive restructure that comes back for sign-off. ATS masters 901/870 demote on the same trigger.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: PRIV-MGMT, milestone: "canonical privacy masters built (PRIV-MGMT B1A-BUILD / B1B-S1-CLUSTER, gated on its B2-1/B2-2)"}
+
+  - id: B1B-B9D-MISTAG-PRIVACY
+    summary: "The 2 privacy mis-tags (handoff_processes 867/868 on handoffs 1313/1314, process 369 'Manage regulatory compliance') stay held until privacy ownership lands."
+    finding: >-
+      #1313 (gdpr_consent_record.withdrawn, LMS->HCM) and #1314 (data_deletion_request.fulfilled,
+      LMS->HCM) carry privacy/DSAR records, not training completions, so process 369 is the wrong APQC
+      target. User answered B2-B9D-MISTAG-PRIVACY = (a) HOLD. Their correct process home depends on where
+      privacy is mastered, which is gated on the PRIV-MGMT build (B1B-PRIV-EMBEDDED-MASTER). Until then
+      the two tags stay as-is (re-pointing or deleting now would be premature, and either is destructive).
+    blocked_by:
+      - {type: depends_on, ref: B1B-PRIV-EMBEDDED-MASTER, reason: "privacy process home follows where privacy is mastered"}
+    affected_handoff_processes:
+      - {process_tag: "16463 'Manage regulatory compliance' (process 369)", handoff_processes: [867, 868], handoffs: [1313, 1314], payloads: "gdpr_consent_records / data_deletion_requests"}
+
 b2:
-  - id: B2-REFACTOR-C
-    summary: "Collapse the per-regulation evidence shells into typed rows of training_evidence_records (940). User asked: would one table be sufficient and not bloated? optional entities instead?"
-    question: "Collapse hipaa/osha/sox/ferpa/bsa_aml into training_evidence_records keyed by regulation_type, keep fda_part11 separate, or just mark the sector-bound shells optional?"
-    user_question: "would one table be sufficient and not bloated? wouldn't it make sense to have optional entities?"
-    agent_answer: >-
-      Grounded in the live descriptions: 944 HIPAA / 945 OSHA / 946 SOX / 947 FERPA / 949 BSA-AML are
-      near-identical 'training documentation row' shapes differing only by statute -> collapsing them
-      into 940 (training_evidence_records) keyed by regulation_type REMOVES redundancy, it is not bloat.
-      948 fda_part11_audit_trails is genuinely different (tamper-evident, retention-locked audit trail)
-      -> the one worth keeping separate. So 'one table sufficient' = yes for the 5 completion shells.
-      'Optional entities' = option c: keep all 6 but mark the sector-bound ones optional; keeps native
-      per-statute install gating at the cost of 5 redundant masters.
-    options:
-      - "(a) Collapse all 6 into training_evidence_records keyed by regulation_type; recover per-statute install gating via a tenant 'active regulations' setting"
-      - "(b) Collapse the 5 completion shells (HIPAA/OSHA/SOX/FERPA/BSA-AML) but keep fda_part11_audit_trails (948) as its own audit-log master (recommended)"
-      - "(c) Keep all 6 separate; just mark the sector-bound shells (948 + 949) necessity=optional (your 'optional entities' idea; no deletes, lowest blast radius)"
-    why: "Option b directly answers both questions: one table is sufficient + not bloated for the 5 identical shells, and the only structurally-different entity (FDA Part 11 audit trail) stays. Option c is the no-delete fallback. DELETE/collapse needs sign-off (destructive). Supersedes B1B-B14-NECESSITY."
-
-  - id: B2-REFACTOR-A
-    summary: "Where is learner-data privacy (DSAR/consent) mastered? User asked: how do other vendors handle it? would an embedded master make sense?"
-    question: "Keep privacy mastered in LMS, dissolve it, or demote LMS (+ ATS) privacy records to embedded_master once a canonical PRIV-MGMT master exists?"
-    user_question: "how do other vendors handle it? maybe an embedded master makes sense?"
-    agent_answer: >-
-      Vendor norm: flagship LMS products rarely master privacy. Privacy/DSAR is handled at the
-      HR/identity-suite or tenant level, or deferred to a central privacy tool; the LMS exposes
-      delete-my-data / export-my-records hooks and is a CONSUMER of privacy machinery, not its master.
-      embedded_master is exactly right: LMS keeps a local DSAR/consent shell so a STANDALONE LMS can
-      still honor training-data erasure, but defers to PRIV-MGMT's canonical master when present (the
-      holistic deployment demotes embedded_master -> consumer at query time). This is the middle path
-      between 'dissolve' (strands standalone erasure) and 'permanently master in LMS' (fragments DSAR).
-      Constraint: PRIV-MGMT (domain 20) masters NOTHING today, so the embedded_master target must be
-      built first. Cross-domain (LMS + ATS masters 901/870 + PRIV-MGMT).
-    options:
-      - "(a) Defer to a focused cross-domain privacy initiative; keep LMS privacy as interim scope-creep (recommended; PRIV-MGMT must exist first)"
-      - "(b) Build PRIV-MGMT canonical DSAR/consent now, then demote LMS + ATS privacy records to embedded_master (the embedded-master target shape)"
-      - "(c) Decline: keep learner-data privacy permanently mastered in LMS"
-    why: "embedded_master is the right end state but needs PRIV-MGMT built first; that is a separate cross-domain build, hence defer. Interacts with q9."
-
   - id: B2-SKILLS-MGMT-ATTRIBUTION
-    summary: "M4: resolve the LMS x SKILLS-MGMT capability orphan (id 20). User asked to explain both options."
-    question: "Drop the capability_domains row for LMS, or realize capability 20 in LMS-PATHS after skill_targets ships?"
-    user_question: "explain both"
+    summary: "M4: resolve the LMS x SKILLS-MGMT capability orphan (capability id 20). User asked for the GENERAL pattern, not a one-off ruling."
+    question: "For 'one domain's entity links to an optional entity owned by another domain', do we delete the orphan LMS capability link (SKILLS-MGMT owns the capability), or model it as the optional embedded-master pattern and realize it in LMS-PATHS?"
+    user_question: "how do we handle that situation in general? isn't that usually the optional embedded-master pattern? anything different here?"
     agent_answer: >-
-      (a) DELETE the LMS<->capability-20 link: the capability appears on LMS only because LMS-COURSE-
-      DELIVERY uses course_tags for skill tagging, which is downstream CONSUMPTION; the real owner is
-      the SKILLS-MGMT domain (its SKILLS-MGMT-TAXONOMY module realizes it). Cleanest, no new entities,
-      removes an orphan. Destructive (a link delete) so it needs sign-off.
-      (b) KEEP the link and make LMS-PATHS realize it: only viable AFTER the MISSING entity skill_targets
-      ships (path step <-> skill + proficiency threshold). Then add a domain_module_capabilities row so
-      PATHS genuinely realizes 'skill alignment'. More work; defers on q8.
+      The user's instinct is right about the GENERAL data-entity pattern but this specific orphan is on a
+      different junction. Two distinct catalog mechanisms are in play and the answer differs by which one:
+      (1) For a DATA ENTITY one domain needs but another owns, the catalog pattern is NOT a shared module
+      via domain_module_host_domains (that junction is deprecated, references/deprecations.md 2026-06-16);
+      it is a per-domain row on domain_module_data_objects with a role that expresses the relationship:
+      master in the owning module, embedded_master where a standalone deployment needs a local shell that
+      defers to the canonical master, consumer where the domain only reads it. That IS the "optional
+      embedded master" the user means, and LMS already uses it (e.g. employees as embedded_master in
+      LMS-CT-GDPR, records_retention_policies 433 now consumer in LMS-CT-GDPR). Nothing special.
+      (2) This orphan is NOT a data entity though: it is a row on capability_domains (capabilities <-> domains),
+      which has no master/embedded_master/consumer qualifier, only a "semantic home" flag. A capability is
+      realized by a module (domain_module_capabilities) or it is an orphan. 'Skills Management' (cap 20) is
+      semantically owned and realized by the SKILLS-MGMT domain; it appears on LMS only because LMS-COURSE-
+      DELIVERY consumes course_tags for skill tagging (downstream consumption, not realization). So the
+      capability-junction has no embedded-master middle option: either (a) delete the LMS capability_domains
+      link (SKILLS-MGMT is the owner; cleanest, removes the orphan, destructive so needs sign-off), or
+      (b) make LMS-PATHS genuinely realize it now that skill_targets (id 1277, path-step <-> skill +
+      proficiency) has shipped, by adding a domain_module_capabilities row (additive). The 'optional
+      embedded master' shape does not apply to a capability link the way it does to a shared data entity;
+      that difference is the answer to "anything different here?".
     options:
-      - "(a) DELETE the LMS x capability-20 row (recommended; SKILLS-MGMT owns it)"
-      - "(b) Add domain_module_capabilities linking LMS-PATHS (34) to capability 20 after skill_targets loads"
-    why: "Independent of the refactors. (a) is the clean interpretation; (b) couples to the missing-entity load (q8)."
+      - "(a) DELETE the LMS x capability-20 capability_domains row (recommended; SKILLS-MGMT owns and realizes it; the LMS appearance is downstream course_tag consumption, not realization). Destructive -> sign-off."
+      - "(b) KEEP the link and add a domain_module_capabilities row so LMS-PATHS (34) realizes capability 20, now that skill_targets (1277) has shipped. Additive, but asserts LMS co-realizes Skills Management."
+    why: "User asked the general rule. The general data-entity rule is the per-domain role on domain_module_data_objects (embedded_master/consumer), and LMS already follows it. But this orphan is a capability_domains link, which has no embedded-master option, so it reduces to delete-the-orphan vs realize-it-here. Destructive (a) needs sign-off."
+    evidence: >-
+      Capability ownership pattern across the catalog: a capability is mastered/realized by the domain whose
+      flagship products deliver it. Skills Management as a market is owned by skills-intelligence / talent-
+      marketplace vendors (Cornerstone Skills Graph, Workday Skills Cloud, SAP SuccessFactors Talent
+      Intelligence Hub, Eightfold, Gloat) - these MASTER the skills taxonomy and proficiency model. Flagship
+      LMS products (Docebo, 360Learning, Absorb, Cornerstone Learning) CONSUME a skills taxonomy to tag
+      courses and align learning paths; they do not master the skills graph. So the catalog's realizing
+      owner is SKILLS-MGMT and LMS is a consumer, which is why the LMS capability link reads as an orphan.
+      The general "shared entity" reuse pattern (per-domain embedded_master/consumer on domain_module_data_
+      objects, deprecating domain_module_host_domains) is documented in references/deprecations.md (Knowledge
+      Mgmt: ITSM masters knowledge_articles, HRSD embedded_master, CSM contributor on the SAME entity).
 
   - id: B2-1121-ROUTING
-    summary: "B10b: pick the LMS-side target module for handoff 1121 (HRSD -> LMS, case_category.updated). User asked to explain the options."
-    question: "Which LMS module receives case-category propagation, or is the handoff mis-modeled?"
-    user_question: "explain the options"
+    summary: "B10b: pick the LMS-side target module for inbound handoff 1121 (HRSD -> LMS, case_category.updated), or retire it. User asked how other vendors handle it."
+    question: "Which LMS module receives HR-case-category propagation: LMS-COMPLIANCE-TRAINING (compliance-tag inheritance) or LMS-PATHS (learning-path assignment), or is the handoff mis-modeled and retired?"
+    user_question: "how are other vendors handling that?"
     agent_answer: >-
-      Handoff 1121: an HR-service case category changes in HRSD, and something in LMS should react.
-      No LMS module currently declares any role on case_categories, so the landing spot is genuinely a
-      design choice:
-      (a) LMS-COMPLIANCE-TRAINING (33): the case category drives compliance-TAG inheritance (e.g. a
-      'harassment complaint' category auto-tags mandatory harassment training). Pick this if the link is
-      about which COMPLIANCE training a case type triggers.
-      (b) LMS-PATHS (34): the case category drives LEARNING-PATH assignment (a case type maps to a
-      development path). Pick this if it is about remedial/developmental learning, not compliance proof.
-      (c) Mis-modeled: retire the handoff if HRSD case taxonomy should not reach LMS at all (removes an
-      existing handoff -> needs sign-off).
+      How flagship vendors handle it: in ServiceNow HRSD the HR case lifecycle (Case Lifecycle Configurator)
+      attaches downstream workflows to a case category, and the ServiceNow <-> Workday Learning integration
+      pushes learning tasks/to-dos onto the case so HR and learning teams drive compliance training off the
+      case. The dominant pattern is compliance-driven: a sensitive case category (harassment complaint,
+      safety incident) auto-assigns the MANDATORY remediation/compliance training for that category and
+      tracks completion as case evidence. The developmental-path variant (a case type maps to a growth path)
+      exists but is the minority shape and is usually handled in the talent/learning-path layer, not the
+      case channel. So the vendor-grounded default is LMS-COMPLIANCE-TRAINING (compliance-tag inheritance).
     options:
-      - "(a) LMS-COMPLIANCE-TRAINING (33): compliance-tag inheritance"
-      - "(b) LMS-PATHS (34): learning-path assignment by case category"
-      - "(c) Mis-modeled: retire the handoff"
-    why: "No preset: endpoint genuinely ambiguous and no LMS module claims case_categories. (c) is destructive (removes a handoff)."
-
-  - id: B2-MISSING-ROUTING
-    summary: "Approve which MISSING vendor-surface entities to load. User asked what the 19 are and whether 'by area' = 'by module'."
-    question: "Ship all module groups, a subset, or defer?"
-    user_question: "what are these 19? what is 'grouped by area' - wouldn't that be 'grouped by module'?"
-    agent_answer: >-
-      You are right: 'by area' == 'by module' here. Each loader group maps 1:1 to a target module. The 19
-      (from the 2026-05-29 market surface), grouped by their target module:
-        LMS-COURSE-DELIVERY: question_banks, cmi5_assignable_units, lrs_statement_endpoints,
-          observation_checklists, observation_checklist_results
-        LMS-ILT-DELIVERY: training_room_bookings, session_rosters, session_cancellations
-        LMS-PATHS: skill_targets, learning_recommendations
-        LMS-CREDENTIALS: credential_verifications, certification_renewals
-        LMS-COMPLIANCE-TRAINING: gxp_training_signoffs, phishing_simulations, phishing_simulation_results
-        TRAINING-RECORDS-STARTER: dpo_training_acknowledgements, pci_dss_awareness_records
-        LMS-CT-GDPR: data_retention_policies (reconcile vs existing records_retention_policies 433)
-        LMS-AUTOMATION: reminder_schedules
-      Compliance group interacts with q1 (Refactor C); GDPR group interacts with q2 (Refactor A); skill_targets
-      unblocks q4 option (b). The b3 candidates (q10) are a separate, additive set on top of these 19.
-    options:
-      - "Ship by module group (course-delivery / ILT / paths / credentials / compliance / starter / GDPR / automation)"
-      - "Subset (name which module groups)"
-      - "Defer"
-    why: "Anchored to flagship-vendor surfaces / specific regulations. Sequence the compliance group after q1 and the GDPR group after q2."
-
-  - id: B2-DOMAIN-REGULATIONS
-    summary: "domain_regulations lists only FERPA; add GDPR (and HIPAA/OSHA/SOX)? User asked why this is separate from q2."
-    question: "Add the regulations the compliance + privacy modules bring into scope?"
-    user_question: "why is it separate from q2?"
-    agent_answer: >-
-      Separate because q2 is a STRUCTURAL ownership decision (who masters the privacy RECORDS: LMS vs a
-      shared PRIV-MGMT domain - expensive, deferred, cross-domain) while q9 is cheap, additive scope
-      METADATA (which statutes the LMS market touches, tagged on the domain_regulations junction for
-      discoverability + filtering). The tags are true regardless of where the records live: LMS delivers
-      GDPR/HIPAA/OSHA/SOX-mandated training and carries those evidence masters today, so the domain should
-      be tagged now even if privacy ownership later moves to PRIV-MGMT. q9 can be answered yes today without
-      waiting on q2. Live: only FERPA (mandatory) is tagged.
-    options:
-      - "Add GDPR + HIPAA + OSHA + SOX (recommended)"
-      - "Add GDPR only"
-      - "Leave as FERPA only"
-    why: "The compliance + privacy modules already bring these statutes into scope. Purely additive metadata, independent of the q2 structural move."
-  - id: B2-B9D-MISTAG-PRIVACY
-    summary: "B9d MIS-TAG (destructive sign-off): 2 privacy handoffs are tagged 11.2.2 'Manage regulatory compliance', which doesn't fit; they should NOT be re-pointed to a training process. Interacts with q2 (privacy ownership)."
-    question: "What to do with the 2 privacy-record process tags (gdpr_consent_records, data_deletion_requests under 11.2.2)?"
-    user_question: ""
-    agent_answer: >-
-      #1313 (gdpr_consent_record.withdrawn, LMS->HCM) and #1314 (data_deletion_request.fulfilled,
-      LMS->HCM) carry privacy/DSAR records, not training completions, so 'Train employees on regulatory
-      requirements' (2.1.3.5.1) is the wrong target for them. Where these should land depends on q2: if
-      privacy moves to a canonical PRIV-MGMT owner, the correct APQC home is a privacy/DSAR process there;
-      if privacy stays in LMS interim, the tag is best deleted until that process is realized.
-    options:
-      - "(a) Hold pending q2 (privacy ownership); leave the 2 tags as-is for now (recommended)"
-      - "(b) Delete the 2 mis-tagged rows now"
-      - "(c) Re-point them anyway to 2.1.3.5.1 with the training set"
-    why: "These are privacy records, not training; their correct process home is gated on the q2 ownership decision. Destructive either way -> sign-off (Rule #21)."
-    blocked_by:
-      - {type: user_decision, ref: B2-REFACTOR-A}
-    affected_handoff_processes:
-      - {process_tag: "11.2.2 (pid 369)", handoffs: [1313, 1314], payloads: "gdpr_consent_records / data_deletion_requests"}
+      - "(a) LMS-COMPLIANCE-TRAINING (33): case category drives compliance-tag inheritance (e.g. harassment-complaint category auto-tags mandatory harassment training). Additive PATCH of target_domain_module_id."
+      - "(b) LMS-PATHS (34): case category drives learning-path assignment (remedial/developmental). Additive PATCH."
+      - "(c) Mis-modeled: retire the handoff if HRSD case taxonomy should not reach LMS. Destructive -> sign-off."
+    why: "Now vendor-grounded (was 'no preset'). The flagship pattern (ServiceNow HRSD + Workday Learning) is compliance-driven case-to-training assignment, so (a) is the recommended default; (b) covers the developmental-path minority case; (c) is the destructive retire option."
+    evidence: >-
+      ServiceNow HRSD Case Lifecycle Configurator attaches workflows (including learning) to a case category;
+      the ServiceNow HRSD <-> Workday Learning integration (ServiceNow Store) pulls Workday Learning tasks
+      onto the case so compliance training is assigned and tracked from the HR case. Workday auto-(re)assigns
+      compliance training on a schedule and via case-driven rules. SAP SuccessFactors similarly drives
+      mandatory training assignment from HR events. The cross-vendor norm is case-category -> MANDATORY
+      compliance training (the harassment-complaint -> harassment-training shape), favoring LMS-COMPLIANCE-
+      TRAINING; developmental-path assignment off a case is the minority pattern and lives in the path layer.
 
 b3:
-  # a10 (2026-06-07): user said "yes" to researching all 4 candidates. Approved but GATED on the
-  # module-shape decision (q1 / Refactor C) and best done additively after the shape settles.
-  # b3 never auto-executes and never blocks "finished".
+  # a8 (2026-06-16): user reaffirmed rec "a" (proceed after q1). q1 (Refactor C) is now settled, so
+  # these 4 are eligible. They remain parked: b3 never auto-executes and never gates "finished".
+  # They are NET-NEW market structure (new masters), so per Rule #21 they load only after a q-file
+  # approves them; surfaced in the q-file Optional section.
   - id: B3-LEARNING-EVALUATIONS
     candidate: "learning_evaluations / training_surveys / survey_responses"
     user_approved: true

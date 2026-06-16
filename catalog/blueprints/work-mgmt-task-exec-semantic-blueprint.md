@@ -13,9 +13,9 @@ system_slug: work-mgmt-task-exec
 domain_modules:
   - work-mgmt-task-exec
 domain_code: WORK-MGMT
-related_modules: [crm-pipeline-mgt, emp-exp-action-planning, intgov-governance, pm-discovery, pm-roadmap-delivery, psa-project-delivery, psa-resource-mgmt, sem-execution-tracking, spm-demand-mgmt, spm-portfolio-planning, spm-resource-capacity, work-mgmt-goals-okr, work-mgmt-intake, wsc-channels-conversations]
+related_modules: [crm-pipeline-mgt, emp-exp-action-planning, intgov-governance, mrm-planning, pm-discovery, pm-roadmap-delivery, psa-project-delivery, psa-resource-mgmt, sem-execution-tracking, spm-demand-mgmt, spm-portfolio-planning, spm-resource-capacity, work-mgmt-goals-okr, work-mgmt-intake, wsc-channels-conversations]
 persona: [OPERATIONS-WORK-CONTRIBUTOR, OPERATIONS-WORK-PROGRAM-LEAD]
-created_at: 2026-06-13
+created_at: 2026-06-16
 ---
 
 # Task and Project Execution
@@ -118,6 +118,9 @@ flowchart TD
   project_tasks -->|"performed_by"| project_assignments
   strategic_portfolios -->|"groups"| strategic_initiatives
   strategic_initiatives -->|"evaluated_by"| business_value_assessments
+  product_releases -->|"owned by"| users
+  product_roadmaps -->|"owned by"| users
+  feature_requests -->|"submitted by"| users
   users -->|"owns_milestones"| work_milestones
   users -->|"approves_steps"| work_approval_steps
   users -->|"initiated_chains"| work_approval_chains
@@ -202,11 +205,11 @@ flowchart TD
 | 17 | `work_user_workloads` | `work_user_workloads` | Workload | Workloads | master | - | - | required | - | computed | read-only | - |
 | 18 | `business_value_assessments` | `business_value_assessments` | Business Value Assessment | Business Value Assessments | consumer | `spm-demand-mgmt` | Demand and Value Management | optional | submit_lock, single_approver | operational_workflow | `:manage` | - |
 | 19 | `action_plans` | `action_plans` | Engagement Action Plan | Engagement Action Plans | consumer | `emp-exp-action-planning` | Action Planning | optional | - | operational_workflow | `:manage` | - |
-| 20 | `feature_requests` | `feature_requests` | Feature Request | Feature Requests | consumer | `pm-discovery` | Product Discovery and Prioritization | optional | - | operational_workflow | `:manage` | - |
+| 20 | `feature_requests` | `feature_requests` | Feature Request | Feature Requests | consumer | `pm-discovery` | Product Discovery and Prioritization | optional | personal_content | operational_workflow | `:manage` | - |
 | 21 | `crm_opportunities` | `crm_opportunities` | Opportunity | Opportunities | consumer | `crm-pipeline-mgt` | Opportunity and Pipeline Management | optional | personal_content, single_approver | operational_workflow | `:manage` | - |
 | 22 | `strategic_portfolios` | `strategic_portfolios` | Portfolio | Portfolios | consumer | `spm-portfolio-planning` | Portfolio Planning | optional | - | operational_workflow | `:manage` | - |
-| 23 | `product_releases` | `product_releases` | Product Release | Product Releases | consumer | `pm-roadmap-delivery` | Roadmap, Release, and Strategy | optional | - | operational_workflow | `:manage` | - |
-| 24 | `product_roadmaps` | `product_roadmaps` | Product Roadmap | Product Roadmaps | consumer | `pm-roadmap-delivery` | Roadmap, Release, and Strategy | optional | - | operational_workflow | `:manage` | - |
+| 23 | `product_releases` | `product_releases` | Product Release | Product Releases | consumer | `pm-roadmap-delivery` | Roadmap, Release, and Strategy | optional | submit_lock | operational_workflow | `:manage` | - |
+| 24 | `product_roadmaps` | `product_roadmaps` | Product Roadmap | Product Roadmaps | consumer | `pm-roadmap-delivery` | Roadmap, Release, and Strategy | optional | submit_lock | operational_workflow | `:manage` | - |
 | 25 | `project_assignments` | `project_assignments` | Project Assignment | Project Assignments | consumer | `psa-resource-mgmt` | Resource Management | optional | - | operational_workflow | `:manage` | - |
 | 26 | `project_tasks` | `project_tasks` | Project Task | Project Tasks | consumer | `psa-project-delivery` | Project Delivery | optional | - | operational_workflow | `:manage` | - |
 | 27 | `strategic_initiatives` | `strategic_initiatives` | Strategic Initiative | Strategic Initiatives | consumer | `sem-execution-tracking` | Execution Tracking | optional | - | operational_workflow | `:manage` | - |
@@ -255,6 +258,9 @@ _(none: no industry-scoped aliases for this scope)_
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `product_releases` | owned by | `users` | many_to_many | optional | source | clear | reference | - |
+| `product_roadmaps` | owned by | `users` | many_to_many | optional | source | clear | reference | - |
+| `feature_requests` | submitted by | `users` | many_to_many | optional | source | clear | reference | - |
 | `users` | owns_milestones | `work_milestones` | one_to_many | optional | source | clear | reference | - |
 | `users` | approves_steps | `work_approval_steps` | one_to_many | optional | source | clear | reference | - |
 | `users` | initiated_chains | `work_approval_chains` | one_to_many | optional | source | clear | reference | - |
@@ -295,6 +301,8 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `work_projects` | closes_into | `service_projects` | one_to_one | optional | none | n/a | - |
 | `work_automations` | posts_to | `chat_channels` | many_to_many | optional | none | n/a | - |
 | `intranet_content_inventory_records` | spawns improvement | `work_items` | one_to_many | optional | none | n/a | - |
+| `marketing_plan_lines` | is delivered by | `work_items` | one_to_many | optional | none | n/a | - |
+| `marketing_plan_lines` | is delivered by | `work_projects` | one_to_many | optional | none | n/a | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -340,9 +348,11 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `work_automations` | PM-ROADMAP-DELIVERY (Roadmap, Release, and Strategy) - PROD-MGMT | consumer | optional | - |
 | `work_automations` | WSC-CHANNELS-CONVERSATIONS (Channels and Conversations) - WSC | consumer | optional | - |
 | `work_items` | INTGOV-GOVERNANCE (Ownership, Lifecycle and Planning) - INTRANET-GOV | embedded_master | optional | - |
+| `work_items` | MRM-PLANNING (Marketing Planning and Calendar) - MRM | consumer | optional | - |
 | `work_items` | PM-ROADMAP-DELIVERY (Roadmap, Release, and Strategy) - PROD-MGMT | consumer | optional | - |
 | `work_items` | SPM-RESOURCE-CAPACITY (Resource and Capacity Planning) - SPM | consumer | optional | - |
 | `work_items` | WORK-MGMT-GOALS-OKR (Team-Execution Goals and OKRs) - WORK-MGMT | embedded_master | required | - |
+| `work_projects` | MRM-PLANNING (Marketing Planning and Calendar) - MRM | consumer | optional | - |
 | `work_projects` | PSA-PROJECT-DELIVERY (Project Delivery) - PSA | consumer | optional | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
@@ -384,6 +394,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | WORK-MGMT-TASK-EXEC | PROD-MGMT | PM-ROADMAP-DELIVERY | `product_roadmap.published` | _(lifecycle)_ | `product_roadmaps` | event_stream | low | A new or updated product roadmap is published in PROD-MGMT. WORK-MGMT subscribers create work_projects or sub-projects representing the new roadmap initiatives so cross-functional teams can begin execution tracking. |
 | WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-INTAKE | `work_form_submission.converted` | `triaged` → `converted` _(lifecycle)_ | `work_items` | lifecycle_progression | low | A converted intake form submission spawns a work item in the task-execution module under the routed project. |
 | WORK-MGMT-TASK-EXEC | INTRANET-GOV | INTGOV-GOVERNANCE | `intranet_content_attestation.flagged_stale` | `pending` → `flagged_stale` _(state_change)_ | `work_items` | api_call | medium | When content is flagged stale during recertification, an improvement work item is created in Work Management for remediation. |
+| WORK-MGMT-TASK-EXEC | MRM | MRM-PLANNING | `marketing_plan_line.scheduled` | `scheduled` _(state_change)_ | `work_items` | api_call | medium | When a plan line is scheduled on the marketing calendar, the delivery work is handed to work-management as tasks and projects. Payload: the work item that delivers the plan line. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 

@@ -137,6 +137,7 @@ type DomainOut = {
   code: string;
   name: string;
   description: string;
+  domain_kind: string; // established_market | emerging_market | bundle (plan: domain-kind taxonomy)
   catalog_release: string | null;
   business_functions: BusinessFunctionRef[]; // functions owning/contributing-to/consuming this domain
   modules: ModuleOut[];
@@ -575,6 +576,7 @@ for (const d of index.domains) {
     code: d.domain_code,
     name: d.domain_name,
     description: d.description ?? "",
+    domain_kind: d.domain_kind,
     catalog_release: d.catalog_release ?? null,
     business_functions: businessFunctionRefs(d.id),
     modules: mods,

@@ -119,6 +119,16 @@ b2:
       - "(b) Build as 1 full module FINOPS-COST-MGMT (catch-all)."
       - "(c) Defer the build; keep FINOPS as an unbuilt stub for now."
     why: "Rule #21: a split / new-module shape is a b2 decision, never an agent auto-scaffold. UNBUILT domains are not scaffolded by an audit pass."
+    evidence: |
+      The 2026-06-16 Phase 0 re-audit recommends BUILD-OUT: FinOps is a recognized software category (Gartner
+      2025 Magic Quadrant for Cloud Financial Management Tools) with standalone pure-plays (Apptio Cloudability,
+      CloudHealth, Finout, nOps; ProsperOps' entire product is one FINOPS module on savings-share pricing). It
+      masters a surface nothing else in the catalog owns (cloud_cost_records, cost_allocations, commitment_plans,
+      cost_anomalies, optimization_recommendations at FOCUS-normalized resource/tag grain). Parentage stays under
+      ITAM (SKILL.md Rule #6 names FinOps an ITAM sub-domain). The re-audit proposes up to 6 modules mapped to the
+      FinOps Framework capability domains; option (a)'s 2-module split is the minimal Rule #14-compliant shape.
+      Full report: .tmp_deploy/FINOPS-phase0-2026-06-16.md.
+    extra_reaudit: "2026-06-16 confirms build-out"
     depends_on_for_cascade: [B1A-M1, B1A-A2, B1A-B-DMDO, B1A-DOMAIN-SKILL, B1A-PHASE-P]
 
   - id: B2-C1-OWNER

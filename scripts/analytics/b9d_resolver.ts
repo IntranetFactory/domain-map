@@ -61,7 +61,7 @@ const [
   domains, domainModules, dataObjects, processes,
   dmdoMasters, lifecycleGated, raci, domainRoles, roleModules, boundaryTags,
 ] = await Promise.all([
-  get("/domains?select=id,domain_code,domain_name&limit=10000"),
+  get("/domains?select=id,domain_code,domain_name,domain_kind&limit=10000"),
   get("/domain_modules?select=id,domain_id,domain_module_code&limit=20000"),
   get("/data_objects?select=id,data_object_name,singular_label,entity_type&limit=20000"),
   get("/processes?select=id,process_code,process_name,hierarchy_level&limit=20000"),
@@ -138,6 +138,13 @@ if (MIGRATE) {
 
 const D = domainByCode.get(DOMAIN_CODE);
 if (!D) { console.error(`unknown domain_code ${DOMAIN_CODE}`); process.exit(1); }
+// bundle-domains master nothing, so they own no handoff payloads and have no B9d work to resolve
+// (and can never be routed an owner item, since owner routing follows carried-entity mastery).
+// Exclude them explicitly (plan §4). Inert until §3.
+if (D.domain_kind === "bundle") {
+  console.error(`${DOMAIN_CODE} is domain_kind='bundle' (masters nothing); B9d is N/A for bundles. Nothing to resolve.`);
+  process.exit(0);
+}
 const DID = D.id as number;
 
 // modules per domain

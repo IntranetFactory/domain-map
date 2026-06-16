@@ -12,7 +12,7 @@ q1: (answer this first) Two consumer rows on the agent-operations module point a
 
 Recommended: a. Embedding a local shell keeps the agent-operations module deployable on its own without loosening the data requirement. This rewrites the role and necessity on existing rows, which is a destructive edit, so it needs your sign-off, and it sets the self-containment shape the rest of the build leans on.
 
-a1:
+a1: a
 
 ---
 
@@ -24,7 +24,7 @@ q2: Seven process tags were attached to the six cross-domain handoffs this domai
 
 Recommended: a. Coverage already passes (every cross-domain handoff has at least one tag) and the mappings match the recorded assignments; the approved count is zero only because the agent is not allowed to stamp approval itself.
 
-a2:
+a2: a
 
 ---
 
@@ -34,7 +34,7 @@ q4: Governance, Risk and Compliance forwards disclosure document to Real Estate 
 
 Recommended: a. Recording it now means that the moment Real Estate Brokerage and Agent Operations decides who does this work, this step already has a named owner instead of being rediscovered later as a gap.
 
-a4:
+a4: a
 
 ---
 

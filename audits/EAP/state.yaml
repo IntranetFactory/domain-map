@@ -1,0 +1,46 @@
+schema_version: 2
+domain: EAP
+status: feedback_needed
+next_action_by: user
+last_audit: 2026-06-16
+
+b1a: []
+
+b1b:
+  - id: B1B-EAP-VSDP-HANDOFF
+    summary: Outbound handoff feature.committed -> VSDP has NULL target module (VSDP unmodularized).
+    finding: >-
+      The cross-domain handoff feature.committed (payload agile_features) from
+      EAP-PORTFOLIO-ROADMAP to VSDP carries target_domain_module_id = NULL because VSDP
+      (Value Stream Delivery Platform, domain 80) has no domain_modules rows yet. This is the
+      one legitimate NULL per the B9 authoring rule; it resolves when VSDP is modularized.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: VSDP, milestone: modularization}
+    affected_handoffs:
+      - {handoff_id: null, direction: outbound, source_domain: EAP, target_domain: VSDP, trigger_event: feature.committed, payload: agile_features, null_field: target_domain_module_id}
+
+b2:
+  - id: B2-EAP-JIRA-ALIGN
+    summary: Demote Jira Align's existing SPM coverage from primary to secondary.
+    question: Demote Jira Align's SPM solution_domains coverage_level from primary to secondary?
+    options: [yes, no]
+    why: >-
+      Jira Align was added as primary on EAP this build; it was already primary on SPM from an
+      earlier load. Leaving both primary double-counts it. This rewrites a non-empty value, so
+      it is a destructive step needing approval (Rule #21). Executing it edits SPM's row.
+    evidence: >-
+      Atlassian Jira Align is the canonical enterprise-agile-planning flagship, purpose-built on
+      Jira for SAFe ARTs and PIs; it is not a strategic-portfolio-management product. The SPM
+      pure-plays (Planview Portfolios, Broadcom Clarity, ServiceNow SPM) own the CIO/EPMO
+      investment-planning surface Jira Align does not master. So Jira Align reads primary on EAP
+      and at most secondary on SPM.
+
+  - id: B2-EAP-PHASE-E
+    summary: Author Phase E (personas + RACI) for EAP now, or leave deferred.
+    question: Author Phase E (domain_roles personas + process_raci) for EAP now?
+    options: [yes, no]
+    why: >-
+      The user scoped this build to A+B+C+S, so Phase E was deferred. EAP is a multi-module
+      domain with real workflow gates (approve_epic on epics, commit_pi on program increments),
+      so it has genuine job-shaped personas (release-train engineer, agile PMO/portfolio
+      manager, team product owner) and gated RACI to author.

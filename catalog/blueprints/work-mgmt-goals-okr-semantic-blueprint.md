@@ -13,9 +13,9 @@ system_slug: work-mgmt-goals-okr
 domain_modules:
   - work-mgmt-goals-okr
 domain_code: WORK-MGMT
-related_modules: [intgov-governance, pm-roadmap-delivery, psa-project-delivery, sem-execution-tracking, sem-operating-rhythm, sem-strategy-definition, talent-performance-mgmt, work-mgmt-intake, work-mgmt-task-exec]
+related_modules: [eap-portfolio-roadmap, intgov-governance, mrm-planning, pm-roadmap-delivery, psa-project-delivery, sem-execution-tracking, sem-operating-rhythm, sem-strategy-definition, talent-performance-mgmt, work-mgmt-intake, work-mgmt-task-exec]
 persona: [OKR-OWNER, OPERATIONS-WORK-CONTRIBUTOR, OPERATIONS-WORK-PROGRAM-LEAD]
-created_at: 2026-06-13
+created_at: 2026-06-16
 ---
 
 # Team-Execution Goals and OKRs
@@ -134,6 +134,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `work_items` | mirrors_to | `service_requests` | one_to_one | optional | none | n/a | - |
 | `strategic_initiatives` | portfolio rollup from | `work_items` | one_to_many | optional | none | n/a | - |
 | `intranet_content_inventory_records` | spawns improvement | `work_items` | one_to_many | optional | none | n/a | - |
+| `marketing_plan_lines` | is delivered by | `work_items` | one_to_many | optional | none | n/a | - |
 
 ## 6. Cross-domain context
 
@@ -141,6 +142,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | data_object | other module / domain | role | necessity | notes |
 | --- | --- | --- | --- | --- |
+| `okr_objectives` | EAP-PORTFOLIO-ROADMAP (Portfolio Backlog and Roadmaps) - EAP | consumer | optional | - |
 | `okr_objectives` | PM-ROADMAP-DELIVERY (Roadmap, Release, and Strategy) - PROD-MGMT | consumer | optional | - |
 | `okr_objectives` | SEM-EXECUTION-TRACKING (Execution Tracking) - SEM | consumer | required | - |
 | `okr_objectives` | SEM-OPERATING-RHYTHM (Operating Rhythm) - SEM | consumer | required | - |
@@ -170,6 +172,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | WORK-MGMT-GOALS-OKR | WORK-MGMT | WORK-MGMT-TASK-EXEC | `work_item.status_changed` | `any` → `any` _(lifecycle)_ | `work_items` | lifecycle_progression | low | Work item status change triggers KR progress recalculation in GOALS-OKR for any objective that has linked the item to a key result. In-process FK + state read; no message moves. |
 | WORK-MGMT-TASK-EXEC | WORK-MGMT | WORK-MGMT-INTAKE | `work_form_submission.converted` | `triaged` → `converted` _(lifecycle)_ | `work_items` | lifecycle_progression | low | A converted intake form submission spawns a work item in the task-execution module under the routed project. |
 | WORK-MGMT-TASK-EXEC | INTRANET-GOV | INTGOV-GOVERNANCE | `intranet_content_attestation.flagged_stale` | `pending` → `flagged_stale` _(state_change)_ | `work_items` | api_call | medium | When content is flagged stale during recertification, an improvement work item is created in Work Management for remediation. |
+| WORK-MGMT-TASK-EXEC | MRM | MRM-PLANNING | `marketing_plan_line.scheduled` | `scheduled` _(state_change)_ | `work_items` | api_call | medium | When a plan line is scheduled on the marketing calendar, the delivery work is handed to work-management as tasks and projects. Payload: the work item that delivers the plan line. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -195,17 +198,10 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `drafted` | ✓ | - | - | - | - |
-| 1 | `drafted` | ✓ | - | - | - | Objective drafted by the owner. |
 | 2 | `committed` | - | - | ✓ | `work-mgmt-goals-okr:commit_okr_objective` | - |
-| 2 | `committed` | - | - | ✓ | `talent-performance-mgmt:commit_okr_objective` | Owner and manager commit to the objective for the cycle. |
 | 3 | `in_progress` | - | - | - | - | - |
-| 3 | `in_progress` | - | - | - | - | Objective is being pursued; key results updated. |
-| 4 | `graded` | - | - | ✓ | `talent-performance-mgmt:grade_okr_objective` | End-of-cycle score (0.0-1.0) recorded. |
 | 4 | `scored` | - | - | ✓ | `work-mgmt-goals-okr:score_okr_objective` | - |
-| 5 | `closed` | - | ✓ | - | - | Cycle closed; objective archived. |
 | 5 | `closed` | - | ✓ | - | - | - |
-
-> ⚠ **state-machine shape:** 2 is_initial (expected exactly 1); state_order not unique/monotonic.
 
 ### `work_items` (Work Item)
 

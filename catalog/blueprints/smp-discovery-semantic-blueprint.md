@@ -10,9 +10,9 @@ system_slug: smp-discovery
 domain_modules:
   - smp-discovery
 domain_code: SMP
-related_modules: [apm-portfolio-registry, iga-entitlement-catalog, itam-portfolio-reporting, smp-automation, smp-optimization, smp-renewal-vendor, spend-mgmt-cards]
+related_modules: [apm-portfolio-registry, iga-entitlement-catalog, it-ops-starter, itam-portfolio-reporting, smp-automation, smp-optimization, smp-renewal-vendor, spend-mgmt-cards]
 persona: []
-created_at: 2026-06-13
+created_at: 2026-06-16
 ---
 
 # SMP Discovery and Catalog
@@ -145,6 +145,7 @@ _(none: no context cross-scope edges on this scope's embedded shells or consumed
 | --- | --- | --- | --- | --- |
 | `saas_applications` | APM-PORTFOLIO-REGISTRY (Portfolio Registry) - APM | consumer | optional | - |
 | `saas_applications` | IGA-ENTITLEMENT-CATALOG (IGA Entitlement Catalog) - IGA | consumer | optional | Newly discovered or sanctioned SaaS apps trigger entitlement registration in IGA catalog. |
+| `saas_applications` | IT-OPS-STARTER (IT Operations Starter) - IT-OPS-STARTER | embedded_master | optional | - |
 | `saas_applications` | ITAM-PORTFOLIO-REPORTING (Portfolio TCO Reporting) - ITAM | consumer | required | - |
 | `saas_applications` | SMP-RENEWAL-VENDOR (SMP Renewal and Vendor Management) - SMP | consumer | required | - |
 

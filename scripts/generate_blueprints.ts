@@ -549,6 +549,12 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   // any downstream tool can `glob *-semantic-blueprint.md` and join entry-by-entry without
   // case-folding.
   const isStarterKit = modules.length > 1 && parentDomains.length === 1;
+  // A promoted bundle (plan §3) is a SINGLE starter module whose parent domain is
+  // domain_kind='bundle'. isStarterKit is structurally false for it (one module), so detect it
+  // explicitly: its buyer catalog copy lives on the bundle-DOMAIN and must be read from there so
+  // it survives the §5 module-catalog CLEAR (Finding 1). Falls back to the module copy pre-§3 /
+  // pre-clear (bundleDomain null until promotion).
+  const bundleDomain = parentDomains.find((d) => d.domain_kind === "bundle") ?? null;
   const systemName = isStarterKit ? parentDomains[0].domain_code : modules[0].domain_module_code;
   const systemDescription = isStarterKit ? parentDomains[0].domain_name : modules[0].domain_module_name;
   const systemSlug = moduleSlug(systemName);
@@ -561,12 +567,16 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   //   - description: the long-form 1-3 paragraph buyer copy (catalog_description).
   // These replace the former in-body §1.1/§1.2 overview split: the body's §1 now carries
   // only the analyst voice (no sub-headings); the buyer voice lives entirely here.
-  const catalogTagline = isStarterKit
-    ? parentDomains[0].catalog_tagline || ""
-    : modules[0].catalog_tagline || "";
-  const catalogDescription = isStarterKit
-    ? parentDomains[0].catalog_description || ""
-    : modules[0].catalog_description || "";
+  const catalogTagline = bundleDomain
+    ? bundleDomain.catalog_tagline || modules[0].catalog_tagline || ""
+    : isStarterKit
+      ? parentDomains[0].catalog_tagline || ""
+      : modules[0].catalog_tagline || "";
+  const catalogDescription = bundleDomain
+    ? bundleDomain.catalog_description || modules[0].catalog_description || ""
+    : isStarterKit
+      ? parentDomains[0].catalog_description || ""
+      : modules[0].catalog_description || "";
 
   // persona: the deduplicated persona actors realized in the §9 RACI tables (B3), aggregated
   // across every module in scope. Only `actorKind === "persona"` rows count; agent-skill

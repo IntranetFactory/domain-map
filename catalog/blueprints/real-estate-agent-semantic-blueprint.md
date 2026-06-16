@@ -9,9 +9,10 @@ description: Bring contacts, listings, and the documents behind each deal into o
 system_slug: real-estate-agent
 domain_modules:
   - real-estate-agent
+domain_code: REAL-ESTATE-AGENT
 related_modules: [agency-mgmt-job-traffic, clm-negotiation, clm-obligation-mgmt, clm-renewal, clm-repository, cpq-quote-builder, crm-acct-mgt, crm-activity, crm-lead-mgt, ma-campaign-authoring, ma-lead-scoring, psa-project-delivery, re-brok-agent-ops, re-brok-brokerage-ops, re-invest-portfolio-val, smp-renewal-vendor]
 persona: [CONTRACT-OPS-MANAGER, CONTRACT-OPS-SPECIALIST, LEGAL-COUNSEL, PROCUREMENT-CONTRACT-LIAISON]
-created_at: 2026-06-13
+created_at: 2026-06-16
 ---
 
 # Real Estate Agent (solo / small firm bundle)

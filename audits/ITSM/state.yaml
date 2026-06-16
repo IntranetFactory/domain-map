@@ -12,13 +12,9 @@ schema_version: 2
 domain: ITSM
 status: feedback_needed
 next_action_by: user
-last_audit: 2026-06-08
+last_audit: 2026-06-16
 
 b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
   - id: B1A-H1-DISCOVER-DEFER
     summary: 2 cross-domain inbound ITSM handoffs have no clean PCF match; defer to Discover Pass 3
     finding: >
@@ -41,20 +37,38 @@ b1a:
       - {handoff_id: 843, source_domain: DLP, target_domain: ITSM, trigger_event: dlp_incident.blocked}
       - {handoff_id: 901, source_domain: HEALTHCARE-PATIENT-OPS, target_domain: ITSM, trigger_event: clinical_order.placed}
 
-  - id: B1A-SELF-CONTAIN
-    summary: "2 contributor/required-consumer rows break module self-containment (M9): embed or relax each. DESTRUCTIVE (rewrites role/necessity on existing DMDO rows) - surfaced, not auto-applied."
-    finding: "Live triage: 2 domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here. Each is an M9 self-containment violation. Fixing rewrites an existing non-empty row, so it is destructive and requires sign-off."
-    action: "Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Surfaced for user approval; not auto-applied."
-    extra_m9_shapes:
-      - {entity: asset_lifecycle_events, module: ITSM-INCIDENT-MGMT, role: contributor, master_domain: ITAM}
-      - {entity: onboarding_tasks, module: ITSM-SERVICE-REQUEST, role: consumer, master_domain: ONBOARDING}
-
   - id: B1A-PHASE-P
     summary: "Multi-module (8 modules) with 0 personas post-Plan-3 (E1 fail): persona / RACI layer. DEFERRED (personas not auto-authored)."
-    finding: "8 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. NOTE: the 2026-05-31 audit recorded 4 roles (IT-SERVICE-DESK-AGENT, IT-SERVICE-DESK-MANAGER, IT-CHANGE-MANAGER, IT-KNOWLEDGE-AUTHOR) with 19 role_modules; reconcile whether Plan 3 deleted these or whether this finding is stale before authoring."
+    finding: "8 domain_modules and 0 domain_roles reaching this domain via role_modules (confirmed 2026-06-16: role_modules on modules 38-45 returns []). Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. The 2026-05-31 audit's recorded 4 roles (IT-SERVICE-DESK-AGENT, IT-SERVICE-DESK-MANAGER, IT-CHANGE-MANAGER, IT-KNOWLEDGE-AUTHOR / 19 role_modules) no longer reach the modules; treat the domain as 0-persona for E1."
     action: "DEFERRED per audit contract (personas/RACI are not auto-authored). Candidate personas if/when authored: IT-SERVICE-DESK-AGENT, IT-SERVICE-DESK-MANAGER, IT-CHANGE-MANAGER, IT-PROBLEM-MANAGER, IT-KNOWLEDGE-AUTHOR, END-USER-REQUESTER. Wire role_modules across the 8 modules + process_raci rows. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
 
 b1b:
+  - id: B1B-B9D-OWN-REALIZE
+    summary: "14 cross-domain steps the user accepted ITSM owns (a-ITSM.md q7-q20) need R/A process_raci once ITSM has personas; blocked on B1A-PHASE-P."
+    finding: >
+      The 2026-06-16 a-file answered q7-q20 with the Recommended "ITSM owns it" for 14 forwarded
+      steps. ITSM has zero personas reaching its modules, so the R/A process_raci realization cannot
+      be authored yet. The decision (ITSM owns each step) is made; the realization is deferred. When
+      B1A-PHASE-P authors personas, wire one R/A pair per process onto the gating module (the
+      Responsible persona must reach the module where the process is gated). Processes accepted as
+      ITSM-owned (process_id "process_name"):
+        1556 Perform preventative asset maintenance (service_incidents, CLIN-DEV inbound)
+        1299 Triage IT service delivery incidents (service_incidents; the bulk incident-triage owner)
+        1241 Define IT change/release standards (service_changes)
+        579  Eliminate quality and reliability problems (service_incidents, TEST-MGMT inbound)
+        1301 Operate and monitor online systems (service_incidents)
+        1103 Triage SLA compliance issues (service_incidents)
+        1319 Resolve IT issues/requests (service_incidents)
+        1558 Perform corrective asset maintenance and repairs (service_incidents, EAM inbound)
+        1293 Maintain service support knowledge repository (knowledge_articles)
+        1257 Document IT change/release outcome (service_changes)
+        1312 Maintain IT asset records (service_incidents; TELCO-BSS inbound, ITSM-owned half)
+      Plus three the user accepted as ITSM-owned that the resolver reclassified to RE-TAG (the
+      underlying triage work is ITSM-owned and folds into 1299; the coarse-tag re-point is a
+      source-side edit, see B9d routing notes in history.md 2026-06-16): 272, 285, 370.
+    blocked_by:
+      - {type: depends_on, ref: B1A-PHASE-P, reason: "no persona pool yet; R/A cannot be authored until ITSM has personas reaching its modules"}
+
   - id: B1B-B9b
     summary: B9b intra-domain cross-module handoff rows absent for ITSM; new trigger_events required for each edge
     finding: ITSM has 8 modules but zero rows in handoffs with source_domain_id=target_domain_id=1. Eight expected intra-domain edges (incident->problem, problem->change, change->configuration_items, request->incident, sla->incident, sla->request, incident->knowledge, problem->knowledge). Each needs a new trigger_events row authored with event_name, event_category, payload data_object_id, and condition; this is editorial choice not mechanical.
@@ -80,219 +94,26 @@ b1b:
 
 b2:
   - id: B2-PATTERN-FLAGS
-    summary: pattern flag positive re-evaluation on 3 masters (carry from 2026-05-29 B2-S2)
-    question: Per Rule #12 / B4 positive re-evaluation, should service_incidents.has_personal_content=true (incident descriptions routinely carry user PII)? knowledge_articles.has_personal_content=true (some KB articles reference customer cases)? service_changes.has_submit_lock=true (freeze change payload at CAB submission)?
+    summary: knowledge_articles.has_personal_content positive re-evaluation (incident PII + change submit-lock resolved 2026-06-16)
+    question: Per Rule #12 / B4 positive re-evaluation, should knowledge_articles.has_personal_content=true (some KB articles reference real customer cases)? The 2026-06-16 a-file already flipped service_incidents.has_personal_content=true (a2=yes) and service_changes.has_submit_lock=true (a4); only the KB-PII flag is undecided because the user asked how others handle it rather than answering.
     options:
-      - Approve all three flips
-      - Approve a subset
-      - Decline all (flags stay false)
-    why: Pattern flags are workflow-shape judgments the user owns; defaults to false do not establish review. Recording the consideration in notes is forbidden by Rule #15, so the answer lives only in the audit decisions. All three masters are now classified entity_type=operational_workflow (2026-06-07), so flag consideration is in scope.
+      - Flip knowledge_articles.has_personal_content to true (treat the KB as in-scope for privacy handling)
+      - Leave it false (the KB is kept strictly generic / scrubbed of personal data)
+    why: Pattern flags are workflow-shape judgments the user owns; defaults to false do not establish review. The decision lives only in the audit decisions (Rule #15 forbids recording it in notes). knowledge_articles (id 51) is entity_type=operational_workflow, so flag consideration is in scope.
     affected_masters:
-      - {data_object_id: 47, name: service_incidents, target_module_id: 38, workflow: incident}
-      - {data_object_id: 50, name: service_changes, target_module_id: 41, workflow: change}
       - {data_object_id: 51, name: knowledge_articles, target_module_id: 43, workflow: knowledge}
 
-  - id: B2-SLA-LIFECYCLE
-    summary: service_slas (id 53) has zero lifecycle states (carry from 2026-05-29 B2-S1)
-    question: service_slas is now classified entity_type=catalog (2026-06-07), under which lifecycle states are permitted but not required (Rule #12), so B12 no longer fails on it. Leave it stateless (config-shape), or author a state machine (e.g. draft, published, active, expired, archived)?
-    options:
-      - Accept config-shape (catalog) classification; no state machine; B12 passes
-      - Author a state machine; surface proposed states for approval
-    why: B12 is satisfied by the catalog classification, but a published SLA does have an effective period (active vs expired) worth modeling as state if the workflow demands it. Either choice is defensible; the user owns the call.
-    affected_masters:
-      - {data_object_id: 53, name: service_slas, target_module_id: 45, workflow: sla-config}
-
-  - id: B2-SKILL-NAMING
-    summary: "RETIRED 2026-06-06 (per-domain-skill restoration). Originally: ITSM system skills used kebab itsm-<module>-system vs SKILL snake <module_code_lower>_agent."
-    question: "SUPERSEDED. The per-module system-skill grain is retired (see header). The 8 kebab itsm-<module>-system skills are no longer the model; each domain now carries exactly ONE domain-grain system skill. Re-frame: confirm the ITSM domain-grain skill exists and the legacy per-module skills are dispositioned per audits/_modularization-backlog.md. No naming-convention decision is owed under the new model."
-    options:
-      - No action under the new model; track per-module skill disposition in audits/_modularization-backlog.md
-    why: Retired item kept as a note so the supersession is traceable; not an open editorial decision.
-
-# b3 verdicts are now backed by Phase 0 vendor research (2026-06-08):
-# .tmp_deploy/ITSM-phase0-2026-06-08.md. All remaining b3 items are CONFIRMED additive
-# masters (no module restructure -> stay b3, not b2). They are non-blocking and never
-# auto-executed; the user approves via q-ITSM.md q6. B3-CHARGEBACK-INVOICES was REFUTED
-# (resolved -> history.md). B3-SERVICE-RELEASES is newly surfaced by the research.
-  - id: B2-B9D-OWN-1556
-    summary: "IT Service Management: name an owner for \"Perform preventative asset maintenance\" (no one is responsible for it today)"
-    question: |
-      Clinical Device Management forwards incident to IT Service Management to perform preventative asset maintenance, but IT Service Management does not yet have anyone assigned to perform preventative asset maintenance, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q7.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-1299
-    summary: "IT Service Management: name an owner for \"Triage IT service delivery incidents\" (no one is responsible for it today)"
-    question: |
-      Business Intelligence and Analytics forwards incident to IT Service Management to triage IT service delivery incidents, but IT Service Management does not yet have anyone assigned to triage IT service delivery incidents, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q8.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-1241
-    summary: "IT Service Management: name an owner for \"Define IT change/release standards\" (no one is responsible for it today)"
-    question: |
-      Configuration Management Database forwards change to IT Service Management to define IT change or release standards, but IT Service Management does not yet have anyone assigned to define IT change or release standards, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q9.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-579
-    summary: "IT Service Management: name an owner for \"Eliminate quality and reliability problems\" (no one is responsible for it today)"
-    question: |
-      Test Management forwards incident to IT Service Management to eliminate quality and reliability problems, but IT Service Management does not yet have anyone assigned to eliminate quality and reliability problems, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q10.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-272
-    summary: "IT Service Management: name an owner for \"Develop and execute IT resilience and continuity operations\" (no one is responsible for it today)"
-    question: |
-      Data and AI Platform forwards incident to IT Service Management to develop and execute IT resilience and continuity operations, but IT Service Management does not yet have anyone assigned to develop and execute IT resilience and continuity operations, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q11.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-1301
-    summary: "IT Service Management: name an owner for \"Operate and monitor online systems\" (no one is responsible for it today)"
-    question: |
-      Discovery and Service Mapping forwards incident to IT Service Management to operate and monitor online systems, but IT Service Management does not yet have anyone assigned to operate and monitor online systems, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q12.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-1103
-    summary: "IT Service Management: name an owner for \"Triage SLA compliance issues\" (no one is responsible for it today)"
-    question: |
-      Data Quality forwards incident to IT Service Management to triage SLA compliance issues, but IT Service Management does not yet have anyone assigned to triage SLA compliance issues, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q13.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-1319
-    summary: "IT Service Management: name an owner for \"Resolve IT issues/requests\" (no one is responsible for it today)"
-    question: |
-      Data Quality forwards incident to IT Service Management to resolve IT issues or requests, but IT Service Management does not yet have anyone assigned to resolve IT issues or requests, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q14.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-1558
-    summary: "IT Service Management: name an owner for \"Perform corrective asset maintenance and repairs\" (no one is responsible for it today)"
-    question: |
-      Enterprise Asset Management forwards incident to IT Service Management to perform corrective asset maintenance and repairs, but IT Service Management does not yet have anyone assigned to perform corrective asset maintenance and repairs, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q15.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-370
-    summary: "IT Service Management: name an owner for \"Create remediation plans\" (no one is responsible for it today)"
-    question: |
-      Governance, Risk and Compliance forwards incident to IT Service Management to create remediation plans, but IT Service Management does not yet have anyone assigned to create remediation plans, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q16.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-1293
-    summary: "IT Service Management: name an owner for \"Maintain service support knowledge repository\" (no one is responsible for it today)"
-    question: |
-      Knowledge Management forwards knowledge article to IT Service Management to maintain service support knowledge repository, but IT Service Management does not yet have anyone assigned to maintain service support knowledge repository, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q17.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-285
-    summary: "IT Service Management: name an owner for \"Manage change deployment control\" (no one is responsible for it today)"
-    question: |
-      Low-Code Application Platform forwards incident to IT Service Management to manage change deployment control, but IT Service Management does not yet have anyone assigned to manage change deployment control, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q18.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-1257
-    summary: "IT Service Management: name an owner for \"Document IT change/release outcome\" (no one is responsible for it today)"
-    question: |
-      Remote Monitoring and Management forwards change to IT Service Management to document IT change or release outcome, but IT Service Management does not yet have anyone assigned to document IT change or release outcome, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q19.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-1312
-    summary: "IT Service Management: name an owner for \"Maintain IT asset records\" (no one is responsible for it today)"
-    question: |
-      Telecommunications OSS/BSS forwards incident to IT Service Management to maintain IT asset records, but IT Service Management does not yet have anyone assigned to maintain IT asset records, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work IT Service Management owns, and assign a named owner once IT Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment IT Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-ITSM.md q20.
-    extra_b9d_added: "2026-06-13"
 b3:
-  - id: B3-SERVICE-OUTAGES
-    candidate: service_outages
-    rationale: Customer-facing outage / status record distinct from the internal incident. Confirmed by name in ServiceNow (Outage records childed to major incidents), Atlassian Statuspage (Incidents + Components + Subscribers), Freshservice/Freshstatus. No collision with outage_events (id 665, UTIL-OPS grid outage).
-    proposed_module: ITSM-INCIDENT-MGMT
-    phase0_verdict: CONFIRM (Core)
-
-  - id: B3-CHANGE-COLLISIONS
-    candidate: change_collisions
-    rationale: Overlapping change-window / blackout-conflict detection. Confirmed by name in ServiceNow (Change Management Collision Detector) and BMC Helix (change conflict review). Junction/transition under change-mgmt.
-    proposed_module: ITSM-CHANGE-MGMT
-    phase0_verdict: CONFIRM (Common)
-
-  - id: B3-CAB-MEETINGS
-    candidate: cab_meetings
-    rationale: Change Advisory Board agenda + minutes as a first-class record. Confirmed by name in ServiceNow (CAB Workbench), BMC, Freshservice.
-    proposed_module: ITSM-CHANGE-MGMT
-    phase0_verdict: CONFIRM (Core)
-
-  - id: B3-SERVICE-OFFERINGS-SPLIT
-    candidate: service_offerings
-    rationale: Back-end service definition split from its user-facing catalog item (an entity-level split, NOT a module split -> additive master, stays b3). Confirmed by name in ServiceNow CSDM (offering vs catalog_item are two separate objects, m:m), BMC, Freshservice. Load as a master related to service_catalog_items.
-    proposed_module: ITSM-SERVICE-REQUEST
-    phase0_verdict: CONFIRM (Core)
-
-  - id: B3-WALKUP-VISITS
-    candidate: walkup_visits
-    rationale: Walk-up / onsite check-in record (queue position, estimated service time) backing the ITSM-WALKUP capability-orphan. Modeled as a first-class entity only by ServiceNow (Walk-Up Experience); Specialist. RESHAPE - load single walkup_visits master, drop walkup_kiosks (kiosk is a location/config attribute, not a master).
-    proposed_module: ITSM-AGENT-WORKSPACE
-    phase0_verdict: CONFIRM / RESHAPE (Specialist; no walkup_kiosks)
-
-  - id: B3-VIRTUAL-AGENT-CONVERSATIONS
-    candidate: virtual_agent_conversations
-    rationale: Conversational / virtual-agent transcripts backing the ITSM-VIRTUAL-AGENT capability-orphan. Confirmed by name in ServiceNow (Interaction/Transcript), Freshservice (Freddy), ManageEngine, Jira SM. Prefer this name over chatbot_sessions.
-    proposed_module: ITSM-AGENT-WORKSPACE
-    phase0_verdict: CONFIRM (Core)
-
-  - id: B3-SERVICE-RELEASES
-    candidate: service_releases
-    rationale: Release & deployment record distinct from a single change; backs the ITSM-RELEASE capability. Confirmed by name in Freshservice, ManageEngine, BMC, ServiceNow, Ivanti. Folds into ITSM-CHANGE-MGMT as a second master (no new ITSM-RELEASE module - over-fragmentation, not required by Rule #14). Newly surfaced by the 2026-06-08 Phase 0 research.
-    proposed_module: ITSM-CHANGE-MGMT
-    phase0_verdict: CONFIRM (Core)
+  - id: B3-WORKFLOW-SUBSTRATE
+    candidate: "5 workflow-substrate masters surfaced by the 2026-06-16 market re-audit: ticket_approvals, ticket_state_transitions, agent_groups, incident_tasks, known_errors."
+    rationale: |
+      The 2026-06-16 market surface (ServiceNow, Jira SM, Freshservice, ManageEngine, Halo) found the 8-module
+      split coherent (0 wrong-ownership, 0 scope-creep) but flagged 5 workflow-substrate masters all 5 flagships
+      model that ITSM lacks, beyond the entities already loaded from the prior b3 backlog: ticket_approvals (change-governance
+      spine + SOX/ISO20000 audit object, CHANGE-MGMT); ticket_state_transitions (immutable per-ticket history, the
+      MTTR/cycle-time source, AGENT-WORKSPACE); agent_groups (the
+      assignment/queue primitive distinct from org_units, AGENT-WORKSPACE); incident_tasks (child-work decomposition,
+      INCIDENT-MGMT); known_errors (the Known Error Database, PROBLEM-MGMT). Additive masters fitting existing
+      modules; non-blocking. Full surface: .tmp_deploy/ITSM-market-surface-2026-06-16.json.
+    vendor_evidence: [ServiceNow, Jira Service Management, Freshservice, ManageEngine ServiceDesk Plus, Halo ITSM]
+    proposed_module: "ticket_approvals->ITSM-CHANGE-MGMT; ticket_state_transitions+agent_groups->ITSM-AGENT-WORKSPACE; incident_tasks->ITSM-INCIDENT-MGMT; known_errors->ITSM-PROBLEM-MGMT"

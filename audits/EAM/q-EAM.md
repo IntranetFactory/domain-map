@@ -112,6 +112,19 @@ a9:
 
 ---
 
+q11: This domain is filed as a sub-domain of IT Asset Management, but its market is industrial plant and equipment maintenance (IBM Maximo, Hexagon, IFS), a different buyer from IT asset management (Flexera, Ivanti). Should it be re-parented out of IT Asset Management?
+
+- a) Re-parent to a new physical-asset umbrella over Enterprise Asset Management, facility management, and workplace management.
+- b) Re-parent under the existing Real Estate and Workplace umbrella.
+- c) Make it top-level (no parent).
+- d) Keep it under IT Asset Management.
+
+Recommended: a, otherwise c. EAM vendors (Maximo, Hexagon, IFS, Fiix) sell equipment-uptime and MRO to maintenance and reliability buyers; IT asset management vendors (Flexera, Ivanti, ServiceNow SAM) sell software-license compliance to IT and finance. The vendors and buyers are disjoint, so the current parentage is a naming coincidence on the word "asset." Separately: EAM is an enterprise industrial market, out of scope for the 50-250-user IT-suite question that started this, so this re-parent is the one edit worth doing whether or not EAM is ever built.
+
+a11:
+
+---
+
 ## Optional (will not hold up the build)
 
 q10: Beyond the masters modeled today, cross-vendor recall surfaces 16 deeper entity candidates (condition monitoring readings, failure codes, FMEA, asset warranties, vendor service contracts, technician certifications, crews, inspection checklists, oil samples, regulatory compliance logs, as-built drawings, asset meter groups, PM task libraries, failure root causes, MRO parts, tool-crib inventory). Should I run a vetted vendor-surface pass and add the ones that hold up? (yes/no)
@@ -122,4 +135,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MODSPLIT q2=B2-M7-ESCALATES q3=B2-WORK-ORDERS-BARE q4=B2-FIXED-ASSETS q5=B2-DOMAIN-CANDIDATES.apm q6=B2-DOMAIN-CANDIDATES.iiot q7=B2-DOMAIN-CANDIDATES.ptw q8=B2-REG-SCOPE q9=B2-USERS-EDGES q10=B3-MARKET-ENTITIES | domain_id=53 -->
+<!-- agent map, ignore: q1=B2-MODSPLIT q2=B2-M7-ESCALATES q3=B2-WORK-ORDERS-BARE q4=B2-FIXED-ASSETS q5=B2-DOMAIN-CANDIDATES.apm q6=B2-DOMAIN-CANDIDATES.iiot q7=B2-DOMAIN-CANDIDATES.ptw q8=B2-REG-SCOPE q9=B2-USERS-EDGES q10=B3-MARKET-ENTITIES q11=B2-REPARENT | domain_id=53 -->

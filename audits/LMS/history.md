@@ -638,3 +638,89 @@ Removed B2-B9D-OWN-1041 + B2-B9D-MISTAG-REPOINT from b2 (both resolved → histo
 b3 unchanged (4). Deleted `a-LMS.md`; regenerated `q-LMS.md` (q1–q6 unchanged, q7 = privacy mis-tags,
 optional q8 = b3). `status: feedback_needed`, `next_action_by: user`. Catalog writes this pass: 2
 `process_raci` inserts + 15 `handoff_processes` re-points; no `record_status` changed.
+
+## 2026-06-16 - a-LMS.md processing
+
+User answered the 2026-06-10 `q-LMS.md` (renamed to `a-LMS.md`). Processed per Rule #22.
+Loader: `.tmp_deploy/2026-06-16_lms_a_processing.ts` (idempotent, read-before-write). All
+catalog writes landed at `record_status='new'` (Rule #1); no `record_status` flipped.
+
+### Decisions executed
+
+- **a1 = a (B2-REFACTOR-C), the 3-entity shape, destructive structural, a-file is the sign-off.**
+  Adopted the q-file option (a): a tenant-scoped reference table + one shared evidence table + FDA
+  Part 11 kept separate. Catalog steps:
+  - Created master `compliance_regulations` (data_object **1268**, entity_type=catalog): `master`
+    in LMS-COMPLIANCE-TRAINING (33), `embedded_master` in TRAINING-RECORDS-STARTER (182), rollup
+    `master`/`required` on domain 57.
+  - Wired the regulation FK as a relationship `compliance_regulations (1268) -> training_evidence_
+    records (940)`, `one_to_many`, `relationship_kind=reference`, FK on the 940 (many) side.
+  - **DELETED the 5 completion entities** 944 hipaa / 945 osha / 946 sox / 947 ferpa / 949 bsa_aml
+    and ALL dependents: 10 `tools`, 15 `domain_module_tools`, 15 `data_object_lifecycle_states`,
+    3 `data_object_aliases`, 10 `data_object_relationships`, 11 `domain_module_data_objects`, 5
+    `domain_data_objects`. **948 fda_part11_audit_trails KEPT** (genuinely different audit-trail shape).
+  - The "seed each tenant's active regulations" part of option (a) is tenant deployment data, not
+    catalog metadata, so it is out of scope for the domain map; only the entity + FK + wiring are modeled.
+  Resolves B2-REFACTOR-C.
+
+- **a5 = recommended a (B2-MISSING-ROUTING): shipped all module groups.** Loaded 18 net-new MISSING
+  masters (ids **1269-1286**) with DMDO + rollup + 24 lifecycle states + entity_type, grouped by module:
+  COURSE-DELIVERY (question_banks 1269, cmi5_assignable_units 1270, lrs_statement_endpoints 1271,
+  observation_checklists 1272, observation_checklist_results 1273); ILT (training_room_bookings 1274,
+  session_rosters 1275, session_cancellations 1276); PATHS (skill_targets 1277, learning_recommendations
+  1278); CREDENTIALS (credential_verifications 1279, certification_renewals 1280); COMPLIANCE-TRAINING
+  (gxp_training_signoffs 1281, phishing_simulations 1282, phishing_simulation_results 1283); STARTER
+  (dpo_training_acknowledgements 1284, pci_dss_awareness_records 1285); AUTOMATION (reminder_schedules
+  1286). The 19th, `data_retention_policies`, was RECONCILED to the existing `records_retention_policies`
+  (433, mastered by ECM): wired 433 as `consumer`/`optional` into LMS-CT-GDPR (180) + rollup, no
+  duplicate entity. Resolves B1B-MISSING-ENTITIES.
+
+- **a6 = recommended a (B2-DOMAIN-REGULATIONS): added GDPR + HIPAA + OSHA + SOX.** `domain_regulations`
+  for domain 57 now GDPR(1) + HIPAA(4) + SOX(5) + FERPA(56, pre-existing) + OSHA(101), all `mandatory`.
+  Resolves B2-DOMAIN-REGULATIONS.
+
+- **B1B-B14-NECESSITY resolved (unblocked by a1).** 949 bsa_aml deleted by Refactor C (moot). 948
+  fda_part11_audit_trails (sector-bound life-sciences master, Rule #16 case B) flipped
+  `necessity` required -> optional on DMDO 1043 (module 33) + rollup 1265. Corrective-additive.
+
+### Decided but blocked / postponed (kept OPEN in state.yaml)
+
+- **a2 = b (B2-REFACTOR-A): build PRIV-MGMT, then demote.** Direction settled, but the build is a
+  cross-domain PRIV-MGMT initiative (outside this LMS pass's edit scope) and the LMS demotion
+  (950/951/952 master -> embedded_master) cannot run until PRIV-MGMT masters the canonical privacy
+  entities (demoting first would strand standalone training-data erasure). Reclassified b2 -> b1b
+  (B1B-PRIV-EMBEDDED-MASTER), blocked on the PRIV-MGMT build (PRIV-MGMT is itself unbuilt, gated on
+  its own B2-1/B2-2). ATS masters 901/870 demote on the same trigger. PRIV-MGMT's backlog should
+  pick this up; not written here because the edit scope was LMS-only.
+- **a7 = recommended a (B2-B9D-MISTAG-PRIVACY): hold.** The 2 privacy mis-tags (`handoff_processes`
+  867/868 on handoffs 1313/1314, process 369) stay as-is; their correct APQC home follows where
+  privacy is mastered (gated on the PRIV-MGMT build). Reclassified to b1b (B1B-B9D-MISTAG-PRIVACY),
+  depends_on B1B-PRIV-EMBEDDED-MASTER. Postpone keeps it open (Rule #22).
+
+### Questions (user did NOT decide; item stays OPEN, answer folded into the new q-file)
+
+- **a3 -> B2-SKILLS-MGMT-ATTRIBUTION** ("how do we handle this in general? isn't it the optional
+  embedded-master pattern?"). Answered: for a shared DATA entity the general pattern IS the per-domain
+  role on `domain_module_data_objects` (embedded_master / consumer; `domain_module_host_domains` is
+  deprecated, see references/deprecations.md), and LMS already follows it. But this orphan is a
+  `capability_domains` link, which has no master/embedded_master/consumer qualifier, so the embedded-
+  master middle option does not apply: it reduces to delete-the-orphan (SKILLS-MGMT owns + realizes it)
+  vs realize-it-in-LMS-PATHS now that skill_targets (1277) shipped. Folded into q1 of the new q-file.
+- **a4 -> B2-1121-ROUTING** ("how are other vendors handling that?"). Answered with vendor grounding:
+  ServiceNow HRSD Case Lifecycle Configurator + the ServiceNow<->Workday Learning integration drive
+  compliance training off a case category (the harassment-complaint -> mandatory-harassment-training
+  shape); developmental-path assignment off a case is the minority pattern. Recommendation upgraded from
+  "no preset" to (a) LMS-COMPLIANCE-TRAINING. Folded into q2 of the new q-file.
+
+### State
+
+Removed from state.yaml (resolved/decided -> history): B2-REFACTOR-C, B2-MISSING-ROUTING,
+B2-DOMAIN-REGULATIONS, B1B-MISSING-ENTITIES, B1B-B14-NECESSITY. Reclassified b2 -> b1b: B2-REFACTOR-A
+(-> B1B-PRIV-EMBEDDED-MASTER), B2-B9D-MISTAG-PRIVACY (-> B1B-B9D-MISTAG-PRIVACY). Still-open b2:
+B2-SKILLS-MGMT-ATTRIBUTION, B2-1121-ROUTING (both re-opened by an a-file question). b1b now 4
+(M4-skills, B10b-1121, priv-embedded-master, b9d-mistag-privacy). b3 unchanged (4, now eligible since
+q1 settled). Deleted `a-LMS.md` + `q-LMS.md`; regenerated `q-LMS.md` with 2 questions (skills-mgmt
+attribution, 1121 routing) + Optional b3 section. `status: feedback_needed`, `next_action_by: user`.
+Catalog writes this pass: +19 data_objects (1268 + 18 missing), +20 DMDO, +20 rollup, +24 lifecycle
+states, +4 domain_regulations, +1 relationship, +1 reconcile (433 consumer); deletes per a1 above;
+2 necessity PATCHes (948). No `record_status` changed.

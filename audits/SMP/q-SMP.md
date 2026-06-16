@@ -7,157 +7,50 @@ Discover every SaaS application in use, sanctioned or not, see who owns each one
 
 ---
 
-q1: (answer this first) The SMP-RENEWAL-VENDOR module needs the shared "SaaS applications" master to deploy, but that master lives in another module. How should that dependency be handled?
+q1: (answer this first) On 13 relationship rows the "owning side" and the parent-to-child wording disagree. Should I run the cleanup pass on them? Each change overwrites an existing value, so it needs your go-ahead. (yes/no)
 
-- a) Carry a local embedded shell of SaaS applications inside SMP-RENEWAL-VENDOR and keep it required (so the module can deploy on its own).
-- b) Make SaaS applications optional in SMP-RENEWAL-VENDOR (the module deploys standalone, and consumes the shared master only when it is co-installed).
-- c) Leave it as a hard cross-module prerequisite (SMP-RENEWAL-VENDOR can only deploy when the discovery module is also present).
+The 13 rows and what each change would be:
 
-Recommended: a. SaaS applications is SMP's own master in the discovery module, so carrying an embedded shell keeps SMP-RENEWAL-VENDOR independently deployable, which is the standard autonomous-deployable-unit shape. This decision sets the deployment shape for the renewal module, so settle it first.
+- 1475 saas_applications integrates_with smp_app_integrations: flip owning side to the app (the app is the parent that has many integrations).
+- 1487 smp_renewal_engagements negotiated_under smp_vendor_negotiations: flip owning side to the engagement (it is the parent of its negotiations).
+- 1488 saas_subscriptions allocates smp_spend_allocations: flip owning side to the subscription.
+- 1490 saas_applications automates_app smp_automation_workflows: flip owning side to the app.
+- 1480 saas_applications recommends_for_app smp_optimization_recommendations: keep the owning side (the app is already the parent), just swap the wording so it reads parent-to-child.
+- 1481 saas_subscriptions recommends_for_sub smp_optimization_recommendations: keep owning side, swap wording.
+- 1483 saas_applications benchmarks_for smp_app_benchmarks: keep owning side, swap wording.
+- 1484 saas_subscriptions tasks_for smp_renewal_tasks: keep owning side, swap wording.
+- 1486 saas_subscriptions engagement_for smp_renewal_engagements: keep owning side, swap wording.
+- 1489 saas_applications assesses_app smp_vendor_risk_assessments: keep owning side, swap wording.
+- 1492 smp_app_catalog_listings requests_listing smp_app_requests: keep owning side, swap wording.
+- 1477 saas_applications raised_for smp_alerts: keep owning side, swap wording.
+- 1478 shadow_it_apps raised_for_shadow smp_alerts: keep owning side, swap wording.
+
+Recommended: yes. This is a soft issue that never blocks the build, but the owning side drives delete behavior and how the relationship diagrams render, so aligning it is worth it. Four rows flip the owning side; nine only swap the wording so it reads parent-to-child (the owning side is already correct).
 
 a1:
 
 ---
 
-q2: Should we add the responsibility overlay now (spelling out who is Responsible, Accountable, Consulted, and Informed for each gated SMP process, and wiring it to the workflow gates), or defer it?
+q2: SMP tagged one of its outbound handoffs with the wrong process. Handoff 44 (SaaS Management Platforms hands a contract to Contract Lifecycle Management) is tagged "Manage demand for products", but the contract belongs to "Negotiate and document agreements/contracts" in CLM. How should I fix the tag?
 
-- a) Author the full RACI overlay and wire it to the gated SMP transitions now.
-- b) Defer the RACI overlay; the current reach-based personas are enough for now.
+- a) Re-point the tag to "Negotiate and document agreements/contracts" (the process that actually owns contracts).
+- b) Delete the tag (leave that handoff untagged).
+- c) Leave the tag as it is.
 
-Recommended: b. The three SMP personas already work from their module reach, and the RACI overlay is an enhancement that needs a process-to-gate mapping first, so it adds value but does not block the build.
+Recommended: a. The contract is already owned by "Negotiate and document agreements/contracts" on the CLM side, so re-pointing the tag there makes the handoff point at the right process instead of an unrelated one. This re-points an existing tag, so it needs your sign-off.
 
 a2:
 
 ---
 
-q3: Should the self-service app request be locked once submitted, so it cannot be edited while it waits for manager and IT approval? (yes/no)
+## Optional (will not hold up the build)
 
-Recommended: yes. The request has a gated submit step and a two-stage manager-plus-IT approval, so locking it on submit keeps the approved content stable.
+q3: A fresh market scan (2026-06-16) found the SMP automation module thin: it has the workflow plumbing but not the access-governance and compliance-evidence layer that flagship vendors treat as core (user-access reviews, entitlement grants, data-deprovisioning logs, per-leaver offboarding runs, a discovery-source registry, app-account records). Should I draft the load proposal for the ones that hold up, for you to approve before anything is written? (yes/no)
+
+Recommended: yes. Access reviews and deprovisioning evidence are SOX/SOC2 staples that Zluri, Torii, Josys, Setyl, and BetterCloud all ship as first-class surfaces (access review campaigns, entitlement grants, and per-leaver offboarding runs), while Productiv and Zylo lean more on usage analytics; the gap is real depth inside the automation module rather than a structural problem. Because these are net-new entities, a "yes" only produces the per-entity proposal for your approval; nothing loads until you sign off on the specific list.
 
 a3:
 
 ---
 
-q4: On about 13 relationship rows the "owning side" and the parent-to-child wording point in opposite directions (for example "SaaS applications integrates with app integrations" but the ownership is set on the child). Should I run a correction pass to align them? (yes/no)
-
-Recommended: yes. This is a soft issue that never blocks the build, but it affects delete behavior and how the relationship diagrams render, so a cleanup pass is worth it. Each row will be surfaced for you before any change.
-
-a4:
-
----
-
-q5: Two outbound handoffs (to procurement for purchase requisitions, and to ITSM for incidents on app deprovisioning) have no matching cross-domain relationship rows. Should I author those mirror relationships, or treat the handoffs as event-only?
-
-- a) Author the mirror relationships (the payload-to-target link, with verb, inverse, cardinality, and owning side).
-- b) Treat them as event-only handoffs with no relationship row.
-
-Recommended: a. Authoring the mirror relationships keeps the cross-domain links symmetric with the other handoffs and makes the data flow explicit.
-
-a5:
-
----
-
-q6: The automation module now masters both the app-lifecycle surface and the self-service requests plus workflow runs. Should I add a dedicated workflow-automation capability for the declarative-automation surface, or keep app-lifecycle as the single capability there? (yes/no)
-
-Recommended: yes, add a dedicated workflow-automation capability. The declarative-automation and self-service-provisioning surface is distinct from app-lifecycle, so giving it its own capability describes the module more accurately. Low stakes either way.
-
-a6:
-
----
-
-q9: Contract Lifecycle Management hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage demand for products, so that step currently has nobody responsible for it. Who should own it?
-- a) The a named owner runs it and approves it.
-- b) The a named owner runs it and the HR Business Partner approves.
-- c) Leave it unassigned for now.
-
-Recommended: a. SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
-
-a9:
-
----
-
-q10: Discovery and Service Mapping hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage infrastructure resource administration, so that step currently has nobody responsible for it. Who should own it?
-- a) The a named owner runs it and approves it.
-- b) The a named owner runs it and the HR Business Partner approves.
-- c) Leave it unassigned for now.
-
-Recommended: a. SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
-
-a10:
-
----
-
-q11: Expense Management hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage corporate credit cards, so that step currently has nobody responsible for it. Who should own it?
-- a) The a named owner runs it and approves it.
-- b) The a named owner runs it and the HR Business Partner approves.
-- c) Leave it unassigned for now.
-
-Recommended: a. SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
-
-a11:
-
----
-
-q12: Cloud Financial Operations hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage IT portfolio strategy, so that step currently has nobody responsible for it. Who should own it?
-- a) The a named owner runs it and approves it.
-- b) The a named owner runs it and the HR Business Partner approves.
-- c) Leave it unassigned for now.
-
-Recommended: a. SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
-
-a12:
-
----
-
-q13: Cloud Financial Operations hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to optimize IT resource allocation, so that step currently has nobody responsible for it. Who should own it?
-- a) The a named owner runs it and approves it.
-- b) The a named owner runs it and the HR Business Partner approves.
-- c) Leave it unassigned for now.
-
-Recommended: a. SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
-
-a13:
-
----
-
-q14: Identity Governance and Administration hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage IT user identity and authorization, so that step currently has nobody responsible for it. Who should own it?
-- a) The a named owner runs it and approves it.
-- b) The a named owner runs it and the HR Business Partner approves.
-- c) Leave it unassigned for now.
-
-Recommended: a. SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
-
-a14:
-
----
-
-q15: Source-to-Pay hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to create and manage support services or solutions, so that step currently has nobody responsible for it. Who should own it?
-- a) The a named owner runs it and approves it.
-- b) The a named owner runs it and the HR Business Partner approves.
-- c) Leave it unassigned for now.
-
-Recommended: a. SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner.
-
-a15:
-
----
-
-## Optional (will not hold up the build)
-
-q7: Three compliance-flavored entities were deferred earlier as single-vendor surface (SaaS data-residency attestations, subprocessor disclosures, and per-user app exposures). Should I re-vet them against the current vendor set and add the ones that hold up? (yes/no)
-
-Recommended: no for now. The first two appeared on only one vendor (Flexera One), and per-user app exposures is better modeled as a privacy or consent view, so they want fresh evidence before any load. Additive and non-blocking.
-
-a7:
-
----
-
-q8: There has been no fresh market-surface research pass this round. Should I run a new pass against the flagship vendors (Zylo, Productiv, Torii, BetterCloud, LeanIX SaaS Management, Flexera One) to catch anything missing, mis-owned, or scope-creeping? (yes/no)
-
-Recommended: yes, but it is optional and additive; the last full surface ran 2026-05-29 and the structural and handoff passes already covered the live state.
-
-a8:
-
----
-
-<!-- agent map, ignore: q1=B2-M9-SELFCONTAIN q2=B2-E4-RACI q3=B2-B4-SUBMITLOCK q4=B2-B6B-OWNERSIDE q5=B2-B8-XREL q6=B2-CAP-AUTOMATION q7=B3-DEFERRED-COMPLIANCE-ENTITIES q8=B3-MARKET-SURFACE-REFRESH q9=B2-B9D-OWN-156 q10=B2-B9D-OWN-294 q11=B2-B9D-OWN-317 q12=B2-B9D-OWN-260 q13=B2-B9D-OWN-1134 q14=B2-B9D-OWN-273 q15=B2-B9D-OWN-53 | domain_id=85 -->
+<!-- agent map, ignore: q1=B2-B6B-OWNERSIDE q2=B2-B9D-MISTAG-44 q3=B3-ACCESS-GOV-ENTITIES | domain_id=85 -->

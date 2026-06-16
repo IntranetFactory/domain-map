@@ -1,0 +1,112 @@
+schema_version: 2
+domain: DAP
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-16"
+
+# DAP is NOT in the live catalog. This is a domain CANDIDATE, scoped 2026-06-16.
+# Phase 0 vendor surface: .tmp_deploy/DAP-phase0-2026-06-16.md
+# Backlog entry: audits/_missing-domains.md (## Pending review, "DAP — Digital Adoption Platform").
+# Coupled to the sibling candidate SOP-MGMT: the capture/in-app seam is the same decision
+# from both sides (DAP B2-DAP-SCOPE consumer-edge <-> SOP-MGMT B2-SOP-DAP-SCOPE). The
+# adoption-analytics module (B2-DAP-ANALYTICS-SPLIT) is coupled to a future, not-yet-existing
+# Product-Analytics domain (Amplitude/Mixpanel).
+
+b1a: []
+
+b2:
+  - id: B2-DAP-PROMOTE
+    summary: "Promote DAP (Digital Adoption Platform) as its own domain, fold it into ONBOARDING/LMS/CSM, or keep queued."
+    question: |
+      DAP passes the point-solution-market test. Should it be created as its own domain, folded into an
+      existing domain (Employee Onboarding, LMS, or Customer Service), or left queued? This is the gate:
+      nothing is written to the catalog until it is answered.
+    options:
+      - "Promote-as-domain: create DAP and master the in-app guidance, engagement, targeting, and adoption surface; relate to Employee Onboarding (id 99) by handoff (it delivers the learn-the-tools slice), consume knowledge_articles from KMS, and consume SOP documents from SOP-MGMT."
+      - "Fold into an existing domain: treat in-app guidance as a capability/module of Employee Onboarding, LMS, or Customer Service."
+      - "Keep queued: leave in the backlog and revisit later."
+    evidence: |
+      Six pure-play flagships sell a product built around overlaying guidance on top of existing apps:
+      WalkMe (enterprise employee-facing overlays on SAP/Salesforce/Workday), Whatfix (employee +
+      customer), Pendo (PLG, DAP fused with product analytics), Userpilot and Appcues (PLG
+      customer-facing onboarding/engagement), and Userlane (EU enterprise adoption). Plus Chameleon and
+      Gainsight PX. The artifact (live in-app walkthroughs, tooltips, checklists, microsurveys delivered
+      as overlays) and the buyer (product / customer-success / PLG team, or IT enablement) are distinct
+      from every adjacent domain: Employee Onboarding (id 99) orchestrates the HR new-hire journey, LMS
+      (id 57) delivers graded out-of-app courseware, CSM (id 30) handles service cases. No DAP domain
+      exists. Phase 0: .tmp_deploy/DAP-phase0-2026-06-16.md.
+    why: |
+      New domain = a market-shape b2 (not b3). Creating DAP is structural; surfaced for the user's
+      go/no-go. Gates every other DAP item.
+
+  - id: B2-DAP-SCOPE
+    summary: "Bound DAP to master the overlay/engagement/targeting surface across full modules and consume KMS articles + SOP documents + hand off to ONBOARDING, vs a broad DAP that re-masters knowledge/documents/onboarding journeys."
+    question: |
+      Should DAP master only its distinctive in-app surface across its modules and consume/hand-off the
+      adjacent records, or also re-master knowledge articles, how-to documents, and onboarding journeys
+      itself?
+    options:
+      - "Bounded: DAP masters walkthroughs, guided_flows, tooltips/hotspots, onboarding_checklists, resource_centers, microsurveys, user_segments, tracked_users (modules guidance_authoring, engagement_feedback, targeting_segmentation), consumes knowledge_articles from KMS and how-to documents from SOP-MGMT, and hands off to Employee Onboarding for the learn-the-tools slice."
+      - "Broad: DAP additionally re-masters knowledge articles, how-to documents, and onboarding journeys, duplicating KMS, SOP-MGMT, and Employee Onboarding masters."
+    evidence: |
+      Phase 0 ownership column: across WalkMe, Whatfix, Pendo, Userpilot, Appcues, and Userlane the
+      overlay, checklist, survey, and segment objects are the system of record, while reference articles
+      and the source how-to document are referenced from adjacent systems. DAP's resource_centers embed
+      KMS knowledge_articles (it does not re-master them), and its task_lists are in-app guidance lists,
+      NOT the HR onboarding task lists Employee Onboarding owns. Collision-safe neutral names were
+      verified live: user_segments (audience_segments is marketing/CDP-owned), microsurveys /
+      in_app_survey_responses (survey_responses is EMP-EXP-owned), session_replays (session_recordings is
+      remote-support-owned). The domain has >=4 capabilities, so >=2 full modules (Rule #14); the
+      hypothesis is four. Re-mastering would duplicate KMS / SOP-MGMT / ONBOARDING masters and break the
+      single-master rule (M7). The DAP<->SOP-MGMT capture seam (Scribe/Tango capture once, publish as a
+      document OR push as an overlay) is modeled as a consumer edge here and resolves together with
+      SOP-MGMT B2-SOP-DAP-SCOPE.
+    why: |
+      Market-shape (master-vs-consume + module count + the SOP-MGMT capture seam). Conditional on
+      B2-DAP-PROMOTE = promote.
+
+  - id: B2-DAP-ANALYTICS-SPLIT
+    summary: "Include the adoption-analytics slice as a DAP module now, or defer it to a future Product-Analytics domain."
+    question: |
+      Adoption analytics (feature usage events, funnels, paths, retention cohorts, goals) overlaps a
+      product-analytics market that has no domain yet. Should DAP ship an adoption_analytics module, or
+      leave the deep event/funnel/cohort engine to a future Product-Analytics domain and keep DAP to
+      flow-level engagement stats?
+    options:
+      - "In-scope now: DAP ships an adoption_analytics module (feature_events, usage_funnels, user_paths, retention_cohorts, goals, flow_engagement_stats), flagged as the extraction candidate. When a Product-Analytics domain is built, the deep engine re-homes there and DAP keeps flow_engagement_stats plus consumed funnels."
+      - "Defer to Product-Analytics: DAP masters only flow_engagement_stats (per-flow completion/drop-off, intrinsic to DAP content) and the analytics engine waits for a dedicated Product-Analytics domain."
+    evidence: |
+      Pendo proves the fusion is real, it sells DAP and product analytics as one product, and Whatfix
+      and Userlane bundle adoption analytics into the DAP offering. But the deep event-pipeline market is
+      owned by pure-play product-analytics vendors (Amplitude, Mixpanel) that have no domain in the
+      catalog yet, and feature_events / funnels / paths / cohorts are exactly their surface. The
+      continuity case for keeping it here now: the same DAP buyer measures whether the guidance worked,
+      so analytics ships with the overlay. The counter-case for deferring: building a thin analytics
+      module inside DAP risks duplicating an Amplitude/Mixpanel domain later. flow_engagement_stats stays
+      in DAP either way (it is per-flow completion, intrinsic to DAP content). Genuine fork, hence the
+      user's call.
+    why: |
+      Market-shape (module count + where the analytics entities are mastered). Coupled to a future,
+      not-yet-existing Product-Analytics domain. Conditional on B2-DAP-PROMOTE = promote.
+
+  - id: B2-DAP-AUDIENCE
+    summary: "Model employee-facing vs customer-facing DAP as one domain with an audience tag, or split into two domains."
+    question: |
+      DAP serves both employee-facing internal-app adoption (overlays on Workday/SAP) and customer-facing
+      product adoption (overlays on your own product). Should this be one domain with an audience tag, or
+      two separate domains?
+    options:
+      - "One domain + audience tag: a single DAP domain with an audience enum (employee_facing / customer_facing) on target_applications (and at the flow/segment level), because every core entity is identical in shape across audiences."
+      - "Two domains: split into an employee-adoption domain and a customer-adoption domain."
+    evidence: |
+      Every core entity (walkthroughs, onboarding_checklists, microsurveys, user_segments, feature_events)
+      is identical in shape regardless of audience; only the buyer and host app differ. WalkMe and
+      Userlane lean employee-facing (overlays on enterprise apps), Appcues and Userpilot lean
+      customer-facing (PLG product onboarding), and Whatfix and Pendo serve both from one product, which
+      is the strongest signal it is one market with an audience dimension, not two. This mirrors the
+      catalog's existing audience-filtering pattern (one record, audience tag) rather than
+      duplicating entities per audience.
+    why: |
+      Market-shape (scope boundary: one domain vs two). Conditional on B2-DAP-PROMOTE = promote.
+
+b3: []

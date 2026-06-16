@@ -1,0 +1,11 @@
+# domain_kind='bundle' audit (domain id 189; promoted from starter module id 171 on 2026-06-16).
+# A bundle masters NOTHING: it embeds/consumes entities from other domains' markets and carries its own
+# module-anchored system skill. Per Rule #2, bundles are EXEMPT from the market-shape audit floors
+# (A1 full market metadata, A2 capabilities, B1 masters, C1 function-owner, A3 solutions, F2 domain-grain
+# skill). This audit validates the Rule #19 STARTER SHAPE only. All six invariants PASS; nothing open.
+# TAM fields reading 0 (usa_market_size_usd_m, market_size_source_year) is EXPECTED for a bundle, not a failure.
+schema_version: 2
+domain: HVAC-SVC-MGMT
+status: passed
+next_action_by: done
+last_audit: "2026-06-16"

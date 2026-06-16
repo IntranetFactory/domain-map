@@ -18,7 +18,7 @@
  *
  * Idempotent: skips any field/entity that already exists.
  *
- * Run from project root: bun run scripts/loaders/add_catalog_ux_schema_2026_05_30.ts
+ * Run from project root: bun run scripts/loaders/add_catalog_ux_schema.ts
  */
 
 type CmdResult = { ok: boolean; data: any; stderr: string; code: number };

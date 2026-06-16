@@ -1,0 +1,20 @@
+schema_version: 2
+domain: VSM
+status: feedback_needed
+next_action_by: user
+last_audit: 2026-06-16
+
+b1a: []
+
+b1b: []
+
+b2:
+  - id: B2-VSM-PHASE-E
+    summary: Author Phase E personas for VSM, or skip (overlay domain, no gated processes).
+    question: Author Phase E (domain_roles personas + process_raci) for VSM now?
+    options: [skip, author]
+    why: >-
+      VSM is a derive/overlay domain: it has no operational_workflow masters, no lifecycle
+      states, and no workflow gates. Personas would be read-mostly with no gated RACI to anchor,
+      so Phase E adds little here. The user scoped this build to A+B+C+S, so it is deferred
+      either way; this records the recommendation to skip unless you want personas anyway.

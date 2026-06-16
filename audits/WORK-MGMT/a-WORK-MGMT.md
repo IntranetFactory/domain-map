@@ -14,7 +14,7 @@ q1: Four masters were given a default classification on a judgment call. Should 
 
 Recommended: a. The defaults are reasonable for each; each one is a single-column change if you later disagree.
 
-a1:
+a1: how do other vendors handle that
 
 ---
 
@@ -33,7 +33,7 @@ q3: Two capabilities on the same module describe the same concept: a Work-Manage
 
 Recommended: yes. Fold into the shared cross-cutting goal-management capability and drop the WM-specific duplicate's link, per the cross-cutting convention.
 
-a3:
+a3: yes
 
 ---
 

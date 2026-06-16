@@ -160,6 +160,17 @@ a17:
 
 ---
 
+q18: A facilities/HVAC field-service starter module is host-linked to this domain, but its entities are an HVAC servicing business (technician dispatch, servicing customer equipment, quoting), not IT hardware. Should I remove the link to this domain?
+
+- a) Yes, remove the host-link (the starter belongs to field service; the link here looks like a mis-host).
+- b) No, keep it.
+
+Recommended: a. The starter's entities are a field-service market (ServiceTitan/Jobber-shaped), and no hardware-asset platform hosts an HVAC servicing business, so the link to Hardware Asset Management reads as a mis-host. Removing a host link is destructive, so it needs your sign-off.
+
+a18:
+
+---
+
 ## Optional (will not hold up the build)
 
 q12: Flagship hardware-asset platforms all model extra masters this domain does not have yet (asset categories, time-bounded assignments, movement and chain-of-custody logs, stockrooms, depreciation schedules, consumables, physical inventory audits, refresh plans, and data-sanitization certificates). Should I research and add the ones that hold up? (yes/no)
@@ -178,4 +189,4 @@ a13:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B2-S4+B1B-S11 q5=B2-S5 q6=B2-S6 q7=B2-S7 q8=B1A-S6 q9=B1A-S9 q10=B1A-S12 q11=B1A-H1-RESIDUAL q12=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5+B3-S6+B3-S7+B3-S8+B3-S9+B3-S10 q13=B3-S11 q14=B2-B9D-OWN-1312 q15=B2-B9D-OWN-1393 q16=B2-B9D-OWN-1573 q17=B2-B9D-OWN-808 | domain_id=51 -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B2-S4+B1B-S11 q5=B2-S5 q6=B2-S6 q7=B2-S7 q8=B1A-S6 q9=B1A-S9 q10=B1A-S12 q11=B1A-H1-RESIDUAL q12=B3-S1+B3-S2+B3-S3+B3-S4+B3-S5+B3-S6+B3-S7+B3-S8+B3-S9+B3-S10 q13=B3-S11 q14=B2-B9D-OWN-1312 q15=B2-B9D-OWN-1393 q16=B2-B9D-OWN-1573 q17=B2-B9D-OWN-808 q18=B2-HVAC-HOST | domain_id=51 -->

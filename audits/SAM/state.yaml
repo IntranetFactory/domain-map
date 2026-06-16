@@ -145,6 +145,12 @@ b2:
       - push_back_per_module_boundary
     why: |
       The 3-module shape is correct for today's 6 data_objects (no empty modules, M7 holds, all 5 capabilities placed). The 6-module shape only becomes non-empty once the 38 masters load. The re-split is a build decision tied to B3-S1, not a structural defect today. The natural seams: SAM-CATALOG-DISCOVERY (201) splits into SAM-CATALOG + SAM-DISCOVERY; SAM-ENTITLEMENT-MGMT (202) splits into SAM-ENTITLEMENT + SAM-METERING + SAM-RENEWAL.
+    evidence: |
+      The 2026-06-16 market re-audit independently recommends KEEP 3 MODULES: Flexera, Snow (Insight), and
+      ServiceNow SAM Pro all package metering and renewal as sub-capabilities INSIDE the license/entitlement
+      product, not as standalone deployables, so the 6-module split has no vendor support as separate modules.
+      Re-split only if the 38 net-new masters (B3-S1) land and a seam genuinely needs its own deployable unit.
+    extra_reaudit: "2026-06-16 confirms keep_3_module_shape"
   - id: B2-S2
     summary: license_audits pattern flags has_submit_lock and has_single_approver -> true?
     question: |

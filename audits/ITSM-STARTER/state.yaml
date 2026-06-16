@@ -1,0 +1,21 @@
+schema_version: 2
+domain: ITSM-STARTER
+status: passed
+next_action_by: done
+last_audit: "2026-06-16"
+
+# BUILT 2026-06-16 (module id 404, record_status='new' on all rows, awaiting UI review per Rule #1).
+# Both q-file decisions resolved (see history.md): q1=a full entry desk (incidents + requests required;
+# catalog + KB + SLA optional); q2=a name ITSM-STARTER. Single-domain starter anchored to ITSM (domain_id=1).
+# Blueprint emitted and verified clean (catalog/blueprints/itsm-starter-semantic-blueprint.md). Semantius
+# score 100% (10/10 platform-covered). No open user decisions. b3 below is the non-blocking follow-up backlog.
+
+b3:
+  - id: B3-STARTER-CAPABILITIES
+    candidate: "Optional domain_module_capabilities for ITSM-STARTER (Rule #19 invariant 5, marketing surface)."
+    rationale: |
+      A starter MAY realize a subset of capabilities (the discoverability surface); none were authored in the
+      initial build. Candidate cross-cutting capabilities to link if desired: incident management, service request
+      fulfillment, knowledge management (self-service), SLA management. Non-blocking; the build deploys without them.
+    vendor_evidence: []
+    proposed_module: null

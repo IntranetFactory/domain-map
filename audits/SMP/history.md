@@ -640,3 +640,31 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-16 - a-SMP.md processed (Rule #22 a-file go-signal)
+
+Loader: [.tmp_deploy/smp_afile_2026_06_16.ts](../../.tmp_deploy/smp_afile_2026_06_16.ts). All inserts omit `record_status` (DB default `new`); no `record_status` flip performed (Rule #1). Nothing committed to git.
+
+Resolved this pass:
+- **B2-M9-SELFCONTAIN (q1 = a).** PATCH `domain_module_data_objects` id=98 (saas_applications 61 on SMP-RENEWAL-VENDOR 31) `role` consumer -> embedded_master; necessity stays required. legal_contracts (DMDO 97) was already embedded_master+optional. SMP-RENEWAL-VENDOR now carries a local SaaS-applications shell and deploys standalone (M9 self-contained).
+- **B2-E4-RACI (q2 = a).** Authored the RACI overlay and wired `data_object_lifecycle_states.process_id` for the 6 cross-domain APQC processes SMP is tagged on. 42 gated SMP lifecycle states wired to one of the 6 processes (156/260/273/294/317/1134) by semantic fit; 12 `process_raci` rows (R + A per process). Each gated process now has >=1 R, >=1 A, and >=1 process_id-wired gate, so the RACI is non-drift (roles.md no-grant-from-nowhere). Remaining internal micro-gates (e.g. acknowledge_alert, agree_negotiation) are left unwired with no R/A; they derive their tier from reach and are not a drift signal. Per-micro-gate RACI refinement is an available enhancement, not a blocker.
+- **B2-B4-SUBMITLOCK (q3 = yes).** `smp_app_requests` (999) already carried `has_submit_lock=true`; verified, no write needed.
+- **B2-B8-XREL (q5 = a / recommended).** Authored 2 outbound mirror `data_object_relationships`: saas_applications (61) raises_incident service_incidents (47) [handoff 642 -> ITSM, id 2664]; shadow_it_apps (65) triggers_requisition purchase_requisitions (72) [handoffs 39/45 -> S2P, id 2665]. owner_side=source on both (the SMP master is the origin of the edge). purchase_requisitions (72) is unmastered catalog-wide (b9d UNOWNED pid 808); the edge is still valid since the data_object exists.
+- **B2-CAP-AUTOMATION (q6 = yes).** New capability SMP-WORKFLOW-AUTOMATION (id 810, code SMP-WORKFLOW-AUTOMATION) + `domain_module_capabilities` id=874 realizing it on SMP-AUTOMATION (185); SMP-APP-LIFECYCLE (524) kept on 185 too.
+- **B2-B9D-OWN-156 (q9 = a).** process_raci R+A on 4.1.2 "Manage demand for products" -> PROCUREMENT-SAAS-RENEWAL-OWNER (17); wired to saas_subscriptions renewal gates.
+- **B2-B9D-OWN-294 (q10 = a).** process_raci R+A on 8.7.7 "Manage infrastructure resource administration" -> IT-SAAS-ADMIN (16); wired to shadow-IT/integration/catalog/alert/automation gates.
+- **B2-B9D-OWN-317 (q11 = a).** process_raci R+A on 9.6.3 "Manage corporate credit cards" -> IT-SAAS-ADMIN (16); wired to block_shadow_app.
+- **B2-B9D-OWN-260 (q12 = a).** process_raci R+A on 8.2.2 "Manage IT portfolio strategy" -> ITAM-SAAS-PORTFOLIO-MANAGER (18); wired to sanction/deprecate + app-lifecycle-stage gates.
+- **B2-B9D-OWN-1134 (q13 = a).** process_raci R+A on 8.2.5.6 "Optimize IT resource allocation" -> ITAM-SAAS-PORTFOLIO-MANAGER (18); wired to reclaim-seat/recommendation/reclamation/spend-allocation gates.
+- **B2-B9D-OWN-273 (q14 = a).** process_raci R+A on 8.3.8 "Manage IT user identity and authorization" -> IT-SAAS-ADMIN (16); wired to deprovision-app/revoke-owner/app-request provisioning gates.
+- **B1A-B9D-VERIFY.** B9d ran this pass (b9d_resolver.ts SMP): 7 ORPHANs classified, 6 SMP-owned ORPHANs realized above; the b9d "run it on next pass" obligation is met. Residual b9d findings are destructive (see below).
+- **B3-DEFERRED-COMPLIANCE-ENTITIES (q7 = no).** Declined for now: smp_data_residency_attestations / smp_subprocessor_disclosures (single-vendor Flexera surface) + smp_user_app_exposures (better as a privacy/consent DSAR view). Not re-vetted; removed from the backlog as a closed idea.
+- **B3-IT-SUITE-STARTER (q16 = yes in principle).** Routed: already promoted to its own proposal at audits/IT-OPS-STARTER/; net-new cross-domain structure gets its own q-file before any load, and never gates SMP. Removed from SMP's backlog (lives in IT-OPS-STARTER now).
+
+Still open (carried into the regenerated q-SMP.md):
+- **B2-B6B-OWNERSIDE (q4, answer = recommended/yes).** "Run the correction pass" was approved in principle, but every owner_side flip / verb swap OVERWRITES an existing value (destructive) and the recommendation itself promised per-row surfacing. 13 candidate rows identified (see state.yaml candidate_rows); each surfaced per-row for sign-off. No owner_side/verb row was changed this pass.
+- **B2-B9D-MISTAG-44 (new).** b9d_resolver surfaced a MIS-TAG: handoff 44 (SMP->CLM, payload legal_contracts) tag 203 points at 4.1.2, but legal_contracts is realized under 12.4.9. SMP authored the tag, so SMP owns the destructive re-point/delete; surfaced for sign-off.
+- **B2-B9D-OWN-53 (q15, was = a) RECLASSIFIED, removed from SMP.** Fresh b9d_resolver run reclassified pid 53 (8.7 on handoff 42, S2P->SMP, payload saas_subscriptions) from ORPHAN to RE-TAG: S2P tagged it coarsely; the more specific 4.1.2 exists on the same entity. The fix is an S2P-source re-point of S2P's own tag (handoff_processes id 170), not an SMP owner assignment. Per Rule #22 fresh evidence wins, so no owner was authored here; routed to S2P (re-surfaces on S2P's own b9d run). B2-B9D-OWN-53 removed from SMP.
+- **B3-ACCESS-GOV-ENTITIES (q8, answer = recommended/yes).** Greenlit, but as net-new masters these are expansive additions: the "yes" authorizes producing the load-approval q-file, not a direct write (Rule #21). Kept in b3 and surfaced as a per-entity load-approval question; non-blocking, never gates SMP finished.

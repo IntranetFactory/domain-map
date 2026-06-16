@@ -2,27 +2,11 @@ schema_version: 2
 domain: ATS
 status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-09"
+last_audit: "2026-06-16"
 
 b1a: []
 
 b1b:
-  - id: B1B-B9D-RETAG-BENADMIN
-    summary: "Re-tag 2 ATS->BEN-ADMIN handoffs (#120, #395) from wrong code 7.3 -> 7.5.2.2 (destructive, needs sign-off)"
-    finding: >
-      B9d re-verified 2026-06-09. handoffs #120 (job_offer.accepted -> BEN-ADMIN, payload
-      benefit_enrollments) and #395 (candidate.hired -> BEN-ADMIN, payload candidates) are both
-      tagged 7.3 "Manage employee onboarding, training, and development" -- the wrong APQC branch.
-      The work handed to BEN-ADMIN is benefit enrollment = 7.5.2.2 "Administer benefit enrollment".
-      WARNING: the mechanical resolver now reports these as ROLL-UP -> 7.3.3.2 "Develop employee
-      career plans and career paths" (a descendant of 7.3 realized today by HCM). That match is
-      SPURIOUS (career planning != benefits enrollment); do NOT apply it. The correct fix is the
-      re-tag to 7.5.2.2. This is ATS-owned (ATS authored the tag) and is a destructive process_id
-      overwrite, so it needs explicit user sign-off. It is NOT blocked on BEN-ADMIN.
-    action: "Surfaced as q-file q2. On sign-off: PATCH handoff_processes #731 (#120) + #66 (#395) process_id 41 -> 1052 (7.3 -> 7.5.2.2), record_status stays new."
-    blocked_by:
-      - {type: user_decision, ref: "q-ATS.md q2", reason: "destructive overwrite of an existing handoff_processes.process_id"}
-
   - id: B1B-B9D-MISTAG-402
     summary: "ATS source mis-tag: handoff #402 (background_checks) tagged 7.4 should re-point to 7.2.5.1 or be deleted (destructive, needs sign-off)"
     finding: >
@@ -31,9 +15,10 @@ b1b:
       (process 1020, gated + process_raci). Handoff #402 (background_check.flagged -> HRSD) tags it
       7.4 "Manage employee relations", which contradicts the carried entity. This is an ATS sender
       mis-tag, NOT work owed to HRSD. The resolver classifies #402 MIS-TAG on every ATS run.
-    action: "On sign-off: PATCH handoff_processes for #402 process_id 42 -> 1020 (7.4 -> 7.2.5.1), or DELETE the 7.4 tag. Destructive catalog edit; record_status stays new."
+      Live: handoff_processes id=226, process_id 42 (7.4), record_status='new'.
+    action: "On sign-off: PATCH handoff_processes #226 process_id 42 -> 1020 (7.4 -> 7.2.5.1), or DELETE the 7.4 tag. Destructive catalog edit; record_status stays new."
     blocked_by:
-      - {type: user_decision, ref: "ATS B9d mis-tag #402", reason: "destructive re-point/delete of a handoff_processes tag"}
+      - {type: user_decision, ref: "q-ATS.md q1", reason: "destructive re-point/delete of a handoff_processes tag"}
 
   - id: B1B-APQC-PREDICTIVE-MODEL-DEFERRED
     summary: "handoff #453 predictive_model.scored has no cross-industry PCF analog"
@@ -48,38 +33,6 @@ b1b:
     blocked_by:
       - {type: depends_on, ref: "Discover Pass 3", reason: "custom-process authoring for ML-scoring handoffs"}
 
-b2:
-  - id: B2-ROLLUP-POLICY
-    summary: "legacy domain_data_objects rollup carries 15 of 60 ATS masters (stale post-modularization)"
-    question: >
-      domain_data_objects is a derived rollup of domain_module_data_objects but was never
-      regenerated after ATS modularized; it lists only the 15 pre-modular masters. A naive
-      auditor deriving <masters> from it under-counts by 45. Deprecate, regenerate, or leave?
-    options:
-      - "deprecate: migrate the checklist <masters> definition + any readers to domain_module_data_objects (agent recommends; catalog-wide)"
-      - "regenerate: idempotent derived-rollup script run catalog-wide (other modularized domains likely drifted too)"
-      - "leave: accept drift; the blueprint emitter reads the module junction directly so renders are unaffected"
-    why: "Catalog-wide policy decision, not ATS-scoped. Affects audit integrity for every modularized domain."
+b2: []
 
-b3:
-  - id: B3-RIGHT-TO-WORK
-    candidate: right_to_work_verifications
-    rationale: >
-      Hard US legal requirement (Form I-9 / E-Verify) at the pre-hire stage, entirely
-      absent. Compliance, distinct from FCRA screening.
-    vendor_evidence: [Workday Recruiting, HireRight]
-    proposed_module: ATS-PRE-EMPLOYEE-RECORD
-  - id: B3-AGENCY-SUBMISSIONS
-    candidate: agency_submissions
-    rationale: >
-      recruitment_agencies is a dangling master with no junction recording who submitted
-      whom (the billable / ownership / dedup event). Every agency-fed pipeline needs it.
-    vendor_evidence: [Greenhouse, SmartRecruiters]
-    proposed_module: ATS-CANDIDATE-CRM
-  - id: B3-OUTREACH-SEQUENCES
-    candidate: "outreach_sequences (+ outreach_sequence_steps)"
-    rationale: >
-      Automated multi-step sourcing cadence; the modern sourcing primitive that
-      candidate_nurture_campaigns + recruiter_interactions do not cover.
-    vendor_evidence: [Ashby, Lever]
-    proposed_module: ATS-CANDIDATE-CRM
+b3: []

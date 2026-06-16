@@ -59,10 +59,19 @@ for (const dm of domainModules) {
 }
 console.log(`(${modulesByDomain.size} domains have modules; ${domainModules.length} total domain_modules rows)`);
 
+// bundle-domains master nothing; exclude any handoff touching a bundle from the cross-domain
+// substrate audit (plan §4). Inert until §3.
+const bundleDomainRows = await get("/domains?domain_kind=eq.bundle&select=id");
+const bundleDomainIds = new Set<number>(bundleDomainRows.map((d: any) => d.id));
 const allHandoffsForAudit = await get(
   "/handoffs?select=id,source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,trigger_event_id,data_object_id,trigger_event:trigger_events(id,event_name,data_object_id),source_domain:domains!handoffs_source_domain_id_fkey(domain_code),target_domain:domains!handoffs_target_domain_id_fkey(domain_code)"
 );
-const crossHandoffs = allHandoffsForAudit.filter((h: any) => h.source_domain_id !== h.target_domain_id);
+const crossHandoffs = allHandoffsForAudit.filter(
+  (h: any) =>
+    h.source_domain_id !== h.target_domain_id &&
+    !bundleDomainIds.has(h.source_domain_id) &&
+    !bundleDomainIds.has(h.target_domain_id)
+);
 console.log(`(${crossHandoffs.length} cross-domain handoffs of ${allHandoffsForAudit.length} total)`);
 
 // Query 1: NULL source_domain_module_id, source domain has modules

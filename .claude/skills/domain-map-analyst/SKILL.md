@@ -82,6 +82,8 @@ When unsure, ask yourself: *can I name three independent vendors whose flagship 
 
 The same test applies to ServiceNow's own taxonomy: ServiceNow markets dozens of "workflows" — some are real domains (ITSM, CSM, HRSD), some are sub-features bundled into a larger workflow (DevOps Change inside ITSM, Demand Management inside SPM, Now Assist as cross-cutting AI). Don't import the marketing taxonomy verbatim; classify each entry against the test.
 
+**`domains.domain_kind` types every row** (enum, NOT NULL, default `established_market`). The point-solution test above IS the test for **`established_market`**: the domain owns its own masters AND has ≥1 `primary`-coverage vendor. **`emerging_market`**: owns its own masters but has only `partial` vendor coverage (a real but immature market; surface the candidate for confirmation rather than defaulting it). **`bundle`**: owns NO masters; it embeds / consumes entities from other domains' markets, a deployable starter (Rule #19) promoted to a domain row (e.g. REAL-ESTATE-AGENT, HVAC-SVC-MGMT, IT-OPS-STARTER). A `bundle` is NOT a market: it is exempt from the market-shape audit floors (A2 capabilities, B1 masters, C1 function-owner, A3 solutions) and from the market-research metadata (A1 keeps `min_org_size` + `cost_band` + `certification_required` but drops `usa_market_size_usd_m` / `market_size_source_year` / `crud_percentage` / `business_logic` — a bundle has no TAM; never fabricate one); it validates the Rule #19 starter shape instead. Filters, rollups, and analytics scope to `domain_kind IN (established_market, emerging_market)` and exclude `bundle`.
+
 ### 3. Junction qualifiers live on the edges, not the cores.
 
 `solution_domains.coverage_level` (`primary` / `secondary` / `partial`), `domain_regulations.applicability`, `domain_data_objects.role` (`master` / `contributor` / `consumer` / `derived`), `business_function_capabilities.responsibility` — these go on the junction rows, never on the parent entity. A solution covers many domains with different strengths; collapsing that onto the solution table would mean either duplicating the solution row per domain or losing the qualifier altogether. Both are wrong.
@@ -152,17 +154,17 @@ Do not append the error to any file. The incidents are logged server-side.
 - Never `cd` into `.claude/skills/...` or `.tmp_deploy/` before running anything that calls `semantius` — the CLI reads `.env` from cwd.
 - **Never prefix any Bash command with `cd c:/dev/domain-map &&` (or any case variant: `cd C:/dev/domain-map &&`, `cd "c:/dev/domain-map" &&`, `cd /c/dev/domain-map &&`, etc.).** Your shell's cwd is already the project root. The `cd-into-the-root` prefix is pure ceremony that forces a permission prompt for the user and adds zero value. Call `semantius`, `bun`, `yq`, etc. directly with no `cd` prefix.
 - Invoke loader scripts with an absolute path from the project root: `bun run "<absolute-path-to-loader>"`.
-- If you ever need to sanity-check the tenant: `semantius call crud getCurrentUser '{}'` and confirm `email` and `semantius_org` match the project.
+- If you ever need to sanity-check the tenant: `semantius call crud getCurrentUser '{}'` and confirm `email` and `semantius_org` match the project. The project tenant is the `adenin` org (`ma@adenin.com`, `api_baseurl=https://adenin.semantius.ai`, `ui_baseurl=https://adenin.semantius.app`), NOT the legacy `tests` org. Treat the `ui_baseurl` it returns as the source of truth for any UI link.
 
 ### 7. Surface the UI link after any meaningful write.
 
 After loading anything, link the user to the UI for spot-checking. The URL pattern uses the lowercase module slug `domain_map`, **not** the display name "Domain Map":
 
 ```
-https://tests.semantius.app/domain_map/<table_name>
+<ui_baseurl>/domain_map/<table_name>
 ```
 
-Example: `https://tests.semantius.app/domain_map/solutions`. Without this link reviewers have no clickable starting point.
+`<ui_baseurl>` is the `ui_baseurl` from `getCurrentUser` (Rule #6), currently `https://adenin.semantius.app`. Do NOT hard-code the legacy `tests` org; this catalog lives in `adenin`. Example: `https://adenin.semantius.app/domain_map/solutions`. Without this link reviewers have no clickable starting point.
 
 ### 8. `domains` rows need full metadata — never insert with defaults.
 
@@ -281,11 +283,11 @@ A `domains` row is a market entry, useful for SEO and analysis but **not deploya
 
 - **Domains with <3 capabilities have exactly 1 full `domain_modules` row.** The single module IS the whole market.
 
-- **Starter kits (`module_kind='starter'`) are a separate, optional class.** Not subject to the ≥1 floor per domain, not counted toward the ≥2 floor for ≥3-capability domains. Starters never master data_objects (they embed / consume only) and have no host-domain requirement (`domain_id` may be NULL). See Rule #19 for the starter contract.
+- **Starter kits (`module_kind='starter'`) are a separate, optional class.** Not subject to the ≥1 floor per domain, not counted toward the ≥2 floor for ≥3-capability domains. Starters never master data_objects (they embed / consume only). Like every module, a starter has a REQUIRED primary `domain_id`: a market-scoped starter homes on its market; a genuinely-cross-domain starter is promoted to its own `domain_kind='bundle'` domain (Rule #2) and homes there, with every touched market listed in `domain_module_host_domains`. See Rule #19 for the starter contract.
 
 **This is a Phase-A obligation, not Phase E.** When loading a new market, `domain_modules` ship in the same load as `domains` + `capabilities` + `solutions`. Phase E (roles) extends modules but it's a separate concern, see the per-domain checklist Phase M (modules) below.
 
-**Cross-cutting modules.** A module can host on multiple domains (e.g. `KNOWLEDGE-MGMT` lives in ITSM, CSM, HRSD, LSD). The primary host is `domain_modules.domain_id` (nullable for genuinely-no-home cases like `APPROVAL-WORKFLOW`); additional hosts go in `domain_module_host_domains`. Both shapes are valid; see [references/modules.md](references/modules.md) for the full mechanics.
+**Cross-cutting modules.** A module can host on multiple domains (e.g. `KNOWLEDGE-MGMT` lives in ITSM, CSM, HRSD, LSD). The primary host is `domain_modules.domain_id`, a REQUIRED field (`input_type='required'`): every module has a primary home domain. A genuinely-cross-domain module with no single market home is promoted to its own `domain_kind='bundle'` domain (Rule #2) and homes there; additional hosts go in `domain_module_host_domains`. See [references/modules.md](references/modules.md) for the full mechanics.
 
 **Permission materialization scope.** Workflow-gate permissions (Rule #12 lifecycle states with `requires_permission=true`) are prefixed with the **realizing module's** `domain_module_code`, not the domain's `domain_code`. Same lifecycle state realized in two modules = two permissions, one per module. `data_object_lifecycle_states.domain_module_id` (nullable) says which module realizes the state; NULL means "always reachable when the master is installed". See [references/modules.md](references/modules.md) for the per-module permission derivation rules.
 
@@ -477,7 +479,7 @@ Starter kits used to be an editorial junction (`domain_starter_modules`) recomme
 
 - **Lite variants of a full module.** `<DOMAIN>-LITE` for a 10-person org wanting basic HR or basic CRM without the full module's breadth: it embeds a subset of entities. Any gated entity it does embed still carries its lifecycle and a re-prefixed gate (invariant #4); a lite variant stays light by embedding fewer entities, not by stripping gates off the ones it keeps.
 - **Onboarding starter kits.** Bundle the embedded shells from 2–3 adjacent modules into a single deployable for first-time buyers.
-- **Persona / use-case bundles.** Cross-domain personas like `REAL-ESTATE-AGENT` (CRM + CLM + light project tracking) that don't belong to any single market. `domain_modules.domain_id` is NULL for these; `domain_module_host_domains` lists every touched domain.
+- **Persona / use-case bundles.** Cross-domain personas like `REAL-ESTATE-AGENT` (CRM + CLM + light project tracking) that don't belong to any single market. These are promoted to their own `domain_kind='bundle'` domain (Rule #2): the starter module's REQUIRED `domain_id` points at that bundle-domain, and `domain_module_host_domains` lists every touched market.
 
 **Six invariants.** Every loader inserting a `module_kind='starter'` row MUST validate before any POST:
 
@@ -617,7 +619,7 @@ A request to **report / check / "check only"** means read-only: diagnose, surfac
 
 | Table | Holds | Hierarchical? |
 |---|---|---|
-| `domain_modules` | Autonomous deployable units inside a domain (`ATS-CANDIDATE-CRM`, `ITSM-INCIDENT-MGMT`, `KNOWLEDGE-MGMT`). Natural key `domain_module_code`. `domain_id` is the primary host (nullable for genuinely-cross-cutting modules); see `domain_module_host_domains` for additional hosts. | no |
+| `domain_modules` | Autonomous deployable units inside a domain (`ATS-CANDIDATE-CRM`, `ITSM-INCIDENT-MGMT`, `KNOWLEDGE-MGMT`). Natural key `domain_module_code`. `domain_id` is the REQUIRED primary home; a genuinely-cross-domain module homes on a `domain_kind='bundle'` domain; see `domain_module_host_domains` for additional hosts. | no |
 
 ### Junctions with qualifiers (13 entities)
 
@@ -861,16 +863,17 @@ For every `master + required` data_object in this domain, count `data_object_lif
 **A1. `domains` row has all 7 business-metadata fields populated.** (Rule #8.)
 - Query: `/domains?id=eq.<id>&select=crud_percentage,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year`
 - Pass: `crud_percentage > 0`, `min_org_size != ''`, `cost_band != ''`, `usa_market_size_usd_m > 0`, `market_size_source_year > 0`; `business_logic` non-empty UNLESS `crud_percentage >= 95`.
+- **`domain_kind='bundle'` carve-out (PARTIAL):** a bundle still requires `min_org_size != ''`, `cost_band != ''`, and `certification_required` non-null, but A1 does NOT require `usa_market_size_usd_m` / `market_size_source_year` / `crud_percentage` / `business_logic` (a bundle has no TAM; do not fabricate one). See Rule #2.
 - Fix: PATCH the row via `validateDomainRow()` in [scripts/loaders/load_research.ts](../../../scripts/loaders/load_research.ts).
 
 **A2. Capabilities linked.**
 - Query: `/capability_domains?domain_id=eq.<id>&select=capabilities(capability_code)`
-- Pass: ≥3 rows (typical: 5–8). For narrowly-scoped domains, may be lower.
+- Pass: ≥3 rows (typical: 5–8). For narrowly-scoped domains, may be lower. **Exempt for `domain_kind='bundle'`** (a bundle realizes a capability subset via its starter but is not held to the floor; Rule #2 / Rule #19).
 - Fix: extend Phase A loader for this market; apply Cross-cutting capability convention (§ below) for any capability that spans ≥3 domains.
 
 **A3. Solutions linked with coverage_level.**
 - Query: `/solution_domains?domain_id=eq.<id>&select=coverage_level,solutions(solution_name)`
-- Pass: ≥3 solutions; ≥1 `primary`; coverage_level set on every row (never null).
+- Pass: ≥3 solutions; ≥1 `primary`; coverage_level set on every row (never null). **`emerging_market` invariant:** a domain with masters (B1 passes) but ZERO `primary` coverage (only `partial`) is the `emerging_market` signal, set `domain_kind='emerging_market'` and surface for confirmation rather than treating the missing `primary` as an A3 failure (Rule #2). **Exempt for `domain_kind='bundle'`** (a bundle is not a vendor market; no `solution_domains` expected).
 - Fix: extend Phase A loader.
 
 **A4. Catalog UX fields populated.** (Rule #20.)
@@ -967,9 +970,13 @@ Modules within a domain are **autonomous deployable units** (per § "The module 
 
 ### B. Phase B — Data-object footprint
 
+**`<masters>` derives from the live per-module junction, NEVER the legacy rollup (deprecation, catalog-wide).** The masters set for every Phase B / M check below is the set of `data_object_id`s with a `role='master'` row in `domain_module_data_objects` across this domain's modules (the module set from Phase A / Step 1):
+`/domain_module_data_objects?domain_module_id=in.(<modIds>)&role=eq.master&select=data_object_id,data_objects(data_object_name)`.
+The legacy `domain_data_objects` rollup is **deprecated as a masters source**: it was a derived rollup of `domain_module_data_objects` that was never regenerated after domains modularized, so it under-counts (an ATS audit on 2026-06-16 found it carrying 15 of 60 ATS masters). Do NOT derive `<masters>`, B1, or B5 from `domain_data_objects`; treat it as stale. It may still be read as an *optional cross-check* only (and a delta between the two is expected drift, not a finding).
+
 **B1. ≥1 `master` data_object exists.**
-- Query: `/domain_data_objects?domain_id=eq.<id>&role=eq.master&select=data_object_id`
-- Pass: ≥1 row. **EXCEPTION (narrow, evidence-based, NOT a fixed domain list):** a domain passes B1 with zero masters ONLY if it is a genuine derive/overlay domain (persists no record of its own; computes its entire output at query time from other domains' masters). Apply the overlay test in § "Master-bearing vs derive/overlay domains". An overlay that passes B1 by this exception is NOT a free pass: it MUST instead carry ≥1 `consumer`/`derived`/`embedded_master` row (B5) and a real non-empty module (M1). Note: there is no hard-coded "leadership-tier" list of zero-master domains. A domain that persists records no other domain masters (deal scores, forecasts, quotas, partner deal registrations, vulnerabilities, DSARs, account plans, etc.) is master-bearing and fails B1 with zero masters; if it has none, it is unbuilt, not exempt.
+- Query: `/domain_module_data_objects?domain_module_id=in.(<modIds>)&role=eq.master&select=data_object_id` (live per-module junction; NOT the legacy `domain_data_objects` rollup).
+- Pass: ≥1 row. **EXCEPTION (narrow, evidence-based, NOT a fixed domain list):** a domain passes B1 with zero masters ONLY if it is a genuine derive/overlay domain (persists no record of its own; computes its entire output at query time from other domains' masters). Apply the overlay test in § "Master-bearing vs derive/overlay domains". An overlay that passes B1 by this exception is NOT a free pass: it MUST instead carry ≥1 `consumer`/`derived`/`embedded_master` row (B5) and a real non-empty module (M1). Note: there is no hard-coded "leadership-tier" list of zero-master domains. A domain that persists records no other domain masters (deal scores, forecasts, quotas, partner deal registrations, vulnerabilities, DSARs, account plans, etc.) is master-bearing and fails B1 with zero masters; if it has none, it is unbuilt, not exempt. **`domain_kind='bundle'` is exempt from B1 entirely:** a bundle masters nothing by definition (it embeds / consumes only); it validates the Rule #19 starter shape, not the master floor (Rule #2).
 - Fix: run Phase 1 of the data-object research workflow (§ below).
 
 **B2. Every master has `singular_label` and `plural_label`.**
@@ -988,7 +995,7 @@ Modules within a domain are **autonomous deployable units** (per § "The module 
 - Fix: PATCH flags to `true` where applicable. Record the audit pass in the gap report / PR description / chat exchange, **not** as a `notes` annotation (Rule #15).
 
 **B5. `embedded_master` integrity.** (Rule #11.)
-- Query: pull all `embedded_master` rows for this domain (`/domain_data_objects?domain_id=eq.<id>&role=eq.embedded_master&select=data_object_id`), then for each `data_object_id` verify either (a) ≥1 `master` row exists somewhere in `domain_data_objects`, or (b) `data_objects.kind='platform_builtin'`.
+- Query: pull all `embedded_master` rows for this domain from the live per-module junction (`/domain_module_data_objects?domain_module_id=in.(<modIds>)&role=eq.embedded_master&select=data_object_id`), then for each `data_object_id` verify either (a) ≥1 `master` row exists somewhere in `domain_module_data_objects` (catalog-wide), or (b) `data_objects.kind='platform_builtin'`. (NOT the legacy `domain_data_objects` rollup, which is deprecated as a masters source per the Phase B header.)
 - Pass: every embedded_master has a canonical owner OR is built-in.
 - Fix: either add the missing canonical `master` row in the owner domain, OR drop the orphan `embedded_master`.
 
@@ -1158,7 +1165,7 @@ The legacy B9 / B10 queries deliberately did not include these columns. Future a
 
 **C1. ≥1 `business_function_domains` owner row.**
 - Query: `/business_function_domains?domain_id=eq.<id>&select=responsibility_type,business_functions(business_function_name)`
-- Pass: ≥1 row with `responsibility_type='owner'`. Most domains also need 1–2 contributors or consumers.
+- Pass: ≥1 row with `responsibility_type='owner'`. Most domains also need 1–2 contributors or consumers. **Exempt for `domain_kind='bundle'`** (a bundle is a persona / use-case package, not a market with a functional owner; Rule #2 / Rule #19).
 - Fix: link to the canonical 20-function spine (§ Function spine).
 
 **C2. `business_function_capabilities` overrides where capability diverges.**
@@ -1169,7 +1176,7 @@ The legacy B9 / B10 queries deliberately did not include these columns. Future a
 ### D. UI spot-check
 
 **D1. UI spot-check.**
-- Visit `https://tests.semantius.app/domain_map/<table>` for every table touched.
+- Visit `https://adenin.semantius.app/domain_map/<table>` (the `ui_baseurl` from `getCurrentUser`, NOT the legacy `tests` org) for every table touched.
 - Pass: rows render with the expected labels; row counts match the loader summary; no `record_status='approved'` on freshly-loaded research (Rule #1).
 - Fix: re-PATCH; never bulk-approve.
 
@@ -1220,7 +1227,7 @@ The `skills` table sits next to `roles` but represents agent skills, not user ro
 
 **F2. The domain has exactly one `skill_type='system'` skill, anchored to the domain.** (Rule #17.)
 - Query: `/skills?domain_id=eq.<id>&skill_type=eq.system&domain_module_id=is.null&select=id,skill_name`.
-- Pass: exactly one row. Zero is a Phase-S gap; >1 is a rule violation (keep one, delete the extras; their tools already live on `domain_module_tools`).
+- Pass: exactly one row. Zero is a Phase-S gap; >1 is a rule violation (keep one, delete the extras; their tools already live on `domain_module_tools`). **Exempt for `domain_kind='bundle'`**: a bundle's system skill is MODULE-anchored on its starter (`domain_module_id` set, per Rule #19 #6 and F1's starter exemption), so a bundle-domain has no domain-grain skill by design and correctly returns zero here. The bundle's skill is validated by F1 (starter-anchored) instead (Rule #2 / Rule #19).
 - Fix: author the missing domain system skill per Phase S in the workflow. Use `skill_name='<domain_code_lower>-system'` (e.g. `grc-system`), `domain_id=<id>`, `domain_module_id` NULL; load alongside the modules' tools and `domain_module_tools` in the same loader.
 
 **F3. The domain's modules carry ≥1 `domain_module_tools` (the derived toolset is non-empty).** (Rule #17.)
@@ -1942,7 +1949,7 @@ Reference loader: [scripts/loaders/load_p25b_process_skills.ts](../../../scripts
 
 ## Quick reference
 
-UI base: `https://tests.semantius.app/domain_map/<table_name>`
+UI base: `https://adenin.semantius.app/domain_map/<table_name>` (the `ui_baseurl` from `getCurrentUser`; NOT the legacy `tests` org)
 
 Reference loader: [scripts/loaders/load_research.ts](scripts/loaders/load_research.ts)
 

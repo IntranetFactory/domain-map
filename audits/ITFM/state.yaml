@@ -1,0 +1,100 @@
+schema_version: 2
+domain: ITFM
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-16"
+
+# NEW-DOMAIN CANDIDATE. ITFM/TBM does not exist in the catalog yet. Phase 0 research is in
+# .tmp_deploy/ITFM-phase0-2026-06-16.md. Nothing is written to the live catalog until the
+# create decision (B2-ITFM-CREATE) and shape decisions are approved via the a-file (Rule #21
+# research carve-out: net-new market structure is surfaced in a q-file first).
+
+b2:
+  - id: B2-ITFM-CREATE
+    summary: "Create a new top-level IT Financial Management (ITFM/TBM) domain?"
+    question: |
+      ITFM/TBM (whole-IT-estate cost transparency, allocation, budgeting, showback/chargeback on the
+      TBM taxonomy) is not in the catalog. FINOPS covers only cloud cost; FIN is the general ledger.
+      Create ITFM as a distinct top-level domain?
+    options: [create_itfm_domain, do_not_create, fold_as_capability_cluster_under_FIN]
+    evidence: |
+      Four independent pure-plays sell this as their flagship: Apptio (an IBM company; ApptioOne, the
+      category definer), Nicus Software (M-ITFM), MagicOrange (allocation engine), Serviceware Financial
+      (EU). Standards body: TBM Council (owns the TBM taxonomy: cost pools -> IT towers -> services ->
+      business units, the "Bill of IT"). Analyst category: Gartner IT Financial Management Tools.
+      ServiceNow ships a suite ITFM module (mainline confirmation). NOT a sub-feature of FIN: general-ledger
+      vendors (NetSuite, SAP S/4, Workday Financials, Sage Intacct) master no cost pools, IT towers, TBM
+      taxonomy, or Bill of IT. Passes Rule #2 cleanly.
+
+  - id: B2-ITFM-MODULES
+    summary: "Module shape for ITFM (if created): 3 modules vs 2."
+    question: |
+      If ITFM is created, ship which module set? 3-module: cost-allocation-modeling (the engine: cost
+      pools, IT towers, allocation rules, rate cards, TBM taxonomy, allocation runs) + cost-transparency-showback
+      (services, service costs, business units, showback statements, chargeback invoices, Bill of IT,
+      unit-cost metrics) + it-budgeting-and-planning (IT budgets, line items, forecasts, variance, scenarios).
+    options: [three_modules_recommended, two_modules, other_user_proposes]
+    evidence: |
+      Apptio (ApptioOne: Costing + Billing + Planning), Nicus, and Serviceware all separate the allocation
+      ENGINE (taxonomy-driven cost flow through pools/towers), the showback/Bill-of-IT OUTPUT, and IT
+      budgeting/forecasting as distinct product areas. MagicOrange is allocation-engine-centric. The
+      three-way split mirrors how the flagships package the market and satisfies Rule #14 (>=2 modules for
+      >=3 capabilities; 8 capabilities proposed).
+
+  - id: B2-ITFM-TEM
+    summary: "Telecom/Technology Expense Management (TEM): separate domain or an ITFM module?"
+    question: |
+      Tangoe/Calero-style TEM (telecom inventory, invoice audit, usage optimization) is adjacent. Model TEM
+      as its own candidate domain, an ITFM module, or out of scope?
+    options: [separate_TEM_domain_recommended, tem_module_inside_itfm, skip_tem]
+    evidence: |
+      Tangoe, Calero, Brightfin, and Sakon are independent TEM pure-plays with their own market, distinct
+      from the Apptio/Nicus/MagicOrange/Serviceware ITFM allocation market. TEM masters telecom_inventory_items
+      and telecom_invoices (invoice audit + dispute), which ITFM allocation/showback does not. Mixing them
+      would make ITFM master a vendor surface (Tangoe/Calero) that the ITFM pure-plays do not carry. Recommend
+      a separate TEM candidate domain (own Phase 0), not an ITFM module.
+
+  - id: B2-ITFM-FUNCTION
+    summary: "Owning business function for ITFM."
+    question: |
+      Which business function owns ITFM? A new "IT Financial Management" sub-function under Finance (sibling
+      of Cloud Financial Operations id 83 and FP&A id 43); or FP&A directly; or IT Operations?
+    options: [new_itfm_subfunction_under_finance_recommended, fpa_directly, it_operations]
+    evidence: |
+      The buyer is the IT Finance Office / IT Business Management Office, a finance discipline (allocation,
+      budgeting, chargeback), not infrastructure. The Phase C spine already places Cloud Financial Operations
+      (id 83) under Finance (id 4); ITFM is its whole-estate sibling, so the same placement keeps the spine
+      consistent. IT Operations (id 27) is a secondary contributor (consumes the showback / owns the IT towers
+      being costed), not the primary owner.
+
+  - id: B2-ITFM-SEGMENT
+    summary: "Confirm enterprise-only positioning (min_org_size = xl, cost_band = $$$$)."
+    question: |
+      Set ITFM min_org_size = "50 xl 10000+" and cost_band = "$$$$" so the catalog does not imply it serves
+      the 50-250 / mid-market segment?
+    options: [confirm_enterprise_only_recommended, allow_mid_large_40_l]
+    evidence: |
+      Apptio, Nicus, and Serviceware buyers are large IT organizations: six-figure licensing plus multi-month
+      TBM-taxonomy modeling engagements; the value (internal IT towers, shared-service chargeback, business-unit
+      showback) only exists at scale. For a 50-250-user org the "IT budget" need is met by the general ledger
+      (FIN) plus spreadsheets. Marking it mid-market-reachable would fail the catalog's min_org_size vs
+      solution-tier internal-consistency check.
+
+b3:
+  - id: B3-ITFM-TEM-CANDIDATE
+    candidate: "TEM (Telecom / Technology Expense Management) as its own candidate domain"
+    rationale: |
+      Surfaced from the ITFM Phase 0 as a distinct adjacent market. If B2-ITFM-TEM picks the separate-domain
+      route, run a dedicated TEM Phase 0 (Tangoe, Calero, Brightfin, Sakon) and queue it in
+      audits/_missing-domains.md. Non-blocking; never gates the ITFM build.
+    vendor_evidence: [Tangoe, Calero, Brightfin, Sakon]
+    proposed_module: null
+
+  - id: B3-ITFM-MARKET-SIZE-CONFIRM
+    candidate: "Confirm usa_market_size_usd_m before any load"
+    rationale: |
+      The proposed usa_market_size_usd_m ~= 900 (2024) is triangulated (US ~35-40% of a ~$2-3B global ITFM
+      tools market), not a single hard Gartner/IDC cite. Confirm against a Gartner ITFM Market Guide or IDC
+      figure before the domains row loads. Non-blocking research follow-up.
+    vendor_evidence: []
+    proposed_module: null

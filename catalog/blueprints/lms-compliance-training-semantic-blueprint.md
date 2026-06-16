@@ -12,7 +12,7 @@ domain_modules:
 domain_code: LMS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-recruitment-pipeline, ben-enrollment, clm-negotiation, clm-repository, comp-planning, emp-exp-continuous-listen, fin-gl-close, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hrsd-case-mgmt, iga-access-request, iga-auto-provisioning, lms-automation, lms-course-delivery, lms-credentials, lms-ct-gdpr, lms-ilt-delivery, lms-paths, onb-journey-mgmt, pa-predictive-models, payroll-run, psa-project-delivery, psa-resource-mgmt, skills-mgmt-profile, talent-performance-mgmt, training-records-starter]
 persona: [CONTRACT-OPS-MANAGER, CONTRACT-OPS-SPECIALIST, GRC-COMPLIANCE-TRAINING-MANAGER, HR-BUSINESS-PARTNER, HR-HRIS-ADMIN, HR-ORG-DESIGN-ANALYST, HR-PEOPLE-OPS-SPECIALIST, LD-INSTRUCTIONAL-DESIGNER, LD-INSTRUCTOR, LD-LEARNING-ADMIN, LEGAL-COMPLIANCE-SPECIALIST, LEGAL-COUNSEL, PEOPLE-MANAGER]
-created_at: 2026-06-13
+created_at: 2026-06-16
 ---
 
 # Compliance Training
@@ -354,6 +354,11 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `employees` | has | `employee_dependents` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
 | `employees` | has | `worker_change_requests` | one_to_many | required | none (required-if-present) | n/a | - |
 | `employees` | applies_as | `candidates` | one_to_many | optional | none | n/a | - |
+| `employees` | is the worker behind | `traveler_profiles` | one_to_one | optional | none | n/a | - |
+| `exit_risk_assessments` | assesses | `employees` | one_to_one | optional | none | n/a | - |
+| `insider_risk_cases` | concerns | `employees` | one_to_many | optional | none | n/a | - |
+| `frontline_recognitions` | recognizes | `employees` | one_to_many | required | none (required-if-present) | n/a | - |
+| `advocate_profiles` | represents | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
 
 ## 6. Cross-domain context
 

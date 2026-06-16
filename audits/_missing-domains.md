@@ -3346,6 +3346,34 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
+### DAP — Digital Adoption Platform
+
+- **Mention count:** 1
+- **First surfaced:** 2026-06-16 (DAP scoping 2026-06-16)
+- **Most recent:** 2026-06-16 (DAP scoping 2026-06-16)
+- **Surfaced by:**
+  - 2026-06-16 DAP scoping 2026-06-16
+- **Vendor evidence:** WalkMe, Whatfix, Pendo (Adopt), Userpilot, Appcues, Userlane, Chameleon, Gainsight PX
+- **Adjacency:** ONBOARDING, LMS, KMS, SOP-MGMT (candidate), DXP, DEM, CSM, EMP-EXP, Product Analytics (gap)
+- **Candidate capabilities:** in-app guided walkthroughs, tooltips and hotspots, onboarding checklists, in-app surveys (NPS/CES), resource center / help widget, in-app announcements, audience segmentation, adoption analytics
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### PROD-ANALYTICS — Product Analytics
+
+- **Mention count:** 1
+- **First surfaced:** 2026-06-16 (PROD-ANALYTICS scoping 2026-06-16 (gap flagged by DAP scoping))
+- **Most recent:** 2026-06-16 (PROD-ANALYTICS scoping 2026-06-16 (gap flagged by DAP scoping))
+- **Surfaced by:**
+  - 2026-06-16 PROD-ANALYTICS scoping 2026-06-16 (gap flagged by DAP scoping)
+- **Vendor evidence:** Amplitude, Mixpanel, Heap, PostHog, June, Kubit, Pendo, Statsig
+- **Adjacency:** BI, PROD-MGMT, CDP, DAP (candidate), DXP, DEM
+- **Candidate capabilities:** product instrumentation, feature-usage events, funnel analysis, retention and cohort analysis, user path analysis, behavioral segmentation, experimentation/A-B testing, session replay
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
 
 ---
 

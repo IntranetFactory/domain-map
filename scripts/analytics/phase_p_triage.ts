@@ -46,7 +46,7 @@ type DataObject = { id: number; data_object_name: string; kind: string; entity_t
 // Fetch sequentially: each pg() spawns a fresh `semantius` CLI process with its own MCP
 // connection, and firing them concurrently intermittently times out the server. One at a
 // time is slower but reliable for a read-only triage.
-const domains = (await pg("GET", "/domains?select=id,domain_code,domain_name&order=domain_code.asc&limit=10000")) as Domain[];
+const domains = (await pg("GET", "/domains?select=id,domain_code,domain_name,domain_kind&order=domain_code.asc&limit=10000")) as Domain[];
 const modules = (await pg("GET", "/domain_modules?select=id,domain_module_code,domain_id&limit=10000")) as Module[];
 const capDoms = (await pg("GET", "/capability_domains?select=domain_id&limit=20000")) as CapDom[];
 const domainRoles = (await pg("GET", "/domain_roles?select=id,record_status&limit=20000")) as DomainRole[];
@@ -58,6 +58,8 @@ const dataObjects = (await pg("GET", "/data_objects?select=id,data_object_name,k
 const doById = new Map<number, DataObject>(dataObjects.map((d) => [d.id, d]));
 const moduleDomain = new Map<number, number | null>(modules.map((m) => [m.id, m.domain_id]));
 const domainCodeById = new Map<number, string>(domains.map((d) => [d.id, d.domain_code]));
+// bundle-domains master nothing; exclude them from triage (plan §4). Inert until §3.
+const bundleDomainIds = new Set<number>(domains.filter((d) => (d as any).domain_kind === "bundle").map((d) => d.id));
 const moduleCodeById = new Map<number, string>(modules.map((m) => [m.id, m.domain_module_code]));
 // A persona is "live" unless its record_status marks it removed. Be permissive: only
 // drop explicit archive/delete tombstones, count everything else (new/active/blank).
@@ -143,6 +145,7 @@ type Record = {
 const records: Record[] = [];
 
 for (const d of domains) {
+  if (bundleDomainIds.has(d.id)) continue; // exclude bundle-domains (plan §4)
   const module_count = moduleCountByDomain.get(d.id) ?? 0;
   const capability_count = capCountByDomain.get(d.id) ?? 0;
   const persona_count = personaSetByDomain.get(d.id)?.size ?? 0;

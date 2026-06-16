@@ -1,0 +1,60 @@
+# Catalog UX data for the use-it-ops-starter skill.
+# Sole input to the catalog site generator. Read by the site builder to render
+# list cards, detail pages, search index. NEVER loaded by the skill at runtime.
+#
+# `catalog_tagline` and `catalog_description` are governed by Rule #20
+# (.claude/skills/domain-map-analyst/SKILL.md): buyer voice (workflow + value),
+# never overwrite a non-empty value without explicit per-row user approval.
+# Marketing can edit these freely; AI loaders must NOT regenerate without review.
+
+domain_code: IT-OPS-STARTER
+skill_name: use-it-ops-starter
+
+# Buyer-facing one-liner for catalog list cards. ~1 sentence.
+catalog_tagline: "Run your whole IT shop from one place: tickets, devices, SaaS renewals, and contracts, without the spreadsheets."
+
+# Buyer-facing 1-3 paragraph description for catalog detail page.
+# YAML `|` preserves newlines literally, keep each paragraph on ONE line, with
+# a blank line between paragraphs (parses to `\n\n` separators).
+catalog_description: |
+  One place to manage IT for a small team. Track the hardware you own and who has it, every SaaS app and when its subscription renews, and the contracts behind them, so nothing slips through a spreadsheet and no renewal catches you off guard.
+
+  Add a lightweight helpdesk for tickets and requests if you do not already run one, or keep the one you have. Start with the renewal and contract essentials and turn on the device, SaaS, and helpdesk pieces as you need them. Built for IT teams that have outgrown spreadsheets but do not need a full enterprise IT suite.
+
+# Category for catalog grouping / filter.
+category: IT Operations
+
+# Search keywords for the catalog's search index. Curated for the catalog
+# (can differ from spec.aliases if the editor wants to add/remove terms
+# specifically for search vs. agent triggering).
+search_keywords:
+  - IT operations
+  - helpdesk
+  - service desk
+  - IT asset management
+  - SaaS management
+  - renewal tracking
+  - software licenses
+  - hardware inventory
+  - contract management
+  - small IT team
+  - IT starter
+  - ITSM
+  - ITAM
+  - SAM
+  - SMP
+
+# Optional icon hint for catalog UX (relative path or URL).
+icon: ""
+
+# Cross-link surfaces for the catalog (related/depends).
+# `depends_on_skills` are required by the skill itself; `related_skills` are
+# what the catalog suggests as "see also" next to this card.
+depends_on_skills:
+  - use-semantius
+related_skills:
+  - use-itsm
+  - use-ham
+  - use-sam
+  - use-smp
+  - use-itam

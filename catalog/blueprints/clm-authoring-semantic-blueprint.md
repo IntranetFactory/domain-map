@@ -15,7 +15,7 @@ domain_modules:
 domain_code: CLM
 related_modules: [clm-negotiation, clm-obligation-mgmt, clm-renewal, clm-repository, cpq-approvals-contracts]
 persona: [CONTRACT-OPS-MANAGER, CONTRACT-OPS-SPECIALIST, LEGAL-COUNSEL]
-created_at: 2026-06-13
+created_at: 2026-06-16
 ---
 
 # Contract Authoring

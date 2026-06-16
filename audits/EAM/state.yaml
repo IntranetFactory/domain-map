@@ -107,6 +107,28 @@ b2:
     why: "Decision gates the Rule 14 floor (>=2 for 6 capabilities), the DMDO layout for masters, the domain-grain system skill toolset, and the source_domain_module_id / target_domain_module_id PATCHes on every EAM handoff (B1B-B1 / B1B-B2)."
     evidence: "Flagship CMMS/EAM vendors co-locate PM planning with work-order execution and keep the asset register separate: IBM Maximo (PM schedules and work orders both under Work Management), Hexagon EAM and IFS Cloud EAM (PM bundled with work orders in maintenance management), and SAP PM (maintenance plans plus maintenance orders inside Plant Maintenance). This maps to the 2-module shape (EAM-ASSETS + EAM-MAINTENANCE-OPS) and gives no vendor support for a separate EAM-PM-PLANNING module."
 
+  - id: B2-REPARENT
+    summary: "Re-parent EAM out of ITAM: its market is industrial plant/equipment maintenance, not IT asset management. Note: EAM is out of scope for the 50-250 IT-suite engagement."
+    question: |
+      EAM is currently parent_domain_id=3 (ITAM), but its vendor surface and masters are industrial
+      (IBM Maximo, Hexagon, IFS; industrial_assets, eam_work_orders, equipment_pm_schedules). Re-parent
+      it out of ITAM?
+    options:
+      - "(a) Re-parent to a new physical-asset umbrella over EAM + CAFM (id 142) + IWMS."
+      - "(b) Re-parent under the existing Real Estate and Workplace umbrella (REAL-EST, id 141)."
+      - "(c) Make EAM top-level (parent_domain_id = null, like FSM)."
+      - "(d) Keep it under ITAM."
+    evidence: |
+      EAM vendors (IBM Maximo, Hexagon EAM, IFS Cloud, Fiix/Rockwell, eMaint) sell equipment-uptime,
+      preventive maintenance, and MRO to maintenance/reliability/operations buyers in asset-intensive
+      industry. ITAM vendors (Flexera, Ivanti, ServiceNow SAM, Snow/USU) sell software-license compliance
+      and SaaS/cloud spend to IT/finance/procurement. Disjoint vendor sets, disjoint buyers: the current
+      ITAM parentage is a naming coincidence on the word "asset." A physical-asset umbrella over EAM/CAFM/IWMS
+      (a) is cleanest; top-level (c) is simplest. SEPARATE NOTE: EAM is an enterprise industrial market and is
+      out of scope for the 50-250-user IT-suite question that opened this engagement; the re-parent is the one
+      edit worth doing regardless of whether EAM is ever built. Discovered by the 2026-06-16 re-audit.
+    extra_reaudit: "2026-06-16"
+
   - id: B2-M7-ESCALATES
     summary: "eam_work_orders escalates_to service_incidents (relationship id 636): keep or downgrade?"
     question: "Is the rel 636 edge to ITSM service_incidents (id 47) intended as a first-class escalation path in plant-OT, or a soft pointer that should not survive M7 audit?"

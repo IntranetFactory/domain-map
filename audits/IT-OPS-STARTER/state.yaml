@@ -1,0 +1,37 @@
+schema_version: 2
+domain: IT-OPS-STARTER
+status: passed
+next_action_by: done
+last_audit: "2026-06-16"
+
+# BUILT 2026-06-16 (module id 403, record_status='new' on all rows, awaiting UI review per Rule #1).
+# All four q-file decisions resolved (see history.md): create=yes; SAM software_licenses=optional embed;
+# required core = renewal/contract spine (asset_contracts + saas_subscriptions) with the rest optional;
+# showback-lite cost = blueprint hint + field-level follow-up. Blueprint emitted and verified clean
+# (catalog/blueprints/it-ops-starter-semantic-blueprint.md). No open user decisions. b3 below is the
+# non-blocking follow-up backlog.
+# PROMOTED 2026-06-16 to a domain_kind='bundle' domain (id 190): module.domain_id null->190; skill 474
+# domain_id 3->190 (module-anchored kept); catalog_release set. Rule #19 starter-shape invariants hold;
+# market floors exempt (Rule #2). Still passed/done. See history.md "Promoted to bundle-domain" section.
+
+b3:
+  - id: B3-COST-FIELD-FOLLOWUP
+    candidate: "Renewal-cost / annual-spend fields on the canonical asset_contracts (ITAM) and saas_subscriptions (SMP) masters (field-level, OUTSIDE domain_map)."
+    rationale: |
+      B2-COST-FIELDS resolved to showback-lite via blueprint hint + a field-level follow-up. The domain-map catalog
+      does not model individual fields (the deployer validates embedded shells against the canonical entity's fields
+      metadata), so this is NOT a domain_map row. Follow-up at deploy/model time: confirm asset_contracts and
+      saas_subscriptions carry renewal_cost and annual_spend (or equivalent) so the starter's "what renews when and
+      what does it cost" view resolves. The starter description already gestures at renewals/contracts; no catalog
+      change is owed here.
+    vendor_evidence: [Freshservice, Josys, Setyl]
+    proposed_module: null
+
+  - id: B3-STARTER-CAPABILITIES
+    candidate: "Optional domain_module_capabilities for IT-OPS-STARTER (Rule #19 invariant 5, marketing surface)."
+    rationale: |
+      A starter MAY realize a subset of capabilities (the discoverability surface); none were authored in the initial
+      build. Candidate cross-cutting capabilities to link if desired: SaaS renewal management, IT asset register,
+      contract/renewal tracking, internal helpdesk. Non-blocking; the build deploys without them.
+    vendor_evidence: []
+    proposed_module: null

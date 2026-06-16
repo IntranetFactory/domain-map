@@ -2,13 +2,7 @@ schema_version: 2
 domain: SMP
 status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-06"
-
-b1a:
-  - id: B1A-B9D-VERIFY
-    summary: "B9d (handoff payload realization) has never run on this domain; run it on the next audit pass."
-    finding: "B9d (handoff payload realization) was added 2026-06-09 and last ran in bulk only on HRSD; this domain was last audited before it existed, so its handoff payload tags are B9d-unverified in BOTH directions (inbound and outbound)."
-    action: "Run B9d per the SKILL.md B9d band: classify every handoff payload on every boundary in BOTH directions (do not treat the inbound half as report-only), re-point ROLL-UPs on the source, surface MIS-TAGs on the source, and for each ORPHAN write a durable b1b item plus a q into the OWNER domain's audit files on whichever side owns it (state.yaml hygiene carve-out (b)). Do not touch record_status without an explicit user request (Rule #1)."
+last_audit: "2026-06-16"
 
 b1b:
   - id: B1B-PARTNER-MODFK
@@ -46,148 +40,51 @@ b1b:
       - {type: domain_audit, blocking_domain: IGA, milestone: validate-entitlement-boundary}
 
 b2:
-  - id: B2-E4-RACI
-    summary: SMP personas + reach are authored; the process_raci responsibility overlay and lifecycle process_id wiring (E4/E6) are not yet done.
-    question: |
-      The 3 SMP personas (IT-SAAS-ADMIN id16, PROCUREMENT-SAAS-RENEWAL-OWNER id17, ITAM-SAAS-PORTFOLIO-MANAGER id18) have reach (role_modules); the derived bundle is functional from reach + entity-type tier. Author the responsibility overlay now (process_raci R/A/C/I per process + wire data_object_lifecycle_states.process_id on the gated SMP transitions), or defer? RACI needs a process-to-gate mapping (which APQC PCF or custom process realizes each gated transition).
-    options:
-      - "(a) Author process_raci + wire lifecycle process_id for the gated SMP processes (full E4/E6)."
-      - "(b) Defer the RACI overlay; reach-only bundle is sufficient for now."
-    why: |
-      E4 only fires for processes whose lifecycle gates carry process_id; with none wired today it is vacuous and the reach-only bundle passes E1/E2/E3/E6. The overlay adds responsibility/accountability semantics (e.g. PROCUREMENT-SAAS-RENEWAL-OWNER Accountable for the renewal-decision gate) and is an enhancement, not a blocker.
-    affected_modules: [30, 31, 184, 185]
-  - id: B2-M9-SELFCONTAIN
-    summary: Module 31 (SMP-RENEWAL-VENDOR) holds saas_applications (consumer+required, sibling-module master) and legal_contracts (contributor+required, CLM master) as hard cross-scope prerequisites.
-    question: |
-      SMP-RENEWAL-VENDOR cannot deploy standalone while it requires a sibling/foreign master. Convert each to embedded_master (carry a local shell) or relax to necessity=optional?
-    options:
-      - "(a) saas_applications (61) -> embedded_master + required; legal_contracts (66) -> embedded_master + optional."
-      - "(b) Set both to necessity=optional, leave roles as-is (presence-conditional)."
-      - "(c) Leave as-is (accept the cross-module/cross-domain prerequisite)."
-    affected_modules: [31]
-    affected_entities: [saas_applications, legal_contracts]
-  - id: B2-B4-SUBMITLOCK
-    summary: smp_app_requests (999) — set has_submit_lock?
-    question: |
-      smp_app_requests has a gated initial `submitted` state (requires_permission) and two-stage manager+IT approval. Should has_submit_lock=true be set on the master? has_single_approver correctly stays false (two distinct approvers).
-    options:
-      - "(a) Set has_submit_lock=true (submit then locked pending approval)."
-      - "(b) Leave false."
-    affected_entities: [smp_app_requests]
   - id: B2-B6B-OWNERSIDE
-    summary: ~13 one_to_many/composition relationship rows carry owner_side=target with a parent-first verb; soft B6b warning, needs review.
+    summary: ~13 one_to_many/composition relationship rows carry owner_side=target with a parent-first verb; soft B6b warning, needs per-row sign-off.
     question: |
-      Several SMP relationship rows set owner_side=target while the forward verb reads parent-to-child from the source (e.g. saas_applications integrates_with smp_app_integrations; smp_renewal_engagements negotiated_under smp_vendor_negotiations). Review owner_side and verb direction? Soft (never blocks); affects delete-mode semantics and the blueprint mermaid renderer.
+      Several SMP relationship rows set owner_side=target while the forward verb reads parent-to-child from the source (e.g. saas_applications integrates_with smp_app_integrations id 1475; smp_renewal_engagements negotiated_under smp_vendor_negotiations id 1487). Per B6b the fix is per-row, never a blanket flip: where the source is genuinely the parent, flip owner_side target->source; where the row is a child-first edge (owner_side=target already names the real parent) leave owner_side and instead swap relationship_verb<->inverse_verb so the forward verb reads parent-to-child. Each owner_side / verb change OVERWRITES an existing value (destructive), so each candidate row needs your sign-off.
     options:
-      - "(a) Run a B6b owner_side/verb-direction correction pass (surfaced per-row first)."
+      - "(a) Run a B6b owner_side/verb-direction correction pass on the surfaced rows (each change is a destructive overwrite, listed per-row in the q-file)."
       - "(b) Leave as authored."
-  - id: B2-B8-XREL
-    summary: Missing cross-domain mirror data_object_relationships for outbound handoffs to S2P (payload purchase_requisitions) and ITSM (payload incidents).
+    candidate_rows:
+      - {id: 1475, edge: "saas_applications integrates_with smp_app_integrations", relationship_type: one_to_many, owner_side: target, proposed: "flip owner_side -> source (app is the parent that has many integrations)"}
+      - {id: 1480, edge: "saas_applications recommends_for_app smp_optimization_recommendations", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first: app is parent, keep owner_side=target)"}
+      - {id: 1481, edge: "saas_subscriptions recommends_for_sub smp_optimization_recommendations", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first)"}
+      - {id: 1483, edge: "saas_applications benchmarks_for smp_app_benchmarks", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first)"}
+      - {id: 1484, edge: "saas_subscriptions tasks_for smp_renewal_tasks", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first)"}
+      - {id: 1486, edge: "saas_subscriptions engagement_for smp_renewal_engagements", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first)"}
+      - {id: 1487, edge: "smp_renewal_engagements negotiated_under smp_vendor_negotiations", relationship_type: one_to_many, relationship_kind: composition, owner_side: target, proposed: "flip owner_side -> source (engagement is the composition parent of its negotiations)"}
+      - {id: 1488, edge: "saas_subscriptions allocates smp_spend_allocations", relationship_type: one_to_many, owner_side: target, proposed: "flip owner_side -> source (subscription is the parent that allocates spend)"}
+      - {id: 1489, edge: "saas_applications assesses_app smp_vendor_risk_assessments", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first: app is parent)"}
+      - {id: 1490, edge: "saas_applications automates_app smp_automation_workflows", relationship_type: one_to_many, owner_side: target, proposed: "flip owner_side -> source (app is the parent the workflow automates)"}
+      - {id: 1492, edge: "smp_app_catalog_listings requests_listing smp_app_requests", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first: listing is parent)"}
+      - {id: 1477, edge: "saas_applications raised_for smp_alerts", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first: app is parent, alert is child)"}
+      - {id: 1478, edge: "shadow_it_apps raised_for_shadow smp_alerts", relationship_type: one_to_many, owner_side: target, proposed: "swap verb<->inverse (child-first)"}
+  - id: B2-B9D-MISTAG-44
+    summary: "SMP mis-tagged handoff 44 (SMP->CLM, payload legal_contracts): APQC tag points at the wrong process; re-point or delete (destructive, SMP-authored)."
     question: |
-      Outbound handoffs 39/45 (-> S2P) and 642 (-> ITSM) have no corresponding cross-domain data_object_relationships rows (payload->target). Author them, or treat as event-only handoffs?
+      Handoff 44 (SaaS Management Platforms -> Contract Lifecycle Management, payload legal_contracts) carries an APQC tag (handoff_processes id 203) on process 4.1.2 "Manage demand for products". The carried entity legal_contracts is already realized under 12.4.9 "Negotiate and document agreements/contracts" in CLM, so 4.1.2 is the wrong process for this payload. SMP authored this tag, so SMP owns the edit. The fix re-points or deletes an existing tag row (destructive), so it needs your sign-off.
     options:
-      - "(a) Author the mirror relationships (verb + inverse + cardinality + owner_side)."
-      - "(b) Event-only; no relationship row."
+      - "(a) Re-point handoff_processes id 203 from process 156 (4.1.2) to process 398 (12.4.9 Negotiate and document agreements/contracts)."
+      - "(b) Delete handoff_processes id 203 (treat the legal_contracts handoff as untagged)."
+      - "(c) Leave the tag as authored."
     affected_handoffs:
-      - {handoff_id: 39, direction: outbound, source_domain: SMP, target_domain: S2P, trigger_event: shadow_app.requires_sanctioning, payload: purchase_requisitions, null_field: data_object_relationship}
-      - {handoff_id: 45, direction: outbound, source_domain: SMP, target_domain: S2P, trigger_event: seat_demand.exceeded, payload: purchase_requisitions, null_field: data_object_relationship}
-      - {handoff_id: 642, direction: outbound, source_domain: SMP, target_domain: ITSM, trigger_event: saas_application.deprovisioned, payload: incidents, null_field: data_object_relationship}
-  - id: B2-CAP-AUTOMATION
-    summary: Is a distinct automation / self-service-provisioning capability warranted for SMP-AUTOMATION (185), or does SMP-APP-LIFECYCLE (524, now realized there) suffice?
-    question: |
-      M6 was cured by moving SMP-APP-LIFECYCLE (524) onto module 185. Module 185 also masters self-service app requests + workflow runs. Author a dedicated capability (e.g. SMP-WORKFLOW-AUTOMATION) for the declarative-automation surface, or keep APP-LIFECYCLE as the single realized capability?
-    options:
-      - "(a) Add SMP-WORKFLOW-AUTOMATION capability realized on 185; keep APP-LIFECYCLE too."
-      - "(b) Keep APP-LIFECYCLE as the sole 185 capability."
-  - id: B2-B9D-OWN-156
-    summary: "SaaS Management Platforms: name an owner for \"Manage demand for products\" (no one is responsible for it today)"
-    question: |
-      Contract Lifecycle Management hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage demand for products, so that step currently has nobody responsible for it. Who should own it?
-    options:
-      - "The a named owner runs it and approves it."
-      - "The a named owner runs it and the HR Business Partner approves."
-      - "Leave it unassigned for now."
-    why: |
-      SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-SMP.md q9.
-    extra_b9d_added: "2026-06-11"
-  - id: B2-B9D-OWN-294
-    summary: "SaaS Management Platforms: name an owner for \"Manage infrastructure resource administration\" (no one is responsible for it today)"
-    question: |
-      Discovery and Service Mapping hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage infrastructure resource administration, so that step currently has nobody responsible for it. Who should own it?
-    options:
-      - "The a named owner runs it and approves it."
-      - "The a named owner runs it and the HR Business Partner approves."
-      - "Leave it unassigned for now."
-    why: |
-      SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-SMP.md q10.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-317
-    summary: "SaaS Management Platforms: name an owner for \"Manage corporate credit cards\" (no one is responsible for it today)"
-    question: |
-      Expense Management hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage corporate credit cards, so that step currently has nobody responsible for it. Who should own it?
-    options:
-      - "The a named owner runs it and approves it."
-      - "The a named owner runs it and the HR Business Partner approves."
-      - "Leave it unassigned for now."
-    why: |
-      SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-SMP.md q11.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-260
-    summary: "SaaS Management Platforms: name an owner for \"Manage IT portfolio strategy\" (no one is responsible for it today)"
-    question: |
-      Cloud Financial Operations hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage IT portfolio strategy, so that step currently has nobody responsible for it. Who should own it?
-    options:
-      - "The a named owner runs it and approves it."
-      - "The a named owner runs it and the HR Business Partner approves."
-      - "Leave it unassigned for now."
-    why: |
-      SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-SMP.md q12.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-1134
-    summary: "SaaS Management Platforms: name an owner for \"Optimize IT resource allocation\" (no one is responsible for it today)"
-    question: |
-      Cloud Financial Operations hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to optimize IT resource allocation, so that step currently has nobody responsible for it. Who should own it?
-    options:
-      - "The a named owner runs it and approves it."
-      - "The a named owner runs it and the HR Business Partner approves."
-      - "Leave it unassigned for now."
-    why: |
-      SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-SMP.md q13.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-273
-    summary: "SaaS Management Platforms: name an owner for \"Manage IT user identity and authorization\" (no one is responsible for it today)"
-    question: |
-      Identity Governance and Administration hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to manage IT user identity and authorization, so that step currently has nobody responsible for it. Who should own it?
-    options:
-      - "The a named owner runs it and approves it."
-      - "The a named owner runs it and the HR Business Partner approves."
-      - "Leave it unassigned for now."
-    why: |
-      SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-SMP.md q14.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-53
-    summary: "SaaS Management Platforms: name an owner for \"Create and manage support services/solutions\" (no one is responsible for it today)"
-    question: |
-      Source-to-Pay hands work to SaaS Management Platforms, but SaaS Management Platforms has no one assigned to create and manage support services or solutions, so that step currently has nobody responsible for it. Who should own it?
-    options:
-      - "The a named owner runs it and approves it."
-      - "The a named owner runs it and the HR Business Partner approves."
-      - "Leave it unassigned for now."
-    why: |
-      SaaS Management Platforms already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-SMP.md q15.
-    extra_b9d_added: "2026-06-13"
+      - {handoff_id: 44, direction: outbound, source_domain: SMP, target_domain: CLM, payload: legal_contracts, handoff_process_id: 203, current_process: "4.1.2 / 156", proposed_process: "12.4.9 / 398"}
+    extra_source: "b9d_resolver.ts MIS-TAG, 2026-06-16"
 
 b3:
-  - id: B3-DEFERRED-COMPLIANCE-ENTITIES
-    candidate: smp_data_residency_attestations / smp_subprocessor_disclosures / smp_user_app_exposures
+  - id: B3-ACCESS-GOV-ENTITIES
+    candidate: "13 access-governance + compliance entities the SMP-AUTOMATION module lacks: smp_access_reviews, smp_access_grants, smp_deprovisioning_logs, smp_offboarding_runs, smp_discovery_sources, smp_app_accounts, plus related access/compliance evidence rows."
     rationale: |
-      Deferred 2026-05-29 as single-vendor Core (Flexera-only surface for the first two; user_app_exposures inferred only and better modeled as a DSAR-driven view in a privacy/consent domain). Re-vet before any load.
-    vendor_evidence:
-      - {vendor: Flexera One, evidence: 1st_class}
-      - {vendor: Productiv, evidence: absent}
-      - {vendor: Zylo, evidence: absent}
-  - id: B3-MARKET-SURFACE-REFRESH
-    candidate: fresh SMP market-surface (semantic) pass
-    rationale: |
-      No market-surface subagent run this round (the structural + handoff passes covered the live state). A fresh Phase-0-style MISSING / WRONG-OWNERSHIP / SCOPE-CREEP / MODULARIZATION pass against flagship vendors (Zylo, Productiv, Torii, BetterCloud, LeanIX, Flexera) is optional; last full surface ran 2026-05-29 and loaded 16 entities.
-    vendor_evidence: [Zylo, Productiv, Torii, BetterCloud, LeanIX SaaS Management, Flexera One]
+      User greenlit (a-SMP.md q8 = recommended/yes) re-vetting and loading the ones that hold up.
+      Per Rule #21, that greenlight authorizes producing the load-approval q-file, NOT a direct write:
+      these are net-new masters (expansive additions) and need their own per-entity q before any catalog
+      write. Fresh market-surface pass ran 2026-06-16: modularization coherent (4 modules), 0 wrong-ownership,
+      0 scope-creep; the gap is DEPTH inside SMP-AUTOMATION (185), which carries only workflow plumbing and
+      lacks the access-governance / compliance-evidence layer every flagship now treats as core (SOX/SOC2
+      user-access reviews, entitlement grants, GDPR/SOX data-deprovisioning evidence, per-leaver offboarding
+      runs, discovery-source registry). A short verification pass confirms which to load.
+      Full surface: .tmp_deploy/SMP-market-surface-2026-06-16.json.
+    vendor_evidence: [Zluri, Torii, Josys, Setyl, BetterCloud, Productiv, Zylo]
+    proposed_module: SMP-AUTOMATION (185)

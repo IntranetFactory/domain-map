@@ -34,7 +34,7 @@ const post = (path: string, body: any) => call({ method: "POST", path, body });
 const [handoffs, triggers, domains, dos, bfd, functions, pcf] = await Promise.all([
   get(`/handoffs?select=id,source_domain_id,target_domain_id,data_object_id,trigger_event_id,friction_level&limit=10000`),
   get(`/trigger_events?select=id,event_name,data_object_id&limit=10000`),
-  get(`/domains?select=id,domain_code,domain_name&limit=10000`),
+  get(`/domains?select=id,domain_code,domain_name,domain_kind&limit=10000`),
   get(`/data_objects?select=id,data_object_name&limit=10000`),
   get(`/business_function_domains?select=business_function_id,domain_id&limit=10000`),
   get(`/business_functions?select=id,business_function_name&limit=200`),
@@ -47,6 +47,8 @@ const triggerById = new Map<number, { event_name: string; data_object_id: number
 const domainById = new Map<number, { domain_code: string; domain_name: string }>(
   domains.map((d: any) => [d.id, d]),
 );
+// bundle-domains master nothing; keep them out of process-skill discovery buckets (plan §4). Inert until §3.
+const bundleDomainIds = new Set<number>(domains.filter((d: any) => d.domain_kind === "bundle").map((d: any) => d.id));
 const doNameById = new Map<number, string>(dos.map((d: any) => [d.id, d.data_object_name]));
 const functionById = new Map<number, string>(functions.map((f: any) => [f.id, f.business_function_name]));
 const functionsByDomain = new Map<number, Set<number>>();
@@ -98,12 +100,13 @@ for (const h of handoffs) {
   }
   b.handoff_ids.push(h.id);
   b.trigger_event_ids.add(h.trigger_event_id);
-  b.domain_ids.add(h.source_domain_id);
-  b.domain_ids.add(h.target_domain_id);
+  if (!bundleDomainIds.has(h.source_domain_id)) b.domain_ids.add(h.source_domain_id);
+  if (!bundleDomainIds.has(h.target_domain_id)) b.domain_ids.add(h.target_domain_id);
   b.friction_score += FRICTION_SCORE[h.friction_level] ?? 0;
   if (h.friction_level === "high") b.friction_high_count++;
   if (h.data_object_id != null) b.data_object_ids.add(h.data_object_id);
   for (const di of [h.source_domain_id, h.target_domain_id]) {
+    if (bundleDomainIds.has(di)) continue; // exclude bundle-domains (plan §4)
     const fns = functionsByDomain.get(di);
     if (fns) for (const f of fns) b.function_ids.add(f);
   }
