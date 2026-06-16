@@ -1124,19 +1124,20 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
-### ENT-ARCH — Enterprise Architecture
+### EA — Enterprise Architecture
 
 - **Mention count:** 1
 - **First surfaced:** 2026-05-30 (BPA audit 2026-05-30)
 - **Most recent:** 2026-05-30 (BPA audit 2026-05-30)
 - **Surfaced by:**
   - 2026-05-30 BPA audit 2026-05-30
-- **Vendor evidence:** LeanIX, Ardoq, BiZZdesign Horizzon, MEGA HOPEX, Avolution Abacus, Software AG Alfabet, Sparx Enterprise Architect
-- **Adjacency:** BPA, APM, BUSINESS-CAPABILITY-MAP
-- **Candidate capabilities:** TOGAF/ArchiMate modeling, application landscape rationalization, business architecture, technology standards governance, EA repository and reporting
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
+- **Vendor evidence:** LeanIX (SAP), Ardoq, Software AG Alfabet, MEGA HOPEX, BiZZdesign Horizzon, Avolution ABACUS, Sparx Enterprise Architect, Orbus iServer
+- **Adjacency:** APM, BPA, BUSINESS-CAPABILITY-MAP, SPM, ITSM, CMDB
+- **Candidate capabilities:** EA repository and metamodel, ArchiMate/TOGAF modeling, application landscape modeling and rationalization, business architecture / business capability modeling, capability heatmaps, technology standards governance, technology radar, architecture roadmapping and transformation planning, IT cost transparency
+- **Point-solution-market test:** PASS. Dedicated software market (Gartner "Enterprise Architecture Tools" Magic Quadrant) with 7+ independent pure-play vendors whose flagship product IS an EA suite (LeanIX, Ardoq, Software AG Alfabet, MEGA HOPEX, BiZZdesign, Avolution ABACUS, Sparx EA). Clears the three-independent-vendor bar decisively.
+- **Status:** pending-review (scoped 2026-06-15; Phase 0 at `.tmp_deploy/EA-phase0-2026-06-15.md`; promote q-file with 4 b2 calls at `audits/EA/q-EA.md` awaiting answers)
+- **Decision:** _(recommended: promote-as-domain as the cross-layer umbrella, bounded so it consumes APM and BPA rather than re-mastering them. Final call plus the APM/BPA boundary await user sign-off; this is a market-shape b2.)_
+- **Scoping note (2026-06-15):** Consolidated from two duplicate codes (`ENT-ARCH` + `EA`), both surfaced by the same 2026-05-30 BPA audit; mention_count held at 1 (one surfacing event, not two). **Classification:** EA is a genuine domain by the point-solution-market test, but it is an *umbrella* discipline that overlaps three things already in or near the catalog: APM (id 10, application layer), BPA (id 136, process layer), and the business-capability-mapping concept (referenced as BUSINESS-CAPABILITY-MAP). This is the umbrella-vs-sub-domain case (cf. ITAM over HAM/SAM/FinOps): EA and its sub-disciplines coexist via `parent_domain_id`. **Bounding to avoid re-absorbing existing markets:** EA should *master* only the cross-layer artifacts no neighbor owns (the architecture repository / metamodel, ArchiMate model artifacts, technology standards and reference models, technology-radar entries, architecture roadmaps / transformation initiatives, and, if not folded into business-capability-mapping, business capability models) and *consume* the application layer from APM and the process layer from BPA. **Cross-decision dependency:** APM q8 proposes an APM tech-layer module (products/services/platforms split plus a tech-risk surface). If EA is promoted to own the technology-standards layer, part of APM q8's scope belongs to EA instead, so decide EA's scope and APM q8 together, not separately.
 
 ### DEC-MGMT — Decision Management
 
@@ -1162,20 +1163,6 @@ the bottom are the resolved history.
 - **Vendor evidence:** HR Acuity, NAVEX EthicsPoint, AllVoices, Convercent (OneTrust), Speakfully, Vault Platform
 - **Adjacency:** HRSD, GRC, LEGAL-PRACT-MGMT
 - **Candidate capabilities:** intake of complaints (harassment, discrimination, retaliation), investigator workflow, anonymity and confidentiality controls, statutory whistleblower reporting, investigation interviews, evidence chain of custody, case outcome tracking
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
-### EA — Enterprise Architecture
-
-- **Mention count:** 1
-- **First surfaced:** 2026-05-30 (BPA audit 2026-05-30)
-- **Most recent:** 2026-05-30 (BPA audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 BPA audit 2026-05-30
-- **Vendor evidence:** LeanIX (SAP), Ardoq, Software AG Alfabet, BiZZdesign Horizzon, MEGA HOPEX, Avolution ABACUS, Sparx EA
-- **Adjacency:** BPA, APM, SPM, ITSM, CMDB
-- **Candidate capabilities:** application landscape modeling, technology radar, business architecture, ArchiMate modeling, TOGAF compliance, capability heatmaps, IT cost transparency
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3341,6 +3328,20 @@ the bottom are the resolved history.
 - **Vendor evidence:** NAVEX EthicsPoint, OneTrust Ethics (Convercent), AllVoices, People Intouch SpeakUp, EQS Integrity Line, Whispli, Vault Platform
 - **Adjacency:** HRSD, GRC, LEGAL, AUDIT
 - **Candidate capabilities:** anonymous report intake, multi-channel hotline, investigation case management, anonymized reporter follow-up, regulatory disclosure tracking
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### SOP-MGMT — Process Documentation and SOP Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-06-15 (SOP-MGMT scoping 2026-06-15)
+- **Most recent:** 2026-06-15 (SOP-MGMT scoping 2026-06-15)
+- **Surfaced by:**
+  - 2026-06-15 SOP-MGMT scoping 2026-06-15
+- **Vendor evidence:** SweetProcess, Trainual, Process Street, Scribe (ScribeHow), Whale, Dozuki
+- **Adjacency:** KMS, ECM, LMS, ONBOARDING, GRC, BPA, EQMS (backlog)
+- **Candidate capabilities:** SOP authoring, work-instruction steps, document versioning, publish-and-assign, read-acknowledgment tracking, comprehension quizzes, periodic review cycles, controlled-document control
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_

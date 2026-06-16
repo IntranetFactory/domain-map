@@ -1,0 +1,159 @@
+schema_version: 2
+domain: TOW-MGMT
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-15"
+
+b1b:
+  - id: B1B-REGULATIONS-UPSTREAM
+    summary: None of the ~8 towing/impound regulation families exist in the regulations table; blocks domain_regulations authoring; also gated on the B2-REGULATION-SCOPE scope decision.
+    finding: >-
+      Live check 2026-06-15: zero of the towing/impound regulation families
+      exist as rows in the regulations table (it holds GDPR / DORA / COPPA-style
+      rows only). The market is heavily regulated: per-state abandoned/lien
+      vehicle statutes (FL 713.78, GA AMVA, TX Ch.2303/VSF, MN 168B, MO 304.156,
+      ID T49C18) with their own notice timelines; DPPA (18 USC 2721) for DMV
+      owner lookups; state PPI signage/authorization rules; state max tow/storage
+      rate caps (e.g. TX TDLR); law-enforcement rotation-tow reporting; NMVTIS
+      disposal reporting; and (only if a REPO domain is ever in scope) UCC
+      Article 9 + FDCPA. Cannot author domain_regulations junctions pointing at
+      non-existent regulation rows.
+    action: >-
+      Seed the chosen regulation families via a transportation/impound
+      regulations seed load (separate from the TOW-MGMT module load), modeling
+      the per-state tow-lien statutes as a family rather than 50 individual
+      rows, then author domain_regulations junctions once the user picks the
+      floor-vs-stretch scope per B2-REGULATION-SCOPE.
+    blocked_by:
+      - {type: catalog_addition, scope: regulations, trigger: towing/impound regulations seed load}
+      - {type: user_decision, ref: B2-REGULATION-SCOPE}
+
+b2:
+  - id: B2-IMPOUND-MODULE-VS-DOMAIN
+    summary: "Gate: impound-lot management as a module inside one TOW-MGMT domain vs its own separate domain."
+    question: >-
+      The user named "Auto Towing AND Impound Lot Trackers". Should impound-lot
+      management be a module inside one Towing & Recovery Management domain, or
+      stand up as its own separate domain? This is the gate decision; module
+      count, masters, and skills all hang off it.
+    options:
+      - module inside TOW-MGMT (recommended)
+      - separate IMPOUND domain
+    evidence: >-
+      Towbook, TRAXERO/Autura (TOPS, Dispatch Anywhere), and ProTow all bundle
+      dispatch + impound + PPI in a single product: a towed vehicle simply
+      becomes an impound record sharing the same job, so impound is "powered by
+      the same tow_job". VTS Systems leans impound-yard-first but still ships
+      dispatch. No mainstream pure-play impound-only vendor (with no towing
+      surface) exists, so impound is not a standalone software market. The one
+      flagship that sells a non-towing product is ADD123, and that product is
+      lien-notice compliance, not impound-lot operations.
+
+  - id: B2-LIEN-MODULE-COUNT
+    summary: Module count, 4 modules (separate lien/title compliance module) vs 3 (fold lien into impound).
+    question: >-
+      How many modules should TOW-MGMT have? 4 (TOW-DISPATCH, TOW-IMPOUND,
+      TOW-LIEN, TOW-BILLING) with lien/title statutory compliance as its own
+      module, or 3 by folding lien into impound?
+    options:
+      - 4 modules with a dedicated TOW-LIEN compliance module (recommended)
+      - 3 modules, fold lien into impound
+    evidence: >-
+      ADD123 and TRAXERO's TowLien sell lien / notice / title compliance as a
+      standalone product (ADD123 has no dispatch tool at all), so the slice has
+      its own market. The statutory notice surface is heavy enough to warrant a
+      dedicated module: owner/lienholder lookups, DPPA permissible-use logging,
+      state notice timelines, certified-mail service records, title transfers,
+      and NMVTIS reporting. Folding it into impound would bury a regulated
+      workflow that one of the five flagships sells on its own.
+
+  - id: B2-REPO-SCOPE
+    summary: Repossession in scope for TOW-MGMT vs out (separate future REPO domain).
+    question: >-
+      Should vehicle repossession be in scope for TOW-MGMT, or kept out as a
+      separate domain? Skid/wheel-lift trucks tow repossessed vehicles, so the
+      operational overlap is real.
+    options:
+      - out of scope, a separate REPO domain later (recommended)
+      - include repossession in TOW-MGMT
+    evidence: >-
+      Repossession runs on distinct lender/forwarder platforms (Recovery
+      Database Network / Clearplan / Cleardata, MVTRAC, MVConnect) sold to
+      lenders, forwarders, and repo agents under UCC Article 9 (§9-609
+      no-breach-of-peace) + FDCPA + state repo licensing, not abandoned-vehicle
+      statutes. No flagship towing vendor (Towbook, TRAXERO/Autura, VTS, ProTow)
+      masters repossession_assignments. The skid-tow overlap is operational, not
+      schema overlap, so the markets and buyers are different.
+
+  - id: B2-CUSTOMER-MASTER
+    summary: customer/account records mastered locally (embedded_master) vs consumed from CRM.
+    question: >-
+      Should TOW-MGMT master its own customer/account records (embedded_master,
+      deferring to CRM when present), or consume them from CRM as a read-only
+      dependency?
+    options:
+      - master locally as embedded_master, defer to CRM canonical master when present (recommended)
+      - consume from CRM (consumer only)
+    evidence: >-
+      Every flagship (Towbook, TRAXERO/Autura, VTS, ProTow) ships its own
+      account/customer book as a first-class record because tow operators rarely
+      run a separate CRM. The dominant "customer" is the motor club (AAA, Agero,
+      Allstate, Urgent.ly), which is a towing-specific dispatch/billing partner
+      with no CRM analogue. embedded_master keeps TOW-MGMT deployable standalone
+      while deferring to the canonical CRM (id 69) master in a holistic
+      deployment.
+
+  - id: B2-TRUCK-MASTER
+    summary: tow_trucks mastered locally in TOW-DISPATCH vs referenced/consumed from FLEET-MGMT.
+    question: >-
+      Should TOW-MGMT master tow_trucks locally, or reference/consume the
+      vehicle asset from FLEET-MGMT (147)? A towing company's trucks are a
+      vehicle fleet, so FLEET-MAINT could plausibly own the asset.
+    options:
+      - master tow_trucks locally in TOW-DISPATCH, optional consumer link to FLEET (recommended)
+      - consume the vehicle asset from FLEET-MGMT
+    evidence: >-
+      Every towing flagship (Towbook, TRAXERO/Autura, VTS, ProTow) masters the
+      tow truck in-product because it is operationally distinct: boom /
+      wheel-lift / rotator / flatbed class, NSD/WreckMaster certification, and
+      live GPS dispatch state that the generic FLEET vehicle record does not
+      carry. A towing operator that also runs FLEET-MAINT can carry a consumer
+      link for maintenance, but the operational dispatch record stays local.
+
+  - id: B2-REGULATION-SCOPE
+    summary: Which regulation families to seed and tag onto TOW-MGMT (floor vs stretch).
+    question: >-
+      Which regulations should domain_regulations carry once the upstream seed
+      lands (B1B-REGULATIONS-UPSTREAM)? Floor: per-state tow-lien statutes
+      (modeled as a family), DPPA, state PPI rules, state max tow/storage rate
+      regulations, law-enforcement rotation-tow reporting. Stretch adds: NMVTIS
+      disposal reporting, and (only if REPO is ever in scope) UCC Article 9 +
+      FDCPA as conditional applicability.
+    options:
+      - floor only (required applicability)
+      - floor required + stretch conditional applicability (recommended for catalog completeness)
+      - custom (user picks per regulation)
+    evidence: >-
+      The compliance specialists encode exactly the floor set: ADD123 and
+      TRAXERO's TowLien automate per-state notice timelines, certified-mail
+      service, DPPA-gated owner lookups, and title/NMVTIS transfer, and the
+      dispatch flagships (Towbook, ProTow) enforce state max-rate caps and PPI
+      signage/consent. The floor reflects what the flagship vendors actually
+      build their compliance engines around; the stretch rounds out NMVTIS and
+      the repo-adjacent statutes for completeness.
+
+b3:
+  - id: B3-REPO-DOMAIN
+    candidate: REPO (Vehicle Repossession Management)
+    rationale: >-
+      If B2-REPO-SCOPE keeps repossession out of TOW-MGMT, the repo market is a
+      distinct buyer (lenders, forwarders, licensed repo agents) running on
+      dedicated platforms under UCC Article 9 + FDCPA + state repo licensing.
+      Passes the point-solution-market test on its own. Register as a
+      new-domain research candidate; non-blocking, never gates TOW-MGMT.
+    vendor_evidence:
+      - Recovery Database Network (RDN)
+      - Clearplan
+      - Cleardata
+      - MVTRAC
+      - MVConnect

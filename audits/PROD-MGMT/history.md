@@ -473,3 +473,21 @@ Ran `scripts/analytics/b9d_resolver.ts PROD-MGMT` in both directions over every 
 - **UNOWNED (2), report-only:** #775 pull_requests (no master anywhere; VSDP's fix), #781 requirements_to_test_traceability (no master; TEST-MGMT's fix). Recorded as `B2-B9D-UNOWNED-DEPS`.
 
 B1A-B9D-VERIFY moved out of state.yaml (executed). No catalog/DB writes; all owner-side edits are local audit-file additions. Domain stays `feedback_needed` / `next_action_by: user` (pre-existing q1-q12 plus new q13/q14).
+
+## 2026-06-15 - a-file processed
+
+Answers applied (q-PROD-MGMT.md renamed to a-PROD-MGMT.md; "process them"):
+- **a1 (B2-31-1)** "did we not recently merge PMM?": answered - PMM was NEVER merged or built; it was a queued candidate in _missing-domains.md. The user approved promoting it (AskUserQuestion "promote both now"), so PMM was built this pass as a new domain (id 184, 4 modules) and the 6 PMM-flavored capabilities (119-124: LAUNCH-PLANNING, GTM-LAUNCH-COORDINATION, MESSAGING-AND-POSITIONING, SALES-ENABLEMENT-CONTENT, COMPETITIVE-INTELLIGENCE, WIN-LOSS-INTERVIEWS) were RELOCATED from PROD-MGMT to PMM (capability_domains.domain_id 101 -> 184). B2-31-1 resolved.
+- **a2 = b (B2-31-2)**: cleared the Rule #15-polluting product_metrics (408) note; incident logged to skill-changelog.md.
+- **a3 = yes (B2-31-3.featreqpii)**: feature_requests (406) has_personal_content=true.
+- **a4 = yes / a5 = yes / a6 = no (B2-31-3)**: product_releases (404) + product_roadmaps (405) has_submit_lock=true; product_lines (402) left false.
+- **a7 = a (B2-31-4)**: SPM owns a portfolio-level roadmap_items master; PROD-MGMT keeps consuming. Routed to SPM's backlog; no local change. The orphan consumer row stays pending the SPM audit.
+- **a8 = c (B2-31-5)**: left notify_team as-is (tool-grain layer being retired separately).
+- **a9 = a (B2-31-6)**: authored 8 Rule #10 users edges with the default verbs (owned_by / assigned_to / submitted_by / recorded_by).
+- **a10 = a (B2-31-7)**: cleared 9 polluting domain_data_objects notes (rows 437, 651-658); incident logged.
+- **a13 = a (B2-B9D-OWN-956)**: PROD-MGMT owns process 956 (6.5.1.3, customer-feedback-to-PM). Authored process_raci PRODUCT-MANAGER (57) as both Responsible and Accountable (PROD-MGMT has personas, so this realized immediately).
+- **a14 = a (B2-B9D-MISTAG-REPOINT)**: re-pointed 7 mis-tagged handoff_processes to the realized product-development codes (997/1004 -> 2.1.2.1; 1003/1006/1002 -> 2.1.2.2; 999/1000 -> 2.1.1.3).
+
+NOT executed (Rule #1): **a11 (B1A-APQC-APPROVAL-PASS)** blank-defaulted to "approve all tags", but flipping handoff_processes record_status to 'approved' cannot ride an a-file. Those rows stay 'new'; approval needs a separate, explicit, standalone instruction.
+
+Loaders: .tmp_deploy/process_afiles_mechanical_2026_06_15.ts, .tmp_deploy/build_pmm_2026_06_15.ts, .tmp_deploy/fsm_split_prod_raci_2026_06_15.ts. Open: a11 record_status approval (out-of-band) + b3 research (a12=yes; competitor_intelligence_records now routes to the built PMM domain). B1A-APQC-TAGGING-DISCOVER-RESIDUAL (5 untagged handoffs, no clean PCF) unchanged.

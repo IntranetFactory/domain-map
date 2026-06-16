@@ -2,252 +2,65 @@ schema_version: 2
 domain: PROD-MGMT
 status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-08"
+last_audit: "2026-06-15"
+
+# NOTE 2026-06-15 (a-file processed): resolved + dropped B2-31-1 (PMM promoted - 6 caps relocated to
+#   new domain 184), B2-31-2, B2-31-3 (3 flags), B2-31-4 (routed to SPM), B2-31-5 (leave), B2-31-6
+#   (8 users edges), B2-31-7 (notes cleared), B2-B9D-OWN-956 (RACI authored), B2-B9D-MISTAG-REPOINT
+#   (7 re-points). See history.md 2026-06-15. a11 record_status approval NOT executed (out-of-band).
 
 b1a:
   - id: B1A-APQC-TAGGING-DISCOVER-RESIDUAL
-    summary: "5 untagged cross-domain handoffs have no clean L4 PCF match: defer to a Discover/PCF-research pass"
-    finding: "2026-06-07 live recheck: of the 16 handoffs the prior snapshot listed as untagged, 10 are already tagged with agent_curated handoff_processes rows (813, 997, 1001, 1003, 1004, 1006, 1008, 1012, 1323, 1324). 1 more (1002) was tagged this pass with a clean L4 match (PCF 1350, Maintain customer/product master files, external_id 10794). The remaining 5 have no clean L4 PCF match on live and cannot be machine-tagged confidently."
-    action: "Run a Discover/PCF-research pass (or eyeball-confirm a PCF id) for the 5 residual handoffs, then INSERT agent_curated handoff_processes rows. Do NOT force a loose L3 / medium match."
-    affected_handoffs:
-      - {handoff_id: 996, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "beta_program.launched", payload: "beta_programs", note: "proposed 'pilot production' returns no PCF on live"}
-      - {handoff_id: 1005, direction: outbound, source_domain: PROD-MGMT, target_domain: CRM, trigger_event: "product_line.launched", payload: "product_lines", note: "proposed 'sales account relationships' returns no PCF on live"}
-      - {handoff_id: 1007, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "product_metric.threshold_breached", payload: "product_metrics", note: "internal monitoring signal; the customer-service-problems L3 (196) and its L4 children are inbound-customer-contact, not a clean fit"}
-      - {handoff_id: 791, direction: inbound, source_domain: WORK-MGMT, target_domain: PROD-MGMT, trigger_event: "work_automation.triggered", payload: "work_automations", note: "only 'workflow' PCF on live is deployment-procedure (8.6.1.3), not generic automation"}
-      - {handoff_id: 1253, direction: inbound, source_domain: WORK-MGMT, target_domain: PROD-MGMT, trigger_event: "work_automation.disabled", payload: "work_automations", note: "same as 791"}
+    summary: "5 untagged cross-domain handoffs have no clean L4 PCF match: defer to a Discover/PCF-research pass."
+    finding: "996 (beta_program.launched->CSM), 1005 (product_line.launched->CRM), 1007 (product_metric.threshold_breached->CSM), 791 + 1253 (work_automation.* from WORK-MGMT) have no clean L4 PCF match on live; cannot be machine-tagged confidently."
+    action: "Run a Discover/PCF-research pass (or eyeball a PCF id) for the 5, then INSERT agent_curated handoff_processes rows. Do NOT force a loose L3 match."
 
   - id: B1A-APQC-APPROVAL-PASS
-    summary: "DESTRUCTIVE (surfaced): 11 agent_curated handoff_processes rows still at record_status='new' need a reviewer approval pass"
-    finding: "H1 catalog-quality headline (record_status='approved' count). After this pass, 12 of the cross-domain handoffs carry agent_curated tags; 5 are already 'approved' (1008, 1012, 1323, 1324, plus pre-existing approvals) and the rest sit at 'new'. Flipping record_status to 'approved' is a Rule #1 / destructive action the agent never performs."
-    action: "User reviews the agent_curated handoff_processes rows in the catalog UI and approves the correct ones. Agent will not flip record_status."
+    summary: "record_status='approved' pass on the agent_curated handoff_processes rows; needs an explicit standalone instruction (a11 could not authorize it)."
+    finding: "a11 blank-defaulted to bulk-approve, but flipping record_status to 'approved' never rides an a-file (Rule #1). The H1 catalog-quality headline (approved count) stays where it is until the user gives a separate, explicit, standalone instruction naming the rows + target status."
+    blocked_by:
+      - {type: user_decision, ref: explicit-record-status-instruction}
 
 b1b:
   - id: B1B-NEIGHBOR-NULL-OUTBOUND
-    summary: "Report-only: 11 outbound PROD-MGMT handoffs carry NULL target_domain_module_id, owed by 4 neighbor domains"
-    finding: "B10b asymmetry on outbound side. PROD-MGMT's source_domain_module_id is populated on every outbound; the neighbor's target_domain_module_id is NULL on 11 of 20 outbound rows. Fix belongs in the receiving domain's b1 audit."
+    summary: "Report-only: 11 outbound PROD-MGMT handoffs carry NULL target FK, owed by CSM / CDP / DXP / FIN."
+    finding: "PROD-MGMT source FK populated on every outbound; the neighbor's target FK is NULL on 11 of 20. Fix belongs in the receiving domain's b1 audit."
     blocked_by:
-      - {type: domain_audit, blocking_domain: CSM, milestone: "B10b backfill on inbound from PROD-MGMT"}
-      - {type: domain_audit, blocking_domain: CDP, milestone: "B10b backfill on inbound from PROD-MGMT"}
-      - {type: domain_audit, blocking_domain: DXP, milestone: "B10b backfill on inbound from PROD-MGMT"}
-      - {type: domain_audit, blocking_domain: FIN, milestone: "B10b backfill on inbound from PROD-MGMT"}
-    affected_handoffs:
-      - {handoff_id: 996, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "beta_program.launched", payload: "beta_programs", null_field: target_domain_module_id}
-      - {handoff_id: 997, direction: outbound, source_domain: PROD-MGMT, target_domain: CDP, trigger_event: "beta_program.launched", payload: "beta_programs", null_field: target_domain_module_id}
-      - {handoff_id: 998, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "customer_feedback_item.linked_to_feature", payload: "customer_feedback_items", null_field: target_domain_module_id}
-      - {handoff_id: 1001, direction: outbound, source_domain: PROD-MGMT, target_domain: DXP, trigger_event: "product_feature.released", payload: "product_features", null_field: target_domain_module_id}
-      - {handoff_id: 1003, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "product_feature.deprecated", payload: "product_features", null_field: target_domain_module_id}
-      - {handoff_id: 1004, direction: outbound, source_domain: PROD-MGMT, target_domain: CDP, trigger_event: "product_feature.adoption_threshold_reached", payload: "product_features", null_field: target_domain_module_id}
-      - {handoff_id: 1006, direction: outbound, source_domain: PROD-MGMT, target_domain: FIN, trigger_event: "product_line.launched", payload: "product_lines", null_field: target_domain_module_id}
-      - {handoff_id: 1007, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "product_metric.threshold_breached", payload: "product_metrics", null_field: target_domain_module_id}
-      - {handoff_id: 1009, direction: outbound, source_domain: PROD-MGMT, target_domain: DXP, trigger_event: "product_release.shipped", payload: "product_releases", null_field: target_domain_module_id}
-      - {handoff_id: 1010, direction: outbound, source_domain: PROD-MGMT, target_domain: CSM, trigger_event: "product_release.rolled_back", payload: "product_releases", null_field: target_domain_module_id}
-      - {handoff_id: 1011, direction: outbound, source_domain: PROD-MGMT, target_domain: DXP, trigger_event: "product_roadmap.published", payload: "product_roadmaps", null_field: target_domain_module_id}
+      - {type: domain_audit, blocking_domain: CSM, milestone: B10b-inbound-from-PROD-MGMT}
+      - {type: domain_audit, blocking_domain: CDP, milestone: B10b-inbound-from-PROD-MGMT}
+      - {type: domain_audit, blocking_domain: DXP, milestone: B10b-inbound-from-PROD-MGMT}
+      - {type: domain_audit, blocking_domain: FIN, milestone: B10b-inbound-from-PROD-MGMT}
 
   - id: B1B-NEIGHBOR-NULL-INBOUND
-    summary: "Report-only: 6 inbound PROD-MGMT handoffs carry NULL source_domain_module_id, owed by 5 source domains"
-    finding: "B10b asymmetry on inbound side. PROD-MGMT's target_domain_module_id is populated on every inbound; the source domain's source_domain_module_id is NULL on 6 of 11 inbound rows. Fix belongs in the source domain's b1 audit."
+    summary: "Report-only: 6 inbound PROD-MGMT handoffs carry NULL source FK, owed by BPA / SPM / VSDP / TEST-MGMT / DXP."
+    finding: "PROD-MGMT target FK populated on every inbound; the source domain's source FK is NULL on 6 of 11. Fix belongs in the source domain's b1 audit."
     blocked_by:
-      - {type: domain_audit, blocking_domain: BPA, milestone: "B10b backfill on outbound to PROD-MGMT"}
-      - {type: domain_audit, blocking_domain: SPM, milestone: "B10b backfill on outbound to PROD-MGMT"}
-      - {type: domain_audit, blocking_domain: VSDP, milestone: "B10b backfill on outbound to PROD-MGMT"}
-      - {type: domain_audit, blocking_domain: TEST-MGMT, milestone: "B10b backfill on outbound to PROD-MGMT"}
-      - {type: domain_audit, blocking_domain: DXP, milestone: "B10b backfill on outbound to PROD-MGMT (handoff 813)"}
-    affected_handoffs:
-      - {handoff_id: 184, direction: inbound, source_domain: BPA, target_domain: PROD-MGMT, trigger_event: "value_stream.bottleneck_identified", payload: "value_streams", null_field: source_domain_module_id}
-      - {handoff_id: 243, direction: inbound, source_domain: SPM, target_domain: PROD-MGMT, trigger_event: "roadmap_item.released", payload: "roadmap_items", null_field: source_domain_module_id}
-      - {handoff_id: 775, direction: inbound, source_domain: VSDP, target_domain: PROD-MGMT, trigger_event: "pull_request.merged", payload: "pull_requests", null_field: source_domain_module_id}
-      - {handoff_id: 781, direction: inbound, source_domain: TEST-MGMT, target_domain: PROD-MGMT, trigger_event: "requirements_to_test_traceability.linked", payload: "requirements_to_test_traceability", null_field: source_domain_module_id}
-      - {handoff_id: 784, direction: inbound, source_domain: BPA, target_domain: PROD-MGMT, trigger_event: "process_simulation_run.bottleneck_identified", payload: "process_simulation_runs", null_field: source_domain_module_id}
-      - {handoff_id: 813, direction: inbound, source_domain: DXP, target_domain: PROD-MGMT, trigger_event: "ab_test.completed", payload: "ab_tests", null_field: source_domain_module_id}
+      - {type: domain_audit, blocking_domain: SPM, milestone: B10b-outbound-to-PROD-MGMT-incl-roadmap_items}
+      - {type: domain_audit, blocking_domain: VSDP, milestone: B10b-outbound-to-PROD-MGMT}
+      - {type: domain_audit, blocking_domain: TEST-MGMT, milestone: B10b-outbound-to-PROD-MGMT}
 
   - id: B1B-DOWNSTREAM-CONSUMER-DMDOS
-    summary: "Report-only: 4 downstream domains lack consumer DMDOs on PROD-MGMT masters their inbound handoffs carry as payloads"
-    finding: "CSM, CDP, DXP, FIN receive PROD-MGMT outbounds with masters (beta_programs, customer_feedback_items, product_features, product_metrics, product_releases, product_roadmaps, product_lines) as payloads, but none of the receiving domains declare consumer DMDOs on these data_objects. Fix belongs in those domains' b1 audits."
+    summary: "Report-only: CSM / CDP / DXP / FIN lack consumer DMDOs on PROD-MGMT masters their inbound handoffs carry."
+    finding: "Fix belongs in those domains' b1 audits."
     blocked_by:
-      - {type: domain_audit, blocking_domain: CSM, milestone: "add consumer DMDOs on beta_programs, customer_feedback_items, product_features, product_metrics, product_releases"}
-      - {type: domain_audit, blocking_domain: CDP, milestone: "add consumer DMDOs on beta_programs, product_features"}
-      - {type: domain_audit, blocking_domain: DXP, milestone: "add consumer DMDOs on product_features, product_releases, product_roadmaps"}
-      - {type: domain_audit, blocking_domain: FIN, milestone: "add consumer DMDOs on product_lines"}
-    affected_entities: ["beta_programs", "customer_feedback_items", "product_features", "product_metrics", "product_releases", "product_roadmaps", "product_lines"]
+      - {type: domain_audit, blocking_domain: CSM, milestone: consumer-DMDOs-on-PROD-MGMT-masters}
+      - {type: domain_audit, blocking_domain: CDP, milestone: consumer-DMDOs-on-PROD-MGMT-masters}
+      - {type: domain_audit, blocking_domain: DXP, milestone: consumer-DMDOs-on-PROD-MGMT-masters}
+      - {type: domain_audit, blocking_domain: FIN, milestone: consumer-DMDOs-on-PROD-MGMT-masters}
 
 b2:
-  - id: B2-31-1
-    summary: "Should the 6 PMM-flavored capabilities split off into a new PMM domain?"
-    question: "Capabilities LAUNCH-PLANNING (119), GTM-LAUNCH-COORDINATION (120), MESSAGING-AND-POSITIONING (121), SALES-ENABLEMENT-CONTENT (122), COMPETITIVE-INTELLIGENCE (123), WIN-LOSS-INTERVIEWS (124) are attached to PROD-MGMT but no PROD-MGMT module hosts entities/skills/solutions covering them. Per Rule #2 Product Marketing Management passes the point-solution market test (Klue, Crayon, Highspot, Showpad, Seismic, Aha! Create, Pendo Adopt). Promote PMM as a new domain, or keep these under PROD-MGMT?"
-    options:
-      - "(a) Promote PMM as new domain candidate, queue to _missing-domains.md, move 6 capability_domains rows on promotion."
-      - "(b) Leave 6 capabilities on PROD-MGMT, build a new PM-MARKETING module."
-      - "(c) Split per-capability between PMM and GTM-PLAN (104)."
-    why: "Editorial market-boundary judgment, gates Bucket 3 item competitor_intelligence_records."
-
-  - id: B2-31-2
-    summary: "Rule #15 violation on data_objects.notes for product_metrics (408) - approve or revert?"
-    question: "product_metrics (408) data_objects.notes is populated with 'Config-shaped; no workflow. Time-series measurement records (adoption, usage, quality, business KPIs) linked to features and releases. Status is derivable from threshold breaches via computed_fields; no per-state permissions needed.' Rule #12's config-shape exemption license for data_objects.notes is RESCINDED per Rule #15 (the classification is now the entity_type column, set to 'computed' on 2026-06-07). Was this wording user-approved at original load?"
-    options:
-      - "(a) Confirm user-approved at load, leave wording in place."
-      - "(b) Confirm auto-populated, PATCH notes to '' and append Rule #15 incident entry to skill-changelog.md."
-    note: "DESTRUCTIVE (overwrite of a non-empty notes value) - surfaced, not executed. entity_type='computed' was set this pass, so the config-shape signal now lives in the typed column regardless of the notes decision."
-
-  - id: B2-31-3
-    summary: "B4 pattern-flag re-evaluation across 4 PROD-MGMT masters"
-    question: "Which of the following pattern flags should be set true? (a) feature_requests.has_personal_content (submitter contact + verbatim quotes carry PII), (b) product_releases.has_submit_lock (state 3 'shipped' is terminal with requires_permission, no silent post-ship mutation), (c) product_roadmaps.has_submit_lock (state 2 'published' is an external-facing commitment), (d) product_lines.has_submit_lock (likely false, long-lived strategic asset)."
-    options:
-      - "Per-flag yes/no decision."
-    why: "Workflow-shape judgment; Rule #12 + Rule #15 mean auto-flipping flags without surfacing them violates the notes-pollution backstop. All four masters are entity_type='operational_workflow' as of 2026-06-07, so the flags are in scope."
-
-  - id: B2-31-4
-    summary: "roadmap_items (275) orphan: SPM should master, or DELETE + recast handoff payload?"
-    question: "roadmap_items (275) is a consumer DMDO on PM-ROADMAP-DELIVERY (131) but has zero master rows catalog-wide. SPM trigger_event 218 (roadmap_item.released) emits handoff 243 with this payload. Two competing models: (a) SPM owns a portfolio-level roadmap_items master in its portfolio-roadmap module, PROD-MGMT consumes; (b) roadmap_items is a redundant alias for product_roadmaps (405), DELETE the orphan consumer + recast handoff 243 payload."
-    options:
-      - "(a) Schedule SPM b1 audit, let SPM master roadmap_items."
-      - "(b) DELETE the (131, 275) consumer DMDO + PATCH handoff 243 data_object_id from 275 to 405."
-    note: "Option (b) is DESTRUCTIVE (DELETE + payload re-attribution) - surfaced, not executed."
-    evidence: "Dragonboat and Aha! both split roadmaps into a portfolio/strategy tier (Dragonboat portfolio roadmaps + strategic objectives, Aha! strategy initiatives) that masters the cross-product roadmap and a product-delivery tier that consumes it. That master-vs-consume split puts a portfolio roadmap_items master in SPM with PROD-MGMT consuming, supporting option (a)."
-
-  - id: B2-31-5
-    summary: "F5 Semantius score gap: notify_team (914) external on skill 202 vs notify_person (913) platform on skill 201"
-    question: "notify_team (914) has coverage_tier='external' but notify_person (913) has coverage_tier='platform'. Both are side-effect notification primitives; the divergence looks like a load-time inconsistency. Promote notify_team to platform, replace with notify_person, or leave at 95% Semantius score?"
-    options:
-      - "(a) Replace notify_team with notify_person on skill 202 (drop the divergent tool, reach 100% platform)."
-      - "(b) Promote notify_team to coverage_tier='platform' (keep the naming distinction)."
-      - "(c) Leave as-is and accept the 95% Semantius score."
-    note: "Options (a) and (b) are DESTRUCTIVE (overwrite/replace existing rows) - surfaced, not executed. Note: skill_tools is being retired per Plan 3 / per-domain-skill restoration; confirm whether this even survives the skill-grain migration before acting."
-
-  - id: B2-31-6
-    summary: "Rule #10 users edges: approve 8 default platform-builtin verbs?"
-    question: "All 8 PROD-MGMT masters reference the users built-in (748) for ownership / submission / assignment but zero data_object_relationships rows wire the edges. Rule #10 mandates the edges; per-row verb is editorial. Default proposal: product_lines.owned_by, product_features.assigned_to, product_releases.owned_by, product_roadmaps.owned_by, feature_requests.submitted_by, customer_feedback_items.submitted_by, product_metrics.recorded_by, beta_programs.owned_by."
-    options:
-      - "(a) Approve 8 default edges with the proposed verbs."
-      - "(b) Specify per-row verb overrides (list which)."
-    note: "Additive once the verb is chosen, but the per-row verb is an editorial pick the agent cannot make alone - surfaced for the verb decision."
-
-  - id: B2-31-7
-    summary: "Rule #15 pollution on domain_data_objects.notes across 9 PROD-MGMT rows - revert + log incident?"
-    question: "9 PROD-MGMT domain_data_objects.notes rows carry legacy load prose: data_object_id 402-409 carry 'Phase-B Lite batch 1 [em-dash] agent-derived; trigger_events + handoffs deferred to follow-up audit pass' (system-mutation history), data_object_id 249 (value_streams) carries 'Product orgs build delivery value streams (DevOps / Agile lens) [em-dash] same artifact, different vantage point.' (descriptive prose restating role + necessity). All contain em-dashes (project rule forbidden). Rule #15 audit obligation: revert polluting writes and append Rule #15 incident entry to skill-changelog.md."
-    options:
-      - "(a) PATCH 9 domain_data_objects.notes to '' and append Rule #15 incident entry to skill-changelog.md."
-      - "(b) Approve current wording (would require explicit Rule #15 carve-out justification per row)."
-    why: "Same-class violation triggered Rule #15's audit obligation in the prior skill incident log; this audit found it on legacy rows the 2026-05-30 audit did not flag."
-    note: "DESTRUCTIVE (overwrite of non-empty notes values) - surfaced, not executed. Also: domain_data_objects is a deprecated rollup being retired (2026-06-02 changelog); for a modularized domain these rows are slated for deletion anyway, which may moot the notes question."
-  - id: B2-B9D-OWN-956
-    summary: "Product Management: name an owner for \"Provide customer feedback to product management on customer service experience\" (no one is responsible for it today)"
-    question: |
-      Customer Service Management hands work to Product Management, but Product Management has no one assigned to provide customer feedback to product management on customer service experience, so that step currently has nobody responsible for it. Who should own it?
-    options:
-      - "The a named owner runs it and approves it."
-      - "The a named owner runs it and the Head of Product approves."
-      - "Leave it unassigned for now."
-    why: |
-      Product Management already assigns the a named owner to work of this kind, so (a) fills this gap the same way and gives the work a named owner. Surfaced as q-PROD-MGMT.md q13.
-    extra_b9d_added: "2026-06-13"
-
-  - id: B2-B9D-MISTAG-REPOINT
-    summary: "DESTRUCTIVE (surfaced): B9d found 6 PROD-MGMT-authored mis-tagged handoff_processes rows that should be re-pointed or deleted"
-    question: "B9d bidirectional resolution (2026-06-13) found 6 cross-domain handoffs where PROD-MGMT (the sender) tagged the payload with a PCF process whose category does not fit the work; the carried entity is already realized under a product-development (category 2) process. Re-point each handoff_processes row to the realized code, or delete the tag? Findings: (1) #997, #1004 (beta_programs, product_features -> CDP) tagged 2.3 'Develop products and services', realized under 2.1.2.1; (2) #1003 (product_features -> CSM) tagged 6.2.2 'Manage customer service problems', realized under 2.1.2.2; (3) #1006 (product_lines -> FIN) tagged 9.1.3 'Perform cost accounting', realized under 2.1.2.2; (4) #999 (feature_requests -> WORK-MGMT) tagged 1.4.2.3 'Prioritize and manage incoming feedback', realized under 2.1.1.3; (5) #1000 (feature_requests -> CRM) tagged 6.5.3.5 'Provide feedback and insights to appropriate teams', realized under 2.1.1.3; (6) #1002 (product_features -> CRM) tagged 9.2.2.1 'Maintain customer/product master files', realized under 2.1.2.2."
-    options:
-      - "(a) Re-point each handoff_processes row to the realized PCF code listed above (record_status='new')."
-      - "(b) Delete the mis-tagged handoff_processes rows and re-tag in a Discover pass."
-      - "(c) Per-row decision (specify which to re-point vs delete)."
-    note: "DESTRUCTIVE (overwrite of process_id or DELETE) - surfaced, not executed. Both re-point and delete edit/remove existing rows. Separately, ROLL-UP #1324 (okr_objectives, WORK-MGMT->PROD-MGMT) is tagged 1.2.6.3 but realized at parent 1.2.6: that re-point is owned by WORK-MGMT (the source), not PROD-MGMT, so it is surfaced on WORK-MGMT's side."
-    extra_b9d_added: "2026-06-13"
-
   - id: B2-B9D-UNOWNED-DEPS
-    summary: "Report-only: 2 inbound payloads carry data_objects with no master row anywhere in the catalog"
-    question: "B9d found 2 inbound handoffs whose carried entity has no master row catalog-wide: #775 (pull_requests, VSDP->PROD-MGMT, tagged 8.5.4) and #781 (requirements_to_test_traceability, TEST-MGMT->PROD-MGMT, tagged 13.3.2). The carried entities are unowned dependencies on the SENDER side (VSDP, TEST-MGMT), not PROD-MGMT's fix. Surface for those domains' audits; do not drop."
-    options:
-      - "(a) Schedule VSDP b1 audit to master/declare pull_requests."
-      - "(b) Schedule TEST-MGMT b1 audit to master/declare requirements_to_test_traceability."
-    note: "Report-only; the missing master belongs to the sender domain, not PROD-MGMT."
-    extra_b9d_added: "2026-06-13"
+    summary: "Report-only: 2 inbound payloads have no master anywhere (VSDP pull_requests, TEST-MGMT requirements_to_test_traceability)."
+    question: "B9d found #775 (pull_requests, VSDP->PROD-MGMT) and #781 (requirements_to_test_traceability, TEST-MGMT->PROD-MGMT) carry entities with no master row catalog-wide. The missing master belongs to the sender domain, not PROD-MGMT."
+    options: ["schedule_VSDP_audit", "schedule_TEST_MGMT_audit"]
+    why: "Report-only; routes to the sender domains' audits."
 
 b3:
-  - id: B3-PROD-OPPORTUNITIES
-    candidate: "product_opportunities"
-    rationale: "Opportunity-solution-tree pattern (Teresa Torres) is a first-class object distinct from feature_requests. An opportunity is a customer problem framing; a feature request is a proposed solution. Current catalog conflates them inside feature_requests."
-    vendor_evidence:
-      - {vendor: "Productboard", evidence: "1st_class"}
-      - {vendor: "Aha! Roadmaps", evidence: "1st_class"}
-      - {vendor: "Jira Product Discovery", evidence: "1st_class"}
-    proposed_module: "PM-DISCOVERY"
-
-  - id: B3-PROD-THEMES
-    candidate: "product_themes (or strategic_initiatives)"
-    rationale: "Multi-quarter strategic groupings above features and below product strategy. Distinct from OKRs (which are measurable). Currently the concept lives implicitly in product_lines."
-    vendor_evidence:
-      - {vendor: "Aha! Roadmaps", evidence: "1st_class"}
-      - {vendor: "Productboard", evidence: "1st_class"}
-      - {vendor: "Roadmunk", evidence: "1st_class"}
-      - {vendor: "Dragonboat", evidence: "1st_class"}
-    proposed_module: "PM-ROADMAP-DELIVERY (or new PM-STRATEGY)"
-
-  - id: B3-PRIORITIZATION-SCORES
-    candidate: "prioritization_scores"
-    rationale: "RICE / WSJF / value-vs-effort scores as structured records per feature with framework provenance. Currently no scoring entity; if recorded at all it lives inside feature_requests.notes."
-    vendor_evidence:
-      - {vendor: "Productboard", evidence: "1st_class"}
-      - {vendor: "Aha! Roadmaps", evidence: "1st_class"}
-      - {vendor: "Airfocus", evidence: "1st_class"}
-      - {vendor: "Dragonboat", evidence: "1st_class"}
-    proposed_module: "PM-DISCOVERY"
-
-  - id: B3-RELEASE-NOTES
-    candidate: "release_notes (or changelog_entries)"
-    rationale: "External-facing release notes as managed entities: drafts, approvals, customer-segment targeting, embed surface. A primary product deliverable today with no catalog entity."
-    vendor_evidence:
-      - {vendor: "LaunchNotes", evidence: "1st_class"}
-      - {vendor: "Productboard", evidence: "1st_class"}
-      - {vendor: "Canny", evidence: "1st_class"}
-      - {vendor: "Aha! Roadmaps", evidence: "1st_class"}
-    proposed_module: "PM-ROADMAP-DELIVERY (or new PM-COMMS)"
-
-  - id: B3-FEATURE-FLAG-RECORDS
-    candidate: "feature_flag_records"
-    rationale: "Feature-flag entities for gradual rollout, A/B test cohort assignment, kill-switch operations. Adjacent to product_releases but distinct lifecycle. Likely a separate FEATURE-FLAGGING domain rather than PROD-MGMT."
-    vendor_evidence:
-      - {vendor: "LaunchDarkly", evidence: "1st_class"}
-      - {vendor: "Statsig", evidence: "1st_class"}
-      - {vendor: "Flagsmith", evidence: "1st_class"}
-      - {vendor: "Optimizely", evidence: "1st_class"}
-      - {vendor: "Split.io", evidence: "1st_class"}
-    proposed_module: "new FEATURE-FLAGGING domain (per candidate-domain queue)"
-
-  - id: B3-USER-RESEARCH-SESSIONS
-    candidate: "user_research_sessions"
-    rationale: "Structured interview / usability-session records with transcripts and tags. customer_feedback_items currently conflates session output with one-off feedback."
-    vendor_evidence:
-      - {vendor: "Productboard", evidence: "1st_class"}
-      - {vendor: "Dovetail", evidence: "1st_class"}
-      - {vendor: "UserTesting", evidence: "1st_class"}
-      - {vendor: "Maze", evidence: "1st_class"}
-    proposed_module: "PM-DISCOVERY"
-
-  - id: B3-RELEASE-MILESTONES
-    candidate: "release_milestones"
-    rationale: "Date-driven checkpoints inside a release (code-complete, RC1, GA). Currently product_releases carries a single state machine with no milestone granularity."
-    vendor_evidence:
-      - {vendor: "Aha! Roadmaps", evidence: "1st_class"}
-      - {vendor: "Productboard", evidence: "1st_class"}
-      - {vendor: "Roadmunk", evidence: "1st_class"}
-    proposed_module: "PM-ROADMAP-DELIVERY"
-
+  - id: B3-PROD-MGMT-ENTITIES
+    candidate: "product_opportunities, product_themes, prioritization_scores, release_notes, user_research_sessions, release_milestones (-> PM-DISCOVERY / PM-ROADMAP-DELIVERY)"
+    rationale: "a12=yes greenlit research. Well-attested across Productboard / Aha! / Jira Product Discovery / Dovetail. Additive after the modules settle. feature_flag_records likely belongs in a separate FEATURE-FLAGGING domain (queued)."
+    status: research_greenlit
   - id: B3-COMPETITOR-INTELLIGENCE
     candidate: "competitor_intelligence_records"
-    rationale: "Structured competitor / product-comparison records. Likely belongs in a new PMM domain rather than PROD-MGMT (gated by B2-31-1)."
-    vendor_evidence:
-      - {vendor: "Klue", evidence: "1st_class"}
-      - {vendor: "Crayon", evidence: "1st_class"}
-      - {vendor: "Kompyte", evidence: "1st_class"}
-      - {vendor: "Aha! Roadmaps", evidence: "secondary"}
-    proposed_module: "candidate PMM domain (depends on B2-31-1)"
-
-extra_candidate_domains:
-  - {code: "PMM", name: "Product Marketing Management", queue_to: "_missing-domains.md", gated_by: "B2-31-1"}
-  - {code: "FEATURE-FLAGGING", name: "Feature Flagging and Experimentation", queue_to: "_missing-domains.md", gated_by: "B3-FEATURE-FLAG-RECORDS"}
-
-extra_candidate_regulations:
-  - {regulation: "GDPR", applicability: "customer_feedback_items personal_content handling"}
-  - {regulation: "CPRA", applicability: "customer_feedback_items personal_content handling"}
-  - {regulation: "Section 508 / ADA / EAA", applicability: "product roadmap planning accessibility checkpoints"}
-
-extra_h1_pending_review_count: 11
-extra_phase_e_lifecycle_states_with_requires_permission: 14
+    rationale: "Now ROUTES TO PMM: the PMM domain (184) was built this pass and masters competitive_intelligence_records in PMM-COMPETITIVE-INTEL, so this PROD-MGMT b3 candidate is satisfied there. No PROD-MGMT action; closes when PMM's own backlog is worked."
+    status: routed_to_PMM

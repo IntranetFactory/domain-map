@@ -1,299 +1,64 @@
 # === SUPERSEDED 2026-06-06: per-domain-skill restoration ===
-# The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
-# Any open item that says "author/split a per-module system skill", "one system skill per
-# domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELED.
-# New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
-# domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
-# DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
-# cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
-# re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+# Per-module `system` skill grain RETIRED. One domain-grain system skill per domain that DERIVES
+# its toolset; FULL modules carry no skill; starters keep their own. Do NOT author per-module skills.
 # === end supersession note ===
 schema_version: 2
 domain: FSM
 status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-13"
+last_audit: "2026-06-15"
 
-# NOTE (2026-06-07 execute pass): the following prior open items were EXECUTED and dropped:
-#   - B1A-ENTITY-TYPE: 7 masters PATCHed entity_type='operational_workflow' (all carried real
-#     multi-state lifecycles; classification unambiguous).
-#   - B1B-A4 / B2-A4: FSM domain row (31) catalog_tagline + catalog_description authored + written.
-#   - B1B-M8 / B2-M8: 4 modules (161/162/163/171) catalog_tagline + catalog_description authored + written.
-#   - B1A-V2: 3 consumer DMDOs INSERTed on FSM-DISPATCH-OPS (161) for UTIL-OPS payloads (662/664/666).
-#   - B1A-V3: handoff 945 tagged -> process 828 (1261 was already tagged -> process 148; nothing owed).
-# OBSOLETE (superseded by the modularization model, NOT executed):
-#   - B1A-V1: requested hand-writing 3 rows into domain_data_objects, the DEPRECATED derived rollup.
-#     For a modularized domain the rollup must NOT be hand-written; masters live in
-#     domain_module_data_objects, which already carries all 7 FSM masters with role='master' on
-#     their owning modules (740/261/262 -> 161; 819/820/821 -> 162; 741 -> 163). Rollup is derived;
-#     nothing to do. Dropped as obsolete.
-
-b1a:
-  - id: B1A-V4
-    summary: "DESTRUCTIVE REPLACE on handoff 230: DELETE discovery_substring row -> process 777, INSERT agent_curated -> process 196. SURFACED, not executed."
-    finding: "H1 fit gap. Handoff 230 (FSM-DISPATCH-OPS -> CSM via dispatch.failed, payload dispatch_records) still carries a discovery_substring handoff_processes row (id 128) pointing at process 777 'Calculate and optimize destination dispatch plan' (10258 L4). That activity is the FSM-side dispatch-planning verb; the CSM-side receives a service-failure signal it must escalate. Better PCF fit is process 196 'Manage customer service problems, requests, and inquiries' (10388 L3). This is a DESTRUCTIVE replace (DELETE a non-agent row + INSERT) and is never executed unapproved."
-    action: "On approval: DELETE handoff_processes id=128 (handoff 230, process 777). INSERT (handoff 230, process 196, agent_curated). Recommended fix only; awaiting user sign-off."
-    surfaced: "destructive"
-    affected_handoffs:
-      - {handoff_id: 230, direction: outbound, source_domain: FSM, target_domain: CSM, trigger_event: dispatch.failed, payload: dispatch_records}
-
-  - id: B1A-B9D-RETAG
-    summary: "B9d RE-TAG (re-point): 3 FSM-source handoff_processes rows carry a coarse PCF code with a more specific tag available on the same entity. DESTRUCTIVE source edit, surfaced not executed."
-    finding: "B9d resolver (run 2026-06-13, both directions) found 3 ROLL-UP/RE-TAG cases on FSM-source handoffs: (1) handoff 1261 (FSM->CRM, customers) tagged 3.5.2 'Manage customers and accounts' -> more specific 3.5.4.2 'Collect and maintain account information'; (2) handoffs 883 + 229 (FSM->CSM, service_work_orders / field_visits) tagged 6.2.2 -> 4.4.4.3 'Manage transportation fleet'; (3) handoff 292 (FSM->REAL-EST, facility_work_orders) tagged 10.3.3 'Perform asset maintenance' -> 4.3.1.6 'Request unplanned maintenance'. Each re-point edits an existing handoff_processes row (destructive)."
-    action: "On approval: re-point handoff_processes.process_id on the named rows (record_status='new'). Re-run scripts/analytics/b9d_resolver.ts FSM to apply once signed off. Recommended fix only; awaiting user sign-off."
-    surfaced: "destructive"
-    affected_handoffs:
-      - {handoff_id: 1261, direction: outbound, source_domain: FSM, target_domain: CRM, payload: customers, retag: "3.5.2 -> 3.5.4.2"}
-      - {handoff_id: 883, direction: outbound, source_domain: FSM, target_domain: CSM, payload: service_work_orders, retag: "6.2.2 -> 4.4.4.3"}
-      - {handoff_id: 229, direction: outbound, source_domain: FSM, target_domain: CSM, payload: field_visits, retag: "6.2.2 -> 4.4.4.3"}
-      - {handoff_id: 292, direction: outbound, source_domain: FSM, target_domain: REAL-EST, payload: facility_work_orders, retag: "10.3.3 -> 4.3.1.6"}
-
-  - id: B1A-PHASE-P
-    summary: "Multi-module (3 full modules + 1 starter) with 0 operational personas (E1): persona / RACI layer. DEFERRED (do not author)."
-    finding: "Live triage: 3 domain_modules and 0 domain_roles reaching this domain via role_modules after Plan 3 deleted the old _core personas. E1 fires on this multi-module domain. Per the current contract, personas/RACI (B1A-PHASE-P) are DEFERRED, not auto-authored."
-    action: "DEFER. Candidate operational personas (function-anchored, references/roles.md section 7): Field Service Dispatcher (FSM-DISPATCH-OPS), Field Service Technician (FSM-DISPATCH-OPS + FSM-INSTALLED-BASE), Field Service Manager (all 3 full modules), Service Contract Administrator (FSM-SERVICE-CONTRACTS). ATS worked reference: scripts/loaders/load_ats_personas_pilot.ts. Author on explicit user go-ahead."
-    surfaced: "personas_deferred"
+# NOTE 2026-06-15 (a-file processed): resolved + dropped B1A-V4 (a2 tag replace), B1A-B9D-RETAG
+#   (a20, 4 re-points), B2-FLAGS (a7-a12), B2-MOBILE-TECH-SPLIT (a4=b, FSM-MOBILE-TECH built),
+#   B2-CROSS-DOMAIN-ROLE (a5=a), B2-STARTER-HOST-SCOPE (a6=a). See history.md 2026-06-15.
+#   a3 (H1-review) NOT executed - record_status approval cannot ride an a-file (kept open below).
 
 b1b:
   - id: B1B-M7
-    summary: "M7 hard-fail on 4 sibling consumer DMDOs (834, 835, 836, 837) gated on B2-M7 user judgment."
-    finding: "M7 (within-domain incoherence) hard fail. installed_equipment (819, master in FSM-INSTALLED-BASE 162 via DMDO 831) is consumer in FSM-DISPATCH-OPS (DMDO 834) and FSM-SERVICE-CONTRACTS (DMDO 836). customer_sites (821, master in FSM-INSTALLED-BASE 162 via DMDO 833) is consumer in FSM-DISPATCH-OPS (DMDO 835, required) and FSM-SERVICE-CONTRACTS (DMDO 837). M7 rejects master + consumer in sibling modules of the same domain. Resolution (DELETE vs PROMOTE) is a destructive architectural call -> B2-M7."
+    summary: "M7 hard-fail on 4 sibling consumer DMDOs (834-837); blocked on the B2-M7 embedded_master decision."
+    finding: "installed_equipment (819, master in FSM-INSTALLED-BASE) is consumer in FSM-DISPATCH-OPS (834) and FSM-SERVICE-CONTRACTS (836); customer_sites (821) is consumer in FSM-DISPATCH-OPS (835) and FSM-SERVICE-CONTRACTS (837). M7 rejects master+consumer in sibling modules. Resolution (DELETE vs PROMOTE to embedded_master) is destructive and gated on B2-M7."
     blocked_by:
       - {type: user_decision, ref: B2-M7}
-    affected_modules: [161, 162, 163]
-    extra_dmdo_ids: [834, 835, 836, 837]
 
   - id: B1B-H1-APPROVED
-    summary: "H1 quality measure (record_status='approved') stays at 0 of 17 cross-domain handoffs."
-    finding: "All 17 FSM cross-domain handoffs now carry an agent_curated handoff_processes row at record_status='new' (945 tagged 2026-06-07; 1261 already tagged). The H1 catalog-quality headline is the record_status='approved' count, which is 0 and only flips on human sign-off per Rule #1 (the agent never self-approves). Handoff 230 also still carries a discovery_substring row pending the B1A-V4 replace decision."
+    summary: "H1 quality headline (record_status='approved') stays 0 of 17; needs an explicit standalone approval instruction."
+    finding: "All 17 FSM cross-domain handoffs carry agent_curated handoff_processes rows at record_status='new'. a3 blank-defaulted to bulk-approve but record_status flips never ride a/q files (Rule #1). The headline approved count is 0 until the user gives a separate, explicit, standalone instruction naming the rows + target status."
     blocked_by:
-      - {type: user_decision, ref: H1-review}
-    affected_handoffs:
-      - {count: 17, scope_note: "All FSM cross-domain handoffs. Enumerated set: 229, 230, 291, 292, 299, 304, 318, 883, 884, 885, 940, 941, 945, 1094, 1260, 1261, 1262."}
+      - {type: user_decision, ref: H1-review, reason: "record_status approval is out-of-band; not an a-file item"}
 
-  - id: B1B-CSM-PAIRWISE
-    summary: "CSM-side report-only: B10b target FK + consumer DMDOs on 3 FSM outbound handoffs."
-    finding: "Outbound 229 (work_order.completed, field_visits), 230 (dispatch.failed, dispatch_records), 883 (service_work_order.completed, service_work_orders) carry NULL target_domain_module_id on the CSM side. CSM has no consumer DMDO on field_visits (261), dispatch_records (262), service_work_orders (740). Fix belongs to the CSM audit (weight 3 pairwise neighbor)."
+  - id: B1B-NEIGHBOR-PAIRWISE
+    summary: "Report-only: partner-side B10b FKs + consumer DMDOs owed by neighbor audits (CSM, FLEET-MGMT, FIN, EAM, REAL-EST, RE-PROP-MGMT, RE-CRE, UTIL-OPS)."
+    finding: "Outbound 229/230/883 (CSM), 884 (FLEET-MGMT), 885 (FIN), 1260 (EAM) carry NULL target FK on the partner side; inbound 291 (REAL-EST), 299 (RE-PROP-MGMT), 304 (RE-CRE), 940/941/945 (UTIL-OPS) carry NULL source FK on the partner side. FSM side complete. Each is the neighbor's fix."
     blocked_by:
       - {type: domain_audit, blocking_domain: CSM, milestone: b1-target-fk-and-consumer-dmdos}
-    affected_handoffs:
-      - {handoff_id: 229, direction: outbound, target_domain: CSM, payload: field_visits, null_field: target_domain_module_id}
-      - {handoff_id: 230, direction: outbound, target_domain: CSM, payload: dispatch_records, null_field: target_domain_module_id}
-      - {handoff_id: 883, direction: outbound, target_domain: CSM, payload: service_work_orders, null_field: target_domain_module_id}
-
-  - id: B1B-FLEET-PAIRWISE
-    summary: "FLEET-MGMT-side report-only: B10b target FK on outbound 884 + consumer DMDO on service_work_orders."
-    finding: "Outbound 884 (service_work_order.assigned, service_work_orders) carries NULL target_domain_module_id on the FLEET-MGMT side; FLEET-MGMT has no consumer DMDO on service_work_orders (740). Fix belongs to the FLEET-MGMT audit."
-    blocked_by:
       - {type: domain_audit, blocking_domain: FLEET-MGMT, milestone: b1-target-fk-and-consumer-dmdo}
-    affected_handoffs:
-      - {handoff_id: 884, direction: outbound, target_domain: FLEET-MGMT, payload: service_work_orders, null_field: target_domain_module_id}
-
-  - id: B1B-FIN-PAIRWISE
-    summary: "FIN-side report-only: B10b target FK on outbound 885 + consumer DMDO on service_work_orders."
-    finding: "Outbound 885 (service_work_order.completed, service_work_orders) carries NULL target_domain_module_id on the FIN side; FIN has no consumer DMDO on service_work_orders (740). Fix belongs to the FIN audit."
-    blocked_by:
       - {type: domain_audit, blocking_domain: FIN, milestone: b1-target-fk-and-consumer-dmdo}
-    affected_handoffs:
-      - {handoff_id: 885, direction: outbound, target_domain: FIN, payload: service_work_orders, null_field: target_domain_module_id}
-
-  - id: B1B-EAM-PAIRWISE
-    summary: "EAM-side report-only: B10b target FK on outbound 1260 + consumer DMDO on installed_equipment."
-    finding: "Outbound 1260 (installed_equipment.decommissioned, installed_equipment) carries NULL target_domain_module_id on the EAM side; EAM has no consumer DMDO on installed_equipment (819). Fix belongs to the EAM audit."
-    blocked_by:
       - {type: domain_audit, blocking_domain: EAM, milestone: b1-target-fk-and-consumer-dmdo}
-    affected_handoffs:
-      - {handoff_id: 1260, direction: outbound, target_domain: EAM, payload: installed_equipment, null_field: target_domain_module_id}
+      - {type: domain_audit, blocking_domain: UTIL-OPS, milestone: master-published-payloads-and-source-fk}
 
-  - id: B1B-REAL-EST-PAIRWISE
-    summary: "REAL-EST-side report-only: B10b source FK on inbound 291."
-    finding: "Inbound 291 (facility_work_order.created, facility_work_orders) carries NULL source_domain_module_id on the REAL-EST side. FSM-side target_domain_module_id is 161. Fix belongs to the REAL-EST audit."
-    blocked_by:
-      - {type: domain_audit, blocking_domain: REAL-EST, milestone: b1-source-fk-on-inbound}
-    affected_handoffs:
-      - {handoff_id: 291, direction: inbound, source_domain: REAL-EST, payload: facility_work_orders, null_field: source_domain_module_id}
-
-  - id: B1B-RE-PROP-MGMT-PAIRWISE
-    summary: "RE-PROP-MGMT-side report-only: B10b source FK on inbound 299."
-    finding: "Inbound 299 (tenant_maintenance_request.created, tenant_maintenance_requests) carries NULL source_domain_module_id on the RE-PROP-MGMT side. FSM-side is 161. Fix belongs to the RE-PROP-MGMT audit."
-    blocked_by:
-      - {type: domain_audit, blocking_domain: RE-PROP-MGMT, milestone: b1-source-fk-on-inbound}
-    affected_handoffs:
-      - {handoff_id: 299, direction: inbound, source_domain: RE-PROP-MGMT, payload: tenant_maintenance_requests, null_field: source_domain_module_id}
-
-  - id: B1B-RE-CRE-PAIRWISE
-    summary: "RE-CRE-side report-only: B10b source FK on inbound 304."
-    finding: "Inbound 304 (tenant_maintenance_request.created, tenant_maintenance_requests) carries NULL source_domain_module_id on the RE-CRE side. FSM-side is 161. Fix belongs to the RE-CRE audit."
-    blocked_by:
-      - {type: domain_audit, blocking_domain: RE-CRE, milestone: b1-source-fk-on-inbound}
-    affected_handoffs:
-      - {handoff_id: 304, direction: inbound, source_domain: RE-CRE, payload: tenant_maintenance_requests, null_field: source_domain_module_id}
-
-  - id: B1B-UTIL-OPS-PAIRWISE
-    summary: "UTIL-OPS-side report-only: B10b source FK on inbound 940, 941, 945."
-    finding: "Inbound 940 (utility_service_order.dispatched), 941 (utility_asset.failed), 945 (meter_read.anomalous), all UTIL-OPS -> FSM-DISPATCH-OPS, carry NULL source_domain_module_id on the UTIL-OPS side. FSM-side target is 161 on all 3, and the FSM consumer DMDOs (666/664/662) are now present on 161 (this domain's side complete). Source FK fix belongs to the UTIL-OPS audit (weight 3 neighbor)."
-    blocked_by:
-      - {type: domain_audit, blocking_domain: UTIL-OPS, milestone: b1-source-fk-on-inbound}
-    affected_handoffs:
-      - {handoff_id: 940, direction: inbound, source_domain: UTIL-OPS, payload: utility_service_orders, null_field: source_domain_module_id}
-      - {handoff_id: 941, direction: inbound, source_domain: UTIL-OPS, payload: utility_assets, null_field: source_domain_module_id}
-      - {handoff_id: 945, direction: inbound, source_domain: UTIL-OPS, payload: meter_reads, null_field: source_domain_module_id}
-
-  - id: B1B-B9D-UNOWNED
-    summary: "B9d UNOWNED dependency: 3 UTIL-OPS->FSM inbound handoffs carry payloads with no master row anywhere in the catalog. Owed by the sender (UTIL-OPS)."
-    finding: "B9d resolver (run 2026-06-13, both directions) classified 2 inbound payload processes as UNOWNED (the carried entity has no master row in any domain): (1) process 828 'Report maintenance issues' carries utility_assets + meter_reads on handoffs 941, 945 (UTIL-OPS->FSM); (2) process 1898 'Schedule field service' carries utility_service_orders on handoff 940 (UTIL-OPS->FSM). These are unowned dependencies on the sender: the payloads must be mastered on the UTIL-OPS side before B9d can resolve them. Do not drop; surfaced for UTIL-OPS's audit."
-    blocked_by:
-      - {type: domain_audit, blocking_domain: UTIL-OPS, milestone: master-the-published-payload-entities}
-    affected_handoffs:
-      - {handoff_id: 941, direction: inbound, source_domain: UTIL-OPS, payload: utility_assets, process: 828}
-      - {handoff_id: 945, direction: inbound, source_domain: UTIL-OPS, payload: meter_reads, process: 828}
-      - {handoff_id: 940, direction: inbound, source_domain: UTIL-OPS, payload: utility_service_orders, process: 1898}
+  - id: B1A-PHASE-P
+    summary: "Persona / RACI layer (E1) for the now-4-full-module domain. DEFERRED."
+    finding: "FSM has 4 full modules + 1 starter and 0 operational personas. Candidate personas: Field Service Dispatcher (DISPATCH-OPS), Field Service Technician (MOBILE-TECH + INSTALLED-BASE), Field Service Manager (all full modules), Service Contract Administrator (SERVICE-CONTRACTS). Author on explicit user go-ahead."
 
 b2:
   - id: B2-M7
-    summary: "M7 architectural choice: DELETE 4 sibling consumer DMDOs (834, 835, 836, 837) or PROMOTE to embedded_master?"
-    question: "installed_equipment and customer_sites (both master in FSM-INSTALLED-BASE) carry consumer rows in sibling FSM modules (FSM-DISPATCH-OPS and FSM-SERVICE-CONTRACTS). M7 rejects master + consumer within the same domain. DELETE (sibling modules read masters by canonical reference) or PROMOTE to embedded_master (each sibling ships a standalone-deployable shell)? Standalone DISPATCH-OPS without INSTALLED-BASE has no equipment to service against; standalone SERVICE-CONTRACTS without INSTALLED-BASE has no equipment to cover. Agent default DELETE. Both paths are destructive on existing rows, so neither is executed unapproved."
-    options:
-      - "(a) DELETE all 4 sibling consumer rows (834, 835, 836, 837)."
-      - "(b) PROMOTE all 4 to embedded_master."
-      - "(c) Mixed per row."
-    why: "Architectural intent and deployability strategy decision; user's call."
-
-  - id: B2-FLAGS
-    summary: "B4 / Rule #12 pattern-flag re-evaluation on 6 candidates across 5 FSM masters."
-    question: "Current pattern flags: only service_contracts has has_single_approver=true; all other flags false on all 7 masters (now all classified operational_workflow, so flags are in scope). Candidates: (a) service_work_orders.has_submit_lock (completed is requires_permission=true; lock-on-completion is standard FSM). (b) field_visits.has_personal_content (signature, customer name, on-site photo). (c) dispatch_records.has_submit_lock (returned is terminal). (d) installed_equipment.has_personal_content (serial / warranty info). (e) service_contracts.has_submit_lock (once active). (f) service_pm_schedules.has_submit_lock (post-completed)."
-    options:
-      - "Per-flag yes/no on each of the 6 candidates."
-    why: "Pattern flags are workflow-shape judgments the user owns. Setting a flag overwrites the current value, so deferred to user."
-
-  - id: B2-CROSS-DOMAIN-ROLE
-    summary: "Cross-domain role bridging FSM + CSM + CRM for customer-care-around-service-failures?"
-    question: "FSM has no cross-domain role bridging to CSM / CRM the way RE-BROKERAGE has SALES-TRANSACTION-COORDINATOR. Should an FSM-CUSTOMER-SUCCESS or FSM-OPERATIONS-MANAGER cross-domain role bundle FSM-DISPATCH-OPS + CSM CSM-CASE-MGMT for the failure-escalation workflow (handoffs 229, 230, 883 land in CSM)?"
-    options:
-      - "(a) No cross-domain role (CSM owns its own roles)."
-      - "(b) Add FSM-CUSTOMER-SUCCESS bundling FSM-DISPATCH-OPS + CSM CSM-CASE-MGMT."
-      - "(c) Defer to CSM audit."
-    why: "RBAC architecture and persona-design question. Pairs with B1A-PHASE-P (operational personas)."
-
-  - id: B2-MOBILE-TECH-SPLIT
-    summary: "Modularization: split FSM-DISPATCH-OPS into a dispatcher-side and a mobile-tech-side module?"
-    question: "Capability FSM-MOBILE-TECH (617) realizes within FSM-DISPATCH-OPS today. Flagship products ship a distinct mobile module with offline sync, route-of-day, and signature capture. Split FSM-DISPATCH-OPS into FSM-DISPATCH-OPS (dispatcher) and FSM-MOBILE-TECH (tech-side)? Pairs with B3-V2 / B3-V6 entity placement."
-    options:
-      - "(a) Keep single DISPATCH-OPS."
-      - "(b) Split into DISPATCH-OPS + MOBILE-TECH."
-      - "(c) Defer until Bucket 3 vetting."
-    evidence: "Every flagship packages the technician truck as a module separate from the dispatcher desk: Salesforce Field Service Mobile, ServiceMax Go, Praxedo Mobile, ServiceNow Mobile Agent, plus the dedicated technician apps from ServiceTitan and IFS, each carrying offline sync, route-of-day, and signature capture that the dispatch console does not. None fold the tech persona into the dispatch board, so the market shape supports the split."
-    why: "Modularization design call; pairs with B3-V2 entity placement."
-
-  - id: B2-STARTER-HOST-SCOPE
-    summary: "HVAC-SVC-MGMT starter cross-domain host metadata: add CRM / CPQ / FIN, or keep FSM-only?"
-    question: "HVAC-SVC-MGMT (171) embeds shells from CRM (customers, crm_contacts), CPQ (sales_quotes), and FIN (customer_invoices) but lists FSM only via domain_module_host_domains. Add host rows for CRM / CPQ / FIN so the catalog reflects cross-domain reach?"
-    options:
-      - "(a) Add host_domain rows for CRM / CPQ / FIN."
-      - "(b) Keep FSM-only since the home-services workflow centers there."
-    why: "Editorial / host-junction discipline question."
-
-  - id: H1-review
-    summary: "H1 quality measure: human review and approve agent_curated handoff_processes rows."
-    question: "All 17 FSM cross-domain handoffs now carry agent_curated handoff_processes rows at record_status='new'. The H1 quality headline (record_status='approved') stays at 0 until a reviewer signs off. Approve in bulk, approve per row, or defer? (Handoff 230 also carries a legacy discovery_substring row pending the B1A-V4 replace decision.)"
-    options:
-      - "(a) Approve all agent_curated FSM rows in bulk."
-      - "(b) Review per row."
-      - "(c) Defer."
-    why: "Rule #1 forbids the agent self-approving record_status; only the user can mark approved."
-
-# RETIRED (per-module skill-grain / skill_tools, superseded 2026-06-06 / Plan 3):
-#   - B2-STARTER-SCOPE: scope of the starter system skill 236's skill_tools (self-sufficient vs
-#     delegate). skill_tools is DROPPED under the new model; per-module tool re-authoring is tracked
-#     in audits/_modularization-backlog.md as domain_module_tools work. No longer a live b2 decision.
-  - id: B2-B9D-OWN-353
-    summary: "Field Service Management: name an owner for \"Perform asset maintenance\" (no one is responsible for it today)"
-    question: |
-      Enterprise Asset Management forwards installed equipment unit to Field Service Management to perform asset maintenance, but Field Service Management does not yet have anyone assigned to perform asset maintenance, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work Field Service Management owns, and assign a named owner once Field Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment Field Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSM.md q16.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-355
-    summary: "Field Service Management: name an owner for \"Decommission productive assets\" (no one is responsible for it today)"
-    question: |
-      Enterprise Asset Management forwards installed equipment unit to Field Service Management to decommission productive assets, but Field Service Management does not yet have anyone assigned to decommission productive assets, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work Field Service Management owns, and assign a named owner once Field Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment Field Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSM.md q17.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-862
-    summary: "Field Service Management: name an owner for \"Manage transportation fleet\" (no one is responsible for it today)"
-    question: |
-      Fleet Management forwards service work order to Field Service Management to manage transportation fleet, but Field Service Management does not yet have anyone assigned to manage transportation fleet, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work Field Service Management owns, and assign a named owner once Field Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment Field Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSM.md q18.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-777
-    summary: "Field Service Management: name an owner for \"Calculate and optimize destination dispatch plan\" (no one is responsible for it today)"
-    question: |
-      Customer Service Management forwards dispatch record to Field Service Management to calculate and optimize destination dispatch plan, but Field Service Management does not yet have anyone assigned to calculate and optimize destination dispatch plan, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work Field Service Management owns, and assign a named owner once Field Service Management sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment Field Service Management decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FSM.md q19.
-    extra_b9d_added: "2026-06-13"
+    summary: "Promote the 4 sibling consumer DMDOs to embedded_master? (a1 = 'shouldn't these be embedded masters?')"
+    question: "installed_equipment and customer_sites (both master in FSM-INSTALLED-BASE) carry consumer rows in sibling FSM-DISPATCH-OPS and FSM-SERVICE-CONTRACTS, which M7 rejects. Promote all 4 to embedded_master (each sibling ships a standalone-deployable shell that demotes to consumer when INSTALLED-BASE is co-installed), DELETE the 4 consumer rows (siblings read the canonical master by reference), or mix per row?"
+    options: ["promote_to_embedded_master", "delete_consumer_rows", "mixed"]
+    evidence: "User leaned embedded_master, and it is the right call here: a standalone FSM-DISPATCH-OPS with no installed base has no equipment to service, and a standalone FSM-SERVICE-CONTRACTS has nothing to cover, so the embedded shell (not deletion) preserves independent deployability. The demotion to consumer happens automatically when FSM-INSTALLED-BASE is co-deployed. Promoting is a DESTRUCTIVE rewrite of the 4 existing consumer rows, so it needs your sign-off before execution."
+    why: "Architectural deployability decision; the a-file question keeps it open until you confirm the destructive promotion."
 
 b3:
-  - id: B3-V1
-    candidate: "time_entries + time_sheets + labor_rates"
-    rationale: "Technician time tracking, billable hours, rate cards. No FSM master records time on a visit / work order; billing relies on free-text. Universal across flagship FSM products."
-    proposed_module: "FSM-DISPATCH-OPS (161) or new FSM-BILLING module"
-
-  - id: B3-V2
-    candidate: "signature_records + service_photos + mobile_devices"
-    rationale: "Proof-of-completion artifacts. Signature capture and photo upload are core technician mobile workflow. Placement depends on B2-MOBILE-TECH-SPLIT."
-    proposed_module: "FSM-DISPATCH-OPS (161), or FSM-MOBILE-TECH if B2-MOBILE-TECH-SPLIT lands"
-
-  - id: B3-V3
-    candidate: "safety_inspections + inspection_checklists"
-    rationale: "Regulated technician safety (OSHA / NEC / EPA). Specialist verticals lean on these inspections; currently no FSM master."
-    proposed_module: "FSM-INSTALLED-BASE (162) or new FSM-SAFETY module"
-
-  - id: B3-V4
-    candidate: "warranties + warranty_claims"
-    rationale: "Equipment warranty coverage and manufacturer claims. service_contracts currently conflates customer SLA with manufacturer warranty."
-    proposed_module: "FSM-INSTALLED-BASE (162) or sibling FSM-WARRANTY"
-
-  - id: B3-V5
-    candidate: "rate_cards + service_pricing_books + service_quotes"
-    rationale: "Pre-work pricing and parts markup. The starter embeds sales_quotes (CPQ-mastered) but pricing books and rate-cards have no first-class FSM home."
-    proposed_module: "new FSM-PRICING module or extension of FSM-SERVICE-CONTRACTS"
-
-  - id: B3-V6
-    candidate: "FSM-MOBILE-TECH module split"
-    rationale: "Modularization candidate paired with B2-MOBILE-TECH-SPLIT and B3-V2. Splitting masters: field_visits, signature_records, service_photos, mobile_devices migrate to the new module."
-    proposed_module: "new FSM-MOBILE-TECH (full module)"
-
-  - id: B3-V7
-    candidate: "FSM-WARRANTY module split"
-    rationale: "Modularization candidate paired with B3-V4. Separates manufacturer warranty from customer SLA. Pushes FSM from 3 to 4 full modules; capability count (7) supports the split per Rule #14."
-    proposed_module: "new FSM-WARRANTY (full module)"
-
-  - id: B3-V8
-    candidate: "domain_regulations row for OSHA 1910 (US technician on-site safety)"
-    rationale: "FSM has zero domain_regulations rows today. OSHA 1910 is the foundational regulatory anchor for any on-site technician workflow."
-    proposed_module: "n/a, domain_regulations row on domain_id=31"
-
-  - id: B3-V9
-    candidate: "domain_regulations row for EPA refrigerant handling (Section 608, HVAC vertical)"
-    rationale: "Vertical regulation specific to HVAC field service. Relevant to HVAC-SVC-MGMT starter and any future TRADES-SVC domain split."
-    proposed_module: "n/a, domain_regulations row on domain_id=31"
-
-  - id: B3-V10
-    candidate: "TRADES-SVC (Trades and Home-Services Field Operations) domain candidate"
-    rationale: "Residential trade contractors form a distinct buyer profile from enterprise FSM (5-50 techs vs enterprise field-service organizations). Consumer-grade invoicing, membership programs, lead generation, per-tech-per-month pricing. The point-solution-market test passes against the listed vendor set."
-    proposed_module: "n/a, new domains row (TRADES-SVC) with its own module set"
+  - id: B3-FSM-ENTITIES
+    candidate: "time_entries+time_sheets+labor_rates; signature_records+service_photos+mobile_devices (-> FSM-MOBILE-TECH); safety_inspections+inspection_checklists; warranties+warranty_claims; rate_cards+service_pricing_books+service_quotes"
+    rationale: "a13=yes greenlit research. Five entity clusters across flagship FSM vendors with no FSM home yet. The proof-of-completion cluster now has a natural home in the new FSM-MOBILE-TECH module. Warranties may warrant a separate FSM-WARRANTY module (decide during research)."
+    status: research_greenlit
+  - id: B3-FSM-REGULATIONS
+    candidate: "domain_regulations: OSHA 1910 (technician on-site safety), EPA Section 608 (refrigerant handling, HVAC)"
+    rationale: "a14=yes. OSHA 1910 is the baseline on-site-safety anchor; EPA 608 only if the HVAC vertical stays in scope. Additive."
+    status: research_greenlit
+  - id: B3-TRADES-SVC
+    candidate: "TRADES-SVC (Trades and Home-Services Field Operations) new-domain candidate"
+    rationale: "a15=yes as a research candidate only. Residential trade contractors (5-50 techs, consumer-grade invoicing, memberships, lead-gen) are a distinct buyer from enterprise FSM. Vendor set (ServiceTitan, Housecall Pro, Workiz, Jobber, FieldEdge, BigChange) passes the point-solution test; whether to spin it out is a separate decision."
+    vendor_evidence: ["ServiceTitan", "Housecall Pro", "Workiz", "Jobber", "FieldEdge", "BigChange"]
+    status: research_greenlit

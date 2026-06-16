@@ -445,3 +445,17 @@ Total: 7 PATCH (entity_type) + 5 PATCH (catalog UX) + 3 INSERT (DMDO) + 1 INSERT
 ### Post-fix status
 
 `next_action_by: user`. Open decisions: B2-M7, B2-FLAGS, B2-CROSS-DOMAIN-ROLE, B2-MOBILE-TECH-SPLIT, B2-STARTER-HOST-SCOPE, H1-review, plus the destructive B1A-V4 replace and the deferred B1A-PHASE-P personas. All blocked b1b items wait on those decisions or on neighbor-domain audits.
+
+## 2026-06-15 - a-file processed
+
+Answers applied (q-FSM.md renamed to a-FSM.md; "process them"):
+- **a2 (B1A-V4)**: replaced the discovery_substring tag on handoff 230 - deleted handoff_processes 128 (proc 777), inserted (230 -> proc 196 "Manage customer service problems", agent_curated, new).
+- **a20 (B1A-B9D-RETAG)**: re-pointed 4 coarse tags to their realized child codes - 1261 (3.5.2 -> 3.5.4.2), 883 + 229 (6.2.2 -> 4.4.4.3), 292 (10.3.3 -> 4.3.1.6).
+- **a7-a12 (B2-FLAGS)**: service_work_orders.has_submit_lock, field_visits.has_personal_content, dispatch_records.has_submit_lock, service_contracts.has_submit_lock, service_pm_schedules.has_submit_lock = true; installed_equipment.has_personal_content left false (a10=no).
+- **a4 = b (B2-MOBILE-TECH-SPLIT)**: split FSM-DISPATCH-OPS - created FSM-MOBILE-TECH (398), moved field_visits master (DMDO 818), the FSM-MOBILE-TECH capability (617), the 4 field_visits lifecycle states, and outbound handoff 229 to it. Dispatcher keeps service_work_orders + dispatch_records. FSM now 4 full modules + 1 starter.
+- **a5 = a (B2-CROSS-DOMAIN-ROLE)**: no cross-domain FSM<->CSM role; customer service owns its own roles.
+- **a6 = a (B2-STARTER-HOST-SCOPE)**: added FIN host row on the HVAC starter (171); CRM + CPQ host rows already present.
+
+NOT executed (Rule #1): **a3 (H1-review)** blank-defaulted to "approve all tags in bulk", but flipping handoff_processes record_status to 'approved' can never ride an a-file. The 17 agent_curated rows stay at 'new'; approval needs a separate, explicit, standalone instruction naming the rows.
+
+Looped into the regenerated q-FSM.md: **a1 (B2-M7)** "shouldn't these be embedded masters?" - yes; re-asked to confirm promoting the 4 sibling consumer DMDOs (installed_equipment, customer_sites) to embedded_master (a destructive rewrite of existing rows). b3 research (a13/a14/a15 = yes) greenlit, parked. Loaders: .tmp_deploy/process_afiles_mechanical_2026_06_15.ts, .tmp_deploy/fsm_split_prod_raci_2026_06_15.ts.

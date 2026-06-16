@@ -984,3 +984,13 @@ Both are the same entity-follows-the-unit principle plan-4 established for gates
 **Scope.** Catalog-wide, all future audits / research that produce q-files. Existing thin q-files are NOT backfilled in this pass (user chose prevent-future-only); run `qfile_grounding_lint.ts --all` to triage when ready.
 
 **Status.** Active.
+
+## 2026-06-15 - Rule #15 notes pollution cleared on PROD-MGMT (remediation, user-approved)
+
+**Incident.** Pre-existing `notes` pollution on PROD-MGMT, authored by earlier loads (not this session) and flagged by the prior audit as `B2-31-2` / `B2-31-7`. Two clusters: (1) `data_objects.notes` on `product_metrics` (408) carried "Config-shaped; no workflow. Time-series measurement records ... no per-state permissions needed." - a restated config-shape exemption whose license was RESCINDED by Rule #15 (the signal now lives in `entity_type='computed'`, already set). (2) Nine `domain_data_objects.notes` rows (ids 437, 651-658) carried system-mutation / load-history prose ("Phase-B Lite batch 1 ... agent-derived; trigger_events + handoffs deferred ...") plus a value-stream restatement on row 437, all containing the project-forbidden em-dash.
+
+**Contradicting rationalization (historical).** The product_metrics note rode the old Rule #12 "config-shape exemption recorded in data_objects.notes" license; the nine rollup notes rode the older "Phase-B Lite defer note" loader habit. Both licenses are RESCINDED under Rule #15 (notes empty by default; populate only with per-row user-approved wording).
+
+**Remediation.** Both clusters surfaced to the user as `a-`file questions (q2 / q10 of `q-PROD-MGMT.md`); user approved clearing. All 10 `notes` values PATCHed to `''` via `.tmp_deploy/process_afiles_mechanical_2026_06_15.ts` (idempotent, verified 0 remaining nonempty). No `record_status` touched. The nine `domain_data_objects` rows are a deprecated derived rollup slated for deletion regardless.
+
+**Status.** Active.

@@ -1,0 +1,24 @@
+schema_version: 2
+domain: PMM
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-15"
+
+# NOTE 2026-06-15: PMM promoted + built this pass (domain 184, 4 modules, 17 masters, 7 relocated
+#   capabilities, pmm-system skill). See history.md. No open user decision; only deferred follow-ups.
+
+b1b:
+  - id: B1B-PHASE-P
+    summary: "Persona / RACI layer (E1) for the 4-module domain. DEFERRED (author on go-ahead)."
+    finding: "PMM has 4 full modules and 0 personas. Candidate personas: Product Marketing Manager (cross-module), Competitive Intelligence Analyst, Launch Manager, Sales Enablement Manager. Author domain_roles + role_modules reach + process_raci, wire lifecycle.process_id."
+
+  - id: B1B-HANDOFFS
+    summary: "Cross-domain handoffs (B9) - inbound from PROD-MGMT + CI/win-loss outbound feeds. DEFERRED."
+    finding: "Inbound product.launch_scheduled from PROD-MGMT (PM-ROADMAP-DELIVERY) into PMM-LAUNCH-MGMT (PROD-MGMT's B9 owes the outbound). Outbound: competitive intel / win-loss feeds toward CRM and REV-INTEL; sales-enablement consumes CRM opportunity context. Author trigger_events + handoffs; reconcile pairwise with PROD-MGMT / CRM / REV-INTEL."
+
+  - id: B1B-ALIASES-TOOLS
+    summary: "data_object_aliases (B11) + broader domain_module_tools. DEFERRED (corrective-additive)."
+    finding: "Non-self-explanatory masters (messaging_frameworks, battlecards, value_propositions) want vendor-synonym aliases. The 10-tool Phase-S set can broaden per master."
+
+b2: []
+b3: []

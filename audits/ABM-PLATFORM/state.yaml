@@ -1,0 +1,31 @@
+schema_version: 2
+domain: ABM-PLATFORM
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-15"
+
+# NOTE 2026-06-15: ABM-PLATFORM promoted + built this pass (domain 185, 4 modules, 12 masters +
+#   3 embedded_master + 3 consumer from GTM-PLAN, abm-platform-system skill). See history.md.
+#   No open user decision; deferred follow-ups + one expansive-additive (GDPR regulation) below.
+
+b1b:
+  - id: B1B-PHASE-P
+    summary: "Persona / RACI layer (E1) for the 4-module domain. DEFERRED (author on go-ahead)."
+    finding: "ABM-PLATFORM has 4 full modules and 0 personas. Candidate personas: ABM Strategist / Marketing Ops Manager (cross-module), Intent Analyst, Campaign Orchestration Manager, Advertising Manager. Author domain_roles + role_modules + process_raci, wire lifecycle.process_id."
+
+  - id: B1B-HANDOFFS
+    summary: "More cross-domain handoffs (B9) beyond the 2 GTM-PLAN inbounds. DEFERRED."
+    finding: "GTM-PLAN -> ABM (target_account_list.approved, ideal_customer_profile.updated) are wired. Still to author: intent / engagement-score feeds toward CRM and REV-INTEL; ABM consumes CRM opportunity context; PROD-MGMT launch -> ABM campaign triggers. Reconcile pairwise with GTM-PLAN / CRM / REV-INTEL / MA."
+
+  - id: B1B-ALIASES-TOOLS
+    summary: "data_object_aliases (B11) + broader domain_module_tools. DEFERRED (corrective-additive)."
+    finding: "Non-self-explanatory masters (account_identifications, web_visitor_resolutions, orchestration_playbooks) want vendor-synonym aliases. The 7-tool Phase-S set can broaden per master."
+
+b2:
+  - id: B2-REGULATIONS
+    summary: "Author domain_regulations GDPR + CPRA for ABM-PLATFORM (contact-level PII is the GDPR/CCPA trigger)."
+    question: "ABM handles contact-level intent, web-visitor resolution, and engagement (all PII), so GDPR + CCPA/CPRA genuinely apply (compliance is modeled via consent_records + data_subject_requests entities + has_personal_content flags). Add domain_regulations links? CPRA (id 3) exists; GDPR would be a NEW regulations row (expansive addition, surfaced not auto-loaded)."
+    options: ["link_cpra_and_create_gdpr", "link_cpra_only", "none_handled_by_entities"]
+    why: "Rule #21: a new regulations row is an expansive addition that ships only after approval; the compliance entities already carry the obligation, so the domain_regulations link is a catalog-completeness choice."
+
+b3: []

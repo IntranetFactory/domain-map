@@ -1,0 +1,101 @@
+schema_version: 2
+domain: EA
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-15"
+
+# EA is NOT in the live catalog. This is a domain CANDIDATE, scoped 2026-06-15.
+# Phase 0 vendor surface: .tmp_deploy/EA-phase0-2026-06-15.md
+# Backlog entry: audits/_missing-domains.md (## Pending review, "EA — Enterprise Architecture").
+# Promotion cascades into BPA (B2-CAPMAP-OWNER, B2-EA-SOLUTION-SPLIT, B3-EA-PROMOTION,
+# B3-ARCHIMATE-MODELS) and APM (B3-APM-MARKET-SURFACE / the q8 tech-risk module).
+
+b1a: []
+
+b2:
+  - id: B2-EA-PROMOTE
+    summary: "Promote EA (Enterprise Architecture) as its own domain (Phase A), fold the artifacts into APM/BPA, or keep queued."
+    question: |
+      EA passes the point-solution-market test. Should it be created as a domain, bounded as a
+      cross-layer umbrella that consumes APM (applications) and BPA (processes) rather than
+      re-mastering them? This is the gate: nothing is written to the catalog until it is answered.
+    options:
+      - "Promote-as-domain: create EA and master only the cross-layer set (repository/metamodel, technology standards & reference architecture, roadmap/transformation); consume applications from APM and processes from BPA."
+      - "Fold into APM/BPA: do not create EA; treat the artifacts as capabilities/modules inside the existing domains."
+      - "Keep queued: leave in the backlog and revisit later."
+    evidence: |
+      All five flagship EA tools (LeanIX/SAP, Ardoq, Software AG Alfabet, MEGA HOPEX, BiZZdesign
+      Horizzon) sell a product built around a surface no existing domain masters: the architecture
+      repository and metamodel, ArchiMate model artifacts, the approved technology-standards catalog
+      and reference architectures, the technology radar, architecture principles and decision records
+      (ADRs), and the baseline-to-target roadmap with gaps/transition architectures. APM (id 10)
+      masters only the application inventory (cost/value/fit); BPA (id 136) masters process models;
+      neither owns the metamodel/repository or the standards-governance surface. Dedicated Gartner
+      "Enterprise Architecture Tools" market with 7+ pure-plays. Phase 0: .tmp_deploy/EA-phase0-2026-06-15.md.
+    why: |
+      New domain = a market-shape b2 (not b3). Creating EA is structural; surfaced for the user's
+      go/no-go. Gates every other EA item and the queued BPA cascade items.
+
+  - id: B2-EA-SCOPE-BOUNDARY
+    summary: "Bound EA to master only its cross-layer set and consume APM/BPA, vs a broad EA that re-masters applications/processes/capabilities."
+    question: |
+      Should EA master only its distinctive cross-layer artifacts (25 entities across 3 modules) and
+      consume applications/processes from APM/BPA, or also re-master those layers itself?
+    options:
+      - "Bounded umbrella: EA masters its 25-entity cross-layer set across 3 full modules (EA Repository & Metamodel; Technology Standards & Reference Architecture; Architecture Roadmap & Transformation) and consumes enterprise_applications + technology_platforms from APM and business_processes from BPA."
+      - "Broad EA: EA additionally re-masters applications/processes/capabilities, duplicating APM's and BPA's masters."
+    evidence: |
+      Phase 0 ownership column: in LeanIX, Ardoq, Alfabet, HOPEX, and BiZZdesign the application and
+      process objects appear in the EA repository as REFERENCED fact-sheets, not as the repository's
+      own system of record. The tools pull the application inventory from the APM/CMDB layer and the
+      process layer from process tooling. Re-mastering would duplicate APM/BPA masters and break the
+      single-master rule (M7). Domain has >=3 capabilities, so >=2 full modules (Rule #14); the
+      hypothesis is 3.
+    why: |
+      Market-shape (master-vs-consume + module count). Conditional on B2-EA-PROMOTE = promote.
+
+  - id: B2-EA-TECH-LAYER
+    summary: "Split the technology layer between EA (prescriptive standards) and APM (operational inventory + risk); resolves the EA<->APM-q8 overlap."
+    question: |
+      APM's pending q8 proposes an APM tech-layer (split technology_platforms into products/services/
+      platforms + a tech-risk surface: vulnerabilities, application_risks, lifecycles, standards,
+      controls, obligations). EA also wants a technology-standards layer. Who masters
+      architecture_standards, technology_lifecycle_phases, and reference_architecture_models?
+    options:
+      - "EA owns the prescriptive half, APM the operational half: EA masters architecture_standards (the approved-standards catalog), technology_lifecycle_phases (the phase/radar policy), and reference_architecture_models; APM's q8 module keeps the per-instance inventory (products/services/platforms), vulnerabilities, application_risks, controls, obligations and references EA's standard."
+      - "APM owns it all (per its q8): standards/lifecycle stay in APM; EA references them."
+      - "Defer: settle at EA's Phase B."
+    evidence: |
+      Phase 0 (c): Software AG Alfabet and LeanIX define technology standards and the lifecycle/radar
+      policy in the EA repository as a NORMATIVE catalog (what is approved/recommended), distinct from
+      the per-application inventory APM tracks; Ardoq's Technology Portfolio separates the
+      lifecycle-policy lens from component instances. The split is define-once-in-EA, reference-from-APM,
+      avoiding a duplicate master. Cross-ref APM B3-APM-MARKET-SURFACE (the q8 tech-risk module): if
+      APM q8 lands first with a local standards table, flag it for promotion into EA at EA's Phase B.
+    why: |
+      Market-shape (where an entity is mastered). Must be decided together with APM q8, not separately,
+      so the technology standard is defined once.
+
+  - id: B2-EA-CAPMAP
+    summary: "Decide whether business capability mapping belongs to EA (4th module + canonical master of business_capability_maps), stays with APM/BPA, or becomes its own domain."
+    question: |
+      Business capability modeling (capability heatmaps, value streams) is a core EA layer (business
+      architecture). Should EA own it, adding a Business Architecture / Capability module and taking
+      canonical ownership of business_capability_maps (currently mastered by APM id 248, embedded in
+      BPA)? This is coupled to BPA's open B2-CAPMAP-OWNER (which already lists "EA owns" as an option).
+    options:
+      - "EA owns capability mapping: add a 4th module (Business Architecture / Capability) holding business_capabilities, capability_assessments, value_streams; relocate the business_capability_maps canonical master APM -> EA. Resolves BPA B2-CAPMAP-OWNER option 3."
+      - "Leave it out of EA: APM keeps business_capability_maps canonical (or BPA, per BPA's own decision); EA consumes it and ships 3 modules."
+      - "Promote BUSINESS-CAPABILITY-MAP as its own standalone domain instead, separate from EA."
+    evidence: |
+      Phase 0 CAP-MAP rows: all five flagship EA tools (LeanIX, Ardoq, Alfabet, HOPEX, BiZZdesign)
+      master business_capabilities + capability_assessments + value_streams as first-class
+      business-architecture objects inside the EA repository, and the capability heatmap is a headline
+      EA feature. Counter-pressure: BPA's B1B-M3 / B2-CAPMAP-OWNER already contest this master
+      (BPA-prefixed capability codes argue for BPA); APM currently masters it (id 248). Genuinely
+      three-way, so it is the user's call.
+    why: |
+      Market-shape (where an entity is mastered + a possible new domain). Coupled to BPA B2-CAPMAP-OWNER
+      and B2-EA-SOLUTION-SPLIT; resolving EA here unblocks both.
+
+b3: []

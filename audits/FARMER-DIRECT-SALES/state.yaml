@@ -1,228 +1,74 @@
 # === SUPERSEDED 2026-06-06: per-domain-skill restoration ===
-# The per-module `system` skill grain is RETIRED (plans/per-domain-skill-restoration.md).
-# Any open item that says "author/split a per-module system skill", "one system skill per
-# domain_modules row", "add/PATCH skill_tools", or "<module>_agent per module" is CANCELED.
-# New model: tool requirements live on `domain_module_tools` (author tools onto modules); each
-# domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module_id null) that
-# DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
-# cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
-# re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+# Per-module `system` skill grain RETIRED. One domain-grain system skill per domain that DERIVES
+# its toolset; FULL modules carry no skill; starters keep their own. Do NOT author per-module skills.
 # === end supersession note ===
 schema_version: 2
 domain: FARMER-DIRECT-SALES
 status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-13"
+last_audit: "2026-06-15"
 
-# NOTE 2026-06-07 (state-driven execute): EXECUTED and dropped from open items:
-#   - B1A-ENTITY-TYPE: all 9 FDS masters classified (514/515/516/517/518/520/521 operational_workflow;
-#     519 pickup_locations and 522 farm_storefronts classified catalog). 0 remain unclassified.
-#   - Catalog UX (Rule #20 / A4 / M8): authored buyer-voice catalog_tagline + catalog_description on the
-#     domain row (158) and all 8 modules (118-124 full, 172 starter), all previously empty.
-# RETIRED / superseded by the 2026-06-06 per-domain-skill restoration (do NOT re-open):
-#   - former B1B-S4 (19 skill_tools.notes rows violating Rule #15) and former B2-S2 (revert authorization):
-#     the `skill_tools` table is dropped (live PGRST205 confirms it no longer exists). Per-module system
-#     skills are retired; there is nothing to revert. Closed as moot.
+# NOTE 2026-06-15 (a-file processed): resolved + dropped B2-S3 (a2, leave Delivery Ops), B2-S4 (a3=b,
+#   no CRM handoff -> B1B-S5 closed won't-do), B2-S6 (a5, hierarchy), B2-S7 (a6, starter minimal),
+#   B2-B9D-RETAG-363 (a12 re-pointed). See history.md 2026-06-15.
 
 b1a:
   - id: B1A-PHASE-P
-    summary: "Multi-module (8 modules) with 0 personas post-Plan-3 (E1 fail): author the persona / RACI layer. DEFERRED (Phase-P)."
+    summary: "Multi-module (8 modules) with 0 personas (E1): persona / RACI layer. DEFERRED."
     status: deferred
-    finding: "Live triage 2026-06-02 (still current 2026-06-07): 8 domain_modules and 0 domain_roles reaching this domain via role_modules. Plan 3 deleted the old _core personas, so E1 fires on this multi-module domain. Per state-driven Validate contract personas/RACI are deferred (Phase-P), not authored in a bulk execute pass."
-    action: "Author domain_roles (operational personas) function-anchored per references/roles.md section 7, wire role_modules reach across the 8 modules, add process_raci responsibility rows, and wire data_object_lifecycle_states.process_id. ATS is the worked reference (scripts/loaders/load_ats_personas_pilot.ts)."
-    candidate_personas: "Farm Operator (owner-operator), CSA Manager, Wholesale / Food-Hub Manager, Delivery Coordinator, Market Cashier, Butcher / Processing Coordinator, Harvest Planner. (FDS already has 6 FDS-specific RBAC roles named in history; persona layer should align to those plus a harvest planner.)"
-    extra_phase_p_triage: "2026-06-02"
+    finding: "8 domain_modules and 0 domain_roles. Candidate personas: Farm Operator, CSA Manager, Wholesale/Food-Hub Manager, Delivery Coordinator, Market Cashier, Butcher/Processing Coordinator, Harvest Planner. Author on explicit user go-ahead."
 
 b1b:
   - id: B1B-S1
-    summary: 4 outbound FDS handoffs carry NULL target_domain_module_id; owed by FIN and FOOD-TRACE b1 audits.
-    finding: >-
-      B10b report-only. 4 outbound handoffs from FDS carry NULL target_domain_module_id: 364 (FDS-CSA-MGMT to FIN, csa_subscription.charged, payload csa_memberships, api_call, medium friction), 960 (FDS-MARKET-POS to FIN, farmers_market_sale.recorded, payload farmers_market_sales, batch_sync, low friction), 961 (FDS-WHOLESALE to FIN, wholesale_order.confirmed, payload wholesale_orders, event_stream, low friction), 963 (FDS-BUTCHER to FOOD-TRACE, butcher_order.ready, payload butcher_orders, event_stream, low friction). FDS cannot populate these; the receiving domain owns its module split.
+    summary: "4 outbound FDS handoffs carry NULL target FK; owed by FIN and FOOD-TRACE audits."
+    finding: "364 (csa_memberships -> FIN), 960 (farmers_market_sales -> FIN), 961 (wholesale_orders -> FIN), 963 (butcher_orders -> FOOD-TRACE). FDS cannot populate; the receiving domain owns its module split."
     blocked_by:
       - {type: domain_audit, blocking_domain: FIN, milestone: revenue-AR-module-resolved}
       - {type: domain_audit, blocking_domain: FOOD-TRACE, milestone: product-lot-tracking-module-resolved}
-    affected_handoffs:
-      - {handoff_id: 364, direction: outbound, source_domain: FDS, target_domain: FIN, trigger_event: csa_subscription.charged, payload: csa_memberships, null_field: target_domain_module_id}
-      - {handoff_id: 960, direction: outbound, source_domain: FDS, target_domain: FIN, trigger_event: farmers_market_sale.recorded, payload: farmers_market_sales, null_field: target_domain_module_id}
-      - {handoff_id: 961, direction: outbound, source_domain: FDS, target_domain: FIN, trigger_event: wholesale_order.confirmed, payload: wholesale_orders, null_field: target_domain_module_id}
-      - {handoff_id: 963, direction: outbound, source_domain: FDS, target_domain: FOOD-TRACE, trigger_event: butcher_order.ready, payload: butcher_orders, null_field: target_domain_module_id}
 
   - id: B1B-S2
-    summary: 1 inbound FDS handoff carries NULL source_domain_module_id; owed by FMIS b1 audit.
-    finding: >-
-      B10b report-only. Inbound handoff 350 from FMIS to FDS-HARVEST-PLANNING (harvest_record.created, payload harvest_records, manual_handoff, high friction) carries NULL source_domain_module_id. FDS target_domain_module_id is populated to 124. FMIS owns its module split.
+    summary: "1 inbound FDS handoff (350, FMIS harvest_record.created) carries NULL source FK; owed by FMIS audit."
+    finding: "FDS target FK populated to 124; FMIS owns its module split."
     blocked_by:
       - {type: domain_audit, blocking_domain: FMIS, milestone: harvest-records-module-resolved}
-    affected_handoffs:
-      - {handoff_id: 350, direction: inbound, source_domain: FMIS, target_domain: FDS, trigger_event: harvest_record.created, payload: harvest_records, null_field: source_domain_module_id}
 
-  - id: B1B-S5
-    summary: Candidate missing inbound CRM-to-FDS-ONLINE-STORE handoff; gated on B2-S4.
-    finding: >-
-      Boundary candidate inbound handoff. If CRM is the small-farm system of record for DTC lead conversion, a crm_opportunity.closed_won (or marketing_subscriber.purchased) inbound handoff to FDS-ONLINE-STORE 119 with payload customers should exist. Small-farm CRM coverage is uneven (some operators run no CRM and use the storefront's built-in customer registry; others run HubSpot/Mailchimp/Klaviyo). Confidence low. No structural fix without B2-S4 confirmation that CRM is the SoR for DTC lead conversion in this market.
+  - id: B1B-CRM-RETARGET
+    summary: "a4 = b: retarget the 3 CRM-pipeline handoffs (365/962/964) to the right CRM engagement module, pending the CRM audit. Also gates 3 of 4 B1B-H1 tags."
+    finding: "365 (csa_share_pack.delivered), 962 (delivery_route.dispatched), 964 (harvest_forecast.updated) currently target CRM-PIPELINE-MGT, which is probably wrong (these are member-facing comms / fulfillment notices, not pipeline events). The user chose 'retarget per the upcoming CRM b1 audit'. Retargeting overwrites a populated target_domain_module_id (destructive), executed once the CRM audit pins the customer-engagement module."
     blocked_by:
-      - {type: user_decision, ref: B2-S4}
+      - {type: domain_audit, blocking_domain: CRM, milestone: customer-engagement-module-identified}
 
   - id: B1B-H1
-    summary: 4 cross-domain handoffs still untagged for APQC PCF; 3 gated on B2-S5 target-module correctness, 1 has no clean PCF match.
-    finding: >-
-      Residual H1 APQC tagging gap (verified live 2026-06-07: 0 handoff_processes rows on 365/962/963/964). 10 of 14 cross-domain handoffs already carry handoff_processes rows (350 pre-existing process_id=171, plus 363/364/960/961/1213/1214/1215/1216/1217 added in 2026-05-31 continuation, all proposal_source=agent_curated, record_status=new). 4 remain untagged: 365 (FDS-CSA-MGMT to CRM, csa_share_pack.delivered, payload csa_share_packs), 962 (FDS-DELIVERY-OPS to CRM, delivery_route.dispatched, payload delivery_routes), 964 (FDS-HARVEST-PLANNING to CRM, harvest_forecast.updated, payload harvest_forecasts) all currently target CRM-PIPELINE-MGT 46 (probably wrong, B2-S5); 963 (FDS-BUTCHER to FOOD-TRACE, butcher_order.ready, payload butcher_orders) has no clean PCF match in 16448 family (resolved to risk-management, unrelated), defer to Discover Pass 3 custom-process authoring path. No clean independent PCF match exists for any of the 4 while the CRM-target question is open, so all 4 stay deferred.
+    summary: "4 cross-domain handoffs untagged for APQC; 3 gated on the CRM retarget, 1 (963) has no clean PCF match."
+    finding: "365/962/964 stay deferred until B1B-CRM-RETARGET lands (no clean independent PCF while the CRM target is open). 963 (butcher_order.ready -> FOOD-TRACE) has no clean cross-industry PCF; route to Discover Pass 3 custom-process authoring."
     blocked_by:
-      - {type: user_decision, ref: B2-S5}
-      - {type: depends_on, ref: discover-pass-3, reason: 963 has no clean PCF cross-industry match; needs custom-process authoring}
-    affected_handoffs:
-      - {handoff_id: 365, direction: outbound, source_domain: FDS, target_domain: CRM, trigger_event: csa_share_pack.delivered, payload: csa_share_packs, null_field: handoff_processes_row}
-      - {handoff_id: 962, direction: outbound, source_domain: FDS, target_domain: CRM, trigger_event: delivery_route.dispatched, payload: delivery_routes, null_field: handoff_processes_row}
-      - {handoff_id: 963, direction: outbound, source_domain: FDS, target_domain: FOOD-TRACE, trigger_event: butcher_order.ready, payload: butcher_orders, null_field: handoff_processes_row}
-      - {handoff_id: 964, direction: outbound, source_domain: FDS, target_domain: CRM, trigger_event: harvest_forecast.updated, payload: harvest_forecasts, null_field: handoff_processes_row}
+      - {type: prerequisite_entity, ref: B1B-CRM-RETARGET}
+      - {type: depends_on, ref: discover-pass-3, reason: "963 needs custom-process authoring"}
+
+  - id: B1B-B9D-OWN
+    summary: "FDS owns processes 55 + 1356 (a10/a11=a) but has no persona to name yet."
+    finding: "a10/a11 chose 'record it now as FDS-owned': process 55 (revenue accounting on farmers_market_sales) and 1356 (receive/deposit customer payments on csa_memberships). FDS has 0 personas (Phase-P deferred), so the named owner / process_raci R-A cannot be authored until the persona layer exists. Recorded as owned-pending-persona."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1A-PHASE-P}
 
 b2:
   - id: B2-S1
-    summary: M7 architectural choice; 5 sibling-consumer DMDO rows in FDS modules either accurate runtime cross-module reads or M7 violations to delete.
-    question: >-
-      Are the 5 sibling-consumer DMDO rows in FDS the intended deployability shape (each module deploys separately and consumes sibling masters via the 9 intra-domain lifecycle_progression handoffs), or do they violate M7 (within-domain redundancy that should be cured)?
-    options:
-      - "(a) KEEP all 5 consumer rows as accurate runtime cross-module read declarations and mark M7 as satisfied by-design for this domain."
-      - "(b) DELETE all 5 sibling consumer DMDO rows and rely solely on master plus handoff."
-      - "(c) PROMOTE specific rows to embedded_master if certain modules should be standalone-deployable (e.g. FDS-DELIVERY-OPS without FDS-CSA-MGMT, FDS-WHOLESALE, or FDS-BUTCHER)."
-    why: Architectural intent and deployability strategy decision; agent cannot decide whether the modules are meant to be independently deployable or whether the consumer rows are residual redundancy. Note option (b) is DESTRUCTIVE (DELETE); requires explicit user approval.
-    extra_affected_dmdo:
-      - {domain_module_id: 120, module_code: FDS-DELIVERY-OPS, data_object_id: 515, data_object_name: csa_share_packs, role: consumer, mastered_by_module_id: 118}
-      - {domain_module_id: 120, module_code: FDS-DELIVERY-OPS, data_object_id: 517, data_object_name: wholesale_orders, role: consumer, mastered_by_module_id: 122}
-      - {domain_module_id: 118, module_code: FDS-CSA-MGMT, data_object_id: 518, data_object_name: delivery_routes, role: consumer, mastered_by_module_id: 120}
-      - {domain_module_id: 122, module_code: FDS-WHOLESALE, data_object_id: 518, data_object_name: delivery_routes, role: consumer, mastered_by_module_id: 120}
-      - {domain_module_id: 118, module_code: FDS-CSA-MGMT, data_object_id: 519, data_object_name: pickup_locations, role: consumer, mastered_by_module_id: 119}
-      - {domain_module_id: 120, module_code: FDS-DELIVERY-OPS, data_object_id: 520, data_object_name: butcher_orders, role: consumer, mastered_by_module_id: 123}
-
-  - id: B2-S3
-    summary: FDS-DELIVERY-OPS as cross-cutting fulfillment module candidate.
-    question: >-
-      Should FDS-DELIVERY-OPS be renamed FDS-FULFILLMENT and registered as a cross-cutting module hosting on FDS-CSA-MGMT, FDS-WHOLESALE, and FDS-BUTCHER via domain_module_host_domains (currently zero rows for any FDS module), or left as-is with the intra-domain lifecycle handoffs adequately representing the dependency, or split into per-channel modules?
-    options:
-      - "(a) Leave as-is (lifecycle handoffs adequately represent the dependency)."
-      - "(b) Rename to FDS-FULFILLMENT and add explicit domain_module_host_domains junctions to FDS-CSA-MGMT 118, FDS-WHOLESALE 122, FDS-BUTCHER 123."
-      - "(c) Split delivery into per-channel modules (probably overkill for the small-farm operator)."
-    why: Module refactor judgment (a rename is destructive/restructuring); FDS-DELIVERY-OPS only masters delivery_routes but is destination of 4 cross-module lifecycle handoffs and consumes 4 sibling masters.
-    extra_affected_module_id: 120
-
-  - id: B2-S4
-    summary: Should CRM seed a DTC online-store purchase-intent handoff to FDS-ONLINE-STORE?
-    question: >-
-      In the small-farm market, is CRM the system of record for DTC lead conversion (warranting a crm_opportunity.closed_won inbound to FDS-ONLINE-STORE 119, payload customers), or is the storefront itself the lead system?
-    options:
-      - "(a) Author the inbound CRM to FDS-ONLINE-STORE handoff."
-      - "(b) Skip (storefront-as-CRM is the small-farm reality)."
-      - "(c) Defer to Bucket 3 vendor research."
-    why: Market-shape judgment on small-farm CRM adoption; agent does not have authoritative evidence. Gates B1B-S5.
-
-  - id: B2-S5
-    summary: CRM target-module accuracy on 3 outbound handoffs currently pointing at CRM-PIPELINE-MGT.
-    question: >-
-      Are handoffs 365 (csa_share_pack.delivered), 962 (delivery_route.dispatched), 964 (harvest_forecast.updated) correctly targeting CRM-PIPELINE-MGT 46, or should they retarget to a customer-marketing/engagement CRM module, or away from CRM entirely?
-    options:
-      - "(a) Confirm CRM-PIPELINE-MGT is correct (small-farm CRM uses pipeline-mgmt as catch-all)."
-      - "(b) Retarget per the upcoming CRM b1 audit to a different CRM module."
-      - "(c) Retarget away from CRM entirely toward a marketing-automation or notification domain (currently not loaded)."
-    why: CRM module shape question; depends on how CRM models customer marketing vs pipeline management. Gates 3 of the 4 B1B-H1 APQC tags. Retargeting an existing populated target_domain_module_id is a destructive overwrite (needs approval).
-    extra_affected_handoff_ids: [365, 962, 964]
-
-  - id: B2-S6
-    summary: E6 permission-bundle drift check on workflow-gate permissions.
-    question: >-
-      Are the 24 FDS workflow-gate permissions intentionally relying on permission_hierarchy expansion under :manage and :admin, or should specific gates be explicitly granted on FDS-specific roles?
-    options:
-      - "(a) Confirm hierarchy expands gates; leave bundles as-is."
-      - "(b) Add explicit gate grants on specific FDS roles (Farm Operator, CSA Manager, Wholesale Manager, Delivery Coordinator, Market Cashier)."
-      - "(c) Leave drift; assumption is permission_hierarchy covers everything."
-    why: Hierarchy seeding state was not introspected this pass; cannot tell whether the gates are reachable via :manage/:admin bundles on FDS roles.
-
-  - id: B2-S7
-    summary: CSA-STARTER coverage breadth decision (4 embeds vs broader).
-    question: >-
-      Should CSA-STARTER 172 additionally embed delivery_routes (solo CSA farms doing their own deliveries) and/or harvest_forecasts (CSA share composition is forecast-driven), or is the starter intentionally minimal at 4 embeds (csa_memberships, csa_share_packs, pickup_locations, customers)?
-    options:
-      - "(a) Starter intentionally minimal; leave at 4 embeds."
-      - "(b) Add embedded_master rows for both delivery_routes 518 and harvest_forecasts 521."
-      - "(c) Add only one (user specifies which)."
-    why: Editorial / product intent question; agent cannot decide whether the starter's lite path is correct.
-  - id: B2-B9D-OWN-55
-    summary: "Farmer-Direct Sales Platform: name an owner for \"Perform revenue accounting\" (no one is responsible for it today)"
-    question: |
-      Core Financial Management forwards farmers market sale to Farmer-Direct Sales Platform to perform revenue accounting, but Farmer-Direct Sales Platform does not yet have anyone assigned to perform revenue accounting, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work Farmer-Direct Sales Platform owns, and assign a named owner once Farmer-Direct Sales Platform sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment Farmer-Direct Sales Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FARMER-DIRECT-SALES.md q10.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-OWN-1356
-    summary: "Farmer-Direct Sales Platform: name an owner for \"Receive/Deposit customer payments\" (no one is responsible for it today)"
-    question: |
-      Core Financial Management forwards csa membership to Farmer-Direct Sales Platform to receive or Deposit customer payments, but Farmer-Direct Sales Platform does not yet have anyone assigned to receive or Deposit customer payments, so this step has no owner. How should it be handled?
-    options:
-      - "Record it now as work Farmer-Direct Sales Platform owns, and assign a named owner once Farmer-Direct Sales Platform sets up who does this work."
-      - "Leave it off the list for now."
-    why: |
-      Recording it now means that the moment Farmer-Direct Sales Platform decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-FARMER-DIRECT-SALES.md q11.
-    extra_b9d_added: "2026-06-13"
-  - id: B2-B9D-RETAG-363
-    summary: "B9d ROLL-UP re-point (destructive, needs sign-off): re-tag handoffs 363/1214/1215 from APQC 3.5.2 to the more specific 3.5.2.4."
-    question: >-
-      On the FDS<->CRM customer boundary, handoffs 363 (FDS->CRM), 1214 and 1215 (CRM->FDS, payload customers) are tagged with the coarse APQC process 3.5.2 "Manage customers and accounts", but the work CRM actually realizes on the same entity is the more specific 3.5.2.4 "Manage customer relationships". Re-point handoff_processes.process_id from 148 (3.5.2) to 718 (3.5.2.4) on these 3 rows?
-    options:
-      - "(a) Re-point all 3 to 3.5.2.4 (matches the realized child process; overwrites the existing process_id, destructive)."
-      - "(b) Leave at 3.5.2 (the coarser parent tag is acceptable)."
-    why: >-
-      B9d classified these as ROLL-UP (the realized code is a descendant of the tagged code). Re-pointing overwrites a non-empty handoff_processes.process_id on existing rows, which is a destructive overwrite per Rule #21 / Rule #1 and is never applied unprompted. The new row stays record_status='new'; no record_status flip is implied.
-    extra_affected_handoff_ids: [363, 1214, 1215]
-    extra_b9d_added: "2026-06-13"
+    summary: "The 5 sibling-consumer DMDO rows: embedded_master, keep, or delete? (a1 = 'would embed master be better?')"
+    question: "5 DMDO rows let one FDS module read a master a sibling module owns (e.g. Delivery Ops reading CSA share packs, wholesale orders, butcher orders). Promote specific ones to embedded_master so those modules (Delivery Ops especially) run fully standalone, keep all 5 as accurate runtime cross-module reads, or delete all 5 and rely on master + handoff?"
+    options: ["promote_to_embedded_master_where_standalone", "keep_all_5_consumer", "delete_all_5"]
+    evidence: "User asked whether embedded_master is better - it is, for any module meant to deploy standalone. Delivery Ops is the clearest case: it is the destination of 4 cross-module handoffs and consumes 4 sibling masters, so an embedded shell lets it ship without CSA-MGMT / WHOLESALE / BUTCHER and demote to consumer when they are co-installed. The domain already has 9 intra-domain handoffs wiring these flows, so the rows are accurate reads, not redundancy - keeping them is also valid if you do NOT need per-module standalone deploy. Promoting / deleting rewrites existing rows (destructive), so it needs sign-off. This sets the deployability shape for every module."
+    why: "Architectural deployability decision; the a-file question keeps it open until you confirm which rows become embedded_master."
 
 b3:
-  - id: B3-share_swaps
-    candidate: share_swaps
-    rationale: >-
-      Harvie, Barn2Door, Local Line all model per-week member swap / pause / dietary substitution as a structured record distinct from the share pack itself. csa_share_packs 515 likely conflates share composition with per-member customization. A share_swaps master would track member-specific deviation from the canonical week's pack (substitution requests, pause windows, dietary flags).
-    vendor_evidence: [Harvie, Barn2Door, Local Line]
-    proposed_module: FDS-CSA-MGMT
-
-  - id: B3-farmers_market_events
-    candidate: farmers_market_events
-    rationale: >-
-      Open Food Network, Local Line, FoodKonnekt model individual farmers-market days/events as structured records (which market, which date, which booth, which vendors). farmers_market_sales 516 records sales but no parent event entity exists; cross-market reporting and recurring market-day scheduling lose context.
-    vendor_evidence: [Open Food Network, Local Line, FoodKonnekt]
-    proposed_module: FDS-MARKET-POS
-
-  - id: B3-producer_payouts
-    candidate: producer_payouts
-    rationale: >-
-      Open Food Network, Local Food Marketplace, GrownBy model the food-hub multi-farm split as structured payout records per producer per fulfillment cycle. FDS-WHOLESALE 122 has no payout-split entity; multi-farm aggregation is described in capability text (FDS-FOODHUB-AGGREGATION 480) but not materialized.
-    vendor_evidence: [Open Food Network, Local Food Marketplace, GrownBy]
-    proposed_module: FDS-WHOLESALE
-
-  - id: B3-producers
-    candidate: producers
-    rationale: >-
-      Food-hub aggregators (Open Food Network, Local Food Marketplace) model partner producers as a first-class entity distinct from customers 97 or vendors. No producer master exists; multi-farm aggregation has no participant registry.
-    vendor_evidence: [Open Food Network, Local Food Marketplace]
-    proposed_module: FDS-WHOLESALE
-
-  - id: B3-cottage_food_disclosures
-    candidate: cottage_food_disclosures
-    rationale: >-
-      US state cottage-food regulations and farmers-market sales-tax remittance regimes require disclosure records (label-required statements, gross-receipts thresholds, exemption notices). No disclosure entity; regulatory exposure is implicit.
-    vendor_evidence: []
-    proposed_module: FDS-MARKET-POS or new FDS-COMPLIANCE module
-
-  - id: B3-fds_compliance_module
-    candidate: FDS-COMPLIANCE module
-    rationale: >-
-      If FSMA Produce Safety records, cottage food disclosures, USDA NOP certifications, and sales-tax remittance entities get loaded, an eighth module makes more sense than overloading existing modules. Pending B3 entity decisions.
-    vendor_evidence: []
-    proposed_module: new FDS-COMPLIANCE 8th full module
-
-  - id: B3-regulations
-    candidate: domain_regulations seed for FDS
-    rationale: >-
-      Zero domain_regulations rows currently loaded for FARMER-DIRECT-SALES. Compliance anchors: FDA FSMA Produce Safety Rule (mandatory for farms with US$25k+ produce sales), USDA National Organic Program (NOP, certified-organic operations), US state cottage food regulations (varies by state), US state retail sales tax remittance, GAP/GHP certification (voluntary but increasingly required by wholesale buyers), PCI-DSS (any operator capturing card payment).
-    vendor_evidence: []
-    proposed_module: domain-level (no module bind)
+  - id: B3-FDS-ENTITIES
+    candidate: "share_swaps (CSA), farmers_market_events, producer_payouts, producers (food-hub registry), cottage_food_disclosures"
+    rationale: "a7=yes greenlit research. Per-member swaps/pauses (Harvie/Barn2Door/Local Line), farmers-market day records (Open Food Network/FoodKonnekt), multi-farm payout splits + producer registry (Open Food Network/Local Food Marketplace/GrownBy), cottage-food disclosure records. Additive after a verification pass."
+    status: research_greenlit
+  - id: B3-FDS-COMPLIANCE-MODULE
+    candidate: "FDS-COMPLIANCE (8th full module)"
+    rationale: "a8=yes (conditional on q7 entities). If FSMA produce-safety records, cottage-food disclosures, USDA NOP certifications, and sales-tax remittance entities land, an 8th module is cleaner than overloading existing ones."
+    status: research_greenlit
+  - id: B3-FDS-REGULATIONS
+    candidate: "domain_regulations seed for FDS"
+    rationale: "a9=yes. Compliance anchors: FDA FSMA Produce Safety Rule, USDA NOP, US state cottage-food rules, US state sales-tax remittance, GAP/GHP certification, PCI-DSS. Purely additive (after the regulation rows exist)."
+    status: research_greenlit

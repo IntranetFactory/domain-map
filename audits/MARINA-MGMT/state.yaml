@@ -1,0 +1,167 @@
+schema_version: 2
+domain: MARINA-MGMT
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-15"
+
+b1b:
+  - id: B1B-RACI-LAYER
+    summary: RACI layer (process_raci + lifecycle process_id wiring) deferred on the initial build; personas and reach are authored, responsibility is not.
+    finding: >-
+      The 5 personas (Harbormaster, Dockmaster, Office Manager, Service Yard
+      Manager, Bookkeeper) and their 18 role_modules reach rows are loaded, but
+      no process_raci rows were authored and no data_object_lifecycle_states
+      carry a process_id. This matches the recent sibling STR-MGMT build, which
+      also deferred RACI to a later pass. E4/E6 are therefore not yet
+      satisfiable (no gated processes to attach R/A to). Non-blocking: the
+      domain has no cross-domain handoffs, so there is no B9d ownership owed to
+      or from neighbors.
+    action: >-
+      In a later pass, define the domain's value-stream processes (or reuse APQC
+      rows), wire each gated lifecycle state's process_id, and author
+      process_raci R/A/C/I against the 5 personas. Additive, record_status=new.
+    blocked_by:
+      - {type: depends_on, ref: B2-MODULE-SPLIT, reason: "the module shape the user picks in q1 determines which gates exist and which persona is Responsible where, so wire RACI after the split is confirmed"}
+
+b2:
+  - id: B2-MODULE-SPLIT
+    summary: How should MARINA-MGMT be divided into modules? (the gate; drives where every entity lands)
+    question: Keep the 6 modules as built, or split further?
+    options:
+      - "a) Keep 6 (Inventory, Reservations, Boater/Vessel CRM, Contracts & Billing, Boatyard Service, Fuel Dock & Ship Store)"
+      - "b) 7: split Fuel Dock apart from Ship Store / retail POS"
+      - "c) 8: add a Gate Access & Security module and a Yacht-Club Membership module"
+    evidence: >-
+      All five flagships (Dockwa, Molo/Storable, DockMaster, Marina Master,
+      MarinaOffice) present marina operations as one integrated product whose
+      core pillars are inventory, reservations, billing, and service. Fuel and
+      ship-store POS are tightly coupled at the dock in Molo, DockMaster, and
+      MarinaOffice (MarinaOffice's PureFuel runs fuel + register together), so a
+      combined Fuel-Retail module matches practice; splitting them (b) is
+      defensible only if a tenant runs a standalone store. Gate access and
+      yacht-club membership are bundled only by Marina Master and MarinaOffice
+      and read as add-ons, so they fit better as optional later modules (c) than
+      as core. Metered utilities (Molo/DockMaster/MarinaMaster/MarinaOffice) sit
+      inside billing today; a dedicated Utilities module is a borderline Rule-14
+      call only MarinaOffice's depth would justify.
+  - id: B2-BOATYARD-SVC-SCOPE
+    summary: Boatyard service as a module inside MARINA-MGMT vs a separate marine-service domain.
+    question: Keep boatyard service (work orders, estimates, haul-out, launch, pump-out) inside MARINA-MGMT, or split it to its own domain that MARINA-MGMT consumes?
+    options:
+      - "a) Keep it as the MARINA-MGMT-SERVICE module"
+      - "b) Split a separate boatyard / marine-service domain"
+    evidence: >-
+      Molo, Marina Master, and MarinaOffice bundle work orders, haul-out, and
+      launch inside the marina product. Only DockMaster treats service as a
+      near-equal ERP pillar, and even then within one suite. Keeping it a
+      standalone-deployable module preserves the service-yard story without
+      fragmenting the domain; a separate domain is warranted only if a pure
+      third-party boatyard market (independent of marinas) is in scope.
+  - id: B2-FUEL-POS-SCOPE
+    summary: Fuel dock and ship-store POS mastered here vs consumed from a generic retail-POS/payments domain.
+    question: Master fuel-dock and ship-store POS specifics in MARINA-MGMT, or consume POS from a generic retail domain?
+    options:
+      - "a) Master fuel + POS here (current: fuel_sales, fuel_tanks, fuel_inventory_logs, ship-store sales)"
+      - "b) Master only fuel-dock specifics; consume generic POS from a retail domain"
+      - "c) Consume both fuel and POS from external systems"
+    evidence: >-
+      Molo, DockMaster, Marina Master, and MarinaOffice all run fuel and store
+      POS natively; MarinaOffice's PureFuel is a flagship differentiator. Marine
+      fuel carries dock-specific tank reconciliation and pay-at-pump that generic
+      retail POS does not model. Only Dockwa is light here. Mastering fuel + POS
+      locally matches four of five vendors; consuming generic POS (b) only makes
+      sense if a tenant already runs a separate retail system.
+  - id: B2-TRANSIENT-MARKETPLACE
+    summary: Model the boater-facing transient-booking marketplace as its own module/domain, or keep one operator-side Reservations module.
+    question: Add a separate boater-facing transient-marketplace surface, or keep reservations operator-side only?
+    options:
+      - "a) Keep one operator-side Reservations module (current)"
+      - "b) Add a separate transient-marketplace module"
+      - "c) Treat the boater marketplace as a separate MARINE-TRAVEL domain"
+    evidence: >-
+      Dockwa and Snag-A-Slip are marketplace-first (boater app + cross-marina
+      discovery), but Molo, DockMaster, Marina Master, and MarinaOffice model
+      reservations operator-side only. The marketplace is a distribution channel
+      layered on operator reservations, not a distinct operator capability;
+      defer unless an aggregator/marketplace is actually the product being built.
+  - id: B2-CRM-OWNERSHIP
+    summary: Boaters/vessels as a marina-local CRM master vs a shared master other domains consume.
+    question: Keep boaters and vessels mastered locally in MARINA-MGMT-CRM, or promote them to a shared master?
+    options:
+      - "a) Marina-local CRM master (current)"
+      - "b) Promote boaters/vessels to a shared master"
+    evidence: >-
+      Every flagship (Dockwa, Molo, DockMaster, Marina Master, MarinaOffice)
+      masters boaters and vessels inside the marina product, and no adjacent
+      loaded domain needs to consume them. Marina-local mastering matches vendor
+      reality and the self-contained SMB build; promotion is worth it only if a
+      sibling marine domain later needs the same records.
+  - id: B2-BOAT-DEALER-SCOPE
+    summary: Boat sales / dealership in scope (thin module) vs out of scope (separate domain).
+    question: Add a thin boat-sales/dealership module to MARINA-MGMT, or keep dealership out of scope?
+    options:
+      - "a) Out of scope: a separate boat-dealer domain (current)"
+      - "b) Add a thin in-scope dealership module"
+    evidence: >-
+      Only DockMaster bundles boat-sales deals and dealership inventory; Dockwa,
+      Molo, Marina Master, and MarinaOffice do not. Boat retail / dealer
+      management (DMS) is a distinct market with its own inventory, F&I, and
+      manufacturer-flooring concerns, better modeled as its own domain than as a
+      marina module.
+  - id: B2-ENTITY-TYPE-CONFIRM
+    summary: Confirm the entity-type classifications (which masters get workflow state machines vs stay records/config/junction).
+    question: Confirm the entity-type calls so the right entities carry lifecycle state machines?
+    options:
+      - "a) Confirm: the 9 workflow entities (slips, reservations, waitlist, contracts, dockage invoices, work orders, estimates, haul-outs, dry-stack launches) carry lifecycle; meters, readings, boaters, vessels, registrations, fuel/POS records stay records; slip-size classes are config; slip assignments are a junction"
+      - "b) Change one or more, and name which"
+    evidence: >-
+      Each of the nine carries an observable workflow (a reservation moves
+      inquiry -> confirmed -> checked_in -> checked_out; a contract draft ->
+      active -> expired), while meters, registrations, and fuel tickets are
+      static records. As part of this build the shared utility_meters entity was
+      reclassified from operational_workflow (a latent mis-classification with
+      zero lifecycle states, predating this load) to operational_record; flag if
+      you want meters to carry a lifecycle instead.
+  - id: B2-CATALOG-COPY
+    summary: How the buyer-voice catalog copy (domain + 6 module taglines/descriptions) should be produced.
+    question: Approve the agent-drafted buyer-voice catalog copy, or replace it?
+    options:
+      - "a) Agent drafted it; you approve the wording (written, sits at the unapproved 'new' state)"
+      - "b) You supply exact wording"
+      - "c) Have marketing rewrite from the analyst descriptions"
+    why: >-
+      The domain and all six modules have catalog_tagline + catalog_description
+      filled today, carrying the unapproved (new) review signal. Approving the
+      wording protects it from silent overwrite (Rule #20).
+
+b3:
+  - id: B3-ACCESS-CONTROL
+    candidate: gate_access_credentials + gate_access_events (+ optional Access module)
+    rationale: Gate/dock access control and event logs; bundled by Molo, DockMaster, Marina Master, MarinaOffice. Additive; would seed the optional Access module in q1 option (c).
+    vendor_evidence: [Molo, DockMaster, Marina Master, MarinaOffice]
+    proposed_module: MARINA-MGMT-ACCESS (new) or MARINA-MGMT-INVENTORY
+  - id: B3-COMPLIANCE-DOCS
+    candidate: spill_prevention_plans (SPCC), liveaboard_permits, clean_marina_certifications
+    rationale: Genuine but jurisdiction-conditional compliance entities from Phase 0; SPCC plan records (fuel), local liveaboard permits, voluntary Clean Marina certification. Load as master+optional where applicable.
+    vendor_evidence: [DockMaster, Marina Master, MarinaOffice]
+    proposed_module: MARINA-MGMT-FUEL-RETAIL / MARINA-MGMT-BILLING / MARINA-MGMT-INVENTORY
+  - id: B3-BOATYARD-DEPTH
+    candidate: service_technicians, inventory_parts, labor_time_entries
+    rationale: ERP-depth boatyard entities (tech assignment, parts inventory, labor time) modeled by Molo, DockMaster, MarinaOffice. Deepen the SERVICE module if full boatyard ops are in scope.
+    vendor_evidence: [Molo, DockMaster, MarinaOffice]
+    proposed_module: MARINA-MGMT-SERVICE
+  - id: B3-ESIGNATURE
+    candidate: esignature_records
+    rationale: First-class e-signature records on contracts; Dockwa, Molo, DockMaster, MarinaOffice support it (the build links a sign_document tool but masters no record). Add if signature evidence must be retained as data.
+    vendor_evidence: [Dockwa, Molo, DockMaster, MarinaOffice]
+    proposed_module: MARINA-MGMT-BILLING
+  - id: B3-DOCK-WALK-MOVEMENTS
+    candidate: dock_walk_logs, vessel_movements
+    rationale: Vessel-movement and dock-walk audit trails; bundled by DockMaster, Marina Master, MarinaOffice. Additive operational-record entities for INVENTORY.
+    vendor_evidence: [DockMaster, Marina Master, MarinaOffice]
+    proposed_module: MARINA-MGMT-INVENTORY
+  - id: B3-PERIPHERAL-RECORDS
+    candidate: ship_store_products (catalog), fuel_dispensers, boater_messages
+    rationale: Peripheral records trimmed from the initial build to keep it tight; products catalog, individual dispensers, and a boater messaging inbox. Cheap to add if needed.
+    vendor_evidence: [Molo, DockMaster, Marina Master, MarinaOffice]
+    proposed_module: MARINA-MGMT-FUEL-RETAIL / MARINA-MGMT-CRM

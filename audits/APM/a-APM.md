@@ -12,7 +12,7 @@ q1: (answer this first) How should the Rationalization module handle the applica
 
 Recommended: a. Rationalization exists to score what the registry inventories, so standalone Rationalization with nothing to score is not a real deployment. This choice decides how the two modules connect and unblocks the cross-module handoffs that depend on it. Both options change existing records, so neither runs without your sign-off.
 
-a1:
+a1: b
 
 ---
 
@@ -20,7 +20,7 @@ q2: Some descriptive notes were written onto the tool rows and onto the cost and
 
 Recommended: no. If they were auto-written, the rule requires clearing them and logging the incident; if you confirm you approved them, they stay. Clearing them is a destructive edit, so it waits on your answer.
 
-a2:
+a2: no
 
 ---
 
@@ -28,7 +28,7 @@ q3: Should capability maps be frozen once published, so anything that depends on
 
 Recommended: yes. A published capability map is a reference surface for the rest of the portfolio and should not shift underneath its consumers. This flips a current setting, so it needs your confirmation.
 
-a3:
+a3: yes
 
 ---
 
@@ -36,7 +36,7 @@ q4: Should an application value score be frozen once recorded, so each quarterly
 
 Recommended: yes. A score snapshot is a point-in-time record used to compare quarters, so locking it keeps the history honest. This flips a current setting, so it needs your confirmation.
 
-a4:
+a4: yes
 
 ---
 
@@ -44,7 +44,7 @@ q5: Should application records be treated as carrying personal data, since they 
 
 Recommended: yes. Owner contact details are personal data and pull the record under retention and privacy handling. This flips a current setting, so it needs your confirmation.
 
-a5:
+a5: yes
 
 ---
 
@@ -52,7 +52,7 @@ q6: A sharper "application sunsetting" event now exists. Should the two handoffs
 
 Recommended: yes. The focused event makes the downstream handoffs to your CMDB and software-asset domains precise about what actually happened. Re-pointing overwrites an existing link, so it needs your sign-off.
 
-a6:
+a6: yes
 
 ---
 

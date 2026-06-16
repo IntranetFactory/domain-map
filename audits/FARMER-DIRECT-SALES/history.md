@@ -408,3 +408,15 @@ No catalog/database writes. All edits are to local audit files (FDS, CRM, FMIS s
 - Open `b2`: B2-S1, B2-S3..S7 (pre-existing) + B2-B9D-OWN-55, B2-B9D-OWN-1356, B2-B9D-RETAG-363 (new this pass).
 - Open `b1b`: B1B-S1, B1B-S2, B1B-S5, B1B-H1 (unchanged; blocked on FIN / FOOD-TRACE / FMIS / CRM audits or user decisions).
 - Open `b3`: 7 items (unchanged).
+
+## 2026-06-15 - a-file processed
+
+Answers applied (q-FARMER-DIRECT-SALES.md renamed to a-...md; "process them"):
+- **a2 = a (B2-S3)**: leave Delivery Ops as-is (no rename to Fulfillment); the intra-domain lifecycle handoffs already represent the dependency.
+- **a3 = b (B2-S4)**: no inbound CRM -> Online Store handoff (the storefront is the small-farm lead system). Closes B1B-S5 as won't-do.
+- **a5 = a (B2-S6)**: confirm the permission hierarchy expands the 24 workflow gates via the manage/admin bundles; no explicit per-role grants.
+- **a6 = a (B2-S7)**: CSA-STARTER stays minimal at 4 embeds.
+- **a12 = yes (B2-B9D-RETAG-363)**: re-pointed handoff_processes on 363/1214/1215 from 3.5.2 to the more specific 3.5.2.4 "Manage customer relationships".
+- **a10 / a11 = a (B2-B9D-OWN-55 / -1356)**: FDS owns the two B9d-surfaced processes (revenue accounting on farmers_market_sales; receive/deposit customer payments on csa_memberships). FDS has 0 personas (Phase-P deferred), so recorded as owned-pending-persona (b1b), not realized.
+
+Looped into the regenerated q-file: **a1 (B2-S1)** "would embed master be better?" - yes for the modules that should be standalone-deployable; re-asked. **a4 (B2-S5)** retarget of the 3 CRM-pipeline handoffs is decided as "retarget once the CRM audit pins the right customer-engagement module" - now a b1b blocked on the CRM audit (it also gates 3 of the 4 B1B-H1 APQC tags). b3 research (a7/a8/a9 = yes: deeper entities, an FDS-COMPLIANCE module, and the regulation seed) greenlit, parked. Loader: .tmp_deploy/process_afiles_mechanical_2026_06_15.ts.

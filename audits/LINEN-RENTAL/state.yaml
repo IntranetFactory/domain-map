@@ -1,0 +1,146 @@
+schema_version: 2
+domain: LINEN-RENTAL
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-15"
+
+b1a: []
+
+b2:
+  - id: B2-CREATE
+    summary: Gate - create LINEN-RENTAL (Commercial Linen & Uniform Rental Management) as a new domain at all.
+    question: Create LINEN-RENTAL as a new domain covering the B2B commercial/industrial linen-supply, uniform-rental, RFID linen tracking, and route-delivery market?
+    options: [yes, no]
+    why: >-
+      No laundry/linen/uniform/textile domain exists in the catalog yet (LSD is Legal Service
+      Delivery, unrelated). The point-solution-market test (Rule #2) must clear before any other
+      decision matters; everything below is conditional on yes.
+    evidence: >-
+      Passes the point-solution-market test. At least three independent vendors sell a flagship
+      product that IS this market: ABS (ABSSolute, a dedicated textile-rental ERP, 600+ installs),
+      LinenTech (cloud commercial linen-rental management, 250+ laundries), and Textile Technologies
+      (RouteManager, "built exclusively for textile rental since 1993"). LinenMaster (multi-segment
+      laundry SaaS) and Positek RFID (TextileTrack linen/uniform tracking) add a fourth and fifth
+      independent confirmation. This is dedicated software, not a generic rental tool.
+
+  - id: B2-SCOPE-PRODUCTION
+    summary: Does the domain include the industrial-laundry PRODUCTION floor (wash/sort/finish/plant work orders) or only the rental + tracking + route side.
+    question: Should LINEN-RENTAL include the industrial-laundry production floor (wash batches, sort, finishing, plant work orders), or cover only the rental, tracking, and route-delivery side?
+    options:
+      - "a) Include production as an optional fourth module (production_operations), deferrable after the core three"
+      - "b) Include production as a core module from the start"
+      - "c) Exclude the production floor entirely; rental + tracking + route only"
+    why: Determines whether the domain models plant operations or stops at the rental/logistics boundary.
+    evidence: >-
+      Vendor packaging splits cleanly, so production is a defensible OPTIONAL sub-scope. ABS ships
+      Production, Stockroom, Sort, and Finishing modules, and LinenTech ships Production Scheduling
+      and Tracking plus rewash/reject/reclaim. Conversely, Textile Technologies (RouteManager, route
+      accounting, no wash-floor module) and LinenMaster (route-accounting/management focus) sell the
+      rental + tracking + route surface WITHOUT a plant module, and Positek is RFID-tracking-only.
+      Two of five flagships master production, so including it is defensible, but the core domain
+      stands on contracts + tracking + route without it, so it is best modeled as optional/deferrable.
+
+  - id: B2-MODULES
+    summary: How many full modules and what scope.
+    question: How should LINEN-RENTAL be split into modules?
+    options:
+      - "a) Three full modules - rental_contracts (accounts, contracts, par levels, orders, billing), linen_tracking (items, RFID tags, scan events, inventory, soil/clean counts, loss), route_delivery (routes, stops, driver runs, settlements) - plus an optional fourth production_operations module"
+      - "b) Two full modules - fold linen_tracking into rental_contracts"
+      - "c) One module covering the whole market"
+    why: Rule #14 requires >=2 full modules for a domain with >=3 capabilities; the count must match how vendors package products.
+    evidence: >-
+      Flagship vendors package this market into exactly these surfaces. ABS sells separate Contract
+      and Rental Management, RFID/item tracking, and Route Accounting / Product Delivery modules.
+      Textile Technologies (RouteManager) and LinenMaster sell route accounting/management as a
+      distinct product from the contract/billing surface. Positek (TextileTrack) sells the RFID
+      tracking layer as a standalone product that integrates with the ERP, which is exactly why
+      linen_tracking earns its own module rather than folding into rental_contracts. Three vendor-
+      mirrored capabilities are present (contracts/par, tracking, route), so the natural shape is
+      three full modules. The optional fourth (production_operations) is grounded in B2-SCOPE-PRODUCTION.
+
+  - id: B2-ROUTE
+    summary: Does LINEN-RENTAL MASTER its own delivery routes/stops/driver runs/settlements, or CONSUME a cross-cutting route capability shared with FLEET-MGMT / FSM.
+    question: Should LINEN-RENTAL master its own route delivery (routes, stops, driver runs, settlements), or consume a cross-cutting route-optimization capability shared with FLEET-MGMT and FSM?
+    options:
+      - "a) Master route delivery inside LINEN-RENTAL (its own route_delivery module)"
+      - "b) Consume a shared route-optimization capability from FLEET-MGMT / FSM"
+    why: >-
+      No cross-cutting route-optimization capability exists in the catalog to consume; every existing
+      route/dispatch capability is domain-scoped (FDS-ROUTE-OPTIMIZATION, FSM-DISPATCH-OPT,
+      FLEET-DISPATCH). The decision is whether to create one or master here.
+    evidence: >-
+      Every full-suite vendor ships its OWN route module. ABS has "Route Accounting" and "Product
+      Delivery"; LinenTech ships its own Routes App and Driver App with no third-party routing
+      referenced; Textile Technologies' entire product is named RouteManager, with native route
+      settlement, scanning, and GPS. Route settlement (driver-level cash/billing reconciliation) and
+      par-replenishment are textile-rental-specific and are not a generic FLEET-MGMT/FSM concern, so
+      consuming a cross-cutting route capability would lose the settlement and par-replenishment
+      semantics. (Industry-term collision noted: WorkWave also markets a product called RouteManager;
+      the textile vendors do not integrate it, they ship their own.) Master here; optionally expose
+      vehicle/asset and driver hours-of-service edges to FLEET-MGMT, but do not consume route execution.
+
+  - id: B2-UNIFORM-VS-LINEN
+    summary: Uniform rental and flat-linen (hospitality/healthcare) rental in one domain, or a meaningful split.
+    question: Should uniform rental and flat-linen (hospitality/healthcare) rental live in one domain, or be split into two?
+    options:
+      - "a) One domain covering both uniform and flat-linen rental (item-category variants)"
+      - "b) Split into two domains"
+    why: Determines whether garment and flat-linen rental share customers, par levels, routes, and billing or are modeled separately.
+    evidence: >-
+      One domain. The B2B majors serve both under one operation: Cintas, UniFirst, Aramark, and Alsco
+      all rent uniforms AND flat linen (plus mats) to the same accounts. The software mirrors this: ABS
+      covers "Linen Supply" and "Garment Services" in one product; Textile Technologies' RouteManager
+      explicitly serves "uniform rental, linen supply, and mat service" in one system; LinenMaster lists
+      both "Industrial/Uniform" and "Healthcare/Hospitality." A split would fracture shared customer
+      accounts, par-level definitions, routes, and invoices. Model uniform and flat-linen as item-category
+      variants (garment_items vs linen_items) inside one domain.
+
+  - id: B2-BOUNDARY-LAUNDROMAT
+    summary: Scope boundary between LINEN-RENTAL (B2B commercial rental) and the sibling candidate LAUNDROMAT-MGMT (retail/B2C wash-dry-fold).
+    question: Where is the scope line between LINEN-RENTAL (B2B commercial linen/uniform rental) and the sibling candidate LAUNDROMAT-MGMT (retail/B2C self-service laundromat and wash-dry-fold)?
+    options:
+      - "a) Split on customer relationship - LINEN-RENTAL owns B2B rental contracts + par billing + DSD routes + RFID rental + plant production; LAUNDROMAT-MGMT owns retail/B2C self-service POS, coin/card machines, and walk-in wash-dry-fold"
+      - "b) One combined laundry domain covering both B2B rental and B2C retail"
+    why: The two candidates are researched in parallel; the boundary must be defined so the masters do not overlap.
+    evidence: >-
+      Clean line on the customer relationship. LINEN-RENTAL is B2B: contract/par billing, DSD routes,
+      RFID item-level rental, plant production for hospital/hotel/uniform accounts; vendors ABS, Positek,
+      LinenTech, LinenMaster, and Textile Technologies all sit here. LAUNDROMAT-MGMT is retail/B2C:
+      self-service POS, coin/card machine management, and walk-in wash-dry-fold (Cents, CleanCloud class
+      of product). The distinguishing entities are rental_contracts + par_level_definitions +
+      route_settlements (only B2B/LINEN-RENTAL) versus machine POS sessions and consumer wash-dry-fold
+      tickets (only B2C/LAUNDROMAT). No flagship vendor in this study sells self-service laundromat POS,
+      which confirms the boundary; the shared "laundry plant" concept does not merge them because the
+      customer relationship (rental contract versus walk-in transaction) is categorically different.
+
+b3:
+  - id: B3-HEALTHCARE-HYGIENE
+    candidate: bloodborne_pathogen_handling_records, hygienically_clean_certifications, linen_microbial_test_results
+    rationale: >-
+      Healthcare-linen processors are governed by the OSHA bloodborne-pathogen standard (29 CFR
+      1910.1030) for soiled-linen handling and by TRSA Hygienically Clean / Clean Green and HLAC
+      accreditation, which require process-control microbial sampling. These are additive compliance
+      entities that fit the existing module shape (handling records and microbial tests in
+      linen_tracking; certifications in production_operations) and never imply a split. Non-blocking.
+    vendor_evidence: [LinenMaster, ABS, LinenTech]
+    proposed_module: linen_tracking / production_operations
+
+  - id: B3-DRIVER-COMPLIANCE
+    candidate: driver_hours_of_service_logs, driver_qualification_records
+    rationale: >-
+      Route drivers running CDL vehicles are subject to DOT/FMCSA hours-of-service (49 CFR 395) and
+      driver-qualification-file (49 CFR 391) rules. These are additive compliance entities for the
+      route_delivery module. They could alternatively be edges exposed to FLEET-MGMT (which already
+      models driver records); surface the choice when the domain is built. Non-blocking, never a split.
+    vendor_evidence: [ABS, Textile Technologies, LinenTech]
+    proposed_module: route_delivery
+
+  - id: B3-GARMENT-REPAIR-FR
+    candidate: garment_repair_records, fr_garment_inspections
+    rationale: >-
+      Garment repair tracking (mend, replace, charge) is modeled by ABS and LinenTech as part of the
+      rental lifecycle, and flame-resistant (FR/PPE) garment programs require periodic inspection
+      against NFPA 2112 / OSHA PPE rules. Additive entities that fit the existing shape (repair in
+      production_operations, FR inspections in linen_tracking). Non-blocking, never a split.
+    vendor_evidence: [ABS, LinenTech]
+    proposed_module: production_operations / linen_tracking

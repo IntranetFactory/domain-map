@@ -1,0 +1,138 @@
+schema_version: 2
+domain: LAUNDROMAT-MGMT
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-15"
+
+b1a: []
+
+b2:
+  - id: B2-CREATE
+    summary: Create LAUNDROMAT-MGMT as a new domain at all (gate).
+    question: Create LAUNDROMAT-MGMT (retail / B2C self-service laundromat, wash-dry-fold, and laundry pickup-and-delivery software) as a new domain?
+    options: [yes, no]
+    why: Everything else is gated on this. The point-solution-market test (Rule #2) passes.
+    evidence: >-
+      Five independent pure-play vendors compete in this market as a recognized software category,
+      each with it as the flagship product: CleanCloud (cleancloudapp.com), Cents (trycents.com),
+      Turns (turnsapp.com), Curbside Laundries (curbsidelaundries.com), and Wash-Dry-Fold POS
+      (washdryfoldpos.com). None is a feature of a larger suite; each sells laundromat / WDF /
+      pickup-delivery as its whole product. Rule #2 needs three independent flagships; this market
+      has five. No laundry/linen/wash domain exists in the catalog today.
+    vendor_evidence: [CleanCloud, Cents, Turns, Curbside Laundries, Wash-Dry-Fold POS]
+
+  - id: B2-MODULES
+    summary: How many full modules and what scope.
+    question: Adopt the proposed three full master-bearing modules (Store POS and self-service machine operations; Wash-dry-fold order management; Pickup and delivery)?
+    options:
+      - "a) three full modules (Store POS + machine ops, WDF order management, Pickup and delivery)"
+      - "b) two full modules (fold machine ops into Store POS, combine WDF into Pickup-and-delivery)"
+      - "c) one full module (single all-in-one)"
+    why: This is a >=3-capability market, so Rule #14 requires >=2 full modules; the question is 2 vs 3.
+    evidence: >-
+      The flagship vendors package the market into exactly these three product surfaces. CleanCloud
+      sells distinct "POS / wash-and-fold", "pickup and delivery", and floor "machine" surfaces;
+      Cents separates its in-store POS + machine management (Cents Connect) platform from a separate
+      pickup-and-delivery platform (drivers, routes, online orders); Wash-Dry-Fold POS leads with
+      POS + machine-repair tracking and adds delivery software as a distinct surface; Turns and
+      Curbside both ship WDF order management plus a separate driver/route delivery product. The WDF
+      order lifecycle (intake -> wash -> dry -> fold -> ready -> picked up) is modeled as its own
+      stage machine by CleanCloud, Turns and Wash-Dry-Fold POS, distinct from both the POS and the
+      delivery route plan. All three modules are master-bearing in every flagship.
+    vendor_evidence: [CleanCloud, Cents, Turns, Curbside Laundries, Wash-Dry-Fold POS]
+
+  - id: B2-ROUTING
+    summary: Master own delivery routing vs consume a shared route-optimization capability.
+    question: Should LAUNDROMAT-MGMT MASTER its own delivery orders, routes, route stops, and driver assignments (rather than consume a cross-cutting route-optimization capability shared with FSM or FLEET-MGMT)?
+    options:
+      - "a) master its own routing (laundry_delivery_routes, route_stops, drivers), optionally consume a third-party courier connector for on-demand"
+      - "b) consume a shared cross-cutting route-optimization capability from FSM (31) / FLEET-MGMT (147)"
+    why: The catalog has dispatch capabilities, but they are domain-scoped, not a neutral shared service.
+    evidence: >-
+      All five flagships master their own native delivery routes, route stops, and drivers in-app:
+      CleanCloud ships smart route planning with a live driver map; Cents has a dedicated
+      pickup-and-delivery platform that adds drivers, manages routes and accepts online orders;
+      Wash-Dry-Fold POS masters delivery routes + drivers; Curbside does in-house route creation and
+      optimization with service areas. The two on-demand options (Turns 1-click DoorDash, Curbside
+      DoorDash) are an OPTIONAL courier-fulfillment layer on top of their own route entities, not a
+      replacement. No flagship outsources its core routing to a generic shared engine. In the catalog
+      there is no neutral consumable route-optimization capability: FSM-DISPATCH-OPT (FSM technician
+      dispatch), FLEET-DISPATCH (FLEET-MGMT vehicle assignment) and FDS-ROUTE-OPTIMIZATION
+      (FARMER-DIRECT-SALES DTC delivery) are each domain-owned. FARMER-DIRECT-SALES, a vertical
+      retail/DTC domain, already masters its own delivery_routes (id 518) and authors its own
+      route-optimization capability; LAUNDROMAT-MGMT should follow that precedent and master its own.
+    vendor_evidence: [CleanCloud, Cents, Turns, Curbside Laundries, Wash-Dry-Fold POS]
+    affected_entities: [laundry_delivery_routes, route_stops, drivers, laundry_pickup_delivery_orders]
+
+  - id: B2-BOUNDARY-LINEN
+    summary: Scope boundary vs the sibling LINEN-RENTAL candidate.
+    question: Confirm the LAUNDROMAT-MGMT vs LINEN-RENTAL boundary as retail/B2C (clean and return the customer's own garments) vs commercial/B2B (rent and circulate provider-owned linens on contract), keeping them as two separate domains?
+    options:
+      - "a) keep separate: LAUNDROMAT-MGMT = retail/B2C own-garment service; LINEN-RENTAL = B2B provider-owned rental + exchange"
+      - "b) merge into one laundry domain"
+    why: Both have routes and customers, but the masters and vendor sets differ.
+    evidence: >-
+      The flagship vendor sets do not overlap and the master records differ. LAUNDROMAT-MGMT vendors
+      (CleanCloud, Cents, Turns, Curbside, Wash-Dry-Fold POS) all model the customer's OWN garments
+      being cleaned and returned (laundry_orders, garments, WDF tickets, per-order or membership
+      revenue). Commercial linen/uniform rental is served by a different vendor set whose product
+      masters provider-OWNED inventory under rental agreements with par-level exchange routes
+      (rental_agreements, linen_inventory, par_levels, loss/replacement accounting). The shared nouns
+      diverge: a LAUNDROMAT route returns a specific customer's order to that customer, whereas a
+      LINEN-RENTAL route circulates provider-owned stock on a soiled-for-clean par-replenishment
+      exchange. Two distinct point-solution markets, hence two domains.
+    vendor_evidence: [CleanCloud, Cents, Turns, Curbside Laundries, Wash-Dry-Fold POS]
+
+  - id: B2-MACHINES
+    summary: Does LAUNDROMAT-MGMT master laundry_machines and machine telemetry.
+    question: Should LAUNDROMAT-MGMT MASTER the washer/dryer machine fleet, machine usage sessions, machine maintenance tickets, and real-time machine telemetry / remote-start?
+    options:
+      - "a) yes, master machines + usage sessions + maintenance tickets + telemetry inside the Store POS module"
+      - "b) no, treat machines as out of scope (delivery/WDF only)"
+    why: Self-service machine operations are a defining part of the laundromat (vs pure WDF/delivery) market.
+    evidence: >-
+      Machine operations are first-class in the laundromat-anchored flagships. CleanCloud monitors
+      washer and dryer usage in real time, logs maintenance issues, and assigns orders to specific
+      washer/dryer stations; Wash-Dry-Fold POS masters individual washer/dryer units with utilization
+      data plus machine-repair tickets (parts and failure history); Cents ships Cents Connect IoT
+      hardware that masters real-time machine telemetry, remote machine start, and utilization
+      insights. The delivery-first flagships (Turns, Curbside) de-emphasize machine ops but do not
+      contradict the cluster. Self-service machine operations is exactly what separates a "laundromat"
+      product from a pure WDF/courier product, so the domain should master it.
+    vendor_evidence: [CleanCloud, Cents, Wash-Dry-Fold POS]
+    affected_entities: [laundry_machines, machine_usage_sessions, machine_maintenance_tickets]
+
+b3:
+  - id: B3-LOYALTY
+    candidate: loyalty_accounts + loyalty_transactions + memberships + subscription_plans
+    rationale: >-
+      Loyalty and monthly membership/subscription plans are additive sub-areas inside the Store POS
+      module (no flagship sells them as a separate laundry product). Additive only, never a split.
+    vendor_evidence: [CleanCloud, Cents, Turns, Curbside Laundries]
+    proposed_module: Store POS and self-service machine operations
+
+  - id: B3-PCI
+    candidate: card_data_access_logs + pci_scope_attestations
+    rationale: >-
+      PCI-DSS is the genuine compliance footprint (card-present + stored card data; CleanCloud
+      advertises PCI-compliant card storage). Additive overlay inside Store POS; loads regardless of
+      explicit vendor documentation per the compliance carve-out.
+    vendor_evidence: [CleanCloud]
+    proposed_module: Store POS and self-service machine operations
+
+  - id: B3-MARKETING
+    candidate: marketing_campaigns + customer_notifications + customer_reviews
+    rationale: >-
+      Outbound SMS/email campaigns, on-the-way customer notifications, and review aggregation are
+      additive engagement entities every flagship ships; they fit inside Store POS / Pickup-and-delivery
+      and do not warrant their own module.
+    vendor_evidence: [CleanCloud, Cents, Turns, Curbside Laundries]
+    proposed_module: Store POS and self-service machine operations
+
+  - id: B3-COURIER-CONNECTOR
+    candidate: third-party on-demand courier connector (solutions/tool layer, not a master)
+    rationale: >-
+      Turns and Curbside both integrate DoorDash for 1-click on-demand fulfillment on top of their own
+      routing. This is a courier connector in the commerce/tool layer, not a new master and not a split.
+    vendor_evidence: [Turns, Curbside Laundries]
+    proposed_module: Pickup and delivery

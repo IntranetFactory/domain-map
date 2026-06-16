@@ -643,3 +643,19 @@ The 3 UNOWNED findings are an artifact of LSD being unbuilt: the resolver reads 
 ### State change
 
 B1A-B9D-VERIFY resolved and removed; `b1a` now empty. No agent-executable work remains on LSD: every open item is b1b (blocked on B1B-M1, itself gated on user decision B2-MODULE-SHAPE) or b2 (user decisions). `next_action_by: agent -> user`. The existing `q-LSD.md` already covers all open b2 + b3 items and needed no regeneration (B9d added no LSD-side questions).
+
+## 2026-06-15 - a-file processed: LSD built (5 modules)
+
+User renamed q-LSD.md to a-LSD.md and instructed "process them" + "build both now". Answers applied:
+
+- **a1 = a (B2-MODULE-SHAPE)**: 5 modules. Built LSD-INTAKE-PORTAL (380), LSD-MATTER-MGMT (381), LSD-LEGAL-HOLD (382), LSD-OUTSIDE-COUNSEL (383), LSD-REGULATORY-RESPONSE (384), all `module_kind=full`, with buyer-voice catalog copy.
+- **B1B-M2**: authored 6 legal capabilities (LEGAL-INTAKE-TRIAGE, LEGAL-MATTER-MGMT existing 422, LEGAL-HOLD-MGMT, LEGAL-EDISCOVERY, OUTSIDE-COUNSEL-MGMT, REGULATORY-RESPONSE) + capability_domains links; 8 domain_module_capabilities (incl. KNOWLEDGE-MGMT provisional on MATTER-MGMT pending a3, SELF-SERVICE-PORTAL on INTAKE-PORTAL).
+- **B1B-S1**: 9 master DMDOs (8 LSD masters role=master/required) + 1 consumer (content_documents 429 on LSD-LEGAL-HOLD). 34 lifecycle states authored across the 8 masters with workflow gates (open_matter, close_matter, approve/reject/route_intake, issue_hold, release_hold, produce_ediscovery, engage_counsel, complete_engagement, issue_advice, respond_inquiry, close_docket).
+- **B1B-B1**: backfilled source_domain_module_id on 11 outbound handoffs; repainted suspicious inbounds 300 (RE-PROP-MGMT) and 807 (HCMS) payload to legal_intake_requests (634) with target LSD-INTAKE-PORTAL (a6/a7 = b); backfilled 824 target to LSD-LEGAL-HOLD.
+- **a4 / a5 (B2-PATTERN-FLAGS)**: legal_advice_records (638) has_personal_content=true; outside_counsel_engagements (637) has_single_approver=true.
+- **a8 = d (B2-OUTSIDE-COUNSEL-FANOUT)**: authored 3 fan-out handoffs on trigger 1045 (outside_counsel.engaged) to SPEND-MGMT (133), CLM (26), GRC (15); target module NULL (partner owns its split per the B10b asymmetry rule).
+- **a9 = a (B2-PAIRWISE-DEPTH)**: decided to rerun pairwise reconciliation now that modules exist; carried as a b1b follow-up.
+
+The 3 prior B9d UNOWNED findings self-resolve now that DMDO master rows exist (next B9d pass).
+
+Still open and looped into the regenerated q-LSD.md: **a2** (legal_contracts necessity - user asked "what is a required consumer?"; explained, re-asked, kept required for now) and **a3** (knowledge surface - recommendation was "a or b", needs a pick; with the 5-module shape, (b) consume cross-cutting is the consistent default). b3 research candidates greenlit for research (a10/a11 = yes), parked non-blocking. Phase-P personas and domain_module_tools authoring deferred. Loader: .tmp_deploy/build_lsd_2026_06_15.ts.

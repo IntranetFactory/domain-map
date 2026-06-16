@@ -19,7 +19,7 @@ q1: (answer this first) Is BCM correctly classified as a leadership-tier domain 
 
 Recommended: b. The vendor surface meets the Rule #2 point-solution-market test cleanly: two flagship pure-plays (Fusion Framework System, Castellan) and three suites (ServiceNow BCM, Archer Resilience Management, MetricStream BCM) each master first-class BCM records, not derived signals. Every one of the five builds the same object set: Fusion houses BIAs in its Business Function tab and masters dependency maps, recovery strategies, plan exercises, and crisis/incident records; Castellan ships integrated BIA, risk assessment, plan development, testing/exercising, and crisis management end to end; ServiceNow runs a Draft/In Review/Approved lifecycle across BIA, continuity plans, recovery exercises, and crisis events; Archer's "Business Continuity & IT Disaster Recovery Planning" use case masters BIAs, BC and DR plans, and crisis events; MetricStream masters BIA surveys with cumulative criticality scoring, template-driven continuity plans, and crisis/incident workflow. The dependency-mapping logic (service to app to infrastructure, driving recovery sequencing) is real algorithmic substance, not pure derived signal. This choice drives the module count, the capability scope, where the skill lives, the breadth of consumed records, and the entire optional list below, so it unlocks the rest of the build.
 
-a1:
+a1: b
 
 ---
 
@@ -31,7 +31,7 @@ q2: How should disaster recovery (DRP) be handled: as part of BCM, or as its own
 
 Recommended: a. The fresh vendor check shows no flagship sells DRP as a market independent of BCM: Fusion folds IT disaster recovery into its resilience platform as an integrated component ("response plans for ITDR integrated within broader resilience frameworks, connecting to business continuity management"), Riskonnect (which now owns Castellan) "includes IT disaster recovery as an integrated component of their broader business continuity management system, rather than as a completely separate standalone module," and ServiceNow does not distinguish a separate DR plan object from the continuity plan at all. Archer is the only one that keeps distinct BC-plan and DR-plan TYPES, but still under a single "Business Continuity & IT Disaster Recovery Planning" use case, not a separate product. So DR belongs inside BCM as `disaster_recovery_plans` plus `recovery_strategies` on the Planning module, next to the continuity plans they serve. Note that option (a) is only available if BCM promotes under q1.
 
-a2:
+a2: a
 
 ---
 

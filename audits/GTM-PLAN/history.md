@@ -523,3 +523,19 @@ q-file is surfaced). Both executed this pass; no catalog writes (unbuilt domain)
 ### UI links
 
 - https://tests.semantius.app/domain_map/domains (catalog UX row, id 104, unchanged this pass)
+
+## 2026-06-15 - a-file processed: GTM-PLAN built (5 modules)
+
+User renamed q-GTM-PLAN.md to a-GTM-PLAN.md and instructed "process them" + "build both now" / "promote both now". Every question answered; the build landed.
+
+- **a1 = b (B2-M1)**: 5-module shape. Built GTM-PLAN-PLANNING-CORE (389), -TERRITORY-QUOTA (390), -CAPACITY (391), -SCENARIO (392), -EXEC-HANDOFF (393), all full, with buyer-voice catalog copy. 13 masters authored (incl. the B1B-V1..V4 gaps: gtm_plans 1223, ideal_customer_profiles 1220, target_account_lists 1221, capacity_plans, plus market_segments, account_scores, channel_mix_plans, territories, quotas, hiring_plans, gtm_scenarios, plan_versions, plan_lock_records). 25 lifecycle states. 7 capabilities mapped to the 5 modules. gtm-plan-system skill + 10 tools.
+- **a4 = a (B2-S1) + promote-both approval**: PMM promoted as its own domain (184); LAUNCH-ORCHESTRATION (cap 109) relocated off GTM-PLAN to PMM-LAUNCH-MGMT. The GTM-PLAN-LAUNCH-ORCH module was never created (its surface lives in PMM).
+- **a5 = b (B2-S2)**: ABM-PLATFORM promoted as the downstream engagement consumer (185). ICP + target lists + planning-grade scoring STAY in GTM-PLAN; ABM consumes them via consumer DMDOs + 2 GTM-PLAN -> ABM handoffs (target_account_list.approved, ideal_customer_profile.updated).
+- **a2 = recommendation (B2-C1)**: channel-mix capability (108) function override authored to Marketing; launch-orch override moot (relocated to PMM).
+- **a3 = a (B2-R1)**: no domain_regulations on GTM-PLAN (planning shell; exposure travels downstream with contact-level intent into ABM-PLATFORM).
+- **a6 = yes (B2-D1)**: domains.description rewritten to the narrowed scope (drops launch orchestration, clarifies GTM-PLAN authors ICPs/target lists that ABM engages against and the territory/quota design SPM executes).
+- **a7 = a (B2-P1)**: run pairwise reconciliation against the non-leadership neighbors right after the build (carried as a b1b follow-up).
+- **a8 = no (B3-SALES-PLANNING-PLATFORM)**: do NOT promote (the Gartner "Sales Planning Platforms" category is unverified); TERRITORY / CAPACITY / SCENARIO stay in GTM-PLAN. Closed.
+- **a9 = c (B3-CHANNEL-MIX-SCOPE)**: split - the thin strategic channel_mix_plans master stays in GTM-PLAN (PLANNING-CORE); paid-media/campaign budget allocation lives downstream in MA / ABM-PLATFORM. Realized (channel_mix_plans authored, necessity optional). Closed.
+
+No user-facing decision remains. Deferred follow-ups (b1b, not blocking): Phase-P personas (E1, 5-module domain), domain_module_tools breadth, pairwise reconciliation (a7), and B9b intra-domain cross-module handoffs. a-file deleted; a light q-GTM-PLAN.md surfaces the persona/pairwise go-ahead. Loaders: .tmp_deploy/build_gtm_plan_2026_06_15.ts, build_pmm_2026_06_15.ts, build_abm_2026_06_15.ts.

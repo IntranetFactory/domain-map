@@ -430,3 +430,22 @@ The per-module `<module>_agent` system-skill grain is RETIRED (per the supersess
 - Catalog: 5 entity_type PATCH, 6 handoff module-FK PATCH, 10 lifecycle states inserted, 8 intra-domain relationships inserted. All `record_status='new'`. No deletions, no overwrites of non-empty values, no record_status flips.
 
 `next_action_by`: user. No agent-executable work remains; everything open is a b2 user decision or a b1b blocked on another domain / upstream seed.
+
+## 2026-06-15 - a-file processed
+
+Answers applied (q-FLEET-MGMT.md renamed to a-FLEET-MGMT.md; "process them"):
+- **a1 = a (B2-DRIVERS-VS-EMPLOYEES)**: keep current shape - FLEET masters fleet_drivers, contributor on employees (US-trucking contractor reality). Decision recorded; unblocks the fleet_drivers state machine subject to a6 below.
+- **a2 = a (B2-PATTERN-FLAGS)**: all 5 masters has_personal_content=true (user chose the privacy-strict reading over the recommended 3).
+- **a4 = a (B2-EVENT-CATEGORIES)**: 6 lifecycle events (985-990) event_category=lifecycle.
+- **a7 = b (B2-MOTOR-POOL)**: motor_pool_reservations will ship as its own FLEET-MGMT-MOTOR-POOL sub-module when the entity is authored (user chose separate over the recommended embed). Recorded; no entity authored yet.
+- **a9 = yes (B2-CATALOG-COPY)**: catalog copy confirmed (already written at record_status=new; nothing to write).
+- **a13-a17 = a (B2-B9D-OWN-315/1389/352/862/...)**: FLEET owns the 5 B9d-surfaced processes (AP, fixed-asset, asset-maintenance, predictive-maintenance, transportation-fleet). FLEET has 0 personas (Phase-P deferred), so these are recorded as owned-but-awaiting-a-named-owner (b1b blocked on Phase-P), not realized yet.
+
+Looped into the regenerated q-FLEET-MGMT.md (questions/requests, NOT executed):
+- **a3 (B2-VEHICLE-INSPECTIONS-DVIR)** "would embedded master be a more flexible option": yes - re-asked as embedded_master vs unified-with-discriminator vs split.
+- **a5 (B2-SIGN-DOCUMENT)** "explain": explained the tool's purpose; re-asked which workflow (if any) keeps it.
+- **a6 (B2-HCM-DRIVER-LIFECYCLE)** "explain": explained the HCM->FLEET driver-lifecycle handoffs; re-asked.
+- **a8 (B2-REGULATION-SCOPE)** "can these be optional, so EU does not need to import US and vice versa": yes - confirmed regulations ship as conditional/optional applicability; re-asked to confirm the floor+stretch set on that basis.
+- **a10 (B2-ALIASES)** blank -> recommendation b (load a curated subset) needs the actual picks; re-asked.
+
+b3 research (a11/a12 = yes): the deeper fleet entities and the 3 adjacent-domain candidates (TMS, EV-CHARGING-MGMT, FREIGHT-AUDIT) are greenlit for research, parked non-blocking. Loader: .tmp_deploy/process_afiles_mechanical_2026_06_15.ts.
