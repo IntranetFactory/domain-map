@@ -150,12 +150,32 @@ function readRenderVars(dir: string): {
   };
 }
 
-// Compose the SKILL.md routing description from DB-projected values only: the domain name +
-// code, then the buyer one-liner (catalog_tagline). No keywords, no hand-authored content.
-function composeSkillDescription(name: string, code: string, tagline: string): string {
-  const t = tagline.trim();
-  const head = `${name} (${code}).`;
-  return clean(t ? `${head} ${t}${/[.!?]$/.test(t) ? "" : "."}` : head);
+// Compose the SKILL.md routing description from the DOMAIN SKILL's own fields: the prose
+// (skills.description) followed by "Use for: <trigger_keywords>", dropping any keyword whose
+// term already appears in the prose (the dedup double-check). Both are the trigger surface:
+// the prose carries natural-language phrasing, the keywords the short search terms.
+function composeSkillDescription(prose: string, triggerKeywords: string): string {
+  const p = clean((prose ?? "").trim());
+  const kws = (triggerKeywords ?? "")
+    .split(",")
+    .map((k) => clean(k.trim()))
+    .filter(Boolean);
+  const lowerProse = p.toLowerCase();
+  const fresh = kws.filter((k) => !lowerProse.includes(k.toLowerCase()));
+  return fresh.length ? `${p} Use for: ${fresh.join(", ")}.` : p;
+}
+
+// The SKILL.md description is sourced from the domain skill's prose (+ keywords). A missing
+// skill or empty prose ERRORS rather than shipping a placeholder description.
+function skillDescriptionFrom(code: string, skill: any): string {
+  if (!skill || !String(skill.description ?? "").trim()) {
+    throw new Error(
+      `${code}: no domain skill, or empty skills.description. The SKILL.md routing description is ` +
+        `sourced from skills.description (+ trigger_keywords), so the emit STOPS instead of writing a ` +
+        `placeholder. Populate the domain skill's description in the database, then re-emit.`,
+    );
+  }
+  return composeSkillDescription(skill.description, skill.trigger_keywords ?? "");
 }
 
 // Best-effort org slug for catalog_snapshot. Never throws; falls back to "catalog".
@@ -282,7 +302,7 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
     get(`/domain_module_capabilities?domain_module_id=in.${moduleIdList}&select=domain_module_id,capability_id,capabilities(capability_code)`),
     get(`/domain_module_data_objects?domain_module_id=in.${moduleIdList}&select=domain_module_id,data_object_id,role,necessity`),
     get(`/handoffs?source_domain_id=eq.${domainId}&target_domain_id=neq.${domainId}&select=integration_pattern,friction_level,source_domain_module_id,target_domain_id,target_domain_module_id,data_objects(data_object_name),trigger_events(event_name,event_category),handoff_processes(processes(external_id,process_name))&order=id.asc`),
-    get(`/skills?skill_type=eq.system&domain_id=eq.${domainId}&domain_module_id=is.null&select=id,skill_name,domain_id,domain_module_id`),
+    get(`/skills?skill_type=eq.domain&domain_id=eq.${domainId}&select=id,skill_name,description,trigger_keywords`),
     get(`/domain_module_tools?domain_module_id=in.${moduleIdList}&select=domain_module_id,tool_id,requirement_level`),
     get(`/role_modules?domain_module_id=in.${moduleIdList}&select=role_id,domain_module_id,interaction_level`),
   ]);
@@ -423,11 +443,9 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
   const systemSkillsOut = systemSkills
     .sort((a, b) => (a.skill_name as string).localeCompare(b.skill_name as string))
     .map((s) => {
-      const scopeModuleIds: number[] =
-        s.domain_module_id != null ? [s.domain_module_id as number] : fullModuleIds.filter(Boolean);
-      // Union tools across the skill's module scope; required wins on collision.
+      // Domain skills derive their toolset from the union of the domain's FULL modules.
       const byTool = new Map<number, boolean>();
-      for (const mid of scopeModuleIds) {
+      for (const mid of fullModuleIds.filter(Boolean)) {
         for (const r of moduleToolsByModule.get(mid) ?? []) {
           const required = r.requirement_level === "required";
           byTool.set(r.tool_id as number, (byTool.get(r.tool_id as number) ?? false) || required);
@@ -440,16 +458,11 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
         })
         .filter(Boolean)
         .sort((a: any, b: any) => a.name.localeCompare(b.name));
-      const grain =
-        s.domain_module_id == null
-          ? "domain"
-          : moduleById.get(s.domain_module_id as number)?.module_kind === "starter"
-            ? "starter"
-            : "module"; // "module" only if a system skill ever sits on a FULL module (a data anomaly)
       return {
-        module_code: s.domain_module_id != null ? lk.moduleCodeById.get(s.domain_module_id as number) ?? null : null,
-        skill_grain: grain,
+        skill_grain: "domain",
         skill_name: s.skill_name,
+        description: clean((s.description as string) ?? ""),
+        trigger_keywords: (s.trigger_keywords as string) ?? "",
         tools,
       };
     });
@@ -579,7 +592,7 @@ async function buildBundleSpec(
     get(`/domain_module_host_domains?domain_module_id=eq.${moduleId}&select=domain_id`),
     get(`/domain_module_data_objects?domain_module_id=eq.${moduleId}&select=data_object_id,role,necessity`),
     get(`/domain_module_capabilities?domain_module_id=eq.${moduleId}&select=capability_id,capabilities(capability_code,capability_name)`),
-    get(`/skills?skill_type=eq.system&domain_module_id=eq.${moduleId}&select=id,skill_name`),
+    get(`/skills?skill_type=eq.domain&domain_id=eq.${mod.domain_id}&select=id,skill_name,description,trigger_keywords`),
     get(`/domain_module_tools?domain_module_id=eq.${moduleId}&select=tool_id,requirement_level`),
     get(`/role_modules?domain_module_id=eq.${moduleId}&select=role_id,interaction_level`),
     get(`/handoffs?source_domain_module_id=eq.${moduleId}&select=integration_pattern,friction_level,target_domain_id,target_domain_module_id,data_objects(data_object_name),trigger_events(event_name),handoff_processes(processes(external_id,process_name))&order=id.asc`),
@@ -646,7 +659,15 @@ async function buildBundleSpec(
     })
     .filter(Boolean)
     .sort((a: any, b: any) => a.name.localeCompare(b.name));
-  const systemSkill = skillRows.length ? { skill_grain: "starter", skill_name: skillRows[0].skill_name, tools } : null;
+  const systemSkill = skillRows.length
+    ? {
+        skill_grain: "domain",
+        skill_name: skillRows[0].skill_name,
+        description: clean((skillRows[0].description as string) ?? ""),
+        trigger_keywords: (skillRows[0].trigger_keywords as string) ?? "",
+        tools,
+      }
+    : null;
 
   // Outbound handoffs + APQC rollup.
   const apqc = new Map<string, string>();
@@ -860,7 +881,7 @@ async function emitOne(code: string, lk: Lookups, template: string): Promise<voi
     name: spec.domain.name,
     tagline,
     description,
-    skillDescription: composeSkillDescription(spec.domain.name, spec.domain.code, tagline),
+    skillDescription: skillDescriptionFrom(code, spec.system_skills[0]),
     capabilityNames: capNames,
     relatedSkills: adjacentDomainCodes.map((c) => `use-${c.toLowerCase()}`),
   });
@@ -886,7 +907,7 @@ async function emitBundle(code: string, lk: Lookups, template: string): Promise<
     name: spec.bundle.name,
     tagline,
     description,
-    skillDescription: composeSkillDescription(spec.bundle.name, spec.bundle.code, tagline),
+    skillDescription: skillDescriptionFrom(code, spec.system_skill),
     capabilityNames: capNames,
     relatedSkills: adjacentDomainCodes.map((c) => `use-${c.toLowerCase()}`),
   });

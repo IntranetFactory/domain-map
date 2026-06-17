@@ -112,5 +112,5 @@ For the value-stream processes, substitute `process_tools` keyed on `processes.i
 
 - **Per-tool, not per-operation_kind.** The tool is the unit of work an agent calls - counting at the kind-level would conflate "needs 5 reads" with "needs 1 read".
 - **`operation_kind` is the partition.** Semantius covers `{query, mutate}` today via CRUD + cube. `side_effect` (email, SMS, signature, calendar) and `compute` (AI, text generation, web automation) are external by definition.
-- **The unit is the deployable thing, not the skill.** A domain's coverage rolls up its modules' `domain_module_tools`; a value stream rolls up its `process_tools`. The `system` / `process` skill derives its toolset from these relationships and stores nothing, so the score is computed from the relationships directly.
+- **The unit is the deployable thing, not the skill.** A domain's coverage rolls up its modules' `domain_module_tools`; a value stream rolls up its `process_tools`. The `domain` / `process` skill derives its toolset from these relationships and stores nothing, so the score is computed from the relationships directly.
 - **Semantius is NOT a row in `solutions`.** Coverage is intrinsic to `operation_kind`. `tool_solutions` records non-Semantius deliveries only.

@@ -165,13 +165,9 @@ function validateStarterModule(m: ModuleSpec): void {
         `(read/manage/admin), found ${baseline.length}.`,
     );
   }
-  const systemSkills = (m.system_skills ?? []).length;
-  if (systemSkills !== 1) {
-    throw new Error(
-      `Starter ${m.domain_module_code}: must ship exactly 1 system skill ` +
-        `(Rule #17), found ${systemSkills}.`,
-    );
-  }
+  // Starters ship NO skill of their own (Rule #17: skills are domain-grain only). A single-domain
+  // starter is served by the host domain's skill; a cross-domain starter is promoted to a
+  // domain_kind='bundle' domain and served by one ordinary domain skill there. Nothing to assert here.
 }
 
 type JunctionSpec = {

@@ -524,6 +524,20 @@ The two changes are paired, not independent: Phase 0 prevents the failure at loa
 
 ---
 
+### 2026-06-17 — Skills are domain-grain only: `system` skill_type renamed to `domain`, module anchor dropped, trigger_keywords added
+
+**Context.** The `skills` table carried `skill_type='system'` with both a `domain_id` (domain grain) and a `domain_module_id` (module grain); per the prior plan, FULL modules got no skill but each `module_kind='starter'` module kept its own module-anchored "system" skill. The user observed this is redundant for single-domain starters: HIRING-STARTER (pure ATS) had its own `hiring_starter_agent` skill that just duplicated the ATS domain skill, which already discovers installed modules and scopes itself at runtime. Separately, the SKILL.md routing description was sourced from the buyer `catalog_tagline` while the purpose-built agent prose already lived in `skills.description` (ignored by the emitter), and the old hand-curated trigger keywords lived only in the generated `catalog.yaml` file with no DB home.
+
+**Decision.** Skills are **domain-grain only**. (1) Renamed `skills.skill_type` enum `system` -> `domain` (now `domain` / `process` / `role`, default `domain`); migrated all 150 rows. (2) Dropped the `skills.domain_module_id` column. (3) Deleted the 4 single-domain starter skills (HIRING / CSA / ITSM-STARTER / TRAINING-RECORDS); their host domains' skills serve them. (4) Re-anchored the 3 cross-domain (bundle) starter skills to domain-grain on their bundle domain. (5) `skill_name` convention dropped its suffix: now `<domain_code_lower>` (e.g. `ats`, not `ats-system`). (6) Added `skills.trigger_keywords` (comma-separated text). The emitter now composes the SKILL.md description = `skills.description` + "Use for: <trigger_keywords>" (keywords deduped against the prose), instead of from `catalog_tagline`. Updated the `domain_required_when_skill_type_is_system` validation rule to `_is_domain`.
+
+**Reasoning.** A single-domain starter is a subset of one market; the domain skill is a superset and already runtime-scopes to the installed modules, so a per-starter skill is pure duplication. A cross-domain starter is already promoted to a `domain_kind='bundle'` domain (Rule #2), so its skill can be an ordinary domain skill on that bundle domain. With both cases covered by domain-grain skills, `domain_module_id` on `skills` is unnecessary and "system" is a misleading name for what is one skill per domain. Sourcing the description from `skills.description` (the agent prose) + `skills.trigger_keywords` (the curated complement) puts both the prose and the keywords in the DB where they belong, not in a generated file.
+
+**Scope.** Catalog-wide: `skills` table (schema + 150 rows), `scripts/emit_skill_spec.ts`, SKILL.md (Rule #17, Rule #19 #6, Phase S, F1/F2, at-a-glance, Domain-skill tool derivation), references (loader-idiom.md, modules.md, semantius-coverage-rollup.md). Migration loader: `.tmp_deploy/skills_domain_grain_migration_2026_06_17.ts`. Supersedes the prior "starters keep their own module-anchored system skill" rule and the earlier per-module skill grain. Open follow-ups (not yet done): authoring `skills.trigger_keywords` data (all empty today; the "Use for:" tail is blank until populated); the `catalog.yaml` redundancy decision; regenerating the remaining catalog-released `use-*` skills.
+
+**Status.** active.
+
+---
+
 # Incidents
 
 Append one entry per occurrence. Used by SKILL.md Rule #15 — the agent MUST log here when notes have been written without user approval, AND revert the writes, AND propose a SKILL.md edit that removes whatever passage rationalized the violation.
