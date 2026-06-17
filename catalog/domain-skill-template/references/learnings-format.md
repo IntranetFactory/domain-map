@@ -75,7 +75,7 @@ Created on first write; absent means empty.
 
 On an exit-4 error whose message is schema-shaped ("column/relation does not exist"),
 `discovered.json` is probably stale: re-run discovery, retry once, else surface and stop (per
-`use-semantius`: do not silently adapt). Record an entry ONLY if there is a non-schema lesson in it;
+1`use-semantius`: do not silently adapt). Record an entry ONLY if there is a non-schema lesson in it;
 a plain rename is fixed by re-discovery, not remembered here.
 
 ## Recall & apply
