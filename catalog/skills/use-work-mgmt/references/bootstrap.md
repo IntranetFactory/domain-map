@@ -84,9 +84,9 @@ hint as `modules`.
 
 > The `<spec.domain.name>` domain is not deployed in your platform. No live module hosts its entities, and no module carries its catalog codes. Deploy the domain blueprint first:
 >
-> 1. Pull the blueprint: `https://semantius.app/catalog/<spec.domain.code lowercase>/blueprint`
+> 1. Pull the blueprint: `https://www.semantius.com/blueprints/work-mgmt`
 > 2. Run the semantic-model-deployer skill against the blueprint
-> 3. Verify with: `semantius call crud postgrestRequest '{"method":"GET","path":"/entities?catalog_entity_code=in.(<a few master codes>)&select=module_id"}'`
+> 3. Verify with: `semantius call crud postgrestRequest '{"method":"GET","path":"/modules?settings->>domain_code=eq.WORK-MGMT&select=id,slug,name"}'` (any row returned means a module of this domain is already deployed)
 >
 > Re-run this skill once the domain is live.
 

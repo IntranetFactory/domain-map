@@ -829,20 +829,26 @@ function buildBundleSpec(
   };
 }
 
-// ---------- SKILL.md rendering (template + catalog.yaml render variables) ----------
+// ---------- template rendering (template text + catalog.yaml render variables) ----------
 
-function renderSkillMd(
-  template: string,
+// Resolves the {{...}} placeholders in ANY template file (SKILL.md, references/*.md, scripts/*.ts),
+// not just SKILL.md. The same variable set is substituted everywhere, so a placeholder such as
+// {{DOMAIN_CODE_LOWER}} renders identically wherever it appears across the template tree.
+function renderTemplate(
+  text: string,
   v: { domainCodeLower: string; moduleSlug: string; domainName: string; skillDescription: string; capabilityNames: string[] },
 ): string {
   const subs: Record<string, string> = {
     SKILL_DESCRIPTION: v.skillDescription,
     DOMAIN_CODE_LOWER: v.domainCodeLower,
+    // Uppercase canonical code, exactly as the deploy pipeline stamps modules.settings.domain_code
+    // (e.g. IT-OPS-STARTER). Round-trips from the lowercase var since codes are uppercase + hyphens.
+    DOMAIN_CODE: v.domainCodeLower.toUpperCase(),
     DOMAIN_NAME: v.domainName,
     CAPABILITY_NAMES_COMMA_LIST: v.capabilityNames.join(", "),
     MODULE_SLUG: v.moduleSlug,
   };
-  let out = template;
+  let out = text;
   for (const [k, val] of Object.entries(subs)) out = out.replaceAll(`{{${k}}}`, val);
   // Safety net: strip any em-dash that slipped through from a substituted DB value.
   return out.replace(/\s*—\s*/g, ", ");
@@ -930,11 +936,24 @@ function writeFolder(code: string, specJson: string, catalogYaml: string): void 
   rmSync(`${dir}/SKILL.md`, { force: true }); // skill-specs no longer stores an expanded SKILL.md
 }
 
+// Every file under a directory, recursively (used to render all copied template files in place).
+function walkDir(dir: string): string[] {
+  const out: string[] = [];
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const full = `${dir}/${e.name}`;
+    if (e.isDirectory()) out.push(...walkDir(full));
+    else if (e.isFile()) out.push(full);
+  }
+  return out;
+}
+
 // Assembles the INSTALLABLE skill folder <SKILLS_DIR>/use-<code>/:
 //   (a) delete any existing folder, (b) copy the generic domain-skill-template (references/,
 //   scripts/, the template SKILL.md with {{...}} placeholders), (c) copy this entry's data
-//   (spec.json + catalog.yaml), (d) render the template SKILL.md IN PLACE from the copied
-//   catalog.yaml. The expanded SKILL.md exists ONLY in the installable skill folder.
+//   (spec.json + catalog.yaml), (d) render {{...}} IN PLACE across EVERY copied template file,
+//   not just SKILL.md: placeholders such as the blueprint URL {{DOMAIN_CODE_LOWER}} also live in
+//   references/bootstrap.md. spec.json + catalog.yaml sit at the folder root and are left as data
+//   (catalog.yaml is the render INPUT). The expanded files exist ONLY in the installable folder.
 function assembleInstalledSkill(specCode: string, template: string): string {
   const skillName = `use-${specCode.toLowerCase()}`;
   const dest = `${SKILLS_DIR}/${skillName}`;
@@ -944,7 +963,17 @@ function assembleInstalledSkill(specCode: string, template: string): string {
   for (const f of ["spec.json", "catalog.yaml"]) {
     cpSync(`${SKILL_SPECS_DIR}/${specCode}/${f}`, `${dest}/${f}`); // (c)
   }
-  writeFileSync(`${dest}/SKILL.md`, renderSkillMd(template, readRenderVars(dest)), "utf8"); // (d)
+  // (d) render placeholders everywhere. SKILL.md comes from the in-memory template; references/
+  // and scripts/ are rendered from disk. The data files at the folder root are never rendered.
+  const vars = readRenderVars(dest);
+  writeFileSync(`${dest}/SKILL.md`, renderTemplate(template, vars), "utf8");
+  for (const sub of ["references", "scripts"]) {
+    const subdir = `${dest}/${sub}`;
+    if (!existsSync(subdir)) continue;
+    for (const file of walkDir(subdir)) {
+      writeFileSync(file, renderTemplate(readFileSync(file, "utf8"), vars), "utf8");
+    }
+  }
   return skillName;
 }
 

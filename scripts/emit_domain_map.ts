@@ -132,7 +132,9 @@ type RaciProcessRef = {
 type ModuleOut = {
   code: string;
   name: string;
-  description: string;
+  description: string; // analyst voice (domain_modules.description); NOT for public surfaces
+  catalog_tagline: string; // buyer voice (domain_modules.catalog_tagline); the public card copy
+  catalog_description: string; // buyer voice (domain_modules.catalog_description); the public detail copy
   personas: PersonaRef[];
   processes: ProcessRef[];
   related_modules: string[];
@@ -141,7 +143,9 @@ type ModuleOut = {
 type DomainOut = {
   code: string;
   name: string;
-  description: string;
+  description: string; // analyst voice (domains.description); NOT for public surfaces
+  catalog_tagline: string; // buyer voice (domains.catalog_tagline); the public landing copy
+  catalog_description: string; // buyer voice (domains.catalog_description); the public landing detail copy
   domain_kind: string; // established_market | emerging_market | bundle (plan: domain-kind taxonomy)
   catalog_release: string | null;
   business_functions: BusinessFunctionRef[]; // functions owning/contributing-to/consuming this domain
@@ -247,6 +251,11 @@ for (const d of index.domains) {
 const gateDomainIds = ALL ? new Set<number>(index.domains.map((d) => d.id)) : releasedDomainIds;
 const gateDomainCodes = new Set<string>(
   [...gateDomainIds].map((id) => index.domainsById.get(id)?.domain_code).filter((c): c is string => Boolean(c)),
+);
+// The strictly-released codes (independent of --all). The catalog-copy publish gate below keys on
+// these: only released domains are actually published, so only they must carry buyer-voice copy.
+const releasedDomainCodes = new Set<string>(
+  [...releasedDomainIds].map((id) => index.domainsById.get(id)?.domain_code).filter((c): c is string => Boolean(c)),
 );
 console.error(
   ALL
@@ -531,6 +540,8 @@ for (const d of index.domains) {
         code: m.domain_module_code,
         name: m.domain_module_name,
         description: m.description ?? "",
+        catalog_tagline: m.catalog_tagline ?? "",
+        catalog_description: m.catalog_description ?? "",
         personas: personaRefs(personaLevelByModule.get(m.id) ?? new Map()),
         processes: processRefsForModule(m.id),
         related_modules: relatedModCodes,
@@ -585,6 +596,8 @@ for (const d of index.domains) {
     code: d.domain_code,
     name: d.domain_name,
     description: d.description ?? "",
+    catalog_tagline: d.catalog_tagline ?? "",
+    catalog_description: d.catalog_description ?? "",
     domain_kind: d.domain_kind,
     catalog_release: d.catalog_release ?? null,
     business_functions: businessFunctionRefs(d.id),
@@ -1042,6 +1055,37 @@ const processesJson = JSON.stringify({ processes: processesOut }, null, 2) + "\n
 // Only `personas` (a role_code string[]) is collapsed; `domains` is an object array (untouched).
 const functionsJson =
   collapseStringArrays(JSON.stringify({ business_functions: functionsOut }, null, 2), ["personas", "actor_personas"]) + "\n";
+
+// ---------------------------------------------------------------------------
+// Catalog-copy publish gate (Rule #20). emit_domain_map feeds the PUBLIC site catalog, so every
+// RELEASED domain and every module it publishes MUST carry buyer-voice copy. An empty
+// catalog_tagline / catalog_description would surface analyst-voice `description` (or a blank) on a
+// public card, so refuse to emit ANY artifact and list every offender. Unreleased domains are not
+// published and are exempt (their copy is backfilled before release). Backfill flow is draft ->
+// q-file approval -> write (Rule #20 / Rule #22); the emitter never authors the copy, it only
+// refuses to publish without it.
+// ---------------------------------------------------------------------------
+const catalogCopyOffenders: string[] = [];
+for (const d of gatedOut) {
+  if (!releasedDomainCodes.has(d.code)) continue; // gate only the published (released) set
+  if (!d.catalog_tagline.trim()) catalogCopyOffenders.push(`domain ${d.code}: catalog_tagline empty`);
+  if (!d.catalog_description.trim()) catalogCopyOffenders.push(`domain ${d.code}: catalog_description empty`);
+  for (const m of d.modules) {
+    if (!m.catalog_tagline.trim()) catalogCopyOffenders.push(`module ${m.code} (on ${d.code}): catalog_tagline empty`);
+    if (!m.catalog_description.trim())
+      catalogCopyOffenders.push(`module ${m.code} (on ${d.code}): catalog_description empty`);
+  }
+}
+if (catalogCopyOffenders.length > 0) {
+  console.error(
+    `\nERROR: refusing to emit. ${catalogCopyOffenders.length} released domain/module catalog-copy field(s) are empty (Rule #20):`,
+  );
+  for (const o of catalogCopyOffenders) console.error(`  - ${o}`);
+  console.error(
+    `\nBuyer-voice catalog_tagline / catalog_description must be backfilled (draft -> q-file approval -> write) before publishing. No files were written.`,
+  );
+  process.exit(1);
+}
 
 const mode = ALL ? "--all (unfiltered)" : RELEASED_ANY ? "released-only (any date)" : "released-only (as of today)";
 if (STDOUT) {
