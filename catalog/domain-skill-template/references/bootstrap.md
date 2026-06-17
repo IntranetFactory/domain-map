@@ -80,9 +80,9 @@ slice. `scripts/phase1-environment.ts` emits the slice as `domain_slice` and the
 hint as `modules`.
 
 - If the slice is **non-empty**, record its `module_id`s in `state.jsonc` under `deployment` and proceed. A spec module that does not appear is a deployment choice (or a bundled package), not a failure.
-- If the slice is **empty**, halt with the error template below, substituting the configured domain at runtime:
+- If the slice is **empty**, halt with the error template below:
 
-> The `<spec.domain.name>` domain is not deployed in your platform. No live module hosts its entities, and no module carries its catalog codes. Deploy the domain blueprint first:
+> The `{{DOMAIN_NAME}}` domain is not deployed in your platform. No live module hosts its entities, and no module carries its catalog codes. Deploy the domain blueprint first:
 >
 > 1. Pull the blueprint: `https://www.semantius.com/blueprints/{{DOMAIN_CODE_LOWER}}`
 > 2. Run the semantic-model-deployer skill against the blueprint
