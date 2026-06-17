@@ -552,6 +552,20 @@ The two changes are paired, not independent: Phase 0 prevents the failure at loa
 
 ---
 
+## 2026-06-17 - B16 British-English audit band: AE was a project rule the audit never enforced
+
+**Context.** A release-scoped build force-rendered embedded entities from unreleased domains (WFM/EPM/SEM) and surfaced a British spelling (`cancelled`, `realisation`) in `strategic_initiatives` that no prior audit had caught. CLAUDE.md states "American English only" project-wide, but the domain-map-analyst audit had no band that checks for British spellings, so the rule was unenforced at audit time.
+
+**Decision.** Added B16 to the B-band: no British-English spellings in any authored text column. Like B15 it is a catalog-wide predicate, enforced by `scripts/analytics/be_spelling_sweep.ts` (a curated BE→AE map, not a blanket `-ise→-ize`; AUTOFIX on authored prose, REPORT-only on natural keys / codes and externally-sourced names like the ERP brand "Fulfil"). First catalog-wide sweep fixed the authored-substrate rows; vendor/solution copy was surfaced report-only for manual judgment.
+
+**Reasoning.** A blanket transform corrupts AE-native words (`enterprise`, `comprise`, `customer`); a curated map is the only safe form. Identifier/code columns are report-only because renaming a natural key cascades to FKs. The tool doubles as the lint the band points at, so a clean catalog stays clean and B16 is a regression guard, not a recurring cleanup.
+
+**Scope.** SKILL.md B16 band + the audit-recipe in-scope list (B11-B16); `scripts/analytics/be_spelling_sweep.ts`. Catalog-wide.
+
+**Status.** active.
+
+---
+
 # Incidents
 
 Append one entry per occurrence. Used by SKILL.md Rule #15 — the agent MUST log here when notes have been written without user approval, AND revert the writes, AND propose a SKILL.md edit that removes whatever passage rationalized the violation.

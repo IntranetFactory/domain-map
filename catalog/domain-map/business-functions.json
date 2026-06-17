@@ -1,6 +1,81 @@
 {
   "business_functions": [
     {
+      "name": "Accounting",
+      "description": "General ledger, period close, consolidation, statutory reporting, financial controls.",
+      "parent": "Finance",
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 0,
+      "domains": [
+        {
+          "code": "RE-BROKERAGE",
+          "responsibility": "consumer"
+        }
+      ],
+      "personas": [],
+      "actor_personas": [],
+      "raci": []
+    },
+    {
+      "name": "Business Operations",
+      "description": "Cross-functional operations: revenue operations, business operations, process improvement, and shared services not specific to any single function.",
+      "parent": null,
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 2,
+      "domains": [
+        {
+          "code": "WORK-MGMT",
+          "responsibility": "owner"
+        }
+      ],
+      "personas": ["OPERATIONS-WORK-CONTRIBUTOR", "OPERATIONS-WORK-PROGRAM-LEAD"],
+      "actor_personas": ["OKR-OWNER", "OPERATIONS-WORK-CONTRIBUTOR", "OPERATIONS-WORK-PROGRAM-LEAD"],
+      "raci": [
+        {
+          "domain": "WORK-MGMT",
+          "responsibility": "owner",
+          "persona": "OKR-OWNER",
+          "persona_via": "seam",
+          "process_code": "1.2.6",
+          "process_key": "develop_set_organizational",
+          "process_name": "Develop and set organizational objectives",
+          "raci": "accountable"
+        },
+        {
+          "domain": "WORK-MGMT",
+          "responsibility": "owner",
+          "persona": "OKR-OWNER",
+          "persona_via": "seam",
+          "process_code": "1.2.6",
+          "process_key": "develop_set_organizational",
+          "process_name": "Develop and set organizational objectives",
+          "raci": "responsible"
+        },
+        {
+          "domain": "WORK-MGMT",
+          "responsibility": "owner",
+          "persona": "OPERATIONS-WORK-PROGRAM-LEAD",
+          "persona_via": "own",
+          "process_code": "13.2.3",
+          "process_key": "manage_projects",
+          "process_name": "Manage projects",
+          "raci": "accountable"
+        },
+        {
+          "domain": "WORK-MGMT",
+          "responsibility": "owner",
+          "persona": "OPERATIONS-WORK-CONTRIBUTOR",
+          "persona_via": "own",
+          "process_code": "13.2.3",
+          "process_key": "manage_projects",
+          "process_name": "Manage projects",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
       "name": "Contract Operations",
       "description": "Contract authoring, redlining, approval routing, signature, repository, obligation tracking. The operational side of legal contract management.",
       "parent": "Legal",
@@ -99,15 +174,36 @@
       ]
     },
     {
-      "name": "Executive",
-      "description": "CEO office, corporate strategy, business development, mergers and acquisitions, and corporate communications.",
+      "name": "Customer Success",
+      "description": "Post-sale account health, expansion, retention, customer education, and onboarding for accounts after the initial sale.",
       "parent": null,
       "record_status": "new",
       "domain_count": 1,
       "persona_count": 0,
       "domains": [
         {
+          "code": "WORK-MGMT",
+          "responsibility": "contributor"
+        }
+      ],
+      "personas": [],
+      "actor_personas": [],
+      "raci": []
+    },
+    {
+      "name": "Executive",
+      "description": "CEO office, corporate strategy, business development, mergers and acquisitions, and corporate communications.",
+      "parent": null,
+      "record_status": "new",
+      "domain_count": 2,
+      "persona_count": 0,
+      "domains": [
+        {
           "code": "HCM",
+          "responsibility": "consumer"
+        },
+        {
+          "code": "INTRANET-GOV",
           "responsibility": "consumer"
         }
       ],
@@ -120,7 +216,7 @@
       "description": "Function responsible for the books, treasury, planning, and procurement of the business.",
       "parent": null,
       "record_status": "new",
-      "domain_count": 2,
+      "domain_count": 4,
       "persona_count": 0,
       "domains": [
         {
@@ -128,7 +224,15 @@
           "responsibility": "contributor"
         },
         {
+          "code": "SMP",
+          "responsibility": "contributor"
+        },
+        {
           "code": "ATS",
+          "responsibility": "consumer"
+        },
+        {
+          "code": "ITSM",
           "responsibility": "consumer"
         }
       ],
@@ -241,7 +345,7 @@
       "description": "Function responsible for the full worker lifecycle: hiring, paying, developing, supporting, and offboarding the workforce. Owns HRIS-equivalent domains and partners with Finance on workforce cost.",
       "parent": null,
       "record_status": "new",
-      "domain_count": 2,
+      "domain_count": 4,
       "persona_count": 4,
       "domains": [
         {
@@ -249,12 +353,20 @@
           "responsibility": "owner"
         },
         {
+          "code": "INTRANET-GOV",
+          "responsibility": "owner"
+        },
+        {
           "code": "ATS",
           "responsibility": "contributor"
+        },
+        {
+          "code": "ITSM",
+          "responsibility": "consumer"
         }
       ],
       "personas": ["HR-BUSINESS-PARTNER", "HR-HRIS-ADMIN", "HR-ORG-DESIGN-ANALYST", "HR-PEOPLE-OPS-SPECIALIST"],
-      "actor_personas": ["HIRING-MANAGER", "HR-BUSINESS-PARTNER", "HR-HRIS-ADMIN", "HR-ORG-DESIGN-ANALYST", "HR-PEOPLE-OPS-SPECIALIST", "HRSD-CASE-AGENT", "HRSD-KNOWLEDGE-MANAGER", "HRSD-SERVICE-MANAGER", "LD-INSTRUCTIONAL-DESIGNER", "LD-INSTRUCTOR", "LD-LEARNING-ADMIN", "PEOPLE-MANAGER", "RECRUITING-COORDINATOR", "RECRUITING-MANAGER", "RECRUITING-RECRUITER", "RECRUITING-SOURCER"],
+      "actor_personas": ["CONTENT-OWNER", "DIGITAL-WORKPLACE-GOV-LEAD", "HIRING-MANAGER", "HR-BUSINESS-PARTNER", "HR-HRIS-ADMIN", "HR-ORG-DESIGN-ANALYST", "HR-PEOPLE-OPS-SPECIALIST", "HRSD-CASE-AGENT", "HRSD-KNOWLEDGE-MANAGER", "HRSD-SERVICE-MANAGER", "LD-INSTRUCTIONAL-DESIGNER", "LD-INSTRUCTOR", "LD-LEARNING-ADMIN", "PEOPLE-MANAGER", "RECRUITING-COORDINATOR", "RECRUITING-MANAGER", "RECRUITING-RECRUITER", "RECRUITING-SOURCER"],
       "raci": [
         {
           "domain": "ATS",
@@ -777,6 +889,26 @@
           "raci": "informed"
         },
         {
+          "domain": "INTRANET-GOV",
+          "responsibility": "owner",
+          "persona": "DIGITAL-WORKPLACE-GOV-LEAD",
+          "persona_via": "seam",
+          "process_code": "CUSTOM-INTRANET-GOV-RECERT",
+          "process_key": "",
+          "process_name": "Recertify Intranet Content",
+          "raci": "accountable"
+        },
+        {
+          "domain": "INTRANET-GOV",
+          "responsibility": "owner",
+          "persona": "CONTENT-OWNER",
+          "persona_via": "seam",
+          "process_code": "CUSTOM-INTRANET-GOV-RECERT",
+          "process_key": "",
+          "process_name": "Recertify Intranet Content",
+          "raci": "responsible"
+        },
+        {
           "domain": "LMS",
           "responsibility": "owner",
           "persona": "PEOPLE-MANAGER",
@@ -969,13 +1101,75 @@
       ]
     },
     {
+      "name": "IT Asset Management",
+      "description": "Hardware, software, SaaS asset lifecycle, license compliance, asset financial management. Distinct from CMDB (configuration) and from procurement (sourcing).",
+      "parent": "IT Operations",
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 1,
+      "domains": [
+        {
+          "code": "SMP",
+          "responsibility": "owner"
+        }
+      ],
+      "personas": ["ITAM-SAAS-PORTFOLIO-MANAGER"],
+      "actor_personas": ["ITAM-SAAS-PORTFOLIO-MANAGER"],
+      "raci": [
+        {
+          "domain": "SMP",
+          "responsibility": "owner",
+          "persona": "ITAM-SAAS-PORTFOLIO-MANAGER",
+          "persona_via": "own",
+          "process_code": "8.2.2",
+          "process_key": "manage_it_portfolio_strategy",
+          "process_name": "Manage IT portfolio strategy",
+          "raci": "accountable"
+        },
+        {
+          "domain": "SMP",
+          "responsibility": "owner",
+          "persona": "ITAM-SAAS-PORTFOLIO-MANAGER",
+          "persona_via": "own",
+          "process_code": "8.2.2",
+          "process_key": "manage_it_portfolio_strategy",
+          "process_name": "Manage IT portfolio strategy",
+          "raci": "responsible"
+        },
+        {
+          "domain": "SMP",
+          "responsibility": "owner",
+          "persona": "ITAM-SAAS-PORTFOLIO-MANAGER",
+          "persona_via": "own",
+          "process_code": "8.2.5.6",
+          "process_key": "optimize_it_resource_allocation",
+          "process_name": "Optimize IT resource allocation",
+          "raci": "accountable"
+        },
+        {
+          "domain": "SMP",
+          "responsibility": "owner",
+          "persona": "ITAM-SAAS-PORTFOLIO-MANAGER",
+          "persona_via": "own",
+          "process_code": "8.2.5.6",
+          "process_key": "optimize_it_resource_allocation",
+          "process_name": "Optimize IT resource allocation",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
       "name": "IT Operations",
       "description": "Infrastructure, end-user computing, service desk, and corporate IT delivery for employee-facing technology.",
       "parent": null,
       "record_status": "new",
-      "domain_count": 2,
-      "persona_count": 0,
+      "domain_count": 4,
+      "persona_count": 2,
       "domains": [
+        {
+          "code": "INTRANET-GOV",
+          "responsibility": "owner"
+        },
         {
           "code": "HCM",
           "responsibility": "contributor"
@@ -983,6 +1177,158 @@
         {
           "code": "HRSD",
           "responsibility": "contributor"
+        },
+        {
+          "code": "ITSM",
+          "responsibility": "contributor"
+        }
+      ],
+      "personas": ["IT-SAAS-ADMIN", "ITOPS-INTRANET-ADMIN"],
+      "actor_personas": ["CONTENT-OWNER", "DIGITAL-WORKPLACE-GOV-LEAD", "IT-SAAS-ADMIN", "ITAM-SAAS-PORTFOLIO-MANAGER", "ITOPS-INTRANET-ADMIN"],
+      "raci": [
+        {
+          "domain": "INTRANET-GOV",
+          "responsibility": "owner",
+          "persona": "DIGITAL-WORKPLACE-GOV-LEAD",
+          "persona_via": "seam",
+          "process_code": "CUSTOM-INTRANET-GOV-RECERT",
+          "process_key": "",
+          "process_name": "Recertify Intranet Content",
+          "raci": "accountable"
+        },
+        {
+          "domain": "INTRANET-GOV",
+          "responsibility": "owner",
+          "persona": "CONTENT-OWNER",
+          "persona_via": "seam",
+          "process_code": "CUSTOM-INTRANET-GOV-RECERT",
+          "process_key": "",
+          "process_name": "Recertify Intranet Content",
+          "raci": "responsible"
+        },
+        {
+          "domain": "INTRANET-GOV",
+          "responsibility": "owner",
+          "persona": "ITOPS-INTRANET-ADMIN",
+          "persona_via": "own",
+          "process_code": "CUSTOM-INTRANET-GOV-RECERT",
+          "process_key": "",
+          "process_name": "Recertify Intranet Content",
+          "raci": "consulted"
+        },
+        {
+          "domain": "SMP",
+          "responsibility": "owner",
+          "persona": "IT-SAAS-ADMIN",
+          "persona_via": "own",
+          "process_code": "9.6.3",
+          "process_key": "manage_corporate_credit_cards",
+          "process_name": "Manage corporate credit cards",
+          "raci": "accountable"
+        },
+        {
+          "domain": "SMP",
+          "responsibility": "owner",
+          "persona": "IT-SAAS-ADMIN",
+          "persona_via": "own",
+          "process_code": "9.6.3",
+          "process_key": "manage_corporate_credit_cards",
+          "process_name": "Manage corporate credit cards",
+          "raci": "responsible"
+        },
+        {
+          "domain": "SMP",
+          "responsibility": "owner",
+          "persona": "IT-SAAS-ADMIN",
+          "persona_via": "own",
+          "process_code": "8.7.7",
+          "process_key": "manage_infrastructure_resource",
+          "process_name": "Manage infrastructure resource administration",
+          "raci": "accountable"
+        },
+        {
+          "domain": "SMP",
+          "responsibility": "owner",
+          "persona": "IT-SAAS-ADMIN",
+          "persona_via": "own",
+          "process_code": "8.7.7",
+          "process_key": "manage_infrastructure_resource",
+          "process_name": "Manage infrastructure resource administration",
+          "raci": "responsible"
+        },
+        {
+          "domain": "SMP",
+          "responsibility": "owner",
+          "persona": "ITAM-SAAS-PORTFOLIO-MANAGER",
+          "persona_via": "descendant",
+          "process_code": "8.2.2",
+          "process_key": "manage_it_portfolio_strategy",
+          "process_name": "Manage IT portfolio strategy",
+          "raci": "accountable"
+        },
+        {
+          "domain": "SMP",
+          "responsibility": "owner",
+          "persona": "ITAM-SAAS-PORTFOLIO-MANAGER",
+          "persona_via": "descendant",
+          "process_code": "8.2.2",
+          "process_key": "manage_it_portfolio_strategy",
+          "process_name": "Manage IT portfolio strategy",
+          "raci": "responsible"
+        },
+        {
+          "domain": "SMP",
+          "responsibility": "owner",
+          "persona": "IT-SAAS-ADMIN",
+          "persona_via": "own",
+          "process_code": "8.3.8",
+          "process_key": "manage_it_user_identity",
+          "process_name": "Manage IT user identity and authorization",
+          "raci": "accountable"
+        },
+        {
+          "domain": "SMP",
+          "responsibility": "owner",
+          "persona": "IT-SAAS-ADMIN",
+          "persona_via": "own",
+          "process_code": "8.3.8",
+          "process_key": "manage_it_user_identity",
+          "process_name": "Manage IT user identity and authorization",
+          "raci": "responsible"
+        },
+        {
+          "domain": "SMP",
+          "responsibility": "owner",
+          "persona": "ITAM-SAAS-PORTFOLIO-MANAGER",
+          "persona_via": "descendant",
+          "process_code": "8.2.5.6",
+          "process_key": "optimize_it_resource_allocation",
+          "process_name": "Optimize IT resource allocation",
+          "raci": "accountable"
+        },
+        {
+          "domain": "SMP",
+          "responsibility": "owner",
+          "persona": "ITAM-SAAS-PORTFOLIO-MANAGER",
+          "persona_via": "descendant",
+          "process_code": "8.2.5.6",
+          "process_key": "optimize_it_resource_allocation",
+          "process_name": "Optimize IT resource allocation",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
+      "name": "IT Service Desk",
+      "description": "Employee-facing IT support: incident, request, knowledge management, walk-up and virtual agent service.",
+      "parent": "IT Operations",
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 0,
+      "domains": [
+        {
+          "code": "ITSM",
+          "responsibility": "owner"
         }
       ],
       "personas": [],
@@ -1391,6 +1737,44 @@
       "raci": []
     },
     {
+      "name": "Marketing",
+      "description": "Brand, demand generation, content production, internal and external communications, customer marketing, and martech operations.",
+      "parent": null,
+      "record_status": "new",
+      "domain_count": 2,
+      "persona_count": 1,
+      "domains": [
+        {
+          "code": "RE-BROKERAGE",
+          "responsibility": "contributor"
+        },
+        {
+          "code": "WORK-MGMT",
+          "responsibility": "contributor"
+        }
+      ],
+      "personas": ["MARKETING-CAMPAIGN-MANAGER"],
+      "actor_personas": [],
+      "raci": []
+    },
+    {
+      "name": "Marketing Communications",
+      "description": "PR, analyst relations, customer marketing communications, and internal-facing corporate communications when housed under Marketing.",
+      "parent": "Marketing",
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 0,
+      "domains": [
+        {
+          "code": "INTRANET-GOV",
+          "responsibility": "contributor"
+        }
+      ],
+      "personas": [],
+      "actor_personas": [],
+      "raci": []
+    },
+    {
       "name": "Payroll",
       "description": "Payroll calculation, gross-to-net, statutory filing, garnishments, pay distribution, payroll compliance.",
       "parent": "Human Resources",
@@ -1412,16 +1796,20 @@
       "description": "Sub-function inside Finance (or independent in some orgs) that runs sourcing, supplier management, and purchase orders.",
       "parent": null,
       "record_status": "new",
-      "domain_count": 1,
-      "persona_count": 1,
+      "domain_count": 2,
+      "persona_count": 2,
       "domains": [
         {
           "code": "CLM",
           "responsibility": "contributor"
+        },
+        {
+          "code": "SMP",
+          "responsibility": "contributor"
         }
       ],
-      "personas": ["PROCUREMENT-CONTRACT-LIAISON"],
-      "actor_personas": ["PROCUREMENT-CONTRACT-LIAISON"],
+      "personas": ["PROCUREMENT-CONTRACT-LIAISON", "PROCUREMENT-SAAS-RENEWAL-OWNER"],
+      "actor_personas": ["PROCUREMENT-CONTRACT-LIAISON", "PROCUREMENT-SAAS-RENEWAL-OWNER"],
       "raci": [
         {
           "domain": "CLM",
@@ -1432,8 +1820,45 @@
           "process_key": "negotiate_document_agreements",
           "process_name": "Negotiate and document agreements/contracts",
           "raci": "consulted"
+        },
+        {
+          "domain": "SMP",
+          "responsibility": "contributor",
+          "persona": "PROCUREMENT-SAAS-RENEWAL-OWNER",
+          "persona_via": "own",
+          "process_code": "4.1.2",
+          "process_key": "manage_demand_products",
+          "process_name": "Manage demand for products",
+          "raci": "accountable"
+        },
+        {
+          "domain": "SMP",
+          "responsibility": "contributor",
+          "persona": "PROCUREMENT-SAAS-RENEWAL-OWNER",
+          "persona_via": "own",
+          "process_code": "4.1.2",
+          "process_key": "manage_demand_products",
+          "process_name": "Manage demand for products",
+          "raci": "responsible"
         }
       ]
+    },
+    {
+      "name": "Product Management",
+      "description": "Product strategy, discovery, prioritization, roadmap ownership, and release coordination for software and physical products.",
+      "parent": null,
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 0,
+      "domains": [
+        {
+          "code": "WORK-MGMT",
+          "responsibility": "contributor"
+        }
+      ],
+      "personas": [],
+      "actor_personas": [],
+      "raci": []
     },
     {
       "name": "Recruiting",
@@ -1668,9 +2093,13 @@
       "description": "Pipeline ownership, account management, quota-carrying revenue generation, and sales operations support across direct and channel motions.",
       "parent": null,
       "record_status": "new",
-      "domain_count": 2,
+      "domain_count": 4,
       "persona_count": 0,
       "domains": [
+        {
+          "code": "RE-BROKERAGE",
+          "responsibility": "owner"
+        },
         {
           "code": "CLM",
           "responsibility": "contributor"
@@ -1678,6 +2107,27 @@
         {
           "code": "LMS",
           "responsibility": "consumer"
+        },
+        {
+          "code": "WORK-MGMT",
+          "responsibility": "consumer"
+        }
+      ],
+      "personas": [],
+      "actor_personas": [],
+      "raci": []
+    },
+    {
+      "name": "Security",
+      "description": "InfoSec policy, security operations, identity and access management, vulnerability management, and incident response.",
+      "parent": null,
+      "record_status": "new",
+      "domain_count": 1,
+      "persona_count": 0,
+      "domains": [
+        {
+          "code": "ITSM",
+          "responsibility": "contributor"
         }
       ],
       "personas": [],

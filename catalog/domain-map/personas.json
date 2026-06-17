@@ -1,6 +1,25 @@
 {
   "personas": [
     {
+      "code": "CONTENT-OWNER",
+      "name": "Content Owner",
+      "description": "Accountable owner for specific pieces of intranet content; responds to recertification attestations and remediates or archives stale content.",
+      "business_function_id": null,
+      "business_function": null,
+      "record_status": "new",
+      "module_count": 2,
+      "domain_count": 1,
+      "modules": ["INTGOV-GOVERNANCE", "INTGOV-INVENTORY"],
+      "domains": ["INTRANET-GOV"],
+      "processes": [
+        {
+          "key": "",
+          "name": "Recertify Intranet Content",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
       "code": "CONTRACT-OPS-MANAGER",
       "name": "Contract Operations Manager",
       "description": "Accountable for the contract lifecycle end to end: owns the repository, signs off on approvals and executions, drives obligation tracking and renewals, and keeps authoring and negotiation moving across the team.",
@@ -65,6 +84,25 @@
           "key": "provide_legal_advice_counseling",
           "name": "Provide legal advice/counseling",
           "raci": "informed"
+        }
+      ]
+    },
+    {
+      "code": "DIGITAL-WORKPLACE-GOV-LEAD",
+      "name": "Digital Workplace Governance Lead",
+      "description": "Owns the intranet governance program across all connected sources: sets policy, oversees recertification, and is accountable for content currency and accountability coverage.",
+      "business_function_id": null,
+      "business_function": null,
+      "record_status": "new",
+      "module_count": 2,
+      "domain_count": 1,
+      "modules": ["INTGOV-GOVERNANCE", "INTGOV-INVENTORY"],
+      "domains": ["INTRANET-GOV"],
+      "processes": [
+        {
+          "key": "",
+          "name": "Recertify Intranet Content",
+          "raci": "accountable"
         }
       ]
     },
@@ -345,6 +383,103 @@
       ]
     },
     {
+      "code": "IT-SAAS-ADMIN",
+      "name": "SaaS Administrator",
+      "description": "IT Operations persona that runs day-to-day SaaS administration: discovering and triaging applications, managing integrations and owners, optimizing license usage and reclamation, and operating automation workflows and self-service requests.",
+      "business_function_id": 27,
+      "business_function": "IT Operations",
+      "record_status": "new",
+      "module_count": 4,
+      "domain_count": 1,
+      "modules": ["SMP-AUTOMATION", "SMP-DISCOVERY", "SMP-OPTIMIZATION", "SMP-RENEWAL-VENDOR"],
+      "domains": ["SMP"],
+      "processes": [
+        {
+          "key": "manage_corporate_credit_cards",
+          "name": "Manage corporate credit cards",
+          "raci": "accountable"
+        },
+        {
+          "key": "manage_corporate_credit_cards",
+          "name": "Manage corporate credit cards",
+          "raci": "responsible"
+        },
+        {
+          "key": "manage_infrastructure_resource",
+          "name": "Manage infrastructure resource administration",
+          "raci": "accountable"
+        },
+        {
+          "key": "manage_infrastructure_resource",
+          "name": "Manage infrastructure resource administration",
+          "raci": "responsible"
+        },
+        {
+          "key": "manage_it_user_identity",
+          "name": "Manage IT user identity and authorization",
+          "raci": "accountable"
+        },
+        {
+          "key": "manage_it_user_identity",
+          "name": "Manage IT user identity and authorization",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
+      "code": "ITAM-SAAS-PORTFOLIO-MANAGER",
+      "name": "SaaS Portfolio Manager",
+      "description": "IT Asset Management persona that governs the SaaS portfolio end to end across discovery, optimization, renewal, and automation; the cross-module owner accountable for portfolio cost, compliance, and lifecycle.",
+      "business_function_id": 84,
+      "business_function": "IT Asset Management",
+      "record_status": "new",
+      "module_count": 4,
+      "domain_count": 1,
+      "modules": ["SMP-AUTOMATION", "SMP-DISCOVERY", "SMP-OPTIMIZATION", "SMP-RENEWAL-VENDOR"],
+      "domains": ["SMP"],
+      "processes": [
+        {
+          "key": "manage_it_portfolio_strategy",
+          "name": "Manage IT portfolio strategy",
+          "raci": "accountable"
+        },
+        {
+          "key": "manage_it_portfolio_strategy",
+          "name": "Manage IT portfolio strategy",
+          "raci": "responsible"
+        },
+        {
+          "key": "optimize_it_resource_allocation",
+          "name": "Optimize IT resource allocation",
+          "raci": "accountable"
+        },
+        {
+          "key": "optimize_it_resource_allocation",
+          "name": "Optimize IT resource allocation",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
+      "code": "ITOPS-INTRANET-ADMIN",
+      "name": "Intranet Platform Administrator",
+      "description": "Connects and maintains intranet sources, runs crawls and scans, and keeps the inventory and connectors healthy.",
+      "business_function_id": 27,
+      "business_function": "IT Operations",
+      "record_status": "new",
+      "module_count": 2,
+      "domain_count": 1,
+      "modules": ["INTGOV-GOVERNANCE", "INTGOV-INVENTORY"],
+      "domains": ["INTRANET-GOV"],
+      "processes": [
+        {
+          "key": "",
+          "name": "Recertify Intranet Content",
+          "raci": "consulted"
+        }
+      ]
+    },
+    {
       "code": "LD-INSTRUCTIONAL-DESIGNER",
       "name": "Instructional Designer",
       "description": "Authors and versions courses, lessons, content assets, and assessments; publishes new training and retires outdated material across self-paced and instructor-led delivery.",
@@ -525,6 +660,81 @@
       ]
     },
     {
+      "code": "MARKETING-CAMPAIGN-MANAGER",
+      "name": "Campaign Manager",
+      "description": "Marketing operator who runs campaign projects with creative review and routes creative requests through intake queues.",
+      "business_function_id": 22,
+      "business_function": "Marketing",
+      "record_status": "new",
+      "module_count": 2,
+      "domain_count": 1,
+      "modules": ["WORK-MGMT-INTAKE", "WORK-MGMT-TASK-EXEC"],
+      "domains": ["WORK-MGMT"],
+      "processes": []
+    },
+    {
+      "code": "OKR-OWNER",
+      "name": "OKR Owner",
+      "description": "Cross-functional objective owner who commits and scores OKRs and links key results to executing work items.",
+      "business_function_id": null,
+      "business_function": null,
+      "record_status": "new",
+      "module_count": 2,
+      "domain_count": 1,
+      "modules": ["WORK-MGMT-GOALS-OKR", "WORK-MGMT-TASK-EXEC"],
+      "domains": ["WORK-MGMT"],
+      "processes": [
+        {
+          "key": "develop_set_organizational",
+          "name": "Develop and set organizational objectives",
+          "raci": "accountable"
+        },
+        {
+          "key": "develop_set_organizational",
+          "name": "Develop and set organizational objectives",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
+      "code": "OPERATIONS-WORK-CONTRIBUTOR",
+      "name": "Work Contributor",
+      "description": "Individual contributor who executes assigned work items, posts updates, and submits cross-team requests through intake.",
+      "business_function_id": 34,
+      "business_function": "Business Operations",
+      "record_status": "new",
+      "module_count": 2,
+      "domain_count": 1,
+      "modules": ["WORK-MGMT-INTAKE", "WORK-MGMT-TASK-EXEC"],
+      "domains": ["WORK-MGMT"],
+      "processes": [
+        {
+          "key": "manage_projects",
+          "name": "Manage projects",
+          "raci": "responsible"
+        }
+      ]
+    },
+    {
+      "code": "OPERATIONS-WORK-PROGRAM-LEAD",
+      "name": "Work Program Lead",
+      "description": "PMO / BizOps lead who owns cross-team programs, triages intake, and rolls up OKR progress from work items.",
+      "business_function_id": 34,
+      "business_function": "Business Operations",
+      "record_status": "new",
+      "module_count": 3,
+      "domain_count": 1,
+      "modules": ["WORK-MGMT-GOALS-OKR", "WORK-MGMT-INTAKE", "WORK-MGMT-TASK-EXEC"],
+      "domains": ["WORK-MGMT"],
+      "processes": [
+        {
+          "key": "manage_projects",
+          "name": "Manage projects",
+          "raci": "accountable"
+        }
+      ]
+    },
+    {
       "code": "PEOPLE-MANAGER",
       "name": "People Manager",
       "description": "Cross-functional people leader who assigns and nudges direct reports through required and developmental learning, monitors completion and certification status, and follows up on overdue training.",
@@ -604,6 +814,30 @@
           "key": "negotiate_document_agreements",
           "name": "Negotiate and document agreements/contracts",
           "raci": "consulted"
+        }
+      ]
+    },
+    {
+      "code": "PROCUREMENT-SAAS-RENEWAL-OWNER",
+      "name": "SaaS Renewal Owner",
+      "description": "Procurement persona that owns the commercial SaaS lifecycle: renewal pipeline, vendor negotiations, spend allocation, and vendor risk attestation, with read access to discovery and usage data that informs renewal decisions.",
+      "business_function_id": 19,
+      "business_function": "Procurement",
+      "record_status": "new",
+      "module_count": 3,
+      "domain_count": 1,
+      "modules": ["SMP-DISCOVERY", "SMP-OPTIMIZATION", "SMP-RENEWAL-VENDOR"],
+      "domains": ["SMP"],
+      "processes": [
+        {
+          "key": "manage_demand_products",
+          "name": "Manage demand for products",
+          "raci": "accountable"
+        },
+        {
+          "key": "manage_demand_products",
+          "name": "Manage demand for products",
+          "raci": "responsible"
         }
       ]
     },

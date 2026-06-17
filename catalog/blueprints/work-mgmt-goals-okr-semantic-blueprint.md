@@ -15,7 +15,7 @@ domain_modules:
 domain_code: WORK-MGMT
 related_modules: [eap-portfolio-roadmap, intgov-governance, mrm-planning, pm-roadmap-delivery, psa-project-delivery, sem-execution-tracking, sem-operating-rhythm, sem-strategy-definition, talent-performance-mgmt, work-mgmt-intake, work-mgmt-task-exec]
 persona: [OKR-OWNER, OPERATIONS-WORK-CONTRIBUTOR, OPERATIONS-WORK-PROGRAM-LEAD]
-created_at: 2026-06-16
+created_at: 2026-06-17
 ---
 
 # Team-Execution Goals and OKRs
@@ -31,6 +31,7 @@ Team-execution OKR tracking surface: objectives with key results that link to wo
 | Key Results | `okr_key_results` | Measurable result attached to an okr_objective. The unit of scoring on OKR programs - vendors universally model KR as first-class (Asana, Monday, ClickUp, Workfront). |
 | Objective / OKRs | `okr_objectives` | Hierarchical objective with measurable key results, weighted progress rollup from child objectives or linked work_items, owner accountability, and cadence (quarterly/annual). Mastered by three distinct domains: WORK-MGMT (team-level execution OKRs), SPM (strategic portfolio OKRs), TALENT-MGMT (individual performance-management OKRs). Same primitive, three different lifecycles and review processes - canonical Signal-1 multi-master. |
 | OKR Check-ins | `okr_check_ins` | Periodic status update on an okr_objective or key_result during the active cycle. Cadence-of-record (weekly/bi-weekly) for OKR programs. May discuss individual performance - flagged as personal content. |
+| Work-to-Goal Links | `work_goal_links` | Contribution link between a work item or project and an okr_objective so that goal progress can roll up from the work that drives it. |
 | Work Items | `work_items` | Atomic primitive in a work-management platform: task / item / card with owner, due date, status, priority, dependencies, subtasks, attachments, and comments. Same shape regardless of platform-specific terminology (task, item, row, card). |
 
 ```mermaid
@@ -42,12 +43,15 @@ flowchart TD
   work_items["Work Items"]
   okr_key_results["Key Results"]
   okr_check_ins["OKR Check-ins"]
+  work_goal_links["Work-to-Goal Links"]
   users["Users"]
   okr_key_results -->|"belongs_to"| okr_objectives
   okr_check_ins -->|"belongs_to"| okr_objectives
   okr_check_ins -->|"references"| okr_key_results
   work_items -->|"depends_on"| work_items
   okr_objectives -->|"tracked_by"| work_items
+  work_goal_links -->|"links"| work_items
+  work_goal_links -->|"links_to"| okr_objectives
   users -->|"owns_key_results"| okr_key_results
   users -->|"authored_check_ins"| okr_check_ins
   users -->|"assigned items"| work_items
@@ -57,7 +61,9 @@ flowchart TD
   class work_items embedded_master;
   class okr_key_results master;
   class okr_check_ins master;
+  class work_goal_links master;
   class users platform_builtin;
+  style work_goal_links stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
@@ -67,7 +73,8 @@ flowchart TD
 | 1 | `okr_key_results` | `okr_key_results` | Key Result | Key Results | master | - | - | required | - | operational_record | `:manage` | - |
 | 2 | `okr_objectives` | `okr_objectives` | Objective / OKR | Objective / OKRs | master | - | - | required | personal_content | operational_workflow | `:manage` | - |
 | 3 | `okr_check_ins` | `okr_check_ins` | OKR Check-in | OKR Check-ins | master | - | - | required | personal_content | operational_record | `:manage` | - |
-| 4 | `work_items` | `work_items` | Work Item | Work Items | embedded_master | `work-mgmt-task-exec` | Task and Project Execution | required | - | operational_workflow | `:manage` | - |
+| 4 | `work_goal_links` | `work_goal_links` | Work-to-Goal Link | Work-to-Goal Links | master | - | - | optional | - | junction | `:manage` | - |
+| 5 | `work_items` | `work_items` | Work Item | Work Items | embedded_master | `work-mgmt-task-exec` | Task and Project Execution | required | - | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -84,6 +91,8 @@ _(none: no industry-scoped aliases for this scope)_
 | `okr_check_ins` | references | `okr_key_results` | one_to_many | reference | optional | target | clear | reference | - |
 | `work_items` | depends_on | `work_items` | many_to_many | association | optional | source | clear | reference | - |
 | `okr_objectives` | tracked_by | `work_items` | one_to_many | reference | optional | source | clear | reference | - |
+| `work_goal_links` | links | `work_items` | one_to_many | reference | required | target | restrict | reference | - |
+| `work_goal_links` | links_to | `okr_objectives` | one_to_many | reference | required | target | restrict | reference | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
@@ -135,6 +144,10 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `strategic_initiatives` | portfolio rollup from | `work_items` | one_to_many | optional | none | n/a | - |
 | `intranet_content_inventory_records` | spawns improvement | `work_items` | one_to_many | optional | none | n/a | - |
 | `marketing_plan_lines` | is delivered by | `work_items` | one_to_many | optional | none | n/a | - |
+| `proofing_sessions` | belongs_to | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `work_time_entries` | logged_against | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
+| `work_statuses` | is_status_of | `work_items` | one_to_many | optional | none | n/a | - |
+| `work_status_updates` | records_change_on | `work_items` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
 
 ## 6. Cross-domain context
 
@@ -213,7 +226,7 @@ _This scope holds `work_items` as **embedded_master**; the canonical state machi
 | 2 | `in_progress` | - | - | - | - | - |
 | 3 | `blocked` | - | - | - | - | - |
 | 4 | `done` | - | ✓ | - | - | - |
-| 5 | `cancelled` | - | ✓ | ✓ | `work-mgmt-goals-okr:cancel_work_item` | - |
+| 5 | `canceled` | - | ✓ | ✓ | `work-mgmt-goals-okr:cancel_work_item` | - |
 
 ## 8. Permissions and business rules (derived)
 
@@ -224,7 +237,7 @@ _This scope holds `work_items` as **embedded_master**; the canonical state machi
 | `work-mgmt-goals-okr:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `work-mgmt-goals-okr:manage` | baseline-manage | Edit operational records | ✓ |
 | `work-mgmt-goals-okr:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
-| `work-mgmt-goals-okr:cancel_work_item` | workflow-gate (lifecycle) | Transition `work_items` into state `cancelled` | ✓ |
+| `work-mgmt-goals-okr:cancel_work_item` | workflow-gate (lifecycle) | Transition `work_items` into state `canceled` | ✓ |
 | `work-mgmt-goals-okr:commit_okr_objective` | workflow-gate (lifecycle) | Transition `okr_objectives` into state `committed` | ✓ |
 | `work-mgmt-goals-okr:score_okr_objective` | workflow-gate (lifecycle) | Transition `okr_objectives` into state `scored` | ✓ |
 | `work-mgmt-goals-okr:commit_okr_key_result` | workflow-gate (lifecycle) | Transition `okr_key_results` into state `committed` | ✓ |

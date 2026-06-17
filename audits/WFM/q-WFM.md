@@ -1,5 +1,7 @@
 # Workforce Management (WFM): questions waiting for you
 
+_(2026-06-17: lifecycle states, aliases, and intra-domain relationships were applied as proposed defaults at record_status='new'; spot-check them in the records. The questions below remain open.)_
+
 ## What this domain is
 Plan, track, and pay for the hours your frontline and hourly workforce actually works. Build and publish shift schedules, capture clock-in and clock-out time with meal-break compliance, and run the full request-and-approval flow for time off and absence balances. The aim is accurate, labor-law-compliant time and attendance that feeds clean actuals to payroll and scheduling downstream.
 

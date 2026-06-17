@@ -12,7 +12,7 @@ For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the 
 
 **Domain inventory** (as-designed, from `spec.json`, orientation only). The actual deployed entities, with renames and omissions already resolved, live in `discovered.json`; operate from that, never from this list:
 
-- Workflows / capabilities: Approval Workflow Orchestration, Core HR Record, HR Regulatory Compliance, Employee Offboarding, Employee Onboarding, Organisation and Position Management, Employee and Manager Self-Service, Workforce Planning
+- Workflows / capabilities: Approval Workflow Orchestration, Core HR Record, HR Regulatory Compliance, Employee Offboarding, Employee Onboarding, Organization and Position Management, Employee and Manager Self-Service, Workforce Planning
 
 ---
 

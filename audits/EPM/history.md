@@ -446,3 +446,92 @@ Classified 28 boundary tags across both directions into 24 distinct (process, ow
 
 - Deleted resolved item B1A-B9D-VERIFY from b1a (B9d has now run; this one-line note records it).
 - `next_action_by` flipped to `user`: every remaining open item is a user decision (the pre-existing B2 set plus the 5 new B2-B9D-OWN items). No agent-executable work remains on EPM.
+
+## 2026-06-17 - Read-only structural + B-band audit (no writes)
+
+Scope: read-only structural + B-band re-audit of EPM (id 66). Zero database writes. Live state via PostgREST through the semantius CLI only.
+
+### Footprint (live)
+
+- domain_kind `established_market`, catalog_release null, crud_percentage 50, cost_band `$$$$`, market 5000 USD m / 2025, business_logic populated.
+- 3 full modules: 239 EPM-PLAN-BUDGET, 240 EPM-FORECAST-SCENARIO, 241 EPM-VARIANCE-REPORT. No host-domain modules.
+- 5 masters: financial_plans (37), financial_budgets (38), financial_forecasts (39), financial_scenarios (40), variance_analyses (41).
+- 6 capabilities (66-71), each realized by exactly one module.
+
+### Structural bands
+
+- A1 PASS (all metadata fields populated; business_logic present, crud 50, market sized).
+- M1 PASS (3 modules). M2 PASS (6 capabilities >= 3, 3 full modules >= 2). M6 PASS (every module realizes >= 1 capability). M7 PASS (each of the 5 masters has exactly one master row catalog-wide). M4 not applicable here (lifecycle shape checked under B12).
+- B1 PASS (5 masters). B2 PASS (all 5 masters carry singular + plural labels). B4 all flags false on all 5 (positive re-confirmation is the standing B2-S3 user item). B5 vacuous PASS (no embedded_master rows). B14 PASS (no statute-prefixed / sector-bound masters; all 5 necessity=required is fine). B15 PASS (no catalog/junction/computed master carries a pattern flag).
+
+### Bucket 1 (agent-fixable, still open; all gated on user-pick tuples per prior passes)
+
+- **B13 (4 unclassified masters)**: financial_budgets (38), financial_forecasts (39), financial_scenarios (40), variance_analyses (41) all carry entity_type=`unclassified`. Only financial_plans (37) is classified (operational_workflow). Proposed classes (heuristic): financial_budgets -> operational_workflow (draft/submit/approve/lock workflow); financial_forecasts -> operational_workflow (rolling refresh/publish/supersede); financial_scenarios -> operational_workflow (what-if model/review/select); variance_analyses -> operational_workflow (analyze/review/escalate/close). Each is a business object with a real workflow per its description, not a per-X record, config, junction, or rollup.
+- **B12 (lifecycle gap)**: only financial_plans (37) has a lifecycle (5 states, shape valid: 1 is_initial draft@10, 1 is_terminal closed@50, monotonic 10/20/30/40/50, gates on approved/published). The 4 unclassified masters have ZERO lifecycle states; once classified operational_workflow (B13) they each need a state machine. State-machine sketches carried in the prior audit narratives.
+- **B6 (intra-domain rels)**: 0 relationships between the 5 EPM masters. All 5 are isolated. Expected: financial_plans composes budgets/forecasts/scenarios; variance_analyses compares budgets/forecasts.
+- **B7 (users edges)**: 0 edges to users (id 748) in either direction on any master, despite user-typed actors on every master (plan_owner/approver, budget_owner/submitter, forecast_owner, scenario_modeler, analyst/reviewer).
+- **B9 (events without handoff)**: 2 of 8 trigger_events have no handoff: id 159 `variance.threshold_breached` (do 39) and id 586 `variance_analysis.completed` (do 41). The other 6 events each have >= 1 handoff.
+- **B9c (state drift, unverifiable)**: all 8 EPM trigger_events carry empty from_state AND to_state, so to_state-to-lifecycle drift cannot be checked. The empty transition states are themselves a gap (events should name from/to states that exist on the master's lifecycle).
+- **B11 (aliases)**: 0 aliases on all 5 masters. Vendor terminology divergence (Reforecast / LE, AOP, Flux Analysis, What-If) enumerated in prior passes.
+
+These are the same open structural items the prior passes carried; each remains gated on user-pick tuples (exact verbs, alias pairs, lifecycle shapes, B13 class confirmation) and on the B2-S3 pattern-flag and B2-S7b enum decisions.
+
+### Bucket 2 (user-judgment)
+
+- B2-S3 pattern flags (positive confirmation on the 5 masters, all currently false).
+- B2-S7b event 587 `variance_analysis.material_variance` category (threshold vs state_change) - note this event now carries `event_category` per prior PATCH; the open question is the enum choice, surfaced previously.
+- B13 class confirmation for the 4 unclassified masters (agent proposes operational_workflow for all 4; user confirms before any write).
+
+### Bucket 3 (speculative / missing scope, unchanged)
+
+- cost_allocations master (allocation rules + per-period runs) - every flagship EPM platform masters this; absence makes the catalog read EPM as a forms tool.
+- headcount_plans master separate from financial_plans.
+- 4th consol/disclosure module, gated on CCM / FIN-CONSOL / DISCLOSURE-MGMT triage.
+
+### Report-only (owed by other domains)
+
+- B9 events 159 and 586 without handoff are EPM-owned (Bucket 1 above), not cross-domain.
+- target_domain_module_id NULLs on EPM-outbound handoffs belong to each target domain (FIN, SPM, AUDIT, HCM, SWP, SEM, PA) per their own B10b, as recorded in the 2026-05-30 report-only table.
+
+No writes issued this pass (read-only).
+
+EPM: Bucket1=7, Bucket2=3, Bucket3=3 (unclassified masters=4, operational_workflow missing lifecycle=0, M4 violations=0)
+
+## 2026-06-17 - Cluster B-band fix pass (keep-as-proposed-defaults)
+
+A catalog-wide cluster fix pass applied corrective B-band work to EPM under a user "keep as proposed defaults" decision. Every change landed at `record_status='new'` and is awaiting user approval; nothing was stamped `approved`. This is a bookkeeping entry: it records the work applied by that pass so the EPM state file reflects which open items are now resolved.
+
+### Entity classification (B13)
+
+The four previously-unclassified masters were classified to `operational_workflow`: financial_budgets (38), financial_forecasts (39), financial_scenarios (40), variance_analyses (41). financial_plans (37) was already classified operational_workflow from an earlier pass. All five EPM masters now carry a real entity_type.
+
+### Lifecycle states authored (B12) - resolves B1B-S3
+
+Lifecycle state machines were authored for the four newly-classified masters (financial_plans lifecycle was authored earlier the same day):
+
+- financial_budgets on module 239: draft, submitted, approved (gate), locked (gate), closed.
+- financial_forecasts on module 240: draft, published (gate), superseded.
+- financial_scenarios on module 240: draft, under_review, selected (gate), archived.
+- variance_analyses on module 241: open, in_review, completed (gate).
+
+The lifecycles were authored with default approval-gating. NOTE: the pattern FLAGS themselves (has_submit_lock / has_single_approver) were NOT set on any master; that pattern-flag decision (B2-S3) REMAINS open. This authoring RESOLVES b1b item B1B-S3.
+
+### Aliases added (B11) - resolves B1B-S4
+
+A pruned alias set was added for all five masters: financial_plans (Operating Plan / Long-Range Plan / LRP); financial_budgets (Operating Budget / Annual Budget / Budget); financial_forecasts (Rolling Forecast / Reforecast / Forecast); financial_scenarios (What-If Scenario / Planning Scenario); variance_analyses (Budget Variance / Variance Report / Plan-vs-Actual Analysis). This RESOLVES b1b item B1B-S4.
+
+### Intra-domain relationships added (B6) - resolves B1B-S6
+
+Intra-domain edges were added between the five EPM masters: financial_plans composes financial_budgets / financial_forecasts / financial_scenarios; variance_analyses evaluates financial_budgets / financial_forecasts. This RESOLVES b1b item B1B-S6.
+
+### Trigger-event alignment and spelling sweep
+
+trigger_events were aligned to their lifecycle states: financial_plan.approved -> approved, financial_plan.published -> published, variance_analysis.completed -> completed. A catalog-wide spelling sweep renamed `cancelled` states to `canceled` (no EPM master state was specifically affected, but the sweep was catalog-wide).
+
+### Not done this pass (still open)
+
+B1B-S5 (users edges), B1B-H1-flip and B1B-H1-mediums (APQC tagging), all b2 items (including B2-S3, the pattern-flag FLAGS which the lifecycle authoring did NOT set), and all b3 items remain open. B1A-S7b and B1A-S10b also remain open (gated on B2-S7b and B2-S3 respectively).
+
+### Resolved by this pass (deleted from state.yaml, recorded here)
+
+B1B-S3 (lifecycle states), B1B-S4 (aliases), B1B-S6 (intra-domain relationships) are resolved and removed from state.yaml in the same write as this entry. The pattern-flag question B2-S3 stays open. EPM remains `status: feedback_needed`.

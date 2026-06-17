@@ -1,5 +1,7 @@
 # Enterprise Performance Management (EPM): questions waiting for you
 
+_(2026-06-17: lifecycle states, aliases, and intra-domain relationships were applied as proposed defaults at record_status='new'; spot-check them in the records. The pattern-flag questions q5-q9 still set the has_submit_lock / has_single_approver FLAGS, which were not applied. The questions below remain open.)_
+
 ## What this domain is
 Plan the numbers, budget the year, forecast the outlook, model the what-ifs, and explain the variance. EPM runs the full financial-planning loop: build and approve the annual operating plan and budget, refresh rolling forecasts, stress-test the plan with driver-based scenarios, then reconcile actuals against plan and report the results to leadership. The calc kernel (allocations, currency translation, eliminations) is what makes it a planning platform rather than a forms tool.
 

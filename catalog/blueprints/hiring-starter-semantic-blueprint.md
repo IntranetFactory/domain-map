@@ -12,7 +12,7 @@ domain_modules:
 domain_code: ATS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, comp-statements, hcm-core-worker, hcm-lifecycle-workflows, onb-journey-mgmt, pa-workforce-metrics]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-COORDINATOR, RECRUITING-MANAGER, RECRUITING-RECRUITER, RECRUITING-SOURCER]
-created_at: 2026-06-16
+created_at: 2026-06-17
 ---
 
 # Hiring Starter
@@ -125,6 +125,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| `candidates` | verified_via | `right_to_work_verifications` | one_to_many | optional | none | n/a | - |
 | `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | none | n/a | - |
 | `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | none (required-if-present) | n/a | - |
 | `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | none | n/a | - |
@@ -169,6 +170,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `employees` | applies_as | `candidates` | one_to_many | optional | none | n/a | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | optional | none | n/a | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | optional | none | n/a | - |
+| `candidates` | submitted_via | `agency_submissions` | one_to_many | optional | none | n/a | - |
 
 ## 6. Cross-domain context
 
@@ -244,7 +246,7 @@ _This scope holds `interviews` as **embedded_master**; the canonical state machi
 | 2 | `confirmed` | - | - | - | - | Candidate and panel confirmed attendance. |
 | 3 | `completed` | - | ✓ | - | - | Interview took place; scorecards are being collected. |
 | 4 | `no_show` | - | ✓ | - | - | Candidate or panel did not attend; interview did not occur. |
-| 5 | `cancelled` | - | ✓ | - | - | Interview cancelled before it took place. |
+| 5 | `canceled` | - | ✓ | - | - | Interview canceled before it took place. |
 | 6 | `rescheduled` | - | ✓ | - | - | Original slot abandoned in favor of a new scheduled interview record. |
 
 ### `job_applications` (Application)
@@ -285,7 +287,7 @@ _This scope holds `job_postings` as **embedded_master**; the canonical state mac
 | 2 | `published` | - | - | ✓ | `hiring-starter:publish_posting` | Posting is live on the target channel; gated publish step. |
 | 3 | `paused` | - | - | - | - | Posting temporarily hidden from the channel. |
 | 4 | `expired` | - | ✓ | - | - | Posting reached its scheduled end date. |
-| 5 | `closed` | - | ✓ | - | - | Posting taken down because the requisition is filled or cancelled. |
+| 5 | `closed` | - | ✓ | - | - | Posting taken down because the requisition is filled or canceled. |
 
 ## 8. Permissions and business rules (derived)
 

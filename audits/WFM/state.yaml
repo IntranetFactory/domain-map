@@ -12,7 +12,7 @@ schema_version: 2
 domain: WFM
 status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-06"
+last_audit: "2026-06-17"
 
 # 2026-06-02 modularization pass: WFM now has 3 full domain_modules
 #   194 WFM-TIME-ATTENDANCE, 195 WFM-SCHEDULING, 196 WFM-ABSENCE.
@@ -23,6 +23,13 @@ last_audit: "2026-06-06"
 #   modules 194/195/196) and B1A-S8-A (users->work_shifts edge id 2083). The only
 #   remaining b1a item (B1A-MODULE-SKILLS) is blocked by user_decision B2-S5, so the
 #   next action pivots to the user (resolve B2-S5 / the rest of the b2 queue).
+# 2026-06-17 cluster fix pass (keep-as-proposed-defaults): applied lifecycle states
+#   (time_entries on 194, work_schedules on 195) and a pruned alias set on all 7 masters
+#   as proposed defaults, all at record_status='new' (resolving B1B-S2 + B1B-S3, now
+#   deleted from this file and recorded in history.md). entity_type classified, intra-domain
+#   master edges added, and the British->American spelling portion of B2-S6 fixed. Pattern
+#   flags (B2-S3) and the rest of the b2 queue (incl. the em-dash + notes portion of B2-S6)
+#   remain open.
 
 b1a:
   - id: B1A-B9D-VERIFY
@@ -52,64 +59,6 @@ b1a:
     affected_modules: [194, 195, 196]
 
 b1b:
-  - id: B1B-S2
-    summary: "Insert 20-30 data_object_aliases rows for the 7 WFM masters once user prunes the inventory (B11 hard-fail)."
-    finding: >-
-      Zero data_object_aliases rows for any of the 7 WFM masters. meal_break_records,
-      absence_balances, absence_requests, time_off_policies are exactly the
-      synonym-heavy masters B11 targets. Common aliases vendors use: absence_requests
-      -> Leave Request / Vacation Request / PTO Request / Time Off Request;
-      absence_balances -> Leave Balance / PTO Balance / Vacation Balance / Time Off
-      Balance; time_off_policies -> Leave Policy / PTO Plan / Accrual Plan / Holiday
-      Policy; meal_break_records -> Meal Break / Rest Break / Compliance Break / Break
-      Attestation; work_schedules -> Roster / Shift Schedule / Workforce Schedule /
-      Roster Plan; work_shifts -> Shift / Rostered Shift / Scheduled Shift / Workblock;
-      time_entries -> Time Punch / Clock Event / Time Card Line / Punch Record.
-    action: >-
-      After B2-S4 (alias inventory pruning), insert the approved aliases. Loader
-      pattern: idempotent INSERT keyed on (data_object_id, alias_name); omit
-      record_status and notes per Rule #1 / Rule #15.
-    blocked_by:
-      - {type: user_decision, ref: B2-S4}
-    affected_masters:
-      - {data_object_id: 160, name: work_schedules, target_module_id: 195, workflow: alias_inventory}
-      - {data_object_id: 161, name: work_shifts, target_module_id: 195, workflow: alias_inventory}
-      - {data_object_id: 162, name: time_entries, target_module_id: 194, workflow: alias_inventory}
-      - {data_object_id: 163, name: absence_requests, target_module_id: 196, workflow: alias_inventory}
-      - {data_object_id: 164, name: absence_balances, target_module_id: 196, workflow: alias_inventory}
-      - {data_object_id: 165, name: time_off_policies, target_module_id: 196, workflow: alias_inventory}
-      - {data_object_id: 166, name: meal_break_records, target_module_id: 194, workflow: alias_inventory}
-
-  - id: B1B-S3
-    summary: "Insert data_object_lifecycle_states across the 7 WFM masters (B12 hard-fail). Each state scoped to its realizing module."
-    finding: >-
-      Zero data_object_lifecycle_states rows. Modules now exist, so each state can carry
-      a domain_module_id. Obvious state machines from descriptions and trigger_events:
-      absence_requests (draft / submitted / approved / rejected / taken / canceled /
-      closed) on 196; time_entries (open / submitted / approved / exported / locked) on
-      194; work_schedules (draft / published / in_progress / closed) on 195; work_shifts
-      (assigned / accepted / swapped / dropped / no_show / completed / paid) on 195;
-      meal_break_records (recorded / waived / violated) on 194; time_off_policies (draft /
-      active / superseded) on 196; absence_balances (config-shape exemption candidate per
-      B2-S2) on 196. Each requires_permission=true state materializes one workflow-gate
-      permission scoped to the realizing module per Rule #14.
-    action: >-
-      After B2-S2 (absence_balances exemption) + B2-S3 (pattern flags), insert lifecycle
-      states with domain_module_id pointing at the realizing module (194/195/196 per the
-      mapping above). Surface each requires_permission flag for review before insert. Do
-      NOT auto-populate state-level notes (Rule #15).
-    blocked_by:
-      - {type: user_decision, ref: B2-S2}
-      - {type: user_decision, ref: B2-S3}
-    affected_masters:
-      - {data_object_id: 163, name: absence_requests, target_module_id: 196, workflow: request_lifecycle}
-      - {data_object_id: 162, name: time_entries, target_module_id: 194, workflow: timecard_lifecycle}
-      - {data_object_id: 160, name: work_schedules, target_module_id: 195, workflow: schedule_publication}
-      - {data_object_id: 161, name: work_shifts, target_module_id: 195, workflow: shift_assignment}
-      - {data_object_id: 166, name: meal_break_records, target_module_id: 194, workflow: break_compliance}
-      - {data_object_id: 165, name: time_off_policies, target_module_id: 196, workflow: policy_revision}
-      - {data_object_id: 164, name: absence_balances, target_module_id: 196, workflow: ledger_recalc}
-
   - id: B1B-S5
     summary: "Insert ~10-17 trigger_events rows once lifecycle states are defined (B9 backfill)."
     finding: >-

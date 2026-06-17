@@ -512,3 +512,36 @@ Disposition of the rest (no blanket `--write`; the resolver has documented false
 - Added B1B-B9D-CROSS-OWED (SEM/WFM owner obligations, COMP-MGMT/PSA owed re-points, PA-980 mis-attribution, reference-read note).
 
 No catalog rows written, no `record_status` touched (Rule #1). Domain stays `feedback_needed`; q-SWP.md unchanged at q1–q10 (B9d added no new SWP-facing questions — its SWP findings fold into existing q6/q10 + deferred persona work).
+
+## 2026-06-17, Structural + B-band audit (read-only)
+
+### Summary
+
+Read-only structural + B-band pass over SWP (domain id 100), live PostgREST. Zero database writes. Domain is `established_market`, 4 modules (all `module_kind=full`), 8 masters. Structure is healthy: every module realizes >= 1 capability, all 6 operational_workflow masters carry well-formed lifecycles, all 8 masters carry aliases, and the intra-domain relationship graph is dense and connected. No agent-fixable structural defects found. The few flagged items are user-judgment (header fields) or owed by neighbor domains.
+
+### Facts
+
+- Modules (host-domain union empty, so direct only): 94 SWP-DEMAND-FORECAST, 95 SWP-SUPPLY-PLANNING, 96 SWP-SCENARIO-MODELING, 97 SWP-COST-PROJECTIONS. All `full`.
+- Masters (8): 23 workforce_plans, 24 headcount_plans, 25 position_demand_forecasts, 26 skills_gap_analyses, 27 workforce_scenarios, 28 org_designs, 29 labor_market_benchmarks, 30 workforce_cost_projections.
+- Capabilities (8) mapped via domain_module_capabilities; each module has >= 1 (94: 2, 95: 2, 96: 3, 97: 1).
+- entity_type: 23/24/26/27/28/30 = operational_workflow; 25 = computed; 29 = catalog.
+
+### Findings
+
+- B12/M4 (lifecycle): PASS. All 6 operational_workflow masters have a single is_initial, >= 1 is_terminal, unique+monotonic state_order, gated transitions carry requires_permission + permission_verb_override, domain_module_id matches master's module. 25 (computed) and 29 (catalog) correctly have no lifecycle.
+- B13 (unclassified masters): none. All 8 masters carry an entity_type.
+- B9/B9c (events/handoffs/drift): 8 trigger_events (one per master). Only event 40 (cost_projection.approved, do 30) carries a non-empty to_state (`approved`), which matches lifecycle state 644. No drift. 7 events carry empty from_state/to_state (notification-style), consistent with non-gated emit points.
+- B11 (aliases): PASS. Every master has >= 1 alias.
+- B6 (intra-domain relationships): PASS. Internal edges connect all 8 masters (23->24, 23->27, 24->25, 24->30, 27->28, 27->29, 27->32, 28->30, 25->26, 26->168...).
+- B7 (users edges): users (748) edges to 23,24,25,26,27,28,30. Object 29 labor_market_benchmarks has NO users edge; it is `catalog` (externally sourced reference data), so a users edge is optional. Low-priority note only.
+- A1 (header, user-judgment): catalog_release is null; crud_percentage=55 with non-empty business_logic (OK since <95 floor met by business_logic presence); min_org_size, cost_band ($$$), usa_market_size_usd_m (800), market_size_source_year (2024) all populated. Only catalog_release null is a possible gap, but that is a release-tagging decision, not agent-fixable structurally.
+- M-band: M1 pass (4 modules). M2 pass (>= 3 caps, all 4 modules full). M6 pass (each module realizes >= 1 capability). M7: domain is multi-master (8 masters across 4 modules), expected for established_market; not a defect.
+
+### Report-only (owed by other domains)
+
+- Handoffs whose trigger_event payload is NOT a SWP master: h14/h1149 (event 62 headcount.approved, object 1 job_requisitions, ATS-owned); h15 (event 98 hcm_position.approved_for_creation, object 32 hcm_positions, HCM-owned). These ride through SWP but are owned upstream by ATS (56) / HCM (54).
+- Outbound cross-domain handoff targets: HCM (54), ATS (56), COMP-MGMT (60), EPM (66), SKILLS-MGMT (169). Inbound reciprocity is the neighbor domains' obligation.
+
+### Net effect
+
+No catalog rows written, no record_status touched (Rule #1). Read-only audit only.

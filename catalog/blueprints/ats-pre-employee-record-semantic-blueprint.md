@@ -12,7 +12,7 @@ domain_modules:
 domain_code: ATS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, comp-statements, hcm-core-worker, hcm-lifecycle-workflows, onb-journey-mgmt]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-MANAGER, RECRUITING-RECRUITER]
-created_at: 2026-06-16
+created_at: 2026-06-17
 ---
 
 # Pre-Employee Record
@@ -26,6 +26,7 @@ The bridge between offer-accepted and start-date: ATS owns the pre-employee life
 | Name | data_object | Description |
 | --- | --- | --- |
 | Pre-Employees | `pre_employees` | ATS-owned pre-employment record covering the post-offer-acceptance window before the new-hire start date: paperwork in flight, background check pending, pre-boarding tasks open. At start-date the pre-employee row is reconciled into HCM-mastered `employees` (the canonical employee record). HCM owns the canonical employee record; ATS owns the pre-employee lifecycle stage so recruiting and HCM can each move at their own pace. |
+| Right to Work Verifications | `right_to_work_verifications` | Pre-hire right-to-work verification event (the I-9 employment eligibility check or E-Verify confirmation itself), distinct from the supporting documents the candidate provides. Tracks the verification method, status, verifier, completion date, and any tentative or final non-confirmation, and handles data subject to federal employment-eligibility law. |
 | Candidates | `candidates` | Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired. |
 | Offers | `job_offers` | Formal employment offer extended to a candidate. Carries compensation components, start date, terms, approval chain, and status (draft / approved / sent / accepted / declined / rescinded). |
 
@@ -37,16 +38,21 @@ flowchart TD
   pre_employees["Pre-Employees"]
   candidates["Candidates"]
   job_offers["Offers"]
+  right_to_work_verifications["Right to Work Verifications"]
   users["Users"]
+  candidates -->|"verified_via"| right_to_work_verifications
   job_offers -->|"spawns pre-employee record"| pre_employees
   candidates -->|"becomes pre-employee"| pre_employees
   candidates -->|"has owning recruiter"| users
   job_offers -->|"has approver"| users
   pre_employees -->|"has owning hr_coordinator"| users
+  right_to_work_verifications -->|"has verifier"| users
   class pre_employees master;
   class candidates embedded_master;
   class job_offers embedded_master;
+  class right_to_work_verifications master;
   class users platform_builtin;
+  style right_to_work_verifications stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
@@ -54,8 +60,9 @@ flowchart TD
 | # | data_object | canonical code | singular | plural | role | mastered in | mastered label | necessity | pattern flags | entity_type | write tier | notes |
 | ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `pre_employees` | `pre_employees` | Pre-Employee | Pre-Employees | master | - | - | required | personal_content | operational_workflow | `:manage` | - |
-| 2 | `candidates` | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | operational_workflow | `:manage` | - |
-| 3 | `job_offers` | `job_offers` | Offer | Offers | embedded_master | `ats-offers` | Offers | required | personal_content, single_approver | operational_workflow | `:manage` | - |
+| 2 | `right_to_work_verifications` | `right_to_work_verifications` | Right to Work Verification | Right to Work Verifications | master | - | - | optional | personal_content | operational_workflow | `:manage` | - |
+| 3 | `candidates` | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | required | personal_content | operational_workflow | `:manage` | - |
+| 4 | `job_offers` | `job_offers` | Offer | Offers | embedded_master | `ats-offers` | Offers | required | personal_content, single_approver | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -67,6 +74,7 @@ _(none: no industry-scoped aliases for this scope)_
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `candidates` | verified_via | `right_to_work_verifications` | one_to_many | reference | optional | source | clear | reference | - |
 | `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | reference | required | source | restrict | reference | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | reference | required | source | restrict | reference | - |
 
@@ -77,6 +85,7 @@ _(none: no industry-scoped aliases for this scope)_
 | `candidates` | has owning recruiter | `users` | many_to_many | optional | source | clear | reference | - |
 | `job_offers` | has approver | `users` | many_to_many | required | source | restrict | reference | - |
 | `pre_employees` | has owning hr_coordinator | `users` | one_to_many | required | source | restrict | reference | - |
+| `right_to_work_verifications` | has verifier | `users` | many_to_many | optional | source | clear | reference | - |
 
 ### 5.3 Cross-scope edges
 
@@ -125,6 +134,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `employees` | applies_as | `candidates` | one_to_many | optional | none | n/a | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | optional | none | n/a | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | optional | none | n/a | - |
+| `candidates` | submitted_via | `agency_submissions` | one_to_many | optional | none | n/a | - |
 
 ## 6. Cross-domain context
 
@@ -200,7 +210,18 @@ _This scope holds `job_offers` as **embedded_master**; the canonical state machi
 | 2 | `paperwork_in_flight` | - | - | - | - | I-9 / W-4 / direct-deposit / banking forms issued; awaiting candidate completion. Background check may run in parallel. |
 | 3 | `cleared` | - | - | - | - | All paperwork received and background check completed clear. Ready for HCM activation. |
 | 4 | `activated` | - | ✓ | ✓ | `ats-pre-employee-record:activate_pre_employee` | Reconciliation handoff fired to HCM (pre_employee.activated event). Canonical employees row created downstream; ATS record becomes read-only. |
-| 5 | `cancelled` | - | ✓ | - | - | Offer rescinded or candidate withdrew before activation. Record retained for audit. |
+| 5 | `canceled` | - | ✓ | - | - | Offer rescinded or candidate withdrew before activation. Record retained for audit. |
+
+### `right_to_work_verifications` (Right to Work Verification)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `pending` | ✓ | - | - | - | - |
+| 2 | `in_progress` | - | - | - | - | - |
+| 3 | `verified` | - | ✓ | ✓ | `ats-pre-employee-record:verify_right_to_work` | - |
+| 4 | `tentative_nonconfirmation` | - | - | - | - | - |
+| 5 | `final_nonconfirmation` | - | ✓ | - | - | - |
+| 6 | `closed` | - | ✓ | - | - | - |
 
 ## 8. Permissions and business rules (derived)
 
@@ -216,12 +237,15 @@ _This scope holds `job_offers` as **embedded_master**; the canonical state machi
 | `ats-pre-employee-record:approve_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `approved` | ✓ |
 | `ats-pre-employee-record:rescind_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `rescinded` | ✓ |
 | `ats-pre-employee-record:activate_pre_employee` | workflow-gate (lifecycle) | Transition `pre_employees` into state `activated` | ✓ |
+| `ats-pre-employee-record:verify_right_to_work` | workflow-gate (lifecycle) | Transition `right_to_work_verifications` into state `verified` | ✓ |
 | `ats-pre-employee-record:view_all_pre-employees` | override (personal_content) | View all `pre_employees` rows beyond row-scope | ✓ |
 | `ats-pre-employee-record:manage_all_pre-employees` | override (personal_content) | Manage all `pre_employees` rows beyond row-scope | ✓ |
 | `ats-pre-employee-record:view_all_candidates` | override (personal_content) | View all `candidates` rows beyond row-scope | ✓ |
 | `ats-pre-employee-record:manage_all_candidates` | override (personal_content) | Manage all `candidates` rows beyond row-scope | ✓ |
 | `ats-pre-employee-record:view_all_offers` | override (personal_content) | View all `job_offers` rows beyond row-scope | ✓ |
 | `ats-pre-employee-record:manage_all_offers` | override (personal_content) | Manage all `job_offers` rows beyond row-scope | ✓ |
+| `ats-pre-employee-record:view_all_right_to_work_verifications` | override (personal_content) | View all `right_to_work_verifications` rows beyond row-scope | ✓ |
+| `ats-pre-employee-record:manage_all_right_to_work_verifications` | override (personal_content) | Manage all `right_to_work_verifications` rows beyond row-scope | ✓ |
 
 ### 8.2 Business rules
 
@@ -231,6 +255,7 @@ _This scope holds `job_offers` as **embedded_master**; the canonical state machi
 | `candidate_edit_scope` | `candidates` | has_personal_content | Row-scope by default; override via `ats-pre-employee-record:view_all_candidates` / `ats-pre-employee-record:manage_all_candidates` |
 | `offer_edit_scope` | `job_offers` | has_personal_content | Row-scope by default; override via `ats-pre-employee-record:view_all_offers` / `ats-pre-employee-record:manage_all_offers` |
 | `approve_offer_requires_approver` | `job_offers` | has_single_approver | Exactly one explicit approver required; uses the module's approval gate (`ats-pre-employee-record:approve_offer` if surfaced as a lifecycle workflow gate). |
+| `right_to_work_verification_edit_scope` | `right_to_work_verifications` | has_personal_content | Row-scope by default; override via `ats-pre-employee-record:view_all_right_to_work_verifications` / `ats-pre-employee-record:manage_all_right_to_work_verifications` |
 
 ## 9. Roles, RACI, and responsibilities (derived)
 
@@ -256,12 +281,15 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:approve_offer` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:rescind_offer` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:activate_pre_employee` |
+| `ats-pre-employee-record:admin` | `ats-pre-employee-record:verify_right_to_work` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:view_all_pre-employees` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:manage_all_pre-employees` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:view_all_candidates` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:manage_all_candidates` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:view_all_offers` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:manage_all_offers` |
+| `ats-pre-employee-record:admin` | `ats-pre-employee-record:view_all_right_to_work_verifications` |
+| `ats-pre-employee-record:admin` | `ats-pre-employee-record:manage_all_right_to_work_verifications` |
 
 **Processes wired:**
 

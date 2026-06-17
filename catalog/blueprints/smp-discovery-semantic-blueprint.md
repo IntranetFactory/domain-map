@@ -11,8 +11,8 @@ domain_modules:
   - smp-discovery
 domain_code: SMP
 related_modules: [apm-portfolio-registry, iga-entitlement-catalog, it-ops-starter, itam-portfolio-reporting, smp-automation, smp-optimization, smp-renewal-vendor, spend-mgmt-cards]
-persona: []
-created_at: 2026-06-16
+persona: [IT-SAAS-ADMIN, ITAM-SAAS-PORTFOLIO-MANAGER]
+created_at: 2026-06-17
 ---
 
 # SMP Discovery and Catalog
@@ -130,6 +130,8 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `saas_applications` | measured_by | `saas_usage_metrics` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
 | `saas_applications` | assigned_via | `smp_license_seat_assignments` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
 | `saas_applications` | is registered as | `enterprise_applications` | one_to_one | optional | none | n/a | - |
+| `saas_applications` | raises_incident | `service_incidents` | one_to_many | optional | none | n/a | - |
+| `shadow_it_apps` | triggers_requisition | `purchase_requisitions` | one_to_many | optional | none | n/a | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -147,7 +149,7 @@ _(none: no context cross-scope edges on this scope's embedded shells or consumed
 | `saas_applications` | IGA-ENTITLEMENT-CATALOG (IGA Entitlement Catalog) - IGA | consumer | optional | Newly discovered or sanctioned SaaS apps trigger entitlement registration in IGA catalog. |
 | `saas_applications` | IT-OPS-STARTER (IT Operations Starter) - IT-OPS-STARTER | embedded_master | optional | - |
 | `saas_applications` | ITAM-PORTFOLIO-REPORTING (Portfolio TCO Reporting) - ITAM | consumer | required | - |
-| `saas_applications` | SMP-RENEWAL-VENDOR (SMP Renewal and Vendor Management) - SMP | consumer | required | - |
+| `saas_applications` | SMP-RENEWAL-VENDOR (SMP Renewal and Vendor Management) - SMP | embedded_master | required | - |
 
 ### 6.2 Outbound handoffs (events this scope publishes)
 
@@ -312,9 +314,27 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `smp-discovery:admin` | `smp-discovery:sunset_app` |
 | `smp-discovery:admin` | `smp-discovery:retire_app` |
 
+**Processes wired:**
+
+| process_key | process_name | PCF code | PCF ID | level | description |
+| --- | --- | --- | --- | --- | --- |
+| `manage_it_portfolio_strategy` | Manage IT portfolio strategy | 8.2.2 | 20660 | 3 | Strategy for systematic management of IT investments, projects, and activities. Analyze and examine the value of the IT portfolio and allocate resources based on business objectives. |
+| `manage_it_user_identity` | Manage IT user identity and authorization | 8.3.8 | 20756 | 3 | The process of identifying, authenticating, and authorizing IT users to have access to applications, systems, IT components, or networks by associating user rights and restrictions with established identities. |
+| `manage_infrastructure_resource` | Manage infrastructure resource administration | 8.7.7 | 20914 | 3 | Managing the resources required for administration of IT infrastructure. Manage the IT inventory and assets. Take care of the organization's IT resource capacity. |
+| `manage_corporate_credit_cards` | Manage corporate credit cards | 9.6.3 | 20929 | 3 | Handling and authoring credit cards to business entities or for corporate purchases. |
+
 **RACI realization:**
 
-_(none: no process_raci assignments wired to this module's gated processes yet)_
+| actor | kind | raci | process_key | realization |
+| --- | --- | --- | --- | --- |
+| `ITAM-SAAS-PORTFOLIO-MANAGER` | persona | responsible | `manage_it_portfolio_strategy` | grant gates [smp-discovery:sanction_application, smp-discovery:deprecate_application, smp-discovery:promote_to_pilot, smp-discovery:promote_to_sanctioned, smp-discovery:sunset_app, smp-discovery:retire_app] + the gated entities' write tier |
+| `ITAM-SAAS-PORTFOLIO-MANAGER` | persona | accountable | `manage_it_portfolio_strategy` | approval gate |
+| `IT-SAAS-ADMIN` | persona | responsible | `manage_it_user_identity` | grant gates [smp-discovery:deprovision_application, smp-discovery:revoke_app_owner] + the gated entities' write tier |
+| `IT-SAAS-ADMIN` | persona | accountable | `manage_it_user_identity` | approval gate |
+| `IT-SAAS-ADMIN` | persona | responsible | `manage_infrastructure_resource` | grant gates [smp-discovery:promote_shadow_app, smp-discovery:mark_integration_degraded, smp-discovery:disconnect_integration, smp-discovery:archive_integration, smp-discovery:publish_catalog_listing, smp-discovery:deprecate_catalog_listing, smp-discovery:unlist_catalog_listing, smp-discovery:acknowledge_alert, smp-discovery:triage_alert, smp-discovery:resolve_alert, smp-discovery:suppress_alert] + the gated entities' write tier |
+| `IT-SAAS-ADMIN` | persona | accountable | `manage_infrastructure_resource` | approval gate |
+| `IT-SAAS-ADMIN` | persona | responsible | `manage_corporate_credit_cards` | grant gates [smp-discovery:block_shadow_app] + the gated entities' write tier |
+| `IT-SAAS-ADMIN` | persona | accountable | `manage_corporate_credit_cards` | approval gate |
 
 ### 9.2 Functional ownership and default grants
 

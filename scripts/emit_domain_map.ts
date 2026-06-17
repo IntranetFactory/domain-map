@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // scripts/emit_domain_map.ts
 //
-// Emits FOUR catalog artifacts under catalog/:
+// Emits FOUR catalog artifacts under catalog/domain-map/:
 //
 //   domain-map.json  — every domain with code, name, description, catalog_release date,
 //                      business_functions[] (the function<->domain market RACI: owner / contributor /
@@ -62,7 +62,8 @@
 // blueprint emitter (generate_blueprints.ts) share one source for the underlying tables.
 //
 // Usage:
-//   bun run scripts/emit_domain_map.ts                       # write all four under catalog/ (RELEASED only)
+//   bun run scripts/emit_domain_map.ts                       # write all four under catalog/ (RELEASED only, as of today)
+//   bun run scripts/emit_domain_map.ts --released-any        # released = any catalog_release date (future-scheduled too)
 //   bun run scripts/emit_domain_map.ts --all                 # no release filter: every domain
 //   bun run scripts/emit_domain_map.ts --out path.json       # custom domain-map output path
 //   bun run scripts/emit_domain_map.ts --personas-out p.json # custom personas output path
@@ -72,9 +73,11 @@
 
 export {};
 
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import { argv } from "node:process";
 import {
+  isDomainReleased,
   loadCachedCatalog,
   type AllRelationships,
   type CatalogIndex,
@@ -87,10 +90,12 @@ function flagValue(name: string): string | null {
   return i >= 0 && i + 1 < args.length ? args[i + 1] : null;
 }
 const STDOUT = args.includes("--stdout");
-const OUT_PATH = flagValue("--out") ?? "c:/dev/domain-map/catalog/domain-map.json";
-const PERSONAS_OUT_PATH = flagValue("--personas-out") ?? "c:/dev/domain-map/catalog/personas.json";
-const PROCESSES_OUT_PATH = flagValue("--processes-out") ?? "c:/dev/domain-map/catalog/processes.json";
-const FUNCTIONS_OUT_PATH = flagValue("--functions-out") ?? "c:/dev/domain-map/catalog/business-functions.json";
+// The four JSON snapshots live in their own folder, catalog/domain-map/, separate from the
+// blueprints/ and skills/ siblings. Override any single path with the matching --*-out flag.
+const OUT_PATH = flagValue("--out") ?? "c:/dev/domain-map/catalog/domain-map/domain-map.json";
+const PERSONAS_OUT_PATH = flagValue("--personas-out") ?? "c:/dev/domain-map/catalog/domain-map/personas.json";
+const PROCESSES_OUT_PATH = flagValue("--processes-out") ?? "c:/dev/domain-map/catalog/domain-map/processes.json";
+const FUNCTIONS_OUT_PATH = flagValue("--functions-out") ?? "c:/dev/domain-map/catalog/domain-map/business-functions.json";
 
 type PersonaRef = {
   code: string;
@@ -228,11 +233,15 @@ console.error(`bulk-loaded catalog + relationships in ${((Date.now() - t0) / 100
 // the `cr <= todayISO` clause below.
 // ---------------------------------------------------------------------------
 const ALL = args.includes("--all");
+// --released-any treats ANY catalog_release date as released (future-scheduled included), the
+// "earmarked for the catalog" sense build_catalog uses. Default keeps the "live as of today" gate
+// (release date on/before today), so a future-dated domain stays hidden until its date arrives.
+const RELEASED_ANY = args.includes("--released-any");
 const todayISO = new Date().toISOString().slice(0, 10);
+const releaseAsOf = RELEASED_ANY ? undefined : todayISO;
 const releasedDomainIds = new Set<number>();
 for (const d of index.domains) {
-  const cr = (d.catalog_release ?? "").slice(0, 10);
-  if (cr && cr <= todayISO) releasedDomainIds.add(d.id);
+  if (isDomainReleased(d, releaseAsOf)) releasedDomainIds.add(d.id);
 }
 // The gate the artifacts actually filter on: released-only by default, every domain under --all.
 const gateDomainIds = ALL ? new Set<number>(index.domains.map((d) => d.id)) : releasedDomainIds;
@@ -242,7 +251,7 @@ const gateDomainCodes = new Set<string>(
 console.error(
   ALL
     ? `release gate: --all (no filter), ${gateDomainIds.size} domain(s)`
-    : `release gate: released-only, ${releasedDomainIds.size} released domain(s) [${[...gateDomainCodes].sort().join(", ")}]`,
+    : `release gate: released-only (${RELEASED_ANY ? "any date" : "as of today"}), ${releasedDomainIds.size} released domain(s) [${[...gateDomainCodes].sort().join(", ")}]`,
 );
 
 // Modules hosted on a domain = primary host (domain_modules.domain_id) ∪ host junction.
@@ -1034,11 +1043,14 @@ const processesJson = JSON.stringify({ processes: processesOut }, null, 2) + "\n
 const functionsJson =
   collapseStringArrays(JSON.stringify({ business_functions: functionsOut }, null, 2), ["personas", "actor_personas"]) + "\n";
 
-const mode = ALL ? "--all (unfiltered)" : "released-only";
+const mode = ALL ? "--all (unfiltered)" : RELEASED_ANY ? "released-only (any date)" : "released-only (as of today)";
 if (STDOUT) {
   process.stdout.write(domainMapJson);
 } else {
   const moduleEntries = gatedOut.reduce((n, d) => n + d.modules.length, 0);
+  for (const p of [OUT_PATH, PERSONAS_OUT_PATH, PROCESSES_OUT_PATH, FUNCTIONS_OUT_PATH]) {
+    mkdirSync(dirname(p), { recursive: true });
+  }
   writeFileSync(OUT_PATH, domainMapJson, "utf8");
   console.log(`wrote ${OUT_PATH} (${gatedOut.length} domains, ${moduleEntries} module entries) [${mode}]`);
   writeFileSync(PERSONAS_OUT_PATH, personasJson, "utf8");

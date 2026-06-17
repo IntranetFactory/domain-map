@@ -12,7 +12,7 @@ For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the 
 
 **Domain inventory** (as-designed, from `spec.json`, orientation only). The actual deployed entities, with renames and omissions already resolved, live in `discovered.json`; operate from that, never from this list:
 
-- Workflows / capabilities: AI Triage and Classification, Approval Workflow Orchestration, Skill-Based Assignment, Service Catalog Authoring, Change Enablement and CAB Workflow, Service Cost and Chargeback, Event and Alert Handling, Incident Management, Major Incident Management, Problem Management, Release Management, ITSM Reporting and Continuous Improvement, Service Request Fulfilment, Standard Change Catalog, Virtual Agent and Conversational ITSM, Walk-Up and Onsite Support, Agent Workspace and Routing, Knowledge Management, Self-Service Portal, SLA and OLA Management
+- Workflows / capabilities: AI Triage and Classification, Approval Workflow Orchestration, Skill-Based Assignment, Service Catalog Authoring, Change Enablement and CAB Workflow, Service Cost and Chargeback, Event and Alert Handling, Incident Management, Major Incident Management, Problem Management, Release Management, ITSM Reporting and Continuous Improvement, Service Request Fulfillment, Standard Change Catalog, Virtual Agent and Conversational ITSM, Walk-Up and Onsite Support, Agent Workspace and Routing, Knowledge Management, Self-Service Portal, SLA and OLA Management
 
 ---
 

@@ -431,3 +431,50 @@ UI links for written tables:
 ### JWT errors
 
 None.
+
+## 2026-06-17, Structural + B-band audit (READ-ONLY, subagent)
+
+### Summary
+
+Read-only structural + B-band pass against SEM (domain 166, established_market, catalog_release null). 3 full modules: 105 STRATEGY-DEFINITION, 106 EXECUTION-TRACKING, 107 OPERATING-RHYTHM. No host-domain modules. 4 distinct masters: strategy_maps (808, catalog), strategic_initiatives (274, operational_workflow), operating_reviews (809, operational_workflow), strategy_decisions (810, operational_workflow). okr_objectives (245) is an embedded_master in module 105 but its TRUE master is WORK-MGMT (domain 135, module 150); its lifecycle and events are WORK-MGMT/SPM owned, so all okr drift is report-only. Zero DB writes.
+
+### Findings
+
+Bucket 1 (agent-fixable):
+- B12/M4 (810 strategy_decisions): three terminal/branch states (decided, deferred, withdrawn) all share state_order=2. M4 requires unique+monotonic state_order. Proposed: deferred=2, decided=3, withdrawn=4 (or similar monotonic ordering). Single is_initial (proposed) and >=1 is_terminal (decided, withdrawn) are satisfied; only the order collision is the defect.
+- B7 (274 strategic_initiatives): no direct data_object_relationships edge to users (748). The other three masters all have a users edge (808 owned_by, 809 facilitated_by/attended_by, 810 decided_by). Proposed: add strategic_initiatives sponsored_by/owned_by users (one_to_many).
+
+Bucket 2 (user-judgment):
+- B9 event coverage (274): SEM-owned events cover approved/completed/canceled (1265/1266/1267) but there is no SEM-owned event for the proposed->in_progress (kickoff/launch) transition; the only such event is the legacy SPM-owned 216. Prior history (2026-06-13) claimed an insert of event 1575 strategic_initiative.benefits_realized, but 1575 does NOT exist live (absent or reverted). Decide whether SEM needs its own in_progress/launch and benefits-realized events.
+- A1: all header gates pass (crud_percentage=80, min_org_size '30 m <2500', cost_band '$$$', usa_market_size_usd_m=600, market_size_source_year=2024, business_logic populated). No action.
+
+Bucket 3 (speculative): none new this pass (b3 backlog carried in prior entries: kpis, strategic_themes, etc.).
+
+Report-only (owed by other domains):
+- Legacy initiative.* events on strategic_initiatives (274) are SPM-owned (source_domain_id=9), not SEM: 216 initiative.kickoff (from_state 'planned', a non-existent state -> B9c drift) and 217 initiative.completed. Handoffs 241/245 (and 215/220-based 240/1434/1435) are SPM->other. SEM-owned drift: none. Fix belongs to SPM.
+- okr_objectives (245) event 1574 okr_objective.deprecated has to_state 'deprecated', not a real state on 245 (states: drafted/committed/in_progress/scored/closed) -> B9c drift, but 245 is WORK-MGMT-owned (module 150). Report-only to WORK-MGMT.
+
+### Clean (no defect)
+
+- M1/M2/M6: 3 full modules, 7 capabilities, every module realizes >=1 capability (105:3, 106:3, 107:1). M7 single-master-per-concept holds across the 4 SEM masters.
+- B1/B2/B4/B11: master present, labels present, flags coherent (809/810 has_submit_lock true, 810 has_single_approver true), aliases present on all 4 masters.
+- B6: no isolated masters; full intra-domain relationship web (strategy_maps->okr, okr<->initiatives<->reviews->decisions->initiatives/okr).
+- B12 (808 strategy_maps): catalog entity_type, zero lifecycle states - correct, no lifecycle required.
+- B12 shape for 274/809: single is_initial, >=1 is_terminal, unique monotonic state_order, requires_permission + permission_verb_override on gated transitions. Clean.
+- B13: zero unclassified masters (all entity_types set by prior pass).
+
+### JWT errors
+
+None.
+
+## 2026-06-17 - Corrective fixes (M4 + spelling)
+
+Two corrective fixes applied to SEM in a cross-domain cluster fix pass. Both are corrective only (record_status untouched, additive in spirit): they normalize existing shape, they do NOT resolve any open b1b / b2 / b3 item in state.yaml (those track other gaps and remain open).
+
+- **M4 fix (strategy_decisions, data_object 810).** The master carried three states (decided, deferred, withdrawn) all sharing state_order=2, a duplicate-order shape violation flagged in the 2026-06-17 read-only audit above. The states were renumbered to a unique, monotonic sequence: proposed=1, deferred=2, decided=3, withdrawn=4. This satisfies the M4 unique + monotonic state_order requirement; the single is_initial (proposed) and the terminal states (decided, withdrawn) are unaffected.
+
+- **British -> American spelling sweep (catalog-wide).** A catalog-wide spelling normalization renamed 'cancelled' lifecycle states to 'canceled'. This is catalog-wide and affects any SEM 'cancelled' state, for example on strategic_initiatives (which was renamed earlier the same day). American English is the project standard; this brings the affected lifecycle-state values into line.
+
+### JWT errors
+
+None.

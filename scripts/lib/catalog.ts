@@ -158,6 +158,21 @@ export type ModuleCatalog = {
 export const ROLE_ORDER = ["master", "embedded_master", "contributor", "consumer", "derived"] as const;
 export const ROLE_RANK: Record<string, number> = Object.fromEntries(ROLE_ORDER.map((r, i) => [r, i]));
 
+// ---------- release gate (shared across emitters) ----------
+//
+// A domain counts as "released" once domains.catalog_release carries a date. By DEFAULT any date
+// qualifies, including a future-scheduled one — the "earmarked for the public catalog" sense the
+// build_catalog command uses. Pass `asOf` (an ISO yyyy-mm-dd) to additionally require the release
+// to have already happened (date on/before asOf): the "live on the public catalog as of that day"
+// sense emit_domain_map uses by default. catalog_release may carry a full timestamp, so only the
+// leading date prefix is compared. One definition, imported by every emitter, so the JSON
+// snapshot, the blueprints, and the skills all scope to the same released set.
+export function isDomainReleased(d: Pick<Domain, "catalog_release">, asOf?: string): boolean {
+  const cr = (d.catalog_release ?? "").slice(0, 10);
+  if (!cr) return false;
+  return asOf ? cr <= asOf : true;
+}
+
 // ---------- catalog index loader ----------
 
 export type RawCatalogIndex = {

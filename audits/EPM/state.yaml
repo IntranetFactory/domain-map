@@ -12,7 +12,7 @@ schema_version: 2
 domain: EPM
 status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-06"
+last_audit: "2026-06-17"
 
 b1a:
   - id: B1A-S7b
@@ -37,34 +37,6 @@ b1a:
       - {handoff_id: null, direction: intra_domain, source_domain: EPM, target_domain: EPM, trigger_event: financial_budget.approved, payload: financial_budgets, null_field: source_239_target_241_missing_event}
 
 b1b:
-  - id: B1B-S3
-    summary: "B12 hard fail, 0 lifecycle states on the 5 EPM masters. Realizer modules now exist; awaits B2-S3 pattern-flag picks."
-    finding: "data_object_lifecycle_states for data_object_id in (37, 38, 39, 40, 41) returns 0 rows. Each master has a real workflow (no config-shape exemption applies). financial_plans (draft -> in_review -> approved -> published -> locked -> archived), financial_budgets (draft -> submitted -> approved -> locked -> variance_tracked -> closed), financial_forecasts (draft -> refreshed -> published -> superseded), financial_scenarios (draft -> modeled -> reviewed -> selected -> archived), variance_analyses (draft -> analyzed -> reviewed -> escalated -> closed). The realizing module_id is now resolvable (37, 38 -> 239; 39, 40 -> 240; 41 -> 241), but the state-machine shape still depends on the B2-S3 pattern-flag answers (submit_lock, single_approver)."
-    blocked_by:
-      - type: user_decision
-        ref: B2-S3
-        reason: "pattern-flag answers influence state-machine shape (submit_lock, single_approver) and which states carry requires_permission"
-    affected_masters:
-      - {data_object_id: 37, name: financial_plans, target_module_id: 239, workflow: "draft -> in_review -> approved -> published -> locked -> archived"}
-      - {data_object_id: 38, name: financial_budgets, target_module_id: 239, workflow: "draft -> submitted -> approved -> locked -> variance_tracked -> closed"}
-      - {data_object_id: 39, name: financial_forecasts, target_module_id: 240, workflow: "draft -> refreshed -> published -> superseded"}
-      - {data_object_id: 40, name: financial_scenarios, target_module_id: 240, workflow: "draft -> modeled -> reviewed -> selected -> archived"}
-      - {data_object_id: 41, name: variance_analyses, target_module_id: 241, workflow: "draft -> analyzed -> reviewed -> escalated -> closed"}
-
-  - id: B1B-S4
-    summary: "B11 hard fail, 0 aliases on the 5 EPM masters. Awaits exact (alias_name, alias_type) tuples."
-    finding: "data_object_aliases for data_object_id in (37, 38, 39, 40, 41) returns 0 rows. Vendor terminology divergence per the 2026-05-30 audit narrative (Plan / Strategic Plan / Form / Pages on financial_plans; AOP / Budget on financial_budgets; Reforecast / Rolling Forecast / LE on financial_forecasts; What-If / Driver Scenario / Sensitivity on financial_scenarios; Variance / Plan-vs-Actuals / Flux Analysis on variance_analyses). Loader idiom requires exact (alias_name, alias_type) tuples per master."
-    blocked_by:
-      - type: user_decision
-        ref: B2-aliases
-        reason: "exact alias_name and alias_type tuples per master not pre-specified"
-    affected_masters:
-      - {data_object_id: 37, name: financial_plans, target_module_id: 239, workflow: alias_set_pending}
-      - {data_object_id: 38, name: financial_budgets, target_module_id: 239, workflow: alias_set_pending}
-      - {data_object_id: 39, name: financial_forecasts, target_module_id: 240, workflow: alias_set_pending}
-      - {data_object_id: 40, name: financial_scenarios, target_module_id: 240, workflow: alias_set_pending}
-      - {data_object_id: 41, name: variance_analyses, target_module_id: 241, workflow: alias_set_pending}
-
   - id: B1B-S5
     summary: "B7 hard fail, 0 users (id 748) edges on the 5 EPM masters. Awaits exact (relationship_verb, inverse_verb) tuples."
     finding: "data_object_relationships with (data_object_id in (37,38,39,40,41) or related_data_object_id in (37,38,39,40,41)) returns 4 cross-domain edges and 0 user edges. Specifically zero edges where data_object_id=748 (users) or related_data_object_id=748. Rule #10 makes built-in edges first-class. Expected verbs: plan_owner / approver / controller on financial_plans; budget_owner / submitter / approver on financial_budgets; forecast_owner / fp_analyst on financial_forecasts; scenario_modeler / reviewer on financial_scenarios; analyst / reviewer / accountable_manager on variance_analyses."
@@ -78,17 +50,6 @@ b1b:
       - {data_object_id: 39, name: financial_forecasts, target_module_id: 240, workflow: user_edges_pending}
       - {data_object_id: 40, name: financial_scenarios, target_module_id: 240, workflow: user_edges_pending}
       - {data_object_id: 41, name: variance_analyses, target_module_id: 241, workflow: user_edges_pending}
-
-  - id: B1B-S6
-    summary: "B6 hard fail, 0 intra-domain edges between the 5 EPM masters. Awaits full edge tuples."
-    finding: "data_object_relationships shows 4 edges touching EPM masters but all are cross-domain (id 330 strategic_initiatives <- financial_scenarios, id 345 audit_findings <-> financial_forecasts, id 346 audit_findings <-> variance_analyses, id 1027 workforce_cost_projections -> financial_plans). 0 edges among financial_plans, financial_budgets, financial_forecasts, financial_scenarios, variance_analyses. Expected composition: financial_plans composes financial_budgets / _forecasts / _scenarios (one_to_many, parent owner_side); variance_analyses compares financial_budgets / _forecasts (many_to_one). Note: financial_plans (37) and financial_budgets (38) now co-reside in module 239; financial_forecasts (39) and financial_scenarios (40) in module 240; cross-module edges to 240/241 become intra-domain cross-module references."
-    blocked_by:
-      - type: user_decision
-        ref: B2-intra-rels
-        reason: "exact (relationship_verb, inverse_verb, relationship_kind, relationship_type, is_required, owner_side) tuple per edge not pre-specified"
-    affected_masters:
-      - {data_object_id: 37, name: financial_plans, target_module_id: 239, workflow: "composes financial_budgets, financial_forecasts, financial_scenarios"}
-      - {data_object_id: 41, name: variance_analyses, target_module_id: 241, workflow: "compares financial_budgets and financial_forecasts"}
 
   - id: B1B-H1-flip
     summary: "APQC TAGGING, flip 4 discovery_substring rows to agent_curated where the proposed PCF matches."

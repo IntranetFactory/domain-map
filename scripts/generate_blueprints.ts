@@ -17,6 +17,7 @@
 //   bun run scripts/generate_blueprints.ts --module ATS-CANDIDATE-CRM
 //   bun run scripts/generate_blueprints.ts --regenerate         # refresh ONLY the existing blueprint files
 //   bun run scripts/generate_blueprints.ts --regenerate --check # CI drift check over existing files
+//   bun run scripts/generate_blueprints.ts --released           # a file for every module hosted on a RELEASED domain
 //   bun run scripts/generate_blueprints.ts --all                # (re)generate a file for EVERY module (rare)
 //
 // "Regenerate" means refresh what already exists on disk; it never creates a file for a module
@@ -31,6 +32,7 @@ import { resolve, dirname } from "node:path";
 import { argv, exit } from "node:process";
 import {
   clearCatalogCache,
+  isDomainReleased,
   loadCachedCatalog,
   loadModuleCatalog,
   ROLE_ORDER,
@@ -50,6 +52,7 @@ import {
 // ---------- args ----------
 const args = argv.slice(2);
 const ALL = args.includes("--all");
+const RELEASED = args.includes("--released");
 const REGEN = args.includes("--regenerate");
 const CHECK = args.includes("--check");
 const NO_CACHE = args.includes("--no-cache");
@@ -66,10 +69,11 @@ if (CLEAR_CACHE) {
   if (!ALL && !MODULE_CODE) exit(0);
 }
 
-if (!ALL && !REGEN && !MODULE_CODE) {
+if (!ALL && !RELEASED && !REGEN && !MODULE_CODE) {
   console.error("usage:");
   console.error("  generate_blueprints.ts --module <MODULE_CODE> [--no-cache] [--clear-cache]");
   console.error("  generate_blueprints.ts --regenerate [--check] [--no-cache]   # refresh ONLY existing blueprint files");
+  console.error("  generate_blueprints.ts --released [--check] [--no-cache]      # (re)generate a file for every module hosted on a RELEASED domain");
   console.error("  generate_blueprints.ts --all [--check] [--no-cache]          # (re)generate a file for EVERY module");
   console.error("  generate_blueprints.ts --clear-cache");
   exit(2);
@@ -1627,6 +1631,26 @@ if (MODULE_CODE) {
   }
   console.log(`regenerating ${modules.length} existing blueprint(s) (no new files created)`);
   await emitModuleList(modules, "regenerate");
+} else if (RELEASED) {
+  // Every module hosted on a RELEASED domain (catalog_release != null), where "hosted" means the
+  // module's primary domain (domain_id) is released OR a host-junction (domain_module_host_domains)
+  // host domain is released. Unlike --regenerate this CREATES a blueprint for a released module that
+  // has none yet (the build_catalog contract: "blueprints for all modules of released domains").
+  const releasedDomainIds = new Set<number>();
+  for (const d of index.domains) if (isDomainReleased(d)) releasedDomainIds.add(d.id);
+  const hostDomainsByModule = new Map<number, Set<number>>();
+  for (const h of allRelationships.hostDomains) {
+    const mid = h.domain_module_id as number;
+    if (!hostDomainsByModule.has(mid)) hostDomainsByModule.set(mid, new Set());
+    hostDomainsByModule.get(mid)!.add(h.domain_id as number);
+  }
+  const modules = allModules.filter((m) => {
+    if (m.domain_id !== null && releasedDomainIds.has(m.domain_id)) return true;
+    for (const did of hostDomainsByModule.get(m.id) ?? []) if (releasedDomainIds.has(did)) return true;
+    return false;
+  });
+  console.log(`generating blueprints for ${modules.length} module(s) hosted on ${releasedDomainIds.size} released domain(s)`);
+  await emitModuleList(modules, "released");
 } else if (ALL) {
   await emitModuleList(allModules, "all");
 }

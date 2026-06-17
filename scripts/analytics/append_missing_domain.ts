@@ -22,6 +22,16 @@
 // Re-run with the same --code: bumps counter, appends "Surfaced by" line,
 // updates "Most recently surfaced". Other fields are NOT overwritten on
 // re-run (they widen at review time, not on each surface).
+//
+// Optional --semantius-score "<text>": sets the "Estimated Semantius score"
+// line on the entry (a coarse CRUD-vs-side-effect/compute estimate). On a
+// normal add/bump it is written alongside the bump; with --score-only it is
+// set on an existing entry WITHOUT bumping the counter or "Surfaced by"
+// (annotation, not a new surfacing). --score-only needs only --code and
+// --semantius-score.
+//   bun run scripts/analytics/append_missing_domain.ts \
+//     --score-only --code CSPM \
+//     --semantius-score "~45% strict (est.): ..."
 
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { resolve } from "path";
@@ -41,12 +51,20 @@ function requireArg(flag: string): string {
   return v;
 }
 
+const scoreOnly = process.argv.includes("--score-only");
+const semantiusScore = arg("--semantius-score")?.trim() ?? "";
+
 const code = requireArg("--code").trim().toUpperCase();
-const name = requireArg("--name").trim();
-const surfacedBy = requireArg("--surfaced-by").trim();
+const name = (scoreOnly ? arg("--name") : requireArg("--name"))?.trim() ?? "";
+const surfacedBy = (scoreOnly ? arg("--surfaced-by") : requireArg("--surfaced-by"))?.trim() ?? "";
 const evidence = arg("--evidence")?.trim() ?? "";
 const adjacency = arg("--adjacency")?.trim() ?? "";
 const capabilities = arg("--capabilities")?.trim() ?? "";
+
+if (scoreOnly && !semantiusScore) {
+  console.error("--score-only requires --semantius-score.");
+  process.exit(2);
+}
 
 if (!/^[A-Z][A-Z0-9-]*$/.test(code)) {
   console.error(`Invalid --code: ${code}. Must be UPPERCASE-KEBAB (A-Z, 0-9, -).`);
@@ -87,6 +105,53 @@ const tail = raw.slice(promotedStart);
 const entryHeaderRe = new RegExp(`^### ${code}\\b.*$`, "m");
 const existing = entryHeaderRe.exec(pendingBlock);
 
+// Set (or insert) the "Estimated Semantius score" line on an entry body.
+// Inserts after "Candidate capabilities" when the line is absent (older
+// entries predate the field); replaces the value when present.
+function setScoreLine(entry: string, score: string): string {
+  const scoreRe = /(\*\*Estimated Semantius score:\*\* ).*/;
+  if (scoreRe.test(entry)) return entry.replace(scoreRe, `$1${score}`);
+  const capRe = /(- \*\*Candidate capabilities:\*\* [^\n]*\n)/;
+  if (capRe.test(entry)) {
+    return entry.replace(capRe, `$1- **Estimated Semantius score:** ${score}\n`);
+  }
+  const pstRe = /(- \*\*Point-solution-market test:\*\*)/;
+  if (pstRe.test(entry)) {
+    return entry.replace(pstRe, `- **Estimated Semantius score:** ${score}\n$1`);
+  }
+  return entry;
+}
+
+// Helper to slice one entry's body out of the pending block, given its header match.
+function entryBounds(header: RegExpExecArray): [number, number] {
+  const start = header.index;
+  const restAfterHeader = pendingBlock.slice(start + header[0].length);
+  const next = restAfterHeader.search(/\n### /);
+  const end = next >= 0 ? start + header[0].length + next : pendingBlock.length;
+  return [start, end];
+}
+
+// --score-only: annotate an existing entry's score without bumping anything.
+if (scoreOnly) {
+  if (!existing) {
+    console.error(`--score-only: no existing candidate ${code} to annotate. Add it first.`);
+    process.exit(2);
+  }
+  const [entryStart, entryEnd] = entryBounds(existing);
+  const entry = pendingBlock.slice(entryStart, entryEnd);
+  const updatedEntry = setScoreLine(entry, semantiusScore);
+  const updatedFull =
+    prelude + pendingBlock.slice(0, entryStart) + updatedEntry + pendingBlock.slice(entryEnd) + tail;
+  if (updatedFull === raw) {
+    console.log(`No change: ${code} already carries that score.`);
+    process.exit(0);
+  }
+  writeFileSync(filePath, updatedFull, "utf8");
+  console.log(`Set Estimated Semantius score for ${code}: ${semantiusScore}`);
+  console.log(`Wrote ${filePath}`);
+  process.exit(0);
+}
+
 let newPendingBlock: string;
 
 if (existing) {
@@ -123,6 +188,8 @@ if (existing) {
     );
   }
 
+  if (semantiusScore) updatedEntry = setScoreLine(updatedEntry, semantiusScore);
+
   newPendingBlock = pendingBlock.slice(0, entryStart) + updatedEntry + pendingBlock.slice(entryEnd);
   console.log(`Bumped ${code}: mention_count ${countMatch[2]} -> ${newCount}; appended "${surfacedBy}".`);
 } else {
@@ -138,6 +205,7 @@ if (existing) {
 - **Vendor evidence:** ${evidence || "_(none provided)_"}
 - **Adjacency:** ${adjacency || "_(none provided)_"}
 - **Candidate capabilities:** ${capabilities || "_(none provided)_"}
+- **Estimated Semantius score:** ${semantiusScore || "_(not estimated)_"}
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_

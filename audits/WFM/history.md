@@ -451,3 +451,79 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+---
+
+## 2026-06-17 - Structural + B-band read-only audit (no DB writes)
+
+Read-only structural and B-band sweep against domain WFM (id 59). Zero writes. Header: domain_kind=established_market, catalog_release=null (unreleased, expected), 3 full modules (194 WFM-TIME-ATTENDANCE, 195 WFM-SCHEDULING, 196 WFM-ABSENCE), 7 masters (work_schedules 160, work_shifts 161, time_entries 162, absence_requests 163, absence_balances 164, time_off_policies 165, meal_break_records 166).
+
+### Bucket 1 (agent-fixable, additive/corrective)
+
+- B13 unclassified masters (4): work_schedules (160) -> operational_workflow (publish lifecycle); time_entries (162) -> operational_workflow (carries approved/posted/closed transitions per trigger_events, but has no lifecycle states); time_off_policies (165) -> catalog (accrual/entitlement rule definition); meal_break_records (166) -> operational_record (per-event compliance log, no workflow).
+- B12 lifecycle gaps: time_entries (162) is workflow-bearing (trigger_events to_state approved/posted/closed) yet has NO lifecycle states. work_schedules (160) once reclassed to operational_workflow needs a draft/published lifecycle. absence_requests (163) lifecycle is well-formed (one is_initial, monotonic order, terminals present).
+- B9c to_state drift: time_entries (162) trigger_events actuals.posted->posted, pay_period.closed->closed, time_entry.approved->approved all reference states that do not exist (time_entries has no lifecycle). Resolve by authoring the time_entries lifecycle.
+- B6 intra-domain relationships: NO master-to-master edges exist anywhere in WFM. All 7 masters are isolated from siblings (e.g. work_shifts->work_schedules, time_entries->work_shifts, absence_balances->time_off_policies, absence_requests->time_off_policies are all missing).
+- B9 events without handoffs: trigger_event 430 (work_shift.swapped) and 433 (time_off_policy.changed) have no handoff row.
+- B11 aliases: NO aliases for any master. absence_requests description explicitly cites Leave Request / Vacation Request / PTO Request; meal_break_records, time_off_policies also alias-worthy.
+
+### Bucket 2 (user-judgment)
+
+- A1 metadata: complete; no fail. catalog_release=null is expected (unreleased).
+- M1/M2/M6/M7: all pass (3 full modules, 6 capabilities, every module realizes >=1 capability, every master single-master).
+- B14 necessity: time_off_policies and meal_break_records are statute-shaped (country/labor-law bound) but are master+required; consider whether they should be optional. User call.
+
+### Bucket 3 (speculative / missing scope)
+
+- Possible missing masters vs market: availability/preferences, open-shift / shift-swap marketplace object, labor-demand forecast, schedule-template. Note only.
+
+### Report-only (owed by other domains)
+
+- Handoff targets are other-domain-owned and out of WFM scope (target_domain_id 22, 54, 55, 68, 100). No action against those rows.
+
+### JWT errors
+
+None observed during the run.
+
+WFM: Bucket1=6, Bucket2=3, Bucket3=1 (unclassified masters=4, operational_workflow missing lifecycle=2, M4 violations=0)
+
+## 2026-06-17 - Cluster B-band fix pass (keep-as-proposed-defaults)
+
+A cluster-wide fix pass executed the additive and corrective WFM work surfaced by the same-day read-only audit, applying the proposed defaults under a user "keep as proposed defaults" decision. Everything written this pass is at `record_status='new'` and awaiting the user's spot-check; nothing was approved.
+
+### entity_type classification (B13)
+
+The four unclassified masters were classified: `work_schedules` (160) and `time_entries` (162) to `operational_workflow`; `time_off_policies` (165) to `catalog`; `meal_break_records` (166) to `operational_record`. These match the read-only audit's B13 recommendations (publish/approval workflows vs. an accrual-rule definition vs. a per-event compliance log).
+
+### Lifecycle states (B12) - resolves B1B-S3
+
+Lifecycle states were authored on the two workflow-bearing masters that lacked them, each scoped to its realizing module:
+
+- `time_entries` (162): `open`, `submitted`, `approved` (gate permission `approve_time_entry`), `posted`, `closed`, on module 194 WFM-TIME-ATTENDANCE. This also resolves the B9c to_state drift from the read-only audit: the `actuals.posted -> posted`, `pay_period.closed -> closed`, and `time_entry.approved -> approved` transitions now reference states that exist.
+- `work_schedules` (160): `draft`, `published` (gate permission `publish_work_schedule`), `archived`, on module 195 WFM-SCHEDULING.
+
+The `absence_requests` (163) lifecycle was authored earlier the same day and is well-formed (one initial state, monotonic order, terminals present); it was not re-touched. The catalog, computed, and operational_record masters correctly carry no lifecycle states (`time_off_policies`, `absence_balances`, `meal_break_records`). With both workflow masters now carrying their state machines, **B1B-S3 (lifecycle states across the WFM masters) is resolved.**
+
+### Aliases (B11) - resolves B1B-S2
+
+A pruned set of 2-4 vendor-terminology synonyms was added for all 7 masters (the "Pruned set per master" shape from B2-S4 / q3). With aliases present on every master, **B1B-S2 (data_object_aliases for the 7 WFM masters) is resolved.** The remaining alias-pruning judgment item B2-S4 stays open for the user to confirm the curated selection.
+
+### Intra-domain relationships (B6)
+
+The missing master-to-master edges were added so the WFM masters are no longer isolated from their siblings: `work_schedules -> work_shifts` (composition), `work_shifts -> time_entries`, `time_off_policies -> absence_balances`, `time_off_policies -> absence_requests`, and `time_entries -> meal_break_records`.
+
+### trigger_event alignment (B9)
+
+The `work_schedule.published` trigger_event had its `to_state` aligned to the newly authored `published` state on `work_schedules`.
+
+### British-to-American spelling sweep - resolves the spelling portion of B2-S6
+
+A catalog-wide British-to-American spelling sweep corrected the WFM `domains` row (id 59) spellings (`Labour` -> `Labor`, `optimisation` -> `optimization`) and renamed every `cancelled` lifecycle state to `canceled` across the catalog. This resolves the British-spelling portion of B2-S6. The em-dash and dated-notes portions of B2-S6 (the `business_logic` em-dash and the dated 2026-05-20 reanalysis prose in `notes`) REMAIN open, since Rule #15 forbids notes writes without user-approved text.
+
+### Status
+
+All of the above is at `record_status='new'`, under user review (no approval was stamped, per Rule #1). B1B-S2 (aliases) and B1B-S3 (lifecycle states) are thereby resolved and removed from `state.yaml`. Pattern flags (B2-S3) and the other open `b2` items remain for the user.
+
+### JWT errors
+
+None observed during the run.

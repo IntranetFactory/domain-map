@@ -16,15 +16,18 @@
 // All reads go through scripts/lib/catalog.ts pg() so the semantius CLI runs from the
 // project-root cwd (CLAUDE.md cwd rule). Bun + TypeScript only, never Python.
 //
-// Three modes (exactly one required):
+// Modes (exactly one required):
 //   --domain <CODE>   generate one specific domain
 //   --regenerate      regenerate ONLY domains that already have a skill-specs/<CODE>/ folder
+//   --released        generate every RELEASED domain/bundle (catalog_release != null); needs --yes to write
 //   --all             generate every catalog domain that has modules; ALWAYS needs --yes to write
 //
 // Usage:
 //   bun run scripts/emit_skill_spec.ts --domain ATS
 //   bun run scripts/emit_skill_spec.ts --domain ATS --stdout    # print spec.json, write nothing
 //   bun run scripts/emit_skill_spec.ts --regenerate             # refresh every existing folder
+//   bun run scripts/emit_skill_spec.ts --released               # lists released targets, then stops (no --yes)
+//   bun run scripts/emit_skill_spec.ts --released --yes         # confirmed: write every released domain/bundle
 //   bun run scripts/emit_skill_spec.ts --all                    # lists targets, then stops (no --yes)
 //   bun run scripts/emit_skill_spec.ts --all --yes              # confirmed: write every domain
 //   bun run scripts/emit_skill_spec.ts --domain ATS --major 2   # override facts_major
@@ -47,10 +50,11 @@ function flagValue(name: string): string | null {
 const DOMAIN_ARG = flagValue("--domain");
 const BUNDLE_ARG = flagValue("--bundle");
 const ALL = args.includes("--all");
+const RELEASED = args.includes("--released");
 const REGEN = args.includes("--regenerate");
 const YES = args.includes("--yes") || args.includes("--confirm");
 const STDOUT = args.includes("--stdout");
-const BATCH = ALL || REGEN;
+const BATCH = ALL || RELEASED || REGEN;
 const FACTS_MAJOR = Number(flagValue("--major") ?? "1");
 const SNAPSHOT_OVERRIDE = flagValue("--snapshot");
 const SKILL_SPECS_DIR = flagValue("--out-dir") ?? "c:/dev/domain-map/catalog/skill-specs";
@@ -60,12 +64,13 @@ const TEMPLATE_PATH = `${TEMPLATE_DIR}/SKILL.md`;
 // default skill-specs dir that is catalog/skills; with a temp --out-dir it stays a sibling.
 const SKILLS_DIR = flagValue("--skills-dir") ?? `${dirname(SKILL_SPECS_DIR)}/skills`;
 
-const modeCount = [ALL, REGEN, Boolean(DOMAIN_ARG), Boolean(BUNDLE_ARG)].filter(Boolean).length;
+const modeCount = [ALL, RELEASED, REGEN, Boolean(DOMAIN_ARG), Boolean(BUNDLE_ARG)].filter(Boolean).length;
 if (modeCount !== 1) {
   console.error("Pick exactly one mode:");
   console.error("  --domain <CODE>   generate one specific domain");
   console.error("  --bundle <CODE>   generate one domain-less industry bundle (e.g. HVAC-SVC-MGMT)");
   console.error("  --regenerate      regenerate only folders that already exist (domains + bundles)");
+  console.error("  --released [--yes]  generate every RELEASED domain with modules + every released bundle (writing needs --yes)");
   console.error("  --all [--yes]     generate every domain with modules + every domain-less bundle (writing needs --yes)");
   console.error("  shared: [--stdout] [--out-dir DIR] [--major N] [--snapshot S]");
   process.exit(2);
@@ -293,7 +298,7 @@ async function loadBulk(): Promise<Bulk> {
     enumFields,
     org,
   ] = await Promise.all([
-    get(`/domains?select=id,domain_code,domain_name,description,parent_domain_id,domain_kind,certification_required,catalog_tagline,catalog_description&limit=${L}`),
+    get(`/domains?select=id,domain_code,domain_name,description,parent_domain_id,domain_kind,certification_required,catalog_release,catalog_tagline,catalog_description&limit=${L}`),
     get(`/domain_modules?select=id,domain_module_code,domain_module_name,domain_id,module_kind,description,catalog_tagline&limit=${L}`),
     get(`/domain_module_host_domains?select=domain_module_id,domain_id&limit=${L}`),
     get(`/domain_aliases?select=domain_id,alias&order=alias.asc&limit=${L}`),
@@ -1054,6 +1059,27 @@ if (ALL) {
     ...bundleCodes.map((code) => ({ code, kind: "bundle" as const })),
   ];
   console.error(`--all: writing ${tasks.length} folders (${domainCodes.length} domains + ${bundleCodes.length} bundles)`);
+} else if (RELEASED) {
+  // Same target set as --all, restricted to RELEASED domains/bundles (domains.catalog_release != null,
+  // any date). lk.domainByCode carries catalog_release (added to the bulk load), so the filter needs no
+  // extra query. Like --all, writing OVERWRITES every targeted folder and requires --yes.
+  const [domainCodes, bundleCodes] = await Promise.all([domainCodesWithModules(), domainLessBundleCodes()]);
+  const isReleased = (code: string) => Boolean(lk.domainByCode.get(code)?.catalog_release);
+  const relDomains = domainCodes.filter(isReleased);
+  const relBundles = bundleCodes.filter(isReleased);
+  if (!STDOUT && !YES) {
+    console.error(`--released targets ${relDomains.length} released domains + ${relBundles.length} released bundles:`);
+    console.error("  domains: " + (relDomains.join(", ") || "(none)"));
+    console.error("  bundles: " + (relBundles.join(", ") || "(none)"));
+    console.error(`\nThis OVERWRITES spec.json + catalog.yaml + the installable skill in ${relDomains.length + relBundles.length} folders.`);
+    console.error(`Nothing written yet. Re-run with --yes to proceed.`);
+    process.exit(0);
+  }
+  tasks = [
+    ...relDomains.map((code) => ({ code, kind: "domain" as const })),
+    ...relBundles.map((code) => ({ code, kind: "bundle" as const })),
+  ];
+  console.error(`--released: writing ${tasks.length} folders (${relDomains.length} domains + ${relBundles.length} bundles)`);
 } else if (REGEN) {
   const folders = existsSync(SKILL_SPECS_DIR)
     ? readdirSync(SKILL_SPECS_DIR, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort()

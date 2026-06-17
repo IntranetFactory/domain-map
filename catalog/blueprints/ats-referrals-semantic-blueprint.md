@@ -12,7 +12,7 @@ domain_modules:
 domain_code: ATS
 related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-talent-pools, ben-enrollment, hcm-core-worker, hcm-lifecycle-workflows, onb-journey-mgmt, payroll-earnings-deductions]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-MANAGER, RECRUITING-RECRUITER]
-created_at: 2026-06-16
+created_at: 2026-06-17
 ---
 
 # Employee Referrals
@@ -107,6 +107,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| `candidates` | verified_via | `right_to_work_verifications` | one_to_many | optional | none | n/a | - |
 | `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | none | n/a | - |
 | `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | none (required-if-present) | n/a | - |
 | `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | none | n/a | - |
@@ -131,6 +132,7 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `employees` | applies_as | `candidates` | one_to_many | optional | none | n/a | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | optional | none | n/a | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | optional | none | n/a | - |
+| `candidates` | submitted_via | `agency_submissions` | one_to_many | optional | none | n/a | - |
 
 ## 6. Cross-domain context
 

@@ -12,7 +12,7 @@ domain_modules:
 domain_code: LMS
 related_modules: [ats-candidate-crm, ats-recruitment-pipeline, ben-enrollment, comp-benchmarking, comp-planning, emp-exp-continuous-listen, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hrsd-case-mgmt, iga-access-request, iga-auto-provisioning, lms-automation, lms-compliance-training, lms-course-delivery, lms-credentials, lms-ilt-delivery, pa-predictive-models, payroll-run, psa-project-delivery, psa-resource-mgmt, skills-mgmt-profile, swp-demand-forecast, talent-performance-mgmt, talent-succession-career, training-records-starter]
 persona: [GRC-COMPLIANCE-TRAINING-MANAGER, HR-BUSINESS-PARTNER, HR-HRIS-ADMIN, HR-ORG-DESIGN-ANALYST, HR-PEOPLE-OPS-SPECIALIST, LD-INSTRUCTIONAL-DESIGNER, LD-INSTRUCTOR, LD-LEARNING-ADMIN, PEOPLE-MANAGER]
-created_at: 2026-06-16
+created_at: 2026-06-17
 ---
 
 # Learning Paths
@@ -28,16 +28,18 @@ Authors and assigns sequenced learning paths inside the LMS. Masters learning_pa
 | Curricula | `curricula` | Grouped paths and courses targeting a role, function, or compliance scope. Used by Workday and Cornerstone as the primary noun for role-based learning. |
 | Learning Path Assignments | `learning_path_assignments` | Path-to-learner assignment row distinct from course_enrollments; tracks overall path progress and completion percentage. |
 | Learning Path Steps | `learning_path_steps` | Ordered step inside a learning path: pointer to a course, sub-path, or external resource with sequencing rules. |
-| Learning Paths | `learning_paths` | Curated sequence of courses targeting a role, skill, or certification. Drives ordered enrolment and progress tracking across multiple courses. |
+| Learning Paths | `learning_paths` | Curated sequence of courses targeting a role, skill, or certification. Drives ordered enrollment and progress tracking across multiple courses. |
 | Learning Plans | `learning_plans` | Personalized plan composed of multiple paths or courses, often manager-curated or AI-recommended against skill gaps. |
+| Learning Recommendations | `learning_recommendations` | Per-learner suggested content generated from skill gaps and role profile. |
 | Prerequisite Rules | `prerequisite_rules` | Gating logic that controls path progression: required completions, scores, certifications, or competencies. |
+| Skill Targets | `skill_targets` | A learning-path step bound to a skill plus a target proficiency threshold. |
 | Certifications | `learner_certifications` | Issued credential against a worker (internal certification, vendor cert, regulatory cert) with issue date, expiry, issuing body, and renewal rules. Drives recertification campaigns. |
 | Course Enrollments | `course_enrollments` | Per-learner per-course state record: assigned date, due date, attempts, status (not_started, in_progress, completed, expired), score. The operational unit of learning tracking. |
 | Employees | `employees` | Canonical record of a person currently or formerly employed by the organization. Carries identity (legal name, contact, IDs), employment metadata (start date, end date, employment type, country), and pointers to position, job profile, org unit, manager, and life-event history. The most multi-mastered data object in the catalog: HCM masters the core HR slice, Payroll masters the comp/withholding slice, and IGA masters the identity/access slice. Onboarding, PA, and Talent Management consume or contribute. |
 | Job Profiles | `job_profiles` | Canonical role definition in the job catalog: title, family, level, responsibilities, required skills and competencies, pay range, FLSA classification. Distinct from positions (which are slots referencing a profile). Many positions share a single job profile. |
 | Org Units | `org_units` | Node in the organizational hierarchy: division, business unit, department, team. Carries manager, cost center alignment, geographic scope, and parent/child relationships. HCM masters the operational hierarchy; EPM contributes the cost-center mapping (which would be Finance-mastered once a Finance/GL domain is loaded). |
 | Positions | `hcm_positions` | Approved slot in the org - a 'chair' with role definition, cost center, reporting line, location, and FTE allocation. Distinct from job_profiles (the catalog definition) and from employees (the person filling the slot). A position can be open, filled, or eliminated. SWP designs future positions via org_designs; HCM operationalizes them once approved. |
-| Performance Goals | `performance_goals` | Individual goal or OKR with owner, period, metric, weight, status, alignment to organisational objectives. Reviewed within performance_reviews cycles. |
+| Performance Goals | `performance_goals` | Individual goal or OKR with owner, period, metric, weight, status, alignment to organizational objectives. Reviewed within performance_reviews cycles. |
 | Skill Profiles | `skill_profiles` | Per-worker collection of skills with self-assessed and validated proficiency levels, derived from completed courses, certifications, performance signals, and inferred peer-comparison. The central artifact of HCM-side skills-cloud and talent-intelligence offerings. |
 | Skills Gap Analyses | `skills_gap_analyses` | Comparison of current-state skills inventory vs future-state demand by role, level, and geography. Drives build/buy/borrow strategy: which gaps to close via training (LMS), external hires (ATS), or contingent workforce. Outputs feed both SWP scenarios and LMS curriculum decisions. |
 
@@ -62,6 +64,8 @@ flowchart TD
   learning_path_assignments["Learning Path Assignments"]
   learning_plans["Learning Plans"]
   prerequisite_rules["Prerequisite Rules"]
+  skill_targets["Skill Targets"]
+  learning_recommendations["Learning Recommendations"]
   users["Users"]
   learning_paths -->|"contains"| learning_path_steps
   curricula -->|"comprises"| learning_paths
@@ -112,6 +116,8 @@ flowchart TD
   class learning_path_assignments master;
   class learning_plans master;
   class prerequisite_rules master;
+  class skill_targets master;
+  class learning_recommendations master;
   class users platform_builtin;
   style hcm_positions stroke-dasharray:5 5;
   style org_units stroke-dasharray:5 5;
@@ -119,6 +125,8 @@ flowchart TD
   style performance_goals stroke-dasharray:5 5;
   style skills_gap_analyses stroke-dasharray:5 5;
   style skill_profiles stroke-dasharray:5 5;
+  style skill_targets stroke-dasharray:5 5;
+  style learning_recommendations stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
@@ -130,16 +138,18 @@ flowchart TD
 | 3 | `learning_path_steps` | `learning_path_steps` | Learning Path Step | Learning Path Steps | master | - | - | required | - | junction | `:admin` | - |
 | 4 | `learning_paths` | `learning_paths` | Learning Path | Learning Paths | master | - | - | required | - | operational_workflow | `:manage` | - |
 | 5 | `learning_plans` | `learning_plans` | Learning Plan | Learning Plans | master | - | - | required | personal_content | operational_workflow | `:manage` | - |
-| 6 | `prerequisite_rules` | `prerequisite_rules` | Prerequisite Rule | Prerequisite Rules | master | - | - | required | - | catalog | `:admin` | - |
-| 7 | `learner_certifications` | `learner_certifications` | Certification | Certifications | embedded_master | `lms-credentials` | Credentials, Badges and Continuing Education | required | personal_content, submit_lock | operational_workflow | `:manage` | - |
-| 8 | `course_enrollments` | `course_enrollments` | Course Enrollment | Course Enrollments | embedded_master | `lms-course-delivery` | Course Delivery | required | personal_content | operational_workflow | `:manage` | - |
-| 9 | `employees` | `employees` | Employee | Employees | embedded_master | `hcm-core-worker` | Core Worker Record | required | personal_content | operational_workflow | `:manage` | - |
-| 10 | `job_profiles` | `job_profiles` | Job Profile | Job Profiles | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | - | catalog | `:admin` | - |
-| 11 | `org_units` | `org_units` | Org Unit | Org Units | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | - | operational_workflow | `:manage` | - |
-| 12 | `hcm_positions` | `hcm_positions` | Position | Positions | embedded_master | `hcm-org-positions` | Organisation and Position Management | optional | single_approver | operational_workflow | `:manage` | - |
-| 13 | `performance_goals` | `performance_goals` | Performance Goal | Performance Goals | consumer | `talent-performance-mgmt` | Performance and Goal Management | optional | personal_content | operational_workflow | `:manage` | - |
-| 14 | `skill_profiles` | `skill_profiles` | Skill Profile | Skill Profiles | consumer | `skills-mgmt-profile` | Worker Skill Profiles and Assessments | optional | personal_content | operational_workflow | `:manage` | - |
-| 15 | `skills_gap_analyses` | `skills_gap_analyses` | Skills Gap Analysis | Skills Gap Analyses | consumer | `swp-demand-forecast` | Demand Forecast | optional | - | operational_workflow | `:manage` | - |
+| 6 | `learning_recommendations` | `learning_recommendations` | Learning Recommendation | Learning Recommendations | master | - | - | optional | personal_content | operational_workflow | `:manage` | - |
+| 7 | `prerequisite_rules` | `prerequisite_rules` | Prerequisite Rule | Prerequisite Rules | master | - | - | required | - | catalog | `:admin` | - |
+| 8 | `skill_targets` | `skill_targets` | Skill Target | Skill Targets | master | - | - | optional | - | catalog | `:admin` | - |
+| 9 | `learner_certifications` | `learner_certifications` | Certification | Certifications | embedded_master | `lms-credentials` | Credentials, Badges and Continuing Education | required | personal_content, submit_lock | operational_workflow | `:manage` | - |
+| 10 | `course_enrollments` | `course_enrollments` | Course Enrollment | Course Enrollments | embedded_master | `lms-course-delivery` | Course Delivery | required | personal_content | operational_workflow | `:manage` | - |
+| 11 | `employees` | `employees` | Employee | Employees | embedded_master | `hcm-core-worker` | Core Worker Record | required | personal_content | operational_workflow | `:manage` | - |
+| 12 | `job_profiles` | `job_profiles` | Job Profile | Job Profiles | embedded_master | `hcm-org-positions` | Organization and Position Management | optional | - | catalog | `:admin` | - |
+| 13 | `org_units` | `org_units` | Org Unit | Org Units | embedded_master | `hcm-org-positions` | Organization and Position Management | optional | - | operational_workflow | `:manage` | - |
+| 14 | `hcm_positions` | `hcm_positions` | Position | Positions | embedded_master | `hcm-org-positions` | Organization and Position Management | optional | single_approver | operational_workflow | `:manage` | - |
+| 15 | `performance_goals` | `performance_goals` | Performance Goal | Performance Goals | consumer | `talent-performance-mgmt` | Performance and Goal Management | optional | personal_content | operational_workflow | `:manage` | - |
+| 16 | `skill_profiles` | `skill_profiles` | Skill Profile | Skill Profiles | consumer | `skills-mgmt-profile` | Worker Skill Profiles and Assessments | optional | personal_content | operational_workflow | `:manage` | - |
+| 17 | `skills_gap_analyses` | `skills_gap_analyses` | Skills Gap Analysis | Skills Gap Analyses | consumer | `swp-demand-forecast` | Demand Forecast | optional | - | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -358,7 +368,7 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 | HCM-ORG-POSITIONS | FIN | _(domain-level)_ | `org_unit.created` | _(state_change)_ | `org_units` | api_call | medium | New org unit usually maps to cost-center; ERP-FIN must reflect the structure for budgeting and labor allocation. |
 | HCM-CORE-WORKER | EXPENSE | _(domain-level)_ | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Termination triggers EXPENSE corporate-card deactivation and outstanding-report close-out. |
 | HCM-CORE-WORKER | PSA | PSA-PROJECT-DELIVERY | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Terminated employee may be the assignee on open project_tasks. PROJECT-DELIVERY needs to surface affected tasks for reassignment or completion handover. |
-| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `attrition_risk.high` | _(state_change)_ | `employees` | event_stream | high | ML attrition score crosses high threshold. PSA resource managers may proactively rebalance assignments away from at-risk consultants on critical engagements. High friction: probabilistic→deterministic pattern (score requires judgement call), false-positive volume can swamp the staffing queue. |
+| HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `attrition_risk.high` | _(state_change)_ | `employees` | event_stream | high | ML attrition score crosses high threshold. PSA resource managers may proactively rebalance assignments away from at-risk consultants on critical engagements. High friction: probabilistic→deterministic pattern (score requires judgment call), false-positive volume can swamp the staffing queue. |
 | HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `employee.created` | `created` _(lifecycle)_ | `employees` | event_stream | low | New consultant hired. PSA resource pool adds the employee as available capacity; skill inventory record is seeded for downstream certifications. |
 | HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `employee.promoted` | _(lifecycle)_ | `employees` | event_stream | low | Consultant promoted (level / job profile change). PSA reevaluates billable rate band and skill inventory; existing project_assignments may need rate revision. |
 | HCM-CORE-WORKER | PSA | PSA-RESOURCE-MGMT | `employee.terminated` | `terminated` _(lifecycle)_ | `employees` | event_stream | medium | Consultant terminated. PSA must release any active project_assignments, return capacity to bench and re-allocate forecast. Medium friction: leaver-event timing varies (immediate vs notice period) and active assignments may need urgent rebalancing. |
@@ -375,7 +385,7 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | HCM-CORE-WORKER | ATS | ATS-CANDIDATE-CRM | `candidate.hired` | `hired` _(lifecycle)_ | `employees` | event_stream | medium | Candidate-to-employee conversion: hired candidate from ATS triggers employee-record creation in HCM. Field mapping (candidate → employee) is rarely perfect; missing fields (legal name spelling, work-eligibility detail, tax IDs) get collected in the Onboarding journey and back-filled into HCM. |
 | HCM-CORE-WORKER | COMP-MGMT | COMP-PLANNING | `merit_cycle.approved` | `approved` _(state_change)_ | `employees` | event_stream | low | Cycle-close pay-rate changes post to the worker record (base salary, bonus target, equity guideline). |
-| HCM-CORE-WORKER | EMP-EXP | EMP-EXP-CONTINUOUS-LISTEN | `attrition_risk.high` | _(state_change)_ | `employees` | api_call | high | Attrition-risk inference from engagement signals surfaces to managers via HCM dashboards. Probabilistic-signal → deterministic-action pattern: a risk score is not a directive; intervention is gated by manager judgement, data-privacy rules (anonymity floor), and DEI-bias concerns. |
+| HCM-CORE-WORKER | EMP-EXP | EMP-EXP-CONTINUOUS-LISTEN | `attrition_risk.high` | _(state_change)_ | `employees` | api_call | high | Attrition-risk inference from engagement signals surfaces to managers via HCM dashboards. Probabilistic-signal → deterministic-action pattern: a risk score is not a directive; intervention is gated by manager judgment, data-privacy rules (anonymity floor), and DEI-bias concerns. |
 | HCM-CORE-WORKER | PA | PA-PREDICTIVE-MODELS | `attrition_risk.high` | _(state_change)_ | `employees` | event_stream | high | Flight-risk score flagged on employee; HR-business-partner motion required. Probabilistic-signal-to-deterministic-action friction shape; false-positive volume drives mistrust. |
 | HCM-CORE-WORKER | MDM | _(domain-level)_ | `employee_golden_record.created` | `active` _(lifecycle)_ | `employees` | api_call | medium | Resolved identity → HCM links operational HR record. |
 
@@ -491,6 +501,14 @@ _This scope holds `learner_certifications` as **embedded_master**; the canonical
 | 3 | `completed` | - | ✓ | ✓ | `lms-paths:complete` | - |
 | 4 | `archived` | - | ✓ | ✓ | `lms-paths:archive` | - |
 
+### `learning_recommendations` (Learning Recommendation)
+
+| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `generated` | ✓ | - | - | - | - |
+| 2 | `accepted` | - | - | ✓ | `lms-paths:accept` | - |
+| 3 | `dismissed` | - | ✓ | ✓ | `lms-paths:dismiss` | - |
+
 ### `org_units` (Org Unit)
 
 _This scope holds `org_units` as **embedded_master**; the canonical state machine is owned by `HCM-ORG-POSITIONS`._
@@ -512,7 +530,7 @@ _This scope holds `performance_goals` as **consumer**; the canonical state machi
 | 2 | `approved` | - | - | ✓ | `talent-performance-mgmt:approve_performance_goal` | Manager approves the goal; it becomes part of the cycle. |
 | 3 | `in_progress` | - | - | - | - | Goal is being worked. |
 | 4 | `completed` | - | - | ✓ | `talent-performance-mgmt:complete_performance_goal` | Outcome recorded; counts toward review rating. |
-| 5 | `cancelled` | - | ✓ | ✓ | `talent-performance-mgmt:cancel_performance_goal` | Goal abandoned (role change, priority shift, etc.). |
+| 5 | `canceled` | - | ✓ | ✓ | `talent-performance-mgmt:cancel_performance_goal` | Goal abandoned (role change, priority shift, etc.). |
 
 ### `skill_profiles` (Skill Profile)
 
@@ -570,6 +588,8 @@ _This scope holds `skills_gap_analyses` as **consumer**; the canonical state mac
 | `lms-paths:revoke` | workflow-gate (lifecycle) | Transition `learner_certifications` into state `revoked` | ✓ |
 | `lms-paths:activate` | workflow-gate (lifecycle) | Transition `learning_plans` into state `active` | ✓ |
 | `lms-paths:archive` | workflow-gate (lifecycle) | Transition `learning_plans` into state `archived` | ✓ |
+| `lms-paths:accept` | workflow-gate (lifecycle) | Transition `learning_recommendations` into state `accepted` | ✓ |
+| `lms-paths:dismiss` | workflow-gate (lifecycle) | Transition `learning_recommendations` into state `dismissed` | ✓ |
 | `lms-paths:view_all_employees` | override (personal_content) | View all `employees` rows beyond row-scope | ✓ |
 | `lms-paths:manage_all_employees` | override (personal_content) | Manage all `employees` rows beyond row-scope | ✓ |
 | `lms-paths:view_all_course_enrollments` | override (personal_content) | View all `course_enrollments` rows beyond row-scope | ✓ |
@@ -581,6 +601,8 @@ _This scope holds `skills_gap_analyses` as **consumer**; the canonical state mac
 | `lms-paths:manage_all_learning_path_assignments` | override (personal_content) | Manage all `learning_path_assignments` rows beyond row-scope | ✓ |
 | `lms-paths:view_all_learning_plans` | override (personal_content) | View all `learning_plans` rows beyond row-scope | ✓ |
 | `lms-paths:manage_all_learning_plans` | override (personal_content) | Manage all `learning_plans` rows beyond row-scope | ✓ |
+| `lms-paths:view_all_learning_recommendations` | override (personal_content) | View all `learning_recommendations` rows beyond row-scope | ✓ |
+| `lms-paths:manage_all_learning_recommendations` | override (personal_content) | Manage all `learning_recommendations` rows beyond row-scope | ✓ |
 
 ### 8.2 Business rules
 
@@ -593,6 +615,7 @@ _This scope holds `skills_gap_analyses` as **consumer**; the canonical state mac
 | `submit_restricted_to_certification_owner` | `learner_certifications` | has_submit_lock | Only the row's authoring user can submit; post-submit the row is read-only except via `lms-paths:manage_all_certifications` |
 | `learning_path_assignment_edit_scope` | `learning_path_assignments` | has_personal_content | Row-scope by default; override via `lms-paths:view_all_learning_path_assignments` / `lms-paths:manage_all_learning_path_assignments` |
 | `learning_plan_edit_scope` | `learning_plans` | has_personal_content | Row-scope by default; override via `lms-paths:view_all_learning_plans` / `lms-paths:manage_all_learning_plans` |
+| `learning_recommendation_edit_scope` | `learning_recommendations` | has_personal_content | Row-scope by default; override via `lms-paths:view_all_learning_recommendations` / `lms-paths:manage_all_learning_recommendations` |
 
 ## 9. Roles, RACI, and responsibilities (derived)
 
@@ -640,6 +663,8 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `lms-paths:admin` | `lms-paths:revoke` |
 | `lms-paths:admin` | `lms-paths:activate` |
 | `lms-paths:admin` | `lms-paths:archive` |
+| `lms-paths:admin` | `lms-paths:accept` |
+| `lms-paths:admin` | `lms-paths:dismiss` |
 | `lms-paths:admin` | `lms-paths:view_all_employees` |
 | `lms-paths:admin` | `lms-paths:manage_all_employees` |
 | `lms-paths:admin` | `lms-paths:view_all_course_enrollments` |
@@ -651,6 +676,8 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `lms-paths:admin` | `lms-paths:manage_all_learning_path_assignments` |
 | `lms-paths:admin` | `lms-paths:view_all_learning_plans` |
 | `lms-paths:admin` | `lms-paths:manage_all_learning_plans` |
+| `lms-paths:admin` | `lms-paths:view_all_learning_recommendations` |
+| `lms-paths:admin` | `lms-paths:manage_all_learning_recommendations` |
 
 **Processes wired:**
 

@@ -66,6 +66,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Klue, Crayon, Highspot, Showpad, Seismic, Aha! Roadmaps Create, Pendo Adopt, Reprise
 - **Adjacency:** PROD-MGMT, CRM, GTM-PLAN, REV-INTEL
 - **Candidate capabilities:** launch planning, GTM coordination, messaging and positioning, sales enablement content, competitive intelligence, win/loss interviews, persona management
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -82,6 +83,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** LaunchDarkly, Statsig, Optimizely Web Experimentation, Flagsmith, Split.io, Eppo, GrowthBook, Amplitude Experiment, ConfigCat
 - **Adjacency:** PROD-MGMT, DXP, VSDP, SPM
 - **Candidate capabilities:** feature flag management, experimentation orchestration, A/B test cohort assignment, kill-switch operations, gradual rollout
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -97,6 +99,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Manhattan WMS, Blue Yonder WMS, Korber One Warehouse, Softeon WMS, HighJump, Logiwa
 - **Adjacency:** INV-MGMT, OMS, SCP, FIN
 - **Candidate capabilities:** picking, packing, slotting, wave planning, RF / scanner workflows, location-grain stock movement, bin management
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -111,6 +114,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** o9, Kinaxis, Anaplan SCP, Blue Yonder Demand, Logility, ToolsGroup
 - **Adjacency:** INV-MGMT, SUPPLY-CHAIN, MFG, FIN
 - **Candidate capabilities:** demand forecasting, S&OP, MRP-light, inventory optimization, supply planning
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -126,6 +130,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Marqeta, Stripe Issuing, Highnote, Lithic, Adyen Issuing
 - **Adjacency:** SPEND-MGMT, FIN, AP-AUTO
 - **Candidate capabilities:** card BIN sponsorship, KYB underwriting, card-program ledger, dispute and chargeback handling, statement generation, interchange revenue tracking
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -140,6 +145,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Metronome, Orb, Lago, Amberflo, m3ter
 - **Adjacency:** SUB-MGMT, FINOPS, APIM, CPQ
 - **Candidate capabilities:** event ingestion at scale, real-time aggregation, rating engines, usage-based pricing models, hybrid (recurring + usage) billing primitives
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -154,6 +160,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Avalara, Vertex, Sovos, TaxJar, Anrok, Stripe Tax
 - **Adjacency:** SUB-MGMT, FIN, B2C-COMM, CPQ
 - **Candidate capabilities:** real-time tax determination, nexus tracking, tax exemption certificates, jurisdictional filing, VAT/GST registration, marketplace facilitator compliance
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -168,6 +175,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Stripe Payments, Adyen, Braintree, Worldpay, Spreedly, Primer
 - **Adjacency:** SUB-MGMT, B2C-COMM, FIN, AP-AUTO
 - **Candidate capabilities:** card vaulting and tokenization, payment method routing, 3DS authentication orchestration, dispute and chargeback management, alternative payment methods, smart routing
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -182,6 +190,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Pricefx, PROS Pricing, Vendavo Pricing, Zilliant, Competera
 - **Adjacency:** CPQ, FIN, PIM, REV-INTEL
 - **Candidate capabilities:** AI price optimization, price waterfall analysis, deal scoring, segmentation pricing, list-price management, margin analytics
+- **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -196,6 +205,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Maxio SaaSOptics, Sage Intacct ARC, Leeyo (Zuora RevPro), RightRev, Trullion
 - **Adjacency:** SUB-MGMT, FIN, CPQ, AUDIT
 - **Candidate capabilities:** performance obligation modeling, transaction price allocation, contract modification accounting, standalone selling price (SSP) estimation, deferred revenue waterfall, RevRec audit trails
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -210,6 +220,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Salesforce B2B Commerce Cloud, Adobe Commerce, BigCommerce B2B, OroCommerce, SAP Commerce Cloud
 - **Adjacency:** CPQ, OMS, PIM, FIN, SUB-MGMT
 - **Candidate capabilities:** buyer self-serve catalog, customer-specific pricing storefronts, punchout catalogs, self-serve quote-to-order, account hierarchies in storefront
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -225,6 +236,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Weights and Biases, MLflow, Comet ML, Domino Data Lab, Neptune.ai, ClearML, Iguazio, DataRobot MLOps
 - **Adjacency:** DATA-AI-PLAT, AIOPS, DCG, OBS
 - **Candidate capabilities:** experiment tracking, model registry, model deployment pipelines, model monitoring, drift detection, model lineage
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -240,6 +252,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Credo AI, Holistic AI, Fairly AI, Monitaur, Saidot, IBM watsonx.governance, ServiceNow AI Control Tower
 - **Adjacency:** DATA-AI-PLAT, GRC, DCG, AUDIT
 - **Candidate capabilities:** AI inventory, model risk classification, bias evaluation, EU AI Act conformity, model cards, policy enforcement, AI incident tracking
+- **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -254,6 +267,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Tecton, Feast, Hopsworks, Featureform, Databricks Feature Store, Vertex AI Feature Store, SageMaker Feature Store
 - **Adjacency:** DATA-AI-PLAT, MLOPS, METRICS-LAYER
 - **Candidate capabilities:** online feature serving, offline training feature stores, feature pipelines, point-in-time correctness, feature monitoring
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -268,20 +282,23 @@ the bottom are the resolved history.
 - **Vendor evidence:** LangSmith, Langfuse, Arize Phoenix, Helicone, Humanloop, PromptLayer, Weights and Biases Prompts, TruEra
 - **Adjacency:** DATA-AI-PLAT, MLOPS, AI-GOV, OBS
 - **Candidate capabilities:** prompt versioning, LLM tracing and evaluation, prompt regression testing, token cost monitoring, RAG retrieval evaluation
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
 ### CSPM — Cloud Security Posture Management
 
-- **Mention count:** 1
+- **Mention count:** 2
 - **First surfaced:** 2026-05-30 (DSPM audit 2026-05-30)
-- **Most recent:** 2026-05-30 (DSPM audit 2026-05-30)
+- **Most recent:** 2026-06-17 (Qualys coverage review 2026-06-17)
 - **Surfaced by:**
   - 2026-05-30 DSPM audit 2026-05-30
+  - 2026-06-17 Qualys coverage review 2026-06-17
 - **Vendor evidence:** Wiz, Palo Alto Prisma Cloud, Orca Security, Lacework, Check Point CloudGuard, Microsoft Defender for Cloud
 - **Adjacency:** DSPM, CNAPP, CIEM, SECOPS, GRC
 - **Candidate capabilities:** cloud misconfiguration detection, CIS benchmarks, multi-cloud control plane audit, compliance framework mapping, infrastructure drift detection
+- **Estimated Semantius score:** ~45% strict (est.): cloud-config fetch and CIS-benchmark compute dominate; findings and remediation tracking are the CRUD slice
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -296,6 +313,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Sonrai Security, Saviynt CIEM, Ermetic (Tenable), Microsoft Entra Permissions Management, Britive, Authomize (Delinea)
 - **Adjacency:** DSPM, IGA, CSPM, CNAPP, SECOPS
 - **Candidate capabilities:** cloud permission rightsizing, identity blast-radius analysis, least-privilege enforcement for cloud IAM, dormant identity cleanup, just-in-time access for cloud roles
+- **Estimated Semantius score:** ~55% strict (auto-est.): reads cloud IAM (external) + blast-radius analysis.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -310,6 +328,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Cyera DDR, Dig Security (Palo Alto Prisma), Sentra DDR, Symmetry Systems DataGuard, Varonis DatAlert
 - **Adjacency:** DSPM, DLP, SECOPS, SIEM
 - **Candidate capabilities:** real-time data-access anomaly detection, data exfil alerting, sensitive-data activity monitoring, automated containment of compromised data stores
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -324,6 +343,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Wiz AI-SPM, Prisma AIRS (Palo Alto), Lasso Security, Protect AI, HiddenLayer, CalypsoAI
 - **Adjacency:** DSPM, CSPM, AI-GOVERNANCE, SECOPS
 - **Candidate capabilities:** LLM model inventory, training-data sensitivity discovery, prompt-injection detection, AI supply-chain risk, model-access audit
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -338,6 +358,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Semarchy xDM, TIBCO EBX, Stibo Reference Data, Collibra Reference Data, Informatica Reference Data Management
 - **Adjacency:** MDM, DCG, FIN, DATA-AI-PLAT
 - **Candidate capabilities:** code list management, hierarchy management, cross-reference mapping, jurisdictional code sets, controlled vocabularies, currency codes, country codes, GL accounts as reference data
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -352,6 +373,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Mediaocean Spectra/Prisma, Smartly.io, Basis Technologies, AdSwerve, Centro Basis
 - **Adjacency:** AGENCY-MGMT, ADV-AD-TECH, FIN
 - **Candidate capabilities:** media plan authoring, insertion order issuance, broadcast and digital placement, commission and markup billing, reconciliation against vendor invoices, post-buy reporting
+- **Estimated Semantius score:** ~76% strict (auto-est.): mostly internal CRUD; external drag = non-email channel, payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -366,6 +388,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** ServiceTitan, Housecall Pro, Workiz, Jobber, FieldEdge, BigChange
 - **Adjacency:** FSM, CRM, FIN
 - **Candidate capabilities:** vertical home-services workflows, residential dispatch, consumer-grade invoicing, membership programs, on-site payment capture, lead generation tie-ins
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -381,6 +404,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Ziflow, Filestage, Approval Studio, GoVisually, ProofHub, Aproove
 - **Adjacency:** AGENCY-MGMT, DAM, MRM
 - **Candidate capabilities:** annotated review of creative deliverables, multi-round client approval workflow, version comparison, brand compliance check, approval routing
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = text generation.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -395,6 +419,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Veryfi, Taggun, Rossum, Klippa, AWS Textract, Google Document AI
 - **Adjacency:** EXPENSE, AP-AUTO, RPA-OCR
 - **Candidate capabilities:** image OCR, receipt-line item extraction, merchant matching, currency detection, duplicate detection
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -409,6 +434,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Attentive, Postscript, Klaviyo SMS, Sinch, Community
 - **Adjacency:** MA, CDP, B2C-COMM
 - **Candidate capabilities:** SMS subscriber acquisition, conversational SMS, MMS campaigns, two-way SMS, shortcode and toll-free messaging, TCPA consent management
+- **Estimated Semantius score:** ~84% strict (auto-est.): mostly internal CRUD; external drag = non-email channel.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -423,6 +449,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** SendGrid, Postmark, Resend, Mailgun, AWS SES, Sparkpost
 - **Adjacency:** MA, B2C-COMM, SUB-MGMT, CSM
 - **Candidate capabilities:** transactional email send API, SMTP relay, deliverability monitoring, dedicated IP warmup, bounce and complaint handling, webhook event streaming
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -438,6 +465,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Smartling, Lokalise, Phrase, Crowdin, memoQ, Transifex
 - **Adjacency:** HCMS, DXP, WEB-CONTOPS, B2C-COMM, LMS
 - **Candidate capabilities:** translation memory, glossary management, machine translation orchestration, translator workbench, vendor and freelancer marketplace, in-context translation
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -452,6 +480,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Honeywell Forge Building Operations, Siemens Desigo CC, Schneider EcoStruxure Building Operation, Johnson Controls OpenBlue, Spacewell IoT
 - **Adjacency:** IWMS, REAL-EST, ESG, EAM
 - **Candidate capabilities:** HVAC scheduling, BACnet/Modbus device integration, occupancy sensor integration, energy meter ingestion, fault detection and diagnostics, building automation control
+- **Estimated Semantius score:** ~30% strict (auto-est.): external action is the product (device/IoT telemetry, external data fetch, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -467,6 +496,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Ninetailed, Uniform, Optimizely Personalization, Dynamic Yield, Adobe Target, Mutiny
 - **Adjacency:** HCMS, DXP, MA, B2C-COMM, CDP
 - **Candidate capabilities:** audience and segment evaluation, content variant authoring, experimentation overlay, rule-based and AI personalization, edge-personalization
+- **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -482,6 +512,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** CrowdStrike Falcon, SentinelOne Singularity, Microsoft Defender for Endpoint, Sophos Intercept X, Bitdefender GravityZone
 - **Adjacency:** RMM, UEM, ITAM, DLP, REMOTE-ACCESS
 - **Candidate capabilities:** behavior-based threat detection, endpoint isolation, EDR telemetry collection, automated response playbooks, threat hunting
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -496,6 +527,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Tenable Nessus, Qualys VMDR, Rapid7 InsightVM, CrowdStrike Falcon Spotlight, Microsoft Defender Vulnerability Management
 - **Adjacency:** RMM, UEM, ITSM, GRC, SAM
 - **Candidate capabilities:** vulnerability scanning, CVE prioritization, remediation tracking, compensating controls, exploit-prediction scoring
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -510,6 +542,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** ConnectWise Manage Billing, Kaseya BMS, Autotask PSA Billing, SuperOps Billing, HaloPSA
 - **Adjacency:** RMM, MSP-PSA, SUB-MGMT, FIN
 - **Candidate capabilities:** per-endpoint usage metering, multi-tenant customer billing, contract-anchored quoting, automated invoicing
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -527,6 +560,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Monte Carlo, Acceldata, Bigeye, Anomalo, Soda, Sifflet, Metaplane, Datafold
 - **Adjacency:** DCG, DQ, DI, OBS
 - **Candidate capabilities:** automated freshness monitoring, schema drift detection, volume anomaly detection, distribution drift detection, lineage-based impact analysis, incident triage and root-cause analysis
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -542,6 +576,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Gable.ai, Datacontract.com, PayPal data-contract-cli, Confluent Schema Registry, Buf Schema Registry
 - **Adjacency:** DCG, DI, DQ, DATA-AI-PLAT
 - **Candidate capabilities:** contract authoring, schema versioning, contract enforcement at producer, breaking-change detection, consumer-impact notification
+- **Estimated Semantius score:** ~88% strict (auto-est.): schema/contract CRUD; 'detection' is not ML.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -556,6 +591,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** ChannelEngine, Rithum (ChannelAdvisor), Mirakl Connect, Productsup, Feedonomics
 - **Adjacency:** PIM, B2C-COMM, OMS, B2B-COMMERCE
 - **Candidate capabilities:** marketplace seller account orchestration, per-marketplace listing optimization, inventory and order sync across marketplaces, rejected listing remediation queues, fee and commission reconciliation, marketplace performance analytics
+- **Estimated Semantius score:** ~66% strict (auto-est.): external marketplace API sync/listing per channel.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -571,6 +607,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** MentorcliQ, Together, PushFar, Chronus, Qooper
 - **Adjacency:** TALENT-MGMT, HCM, LMS, EMP-EXP, TLNT-INTEL
 - **Candidate capabilities:** mentor-mentee matching, mentorship program orchestration, session tracking, mentorship outcome measurement, group mentoring
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -586,6 +623,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Bonusly, Kudos, Nectar, Workhuman, Achievers, Awardco
 - **Adjacency:** TALENT-MGMT, EMP-EXP, HCM, COMP-MGMT
 - **Candidate capabilities:** peer-to-peer recognition, points-based rewards, reward catalog, social recognition feeds, milestone celebrations, recognition analytics
+- **Estimated Semantius score:** ~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -600,6 +638,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Shareworks (Morgan Stanley at Work), J.P. Morgan Workplace Solutions, Carta Equity Plans, Pulley Equity Plans
 - **Adjacency:** CAP-TABLE, COMP-MGMT, HCM
 - **Candidate capabilities:** equity grant proposal, grant acceptance, vesting administration, exercise workflow, tax-surface reporting, ESPP enrollment
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -614,6 +653,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Siemens Desigo CC, Johnson Controls Metasys, Honeywell Niagara, Schneider EcoStruxure, ABB Ability Building Ecosystem
 - **Adjacency:** REAL-EST, IWMS, ESG, OT
 - **Candidate capabilities:** HVAC control, lighting automation, energy submetering, BACnet/Modbus integration, fault detection and diagnostics, occupancy-driven setpoint adjustment
+- **Estimated Semantius score:** ~37% strict (auto-est.): external action is the product (device/IoT telemetry, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -628,6 +668,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Climate FieldView Nitrogen Advisor, Granular Agronomy, AgWorld agronomy notes, Taranis, Sentera, FarmLogs
 - **Adjacency:** FMIS, FOOD-TRACE, TELEMATICS
 - **Candidate capabilities:** soil test results, soil zones, weather observations, agronomic recommendations, NDVI imagery, scouting reports, planting-window advisors, spray-window advisors, variety selection
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (external data fetch); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -642,6 +683,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** CyberArk Identity, Delinea, BeyondTrust, Saviynt PAM, Senhasegura
 - **Adjacency:** IGA, ITSM, SECOPS, GRC
 - **Candidate capabilities:** privileged session management, credential vaulting, just-in-time elevation, session recording, account rotation, break-glass governance
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -656,6 +698,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Liferay DXP, Salesforce Experience Cloud, Backbase Engagement Platform, OutSystems, Microsoft Power Pages, IBM HCL Digital Experience
 - **Adjacency:** DXP, CRM, CSM, B2C-COMM, IDP
 - **Candidate capabilities:** authenticated portal pages, portal user provisioning, role-based portal access, portal widgets and gadgets, partner / customer / employee portals, single sign-on integration
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -670,6 +713,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** BlackLine, FloQast, Trintech Cadency, Numeric, Numeral
 - **Adjacency:** FIN, EPM, AUDIT
 - **Candidate capabilities:** balance sheet reconciliation, journal entry workflow, close task management, intercompany matching, flux analysis, certifications and attestations
+- **Estimated Semantius score:** ~90% strict (auto-est.): close CRUD; 'intercompany matching' is data matching, not ML.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -685,6 +729,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Kyriba, GTreasury, FIS Quantum, ION Treasury, Coupa Treasury
 - **Adjacency:** FIN, EPM, SPEND-MGMT, AP-AUTO
 - **Candidate capabilities:** cash positioning and forecasting, in-house banking, bank account management, payment factory, FX hedging, debt and investment management, intercompany netting
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -699,6 +744,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Thomson Reuters ONESOURCE Tax Provision, Vertex Tax Provision, Wolters Kluwer CCH Tagetik, Longview Tax, Bloomberg Tax Provision
 - **Adjacency:** FIN, EPM, AUDIT
 - **Candidate capabilities:** ASC 740 income tax provision, deferred tax calculation, effective tax rate analysis, return to provision reconciliation, multi-jurisdictional tax disclosures, transfer pricing documentation
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -713,6 +759,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** OneStream Financial Close, Oracle FCCS, SAP Group Reporting, Wolters Kluwer CCH Tagetik Consolidation, BlackLine Smart Close
 - **Adjacency:** FIN, EPM, AUDIT, ESG
 - **Candidate capabilities:** multi-entity consolidation, intercompany elimination, currency translation, minority interest accounting, regulatory consolidated reporting, IFRS and GAAP reporting, segment reporting
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -727,6 +774,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** CreatorIQ, Aspire, Grin, Klear (Meltwater), Upfluence, Mavrck, Traackr
 - **Adjacency:** SMM, MA, CRM, AGENCY-MGMT
 - **Candidate capabilities:** influencer discovery, creator outreach, campaign brief management, deliverables tracking, payment workflow, FTC disclosure compliance, content rights and licensing
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -741,6 +789,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Brandwatch, Talkwalker, Meltwater, NetBase Quid, Sprinklr Insights, Synthesio (Ipsos), Awario
 - **Adjacency:** SMM, CDP, REV-INTEL, GRC
 - **Candidate capabilities:** boolean query authoring across social, news and forums, sentiment classification at scale, share-of-voice tracking, crisis early-warning, image and video brand-logo detection, audience demographics inference
+- **Estimated Semantius score:** ~36% strict (auto-est.): external action is the product (external data fetch, ML/AI compute, non-email channel); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -755,6 +804,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Bombora, 6sense, G2 Buyer Intent, ZoomInfo Intent, Demandbase, Cognism
 - **Adjacency:** SALES-ENG, MA, CDP, ACCT-PLAN, ABM
 - **Candidate capabilities:** intent topic taxonomy, account-level intent scoring, surge signal detection, third-party intent aggregation, first-party intent capture, intent-to-account matching
+- **Estimated Semantius score:** ~32% strict (auto-est.): third-party intent aggregation + scoring is the product.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -769,6 +819,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Chili Piper, Calendly, Outreach Meetings, Salesloft Calendar, HubSpot Meetings, Cal.com
 - **Adjacency:** SALES-ENG, CRM, MA, CSM
 - **Candidate capabilities:** availability window publishing, round-robin routing, lead-to-rep matching, meeting confirmation and reminders, scheduling-link distribution, calendar federation
+- **Estimated Semantius score:** ~80% strict (auto-est.): calendar federation (external) + light routing.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -783,6 +834,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Netskope CASB, Zscaler ZIA, Microsoft Defender for Cloud Apps, Palo Alto Networks Prisma Access, Skyhigh Security, Lookout CASB, Forcepoint CASB
 - **Adjacency:** DLP, DSPM, SECOPS, IGA, NETSEC
 - **Candidate capabilities:** sanctioned and unsanctioned SaaS discovery, OAuth/API governance for SaaS, inline cloud traffic inspection, SaaS-level DLP, malware scanning for cloud uploads, shadow IT discovery, SaaS user activity monitoring
+- **Estimated Semantius score:** ~42% strict (auto-est.): external action is the product (external infra/runtime); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -797,6 +849,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Zscaler SSE, Netskope SSE, Palo Alto Prisma Access, Cisco Umbrella, Cloudflare One, Microsoft Entra Internet Access, Forcepoint ONE
 - **Adjacency:** DLP, CASB, SECOPS, ZTNA, NETSEC
 - **Candidate capabilities:** secure web gateway, ZTNA enforcement, inline TLS inspection, edge DLP, FWaaS, SD-WAN integration, unified policy across web/SaaS/private apps
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -811,6 +864,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Bitsight, SecurityScorecard, RiskLens, ThreatConnect, Kovrr, X-Analytics, Safe Security
 - **Adjacency:** GRC, SECOPS, TPRM, OP-RES
 - **Candidate capabilities:** quantitative risk scoring, FAIR-based loss modeling, vendor risk scoring, dollarized cyber risk, control-effectiveness scoring, exposure analytics
+- **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -825,6 +879,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Verint Workforce Management, NICE IEX WFM, Calabrio ONE, Genesys Cloud Workforce Management, Aspect Workforce Management, Playvox WFM
 - **Adjacency:** WFM, CCAAS, PA
 - **Candidate capabilities:** contact-center demand forecasting (Erlang-C), intraday adherence, agent shrinkage modeling, multi-channel scheduling, real-time adherence, WEM (workforce engagement management)
+- **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -839,6 +894,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Relativity, Everlaw, Logikcull, DISCO, Reveal, Nuix, Casepoint
 - **Adjacency:** LEGAL-PRACT-MGMT, LSD, GRC, ECM
 - **Candidate capabilities:** ESI collection, processing, review, predictive coding, production, hosted review, native review, redaction
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -853,6 +909,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** NAVEX EthicsPoint, OneTrust Ethics, Convercent (OneTrust), Whispli, Speakfully, EQS Integrity Line, Syntrio, Lighthouse Services
 - **Adjacency:** GRC, HRSD, AUDIT, LSD
 - **Candidate capabilities:** anonymous reporting intake, case triage and investigation, retaliation protection workflow, regulatory hotline compliance (EU Whistleblower Directive, SOX 806), case-outcome analytics, hotline-to-investigation handoff
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -867,6 +924,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Exterro Legal Hold, Onna, Zapproved, Logikcull Hold, Mitratech HoldsPro
 - **Adjacency:** LEGAL-PRACT-MGMT, LSD, EDISCOVERY, ECM, HCM
 - **Candidate capabilities:** custodian identification, hold notice issuance, custodian acknowledgement, in-place preservation, hold release, audit trail
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -881,6 +939,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** NAVEX PolicyTech, OneTrust Policy Management, ConvergePoint Policy Management, MetricStream Policy Management, PowerDMS, Mitratech PolicyHub, MyComplianceOffice
 - **Adjacency:** GRC, HRSD, LSD, LMS
 - **Candidate capabilities:** policy authoring with version control, policy lifecycle workflow (draft, review, approve, publish, retire), policy mapping to regulations and controls, policy attestation campaigns, policy exception management, policy template libraries
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -895,6 +954,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Westlaw, LexisNexis, Bloomberg Law, Fastcase, Casetext, Vincent AI, Harvey
 - **Adjacency:** LEGAL-PRACT-MGMT, LSD, KMS
 - **Candidate capabilities:** case law search, statute lookup, citator analysis, secondary-source mining, AI-assisted brief generation, jurisdictional filtering
+- **Estimated Semantius score:** ~72% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute, text generation.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -909,6 +969,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Thomson Reuters Regulatory Intelligence, Wolters Kluwer OneSumX, RegEd, Compliance.ai, Ascent RegTech, ComplyAdvantage, Reuters Compliance Learning
 - **Adjacency:** GRC, LSD, AUDIT, BANK-OPS
 - **Candidate capabilities:** regulatory feed ingestion, regulation-to-obligation mapping, change-alert subscription management, jurisdictional impact analysis, regulator-source curation, obligation library maintenance
+- **Estimated Semantius score:** ~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -923,6 +984,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Anaqua, CPA Global Memotech, IPfolio, Clarivate Derwent, Patsnap, FoundationIP
 - **Adjacency:** LEGAL-PRACT-MGMT, LSD, CLM, AUDIT
 - **Candidate capabilities:** patent docketing, trademark portfolio management, IP renewals and annuities, prior-art search, IP licensing, infringement watch, IP valuation
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -937,6 +999,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Stackla (Nosto), Yotpo Visual UGC, TINT, Bazaarvoice, Pixlee TurnTo, Curalate (Bazaarvoice)
 - **Adjacency:** SMM, B2C-COMM, MA, CDP
 - **Candidate capabilities:** UGC rights management, hashtag and mention collection, UGC moderation queue, UGC galleries for storefront and email embedding, creator outreach for re-use rights, attribution tracking
+- **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -951,6 +1014,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Firstup, Haiilo, Staffbase, Workshop, Poppulo, Microsoft Viva Engage, Workvivo
 - **Adjacency:** EMP-EXP, INTRANET, HCM, COLLAB-GOV
 - **Candidate capabilities:** targeted multi-channel employee messaging, comms campaign orchestration, leader-comms cadence, comms analytics, attestation tracking, frontline reach
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -965,6 +1029,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Oracle PCMCS, SAP Profitability and Performance Management, OneStream PCM, Anaplan Profitability, IBM Cognos Cost Allocation
 - **Adjacency:** EPM, FIN, FINOPS
 - **Candidate capabilities:** activity-based costing, profitability allocation, cost driver modeling, customer and product profitability analysis, transfer pricing allocation, multi-step allocations
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -979,6 +1044,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Workiva, CCH Tagetik Disclosure, Certent CDM, IRIS CARBON, Toppan Merrill DisclosureNet
 - **Adjacency:** EPM, FIN, AUDIT, ESG
 - **Candidate capabilities:** narrative report authoring, XBRL tagging, statutory filing preparation, ESEF iXBRL submission, board-pack assembly, controlled narrative versioning
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = text generation.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -993,6 +1059,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Iron Mountain ITAD, Sims Lifecycle Services, Wisetek, ERI Direct, TES (an SK ecoplant company)
 - **Adjacency:** HAM, ITAM, GRC, ESG
 - **Candidate capabilities:** secure data sanitization, chain of custody, e-waste recycling logistics, certificate of destruction generation, fair-market resale, regulatory disposal reporting (RoHS, WEEE, R2v3, e-Stewards)
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1008,6 +1075,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** MasterControl, ETQ Reliance, Sparta Systems TrackWise, Veeva QualityOne, AssurX, Honeywell QMS
 - **Adjacency:** FSQM, MFG-OPS, FDA-VAL, GRC, AUDIT
 - **Candidate capabilities:** document control, nonconformance and CAPA management, change control, training records, supplier quality management, complaint handling, audit management, validation lifecycle
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1022,6 +1090,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Lytx DriveCam, Samsara AI Dash Cam, Motive AI Dashcam, Nauto, Netradyne Driveri
 - **Adjacency:** TELEMATICS, FLEET-MGMT, INS-CLAIMS
 - **Candidate capabilities:** in-cab AI risk detection, driver-facing distraction monitoring, collision-replay extraction, exoneration video retrieval, coaching clip routing
+- **Estimated Semantius score:** ~30% strict (auto-est.): external action is the product (device/IoT telemetry, ML/AI compute, non-email channel); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1036,6 +1105,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Omnitracs One, Motive Compliance, Geotab Drive, KeepTruckin, EROAD
 - **Adjacency:** TELEMATICS, FLEET-MGMT, GRC, HCM
 - **Candidate capabilities:** FMCSA-registered ELD certification, HOS log capture, DVIR workflow, IFTA jurisdiction allocation, RODS audit packet, driver-coaching for HOS violations
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1050,6 +1120,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Ex Libris Leganto, Atlas Systems Ares, Talis Aspire, Rialto, Bookshelf
 - **Adjacency:** LIB-MGMT, LMS, HCMS
 - **Candidate capabilities:** course reading list authoring, license cleared materials sourcing, fair-use checks, instructor reading list management, persistent linking to e-resources
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1064,6 +1135,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** OverDrive Libby, Hoopla, Axis 360, cloudLibrary, Boundless, BorrowBox
 - **Adjacency:** LIB-MGMT, B2C-COMM, DRM
 - **Candidate capabilities:** DRM-protected e-book and audiobook lending, simultaneous-use license enforcement, digital hold queues, patron authentication via library card, copyright limited concurrent lending
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1078,6 +1150,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Springshare LibCal, Skedda, EMS Software, Robin, OfficeRnD, YArooms
 - **Adjacency:** LIB-MGMT, IWMS, REAL-EST, EMP-EXP
 - **Candidate capabilities:** study room reservations, meeting room booking, equipment reservations, recurring bookings, waitlists, occupancy capacity rules, conflict resolution
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1092,6 +1165,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** John Deere Operations Center, Trimble Ag, AGCO Fuse, Topcon Ag, CNH Industrial AFS Connect
 - **Adjacency:** TELEMATICS, FMIS, FLEET-MGMT
 - **Candidate capabilities:** ag-machinery telemetry, variable-rate prescription distribution, precision-agriculture data ingestion, isobus / can-bus farm-equipment data
+- **Estimated Semantius score:** ~37% strict (auto-est.): external action is the product (device/IoT telemetry, external data fetch); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1106,6 +1180,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Fairmarkit, Globality, ORO Labs, Una, Vroozi
 - **Adjacency:** S2P, SPEND-MGMT, SUP-LIFE
 - **Candidate capabilities:** tail spend automation, low-touch sourcing, supplier discovery for one-off purchases, AI-driven category routing, expense aggregation
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1120,6 +1195,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** SS&C Transfer Agency, FIS Investran TA, BNY Mellon TA, State Street TA
 - **Adjacency:** FUND-ADMIN, BANK-OPS
 - **Candidate capabilities:** shareholder recordkeeping, fund share issuance/redemption, dividend distributions, 1099/tax reporting
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1134,6 +1210,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** LeanIX (SAP), Ardoq, Software AG Alfabet, MEGA HOPEX, BiZZdesign Horizzon, Avolution ABACUS, Sparx Enterprise Architect, Orbus iServer
 - **Adjacency:** APM, BPA, BUSINESS-CAPABILITY-MAP, SPM, ITSM, CMDB
 - **Candidate capabilities:** EA repository and metamodel, ArchiMate/TOGAF modeling, application landscape modeling and rationalization, business architecture / business capability modeling, capability heatmaps, technology standards governance, technology radar, architecture roadmapping and transformation planning, IT cost transparency
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** PASS. Dedicated software market (Gartner "Enterprise Architecture Tools" Magic Quadrant) with 7+ independent pure-play vendors whose flagship product IS an EA suite (LeanIX, Ardoq, Software AG Alfabet, MEGA HOPEX, BiZZdesign, Avolution ABACUS, Sparx EA). Clears the three-independent-vendor bar decisively.
 - **Status:** pending-review (scoped 2026-06-15; Phase 0 at `.tmp_deploy/EA-phase0-2026-06-15.md`; promote q-file with 4 b2 calls at `audits/EA/q-EA.md` awaiting answers)
 - **Decision:** _(recommended: promote-as-domain as the cross-layer umbrella, bounded so it consumes APM and BPA rather than re-mastering them. Final call plus the APM/BPA boundary await user sign-off; this is a market-shape b2.)_
@@ -1149,6 +1226,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** FICO Decision Modeler, Camunda DMN, Trisotech DMN Modeler, Sparkling Logic, IBM Operational Decision Manager
 - **Adjacency:** BPA, IBPMS, GRC
 - **Candidate capabilities:** DMN decision modeling, business rule authoring, decision table management, rule execution
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1163,6 +1241,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** HR Acuity, NAVEX EthicsPoint, AllVoices, Convercent (OneTrust), Speakfully, Vault Platform
 - **Adjacency:** HRSD, GRC, LEGAL-PRACT-MGMT
 - **Candidate capabilities:** intake of complaints (harassment, discrimination, retaliation), investigator workflow, anonymity and confidentiality controls, statutory whistleblower reporting, investigation interviews, evidence chain of custody, case outcome tracking
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1177,6 +1256,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Lightcast, SkyHive, Burning Glass Technologies, Emsi, Revelio Labs
 - **Adjacency:** SKILLS-MGMT, SWP, TLNT-INTEL, COMP-MGMT
 - **Candidate capabilities:** external skill demand inference, salary benchmarking from job postings, occupational taxonomy ingestion, talent-supply heatmap, regional skill availability scoring
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1191,6 +1271,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** BNY Mellon AIS, State Street AIS, Citco Depositary, IQ-EQ Depositary, Apex Group
 - **Adjacency:** FUND-ADMIN, BANK-OPS
 - **Candidate capabilities:** AIFMD-Article-21 oversight, asset safekeeping, cash-flow monitoring, ownership verification, AIFM monitoring
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1205,6 +1286,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Allvue Loan Admin, SS&C Precision LM, Cloudmargin, Black Mountain BMS-WSO, Solvas
 - **Adjacency:** FUND-ADMIN, FIN
 - **Candidate capabilities:** loan-level cash management, agent notices, covenant tracking, syndicated-loan position keeping, secondary trade settlement
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1219,6 +1301,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Carta GP Books, Allvue GP Admin, AlterDomus, SS&C GlobeOp
 - **Adjacency:** FUND-ADMIN, FIN
 - **Candidate capabilities:** GP entity books, management-fee tracking, carry allocation between partners, employee profit-sharing, GP cap-table
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1233,6 +1316,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Confluence Unity, Vermilion Reporting Suite, DiligentRegtek, ComplySci, AlterDomus, Pregin Pro Reporting
 - **Adjacency:** FUND-ADMIN, GRC
 - **Candidate capabilities:** Form PF preparation, AIFMD Annex IV, CRS/FATCA, ILPA reporting templates, regulator-specific filings
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1247,6 +1331,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** K-1 Navigator, PwC K-1 Plus, Deloitte iPartner, RSM K-1 Workflow, EisnerAmper K-1
 - **Adjacency:** FUND-ADMIN, TAX-PROVISION
 - **Candidate capabilities:** Schedule K-1 generation, K-3 international supplement, state K-1 schedules, LP tax-package portal delivery
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1261,6 +1346,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Loop Returns, Happy Returns, Narvar Return and Exchange, AfterShip Returns, ReturnGO, Returnly
 - **Adjacency:** OMS, B2C-COMM, CSM, FIN
 - **Candidate capabilities:** self-serve return portal, return reason capture, exchange-first incentives, return label generation, in-store and 3PL drop-off network, refund and exchange orchestration, instant credit, return fraud scoring
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1275,6 +1361,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** ShipStation, ShipEngine, EasyPost, Shippo, Sendcloud, Stamps.com, ProShip, Logistyx, ShipperHQ
 - **Adjacency:** OMS, B2C-COMM, INV-MGMT, FIN
 - **Candidate capabilities:** multi-carrier rate-shop, label printing, manifesting, tracking number normalization, address validation, customs documentation, parcel insurance, branded tracking pages, carrier contract abstraction
+- **Estimated Semantius score:** ~64% strict (auto-est.): external multi-carrier rate/label/tracking APIs dominate.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1289,6 +1376,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** AfterShip, Narvar Track, Route, parcelLab, Wonderment, Malomo, Shop App tracking
 - **Adjacency:** OMS, B2C-COMM, CSM, CRM, MA
 - **Candidate capabilities:** branded tracking pages, predictive delivery ETA, shipment exception alerts, customer notification orchestration, delivery experience surveys, package protection, post-purchase upsell, replacement-order triggers
+- **Estimated Semantius score:** ~70% strict (auto-est.): carrier-tracking fetch + ETA prediction.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1303,6 +1391,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Microsoft Intune App Protection, Hexnode MAM, Lookout MAM, Sophos Mobile, Ivanti Neurons for MDM
 - **Adjacency:** UEM, MTD, DLP, IGA
 - **Candidate capabilities:** app wrapping, app config policies, app-level data containers, conditional launch, selective wipe of corporate app data
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1317,6 +1406,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Lookout, Zimperium, Pradeo, Check Point Harmony Mobile, Jamf Threat Defense (Wandera), SentinelOne Mobile
 - **Adjacency:** UEM, EDR, SECOPS, DLP
 - **Candidate capabilities:** on-device app vetting, network attack detection, OS exploit detection, phishing URL filtering, side-loaded-app detection, jailbreak/root detection
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1331,20 +1421,23 @@ the bottom are the resolved history.
 - **Vendor evidence:** Nexthink, 1E Tachyon, Lakeside SysTrack, Riverbed Aternity, ControlUp Edge DX
 - **Adjacency:** UEM, ITSM, OBS, EMP-EXP
 - **Candidate capabilities:** endpoint telemetry collection, application performance score, user sentiment polls, proactive remediation playbooks, IT experience analytics
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
 ### PATCH-MGMT — Patch and Vulnerability Remediation Management
 
-- **Mention count:** 1
+- **Mention count:** 2
 - **First surfaced:** 2026-05-30 (UEM audit 2026-05-30)
-- **Most recent:** 2026-05-30 (UEM audit 2026-05-30)
+- **Most recent:** 2026-06-17 (Qualys coverage review 2026-06-17)
 - **Surfaced by:**
   - 2026-05-30 UEM audit 2026-05-30
+  - 2026-06-17 Qualys coverage review 2026-06-17
 - **Vendor evidence:** Automox, Action1, NinjaOne Patching, Tanium Patch, BigFix, Ivanti Patch, Syxsense
 - **Adjacency:** UEM, RMM, ITSM, VULN-MGT
 - **Candidate capabilities:** OS patch catalog management, third-party app patching, patch ring rollouts, patch deviation reporting, mandated reboot orchestration
+- **Estimated Semantius score:** ~50% strict (est.): patch-deploy side-effect and vuln-to-patch correlation compute; catalog, scheduling, and compliance-status are CRUD
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1359,6 +1452,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Island Browser, Talon Cyber Security (Palo Alto), LayerX, Surf Security, Microsoft Edge for Business, Google Chrome Browser Cloud Management
 - **Adjacency:** UEM, ZTNA, DLP, SECOPS
 - **Candidate capabilities:** browser policy enforcement, last-mile DLP, isolation of unmanaged SaaS, extension allowlisting, browser-level conditional access
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1373,6 +1467,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** JupiterOne, Steampipe, Faros AI, Wiz inventory, Orca inventory, AWS Config, Azure Resource Graph
 - **Adjacency:** CMDB, CSPM, DSPM, FINOPS, ITAM
 - **Candidate capabilities:** cloud-native CI inventory, identity-graph linking, multi-cloud resource normalization, real-time change feed
+- **Estimated Semantius score:** ~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1387,6 +1482,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Tanium, Qualys CSAM, Red Hat Insights Compliance
 - **Adjacency:** CMDB, GRC, CSPM, SECOPS
 - **Candidate capabilities:** continuous configuration scoring, baseline-to-control mapping, compliance reporting against frameworks
+- **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1401,6 +1497,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** ServiceNow CMDB IRE federations, BMC TrueSight Reconciliation, Cloudaware
 - **Adjacency:** CMDB, MDM, ITAM
 - **Candidate capabilities:** multi-CMDB reconciliation, identification rule arbitration, cross-tenant CI federation
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1415,6 +1512,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** ChargePoint Fleet, Geotab EV Suite, Samsara EV Charging, Driivz, Sparkion, AMPECO
 - **Adjacency:** FLEET-MGMT, TELEMATICS, ENERGY-MGMT
 - **Candidate capabilities:** charger inventory, charge-session telemetry, depot energy planning, charging-cost allocation, V2G readiness
+- **Estimated Semantius score:** ~37% strict (auto-est.): external action is the product (device/IoT telemetry, external data fetch); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1429,6 +1527,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Cass Information Systems, U.S. Bank Freight Payment, A3 Freight Payment, Trax Technologies, Transporeon
 - **Adjacency:** FLEET-MGMT, TMS, S2P, FIN
 - **Candidate capabilities:** invoice receipt and matching, carrier rate validation, payment processing, GL coding by lane, dispute management
+- **Estimated Semantius score:** ~68% strict (auto-est.): mostly internal CRUD; external drag = external data fetch, payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1443,6 +1542,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Confluent Cloud, Redpanda, Amazon MSK, Aiven for Kafka, StreamNative, Upstash Kafka
 - **Adjacency:** DI, DATA-AI-PLAT, IPAAS, OBS
 - **Candidate capabilities:** managed Kafka brokers, topic and partition management, schema registry integration, stream processing runtimes, exactly-once semantics, multi-region replication
+- **Estimated Semantius score:** ~40% strict (auto-est.): mostly internal CRUD; external drag = external infra/runtime.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1457,6 +1557,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Onit, SimpleLegal, Brightflag, Mitratech TeamConnect, BusyLamp, LawVu, Wolters Kluwer Passport
 - **Adjacency:** LSD, LEGAL-PRACT-MGMT, CLM, SPEND-MGMT
 - **Candidate capabilities:** matter intake routing, outside counsel guidelines, e-billing invoice review, LEDES invoice processing, matter budgeting, spend analytics, accruals, vendor scorecards, alternative-fee-arrangement tracking
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1471,6 +1572,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Resilinc, Interos, Sphera (riskmethods), Prewave, Everstream Analytics, Sayari
 - **Adjacency:** SUP-LIFE, TPRM, GRC, S2P
 - **Candidate capabilities:** n-tier supply chain mapping, supplier risk monitoring, disruption alerting, sub-tier risk discovery, geopolitical risk scoring
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1485,6 +1587,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** FrontSteps, AppFolio Condo, CINC Systems, Buildium Association, PayHOA, Vantaca
 - **Adjacency:** RE-PROP-MGMT, FIN, LSD
 - **Candidate capabilities:** owner-roster management, board governance, architectural review, dues collection, reserve studies, violation tracking, community communications
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1499,6 +1602,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Guesty, Hostaway, Lodgify, Hospitable, Hostfully, OwnerRez
 - **Adjacency:** RE-PROP-MGMT, HOSP-PMS, RE-INVEST
 - **Candidate capabilities:** channel-manager syndication, dynamic pricing, guest messaging, cleaning-team scheduling, occupancy-tax remittance, OTA payout reconciliation
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1513,6 +1617,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Provenance Ltd, IBM Food Trust, Wholechain, Everledger, Circularise, TextileGenesis, ConsenSys Treum
 - **Adjacency:** FOOD-TRACE, PLM, SUP-LIFE, ESG-PLAT
 - **Candidate capabilities:** blockchain anchoring, cross-organization chain-of-custody, immutable provenance attestation, NFC and QR consumer storytelling, regulatory token bridging, sustainability claim verification
+- **Estimated Semantius score:** ~48% strict (auto-est.): blockchain anchoring infra.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1527,6 +1632,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** HowGood, CarbonCloud, Persefoni Food, Trace One Sustainability, Foodsteps, Vaayu Food
 - **Adjacency:** FOOD-TRACE, ESG-PLAT, FSQM, FMIS
 - **Candidate capabilities:** ingredient-level carbon footprint, farm-gate emissions modeling, Scope 3 supplier-data ingest, on-pack carbon label generation, regenerative-agriculture incentive tracking
+- **Estimated Semantius score:** ~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1541,6 +1647,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Talon.One, Voucherify, Cheetah Digital Promotions, SessionM Promotions
 - **Adjacency:** LOYALTY, B2C-COMM, MA, CDP
 - **Candidate capabilities:** promo rule authoring, coupon code generation, cart-level discount evaluation, campaign budget control, fraud detection on coupon use
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1555,6 +1662,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Friendbuy, ReferralCandy, Yotpo Referrals, Mention Me, Talkable, Extole
 - **Adjacency:** LOYALTY, MA, B2C-COMM, CDP
 - **Candidate capabilities:** referral program design, advocate tracking, friend-invitee attribution, reward issuance, fraud protection on self-referrals
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1569,6 +1677,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Watershed, Sphera Product Sustainability, CarbonChain, Sweep, Makersite, Persefoni
 - **Adjacency:** ESG, PLM, SCM, PROC
 - **Candidate capabilities:** product-level LCA, supplier-data ingestion, product-footprint disclosures, customer-facing footprint queries, PEF/ISO 14067 calculation
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1583,6 +1692,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** EcoVadis, IntegrityNext, Sphera Supply Chain, Achilles, Sedex
 - **Adjacency:** ESG, PROC, SUP-LIFE, TPRM
 - **Candidate capabilities:** supplier sustainability scoring, scope-3 supplier surveys, modern-slavery diligence, supplier sustainability ratings, supplier-risk assessments
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1597,6 +1707,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Jupiter Intelligence, Cervest, Climate X, Risilience, S&P Climanomics
 - **Adjacency:** ESG, GRC, BCM, INS-PROP
 - **Candidate capabilities:** physical climate hazard modeling, transition risk scenario analysis, asset-level climate exposure, financial impact quantification, TCFD scenario disclosure
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1611,6 +1722,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Typeform, Jotform, Google Forms, Microsoft Forms, Tally, Formstack, Wufoo, Cognito Forms
 - **Adjacency:** NCDB, WORK-MGMT, B2C-COMM, DXP
 - **Candidate capabilities:** form authoring, conditional logic, payment collection, file uploads, response routing, embedded forms, anti-spam
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1625,6 +1737,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Google Sheets, Microsoft Excel Online, Quip, Equals, Rows, Causal
 - **Adjacency:** NCDB, BI, EPM, FP-A
 - **Candidate capabilities:** cell-grid editing, real-time co-editing, formula engine, charting, pivot tables, named ranges, sheet-to-sheet refs
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1639,6 +1752,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Argus Enterprise, Dyna Connections, ARGUS Taliance, REIWise, Valcre
 - **Adjacency:** RE-CRE, RE-INVEST, REAL-EST
 - **Candidate capabilities:** discounted cash flow modeling, IRR/NPV analysis, lease cash-flow modeling, comparable-sales valuation, capitalization rate analysis, multi-scenario valuation, appraisal report generation
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1653,6 +1767,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** HqO, Equiem, Rise Buildings, Lane, Bisly, Comfy, VTS Activate
 - **Adjacency:** RE-CRE, REAL-EST, IWMS, EMP-EXP
 - **Candidate capabilities:** tenant mobile app, building amenity booking, tenant communications, building event programming, work-order intake, badge and access integration, indoor wayfinding
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1667,6 +1782,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Splunk Cloud Platform, Elastic Observability, Sumo Logic, Graylog, Logz.io, Loggly
 - **Adjacency:** OBS, SIEM-rel, APM, DEM
 - **Candidate capabilities:** log ingestion, log indexing, log search, log retention policies, log archiving, log redaction
+- **Estimated Semantius score:** ~66% strict (auto-est.): log ingestion at scale (external fetch).
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1681,6 +1797,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Datadog RUM, Dynatrace Real User Monitoring, New Relic Browser, Splunk RUM, Akamai mPulse, SpeedCurve
 - **Adjacency:** OBS, DEM, APM, WEB-CONTOPS
 - **Candidate capabilities:** session replay capture, page-load performance, frontend error tracking, web vitals tracking, frustration index
+- **Estimated Semantius score:** ~55% strict (auto-est.): frontend telemetry + session-replay ingestion.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1695,6 +1812,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Enboarder, ChangeEngine, Applauz, HelloTeam, Cooleaf, Pyn
 - **Adjacency:** INTRANET, EMP-EXP, HCM, ONBOARDING
 - **Candidate capabilities:** personalized employee journey design, milestone-triggered nudges, manager-action playbooks, journey analytics, cross-system event listening, multi-channel delivery
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1709,6 +1827,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Ryan, Avalara Property Tax, Crowdreason, PTMS, Rethink Solutions, Tax Compliance Inc
 - **Adjacency:** RE-INVEST, REAL-EST, RE-CRE, FIN
 - **Candidate capabilities:** tax assessment intake, appeal case management, jurisdictional filing, tax bill payment workflow, tax obligation forecasting, parcel-level tracking
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1723,6 +1842,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Northspyre, Procore Financials, Yardi Construction, Rabbet, Built Technologies
 - **Adjacency:** RE-INVEST, REAL-EST, RE-CRE, CONSTR-MGMT, FIN
 - **Candidate capabilities:** construction budget tracking, draw request workflow, lien waiver collection, change order accounting, lender disbursement reconciliation, development pro-forma management
+- **Estimated Semantius score:** ~90% strict (auto-est.): mostly internal CRUD; external drag = e-signature.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1737,6 +1857,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Guidewire PolicyCenter, Duck Creek Policy, Sapiens IDIT Policy, Insurity, EIS Group
 - **Adjacency:** INS-CLAIMS, FIN, CSM
 - **Candidate capabilities:** policy issuance, endorsement processing, policy renewal, premium calculation, policy lifecycle workflow, agent/broker channel, party and producer management
+- **Estimated Semantius score:** ~84% strict (auto-est.): policy CRUD + premium; 'broker channel' is not infra.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1751,6 +1872,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Backstage, Port, OpsLevel, Cortex, Humanitec
 - **Adjacency:** APP-PAAS, KUBE-PLAT, VSDP, ITSM
 - **Candidate capabilities:** service catalog, software template scaffolding, golden paths, developer portal, scorecards
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1765,6 +1887,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Guidewire Underwriting Management, Duck Creek Rating, Sapiens UnderwritingPro, Earnix, Akur8, Cytora, hyperexponential
 - **Adjacency:** INS-CLAIMS, INS-POLICY-ADMIN
 - **Candidate capabilities:** risk appetite rules, rating engines, quote and bind workflow, referral routing, exposure analysis, predictive risk scoring, broker submission triage
+- **Estimated Semantius score:** ~72% strict (auto-est.): underwriting CRUD + risk scoring.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1779,6 +1902,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Cloudflare Workers, Fastly Compute, AWS Lambda@Edge, Deno Deploy, Vercel Edge Functions
 - **Adjacency:** APP-PAAS, KUBE-PLAT, OBS
 - **Candidate capabilities:** edge function deployment, geo-replicated execution, KV store at edge, request middleware, cold-start-free runtime
+- **Estimated Semantius score:** ~40% strict (auto-est.): mostly internal CRUD; external drag = external infra/runtime.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1793,6 +1917,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Guidewire BillingCenter, Duck Creek Billing, Sapiens BillingPro, Majesco Billing, Insurity Billing
 - **Adjacency:** INS-POLICY-ADMIN, INS-CLAIMS, FIN
 - **Candidate capabilities:** premium invoicing, installment plans, lockbox processing, agency commission accounting, NSF and reinstatement handling, premium-trust accounting, cash application
+- **Estimated Semantius score:** ~82% strict (auto-est.): premium billing CRUD.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1807,6 +1932,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Guidewire ReinsuranceManager, Sapiens ReinsurancePro, SAP Reinsurance Management, Verisk SequelDirect, Tigerlab
 - **Adjacency:** INS-CLAIMS, INS-UNDERWRITING, FIN
 - **Candidate capabilities:** treaty and facultative tracking, cession allocation, retrocession, reinsurance claims recovery, bordereau reporting, ceded premium accounting
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1821,6 +1947,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Harmonic, Specter, Tracxn, BoxGroup Signal, Crunchbase Pro, PitchBook (signals tier)
 - **Adjacency:** INV-CRM, PROD-MGMT
 - **Candidate capabilities:** company signal monitoring, growth-stage detection, founder change tracking, hiring-velocity alerts, fundraising news ingestion
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1835,6 +1962,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Box, Dropbox Business, Citrix ShareFile, Egnyte, Microsoft OneDrive for Business
 - **Adjacency:** ECM, WSC, DXP, DLP
 - **Candidate capabilities:** secure file sharing, mobile file access, external collaboration, file sync, link-based sharing
+- **Estimated Semantius score:** ~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1849,6 +1977,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Smarsh, Proofpoint Archive, Mimecast Archive, Global Relay, Veritas Enterprise Vault, Iron Mountain InSight
 - **Adjacency:** ECM, DLP, LSD, AUDIT, GRC
 - **Candidate capabilities:** long-term email and message archival, supervisory review for financial services, eDiscovery export, immutable storage, communications compliance
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1863,6 +1992,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Pinecone, Weaviate, Milvus, Qdrant, Chroma
 - **Adjacency:** KGP, DATA-AI-PLAT, DCG, MDM
 - **Candidate capabilities:** vector indexing, ANN similarity search, embedding ingestion, hybrid sparse-dense retrieval, namespace/tenancy isolation
+- **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1877,6 +2007,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Vectara, Glean Assistant, Cohere Compass, Pinecone Assistant, Elastic Search AI, NVIDIA NeMo Retriever
 - **Adjacency:** KGP, DATA-AI-PLAT, VECTOR-DB, DCG
 - **Candidate capabilities:** document chunking, embedding pipelines, retrieval orchestration, answer grounding, citation generation, evaluation harnesses
+- **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1891,6 +2022,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** LangChain, LlamaIndex, CrewAI, Microsoft Semantic Kernel, AutoGen, OpenAI Agents SDK
 - **Adjacency:** KGP, DATA-AI-PLAT, RAG-PLATFORM
 - **Candidate capabilities:** tool routing, plan-and-execute orchestration, memory management, multi-agent coordination, tracing and observability
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1905,6 +2037,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Glean, Coveo, Algolia, Elastic Enterprise Search, Sinequa, Lucidworks Fusion, GoSearch, AlphaSense
 - **Adjacency:** KMS, ECM, DATA-AI-PLAT, INTRANET, CSM, ITSM
 - **Candidate capabilities:** federated indexing across SaaS, vector and hybrid search, personalized ranking, answer generation, citation extraction, search analytics, query understanding
+- **Estimated Semantius score:** ~72% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute, text generation.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1919,6 +2052,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Cresta, ASAPP, Forethought, Espressive, Aisera, ServiceNow Now Assist, Salesforce Einstein Service Replies
 - **Adjacency:** KMS, CSM, CCAAS, HRSD, ITSM
 - **Candidate capabilities:** real-time agent suggestion, knowledge surfacing in case context, AI summarization of conversations, response drafting, next-best-action prompting
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (ML/AI compute, text generation); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1933,6 +2067,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Bridgestone Webfleet Tire Management, Goodyear Tirewise, IDSC Tire Operations, Hankook Tire Management, Continental ContiConnect
 - **Adjacency:** FLEET-MAINT, FLEET-MGMT, TELEMATICS
 - **Candidate capabilities:** tire-asset tracking, tread-depth monitoring, retread workflow, mounting/dismounting work-order, tire-cost-per-mile analytics
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1947,6 +2082,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Recall Masters, AutoAp, MotorTrace, CDK Global Recall, Stoneeagle Recall
 - **Adjacency:** FLEET-MAINT, FLEET-MGMT, RE-CRE
 - **Candidate capabilities:** OEM-recall ingestion (NHTSA VIN match), per-vehicle campaign tracking, repair-completion attestation, owner notification, OEM reimbursement claims
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1962,6 +2098,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Infoblox, BlueCat, EfficientIP, ApplianSys, NetBox, Men&Mice
 - **Adjacency:** DCIM, CMDB, NPMD, ITOM
 - **Candidate capabilities:** IPv4 / IPv6 address pool management, subnet allocation, DHCP server management, DNS authoritative records, network discovery, IP audit and reconciliation
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1977,6 +2114,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Axonius, JupiterOne, runZero, Sevco Security, Lansweeper Cloud
 - **Adjacency:** DISCOVERY, CMDB, ITAM, SECOPS, VULN-MGMT
 - **Candidate capabilities:** cross-source asset aggregation, security control coverage gap detection, unmanaged-device discovery, security tool coverage analysis
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -1991,6 +2129,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Fenergo, Alloy, Trulioo, Persona, ComplyAdvantage, Jumio
 - **Adjacency:** BANK-OPS, GRC, TPRM, INS-CARRIER
 - **Candidate capabilities:** identity verification, beneficial ownership, sanctions screening, PEP screening, ongoing monitoring
+- **Estimated Semantius score:** ~62% strict (auto-est.): external sanctions/PEP list fetch + screening.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2005,6 +2144,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** NICE Actimize, Featurespace, ComplyAdvantage, SAS AML, Oracle Financial Services
 - **Adjacency:** BANK-OPS, GRC, FRAUD-DETECT
 - **Candidate capabilities:** transaction surveillance, anomaly detection, alert triage, SAR/STR filing, scenario tuning
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2019,6 +2159,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Modern Treasury, Orum, Stripe Treasury, Treasury Prime, Sila, Volopa
 - **Adjacency:** BANK-OPS, S2P, FIN, ECOM
 - **Candidate capabilities:** payment orchestration, ledger reconciliation, multi-rail routing, payment scheduling, beneficiary management
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2033,6 +2174,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Plaid, TrueLayer, Tink, Yapily, Finicity (Mastercard), MX
 - **Adjacency:** BANK-OPS, PAYMENT-OPS, ECOM
 - **Candidate capabilities:** account linking, PSD2/CMA9 access, balance retrieval, transaction enrichment, payment initiation
+- **Estimated Semantius score:** ~50% strict (auto-est.): external bank-API account aggregation is the product.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2047,6 +2189,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Unit, Treasury Prime, Synctera, Solid, Bond, Marqeta (issuing)
 - **Adjacency:** BANK-OPS, PAYMENT-OPS, FINTECH-INFRA
 - **Candidate capabilities:** embedded banking, sponsor-bank orchestration, BIN sponsorship, virtual account issuance, embedded card programs
+- **Estimated Semantius score:** ~54% strict (auto-est.): sponsor-bank / external orchestration heavy.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2061,6 +2204,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Featurespace, NICE Actimize, FICO Falcon, BioCatch, ThreatMetrix (LexisNexis)
 - **Adjacency:** BANK-OPS, PAYMENT-OPS, SECOPS, FRAUD-DETECT
 - **Candidate capabilities:** behavioral biometrics, real-time scoring, device fingerprinting, account takeover detection, payment fraud screening
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (ML/AI compute, payment/settlement); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2075,6 +2219,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** nCino (LOS module), Blend, Encompass (ICE Mortgage), Mortgage Cadence, Roostify, Baker Hill
 - **Adjacency:** BANK-OPS, CRM, GRC
 - **Candidate capabilities:** application intake, document collection, underwriting workflow, credit decisioning, closing/funding orchestration
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2089,6 +2234,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Mambu, Thought Machine, 10x Banking, Temenos, FIS Core, Finastra, Jack Henry, Fiserv DNA
 - **Adjacency:** BANK-OPS, FIN, PAYMENT-OPS
 - **Candidate capabilities:** deposit ledger, loan ledger, product configuration, interest accrual, statement generation
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2104,6 +2250,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Anaplan Sales Planning, Pigment, Board, Fullcast
 - **Adjacency:** SALES-PERF, GTM-PLAN, EPM, ACCT-PLAN
 - **Candidate capabilities:** territory ops, quota refresh cycles, sales capacity modeling, segmentation-driven plan rollouts, rev-ops strategy modeling
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2118,6 +2265,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Tricentis Tosca, mabl, BrowserStack Automate, Sauce Labs, Applitools, LambdaTest, Katalon
 - **Adjacency:** TEST-MGMT, VSDP, APIM, PROD-MGMT
 - **Candidate capabilities:** low-code test authoring, cross-browser execution grid, visual regression testing, AI-based test self-healing, mobile device cloud, parallel run orchestration
+- **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2132,6 +2280,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Postman, ReadyAPI (SmartBear), Insomnia, Bruno, Karate Labs, Apidog
 - **Adjacency:** TEST-MGMT, APIM, VSDP
 - **Candidate capabilities:** API contract testing, mock servers, environment-scoped requests, schema-validation assertions, performance smoke testing
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2146,6 +2295,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Voiceflow, Botpress Studio, Botmock, Dialogflow CX Designer
 - **Adjacency:** CONV-AI, DXP, UX-RES
 - **Candidate capabilities:** dialog flow authoring, intent and entity modeling, prototype testing, voice and chat persona design, multilingual variant authoring, collaborative review and versioning
+- **Estimated Semantius score:** ~64% strict (auto-est.): mostly internal CRUD; external drag = external data fetch, non-email channel.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2161,6 +2311,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Gong, Chorus.ai (ZoomInfo), Salesloft Conversations, Observe.ai, CallMiner, ExecVision
 - **Adjacency:** CONV-AI, CCAAS, REV-INTEL, CRM
 - **Candidate capabilities:** call recording and transcription, topic and moment detection, coaching scorecards, deal-risk scoring, agent quality monitoring, post-call analytics
+- **Estimated Semantius score:** ~28% strict (auto-est.): external action is the product (external infra/runtime, ML/AI compute, non-email channel); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2175,6 +2326,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** LangSmith, Arize AI, Langfuse, Helicone, Galileo, Weights and Biases Weave
 - **Adjacency:** CONV-AI, DATA-AI-PLAT, ITSM
 - **Candidate capabilities:** prompt and trace observability, model evaluation, drift detection, agent run replay, tool-call inspection, hallucination metrics
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2189,6 +2341,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Subex HyperSense, Mobileum (WeDo), Araxxe, Neural Technologies
 - **Adjacency:** TELCO-BSS, FIN, GRC
 - **Candidate capabilities:** revenue leakage detection, fraud case management, usage reconciliation, CDR audit, interconnect billing assurance
+- **Estimated Semantius score:** ~36% strict (auto-est.): external action is the product (external data fetch, ML/AI compute, payment/settlement); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2203,6 +2356,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** IBM Netcool, Cisco Crosswork, Nokia NSP, Ciena Manage Control Plan, VMware Telco Cloud
 - **Adjacency:** TELCO-BSS, ITSM, AIOPS
 - **Candidate capabilities:** fault management, performance management, network alarm correlation, topology discovery, service impact analysis
+- **Estimated Semantius score:** ~50% strict (auto-est.): network fault/alarm telemetry + correlation.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2217,6 +2371,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Oracle Utilities Customer Care and Billing, SAP IS-U, Itineris UMAX, Gentrack Velocity, Hansen CC&B
 - **Adjacency:** UTIL-OPS, CRM, FIN
 - **Candidate capabilities:** service activation, rate schedules, billing determinants, customer move-in move-out, payment posting, credit and collections, customer self-service portal
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2231,6 +2386,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Itron OpenWay, Landis+Gyr Gridstream, Sensus FlexNet, Aclara, Honeywell Elster EnergyAxis, Siemens EnergyIP MDM
 - **Adjacency:** UTIL-OPS, IOT, DATA-AI-PLAT
 - **Candidate capabilities:** head-end system, meter data collection, interval data validation editing estimation, register reads, demand-response signaling, meter event ingestion
+- **Estimated Semantius score:** ~37% strict (auto-est.): external action is the product (device/IoT telemetry, external data fetch); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2245,6 +2401,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Oracle Utilities Network Management System, GE Digital PowerOn Restore, Schneider Electric ADMS, Survalent SCADA OMS, OATI webSmartEnergy
 - **Adjacency:** UTIL-OPS, FSM, CSM, GIS-UTIL
 - **Candidate capabilities:** outage prediction, crew dispatch, restoration tracking, customer outage reporting, storm management, IVR outage capture, ETR estimation
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2259,6 +2416,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Oracle Utilities Work and Asset Management, IBM Maximo for Utilities, Cityworks, ABB Ellipse, Hexagon EAM Utilities
 - **Adjacency:** UTIL-OPS, FSM, ITSM, GIS-UTIL
 - **Candidate capabilities:** asset register, planned maintenance scheduling, work order lifecycle, crew assignment, mobile field execution, asset health scoring, regulatory inspection cycles
+- **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2273,6 +2431,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Generac Concerto, AutoGrid Flex, Smarter Grid Solutions ANM Strata, Itron IntelliFLEX, Bidgely UtilityAI, Sunverge Solar Integration Platform
 - **Adjacency:** UTIL-OPS, IOT, ESG
 - **Candidate capabilities:** DER registration, real-time telemetry, dispatch optimization, virtual power plant orchestration, demand response events, settlement, grid services
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (external data fetch, payment/settlement); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2287,6 +2446,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Esri ArcGIS Utility Network, Schneider Electric ArcFM, Hexagon G/Technology, Bentley OpenUtilities, GE Digital Smallworld
 - **Adjacency:** UTIL-OPS, UTIL-OMS, UTIL-WAM
 - **Candidate capabilities:** network topology modeling, connectivity tracing, as-built capture, land base management, design and estimating, joint use, facility data management
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2301,6 +2461,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Granicus, GovQA, SeeClickFix (CivicPlus), Accela Civic Engage
 - **Adjacency:** PS-LIC, CSM, CCAAS
 - **Candidate capabilities:** 311 case intake, service-request routing, constituent identity verification, public-meeting agendas, FOIA request workflow
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2315,6 +2476,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Submittable, Fluxx, eCivis (Euna), SmartSimple, GrantHub
 - **Adjacency:** PS-LIC, FIN, GRC
 - **Candidate capabilities:** grant solicitation, application intake, reviewer scoring, award disbursement, recipient compliance reporting, federal grant pass-through tracking
+- **Estimated Semantius score:** ~92% strict (auto-est.): grant CRUD; 'reviewer scoring' is human, not ML.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2329,6 +2491,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Backstage, Port, Cortex, OpsLevel, Humanitec, Roadie, Spotify Portal
 - **Adjacency:** VSDP, KUBE-PLAT, APP-PAAS, ITSM, OBS
 - **Candidate capabilities:** developer portal, service catalog, scorecards / tech health, self-service templates / golden paths, software cataloging
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2343,6 +2506,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Argo CD, Flux, Codefresh, Akuity, Weaveworks, Octopus Deploy, Harness CD
 - **Adjacency:** VSDP, KUBE-PLAT, APP-PAAS
 - **Candidate capabilities:** declarative deployment, drift detection and reconciliation, progressive delivery, release orchestration, environment promotion
+- **Estimated Semantius score:** ~35% strict (auto-est.): external action is the product (external infra/runtime, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2357,6 +2521,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** JFrog Artifactory, Sonatype Nexus Repository, GitHub Packages, GitLab Package Registry, Azure Artifacts, AWS CodeArtifact, Cloudsmith
 - **Adjacency:** VSDP, APPSEC-ORCH, SUPPLY-CHAIN-SEC, KUBE-PLAT
 - **Candidate capabilities:** package hosting (docker, npm, maven, pypi, helm, nuget), package promotion, SBOM publication, signed artifact distribution, retention policy
+- **Estimated Semantius score:** ~40% strict (auto-est.): mostly internal CRUD; external drag = external infra/runtime.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2371,6 +2536,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Snyk, Sonatype Lifecycle, Mend, GitHub Advanced Security, Checkmarx, Veracode, Cycode, ArmorCode, Apiiro, Endor Labs
 - **Adjacency:** VSDP, DSPM, SECOPS, GRC
 - **Candidate capabilities:** SAST orchestration, SCA / dependency scanning, secret scanning, license compliance, vulnerability triage and routing, application security posture rollup
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2385,6 +2551,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Chainguard, Sigstore, Anchore, JFrog Xray, Aqua Security, Snyk Container, Phylum, Socket
 - **Adjacency:** VSDP, APPSEC-ORCH, ARTIFACT-REGISTRY, DSPM
 - **Candidate capabilities:** SBOM generation and validation, dependency provenance (SLSA), signed-artifact attestation, container image scanning, dependency-confusion detection
+- **Estimated Semantius score:** ~35% strict (auto-est.): external action is the product (external infra/runtime, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2399,6 +2566,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Veeam Backup for Microsoft 365, AvePoint Cloud Backup, Druva for Microsoft 365, Spanning, Keepit, HYCU, Barracuda Cloud-to-Cloud Backup
 - **Adjacency:** COLLAB-GOV, ECM, ITSM, BCM
 - **Candidate capabilities:** tenant backup scheduling, point-in-time restore, granular item restore, ransomware recovery, retention policy management, cross-tenant restore
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2413,6 +2581,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** ShareGate Migrate, AvePoint Fly, Quest On Demand Migration, BitTitan MigrationWiz, CloudM Migrate
 - **Adjacency:** COLLAB-GOV, ECM, ITSM
 - **Candidate capabilities:** pre-migration assessment, content mapping, incremental delta sync, post-migration validation, cross-tenant moves, mergers and acquisitions content reorg
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2427,6 +2596,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** CoreView, ENow Application Insights, Quest On Demand for Microsoft 365, ManageEngine M365 Manager Plus, AdminDroid
 - **Adjacency:** COLLAB-GOV, SAM, ITSM, UEM, IGA
 - **Candidate capabilities:** tenant health monitoring, license usage reporting, delegated administration, bulk tenant operations, M365 service health, cross-workload analytics
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2441,6 +2611,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** GoSpotCheck (FORM), Repsly, YOOBIC, Wiser Retail, Trax Retail, ImageX
 - **Adjacency:** RET-STORE, INV-MGMT, CPG-TRADE
 - **Candidate capabilities:** shelf compliance audits, planogram execution scoring, retail execution surveys, image-recognition shelf scans, perfect store KPIs
+- **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2455,6 +2626,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Zipline, Nudge, AxonifyConnect, Reflexis Q&A
 - **Adjacency:** RET-STORE, INTRANET, LMS, KNOWLEDGE-MGMT
 - **Candidate capabilities:** store-targeted messaging, acknowledgement tracking, district memos, multi-store campaigns, store-level knowledge bases
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2469,6 +2641,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Claroty Medigate, Asimily, Cynerio, MedCrypt, Ordr
 - **Adjacency:** CLIN-DEV, OT-SEC, CMDB, VULN-MGMT
 - **Candidate capabilities:** passive device discovery, IoMT vulnerability management, medical-device microsegmentation, FDA cybersecurity premarket reviews, SBOM tracking for medical devices
+- **Estimated Semantius score:** ~50% strict (auto-est.): mostly internal CRUD; external drag = device/IoT telemetry.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2483,6 +2656,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** UiPath AI Center, Automation Anywhere AARI, Microsoft Power Automate AI Builder, SS&C Blue Prism Decipher
 - **Adjacency:** RPA, IDP, PROC-MIN, LCAP, BPA
 - **Candidate capabilities:** AI-augmented automation, document AI in RPA, ML model embedding in bots, attended-bot copilots, decision automation in workflows
+- **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2497,6 +2671,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** UiPath Task Mining, Microsoft Power Automate Process Advisor, Soroco Scout, Kryon Process Discovery, ABBYY Timeline Task Mining
 - **Adjacency:** RPA, PROC-MIN, BPA
 - **Candidate capabilities:** user-interaction recording, click-stream capture, task variant analysis, automation candidate identification, UI element fingerprinting
+- **Estimated Semantius score:** ~70% strict (auto-est.): task-mining capture + analysis (twin of TASK-MINING).
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2511,6 +2686,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Nuvolo Connected Workplace for Healthcare, AIMS, EQ2 HEMS, Phoenix Data Systems Mediq RAM, Connectiv, Hemingway
 - **Adjacency:** CLIN-DEV, EAM, ITSM, FACILITY-MGMT
 - **Candidate capabilities:** biomedical-equipment CMMS, PM scheduling for medical assets, work-order dispatch to biomeds, parts inventory for clinical engineering, vendor-service-contract tracking
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2525,6 +2701,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Camunda, Bizagi, Pega Platform, IBM Business Automation Workflow, Workato, Tray.ai, Appian, Microsoft Power Automate Cloud Flows
 - **Adjacency:** RPA, BPA, LCAP, IPA
 - **Candidate capabilities:** BPMN-based workflow modeling, human-in-the-loop tasks, long-running process state machines, service task orchestration, decision tables, business rules engine integration
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2539,6 +2716,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Greenlight Guru, MasterControl, Sparta Systems TrackWise, Veeva Vault QMS, Qualio
 - **Adjacency:** CLIN-DEV, QMS, GRC, MFG-QUALITY
 - **Candidate capabilities:** design history file management, design controls per 21 CFR 820.30, CAPA workflows for device manufacturers, complaint handling, eMDR submissions to FDA
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2554,6 +2732,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Solace PubSub+, Confluent Cloud, AWS EventBridge, Ably, Pusher, Kafka-as-a-Service offerings
 - **Adjacency:** IPAAS, OBS, APIM, APP-PAAS
 - **Candidate capabilities:** managed event broker, topic and stream administration, pub-sub fan-out, event schema registry, replay and dead-letter handling
+- **Estimated Semantius score:** ~40% strict (auto-est.): mostly internal CRUD; external drag = external infra/runtime.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2569,6 +2748,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** HashiCorp Vault, CyberArk Conjur, AWS Secrets Manager, Doppler, 1Password Secrets Automation, Akeyless
 - **Adjacency:** RPA, IGA, SECOPS, DEVOPS
 - **Candidate capabilities:** secret vaulting, automatic credential rotation, machine identity issuance, dynamic credentials, secret leasing, audit logging of secret access
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2583,6 +2763,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Zapier, Make.com, IFTTT, Pipedream, n8n cloud, Pabbly Connect
 - **Adjacency:** IPAAS, RPA, LCAP
 - **Candidate capabilities:** no-code multi-step workflow, app trigger and action library, schedule and webhook triggers, light data transformation, end-user authored automations
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2598,6 +2779,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Istio, Linkerd, Consul Connect, Cilium Service Mesh, Solo.io Gloo Mesh
 - **Adjacency:** KUBE-PLAT, OBS, APP-PAAS, SECOPS
 - **Candidate capabilities:** service-to-service mTLS, traffic routing policy, circuit breaking, distributed tracing wiring, multi-cluster mesh federation
+- **Estimated Semantius score:** ~40% strict (auto-est.): mostly internal CRUD; external drag = external infra/runtime.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2612,6 +2794,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Argo CD, Flux, Weaveworks GitOps, Codefresh GitOps, Akuity
 - **Adjacency:** KUBE-PLAT, VSDP, APP-PAAS
 - **Candidate capabilities:** git-driven cluster reconciliation, app of apps deployment, drift detection, sync policy management, application set generation
+- **Estimated Semantius score:** ~35% strict (auto-est.): external action is the product (external infra/runtime, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2626,6 +2809,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Harbor, JFrog Artifactory, Docker Hub, GitHub Container Registry, Quay
 - **Adjacency:** KUBE-PLAT, VULN-MGMT, VSDP
 - **Candidate capabilities:** container image storage, image signing, vulnerability scanning, image promotion, replication
+- **Estimated Semantius score:** ~42% strict (auto-est.): external action is the product (external infra/runtime); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2640,6 +2824,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Open Policy Agent (OPA), Kyverno, Styra DAS, HashiCorp Sentinel
 - **Adjacency:** KUBE-PLAT, GRC, SECOPS, IAC
 - **Candidate capabilities:** admission control policy, runtime policy enforcement, policy bundle distribution, decision logging, policy testing
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2654,6 +2839,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Backstage, Port, Cortex, OpsLevel, Humanitec
 - **Adjacency:** KUBE-PLAT, APP-PAAS, VSDP, DEVPORTAL
 - **Candidate capabilities:** service catalog, scaffolder templates, software templates, developer self-service portal, tech radar, software documentation surfacing
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2668,6 +2854,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Epic, Oracle Health (Cerner), MEDITECH, Athenahealth, eClinicalWorks
 - **Adjacency:** HC-PATIENT, HC-RCM, CLIN-DEV
 - **Candidate capabilities:** longitudinal patient record, clinical documentation, computerized provider order entry, e-prescribing, clinical decision support, interoperability via HL7/FHIR
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2682,6 +2869,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Waystar, R1 RCM, Optum, Change Healthcare, Experian Health, FinThrive
 - **Adjacency:** HC-PATIENT, EHR, FIN, HC-PAYER
 - **Candidate capabilities:** patient eligibility verification, prior authorization, charge capture, claims submission, denial management, patient billing, payment posting
+- **Estimated Semantius score:** ~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2696,6 +2884,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** HealthEdge HealthRules Payer, TriZetto QNXT, Cognizant Facets, Edifecs
 - **Adjacency:** HC-PATIENT, HC-RCM, INS-CLAIMS
 - **Candidate capabilities:** member enrollment, benefit configuration, claims adjudication, provider network management, utilization management, prior authorization processing
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2710,6 +2899,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Teladoc Health, Amwell, Doxy.me, Zoom for Healthcare, MDLIVE
 - **Adjacency:** HC-PATIENT, EHR, CCAAS
 - **Candidate capabilities:** virtual visit scheduling, video consultation, virtual waiting room, remote patient monitoring intake, e-prescribing integration, virtual visit billing
+- **Estimated Semantius score:** ~76% strict (auto-est.): mostly internal CRUD; external drag = non-email channel, payment/settlement.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2724,6 +2914,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** HID Global, Genetec, Lenel S2, Brivo, Honeywell Pro-Watch, Johnson Controls C-CURE 9000
 - **Adjacency:** VIS-MGMT, IGA, REAL-EST, IWMS
 - **Candidate capabilities:** card credential issuance, badge access policy authoring, door / reader controller management, badge-in / badge-out event ingest, access zone definition, anti-passback enforcement, mustering and emergency lockdown
+- **Estimated Semantius score:** ~30% strict (auto-est.): mostly internal CRUD; external drag = device/IoT telemetry, external data fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2738,6 +2929,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** McKesson EnterpriseRx, Cardinal Health Cube Rx, Omnicell, BD Pyxis, Surescripts (network)
 - **Adjacency:** HC-PATIENT, EHR, HC-RCM
 - **Candidate capabilities:** prescription dispensing, medication reconciliation, drug utilization review, controlled-substance ledger, automated dispensing, pharmacy inventory, e-prescribing receive
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2752,6 +2944,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Envoy Workplace, Robin, Eptura, OfficeSpace, Condeco, Kadence, Tactic
 - **Adjacency:** VIS-MGMT, IWMS, REAL-EST, HCM, EMP-EXP
 - **Candidate capabilities:** desk booking, room reservation, hybrid attendance scheduling, neighborhood / floor planning, visitor flow integration, occupancy analytics, hot-desking
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2766,6 +2959,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Rundeck, Resolve Actions Pro, BMC TrueSight Orchestration, Ansible Automation Platform, HashiCorp Nomad workflows
 - **Adjacency:** ITOM, ITSM, AIOPS, SECOPS, SOAR
 - **Candidate capabilities:** runbook authoring, workflow orchestration, approval-gated automation, parametric execution, audit-trailed runs
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2780,6 +2974,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** BMC Control-M, Broadcom AutoSys, Tidal, Stonebranch UAC, Redwood RunMyJobs, IBM Workload Scheduler
 - **Adjacency:** ITOM, FIN, DATA-AI-PLAT, S2P
 - **Candidate capabilities:** job definition, calendar scheduling, cross-system orchestration, SLA-based job monitoring, batch dependency management
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2794,6 +2989,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** SolarWinds NPM, Auvik, Kentik, ThousandEyes, LiveAction, Riverbed NetIM, Nagios XI
 - **Adjacency:** ITOM, OBS, DCIM, AIOPS, SECOPS
 - **Candidate capabilities:** flow telemetry collection, network device polling, path analytics, synthetic network testing, packet capture analysis
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (external data fetch); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2808,6 +3004,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** UiPath Task Mining, Skan.ai, Microsoft Power Automate Process Mining (desktop activity), Celonis Task Mining, ABBYY Timeline (Desktop)
 - **Adjacency:** PROC-MIN, RPA, EMP-EXP
 - **Candidate capabilities:** desktop activity capture, task variant discovery, automation candidate scoring, time-and-motion analytics
+- **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2822,6 +3019,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Demandbase, 6sense, RollWorks, Madison Logic, Terminus, Mutiny
 - **Adjacency:** GTM-PLAN, MA, CRM, ACCT-PLAN, REV-INTEL
 - **Candidate capabilities:** account-list construction, intent-data orchestration, account-based advertising, ICP enrichment, target-account engagement scoring, account-based personalization
+- **Estimated Semantius score:** ~60% strict (auto-est.): mostly internal CRUD; external drag = external data fetch, ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2836,6 +3034,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Verint, NICE WEM, Calabrio ONE, Genesys WEM, Aspect
 - **Adjacency:** CCAAS, WFM, CSM
 - **Candidate capabilities:** call recording, quality management, speech analytics, agent coaching, contact center workforce scheduling, agent gamification
+- **Estimated Semantius score:** ~84% strict (auto-est.): mostly internal CRUD; external drag = non-email channel.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2850,6 +3049,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** BackBox, NetBrain, SolarWinds NCM, Cisco DNA Center, Itential, Gluware
 - **Adjacency:** NPMD, CMDB, ITOM, ITSM-CHANGE-MGMT
 - **Candidate capabilities:** device config backup, golden-config baselining, compliance drift detection, change orchestration, rollback, vulnerability-aware patching
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2864,6 +3064,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Cisco Catalyst SD-WAN (Viptela), VMware VeloCloud, Fortinet Secure SD-WAN, Versa, Aruba EdgeConnect, Cato Networks
 - **Adjacency:** NPMD, ITOM, SECOPS, OBS
 - **Candidate capabilities:** policy-based routing, transport SLA enforcement, application-aware path selection, tunnel health monitoring, edge appliance fleet management, zero-touch provisioning
+- **Estimated Semantius score:** ~46% strict (auto-est.): device-fleet + tunnel telemetry.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2878,6 +3079,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Darktrace, ExtraHop Reveal(x), Vectra AI, Corelight, Arista NDR (Awake), Cisco Secure Network Analytics (Stealthwatch)
 - **Adjacency:** NPMD, SECOPS, SIEM, AIOPS
 - **Candidate capabilities:** east-west traffic inspection, encrypted-traffic analytics, lateral-movement detection, behavioral baselines, MITRE ATT&CK mapping, packet capture forensics
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2892,6 +3094,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Salt Security, Noname Security (Akamai), Traceable AI, Wallarm, 42Crunch
 - **Adjacency:** APIM, SECOPS, VULN-MGMT
 - **Candidate capabilities:** API discovery and inventory, runtime API attack detection, API schema and contract testing, sensitive-data exposure analysis on API traffic, business-logic abuse detection
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2906,6 +3109,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Nexthink, 1E (TachyonOS), ControlUp Edge DX, Lakeside Software SysTrack, HappySignals, Riverbed Aternity
 - **Adjacency:** DEM, UEM, EMP-EXP, ITSM
 - **Candidate capabilities:** digital employee sentiment, employee-driven automation, persona-level experience scoring, IT self-service health, proactive sensor remediation, end-user productivity analytics
+- **Estimated Semantius score:** ~60% strict (auto-est.): mostly internal CRUD; external drag = external data fetch, ML/AI compute.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2920,6 +3124,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Datadog APM, Dynatrace, New Relic, AppDynamics (Splunk), Elastic APM, Honeycomb, Instana (IBM)
 - **Adjacency:** DEM, OBS, AIOPS, ITSM
 - **Candidate capabilities:** application transaction tracing, code-level diagnostics, service map auto-discovery, latency analytics, error tracking, business transaction monitoring
+- **Estimated Semantius score:** ~55% strict (auto-est.): application transaction telemetry + auto-discovery.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2934,6 +3139,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** BitSight, SecurityScorecard, RiskRecon (Mastercard), UpGuard, Black Kite
 - **Adjacency:** TPRM, SUP-LIFE, GRC, SECOPS
 - **Candidate capabilities:** external attack surface scoring, cyber rating per vendor domain, breach intelligence feeds, fourth-party discovery, security questionnaire augmentation
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2948,6 +3154,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Onfido, Persona, Trulioo, Middesk, Alloy, ComplyAdvantage
 - **Adjacency:** TPRM, GRC, FIN-CRIME, IDV, S2P
 - **Candidate capabilities:** individual identity verification, business identity verification, sanctions and PEP screening, beneficial-ownership lookup, ongoing screening, document verification
+- **Estimated Semantius score:** ~62% strict (auto-est.): external sanctions/PEP/business-registry fetch + screening.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2962,6 +3169,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** AVEVA APM, GE Digital APM (SmartSignal), Aspen Mtell, Bentley AssetWise, Cognite Data Fusion
 - **Adjacency:** EAM, MFG-OPS, GRC
 - **Candidate capabilities:** predictive maintenance analytics, condition monitoring, failure mode and effects analysis, reliability centered maintenance, asset health scoring, anomaly detection
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2976,6 +3184,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** PTC ThingWorx, Siemens MindSphere/Insights Hub, AWS IoT SiteWise, Cognite Data Fusion, GE Digital Predix
 - **Adjacency:** EAM, MFG-OPS, APM-RELIABILITY
 - **Candidate capabilities:** industrial telemetry ingestion, OT-IT data integration, edge gateway management, time-series data store, digital twin orchestration
+- **Estimated Semantius score:** ~37% strict (auto-est.): external action is the product (device/IoT telemetry, external data fetch); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2990,6 +3199,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Intelex EHSQ, Sphera Operational Risk, Enablon, Cority PTW, Salus
 - **Adjacency:** EAM, GRC, MFG-OPS
 - **Candidate capabilities:** permit issuance and approval, hazardous energy isolation, lockout-tagout procedures, confined-space entry, hot work permits, safety briefings
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3004,6 +3214,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** ENGIE Impact, Schneider Resource Advisor, Accruent Lucernex Utility, Eptura Sustainability, Watershed
 - **Adjacency:** CAFM, REAL-EST, IWMS, EAM, EHS-MGMT, UTIL-OPS
 - **Candidate capabilities:** utility-meter ingestion, energy-cost analytics, demand-response automation, sustainability and carbon reporting, scope-2 emissions ledger
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (external data fetch); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3018,6 +3229,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Kubecost, CloudHealth Kubernetes Cost, Cloudability Kubernetes, Vantage Kubernetes
 - **Adjacency:** FINOPS, APP-PAAS, ITAM
 - **Candidate capabilities:** workload-level cost allocation, namespace-scoped cost, shared-cluster fair-share, idle-resource detection, in-cluster recommendations
+- **Estimated Semantius score:** ~66% strict (auto-est.): cost accounting on k8s, not running infra.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3032,6 +3244,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Watershed, Persefoni, AWS Customer Carbon Footprint Tool, Azure Emissions Impact Dashboard, Google Cloud Carbon Footprint
 - **Adjacency:** FINOPS, ESG
 - **Candidate capabilities:** Scope 2 / Scope 3 emissions, cloud-provider emissions ingestion, FOCUS-aligned carbon allocation, carbon vs cost overlay, GHG Protocol reporting
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3046,6 +3259,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** ProsperOps, ZestyCloud, Spot by NetApp, Archera
 - **Adjacency:** FINOPS, ITAM, FIN
 - **Candidate capabilities:** Reserved Instance management, Savings Plan optimization, algorithmic commitment ladder, commitment-savings attribution, autonomous commitment management
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3060,20 +3274,23 @@ the bottom are the resolved history.
 - **Vendor evidence:** CloudZero, Vantage Unit Economics, Finout MegaBill
 - **Adjacency:** FINOPS, BI, EPM
 - **Candidate capabilities:** cost-per-customer, cost-per-feature, cost-per-transaction, unit-cost KPI definitions, COGS attribution
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
 ### EASM — External Attack Surface Management
 
-- **Mention count:** 1
+- **Mention count:** 2
 - **First surfaced:** 2026-05-30 (VULN-MGMT audit 2026-05-30)
-- **Most recent:** 2026-05-30 (VULN-MGMT audit 2026-05-30)
+- **Most recent:** 2026-06-17 (Qualys coverage review 2026-06-17)
 - **Surfaced by:**
   - 2026-05-30 VULN-MGMT audit 2026-05-30
+  - 2026-06-17 Qualys coverage review 2026-06-17
 - **Vendor evidence:** Censys, Palo Alto Cortex Xpanse, Microsoft Defender EASM, BitSight, SecurityScorecard External, Tenable Attack Surface Management
 - **Adjacency:** VULN-MGMT, ASM, TPRM, SECOPS, THREAT-INTEL
 - **Candidate capabilities:** internet-asset discovery, shadow IT and forgotten domain inventory, third-party exposure scoring, takeover-risk detection, certificate and DNS posture, leaked credential and breach monitoring
+- **Estimated Semantius score:** ~30% strict (est.): external-discovery fetch and exposure-scoring compute dominate; only the asset-inventory store is CRUD
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3089,6 +3306,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Splunk Enterprise Security, Microsoft Sentinel, IBM QRadar, Securonix, Exabeam, Sumo Logic, Elastic Security, Chronicle (Google SecOps)
 - **Adjacency:** THREAT-INTEL, SECOPS, SOAR, XDR, DLP, VULN-MGMT
 - **Candidate capabilities:** log aggregation, correlation rule authoring, security analytics, alert triage, UEBA-light, compliance reporting, threat hunting workbench
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (external data fetch); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3103,6 +3321,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Synack, Cobalt.io, HackerOne, Bugcrowd, NetSPI, Pentera, Horizon3.ai NodeZero
 - **Adjacency:** VULN-MGMT, SECOPS, GRC, AUDIT
 - **Candidate capabilities:** pentest engagement orchestration, autonomous and continuous pentesting, vulnerability triage and validation, retest workflow, bug-bounty program management, exploit proof-of-concept handoff to remediation
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3118,6 +3337,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Palo Alto Cortex XDR, CrowdStrike Falcon Insight XDR, Microsoft Defender XDR, SentinelOne Singularity XDR, Trellix XDR, Trend Micro Vision One
 - **Adjacency:** THREAT-INTEL, SECOPS, SOAR, SIEM, EDR
 - **Candidate capabilities:** cross-surface telemetry correlation, behavioral analytics, attack-chain reconstruction, automated response actions, threat-intel integration
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3132,6 +3352,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** XM Cyber, Picus Security, Cymulate, AttackIQ, Pentera, SafeBreach, Mandiant Attack Surface Management
 - **Adjacency:** VULN-MGMT, EASM, SECOPS, THREAT-INTEL, GRC
 - **Candidate capabilities:** attack-path analysis, breach and attack simulation, control validation, prioritised remediation routing on real exploitability, scoping and assessment of exposure programs
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (external data fetch); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3146,6 +3367,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** ZeroFox, Digital Shadows (ReliaQuest), Recorded Future Brand Intelligence, Mandiant Digital Threat Monitoring, IntSights (Rapid7), CybelAngel
 - **Adjacency:** THREAT-INTEL, SECOPS, BRAND-MGMT
 - **Candidate capabilities:** external attack surface monitoring, brand impersonation detection, dark-web credential leak monitoring, takedown coordination, phishing-domain surveillance, executive protection monitoring
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3160,6 +3382,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Mandiant Vulnerability Intelligence, Recorded Future Vulnerability Intelligence, Flashpoint, Vulncheck, Tenable Vulnerability Intelligence, Rapid7 Threat Command, Qualys TruRisk
 - **Adjacency:** VULN-MGMT, THREAT-INTEL, SECOPS, GRC
 - **Candidate capabilities:** exploit-in-the-wild feeds, CISA KEV ingestion, EPSS scoring, threat-actor and campaign linkage to CVEs, custom risk scoring with environmental factors, advisory enrichment
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3174,6 +3397,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Frontify, Bynder Brand Guidelines, Brandfolder Brand Guidelines, Lingo by Noun Project, Brandworkz, Templafy
 - **Adjacency:** DAM, MRM, AGENCY-MGMT, HCMS
 - **Candidate capabilities:** brand guideline portal, brand asset distribution to external partners, brand template gallery, logo and color usage policies, brand compliance enforcement, partner enablement
+- **Estimated Semantius score:** ~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3188,6 +3412,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Exabeam, Securonix, Splunk UBA, Microsoft Defender for Identity, IBM QRadar UBA, Gurucul, Varonis
 - **Adjacency:** SECOPS, SIEM, XDR, IGA, DLP
 - **Candidate capabilities:** behavioral baselining, peer-group analytics, risk scoring per user/entity, anomalous session detection, insider-threat detection
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3202,6 +3427,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** CrowdStrike Falcon Complete, Arctic Wolf, Red Canary, Expel, Sophos MDR, SentinelOne Vigilance, Rapid7 MDR, Secureworks Taegis Managed XDR
 - **Adjacency:** SECOPS, EDR, XDR, SIEM, SOAR
 - **Candidate capabilities:** 24x7 monitoring as a service, managed threat hunting, customer-tenant case management, escalation runbooks, MDR analyst notes, response approval workflows
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3216,6 +3442,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Darktrace, ExtraHop Reveal(x), Vectra AI, Corelight, Cisco Secure Network Analytics (Stealthwatch), Arista NDR
 - **Adjacency:** SECOPS, NPMD, XDR, SIEM
 - **Candidate capabilities:** network metadata extraction, encrypted-traffic analytics, lateral-movement detection, east-west visibility, deception integration
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3230,6 +3457,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Magnet AXIOM, Cellebrite, OpenText EnCase, Cado Security, Velociraptor, FireEye/Mandiant (Trellix), KAPE
 - **Adjacency:** SECOPS, IR, LEGAL-PRACT-MGMT, AUDIT
 - **Candidate capabilities:** forensic image acquisition, chain-of-custody management, timeline reconstruction, malware artifact analysis, evidence vault, expert-witness reporting
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3244,6 +3472,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Resilient (IBM SOAR), ServiceNow Security Incident Response, Palo Alto XSOAR, Splunk SOAR, D3 Security, TheHive Project, Tines, Swimlane
 - **Adjacency:** SECOPS, SOAR, ITSM, LEGAL-PRACT-MGMT, GRC, PRIV-MGMT
 - **Candidate capabilities:** case management for security incidents, playbook execution, breach notification workflow, post-incident review, regulator notification tracking, IR retainer fulfillment
+- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (external data fetch); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3258,6 +3487,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** AttackIQ, Cymulate, SafeBreach, Picus Security, XM Cyber, Mandiant Security Validation
 - **Adjacency:** SECOPS, VULN-MGMT, CTEM, GRC
 - **Candidate capabilities:** continuous control validation, attack-scenario library, MITRE ATT&CK coverage scoring, automated red-team campaigns, exposure-to-control mapping
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3272,6 +3502,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Arctic Wolf, eSentire, deepwatch, Trustwave, Critical Start, Pondurance, Alert Logic
 - **Adjacency:** SECOPS, MDR, SIEM, XDR
 - **Candidate capabilities:** outsourced SOC operations, tenant onboarding, shared analyst pool case routing, customer-portal incident visibility, SLA-bound triage commitments
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3286,6 +3517,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Zift Solutions, Sproutloud, Impartner TCMA, Mindmatrix, Structured Web
 - **Adjacency:** PRM, MA, CRM
 - **Candidate capabilities:** co-branded asset distribution, partner-led campaign syndication, partner email and social automation, lead distribution to partners, MDF claim workflows
+- **Estimated Semantius score:** ~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3300,6 +3532,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Crossbeam, Reveal, PartnerTap, Partnered
 - **Adjacency:** PRM, CRM, SALES-PERF, REV-INTEL
 - **Candidate capabilities:** partner account mapping, overlap analysis, co-sell signal sharing, partner-sourced pipeline attribution, ecosystem revenue analytics
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3314,6 +3547,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Impact.com, PartnerStack, Everflow, Refersion, CJ Affiliate, Awin, Rakuten Advertising
 - **Adjacency:** PRM, MA, LOYALTY, B2C-COMM
 - **Candidate capabilities:** affiliate recruitment, tracking link generation, conversion attribution, commission and payout automation, fraud detection on affiliate traffic
+- **Estimated Semantius score:** ~43% strict (auto-est.): external action is the product (ML/AI compute, payment/settlement); thin internal store.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3328,6 +3562,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** NAVEX EthicsPoint, OneTrust Ethics (Convercent), AllVoices, People Intouch SpeakUp, EQS Integrity Line, Whispli, Vault Platform
 - **Adjacency:** HRSD, GRC, LEGAL, AUDIT
 - **Candidate capabilities:** anonymous report intake, multi-channel hotline, investigation case management, anonymized reporter follow-up, regulatory disclosure tracking
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3342,6 +3577,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** SweetProcess, Trainual, Process Street, Scribe (ScribeHow), Whale, Dozuki
 - **Adjacency:** KMS, ECM, LMS, ONBOARDING, GRC, BPA, EQMS (backlog)
 - **Candidate capabilities:** SOP authoring, work-instruction steps, document versioning, publish-and-assign, read-acknowledgment tracking, comprehension quizzes, periodic review cycles, controlled-document control
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3356,6 +3592,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** WalkMe, Whatfix, Pendo (Adopt), Userpilot, Appcues, Userlane, Chameleon, Gainsight PX
 - **Adjacency:** ONBOARDING, LMS, KMS, SOP-MGMT (candidate), DXP, DEM, CSM, EMP-EXP, Product Analytics (gap)
 - **Candidate capabilities:** in-app guided walkthroughs, tooltips and hotspots, onboarding checklists, in-app surveys (NPS/CES), resource center / help widget, in-app announcements, audience segmentation, adoption analytics
+- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3370,6 +3607,67 @@ the bottom are the resolved history.
 - **Vendor evidence:** Amplitude, Mixpanel, Heap, PostHog, June, Kubit, Pendo, Statsig
 - **Adjacency:** BI, PROD-MGMT, CDP, DAP (candidate), DXP, DEM
 - **Candidate capabilities:** product instrumentation, feature-usage events, funnel analysis, retention and cohort analysis, user path analysis, behavioral segmentation, experimentation/A-B testing, session replay
+- **Estimated Semantius score:** ~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### DAST — Dynamic Application Security Testing (Web Application Scanning)
+
+- **Mention count:** 1
+- **First surfaced:** 2026-06-17 (Qualys coverage review 2026-06-17)
+- **Most recent:** 2026-06-17 (Qualys coverage review 2026-06-17)
+- **Surfaced by:**
+  - 2026-06-17 Qualys coverage review 2026-06-17
+- **Vendor evidence:** Qualys WAS, Invicti, Checkmarx DAST, Rapid7 InsightAppSec, Veracode DAST, PortSwigger Burp Suite Enterprise
+- **Adjacency:** VULN-MGMT, APPSEC-ORCH, SECOPS
+- **Candidate capabilities:** authenticated web crawling, OWASP Top 10 detection, API and REST scanning, dynamic vulnerability validation, scan scheduling, progressive scan tuning
+- **Estimated Semantius score:** ~25% strict (est.): scan side-effect, response-analysis compute, and crawl fetch dominate; thin findings and scan-config store
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### CXM — Customer Experience Management (Voice of Customer)
+
+- **Mention count:** 1
+- **First surfaced:** 2026-06-17 (Qualtrics coverage review 2026-06-17)
+- **Most recent:** 2026-06-17 (Qualtrics coverage review 2026-06-17)
+- **Surfaced by:**
+  - 2026-06-17 Qualtrics coverage review 2026-06-17
+- **Vendor evidence:** Qualtrics CustomerXM, Medallia, InMoment, Sprinklr Service, SurveyMonkey/Momentive (GetFeedback), Forsta (Press Ganey), Verint, NICE Satmetrix
+- **Adjacency:** CRM, CDP, CSM, LOYALTY, EMP-EXP
+- **Candidate capabilities:** voice-of-customer surveys, NPS/CSAT/CES tracking, closed-loop feedback, journey analytics, verbatim text analytics, omnichannel feedback collection, role-based CX dashboards
+- **Estimated Semantius score:** ~70-80% strict (est.): survey/CX-metric CRUD + response intake (receive_webhook) + send_email/notify_person are platform-tier; external drag = detect_sentiment, classify_text, generate_text, send_sms. operational ~= strict (no integration-tier tools).
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### MARKET-RESEARCH — Market Research and Insights Platform
+
+- **Mention count:** 1
+- **First surfaced:** 2026-06-17 (Qualtrics coverage review 2026-06-17)
+- **Most recent:** 2026-06-17 (Qualtrics coverage review 2026-06-17)
+- **Surfaced by:**
+  - 2026-06-17 Qualtrics coverage review 2026-06-17
+- **Vendor evidence:** Qualtrics Strategy and Research (CoreXM), SurveyMonkey/Momentive, Forsta (FocusVision/Confirmit), Alchemer, Dynata, Suzy, Quantilope, Remesh
+- **Adjacency:** PROD-MGMT, CXM, MA, CDP
+- **Candidate capabilities:** survey design and scripting, panel and sample management, conjoint and maxdiff, ad and brand tracking studies, statistical analysis, verbatim coding, study and report generation
+- **Estimated Semantius score:** ~60-72% strict (est.): study/panel/instrument CRUD + send_email platform; external drag = statistical compute (conjoint/maxdiff/regression), classify_text, generate_text, external panel fetch, send_sms. Lowest of the XM markets (adds external panel data + stats compute).
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### PRODUCT-XM — Product Experience Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-06-17 (Qualtrics coverage review 2026-06-17)
+- **Most recent:** 2026-06-17 (Qualtrics coverage review 2026-06-17)
+- **Surfaced by:**
+  - 2026-06-17 Qualtrics coverage review 2026-06-17
+- **Vendor evidence:** Qualtrics ProductXM, Sprig, Maze, UserTesting, Pendo Feedback, Productboard, Dovetail
+- **Adjacency:** PROD-MGMT, CXM, MARKET-RESEARCH, DAP
+- **Candidate capabilities:** in-product feedback and surveys, concept and feature testing, product-feedback aggregation, prioritization signals, usability research
+- **Estimated Semantius score:** ~72-82% strict (est.): feedback/concept-test CRUD + send_email + receive_webhook + notify_person platform; external drag = detect_sentiment, classify_text, generate_text. Fold risk into PROD-MGMT customer-feedback-aggregation capability, flag at triage.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_

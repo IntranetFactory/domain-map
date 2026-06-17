@@ -420,3 +420,64 @@ Pass: A1-A4, M1-M8, B1-B5, B6/B7 (intra + users edges), B9b, B10b (outbound), B1
 
 - **B2-HANDOFF-REATTRIB (new b2, surfaced):** outbound handoffs 178 (okr_objective.created → WORK-MGMT), 245 (initiative.completed → EPM), 241 (initiative.kickoff → SWP) fire on SEM-published events (okr_objectives / strategic_initiatives are SEM's masters under the (c) split) but are recorded `source_domain_id=9` (SPM). Their `source_domain_module_id` was left NULL. Correct fix is to re-attribute source to SEM (166) — a destructive overwrite of existing rows that also adds SEM outbound, so it needs user sign-off. Not auto-applied.
 - **B1A-B9D-VERIFY (carried b1a):** B9d handoff-payload realization has never run on this domain; run it on a later audit pass.
+
+## 2026-06-17 - Structural + B-band audit (read-only, no writes)
+
+### Header
+
+- SPM (domain id 9), domain_kind=`established_market`, catalog_release=`null`, 3 modules (343 SPM-DEMAND-MGMT, 344 SPM-PORTFOLIO-PLANNING, 345 SPM-RESOURCE-CAPACITY, all `full`), 8 distinct masters. No host-domain links (domain_module_host_domains empty). `strategic_initiatives` (274) is held as `embedded_master` in 344 but is mastered by SEM module 106; `okr_objectives` (245) is mastered by WORK-MGMT 150.
+- Masters: 273 strategic_portfolios, 275 roadmap_items, 276 business_value_assessments, 277 resource_allocations, 278 demand_intake_requests, 279 scenario_plans, 280 dependency_chains, 281 benefits_tracking_records. All `record_status=new`, `kind=domain_owned`.
+
+### Bucket 1 (agent-fixable)
+
+- B9c (event/from_state drift, roadmap_items 275): event 218 `roadmap_item.released` from_state=`in_progress`, but lifecycle has no `in_progress` state (states: planned, committed, in_development, delivered, cancelled). Fix from_state to `in_development`. to_state=`delivered` is valid.
+- B9c (event/from_state drift, demand_intake_requests 278): event 215 `demand_intake.approved` from_state=`reviewed`, but lifecycle has no `reviewed` state (states: submitted, screened, approved, rejected, fulfilled). Fix from_state to `screened`.
+- B9c (event to_state blank, benefits_tracking_records 281): event 874 `benefits_tracking_record.realized` to_state='' should be `realized`; event 875 `benefits_tracking_record.at_risk` to_state='' should be `at_risk` (both are real terminal/intermediate states). event_category for 874 is `lifecycle`, 875 is `threshold`.
+- B9c (event to_state blank, business_value_assessments 276): event 872 `business_value_assessment.completed` to_state='' and from_state=''; terminal state is `approved`. Set to_state=`approved` (or rename event to match terminal). Minor: event name says "completed" but no `completed` state exists.
+- B9 (event domain_module_id NULL): all SPM-mastered trigger events (214,215,218,219,220,221,872,873,874,875) have domain_module_id=NULL; should be stamped with each master's owning module (343/344/345) per M4 convention. Compare to SEM events 1265-1267 which carry domain_module_id=106.
+
+### Bucket 2 (user-judgment)
+
+- A1: catalog_release is NULL. crud_percentage=85, min_org_size=`40 l <10000` (odd format, verify), cost_band=`$$$$`, usa_market_size_usd_m=2500, market_size_source_year=2025, business_logic present. No hard A1 fail, but catalog_release NULL and min_org_size format warrant a look.
+- B9 attribution defect (legacy initiative.* events): `strategic_initiatives` (274) is SEM-mastered (module 106). SPM still carries legacy events `initiative.kickoff` (216) and `initiative.completed` (217), domain_module_id=NULL, using a divergent state vocabulary (planned/in_progress vs SEM's proposed/approved/in_progress/completed/canceled). SEM's canonical events are 1265/1266/1267 (`strategic_initiative.*`). The legacy pair duplicates SEM lifecycle on an object SPM does not master. Deduplicate against SEM, needs cross-domain sign-off (destructive).
+- B9 attribution defect (handoffs on non-SPM-mastered objects): handoffs 245 (`initiative.completed`/event 217 -> EPM 66), 241 (`initiative.kickoff`/event 216 -> SWP 100) fire on strategic_initiatives (SEM-mastered); handoff 178 (`okr_objective.created`/event 150 -> WORK-MGMT 135) fires on okr_objectives (WORK-MGMT-mastered). All three have source_domain_module_id=NULL and source_domain_id=9. Re-attributing source to the true owner (SEM/WORK-MGMT) is a destructive overwrite, needs sign-off. (Matches prior B2-HANDOFF-REATTRIB follow-up.)
+- M7 (single-master): satisfied across the 8 SPM masters (each mastered by exactly one SPM module). Noted only because 274 (embedded_master in 344) is correctly the SEM master, not a SPM duplicate.
+
+### Bucket 3 (speculative)
+
+- None material. Master roster (portfolios, demands, value assessments, resource allocations, scenarios, roadmaps, dependencies, benefits) covers the expected SPM scope. No obvious missing master.
+
+### Report-only (owed by other domains)
+
+- SEM (166): legacy event cleanup on strategic_initiatives 274 and the re-attribution of handoffs 241/245 ultimately belong to SEM as the true source domain.
+- WORK-MGMT (135): re-attribution of handoff 178 (okr_objective.created) belongs to WORK-MGMT as okr_objectives owner.
+
+### Pass-band notes (clean)
+
+- M1 pass (3 modules). M2 pass (all 3 `full`). M6 pass (every module realizes >=1 capability: 343->2, 344->5, 345->2; 9 capabilities total). B1 pass (8 masters). B2 pass (singular/plural labels on all). B4 pass (all masters operational_workflow except dependency_chains=operational_record; flags coherent). B11 pass (2-3 aliases per master). B12 pass (lifecycle present on all operational_workflow masters with one is_initial, >=1 is_terminal, monotonic state_order, gated transitions carry requires_permission + permission_verb_override; domain_module_id correct). B6/B7 pass (rich intra-domain relationships; users edges to every SPM master). dependency_chains correctly has no lifecycle (operational_record).
+- Minor naming: roadmap_items uses British `cancelled` (state_order 5) while resource_allocations/demand use American spellings elsewhere; cosmetic, not flagged as a fix here.
+
+SPM: Bucket1=5, Bucket2=4, Bucket3=0 (unclassified masters=0, operational_workflow missing lifecycle=0, M4 violations=0)
+
+## 2026-06-17 - Corrective fixes (B9c + event module stamping + spelling)
+
+A catalog-wide cluster fix pass ran the same day and applied the corrective (additive-only, `record_status` untouched) fixes the read-only structural audit above surfaced as Bucket 1. These resolve the B9c drift and the B9 M4 module-stamping gaps; they do not touch `record_status` (Rule #1) and do not resolve any open b2 or b3 item in state.yaml.
+
+### Executed (corrective, record_status untouched)
+
+- **B9c trigger_event state corrections (5 events):**
+  - `demand_intake.approved` (event 215, demand_intake_requests 278): `from_state` corrected `reviewed` -> `screened` (no `reviewed` state exists in the lifecycle).
+  - `roadmap_item.released` (event 218, roadmap_items 275): `from_state` corrected `in_progress` -> `in_development` (no `in_progress` state exists in the lifecycle).
+  - `business_value_assessment.completed` (event 872, business_value_assessments 276): `to_state` set to `approved` (was blank; `approved` is the terminal state).
+  - `benefits_tracking_record.realized` (event 874, benefits_tracking_records 281): `to_state` set to `realized` (was blank).
+  - `benefits_tracking_record.at_risk` (event 875, benefits_tracking_records 281): `to_state` set to `at_risk` (was blank).
+- **B9 module stamping (M4 convention): `domain_module_id` stamped on all 10 SPM-mastered trigger_events** so each event carries its master's owning module:
+  - events 214, 215, 872 -> module 343 (SPM-DEMAND-MGMT).
+  - events 219, 218, 873, 874, 875 -> module 344 (SPM-PORTFOLIO-PLANNING).
+  - events 220, 221 -> module 345 (SPM-RESOURCE-CAPACITY).
+- **British -> American spelling sweep (catalog-wide).** The roadmap_items `cancelled` state (and its event references) was renamed to `canceled`, along with all other `cancelled` states catalog-wide. This clears the cosmetic naming note flagged in the read-only audit above (roadmap_items state_order 5).
+
+### Left open (untouched)
+
+- **B2-HANDOFF-REATTRIB remains OPEN and was NOT touched.** The legacy SPM-recorded `initiative.kickoff` / `initiative.completed` events and the outbound handoffs (241 -> SWP, 245 -> EPM, 178 -> WORK-MGMT) that fire on SEM-mastered `strategic_initiatives` / WORK-MGMT-mastered `okr_objectives` are a destructive cross-domain re-attribution that still awaits user sign-off. No source_domain_id / source_domain_module_id was overwritten in this pass.
+- All other open b2 items (B2-B9D-OWN-297, B2-B9D-OWN-1133, B2-B9D-OWN-1135, B2-B9D-OWN-409), the carried b1a (B1A-B9D-VERIFY), and the b3 backlog are unchanged by this corrective pass.
