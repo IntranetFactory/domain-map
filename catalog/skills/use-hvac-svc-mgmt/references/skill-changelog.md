@@ -12,7 +12,7 @@ Loaded on demand, not on every invocation. The skill reads this when context is 
 - **A discovery procedure was overridden by an earned learning**, record the why (the original problem) and link to the `learnings.jsonc` entry.
 - **A tenant-specific decision was made that future runs must respect**, e.g. *"User confirmed on 2026-05-15 that the `vendors` entity in this tenant corresponds to `suppliers` in the spec, NOT the other way around. Reverse renames discussed and explicitly rejected."*
 - **A category of error recurred and was resolved via a workaround**, note here so the rationale survives even if the specific entry rolls off `learnings.jsonc`.
-- **A material change to the catalog DB (HQ-side) affected this skill**, e.g. an entity was renamed in the catalog and the local discovery state needed reconciling.
+- **A material change to the catalog DB (DomainMap-side) affected this skill**, e.g. an entity was renamed in the catalog and the local discovery state needed reconciling.
 - **A field was deprecated or removed from `spec.json`** that the tenant was actively using, capture the migration path.
 
 ## When NOT to append

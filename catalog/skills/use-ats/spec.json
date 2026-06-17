@@ -1,18 +1,15 @@
 {
   "facts_major": 1,
-  "emitted": "2026-06-15",
-  "catalog_snapshot": "catalog-2026-06-15",
+  "emitted": "2026-06-17",
+  "catalog_snapshot": "catalog-2026-06-17",
   "domain": {
     "code": "ATS",
     "name": "Applicant Tracking and Recruiting",
     "description": "Requisition management, candidate sourcing, interview workflows, and offer management. AI-assisted matching and screening overlays are increasingly bundled.",
     "parent_domain_code": "HCM",
-    "business_logic": "Candidate matching and resume parsing ML, significant in modern ATS products; the rest is pipeline stages, scheduling, and offers.",
-    "min_org_size": "20 s <500",
-    "cost_band": "$$",
     "certification_required": false,
-    "usa_market_size_usd_m": 3000,
-    "market_size_source_year": 2025
+    "catalog_tagline": "Hire faster with a connected pipeline from sourcing through offer acceptance.",
+    "catalog_description": "Track every candidate from first contact through hire. Manage job requisitions, posting distribution, application intake, interview scheduling, scorecard collection, and offer generation in one connected pipeline.\n\nWhen a candidate accepts an offer, the workflow hands off cleanly to onboarding so your new hire's first day doesn't start from a blank page. Built-in support for EEOC-compliant funnel analytics, requisition approval routing, and offer-letter version control."
   },
   "aliases": [],
   "business_functions": {
@@ -101,6 +98,7 @@
         "SOURCING"
       ],
       "masters": [
+        "agency_submissions",
         "candidate_consents",
         "candidate_documents",
         "candidate_emails",
@@ -109,6 +107,8 @@
         "candidate_nurture_campaigns",
         "candidates",
         "data_subject_requests",
+        "outreach_sequence_steps",
+        "outreach_sequences",
         "recruiter_interactions",
         "recruiting_event_attendances",
         "recruitment_agencies",
@@ -175,7 +175,8 @@
         "OFFER-MGMT"
       ],
       "masters": [
-        "pre_employees"
+        "pre_employees",
+        "right_to_work_verifications"
       ],
       "embedded_masters": [
         "candidates",
@@ -300,6 +301,29 @@
           "is_terminal": true
         }
       ]
+    },
+    {
+      "name": "agency_submissions",
+      "singular_label": "Agency Submission",
+      "plural_label": "Agency Submissions",
+      "description": "Record of a staffing or search agency submitting a candidate against a requisition. Carries the submission date, the ownership and dedup window that determines which agency owns a placement when more than one submits the same person, and the fee terms that apply if the submission converts to a hire.",
+      "is_canonical_bare_word": false,
+      "pattern_flags": {
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      },
+      "aliases": [
+        {
+          "name": "Agency Candidate Submission",
+          "source": "synonym"
+        },
+        {
+          "name": "Agency Referral",
+          "source": "synonym"
+        }
+      ],
+      "lifecycle_states": []
     },
     {
       "name": "applicant_flow_records",
@@ -1812,6 +1836,69 @@
       ]
     },
     {
+      "name": "outreach_sequence_steps",
+      "singular_label": "Outreach Sequence Step",
+      "plural_label": "Outreach Sequence Steps",
+      "description": "One ordered step within an outreach sequence: the channel, the day offset from enrollment, the message template, and whether the step is automated or requires a recruiter action. Defines the cadence the platform follows when a candidate is enrolled in the parent sequence.",
+      "is_canonical_bare_word": false,
+      "pattern_flags": {
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      },
+      "aliases": [
+        {
+          "name": "Cadence Step",
+          "source": "synonym"
+        }
+      ],
+      "lifecycle_states": []
+    },
+    {
+      "name": "outreach_sequences",
+      "singular_label": "Outreach Sequence",
+      "plural_label": "Outreach Sequences",
+      "description": "Named multi-step sourcing cadence definition (for example day 0 email, day 3 nudge, day 7 message) that automates candidate outreach. Holds the sequence name, owner, channel mix, and active status, and is the parent of its ordered steps.",
+      "is_canonical_bare_word": false,
+      "pattern_flags": {
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      },
+      "aliases": [
+        {
+          "name": "Outreach Campaign",
+          "source": "synonym"
+        },
+        {
+          "name": "Sourcing Cadence",
+          "source": "synonym"
+        }
+      ],
+      "lifecycle_states": [
+        {
+          "name": "draft",
+          "order": 1,
+          "is_initial": true
+        },
+        {
+          "name": "active",
+          "order": 2,
+          "requires_permission": true,
+          "permission_verb_override": "activate_outreach_sequence"
+        },
+        {
+          "name": "paused",
+          "order": 3
+        },
+        {
+          "name": "archived",
+          "order": 4,
+          "is_terminal": true
+        }
+      ]
+    },
+    {
       "name": "pre_adverse_action_notices",
       "singular_label": "Pre-Adverse Action Notice",
       "plural_label": "Pre-Adverse Action Notices",
@@ -2212,6 +2299,64 @@
       ]
     },
     {
+      "name": "right_to_work_verifications",
+      "singular_label": "Right to Work Verification",
+      "plural_label": "Right to Work Verifications",
+      "description": "Pre-hire right-to-work verification event (the I-9 employment eligibility check or E-Verify confirmation itself), distinct from the supporting documents the candidate provides. Tracks the verification method, status, verifier, completion date, and any tentative or final non-confirmation, and handles data subject to federal employment-eligibility law.",
+      "is_canonical_bare_word": false,
+      "pattern_flags": {
+        "has_personal_content": true,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      },
+      "aliases": [
+        {
+          "name": "E-Verify Check",
+          "source": "synonym"
+        },
+        {
+          "name": "Employment Eligibility Verification",
+          "source": "synonym"
+        },
+        {
+          "name": "I-9 Verification",
+          "source": "synonym"
+        }
+      ],
+      "lifecycle_states": [
+        {
+          "name": "pending",
+          "order": 1,
+          "is_initial": true
+        },
+        {
+          "name": "in_progress",
+          "order": 2
+        },
+        {
+          "name": "verified",
+          "order": 3,
+          "is_terminal": true,
+          "requires_permission": true,
+          "permission_verb_override": "verify_right_to_work"
+        },
+        {
+          "name": "tentative_nonconfirmation",
+          "order": 4
+        },
+        {
+          "name": "final_nonconfirmation",
+          "order": 5,
+          "is_terminal": true
+        },
+        {
+          "name": "closed",
+          "order": 6,
+          "is_terminal": true
+        }
+      ]
+    },
+    {
       "name": "talent_pool_memberships",
       "singular_label": "Talent Pool Membership",
       "plural_label": "Talent Pool Memberships",
@@ -2332,114 +2477,93 @@
   ],
   "relationships": [
     {
-      "from": "candidates",
-      "verb": "engaged_via",
-      "to": "candidate_engagements",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "candidate_nurture_campaigns",
-      "verb": "generates",
-      "to": "candidate_engagements",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "candidates",
-      "verb": "attends_via",
-      "to": "recruiting_event_attendances",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "recruitment_events",
-      "verb": "has_attendance",
-      "to": "recruiting_event_attendances",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "candidates",
-      "verb": "noted_via",
-      "to": "recruiter_interactions",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "candidates",
-      "verb": "consents_via",
-      "to": "candidate_consents",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "talent_pools",
-      "verb": "targets",
-      "to": "candidate_nurture_campaigns",
+      "from": "adverse_action_notices",
+      "verb": "has owner",
+      "to": "users",
       "cardinality": "many_to_many",
       "required": false
     },
     {
-      "from": "talent_pools",
-      "verb": "has_member",
-      "to": "talent_pool_memberships",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "candidates",
-      "verb": "member_of_via",
-      "to": "talent_pool_memberships",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "talent_segments",
-      "verb": "materializes_into",
-      "to": "talent_pools",
-      "cardinality": "one_to_many",
+      "from": "agency_submissions",
+      "verb": "has owner",
+      "to": "users",
+      "cardinality": "many_to_many",
       "required": false
     },
     {
-      "from": "candidate_referrals",
-      "verb": "earns",
-      "to": "referral_payouts",
+      "from": "applicant_flow_records",
+      "verb": "audited_via",
+      "to": "ofccp_audit_trails",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "applicant_flow_records",
+      "verb": "has owner",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "application_screening_questions",
+      "verb": "answered_by",
+      "to": "application_screening_answers",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "application_stage_transitions",
+      "verb": "has author",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "application_stages",
+      "verb": "lands_at",
+      "to": "application_stage_transitions",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "background_check_adjudications",
+      "verb": "triggers",
+      "to": "adverse_action_notices",
       "cardinality": "one_to_one",
       "required": false
     },
     {
-      "from": "referral_rewards",
-      "verb": "governs",
-      "to": "referral_payouts",
-      "cardinality": "one_to_many",
+      "from": "background_check_adjudications",
+      "verb": "has adjudicator",
+      "to": "users",
+      "cardinality": "many_to_many",
       "required": true
     },
     {
-      "from": "referral_campaigns",
-      "verb": "overrides",
-      "to": "referral_rewards",
+      "from": "background_check_components",
+      "verb": "disputed_via",
+      "to": "background_check_disputes",
       "cardinality": "one_to_many",
       "required": false
     },
     {
-      "from": "background_checks",
-      "verb": "contains",
-      "to": "background_check_components",
-      "cardinality": "one_to_many",
-      "required": true
+      "from": "background_check_components",
+      "verb": "has owner",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "background_check_disputes",
+      "verb": "has owner",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
     },
     {
       "from": "background_check_packages",
       "verb": "shapes",
       "to": "background_checks",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "candidates",
-      "verb": "discloses_via",
-      "to": "fcra_disclosures",
       "cardinality": "one_to_many",
       "required": true
     },
@@ -2451,192 +2575,17 @@
       "required": true
     },
     {
-      "from": "background_check_adjudications",
-      "verb": "triggers",
-      "to": "adverse_action_notices",
-      "cardinality": "one_to_one",
-      "required": false
-    },
-    {
-      "from": "background_check_components",
-      "verb": "disputed_via",
-      "to": "background_check_disputes",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "job_requisitions",
-      "verb": "defines_pipeline",
-      "to": "application_stages",
+      "from": "background_checks",
+      "verb": "contains",
+      "to": "background_check_components",
       "cardinality": "one_to_many",
       "required": true
     },
     {
-      "from": "job_applications",
-      "verb": "transitions_via",
-      "to": "application_stage_transitions",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "application_stages",
-      "verb": "lands_at",
-      "to": "application_stage_transitions",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "job_requisitions",
+      "from": "background_checks",
       "verb": "gated_by",
-      "to": "requisition_approvals",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "job_postings",
-      "verb": "syndicates_via",
-      "to": "job_posting_distributions",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "job_postings",
-      "verb": "asks",
-      "to": "application_screening_questions",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "job_applications",
-      "verb": "answers_via",
-      "to": "application_screening_answers",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "application_screening_questions",
-      "verb": "answered_by",
-      "to": "application_screening_answers",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "candidates",
-      "verb": "self_identifies_via",
-      "to": "eeo_responses",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "interview_kits",
-      "verb": "shapes",
-      "to": "interviews",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "interview_kits",
-      "verb": "includes",
-      "to": "interview_questions",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "interviews",
-      "verb": "convenes",
-      "to": "interview_panels",
-      "cardinality": "one_to_one",
-      "required": true
-    },
-    {
-      "from": "interview_panels",
-      "verb": "produces",
-      "to": "interview_scorecards",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "candidate_assessment_templates",
-      "verb": "instantiates_as",
-      "to": "candidate_assessments",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "interviewer_availability_slots",
-      "verb": "booked_for",
-      "to": "interviews",
-      "cardinality": "one_to_one",
-      "required": false
-    },
-    {
-      "from": "job_offers",
-      "verb": "evolves_through",
-      "to": "offer_versions",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "job_offers",
-      "verb": "gated_by",
-      "to": "offer_approvals",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "offer_versions",
-      "verb": "renders_as",
-      "to": "offer_letter_documents",
-      "cardinality": "one_to_one",
-      "required": true
-    },
-    {
-      "from": "candidates",
-      "verb": "submits_via",
-      "to": "data_subject_requests",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "candidates",
-      "verb": "self_ids_via",
-      "to": "voluntary_self_identifications",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "candidates",
-      "verb": "acknowledges_via",
       "to": "fcra_summary_of_rights_acknowledgements",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "job_applications",
-      "verb": "disposed_via",
-      "to": "application_dispositions",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "job_applications",
-      "verb": "logged_via",
-      "to": "applicant_flow_records",
       "cardinality": "one_to_one",
-      "required": true
-    },
-    {
-      "from": "job_requisitions",
-      "verb": "staffed_by",
-      "to": "hiring_team_assignments",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "hiring_team_assignments",
-      "verb": "assigns",
-      "to": "users",
-      "cardinality": "many_to_many",
       "required": true
     },
     {
@@ -2648,38 +2597,17 @@
     },
     {
       "from": "background_checks",
-      "verb": "gated_by",
-      "to": "fcra_summary_of_rights_acknowledgements",
-      "cardinality": "one_to_one",
+      "verb": "has requester",
+      "to": "users",
+      "cardinality": "many_to_many",
       "required": true
     },
     {
-      "from": "applicant_flow_records",
-      "verb": "audited_via",
-      "to": "ofccp_audit_trails",
+      "from": "candidate_assessment_templates",
+      "verb": "instantiates_as",
+      "to": "candidate_assessments",
       "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "candidates",
-      "verb": "has owning recruiter",
-      "to": "users",
-      "cardinality": "many_to_many",
       "required": false
-    },
-    {
-      "from": "job_postings",
-      "verb": "has publisher",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "talent_pools",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
     },
     {
       "from": "candidate_assessments",
@@ -2689,30 +2617,93 @@
       "required": true
     },
     {
-      "from": "background_checks",
-      "verb": "has requester",
+      "from": "candidate_emails",
+      "verb": "has sender",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "candidate_engagements",
+      "verb": "has recruiter",
       "to": "users",
       "cardinality": "many_to_many",
       "required": true
     },
     {
-      "from": "recruitment_agencies",
-      "verb": "has relationship owner",
+      "from": "candidate_nurture_campaigns",
+      "verb": "generates",
+      "to": "candidate_engagements",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "candidate_nurture_campaigns",
+      "verb": "has owner",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "candidate_referrals",
+      "verb": "introduces",
+      "to": "candidates",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "candidate_referrals",
+      "verb": "earns",
+      "to": "referral_payouts",
+      "cardinality": "one_to_one",
+      "required": false
+    },
+    {
+      "from": "candidate_referrals",
+      "verb": "has referring employee",
       "to": "users",
       "cardinality": "many_to_many",
       "required": true
     },
     {
-      "from": "recruitment_events",
-      "verb": "has coordinator",
-      "to": "users",
-      "cardinality": "many_to_many",
+      "from": "candidate_tags",
+      "verb": "applied_via",
+      "to": "candidate_tag_assignments",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "candidates",
+      "verb": "submitted_via",
+      "to": "agency_submissions",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "candidates",
+      "verb": "consents_via",
+      "to": "candidate_consents",
+      "cardinality": "one_to_many",
       "required": true
     },
     {
       "from": "candidates",
       "verb": "documented_via",
       "to": "candidate_documents",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "candidates",
+      "verb": "corresponds_via",
+      "to": "candidate_emails",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "candidates",
+      "verb": "engaged_via",
+      "to": "candidate_engagements",
       "cardinality": "one_to_many",
       "required": false
     },
@@ -2731,16 +2722,576 @@
       "required": false
     },
     {
-      "from": "candidate_tags",
-      "verb": "applied_via",
-      "to": "candidate_tag_assignments",
+      "from": "candidates",
+      "verb": "submits_via",
+      "to": "data_subject_requests",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "candidates",
+      "verb": "screened_via",
+      "to": "drug_health_screenings",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "candidates",
+      "verb": "self_identifies_via",
+      "to": "eeo_responses",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "candidates",
+      "verb": "discloses_via",
+      "to": "fcra_disclosures",
       "cardinality": "one_to_many",
       "required": true
+    },
+    {
+      "from": "candidates",
+      "verb": "acknowledges_via",
+      "to": "fcra_summary_of_rights_acknowledgements",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "candidates",
+      "verb": "submits",
+      "to": "job_applications",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "candidates",
+      "verb": "becomes pre-employee",
+      "to": "pre_employees",
+      "cardinality": "one_to_one",
+      "required": true
+    },
+    {
+      "from": "candidates",
+      "verb": "noted_via",
+      "to": "recruiter_interactions",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "candidates",
+      "verb": "attends_via",
+      "to": "recruiting_event_attendances",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "candidates",
+      "verb": "verified_via",
+      "to": "right_to_work_verifications",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "candidates",
+      "verb": "member_of_via",
+      "to": "talent_pool_memberships",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "candidates",
+      "verb": "has owning recruiter",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "candidates",
+      "verb": "self_ids_via",
+      "to": "voluntary_self_identifications",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "data_subject_requests",
+      "verb": "has owner",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "drug_health_screenings",
+      "verb": "has coordinator",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "hcm_positions",
+      "verb": "spawns",
+      "to": "job_requisitions",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "hiring_team_assignments",
+      "verb": "assigns",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "interview_kits",
+      "verb": "includes",
+      "to": "interview_questions",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "interview_kits",
+      "verb": "shapes",
+      "to": "interviews",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "interview_panels",
+      "verb": "produces",
+      "to": "interview_scorecards",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "interview_panels",
+      "verb": "has owner",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "interview_scorecards",
+      "verb": "has interviewer as author",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "interviewer_availability_slots",
+      "verb": "booked_for",
+      "to": "interviews",
+      "cardinality": "one_to_one",
+      "required": false
+    },
+    {
+      "from": "interviewer_availability_slots",
+      "verb": "has owner",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "interviews",
+      "verb": "convenes",
+      "to": "interview_panels",
+      "cardinality": "one_to_one",
+      "required": true
+    },
+    {
+      "from": "interviews",
+      "verb": "is scored via",
+      "to": "interview_scorecards",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "interviews",
+      "verb": "has coordinator and panelists",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "job_applications",
+      "verb": "logged_via",
+      "to": "applicant_flow_records",
+      "cardinality": "one_to_one",
+      "required": true
+    },
+    {
+      "from": "job_applications",
+      "verb": "disposed_via",
+      "to": "application_dispositions",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "job_applications",
+      "verb": "answers_via",
+      "to": "application_screening_answers",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "job_applications",
+      "verb": "transitions_via",
+      "to": "application_stage_transitions",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "job_applications",
+      "verb": "requires",
+      "to": "candidate_assessments",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "job_applications",
+      "verb": "schedules",
+      "to": "interviews",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "job_applications",
+      "verb": "results in",
+      "to": "job_offers",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "job_applications",
+      "verb": "has owning recruiter",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "job_offers",
+      "verb": "is contingent on",
+      "to": "background_checks",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "job_offers",
+      "verb": "gated_by",
+      "to": "offer_approvals",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "job_offers",
+      "verb": "evolves_through",
+      "to": "offer_versions",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "job_offers",
+      "verb": "spawns pre-employee record",
+      "to": "pre_employees",
+      "cardinality": "one_to_one",
+      "required": true
+    },
+    {
+      "from": "job_offers",
+      "verb": "has approver",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "job_postings",
+      "verb": "asks",
+      "to": "application_screening_questions",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "job_postings",
+      "verb": "is applied to via",
+      "to": "job_applications",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "job_postings",
+      "verb": "syndicates_via",
+      "to": "job_posting_distributions",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "job_postings",
+      "verb": "has publisher",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "job_profiles",
+      "verb": "feeds",
+      "to": "job_postings",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "job_requisitions",
+      "verb": "defines_pipeline",
+      "to": "application_stages",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "job_requisitions",
+      "verb": "staffed_by",
+      "to": "hiring_team_assignments",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "job_requisitions",
+      "verb": "receives",
+      "to": "job_applications",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "job_requisitions",
+      "verb": "is advertised through",
+      "to": "job_postings",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "job_requisitions",
+      "verb": "gated_by",
+      "to": "requisition_approvals",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "job_requisitions",
+      "verb": "has recruiter and hiring manager",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "ofccp_audit_trails",
+      "verb": "has author",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "offer_approvals",
+      "verb": "has approver",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "offer_letter_documents",
+      "verb": "has owner",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
     },
     {
       "from": "offer_letter_templates",
       "verb": "rendered_as",
       "to": "offer_letter_documents",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "offer_versions",
+      "verb": "renders_as",
+      "to": "offer_letter_documents",
+      "cardinality": "one_to_one",
+      "required": true
+    },
+    {
+      "from": "offer_versions",
+      "verb": "has author",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "outreach_sequences",
+      "verb": "contains",
+      "to": "outreach_sequence_steps",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "outreach_sequences",
+      "verb": "has owner",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "pre_adverse_action_notices",
+      "verb": "has owner",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "pre_employees",
+      "verb": "has owning hr_coordinator",
+      "to": "users",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "recruiter_interactions",
+      "verb": "has author",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "recruiter_saved_searches",
+      "verb": "has owner",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "recruiting_event_attendances",
+      "verb": "has owner",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "recruitment_agencies",
+      "verb": "submits_via",
+      "to": "agency_submissions",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "recruitment_agencies",
+      "verb": "sources",
+      "to": "candidates",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "recruitment_agencies",
+      "verb": "has relationship owner",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "recruitment_events",
+      "verb": "attracts",
+      "to": "candidates",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "recruitment_events",
+      "verb": "has_attendance",
+      "to": "recruiting_event_attendances",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "recruitment_events",
+      "verb": "has coordinator",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "recruitment_sources",
+      "verb": "attributes",
+      "to": "candidates",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "referral_campaigns",
+      "verb": "overrides",
+      "to": "referral_rewards",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "referral_campaigns",
+      "verb": "has owner",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "referral_payouts",
+      "verb": "has approver",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "referral_rewards",
+      "verb": "governs",
+      "to": "referral_payouts",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "requisition_approvals",
+      "verb": "has approver",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "right_to_work_verifications",
+      "verb": "has verifier",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "talent_pools",
+      "verb": "targets",
+      "to": "candidate_nurture_campaigns",
+      "cardinality": "many_to_many",
+      "required": false
+    },
+    {
+      "from": "talent_pools",
+      "verb": "groups",
+      "to": "candidates",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "talent_pools",
+      "verb": "has_member",
+      "to": "talent_pool_memberships",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "talent_pools",
+      "verb": "has owner",
+      "to": "users",
+      "cardinality": "many_to_many",
+      "required": true
+    },
+    {
+      "from": "talent_segments",
+      "verb": "materializes_into",
+      "to": "talent_pools",
       "cardinality": "one_to_many",
       "required": false
     },
@@ -2767,770 +3318,19 @@
     },
     {
       "from": "users",
-      "verb": "authored templates",
-      "to": "offer_letter_templates",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "users",
       "verb": "approved templates",
       "to": "offer_letter_templates",
       "cardinality": "one_to_many",
       "required": false
     },
     {
-      "from": "candidate_engagements",
-      "verb": "has recruiter",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "candidate_nurture_campaigns",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "background_check_components",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "background_check_adjudications",
-      "verb": "has adjudicator",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "adverse_action_notices",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "background_check_disputes",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "application_stage_transitions",
-      "verb": "has author",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "applicant_flow_records",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "data_subject_requests",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "recruiter_saved_searches",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "referral_payouts",
-      "verb": "has approver",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "referral_campaigns",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "requisition_approvals",
-      "verb": "has approver",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "recruiting_event_attendances",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "pre_adverse_action_notices",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "interviewer_availability_slots",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "offer_versions",
-      "verb": "has author",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "offer_approvals",
-      "verb": "has approver",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "offer_letter_documents",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "interview_panels",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "recruiter_interactions",
-      "verb": "has author",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "ofccp_audit_trails",
-      "verb": "has author",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "hcm_positions",
-      "verb": "spawns",
-      "to": "job_requisitions",
+      "from": "users",
+      "verb": "authored templates",
+      "to": "offer_letter_templates",
       "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "job_profiles",
-      "verb": "feeds",
-      "to": "job_postings",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "job_requisitions",
-      "verb": "is advertised through",
-      "to": "job_postings",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "job_requisitions",
-      "verb": "receives",
-      "to": "job_applications",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "job_postings",
-      "verb": "is applied to via",
-      "to": "job_applications",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "candidates",
-      "verb": "submits",
-      "to": "job_applications",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "candidate_referrals",
-      "verb": "introduces",
-      "to": "candidates",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "recruitment_sources",
-      "verb": "attributes",
-      "to": "candidates",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "recruitment_agencies",
-      "verb": "sources",
-      "to": "candidates",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "recruitment_events",
-      "verb": "attracts",
-      "to": "candidates",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "talent_pools",
-      "verb": "groups",
-      "to": "candidates",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "job_applications",
-      "verb": "schedules",
-      "to": "interviews",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "interviews",
-      "verb": "is scored via",
-      "to": "interview_scorecards",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "job_applications",
-      "verb": "requires",
-      "to": "candidate_assessments",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "job_applications",
-      "verb": "results in",
-      "to": "job_offers",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "job_offers",
-      "verb": "is contingent on",
-      "to": "background_checks",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "job_requisitions",
-      "verb": "has recruiter and hiring manager",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "job_applications",
-      "verb": "has owning recruiter",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "interviews",
-      "verb": "has coordinator and panelists",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "interview_scorecards",
-      "verb": "has interviewer as author",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "job_offers",
-      "verb": "has approver",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "candidate_referrals",
-      "verb": "has referring employee",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "job_offers",
-      "verb": "spawns pre-employee record",
-      "to": "pre_employees",
-      "cardinality": "one_to_one",
-      "required": true
-    },
-    {
-      "from": "candidates",
-      "verb": "becomes pre-employee",
-      "to": "pre_employees",
-      "cardinality": "one_to_one",
-      "required": true
-    },
-    {
-      "from": "pre_employees",
-      "verb": "has owning hr_coordinator",
-      "to": "users",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "candidates",
-      "verb": "corresponds_via",
-      "to": "candidate_emails",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "candidate_emails",
-      "verb": "has sender",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "candidates",
-      "verb": "screened_via",
-      "to": "drug_health_screenings",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "drug_health_screenings",
-      "verb": "has coordinator",
-      "to": "users",
-      "cardinality": "many_to_many",
       "required": false
     }
   ],
-  "handoffs": {
-    "outbound": [
-      {
-        "trigger_event": "job_offer.accepted",
-        "payload": "onboarding_journeys",
-        "target_domain": "ONBOARDING",
-        "target_module": "ONB-JOURNEY-MGMT",
-        "integration_pattern": "event_stream",
-        "friction_level": "high",
-        "source_module": "ATS-OFFERS",
-        "apqc_processes": [
-          {
-            "external_id": "10469",
-            "name": "Manage employee onboarding"
-          }
-        ]
-      },
-      {
-        "trigger_event": "requisition.filled",
-        "payload": "position_demand_forecasts",
-        "target_domain": "SWP",
-        "target_module": "SWP-DEMAND-FORECAST",
-        "integration_pattern": "event_stream",
-        "friction_level": "medium",
-        "source_module": "ATS-RECRUITMENT-PIPELINE",
-        "apqc_processes": [
-          {
-            "external_id": "21698",
-            "name": "Manage employee requisitions"
-          }
-        ]
-      },
-      {
-        "trigger_event": "candidate.hired",
-        "payload": "employees",
-        "target_domain": "HCM",
-        "target_module": "HCM-CORE-WORKER",
-        "integration_pattern": "event_stream",
-        "friction_level": "medium",
-        "source_module": "ATS-CANDIDATE-CRM",
-        "apqc_processes": [
-          {
-            "external_id": "10443",
-            "name": "Manage new hire/re-hire"
-          }
-        ]
-      },
-      {
-        "trigger_event": "requisition.filled",
-        "payload": "people_kpis",
-        "target_domain": "PA",
-        "target_module": "PA-WORKFORCE-METRICS",
-        "integration_pattern": "event_stream",
-        "friction_level": "low",
-        "source_module": "ATS-RECRUITMENT-PIPELINE",
-        "apqc_processes": [
-          {
-            "external_id": "21698",
-            "name": "Manage employee requisitions"
-          }
-        ]
-      },
-      {
-        "trigger_event": "job_offer.accepted",
-        "payload": "benefit_enrollments",
-        "target_domain": "BEN-ADMIN",
-        "target_module": "BEN-ENROLLMENT",
-        "integration_pattern": "event_stream",
-        "friction_level": "medium",
-        "source_module": "ATS-OFFERS",
-        "apqc_processes": [
-          {
-            "external_id": "20599",
-            "name": "Manage employee onboarding, training, and development"
-          }
-        ]
-      },
-      {
-        "trigger_event": "job_offer.signed",
-        "payload": "compensation_statements",
-        "target_domain": "COMP-MGMT",
-        "target_module": "COMP-STATEMENTS",
-        "integration_pattern": "event_stream",
-        "friction_level": "medium",
-        "source_module": "ATS-OFFERS",
-        "apqc_processes": [
-          {
-            "external_id": "10443",
-            "name": "Manage new hire/re-hire"
-          }
-        ]
-      },
-      {
-        "trigger_event": "candidate.hired",
-        "payload": "candidates",
-        "target_domain": "HCM",
-        "target_module": "HCM-LIFECYCLE-WORKFLOWS",
-        "integration_pattern": "event_stream",
-        "friction_level": "high",
-        "source_module": "ATS-CANDIDATE-CRM",
-        "apqc_processes": [
-          {
-            "external_id": "10443",
-            "name": "Manage new hire/re-hire"
-          }
-        ]
-      },
-      {
-        "trigger_event": "candidate.hired",
-        "payload": "candidates",
-        "target_domain": "ONBOARDING",
-        "target_module": "ONB-JOURNEY-MGMT",
-        "integration_pattern": "event_stream",
-        "friction_level": "medium",
-        "source_module": "ATS-CANDIDATE-CRM",
-        "apqc_processes": [
-          {
-            "external_id": "10440",
-            "name": "Recruit/Source candidates"
-          }
-        ]
-      },
-      {
-        "trigger_event": "candidate.hired",
-        "payload": "candidates",
-        "target_domain": "BEN-ADMIN",
-        "target_module": "BEN-ENROLLMENT",
-        "integration_pattern": "event_stream",
-        "friction_level": "low",
-        "source_module": "ATS-CANDIDATE-CRM",
-        "apqc_processes": [
-          {
-            "external_id": "20599",
-            "name": "Manage employee onboarding, training, and development"
-          }
-        ]
-      },
-      {
-        "trigger_event": "job_offer.accepted",
-        "payload": "job_offers",
-        "target_domain": "HCM",
-        "target_module": "HCM-LIFECYCLE-WORKFLOWS",
-        "integration_pattern": "event_stream",
-        "friction_level": "medium",
-        "source_module": "ATS-OFFERS",
-        "apqc_processes": [
-          {
-            "external_id": "10465",
-            "name": "Hire candidate"
-          }
-        ]
-      },
-      {
-        "trigger_event": "job_offer.signed",
-        "payload": "job_offers",
-        "target_domain": "COMP-MGMT",
-        "target_module": "COMP-STATEMENTS",
-        "integration_pattern": "event_stream",
-        "friction_level": "low",
-        "source_module": "ATS-OFFERS",
-        "apqc_processes": [
-          {
-            "external_id": "10443",
-            "name": "Manage new hire/re-hire"
-          }
-        ]
-      },
-      {
-        "trigger_event": "requisition.filled",
-        "payload": "job_requisitions",
-        "target_domain": "HCM",
-        "target_module": "HCM-ORG-POSITIONS",
-        "integration_pattern": "event_stream",
-        "friction_level": "low",
-        "source_module": "ATS-RECRUITMENT-PIPELINE",
-        "apqc_processes": [
-          {
-            "external_id": "21698",
-            "name": "Manage employee requisitions"
-          }
-        ]
-      },
-      {
-        "trigger_event": "requisition.filled",
-        "payload": "job_requisitions",
-        "target_domain": "SWP",
-        "target_module": "SWP-DEMAND-FORECAST",
-        "integration_pattern": "event_stream",
-        "friction_level": "low",
-        "source_module": "ATS-RECRUITMENT-PIPELINE",
-        "apqc_processes": [
-          {
-            "external_id": "21698",
-            "name": "Manage employee requisitions"
-          }
-        ]
-      },
-      {
-        "trigger_event": "background_check.cleared",
-        "payload": "background_checks",
-        "target_domain": "PAYROLL",
-        "target_module": "PAYROLL-RUN",
-        "integration_pattern": "api_call",
-        "friction_level": "medium",
-        "source_module": "ATS-BACKGROUND-CHECKS",
-        "apqc_processes": [
-          {
-            "external_id": "10460",
-            "name": "Obtain candidate background information"
-          }
-        ]
-      },
-      {
-        "trigger_event": "background_check.flagged",
-        "payload": "background_checks",
-        "target_domain": "HRSD",
-        "target_module": "HRSD-CASE-MGMT",
-        "integration_pattern": "manual_handoff",
-        "friction_level": "high",
-        "source_module": "ATS-BACKGROUND-CHECKS",
-        "apqc_processes": [
-          {
-            "external_id": "17052",
-            "name": "Manage employee relations"
-          }
-        ]
-      },
-      {
-        "trigger_event": "recruitment_source.attributed",
-        "payload": "recruitment_sources",
-        "target_domain": "PA",
-        "target_module": "PA-WORKFORCE-METRICS",
-        "integration_pattern": "batch_sync",
-        "friction_level": "low",
-        "source_module": "ATS-CANDIDATE-CRM",
-        "apqc_processes": [
-          {
-            "external_id": "10440",
-            "name": "Recruit/Source candidates"
-          }
-        ]
-      },
-      {
-        "trigger_event": "candidate_referral.bonus_earned",
-        "payload": "candidate_referrals",
-        "target_domain": "PAYROLL",
-        "target_module": "PAYROLL-EARNINGS-DEDUCTIONS",
-        "integration_pattern": "api_call",
-        "friction_level": "medium",
-        "source_module": "ATS-REFERRALS",
-        "apqc_processes": [
-          {
-            "external_id": "17047",
-            "name": "Manage employee referral programs"
-          }
-        ]
-      },
-      {
-        "trigger_event": "headcount.approved",
-        "payload": "job_requisitions",
-        "target_domain": "HCM",
-        "target_module": "HCM-ORG-POSITIONS",
-        "integration_pattern": "event_stream",
-        "friction_level": "low",
-        "source_module": "ATS-RECRUITMENT-PIPELINE",
-        "apqc_processes": [
-          {
-            "external_id": "21698",
-            "name": "Manage employee requisitions"
-          }
-        ]
-      },
-      {
-        "trigger_event": "candidate_assessment.passed",
-        "payload": "candidate_assessments",
-        "target_domain": "HCM",
-        "target_module": "HCM-LIFECYCLE-WORKFLOWS",
-        "integration_pattern": "event_stream",
-        "friction_level": "medium",
-        "source_module": "ATS-INTERVIEWS",
-        "apqc_processes": [
-          {
-            "external_id": "10457",
-            "name": "Interview candidates"
-          }
-        ]
-      },
-      {
-        "trigger_event": "candidate_assessment.passed",
-        "payload": "candidate_assessments",
-        "target_domain": "TALENT-MGMT",
-        "target_module": "TALENT-SUCCESSION-CAREER",
-        "integration_pattern": "api_call",
-        "friction_level": "medium",
-        "source_module": "ATS-INTERVIEWS",
-        "apqc_processes": [
-          {
-            "external_id": "10457",
-            "name": "Interview candidates"
-          }
-        ]
-      },
-      {
-        "trigger_event": "candidate_assessment.failed",
-        "payload": "candidate_assessments",
-        "target_domain": "HCM",
-        "target_module": "HCM-LIFECYCLE-WORKFLOWS",
-        "integration_pattern": "event_stream",
-        "friction_level": "low",
-        "source_module": "ATS-INTERVIEWS",
-        "apqc_processes": [
-          {
-            "external_id": "10457",
-            "name": "Interview candidates"
-          }
-        ]
-      },
-      {
-        "trigger_event": "pre_employee.activated",
-        "payload": "pre_employees",
-        "target_domain": "HCM",
-        "target_module": "HCM-LIFECYCLE-WORKFLOWS",
-        "integration_pattern": "event_stream",
-        "friction_level": "medium",
-        "source_module": "ATS-PRE-EMPLOYEE-RECORD",
-        "apqc_processes": [
-          {
-            "external_id": "10443",
-            "name": "Manage new hire/re-hire"
-          }
-        ]
-      },
-      {
-        "trigger_event": "job_offer.rescinded",
-        "payload": "onboarding_journeys",
-        "target_domain": "ONBOARDING",
-        "target_module": "ONB-JOURNEY-MGMT",
-        "integration_pattern": "event_stream",
-        "friction_level": "high",
-        "source_module": "ATS-OFFERS",
-        "apqc_processes": [
-          {
-            "external_id": "10443",
-            "name": "Manage new hire/re-hire"
-          }
-        ]
-      },
-      {
-        "trigger_event": "job_offer.rescinded",
-        "payload": "benefit_enrollments",
-        "target_domain": "BEN-ADMIN",
-        "target_module": "BEN-ENROLLMENT",
-        "integration_pattern": "event_stream",
-        "friction_level": "high",
-        "source_module": "ATS-OFFERS",
-        "apqc_processes": [
-          {
-            "external_id": "10505",
-            "name": "Administer benefit enrollment"
-          }
-        ]
-      },
-      {
-        "trigger_event": "job_offer.rescinded",
-        "payload": "compensation_statements",
-        "target_domain": "COMP-MGMT",
-        "target_module": "COMP-STATEMENTS",
-        "integration_pattern": "event_stream",
-        "friction_level": "medium",
-        "source_module": "ATS-OFFERS",
-        "apqc_processes": [
-          {
-            "external_id": "10443",
-            "name": "Manage new hire/re-hire"
-          }
-        ]
-      },
-      {
-        "trigger_event": "interview_scorecard.submitted",
-        "payload": "interview_scorecards",
-        "target_domain": "PA",
-        "target_module": "PA-WORKFORCE-METRICS",
-        "integration_pattern": "event_stream",
-        "friction_level": "low",
-        "source_module": "ATS-INTERVIEWS",
-        "apqc_processes": [
-          {
-            "external_id": "10457",
-            "name": "Interview candidates"
-          }
-        ]
-      }
-    ]
-  },
   "apqc_processes_touched": [
     {
       "external_id": "10440",
@@ -3569,19 +3369,16 @@
       "name": "Manage employee relations"
     },
     {
-      "external_id": "20599",
-      "name": "Manage employee onboarding, training, and development"
-    },
-    {
       "external_id": "21698",
       "name": "Manage employee requisitions"
     }
   ],
   "system_skills": [
     {
-      "module_code": null,
       "skill_grain": "domain",
-      "skill_name": "ats-system",
+      "skill_name": "ats",
+      "description": "Open and route job requisitions for approval, post openings to job boards, and capture applications. Source candidates, build talent pools, and run outreach and referral campaigns. Move applicants through pipeline stages, schedule interviews, collect scorecards, and run assessments. Generate and version offer letters, route them for approval, and send them for e-signature. Order background and drug screenings with FCRA disclosures and adverse-action notices, then hand accepted hires to onboarding. Track EEO and OFCCP funnel analytics and disposition reasons.",
+      "trigger_keywords": "ATS, applicant tracking system, recruiting, recruitment, hiring, talent acquisition, req, sourcing, headhunting, resume, CV, careers page, candidate experience, nurture, recruiter CRM, interview kit, hiring panel, hiring manager, time-to-fill, offer management, salary, comp, e-sign, drug test, EEOC, diversity, compliance, new hire, pre-employee, scorecards, requisition approval",
       "tools": [
         {
           "name": "activate_pre_employee",

@@ -1,13 +1,14 @@
 {
   "facts_major": 1,
-  "emitted": "2026-06-16",
-  "catalog_snapshot": "catalog-2026-06-16",
+  "emitted": "2026-06-17",
+  "catalog_snapshot": "catalog-2026-06-17",
   "bundle": {
     "code": "IT-OPS-STARTER",
     "name": "IT Operations Starter",
     "kind": "industry_starter",
     "domain_attached": false,
     "tagline": "Run your whole IT shop from one place: tickets, devices, SaaS renewals, and contracts, without the spreadsheets.",
+    "catalog_description": "One place to manage IT for a small team. Track the hardware you own and who has it, every SaaS app and when its subscription renews, and the contracts behind them, so nothing slips through a spreadsheet and no renewal catches you off guard. Add a lightweight helpdesk for tickets and requests if you do not already run one, or keep the one you have. Start with the renewal and contract essentials and turn on the device, SaaS, and helpdesk pieces as you need them. Built for IT teams that have outgrown spreadsheets but do not need a full enterprise IT suite.",
     "description": "Cross-domain starter kit for small and mid-sized IT teams. Embeds lightweight shells of the records a small IT shop manages: the helpdesk (optional), the hardware register, the SaaS application and renewal tracker, and the contract register. The renewal/contract spine (asset_contracts + saas_subscriptions) is required; hardware, SaaS apps, helpdesk, and on-prem licenses are optional. domain_id NULL; hosts ITSM, HAM, SMP, ITAM, SAM. Replaces the helpdesk-plus-spreadsheets reality; budget stays in the general ledger.",
     "host_domains": [
       "HAM",
@@ -76,13 +77,12 @@
       "owning_domain": null
     }
   ],
-  "handoffs": {
-    "outbound": []
-  },
   "apqc_processes_touched": [],
   "system_skill": {
-    "skill_grain": "starter",
-    "skill_name": "it_ops_starter_system",
+    "skill_grain": "domain",
+    "skill_name": "it-ops-starter",
+    "description": "Manage IT for a small team from one place: log and resolve helpdesk tickets and service requests, track hardware and who has each device, inventory SaaS apps and their subscriptions, watch upcoming renewal dates, keep the contracts and on-prem licenses behind them, and alert owners before anything lapses. Look up a device, an app, a subscription, or a contract, record a new ticket or request, and flag renewals that are coming due.",
+    "trigger_keywords": "IT asset management, ITAM, ITSM, help desk, ticketing, incident, MSP, CMDB, asset register, software asset management, SAM, license compliance, vendor agreement, autorenewal, SaaS spend, shadow IT, seat count, end of life, warranty, procurement, sysadmin, IT operations",
     "tools": [
       {
         "name": "create_service_request",

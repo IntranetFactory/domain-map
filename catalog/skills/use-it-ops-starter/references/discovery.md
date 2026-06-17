@@ -1,6 +1,6 @@
 # Discovery procedure
 
-Reconciles the HQ-emitted `spec.json` (the uber-model this domain assumes) against what is
+Reconciles the DomainMap-emitted `spec.json` (the DomainMap model this domain assumes) against what is
 actually deployed in this deployment. Discovery is **read-only** against the platform; it never
 inserts, updates, or deletes. Its outputs are `discovered.json` (full snapshot + per-concept
 resolution) and `state.jsonc` (lean deltas).
@@ -59,7 +59,7 @@ a deployment choice (or a bundled package), not a failure.
 
 ---
 
-## Pass 2: the resolution ladder (per uber-model concept)
+## Pass 2: the resolution ladder (per DomainMap concept)
 
 For each concept `X` the domain assumes (the union of every module's `masters`,
 `embedded_masters`, and `consumers`; each name **is** its canonical code under D6), resolve `X`

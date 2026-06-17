@@ -1,13 +1,14 @@
 {
   "facts_major": 1,
-  "emitted": "2026-06-15",
-  "catalog_snapshot": "catalog-2026-06-15",
+  "emitted": "2026-06-17",
+  "catalog_snapshot": "catalog-2026-06-17",
   "bundle": {
     "code": "REAL-ESTATE-AGENT",
     "name": "Real Estate Agent (solo / small firm bundle)",
     "kind": "industry_starter",
     "domain_attached": false,
     "tagline": "A working surface for the real-estate agent.",
+    "catalog_description": "Bring contacts, listings, and the documents behind each deal into one agent-facing workspace. Move leads forward, keep listing and transaction paperwork organized, and stay on top of every active deal from a single view that travels with the agent across the systems they already use.",
     "description": "Solo-agent and small-firm persona bundle. Single-install deployable for individual real estate agents covering lead capture and contact relationships (CRM-LEAD-MGT, CRM-ACCT-MGT), listing creation and MLS syndication, tour scheduling, transaction execution, disclosure handling (RE-BROK-AGENT-OPS), and contract reference (CLM-REPOSITORY). One module to install; larger brokerages deploy the underlying full modules and skip the starter.",
     "host_domains": [
       "CLM",
@@ -115,13 +116,12 @@
       "owning_domain": null
     }
   ],
-  "handoffs": {
-    "outbound": []
-  },
   "apqc_processes_touched": [],
   "system_skill": {
-    "skill_grain": "starter",
-    "skill_name": "real_estate_agent",
+    "skill_grain": "domain",
+    "skill_name": "real-estate-agent",
+    "description": "Capture and qualify buyer and seller leads, keep client contacts organized, create and publish property listings, schedule and track showings, and carry each deal from offer through closing with disclosures and signed purchase agreements. Send client updates and reminders, request e-signatures on agreements, and optionally draft listing descriptions, generate follow-up messages, and match listings to buyer preferences.",
+    "trigger_keywords": "MLS, open house, property tour, home sale, escrow, commission, real estate CRM",
     "tools": [
       {
         "name": "convert_lead",

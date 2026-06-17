@@ -538,6 +538,20 @@ The two changes are paired, not independent: Phase 0 prevents the failure at loa
 
 ---
 
+### 2026-06-17 — F8 hardened: brand names and embedded "Use for:" tail are HARD fails in skill copy
+
+**Context.** Authoring `skills.description` + `skills.trigger_keywords` for the 13 catalog-released domains (the open follow-up from the same-day domain-grain decision above), the pass shipped competitor product names (ServiceNow, Jira Service Management, Zendesk, Freshservice, BMC Helix, Ivanti, Asana, DocuSign, Zylo, and more) into both columns, and embedded a "Use for: ..." keyword tail inside several `description` fields. Because the emitter ALSO appends its own "Use for:" built from `trigger_keywords`, those packages double-rendered the tail (e.g. use-itsm, use-clm, use-re-brokerage showed two "Use for:" segments). The user caught both on review of use-itsm.
+
+**Decision.** F8 gains two HARD fails. (1) No vendor / product / brand / trademark token in `description` OR `trigger_keywords`: Rule #18 already lists `skills.description` as a forbidden zone, and these two columns are not on Rule #18's commerce-shaped allow-list, so brand names belong only on `vendors` / `solutions` / `data_object_aliases` / `tool_solutions` (statutory / standards-body names like ITIL / HIPAA / WCAG / SCORM remain allowed). (2) `description` must be pure task prose with no `Use for:` segment or trailing keyword list: the rendered tail is emitter-only, from `trigger_keywords`. `trigger_keywords` redefined from "product-category names" to generic category terms + jargon only (help desk / ticketing / ITIL, never ServiceNow / Zendesk).
+
+**Reasoning.** F8's prior pass-bar invited "product-category names," which an authoring pass reads as "name the leading products," directly violating Rule #18; and nothing constrained the description to prose, so an embedded tail double-rendered against the emitter's own tail. Both are now caught at audit time. The same-day domain-grain entry above introduced `trigger_keywords` and the emitter "Use for:" composition; this entry closes the content-quality gaps that surfaced the first time the field was populated at scale.
+
+**Scope.** SKILL.md F8 band (Pass + Fix + Why). Pending follow-ups: (a) data cleanup of the brand names + double tails across the 13 skill rows authored this session (rows are `record_status='new'`, under user review) and re-emit of the affected `use-*` packages; (b) an emitter backstop in `scripts/emit_skill_spec.ts` `skillDescriptionFrom` that strips any embedded `Use for:` and rejects brand tokens, so a human-review miss cannot ship them.
+
+**Status.** active.
+
+---
+
 # Incidents
 
 Append one entry per occurrence. Used by SKILL.md Rule #15 — the agent MUST log here when notes have been written without user approval, AND revert the writes, AND propose a SKILL.md edit that removes whatever passage rationalized the violation.

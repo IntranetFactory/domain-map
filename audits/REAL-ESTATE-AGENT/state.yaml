@@ -1,12 +1,14 @@
-# domain_kind='bundle' audit (domain id 188; promoted 2026-06-16 from cross-domain starter module
+# domain_kind='bundle' audit (domain id 188; promoted 2026-06-16 from the cross-domain starter module
 # REAL-ESTATE-AGENT, domain_module id 153). A bundle masters NOTHING: it embeds/consumes entities from
-# other domains' markets (hosts: CRM, RE-BROKERAGE, CLM) and carries its own module-anchored system skill.
-# This audit validates ONLY the Rule #19 STARTER SHAPE. Per Rule #2, bundles are EXEMPT from the
-# market-shape audit floors (A1 full market metadata, A2 capabilities, B1 masters, C1 function-owner,
-# A3 solutions, F2 domain-grain skill). TAM fields (usa_market_size_usd_m / market_size_source_year)
-# being 0 is EXPECTED for a bundle, not a failure. All six invariants passed; nothing open.
+# other domains' markets (hosts: CRM, RE-BROKERAGE, CLM) and carries exactly one domain-grain skill.
+# This audit validates the Rule #19 STARTER SHAPE plus the F-band skill-layer checks. Per Rule #2 a
+# bundle is EXEMPT from the MARKET-shape floors (A2 capabilities, B1 masters, C1 function-owner, A3
+# solutions) and uses the A1 partial carve-out (no TAM / crud_percentage / business_logic required).
+# It is NOT exempt from F1/F2/F8: a bundle carries exactly one skill_type='domain' skill anchored to
+# the bundle domain, with non-empty description + trigger_keywords (current rules; skill_type='system'
+# and skills.domain_module_id are retired). All checks pass; nothing open.
 schema_version: 2
 domain: REAL-ESTATE-AGENT
 status: passed
 next_action_by: done
-last_audit: "2026-06-16"
+last_audit: "2026-06-17"

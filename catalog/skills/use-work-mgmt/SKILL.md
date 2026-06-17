@@ -1,18 +1,18 @@
 ---
-name: use-it-ops-starter
+name: use-work-mgmt
 description: >-
-  IT Operations Starter (IT-OPS-STARTER). Run your whole IT shop from one place: tickets, devices, SaaS renewals, and contracts, without the spreadsheets. Use for: IT operations, helpdesk, service desk, IT asset management, SaaS management, renewal tracking, software licenses, hardware inventory, contract management, small IT team, IT starter, ITSM, ITAM, SAM, SMP.
+  Plan projects and break them into assignable tasks with owners, due dates, and statuses; map dependencies and milestones on boards, lists, calendars, and timelines; and show who is doing what by when across teams. Set objectives and key results, link them to the work that moves them, and log check-ins so progress rolls up. Stand up request intake forms and route submissions, run approval and proofing reviews, automate status changes and reminders, balance workload against capacity, and report on cross-project dashboards. Use for: work management, project tracker, task tracker, to-do list, kanban, swimlane, Gantt, roadmap, sprint backlog, burndown, milestone tracking, dependency mapping, ticket queue, request queue, work intake, OKR, KPI, goal tracking, timesheets, resource allocation, capacity planning, workload balancing, creative markup, approval workflow, status rollup, PMO, BizOps, marketing ops, operations team.
 ---
 
-# use-it-ops-starter skill
+# use-work-mgmt skill
 
-This skill knows the **IT Operations Starter** domain as shipped from the catalog at HQ and as discovered in this deployment. It avoids re-discovering the domain shape on every conversation by persisting deployment-specific findings to local state.
+This skill knows the **Work Management** domain as shipped from the DomainMap catalog and as discovered in this deployment. It avoids re-discovering the domain shape on every conversation by persisting deployment-specific findings to local state.
 
 For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the `use-semantius` skill, which is expected to load alongside.
 
 **Domain inventory** (as-designed, from `spec.json`, orientation only). The actual deployed entities, with renames and omissions already resolved, live in `discovered.json`; operate from that, never from this list:
 
-- Workflows / capabilities: 
+- Workflows / capabilities: Approval Workflow Orchestration, Creative Proofing and Approval, Goals and OKR Management, Resource Capacity and Workload Visibility, Cross-Project Dashboards, Dependency-Based Scheduling and Gantt, Request Intake and Form Routing, Task Management and Assignment, Workflow Automation
 
 ---
 
@@ -20,14 +20,14 @@ For all Semantius CLI mechanics, PostgREST encoding, and cube DSL, defer to the 
 
 | File | Source of truth | Mutated by |
 |---|---|---|
-| `SKILL.md` | rendered from template + spec at HQ | HQ on skill upgrade |
-| `spec.json` | HQ catalog emit (structured per-domain data) | HQ on skill upgrade |
+| `SKILL.md` | rendered from template + spec in DomainMap | DomainMap on skill upgrade |
+| `spec.json` | DomainMap catalog emit (structured per-domain data) | DomainMap on skill upgrade |
 | `state.jsonc` | deployment discovery run | this skill |
 | `discovered.json` | deployment discovery run (full discovered schema) | this skill |
 | `learnings.jsonc` | deployment runtime | this skill (earned-knowledge store) |
 | `ready.flag` | written by `scripts/bootstrap.ts` | bootstrap (single producer) |
-| `references/` | generic, no per-domain content | HQ on skill upgrade |
-| `scripts/` | generic Bun/TypeScript bootstrap scripts | HQ on skill upgrade |
+| `references/` | generic, no per-domain content | DomainMap on skill upgrade |
+| `scripts/` | generic Bun/TypeScript bootstrap scripts | DomainMap on skill upgrade |
 
 The skill **learns** locally through two files: `state.jsonc` (structural deltas vs. spec) and `learnings.jsonc` (earned knowledge: error fixes, user corrections, validated recipes, deployment quirks). Both are read on every invocation and applied to subsequent operations. `SKILL.md` itself stays untouched: the procedure manual is stable; the learning layer grows around it.
 
@@ -47,7 +47,7 @@ Before doing any domain work, the skill follows this sequence:
    - `ready.flag` exists, AND
    - `ready.flag.valid_through_emitted == spec.emitted`, AND
    - `ready.flag.valid_through_major == spec.facts_major`.
-   If any condition fails, run `bun run scripts/bootstrap.ts` from the project root. Bootstrap orchestrates Phase 1 (environment) → Phase 2a (runs the provenance resolution ladder, writes `discovered.json`) → ready.flag. Phase 2a resolves every uber-model concept against the live deployment by **deterministic platform reads** (no name guessing): see the ladder below. If Phase 2a leaves genuine ambiguities (a live row with an **empty** `catalog_entity_code`, i.e. created outside the deploy pipeline, or a concept that resolves to more than one in-domain entity), bootstrap DOES NOT write `ready.flag`; the agent runs Phase 2b ([references/discovery.md](references/discovery.md)) to surface only those to the user, records resolutions in `state.jsonc`, then re-invokes `bootstrap.ts`. A fully provenance-stamped deployment yields zero ambiguities and no prompts. **Run all of this silently:** the user must never see bootstrap mechanics, internal file names, module IDs, version numbers, or read-by-read narration (see [How to talk about the deployment](#how-to-talk-about-the-deployment)).
+   If any condition fails, run `bun run scripts/bootstrap.ts` from the project root. Bootstrap orchestrates Phase 1 (environment) → Phase 2a (runs the provenance resolution ladder, writes `discovered.json`) → ready.flag. Phase 2a resolves every DomainMap concept against the live deployment by **deterministic platform reads** (no name guessing): see the ladder below. If Phase 2a leaves genuine ambiguities (a live row with an **empty** `catalog_entity_code`, i.e. created outside the deploy pipeline, or a concept that resolves to more than one in-domain entity), bootstrap DOES NOT write `ready.flag`; the agent runs Phase 2b ([references/discovery.md](references/discovery.md)) to surface only those to the user, records resolutions in `state.jsonc`, then re-invokes `bootstrap.ts`. A fully provenance-stamped deployment yields zero ambiguities and no prompts. **Run all of this silently:** the user must never see bootstrap mechanics, internal file names, module IDs, version numbers, or read-by-read narration (see [How to talk about the deployment](#how-to-talk-about-the-deployment)).
 5. **Once `ready.flag` is current,** answer the user's request from the persisted discovery, not from live re-queries. `discovered.json` already holds the full operational shape of this deployment, captured once at bootstrap: per entity the deployed `table_name`, `id_column` and `label_column` (read, never assumed: the label column is entity-specific, e.g. `candidate_name` vs `application_ref`), `description`, view/edit permissions, and per field the `name`, `title`, `format`, `ctype`, `enum_values` (live lifecycle/enum vocab), `reference_table` + `reference_delete_mode` + `relationship_label` (the relationship shape), and `is_pk`/`is_nullable`/`unique_value`. `state.jsonc` holds the deployment deltas (renames, omissions). Read those files; do NOT re-discover field names, formats, enums, or relationships per request, that is what the one-time discovery is for. **Before any write, apply the entity's operating contract from `discovered.json`**: `validation_rules` (live write guards, each with a human `message`), `input_type_rule` (conditional field editability), and `select_rule` (row-level read visibility, so you know what a query returns vs. what the UI shows). Never assume catalog names hold; this deployment may have renamed `suppliers` to `vendors`, dropped `cost_centers`, or split a master into two entities. Operational failures from semantius calls surface verbatim (Rule #6); the skill does NOT pre-flight authentication on every invocation; trust the CLI to error when it errors.
 6. **When something is earned during the run, write it to `learnings.jsonc`** so it is not re-derived next session: a call that failed in a non-obvious way plus the working form (`error_fix`), a correction or rule the user supplied (`user_input`), a validated multi-step or multi-table operation (`recipe`), or a deployment-specific fact the schema cannot express (`quirk`). `user_input` is `active` immediately; a `recipe` is `active` only after it actually ran and returned the expected result; `error_fix`/`quirk` are `proposed` until reconfirmed or user-approved. Re-encountered knowledge bumps `confidence`/`last_seen` rather than duplicating; contradicted knowledge is marked `obsolete`, never deleted. Do NOT record what `discovered.json` already holds (a plain rename is fixed by re-discovery, not remembered here). These feed back into step 3 on the next invocation. See [references/learnings-format.md](references/learnings-format.md).
 
@@ -57,7 +57,7 @@ To force a fresh discovery: delete `ready.flag` (or also `discovered.json` and `
 
 ## How discovery resolves concepts (the provenance ladder)
 
-As of core v0.1.2 the live platform carries provenance columns, so discovery reads identity instead of guessing it. The **domain slice** (the modules Phase 2a scans) is resolved by Phase 1 as the UNION of two deterministic signals: **(a) the deploy stamp**, modules whose `settings.domain_code` equals this domain's code (the deploy pipeline writes `{ domain_code, module_kind, naming_mode, catalog_snapshot }` into each provisioned module's `settings` JSONB; this is the authoritative marker and holds even when a deployment's entities were never `catalog_entity_code`-stamped), and **(b) entity-first**, the live `module_id`s that host the domain's owned master codes. A module carrying a spec module code/slug is a weak hint folded into the same union. For each uber-model concept `X` the domain assumes, Phase 2a resolves it against the live deployment in this order (first hit wins), and a live `table_name` that differs from `X` is a deterministic rename:
+As of core v0.1.2 the live platform carries provenance columns, so discovery reads identity instead of guessing it. The **domain slice** (the modules Phase 2a scans) is resolved by Phase 1 as the UNION of two deterministic signals: **(a) the deploy stamp**, modules whose `settings.domain_code` equals this domain's code (the deploy pipeline writes `{ domain_code, module_kind, naming_mode, catalog_snapshot }` into each provisioned module's `settings` JSONB; this is the authoritative marker and holds even when a deployment's entities were never `catalog_entity_code`-stamped), and **(b) entity-first**, the live `module_id`s that host the domain's owned master codes. A module carrying a spec module code/slug is a weak hint folded into the same union. For each DomainMap concept `X` the domain assumes, Phase 2a resolves it against the live deployment in this order (first hit wins), and a live `table_name` that differs from `X` is a deterministic rename:
 
 0. **State resolution**, a resolution the user already recorded in `state.jsonc` from a prior Phase 2b (rename, omission, or custom classification). Applied first so the bootstrap loop converges instead of re-asking.
 1. **FK reachability**, a live FK on the domain's own entities whose `reference_table` resolves to an entity carrying `catalog_entity_code = X`. Reseating is universal, so this catches silo, same-name share, and reuse/merge whenever `X` still has a consumer in the domain.
@@ -78,21 +78,20 @@ The provenance columns and their **empty** values (core v0.1.2 stores NOT NULL w
 | `catalog_module_code` (`modules`) | `''` | greenfield; a weak **hint** for the slice (membership is resolved by `settings.domain_code` + entity-first, not by this code) |
 | `settings` (`modules`, json) | `null` | not provisioned by the deploy pipeline (hand-built); its `domain_code` key is the authoritative slice marker when present |
 
-`catalog_entity_code` stamps the **canonical** uber-model code (so the join is clean across dialect and silo renames); the deployed name lives in `table_name`. The name/alias/label heuristic survives only as a fallback for rows whose `catalog_entity_code` is empty. Full procedure and query shapes: [references/discovery.md](references/discovery.md).
+`catalog_entity_code` stamps the **canonical** DomainMap code (so the join is clean across dialect and silo renames); the deployed name lives in `table_name`. The name/alias/label heuristic survives only as a fallback for rows whose `catalog_entity_code` is empty. Full procedure and query shapes: [references/discovery.md](references/discovery.md).
 
 ---
 
 ## What's in `spec.json`
 
-The HQ-emitted structured snapshot of this domain. Read on demand (not loaded into every conversation). Includes:
+The DomainMap-emitted structured snapshot of this domain. Read on demand (not loaded into every conversation). Includes:
 
-- Domain metadata (description, buyer size, cost band, market size)
+- Domain metadata (description)
 - Functional ownership (owner / contributor / consumer business functions)
 - Capabilities and the modules that realize them
 - Modules with their masters, embedded-masters, consumers
 - Per-master pattern flags, aliases, lifecycle states
 - Intra-domain relationships and edges to platform built-ins
-- Outbound cross-domain handoffs (trigger events, payloads, targets, friction, APQC process tags)
 - Domain-level APQC process rollup (`apqc_processes_touched`) for cross-domain process queries
 - System skills and tool sets per module
 - Expected role personas with their module footprints
@@ -216,7 +215,7 @@ Full versions of these rules with rationale live in the catalog's [domain-map-an
 
 ## Quick reference
 
-UI base: `https://<org>.semantius.app/it-ops-starter/<table>`
+UI base: `https://<org>.semantius.app/work-mgmt/<table>`
 
 Spec file: [`spec.json`](./spec.json)
 

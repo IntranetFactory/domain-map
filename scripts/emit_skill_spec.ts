@@ -154,6 +154,10 @@ function readRenderVars(dir: string): {
 // (skills.description) followed by "Use for: <trigger_keywords>", dropping any keyword whose
 // term already appears in the prose (the dedup double-check). Both are the trigger surface:
 // the prose carries natural-language phrasing, the keywords the short search terms.
+// NOTE: this substring drop is only a FLOOR (it catches exact repeats). The trigger match is
+// semantic, so true dedup is the author's job: a keyword that is a near-synonym of a word
+// already in the prose (e.g. "real estate broker" when the prose says "real estate agent")
+// adds nothing and should not be authored. See SKILL.md Phase S.
 function composeSkillDescription(prose: string, triggerKeywords: string): string {
   const p = clean((prose ?? "").trim());
   const kws = (triggerKeywords ?? "")
@@ -165,17 +169,25 @@ function composeSkillDescription(prose: string, triggerKeywords: string): string
   return fresh.length ? `${p} Use for: ${fresh.join(", ")}.` : p;
 }
 
-// The SKILL.md description is sourced from the domain skill's prose (+ keywords). A missing
-// skill or empty prose ERRORS rather than shipping a placeholder description.
+// The SKILL.md description is sourced from the domain skill's prose (skills.description) plus its
+// trigger keywords (skills.trigger_keywords). BOTH are required: a missing skill, empty prose, or
+// empty keywords ERRORS rather than shipping an incomplete trigger surface (the F8 audit band
+// enforces the same at audit time).
 function skillDescriptionFrom(code: string, skill: any): string {
-  if (!skill || !String(skill.description ?? "").trim()) {
+  const prose = String(skill?.description ?? "").trim();
+  const keywords = String(skill?.trigger_keywords ?? "").trim();
+  if (!skill || !prose || !keywords) {
+    const what = !skill
+      ? "no domain skill row"
+      : [!prose && "skills.description", !keywords && "skills.trigger_keywords"].filter(Boolean).join(" + ") + " empty";
     throw new Error(
-      `${code}: no domain skill, or empty skills.description. The SKILL.md routing description is ` +
-        `sourced from skills.description (+ trigger_keywords), so the emit STOPS instead of writing a ` +
-        `placeholder. Populate the domain skill's description in the database, then re-emit.`,
+      `${code}: ${what}. The SKILL.md routing description is sourced from skills.description + ` +
+        `skills.trigger_keywords (both required), so the emit STOPS instead of shipping an incomplete ` +
+        `trigger surface. Author both in one pass (trigger-shaped prose + comma-separated keywords, the ` +
+        `complement of the prose), then re-emit.`,
     );
   }
-  return composeSkillDescription(skill.description, skill.trigger_keywords ?? "");
+  return composeSkillDescription(prose, keywords);
 }
 
 // Best-effort org slug for catalog_snapshot. Never throws; falls back to "catalog".
@@ -209,9 +221,16 @@ const ENUM_SPEC: { key: string; table: string; field: string }[] = [
   { key: "record_status", table: "handoffs", field: "record_status" },
 ];
 
-// ---------- shared lookups (loaded once) ----------
+// ---------- bulk catalog load (one pass, all domains) ----------
+//
+// Every read the per-domain / per-bundle builders need is fetched ONCE here as a full-table pull,
+// then indexed in memory. buildSpec / buildBundleSpec are pure derivations over these indices and
+// issue ZERO further reads, so the number of `semantius` subprocess spawns is a constant (~22)
+// regardless of how many domains the catalog holds. The previous design issued ~19 scoped reads
+// PER domain (each a fresh CLI spawn), which is fine at 13 domains but does not scale to 100+.
 
-type Lookups = {
+type Bulk = {
+  // id -> human lookups (the old Lookups shape; callers still read these by name)
   domainCodeById: Map<number, string>;
   moduleCodeById: Map<number, string>;
   moduleDomainById: Map<number, number | null>;
@@ -219,20 +238,87 @@ type Lookups = {
   capabilityDomainCount: Map<number, number>;
   enumByKey: Map<string, string[]>;
   snapshot: string;
+
+  // full rows + indices for in-memory derivation
+  domainByCode: Map<string, any>;
+  moduleById: Map<number, any>;
+  moduleByCode: Map<string, any>;
+  modulesByDomainId: Map<number, any[]>;
+  hostByDomainId: Map<number, any[]>;
+  hostByModuleId: Map<number, any[]>;
+  domainAliasesByDomainId: Map<number, any[]>;
+  bfDomainsByDomainId: Map<number, any[]>;
+  capDomainsByDomainId: Map<number, any[]>;
+  capabilityById: Map<number, any>;
+  moduleCapsByModuleId: Map<number, any[]>;
+  dmdoByModuleId: Map<number, any[]>;
+  dmdoByDataObjectId: Map<number, any[]>;
+  handoffsBySourceDomainId: Map<number, any[]>;
+  handoffsBySourceModuleId: Map<number, any[]>;
+  skillsByDomainId: Map<number, any[]>;
+  moduleToolsByModuleId: Map<number, any[]>;
+  roleModulesByModuleId: Map<number, any[]>;
+  dataObjectById: Map<number, any>;
+  usersId: number | undefined;
+  lifecycleByDataObjectId: Map<number, any[]>;
+  doAliasesByDataObjectId: Map<number, any[]>;
+  relationships: any[];
+  toolById: Map<number, any>;
+  roleById: Map<number, any>;
 };
 
-async function loadLookups(): Promise<Lookups> {
-  const [domains, modules, bfs, capDomains, enumFields, org] = await Promise.all([
-    get("/domains?select=id,domain_code&limit=10000"),
-    get("/domain_modules?select=id,domain_module_code,domain_id&limit=10000"),
-    get("/business_functions?select=id,business_function_name&limit=10000"),
-    get("/capability_domains?select=capability_id,domain_id&limit=20000"),
-    get("/fields?format=eq.enum&select=table_name,field_name,enum_values&limit=20000"),
+async function loadBulk(): Promise<Bulk> {
+  const L = 100000; // full-table pulls; the catalog is well under this even at 100+ domains
+  const [
+    domains,
+    modules,
+    hostDomains,
+    domainAliases,
+    bfDomains,
+    capabilities,
+    capabilityDomains,
+    moduleCaps,
+    dmdo,
+    handoffs,
+    skills,
+    moduleTools,
+    roleModules,
+    dataObjects,
+    lifecycle,
+    doAliases,
+    relationships,
+    tools,
+    domainRoles,
+    bfs,
+    enumFields,
+    org,
+  ] = await Promise.all([
+    get(`/domains?select=id,domain_code,domain_name,description,parent_domain_id,domain_kind,certification_required,catalog_tagline,catalog_description&limit=${L}`),
+    get(`/domain_modules?select=id,domain_module_code,domain_module_name,domain_id,module_kind,description,catalog_tagline&limit=${L}`),
+    get(`/domain_module_host_domains?select=domain_module_id,domain_id&limit=${L}`),
+    get(`/domain_aliases?select=domain_id,alias&order=alias.asc&limit=${L}`),
+    get(`/business_function_domains?select=domain_id,responsibility_type,business_function_id&limit=${L}`),
+    get(`/capabilities?select=id,capability_code,capability_name&limit=${L}`),
+    get(`/capability_domains?select=capability_id,domain_id&limit=${L}`),
+    get(`/domain_module_capabilities?select=domain_module_id,capability_id&limit=${L}`),
+    get(`/domain_module_data_objects?select=domain_module_id,data_object_id,role,necessity&order=domain_module_id.asc,data_object_id.asc&limit=${L}`),
+    get(`/handoffs?select=id,source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,integration_pattern,friction_level,data_objects(data_object_name),trigger_events(event_name,event_category),handoff_processes(processes(external_id,process_name))&order=id.asc&limit=${L}`),
+    get(`/skills?skill_type=eq.domain&select=id,skill_name,description,trigger_keywords,domain_id&order=id.asc&limit=${L}`),
+    get(`/domain_module_tools?select=domain_module_id,tool_id,requirement_level&limit=${L}`),
+    get(`/role_modules?select=role_id,domain_module_id,interaction_level&limit=${L}`),
+    get(`/data_objects?select=id,data_object_name,singular_label,plural_label,description,is_canonical_bare_word,has_personal_content,has_submit_lock,has_single_approver&limit=${L}`),
+    get(`/data_object_lifecycle_states?select=data_object_id,state_name,state_order,is_initial,is_terminal,requires_permission,permission_verb_override&order=data_object_id.asc,state_order.asc&limit=${L}`),
+    get(`/data_object_aliases?select=data_object_id,alias_name,alias_type&order=alias_name.asc&limit=${L}`),
+    get(`/data_object_relationships?select=data_object_id,related_data_object_id,relationship_type,relationship_verb,is_required&order=data_object_id.asc,related_data_object_id.asc&limit=${L}`),
+    get(`/tools?select=id,tool_name,operation_kind&limit=${L}`),
+    get(`/domain_roles?select=id,role_code,business_function_id&limit=${L}`),
+    get(`/business_functions?select=id,business_function_name&limit=${L}`),
+    get(`/fields?format=eq.enum&select=table_name,field_name,enum_values&limit=${L}`),
     orgSlug(),
   ]);
 
   const capabilityDomainCount = new Map<number, number>();
-  for (const r of capDomains) {
+  for (const r of capabilityDomains) {
     const cid = r.capability_id as number;
     capabilityDomainCount.set(cid, (capabilityDomainCount.get(cid) ?? 0) + 1);
   }
@@ -242,39 +328,58 @@ async function loadLookups(): Promise<Lookups> {
   const enumByKey = new Map<string, string[]>();
   for (const e of ENUM_SPEC) enumByKey.set(e.key, enumLive.get(`${e.table}.${e.field}`) ?? []);
 
+  const usersRow = dataObjects.find((d: any) => d.data_object_name === "users");
+
   return {
-    domainCodeById: new Map(domains.map((d) => [d.id as number, d.domain_code as string])),
-    moduleCodeById: new Map(modules.map((m) => [m.id as number, m.domain_module_code as string])),
-    moduleDomainById: new Map(modules.map((m) => [m.id as number, (m.domain_id as number | null) ?? null])),
-    businessFunctionNameById: new Map(bfs.map((b) => [b.id as number, b.business_function_name as string])),
+    domainCodeById: new Map(domains.map((d: any) => [d.id as number, d.domain_code as string])),
+    moduleCodeById: new Map(modules.map((m: any) => [m.id as number, m.domain_module_code as string])),
+    moduleDomainById: new Map(modules.map((m: any) => [m.id as number, (m.domain_id as number | null) ?? null])),
+    businessFunctionNameById: new Map(bfs.map((b: any) => [b.id as number, b.business_function_name as string])),
     capabilityDomainCount,
     enumByKey,
     snapshot: SNAPSHOT_OVERRIDE ?? `${org}-${todayIso()}`,
+
+    domainByCode: new Map(domains.map((d: any) => [d.domain_code as string, d])),
+    moduleById: new Map(modules.map((m: any) => [m.id as number, m])),
+    moduleByCode: new Map(modules.map((m: any) => [m.domain_module_code as string, m])),
+    modulesByDomainId: groupBy(modules.filter((m: any) => m.domain_id != null), (m: any) => m.domain_id as number),
+    hostByDomainId: groupBy(hostDomains, (h: any) => h.domain_id as number),
+    hostByModuleId: groupBy(hostDomains, (h: any) => h.domain_module_id as number),
+    domainAliasesByDomainId: groupBy(domainAliases, (a: any) => a.domain_id as number),
+    bfDomainsByDomainId: groupBy(bfDomains, (r: any) => r.domain_id as number),
+    capDomainsByDomainId: groupBy(capabilityDomains, (r: any) => r.domain_id as number),
+    capabilityById: new Map(capabilities.map((c: any) => [c.id as number, c])),
+    moduleCapsByModuleId: groupBy(moduleCaps, (r: any) => r.domain_module_id as number),
+    dmdoByModuleId: groupBy(dmdo, (r: any) => r.domain_module_id as number),
+    dmdoByDataObjectId: groupBy(dmdo, (r: any) => r.data_object_id as number),
+    handoffsBySourceDomainId: groupBy(handoffs, (h: any) => h.source_domain_id as number),
+    handoffsBySourceModuleId: groupBy(handoffs.filter((h: any) => h.source_domain_module_id != null), (h: any) => h.source_domain_module_id as number),
+    skillsByDomainId: groupBy(skills.filter((s: any) => s.domain_id != null), (s: any) => s.domain_id as number),
+    moduleToolsByModuleId: groupBy(moduleTools, (r: any) => r.domain_module_id as number),
+    roleModulesByModuleId: groupBy(roleModules, (r: any) => r.domain_module_id as number),
+    dataObjectById: new Map(dataObjects.map((d: any) => [d.id as number, d])),
+    usersId: usersRow?.id as number | undefined,
+    lifecycleByDataObjectId: groupBy(lifecycle, (r: any) => r.data_object_id as number),
+    doAliasesByDataObjectId: groupBy(doAliases, (r: any) => r.data_object_id as number),
+    relationships,
+    toolById: new Map(tools.map((t: any) => [t.id as number, t])),
+    roleById: new Map(domainRoles.map((r: any) => [r.id as number, r])),
   };
 }
 
 // ---------- per-domain spec build ----------
 
-async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; masters: any[]; capNames: string[]; adjacentDomainCodes: string[] }> {
-  const [domainRow] = await get(
-    `/domains?domain_code=eq.${domainCode}&select=id,domain_code,domain_name,description,parent_domain_id,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year,catalog_tagline,catalog_description&limit=1`,
-  );
+function buildSpec(domainCode: string, lk: Bulk): { spec: any; masters: any[]; capNames: string[]; adjacentDomainCodes: string[]; handoffCount: number } {
+  const domainRow = lk.domainByCode.get(domainCode);
   if (!domainRow) throw new Error(`domain ${domainCode} not found in /domains`);
   const domainId = domainRow.id as number;
 
-  // Modules hosted on this domain: primary (domain_id) + host junction.
-  const [primaryModules, hostJunction] = await Promise.all([
-    get(`/domain_modules?domain_id=eq.${domainId}&select=id,domain_module_code,domain_module_name,module_kind,description&order=domain_module_code.asc`),
-    get(`/domain_module_host_domains?domain_id=eq.${domainId}&select=domain_module_id`),
-  ]);
-  const discoveredModuleIds = [...new Set([...primaryModules.map((m) => m.id as number), ...hostJunction.map((h) => h.domain_module_id as number)])];
-  const moduleById = new Map<number, any>(primaryModules.map((m) => [m.id as number, m]));
-  // Fetch any host-only modules not already in primaryModules.
-  const missingModuleIds = discoveredModuleIds.filter((id) => !moduleById.has(id));
-  if (missingModuleIds.length > 0) {
-    const extra = await get(`/domain_modules?id=in.${inList(missingModuleIds)}&select=id,domain_module_code,domain_module_name,module_kind,description`);
-    for (const m of extra) moduleById.set(m.id as number, m);
-  }
+  // Modules hosted on this domain: primary (domain_id) + host junction. Resolved from the one-time
+  // bulk load; no per-domain reads.
+  const moduleById = lk.moduleById;
+  const primaryModuleIds = (lk.modulesByDomainId.get(domainId) ?? []).map((m) => m.id as number);
+  const hostModuleIds = (lk.hostByDomainId.get(domainId) ?? []).map((h) => h.domain_module_id as number);
+  const discoveredModuleIds = [...new Set([...primaryModuleIds, ...hostModuleIds])];
 
   // A per-domain spec covers only the domain's FULL modules. A starter (module_kind='starter')
   // is just a packaged subset of the domain; the combination-agnostic skill already handles any
@@ -283,49 +388,37 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
   // on FSM) out of the domain spec. Domain-less starters get their own bundle skill (see emitBundle).
   const moduleIds = discoveredModuleIds.filter((id) => moduleById.get(id)?.module_kind === "full");
 
-  // Bulk per-domain reads. Each is scoped to this domain's FULL modules / id.
-  const moduleIdList = inList(moduleIds.length ? moduleIds : [-1]);
-  const [
-    domainAliases,
-    bfDomains,
-    capDomains,
-    moduleCaps,
-    dmdo,
-    outboundHandoffsRaw,
-    systemSkills,
-    moduleTools,
-    roleModules,
-  ] = await Promise.all([
-    get(`/domain_aliases?domain_id=eq.${domainId}&select=alias&order=alias.asc`),
-    get(`/business_function_domains?domain_id=eq.${domainId}&select=responsibility_type,business_functions(business_function_name)`),
-    get(`/capability_domains?domain_id=eq.${domainId}&select=capability_id,capabilities(capability_code,capability_name)`),
-    get(`/domain_module_capabilities?domain_module_id=in.${moduleIdList}&select=domain_module_id,capability_id,capabilities(capability_code)`),
-    get(`/domain_module_data_objects?domain_module_id=in.${moduleIdList}&select=domain_module_id,data_object_id,role,necessity`),
-    get(`/handoffs?source_domain_id=eq.${domainId}&target_domain_id=neq.${domainId}&select=integration_pattern,friction_level,source_domain_module_id,target_domain_id,target_domain_module_id,data_objects(data_object_name),trigger_events(event_name,event_category),handoff_processes(processes(external_id,process_name))&order=id.asc`),
-    get(`/skills?skill_type=eq.domain&domain_id=eq.${domainId}&select=id,skill_name,description,trigger_keywords`),
-    get(`/domain_module_tools?domain_module_id=in.${moduleIdList}&select=domain_module_id,tool_id,requirement_level`),
-    get(`/role_modules?domain_module_id=in.${moduleIdList}&select=role_id,domain_module_id,interaction_level`),
-  ]);
+  // Per-domain slices, derived in memory from the bulk indices (was 9 scoped reads + 5 follow-ups).
+  const domainAliases = lk.domainAliasesByDomainId.get(domainId) ?? [];
+  const bfDomains = lk.bfDomainsByDomainId.get(domainId) ?? [];
+  const capDomains = lk.capDomainsByDomainId.get(domainId) ?? [];
+  const moduleCaps = moduleIds.flatMap((mid) => lk.moduleCapsByModuleId.get(mid) ?? []);
+  const dmdo = moduleIds.flatMap((mid) => lk.dmdoByModuleId.get(mid) ?? []);
+  const outboundHandoffsRaw = (lk.handoffsBySourceDomainId.get(domainId) ?? []).filter(
+    (h) => (h.target_domain_id as number) !== domainId,
+  );
+  const systemSkills = (lk.skillsByDomainId.get(domainId) ?? []).slice();
+  const moduleTools = moduleIds.flatMap((mid) => lk.moduleToolsByModuleId.get(mid) ?? []);
+  const roleModules = moduleIds.flatMap((mid) => lk.roleModulesByModuleId.get(mid) ?? []);
 
   // ----- data object detail (all masters + entities referenced in scope) -----
   const scopeObjectIds = [...new Set(dmdo.map((r) => r.data_object_id as number))];
-  const dataObjectRows = scopeObjectIds.length
-    ? await get(`/data_objects?id=in.${inList(scopeObjectIds)}&select=id,data_object_name,singular_label,plural_label,description,is_canonical_bare_word,has_personal_content,has_submit_lock,has_single_approver`)
-    : [];
-  const doById = new Map<number, any>(dataObjectRows.map((d) => [d.id as number, d]));
+  const doById = new Map<number, any>();
+  for (const id of scopeObjectIds) {
+    const d = lk.dataObjectById.get(id);
+    if (d) doById.set(id, d);
+  }
   const masterIds = [...new Set(dmdo.filter((r) => r.role === "master").map((r) => r.data_object_id as number))];
+  const masterIdSet = new Set(masterIds);
+  const usersId = lk.usersId;
 
-  const [usersRow] = await get(`/data_objects?data_object_name=eq.users&select=id&limit=1`);
-  const usersId = usersRow?.id as number | undefined;
-
-  const [lifecycleRows, doAliasRows, relationshipRows] = await Promise.all([
-    masterIds.length ? get(`/data_object_lifecycle_states?data_object_id=in.${inList(masterIds)}&select=data_object_id,state_name,state_order,is_initial,is_terminal,requires_permission,permission_verb_override&order=data_object_id.asc,state_order.asc`) : Promise.resolve([]),
-    masterIds.length ? get(`/data_object_aliases?data_object_id=in.${inList(masterIds)}&select=data_object_id,alias_name,alias_type&order=alias_name.asc`) : Promise.resolve([]),
-    masterIds.length ? get(`/data_object_relationships?or=(data_object_id.in.${inList(masterIds)},related_data_object_id.in.${inList(masterIds)})&select=data_object_id,related_data_object_id,relationship_type,relationship_verb,is_required`) : Promise.resolve([]),
-  ]);
-
-  const lifecycleByDo = groupBy(lifecycleRows, (r) => r.data_object_id as number);
-  const aliasByDo = groupBy(doAliasRows, (r) => r.data_object_id as number);
+  // Master-scoped lifecycle/alias views come straight from the bulk indices; relationships are the
+  // rows where either endpoint is one of this domain's masters (the old `or=(...)` query, in memory).
+  const lifecycleByDo = lk.lifecycleByDataObjectId;
+  const aliasByDo = lk.doAliasesByDataObjectId;
+  const relationshipRows = lk.relationships.filter(
+    (r) => masterIdSet.has(r.data_object_id as number) || masterIdSet.has(r.related_data_object_id as number),
+  );
 
   const nameOf = (id: number): string | null => (id === usersId ? "users" : doById.get(id)?.data_object_name ?? null);
 
@@ -341,7 +434,7 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
       const byRole = (role: string) =>
         rows.filter((r) => r.role === role).map((r) => nameOf(r.data_object_id as number)).filter(Boolean).sort();
       const realizes = (capCodeByModule.get(m.id as number) ?? [])
-        .map((r) => r.capabilities?.capability_code)
+        .map((r) => lk.capabilityById.get(r.capability_id as number)?.capability_code)
         .filter(Boolean)
         .sort();
       const out: any = {
@@ -402,7 +495,8 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
         required: Boolean(r.is_required),
       };
     })
-    .filter(Boolean);
+    .filter(Boolean)
+    .sort((a: any, b: any) => a.from.localeCompare(b.from) || a.to.localeCompare(b.to) || a.verb.localeCompare(b.verb));
 
   // ----- handoffs.outbound + apqc rollup -----
   const apqc = new Map<string, string>();
@@ -435,9 +529,7 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
   // domain_id, so the query pins domain_module_id IS NULL (not just domain_id). Domain-less
   // starters get their own skill via emitBundle. PROCESS skills (process_id set) are out of
   // scope. The domain skill's tools = union across the domain's FULL modules.
-  const toolIds = [...new Set(moduleTools.map((r) => r.tool_id as number))];
-  const toolRows = toolIds.length ? await get(`/tools?id=in.${inList(toolIds)}&select=id,tool_name,operation_kind`) : [];
-  const toolById = new Map<number, any>(toolRows.map((t) => [t.id as number, t]));
+  const toolById = lk.toolById;
   const moduleToolsByModule = groupBy(moduleTools, (r) => r.domain_module_id as number);
   const fullModuleIds = moduleIds; // moduleIds is already filtered to FULL modules above
   const systemSkillsOut = systemSkills
@@ -469,8 +561,7 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
 
   // ----- roles (personas) -----
   const roleIds = [...new Set(roleModules.map((r) => r.role_id as number))];
-  const roleRows = roleIds.length ? await get(`/domain_roles?id=in.${inList(roleIds)}&select=id,role_code,business_function_id`) : [];
-  const roleById = new Map<number, any>(roleRows.map((r) => [r.id as number, r]));
+  const roleById = lk.roleById;
   const roleModulesByRole = groupBy(roleModules, (r) => r.role_id as number);
   const rolesOut = roleIds
     .map((rid) => {
@@ -492,7 +583,7 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
   // ----- business functions (market RACI) -----
   const bf = { owner: [] as string[], contributors: [] as string[], consumers: [] as string[] };
   for (const r of bfDomains) {
-    const name = r.business_functions?.business_function_name;
+    const name = lk.businessFunctionNameById.get(r.business_function_id as number);
     if (!name) continue;
     if (r.responsibility_type === "owner") bf.owner.push(name);
     else if (r.responsibility_type === "contributor") bf.contributors.push(name);
@@ -504,11 +595,14 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
 
   // ----- capabilities (domain level) -----
   const capabilities = capDomains
-    .map((r) => ({
-      code: r.capabilities?.capability_code,
-      name: r.capabilities?.capability_name,
-      cross_cutting: (lk.capabilityDomainCount.get(r.capability_id as number) ?? 1) > 1,
-    }))
+    .map((r) => {
+      const cap = lk.capabilityById.get(r.capability_id as number);
+      return {
+        code: cap?.capability_code,
+        name: cap?.capability_name,
+        cross_cutting: (lk.capabilityDomainCount.get(r.capability_id as number) ?? 1) > 1,
+      };
+    })
     .filter((c) => c.code)
     .sort((a, b) => (a.code as string).localeCompare(b.code as string));
 
@@ -528,12 +622,7 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
       name: domainRow.domain_name,
       description: clean(domainRow.description ?? ""),
       parent_domain_code: domainRow.parent_domain_id != null ? lk.domainCodeById.get(domainRow.parent_domain_id as number) ?? null : null,
-      business_logic: clean(domainRow.business_logic ?? ""),
-      min_org_size: domainRow.min_org_size ?? null,
-      cost_band: domainRow.cost_band ?? null,
       certification_required: Boolean(domainRow.certification_required),
-      usa_market_size_usd_m: domainRow.usa_market_size_usd_m ?? null,
-      market_size_source_year: domainRow.market_size_source_year ?? null,
       catalog_tagline: clean(domainRow.catalog_tagline ?? ""),
       catalog_description: clean(domainRow.catalog_description ?? ""),
     },
@@ -544,7 +633,6 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
     modules: modulesOut,
     data_objects: masterDetail,
     relationships,
-    handoffs: { outbound },
     apqc_processes_touched: apqcTouched,
     system_skills: systemSkillsOut,
     roles: rolesOut,
@@ -556,6 +644,7 @@ async function buildSpec(domainCode: string, lk: Lookups): Promise<{ spec: any; 
     masters: masterDetail,
     capNames: capabilities.map((c) => c.name as string),
     adjacentDomainCodes: [...new Set(outbound.map((h) => h.target_domain).filter(Boolean) as string[])].sort(),
+    handoffCount: outbound.length,
   };
 }
 
@@ -576,32 +665,29 @@ function groupBy<T>(rows: T[], keyFn: (r: T) => number): Map<number, T[]> {
 // bundle (e.g. HVAC-SVC-MGMT, REAL-ESTATE-AGENT). It masters nothing of its own; it COMPOSES
 // entities mastered by the domains it is hosted on, and carries its OWN system skill. There is
 // no domain skill to ride on, so it gets its own skill-spec folder. The spec is module-rooted.
-async function buildBundleSpec(
+function buildBundleSpec(
   code: string,
-  lk: Lookups,
-): Promise<{ spec: any; entityPluralLabels: string[]; capNames: string[]; adjacentDomainCodes: string[] }> {
-  const [mod] = await get(
-    `/domain_modules?domain_module_code=eq.${code}&select=id,domain_module_code,domain_module_name,module_kind,description,catalog_tagline,domain_id&limit=1`,
-  );
+  lk: Bulk,
+): { spec: any; entityPluralLabels: string[]; capNames: string[]; adjacentDomainCodes: string[] } {
+  const mod = lk.moduleByCode.get(code);
   if (!mod) throw new Error(`bundle module ${code} not found in /domain_modules`);
   if (mod.module_kind !== "starter") throw new Error(`${code} is module_kind='${mod.module_kind}', not a starter bundle`);
   const moduleId = mod.id as number;
 
-  const [bundleDomainRows, hosts, dmdo, caps, skillRows, moduleTools, roleModules, outboundRaw] = await Promise.all([
-    get(`/domains?domain_code=eq.${code}&domain_kind=eq.bundle&select=id,domain_code,catalog_tagline,catalog_description&limit=1`),
-    get(`/domain_module_host_domains?domain_module_id=eq.${moduleId}&select=domain_id`),
-    get(`/domain_module_data_objects?domain_module_id=eq.${moduleId}&select=data_object_id,role,necessity`),
-    get(`/domain_module_capabilities?domain_module_id=eq.${moduleId}&select=capability_id,capabilities(capability_code,capability_name)`),
-    get(`/skills?skill_type=eq.domain&domain_id=eq.${mod.domain_id}&select=id,skill_name,description,trigger_keywords`),
-    get(`/domain_module_tools?domain_module_id=eq.${moduleId}&select=tool_id,requirement_level`),
-    get(`/role_modules?domain_module_id=eq.${moduleId}&select=role_id,interaction_level`),
-    get(`/handoffs?source_domain_module_id=eq.${moduleId}&select=integration_pattern,friction_level,target_domain_id,target_domain_module_id,data_objects(data_object_name),trigger_events(event_name),handoff_processes(processes(external_id,process_name))&order=id.asc`),
-  ]);
+  // All slices derived in memory from the one-time bulk load.
+  const hosts = lk.hostByModuleId.get(moduleId) ?? [];
+  const dmdo = lk.dmdoByModuleId.get(moduleId) ?? [];
+  const caps = lk.moduleCapsByModuleId.get(moduleId) ?? [];
+  const skillRows = mod.domain_id != null ? lk.skillsByDomainId.get(mod.domain_id as number) ?? [] : [];
+  const moduleTools = lk.moduleToolsByModuleId.get(moduleId) ?? [];
+  const roleModules = lk.roleModulesByModuleId.get(moduleId) ?? [];
+  const outboundRaw = lk.handoffsBySourceModuleId.get(moduleId) ?? [];
 
   // After §3 the bundle is promoted to a domain_kind='bundle' domain that carries the buyer
   // catalog copy; read the tagline from there so it survives the §5 module-catalog CLEAR. Pre-§3
   // (no bundle-domain yet) bundleDomain is null and spec.bundle.tagline falls back to the module.
-  const bundleDomain = bundleDomainRows[0] ?? null;
+  const bundleDomainRow = lk.domainByCode.get(code);
+  const bundleDomain = bundleDomainRow && bundleDomainRow.domain_kind === "bundle" ? bundleDomainRow : null;
 
   const hostDomainCodes = hosts
     .map((h) => lk.domainCodeById.get(h.domain_id as number))
@@ -610,18 +696,12 @@ async function buildBundleSpec(
 
   // Composed entities (the bundle masters nothing): resolve names + the domain that masters each.
   const entityIds = [...new Set(dmdo.map((r) => r.data_object_id as number))];
-  const doRows = entityIds.length
-    ? await get(`/data_objects?id=in.${inList(entityIds)}&select=id,data_object_name,singular_label,plural_label`)
-    : [];
-  const doById = new Map<number, any>(doRows.map((d) => [d.id as number, d]));
-  const masterDmdo = entityIds.length
-    ? await get(`/domain_module_data_objects?data_object_id=in.${inList(entityIds)}&role=eq.master&select=data_object_id,domain_module_id`)
-    : [];
+  const doById = lk.dataObjectById;
   const ownerDomainByDo = new Map<number, string | null>();
-  for (const r of masterDmdo) {
-    const did = r.data_object_id as number;
-    if (ownerDomainByDo.has(did)) continue;
-    const domId = lk.moduleDomainById.get(r.domain_module_id as number);
+  for (const did of entityIds) {
+    const masterRow = (lk.dmdoByDataObjectId.get(did) ?? []).find((r) => r.role === "master");
+    if (!masterRow) continue;
+    const domId = lk.moduleDomainById.get(masterRow.domain_module_id as number);
     ownerDomainByDo.set(did, domId != null ? lk.domainCodeById.get(domId) ?? null : null);
   }
   const composes = dmdo
@@ -640,18 +720,19 @@ async function buildBundleSpec(
     .sort((a: any, b: any) => a.name.localeCompare(b.name));
 
   const capabilities = caps
-    .map((r) => ({
-      code: r.capabilities?.capability_code,
-      name: r.capabilities?.capability_name,
-      cross_cutting: (lk.capabilityDomainCount.get(r.capability_id as number) ?? 1) > 1,
-    }))
+    .map((r) => {
+      const cap = lk.capabilityById.get(r.capability_id as number);
+      return {
+        code: cap?.capability_code,
+        name: cap?.capability_name,
+        cross_cutting: (lk.capabilityDomainCount.get(r.capability_id as number) ?? 1) > 1,
+      };
+    })
     .filter((c) => c.code)
     .sort((a, b) => (a.code as string).localeCompare(b.code as string));
 
   // The bundle's own system skill (one per starter; modeled singular).
-  const toolIds = [...new Set(moduleTools.map((r) => r.tool_id as number))];
-  const toolRows = toolIds.length ? await get(`/tools?id=in.${inList(toolIds)}&select=id,tool_name,operation_kind`) : [];
-  const toolById = new Map<number, any>(toolRows.map((t) => [t.id as number, t]));
+  const toolById = lk.toolById;
   const tools = moduleTools
     .map((r) => {
       const t = toolById.get(r.tool_id as number);
@@ -693,8 +774,7 @@ async function buildBundleSpec(
 
   // Roles (personas) on the bundle module.
   const roleIds = [...new Set(roleModules.map((r) => r.role_id as number))];
-  const roleRows = roleIds.length ? await get(`/domain_roles?id=in.${inList(roleIds)}&select=id,role_code,business_function_id`) : [];
-  const roleById = new Map<number, any>(roleRows.map((r) => [r.id as number, r]));
+  const roleById = lk.roleById;
   const roles = roleIds
     .map((rid) => {
       const role = roleById.get(rid);
@@ -730,7 +810,6 @@ async function buildBundleSpec(
 
     capabilities,
     composes,
-    handoffs: { outbound },
     apqc_processes_touched: apqcTouched,
     system_skill: systemSkill,
     roles,
@@ -866,8 +945,8 @@ function assembleInstalledSkill(specCode: string, template: string): string {
 
 // ---------- driver ----------
 
-async function emitOne(code: string, lk: Lookups, template: string): Promise<void> {
-  const { spec, capNames, adjacentDomainCodes } = await buildSpec(code, lk);
+async function emitOne(code: string, lk: Bulk, template: string): Promise<void> {
+  const { spec, capNames, adjacentDomainCodes, handoffCount } = await buildSpec(code, lk);
   const specJson = JSON.stringify(spec, null, 2) + "\n";
   if (STDOUT) {
     process.stdout.write(specJson);
@@ -888,11 +967,11 @@ async function emitOne(code: string, lk: Lookups, template: string): Promise<voi
   writeFolder(code, specJson, catalogYaml);
   const skillName = assembleInstalledSkill(code, template);
   console.log(
-    `wrote ${SKILL_SPECS_DIR}/${code}/ [domain] ${spec.modules.length} modules, ${spec.data_objects.length} masters, ${spec.handoffs.outbound.length} handoffs -> installed ${SKILLS_DIR}/${skillName}/ (catalog.yaml + SKILL.md projected from DB)`,
+    `wrote ${SKILL_SPECS_DIR}/${code}/ [domain] ${spec.modules.length} modules, ${spec.data_objects.length} masters, ${handoffCount} handoffs -> installed ${SKILLS_DIR}/${skillName}/ (catalog.yaml + SKILL.md projected from DB)`,
   );
 }
 
-async function emitBundle(code: string, lk: Lookups, template: string): Promise<void> {
+async function emitBundle(code: string, lk: Bulk, template: string): Promise<void> {
   const { spec, capNames, adjacentDomainCodes } = await buildBundleSpec(code, lk);
   const specJson = JSON.stringify(spec, null, 2) + "\n";
   if (STDOUT) {
@@ -918,7 +997,7 @@ async function emitBundle(code: string, lk: Lookups, template: string): Promise<
   );
 }
 
-const lk = await loadLookups();
+const lk = await loadBulk();
 const template = await Bun.file(TEMPLATE_PATH).text();
 
 type Task = { code: string; kind: "domain" | "bundle" };

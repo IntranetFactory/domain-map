@@ -1,7 +1,7 @@
 /**
  * Phase 2a, script-driven structural discovery via the provenance resolution ladder.
  *
- * Runs after Phase 1. For each uber-model concept the domain assumes, resolves it
+ * Runs after Phase 1. For each DomainMap concept the domain assumes, resolves it
  * against the live deployment using the resolution ladder (deterministic platform
  * reads against the provenance columns shipped in core v0.1.2). First hit wins:
  *
@@ -26,7 +26,7 @@
  * actually host the domain's entities), read from .phase1-cache.json; if the cache is
  * missing it is re-derived here from the canonical master codes.
  *
- * catalog_entity_code stamps the CANONICAL uber-model code (D6); table_name holds the
+ * catalog_entity_code stamps the CANONICAL DomainMap code (D6); table_name holds the
  * deployed name and may drift (silo/dialect). A resolution whose live table_name differs
  * from X is a rename, recorded deterministically.
  *
