@@ -243,16 +243,17 @@ the bottom are the resolved history.
 
 ### AI-GOV — AI Governance
 
-- **Mention count:** 2
+- **Mention count:** 3
 - **First surfaced:** 2026-05-30 (DATA-AI-PLAT audit 2026-05-30)
-- **Most recent:** 2026-05-30 (AIOPS audit 2026-05-30)
+- **Most recent:** 2026-06-18 (SmartSuite products review 2026-06-18)
 - **Surfaced by:**
   - 2026-05-30 DATA-AI-PLAT audit 2026-05-30
   - 2026-05-30 AIOPS audit 2026-05-30
+  - 2026-06-18 SmartSuite products review 2026-06-18
 - **Vendor evidence:** Credo AI, Holistic AI, Fairly AI, Monitaur, Saidot, IBM watsonx.governance, ServiceNow AI Control Tower
 - **Adjacency:** DATA-AI-PLAT, GRC, DCG, AUDIT
 - **Candidate capabilities:** AI inventory, model risk classification, bias evaluation, EU AI Act conformity, model cards, policy enforcement, AI incident tracking
-- **Estimated Semantius score:** ~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.
+- **Estimated Semantius score:** ~90% strict (est.): governance-register shape: AI inventory, model risk classification, model cards, policy and incident tracking are internal CRUD + approval gates; external drag = optional bias-eval compute + review notifications. Near-100% once native email lands.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3668,6 +3669,66 @@ the bottom are the resolved history.
 - **Adjacency:** PROD-MGMT, CXM, MARKET-RESEARCH, DAP
 - **Candidate capabilities:** in-product feedback and surveys, concept and feature testing, product-feedback aggregation, prioritization signals, usability research
 - **Estimated Semantius score:** ~72-82% strict (est.): feedback/concept-test CRUD + send_email + receive_webhook + notify_person platform; external drag = detect_sentiment, classify_text, generate_text. Fold risk into PROD-MGMT customer-feedback-aggregation capability, flag at triage.
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### CUSTOMER-SUCCESS — Customer Success Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-06-18 (SmartSuite products review 2026-06-18)
+- **Most recent:** 2026-06-18 (SmartSuite products review 2026-06-18)
+- **Surfaced by:**
+  - 2026-06-18 SmartSuite products review 2026-06-18
+- **Vendor evidence:** Gainsight, ChurnZero, Totango, Catalyst, Planhat, Vitally
+- **Adjacency:** CSM, CRM, SUB-MGMT, REV-INTEL, WORK-MGMT
+- **Candidate capabilities:** customer health scoring, success plans, QBR management, churn-risk detection, renewal management, playbook execution, product-usage analysis
+- **Estimated Semantius score:** ~75% strict (est.): success plans / playbooks / renewals are internal CRUD, but external drag = product-usage telemetry fetch, health-score compute, customer email + QBR doc-gen.
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### SIS — Student Information System
+
+- **Mention count:** 1
+- **First surfaced:** 2026-06-18 (SmartSuite products review 2026-06-18)
+- **Most recent:** 2026-06-18 (SmartSuite products review 2026-06-18)
+- **Surfaced by:**
+  - 2026-06-18 SmartSuite products review 2026-06-18
+- **Vendor evidence:** Ellucian Banner/Colleague, Workday Student, Anthology, Jenzabar, Oracle Student Cloud
+- **Adjacency:** LMS, HCM, FIN, LIB-MGMT, WORK-MGMT
+- **Candidate capabilities:** student records, admissions, enrollment and registration, curriculum and scheduling, grades and transcripts, financial aid, advising and case management, accreditation tracking
+- **Estimated Semantius score:** ~85% strict (est.): records + enrollment lifecycle are platform CRUD; external drag = student notifications/email + tuition/financial-aid payment.
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### RESEARCH-ADMIN — Research Administration and Grants Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-06-18 (SmartSuite products review 2026-06-18)
+- **Most recent:** 2026-06-18 (SmartSuite products review 2026-06-18)
+- **Surfaced by:**
+  - 2026-06-18 SmartSuite products review 2026-06-18
+- **Vendor evidence:** Cayuse, Kuali Research, Huron Click, Streamlyne, InfoEd Global
+- **Adjacency:** SIS, FIN, GRC, AUDIT, WORK-MGMT
+- **Candidate capabilities:** grant proposal preparation, budget development, pre-award submission, award setup, post-award spend tracking, effort certification, subaward management, research compliance
+- **Estimated Semantius score:** ~90% strict (est.): proposal/award/compliance records + approval workflows are internal CRUD; external drag = email/notify + document generation. Distinct from PS-GRANTS-MGMT (grant-making/disbursing side); this is the grantee/research-org side.
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
+### PHYS-SEC-OPS — Physical Security Operations and Incident Management
+
+- **Mention count:** 1
+- **First surfaced:** 2026-06-18 (SmartSuite products review 2026-06-18)
+- **Most recent:** 2026-06-18 (SmartSuite products review 2026-06-18)
+- **Surfaced by:**
+  - 2026-06-18 SmartSuite products review 2026-06-18
+- **Vendor evidence:** Resolver, Ontic, Everbridge, AlertEnterprise, Trackforce Valiant
+- **Adjacency:** OP-RES, VIS-MGMT, PACS, GRC, EHS
+- **Candidate capabilities:** security incident reporting, investigations and case management, guard tour management, threat assessment, post orders, watchlists and BOLO, mass-notification tie-in
+- **Estimated Semantius score:** ~88% strict (est.): incident/investigation/case records + workflow are platform CRUD; external drag = mass-notification channels and optional sensor/access feeds. May fold into OP-RES at triage. Distinct from PACS (access-control device telemetry).
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_

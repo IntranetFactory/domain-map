@@ -49,7 +49,7 @@ surface `install_docs` and stop.
 > 2. Generate an API key from the Semantius UI: Settings > API Keys > New Key
 > 3. Verify with: `semantius call crud getCurrentUser '{}'`
 >
-> Full setup: https://semantius.app/docs/cli/configure
+> Full setup: https://www.semantius.com/docs/agent-skills/installation/
 
 ---
 
