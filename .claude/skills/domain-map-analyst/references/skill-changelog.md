@@ -564,6 +564,18 @@ The two changes are paired, not independent: Phase 0 prevents the failure at loa
 
 **Status.** active.
 
+## 2026-06-18 - data_objects.catalog_description: reader-facing §2 surface, split from description
+
+**Context.** `data_objects.description` was doing double duty: the only free-text prose on the entity, rendered verbatim into the §2 Entity-summary table (the reader-facing catalog surface) AND emitted into the agent-facing domain skill spec (`emit_skill_spec.ts`) plus read by the B13 entity_type keyword heuristic. The §2 copy read as analyst / market prose, wrong for a human catalog; shortening `description` would have thinned the agent surface, and the only other text column (`notes`) is locked by Rule #15.
+
+**Decision.** Added `data_objects.catalog_description` (format `text`, field_order 1000010), mirroring the existing `catalog_description` pattern on `domains` / `domain_modules` but with a SHORTER spec: 1 to 2 sentences, plural voice matching the plural Name with no leading article ("Contracts with counterparties...", not "A contract..."), not the 1-3 buyer-marketing paragraphs those tables carry. The §2 Entity summary now renders `catalog_description` and falls back to `description` when empty (`generate_blueprints.ts`). `description` stays the analyst-facing field feeding the skill spec + B13. Authored at Phase B for every new master; fill-empty-freely, overwrite-protected per the Rule #20 shape.
+
+**Reasoning.** A split field beats overloading `description`: overloading would have degraded the agent skill spec, since the rich cross-domain / multi-master context in `description` has nowhere else to live (notes is forbidden). Reusing the `catalog_description` name keeps the catalog-UX pattern consistent; the shorter per-table spec is documented (module-shape.md + Phase B) so it is not conflated with the buyer-marketing flavor.
+
+**Scope.** `data_objects` catalog-wide; `generate_blueprints.ts` §2 + `scripts/lib/catalog.ts` `DataObject` type / fetch; SKILL.md Rule #18 field list + Phase B deliverable 1 + Phase 1 step 6; module-shape.md data_objects table. Field added by `scripts/loaders/add_catalog_description_2026_06_18.ts`; the backfill loader authoring the existing values is separate.
+
+**Status.** active.
+
 ---
 
 # Incidents

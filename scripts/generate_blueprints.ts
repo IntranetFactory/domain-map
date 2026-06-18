@@ -84,11 +84,13 @@ const BLUEPRINTS_DIR = `${ROOT}/catalog/blueprints`;
 const BLUEPRINT_SUFFIX = "-semantic-blueprint.md";
 const TODAY = new Date().toISOString().slice(0, 10);
 // Blueprint format/schema version (front-matter `blueprint_version`). The producer owns this and
-// bumps it only when the file SHAPE changes. 3.0 (vs 2.x) adds exactly two Section 3 columns:
+// bumps it only when the file SHAPE changes. 3.0 (vs 2.x) added two Section 3 columns:
 // `canonical code` (the stable uber-model identity, beside the deployed `data_object`) and a
-// relocated `entity_type` (now immediately before `write tier`). No other section changed shape.
+// relocated `entity_type` (now immediately before `write tier`). 3.1 sources the §2 Entity-summary
+// Description from `data_objects.catalog_description` (the short reader-facing field, falling back
+// to `description` when empty) and adds a full `description` column to Section 3 after the labels.
 // Emit exactly this one version key, never a consumer/authoring-tool version.
-const BLUEPRINT_VERSION = "3.0";
+const BLUEPRINT_VERSION = "3.1";
 
 // ---------- catalog index (loaded once via lib) ----------
 // Types, pg helper, and scoped query helpers live in ./lib/catalog.ts. Aliasing
@@ -270,6 +272,9 @@ function renderEntitySummary(scopeRows: ScopeRow[]): string[] {
   const out: string[] = [];
   if (scopeRows.length === 0) return out;
   // Three columns: Name (plural label) + data_object (snake_case natural key) + Description.
+  // The Description cell prefers the short reader-facing `catalog_description`; it falls back
+  // to the analyst-facing `description` when catalog_description has not been authored yet, so
+  // the surface degrades gracefully mid-migration.
   // Role classification is conveyed visually via the mermaid color coding below.
   out.push(tableHeader(["Name", "data_object", "Description"]));
   const sorted = [...scopeRows].sort((a, b) => {
@@ -282,7 +287,7 @@ function renderEntitySummary(scopeRows: ScopeRow[]): string[] {
     out.push(tableRow([
       r.data_object.plural_label,
       `\`${r.data_object.data_object_name}\``,
-      r.data_object.description || "",
+      r.data_object.catalog_description || r.data_object.description || "",
     ]));
   }
   return out;
@@ -716,11 +721,12 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   if (scopeRows.length === 0) {
     out.push(noneSection("no data_objects in scope"));
   } else {
-    // 3.0 Section 3 header (13 canonical columns). `canonical code` sits immediately after
-    // `data_object`; `entity_type` sits immediately before `write tier`. Downstream parses by
+    // 3.0 Section 3 header. `canonical code` sits immediately after `data_object`; `description`
+    // (the full analyst-facing prose, the longer counterpart to §2's short `catalog_description`)
+    // follows the labels; `entity_type` sits immediately before `write tier`. Downstream parses by
     // header name, not column position, but this is the canonical order. (`modules` is an
     // extra multi-module-bundle column inserted before `notes`; single-module blueprints omit it.)
-    const headers = ["#", "data_object", "canonical code", "singular", "plural", "role", "mastered in", "mastered label", "necessity", "pattern flags", "entity_type", "write tier"];
+    const headers = ["#", "data_object", "canonical code", "singular", "plural", "description", "role", "mastered in", "mastered label", "necessity", "pattern flags", "entity_type", "write tier"];
     if (showModulesCol) headers.push("modules");
     headers.push("notes");
     out.push(tableHeader(headers, ["right"]));
@@ -755,6 +761,7 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
         canonicalCode,
         o.singular_label,
         o.plural_label,
+        o.description || "",
         r.role,
         owner.code,
         owner.label,

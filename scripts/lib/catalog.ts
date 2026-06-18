@@ -46,6 +46,10 @@ export type DataObject = {
   singular_label: string;
   plural_label: string;
   description: string;
+  // Short reader-facing summary (1-2 sentences) for the §2 Entity summary surface; distinct
+  // from the analyst-facing `description`. Empty until authored; the emitter falls back to
+  // `description` when this is blank. See SKILL.md "data_objects.catalog_description".
+  catalog_description: string;
   kind: string;
   is_canonical_bare_word: boolean;
   has_personal_content: boolean;
@@ -209,7 +213,7 @@ export async function loadCatalogIndex(): Promise<CatalogIndex> {
     ) as Promise<Domain[]>,
     pg(
       "GET",
-      "/data_objects?select=id,data_object_name,singular_label,plural_label,description,kind,is_canonical_bare_word,has_personal_content,has_submit_lock,has_single_approver,entity_type&limit=10000",
+      "/data_objects?select=id,data_object_name,singular_label,plural_label,description,catalog_description,kind,is_canonical_bare_word,has_personal_content,has_submit_lock,has_single_approver,entity_type&limit=10000",
     ) as Promise<DataObject[]>,
     pg("GET", "/industries?select=id,industry_name&limit=10000") as Promise<IndustryRow[]>,
     pg(
