@@ -12,7 +12,7 @@ schema_version: 2
 domain: S2P
 status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-13"
+last_audit: "2026-06-19"
 
 # All agent-doable additive/corrective work for S2P is executed (record_status='new', awaiting
 # your approval): entity_type classification on the 5 masters, domain catalog UX copy (Rule #20),
@@ -29,11 +29,12 @@ last_audit: "2026-06-13"
 
 b1b:
   - id: B1B-S2P-MODULE-SPLIT
-    summary: "All M / E / F structural fixes for S2P gated on the 5-module split decision in b2 B2-MODULE-SPLIT."
+    summary: "All M / E / F structural fixes for S2P gated on the module-split decision in b2 B2-MODULE-SPLIT."
     finding: >-
       S2P has zero domain_modules rows. M1 fail. Until the user picks the module shape
-      (proposed 5-module split: S2P-SOURCING / S2P-REQ-TO-PO / S2P-RECEIVING / S2P-INVOICE-MATCHING /
-      S2P-CATALOG-MGMT, or an alternative), the catalog cannot author domain_modules, cannot anchor
+      (Phase 0 2026-06-19 recommends a 4-module split: S2P-SOURCING / S2P-REQ-TO-PO (absorbs
+      goods_receipts) / S2P-INVOICE-CAPTURE / S2P-CATALOG-MGMT, with optional 5th S2P-RECEIVING and
+      optional S2P-SPEND-ANALYTICS; or an alternative), the catalog cannot author domain_modules, cannot anchor
       domain_module_data_objects, cannot resolve lifecycle_states domain_module_id (M5), cannot link
       capabilities to modules (M4 / M6), cannot author the domain-grain system skill / domain_module_tools,
       cannot PATCH the 12 outbound + 14 inbound handoffs that carry NULL source / target domain_module_id
@@ -103,18 +104,32 @@ b1b:
     summary: "Authoring 5 to 8 market-specific S2P capabilities (B1-A2) gated on module-shape decision."
     finding: >-
       capability_domains has 1 row (APPROVAL-WORKFLOW, cross-cutting). Rule #14 expects 5 to 8 market-specific
-      capabilities. Proposed set (mirrors the proposed module split): S2P-SOURCING, S2P-REQ-TO-PO, S2P-RECEIVING,
-      S2P-INVOICE-MATCHING, S2P-CATALOG-MGMT, S2P-SAVINGS-TRACKING. Each capability needs a realizing module under
-      M4 / M6; until modules exist the link cannot be authored coherently.
+      capabilities. Proposed set (mirrors the proposed module split): S2P-STRATEGIC-SOURCING, S2P-REQUISITION-TO-PO,
+      S2P-GOODS-RECEIPT, S2P-INVOICE-CAPTURE, S2P-CATALOG-MGMT, S2P-SAVINGS-TRACKING, S2P-SPEND-ANALYTICS. Each
+      capability needs a realizing module under M4 / M6; until modules exist the link cannot be authored coherently.
     blocked_by:
       - {type: user_decision, ref: B2-MODULE-SPLIT}
     affected_entities:
-      - S2P-SOURCING
-      - S2P-REQ-TO-PO
-      - S2P-RECEIVING
-      - S2P-INVOICE-MATCHING
+      - S2P-STRATEGIC-SOURCING
+      - S2P-REQUISITION-TO-PO
+      - S2P-GOODS-RECEIPT
+      - S2P-INVOICE-CAPTURE
       - S2P-CATALOG-MGMT
       - S2P-SAVINGS-TRACKING
+      - S2P-SPEND-ANALYTICS
+  - id: B1B-CATALOG-COPY-CONFIRM
+    summary: "Domain catalog_tagline + catalog_description are written (non-empty) but await user confirmation (Rule #20 / #22)."
+    finding: >-
+      domains id 27 carries non-empty catalog_tagline and catalog_description (authored buyer-voice copy
+      at record_status='new' by a prior pass). Per Rule #20 the written copy stays an OPEN b1b confirmation
+      until the user confirms it in the q-file (or hands back a correction, which is the approved overwrite).
+      The exact live text is surfaced verbatim in q-S2P.md for confirmation. No module-grain copy is owed yet
+      (0 domain_modules; module catalog copy is authored when modules are built).
+    blocked_by:
+      - {type: user_confirmation, ref: B2-CATALOG-COPY}
+    affected_entities:
+      - "domains.id=27 catalog_tagline"
+      - "domains.id=27 catalog_description"
   - id: B1B-JAGGAER-DEDUP
     summary: "DELETE duplicate Jaggaer ONE solution row blocked on user-pick survivor (b2 B2-JAGGAER)."
     finding: >-
@@ -129,26 +144,113 @@ b1b:
 
 b2:
   - id: B2-MODULE-SPLIT
-    summary: "Approve proposed 5-module S2P split, propose alternative, or defer."
+    summary: "Pick the S2P module split (4 / 5 / 3 modules), or defer. Gate decision (UNBUILT domain)."
     question: >-
-      The audit recommends splitting S2P into 5 modules: S2P-SOURCING (masters sourcing_events),
-      S2P-REQ-TO-PO (masters purchase_requisitions + purchase_orders), S2P-RECEIVING (masters
-      goods_receipts), S2P-INVOICE-MATCHING (masters supplier_invoices; boundary question with
-      AP-AUTO on invoice-matching ownership), S2P-CATALOG-MGMT (would master procurement_catalogs
-      + catalog_items, Bucket 3 pending). Approve the 5-module split, propose an alternative shape
-      (e.g. 4 modules collapsing receiving into invoice-matching; 3 modules collapsing sourcing into
-      req-to-po), or defer the Phase A re-load entirely. The domain is UNBUILT (0 domain_modules):
-      this is the build decision.
+      S2P is UNBUILT (0 domain_modules); this is the build decision. Phase 0 (2026-06-19) grounds the
+      split in the suite-vendor surface. Recommended 4-module split: S2P-SOURCING (masters
+      sourcing_events; RFP/RFQ/RFI, reverse auctions, bids, awards, savings home here), S2P-REQ-TO-PO
+      (masters purchase_requisitions + purchase_orders; goods_receipts and intake fold in here),
+      S2P-INVOICE-CAPTURE (masters supplier_invoices, the invoice record + e-invoicing compliance
+      cluster), S2P-CATALOG-MGMT (would master procurement_catalogs + catalog_items, b3 research
+      pending). Alternatives: 5 modules (add standalone S2P-RECEIVING mastering goods_receipts);
+      3 modules (fold both receiving and catalog into S2P-REQ-TO-PO for a lean launch). An optional
+      S2P-SPEND-ANALYTICS (masters spend_categories) can be added under any shape.
     options:
-      - "approve 5-module split as proposed"
-      - "approve with AP-AUTO boundary resolved (S2P stops at GR, AP-AUTO absorbs matching)"
-      - "approve with AP-AUTO boundary resolved (S2P owns matching, hands off invoice.approved)"
-      - "propose alternative 3-module or 4-module shape"
+      - "4 modules: Sourcing / Req-to-PO (absorbs goods_receipts) / Invoice-Capture / Catalog (Phase-0 recommended)"
+      - "5 modules: the four above plus a standalone Receiving module mastering goods_receipts"
+      - "3 modules: Sourcing / Req-to-PO (absorbs receiving + catalog) / Invoice-Capture (lean launch)"
+      - "any of the above plus an optional Spend-Analytics module mastering spend_categories"
       - "defer module decision; keep S2P pre-modular for now"
+    evidence: >-
+      Phase 0 (.tmp_deploy/S2P-phase0-2026-06-19.md), 7 flagship vendors. Sourcing is a discrete,
+      separately-packaged module in every full-suite vendor: Coupa (Sourcing + Coupa Sourcing
+      Optimization), SAP Ariba (Strategic Sourcing Suite, separate SKU), Ivalua (Sourcing), GEP SMART
+      (Sourcing Management), JAGGAER (Sourcing under the Source-to-Contract pillar), Zip (Sourcing);
+      Basware is the only abstainer. RFP/RFQ/RFI canonically live in Sourcing, never in Procurement,
+      across the whole set. Req-to-PO (purchase_requisitions + purchase_orders) is the transactional
+      spine in every vendor; intake (Coupa Intake and Orchestration, Ariba Intake Management, Ivalua
+      Intake, GEP Intake, Zip Intake) attaches as a front door to requisitioning and folds in (Zip
+      auto-generates POs from intake), so it is not a separate module. Receiving (goods_receipts) is a
+      universal OBJECT but NO vendor sells receiving as a separate purchasable module: it sits inside
+      Procurement/P2P in Coupa, Ariba (Buying), Ivalua (eProcurement), GEP (P2P), JAGGAER
+      (eProcurement), so the honest reading folds goods_receipts into Req-to-PO. Invoice-Capture is
+      vendor-supported as the invoice system of record (Ariba Buying and Invoicing, Coupa Invoicing,
+      Ivalua AP Automation, JAGGAER Invoicing, Basware whose entire business is invoice capture and
+      e-invoicing); S2P masters only the supplier_invoices RECORD, with match + pay consumed from
+      AP-AUTO (see B2-AP-BOUNDARY). Catalog is a soft seam: Ariba sells Catalog as a fully separate
+      SKU, but Coupa, Ivalua, GEP, and JAGGAER fold catalogs and punch-out inside their procurement
+      module, so a standalone S2P-CATALOG-MGMT has single-vendor packaging precedent (Ariba) plus
+      distinct objects (procurement_catalogs / catalog_items / punch_out_sessions). Spend-Analytics is
+      a separate Spend Analysis SKU in every full suite (Coupa, Ariba, Ivalua, GEP, JAGGAER).
     why: >-
       Most of the structural fixes (M1 / M2 / M4 / M5 / M6 / B9b / B10b / E1 to E5 / M8) and the
       B1-A2 capability authoring are gated on this decision (b1b cascade). The catalog cannot proceed
       until the module shape is settled. The agent does not scaffold an unbuilt domain unprompted.
+  - id: B2-AP-BOUNDARY
+    summary: "Confirm the S2P / AP-AUTO invoice-payment ownership boundary: S2P masters the invoice record, AP-AUTO retains match + pay."
+    question: >-
+      The buyer-side invoice/match/pay chain spans S2P and the separate AP-AUTO domain. Live catalog
+      state already draws the line: supplier_invoices (id 75) has S2P as its ONLY master anywhere
+      (AP-AUTO holds it at role=contributor), while invoice_matches (id 204) and payment_runs (id 205)
+      are mastered by AP-AUTO. Confirm S2P masters the supplier-invoice RECORD (capture, ingestion,
+      e-invoicing compliance) and CONSUMES match + pay from AP-AUTO, handing off at
+      supplier_invoice.captured / .approved; OR decide S2P should own invoice matching too (which would
+      require re-mastering invoice_matches away from AP-AUTO).
+    options:
+      - "S2P masters supplier_invoices (capture); AP-AUTO retains invoice_matches + payment_runs (S2P consumes) (recommended, matches live state)"
+      - "S2P stops at goods receipt; AP-AUTO absorbs the supplier_invoices record too (S2P consumes invoices)"
+      - "S2P owns invoice matching as well; re-master invoice_matches from AP-AUTO to S2P (destructive re-master)"
+    evidence: >-
+      Live catalog: supplier_invoices (75) S2P=master (only master anywhere), AP-AUTO=contributor;
+      invoice_matches (204) and payment_runs (205) AP-AUTO=master. Handoff 545
+      (invoice_match.exception_raised, AP-AUTO -> S2P) plus 581/583/584 (S2P PO/GR events -> AP-AUTO)
+      confirm match+pay sit downstream in AP-AUTO. Phase 0: vendors draw the capture/match/pay line
+      differently. SAP Ariba folds invoicing into Buying and Invoicing and STOPS at a payment_request
+      handed to ERP (does not disburse). Coupa and Ivalua own capture through match through disburse
+      natively. GEP folds all of invoice inside one Procure-to-Pay module. JAGGAER splits Invoicing and
+      Payments into separate P2P modules. Basware's entire business is capture, three-way match,
+      e-invoicing compliance, and pay. The catalog has chosen the Ariba-like cut: S2P is the invoice
+      system of record, AP-AUTO does the matching and the payment run, which is internally consistent
+      with the existing masters and handoffs.
+  - id: B2-CONSUME-CONFIRM
+    summary: "Confirm S2P consumes suppliers from SRM and contracts from CLM (never re-masters them)."
+    question: >-
+      S2P is the procurement spine and depends on two shared records it must NOT re-master:
+      suppliers (id 206), mastered by SRM (SRM-SUPPLIER-LIFECYCLE; also a legacy duplicate master in
+      MDM that SRM/MDM must resolve, not S2P), and legal_contracts (id 66), mastered by CLM
+      (CLM-REPOSITORY). Confirm S2P consumes both (consumer role on suppliers, contributor/consumer on
+      legal_contracts) rather than authoring its own supplier or contract master.
+    options:
+      - "confirm: S2P consumes suppliers from SRM and contracts from CLM, no S2P-side master (recommended)"
+      - "S2P should master its own procurement-side supplier or contract record (specify which, and why)"
+    evidence: >-
+      Live catalog: suppliers (206) mastered by SRM (SRM-SUPPLIER-LIFECYCLE); legal_contracts (66)
+      mastered by CLM (CLM-REPOSITORY). Phase 0: every suite vendor (Coupa, SAP Ariba, Ivalua, GEP,
+      JAGGAER) ships a distinct Supplier Management module and a distinct Contract Management module
+      separate from sourcing and buying, confirming that the supplier and contract records are their
+      own systems of record that procurement consumes. S2P's existing footprint already records
+      suppliers and contingent_invoices as consumers and legal_contracts as a contributor; no S2P-side
+      supplier or contract master exists or is warranted.
+  - id: B2-SOW-RELATION
+    summary: "Confirm S2P relates to (does not master) the services-procurement / SOW domain analyzed in parallel."
+    question: >-
+      Services procurement (statements_of_work, services_engagements, milestones) is being analyzed as
+      its own domain in a parallel task. No SOW master exists in the catalog today (search found only
+      CWM = Contingent Workforce Management, which masters contingent_invoices; statements_of_work has
+      no master anywhere). Confirm S2P treats services as a spend CATEGORY and RELATES / hands off to
+      the SOW domain, rather than mastering any SOW entity.
+    options:
+      - "confirm: S2P relates to / hands off to the SOW domain; services is a spend category, S2P masters no SOW entity (recommended)"
+      - "S2P should master services-procurement entities (statements_of_work, milestones) itself"
+      - "defer until the parallel SOW domain analysis lands, then wire the handoff"
+    evidence: >-
+      Live catalog: no statements_of_work / services_engagements master row exists; the nearest is CWM
+      (Contingent Workforce Management, contingent_invoices) which S2P already consumes. Phase 0:
+      services / SOW procurement is a distinct market segment (SAP Fieldglass, Beeline, Coupa CCW,
+      Ivalua services procurement) sold separately from the goods-buying S2P spine; treating services
+      as a spend category that routes to a dedicated services-procurement system of record matches the
+      vendor surface. S2P's spend-category routing (direct / indirect / services / tail) already
+      models services as a routing path, not an owned entity.
   - id: B2-JAGGAER
     summary: "Pick survivor for duplicate Jaggaer solutions rows (id 129 vs id 518). DESTRUCTIVE DELETE."
     question: >-
@@ -181,11 +283,11 @@ b2:
       workflow-specific justification. When module tooling is authored after the module split, the
       default replacement is notify_person. But S2P-REQ-TO-PO has a candidate workflow-specific
       justification (supplier-facing PO dispatch email IS the contract in many B2B flows); similar
-      candidate on S2P-INVOICE-MATCHING (invoice-received confirmations). Keep send_email with a
+      candidate on S2P-INVOICE-CAPTURE (invoice-received confirmations). Keep send_email with a
       module-specific workflow justification, or move every module to notify_person and let the
       deployment pick the channel.
     options:
-      - "keep send_email on S2P-REQ-TO-PO (PO dispatch); keep on S2P-INVOICE-MATCHING (receipt confirmation); notify_person everywhere else"
+      - "keep send_email on S2P-REQ-TO-PO (PO dispatch); keep on S2P-INVOICE-CAPTURE (receipt confirmation); notify_person everywhere else"
       - "keep send_email on S2P-REQ-TO-PO only; notify_person on all other modules"
       - "notify_person across all S2P modules; no channel-specific links"
     why: >-

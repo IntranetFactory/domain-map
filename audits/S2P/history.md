@@ -487,3 +487,68 @@ H1 approval sweep), and the two new B9d source-side destructive sign-offs (RE-TA
 ### JWT-audience errors
 
 None. Tenant `ma@adenin.com` throughout.
+
+## 2026-06-19, Research-to-q-file pass (Phase 0 + design, no catalog writes)
+
+Took S2P from research toward a build-ready q-file per the domain-map-analyst workflow (Phase 0 +
+design + q-file). The domain is an EXISTING row (id 27) but UNBUILT (0 domain_modules, 0 DMDO master
+rows). ZERO catalog writes this pass: every `semantius` call was a GET read; building a new domain's
+modules/masters is expansive (Rule #21) and loads only after the user answers the q-file.
+
+### Live audit (consume-vs-master map)
+
+- Confirmed 0 domain_modules for domain 27. Five masters still recorded only in legacy
+  domain_data_objects: sourcing_events (71), purchase_requisitions (72), purchase_orders (73),
+  goods_receipts (74), supplier_invoices (75).
+- AP-AUTO boundary RESOLVED from live state: supplier_invoices (75) has S2P as its ONLY master
+  anywhere (AP-AUTO holds it at role=contributor); invoice_matches (204) and payment_runs (205) are
+  mastered by AP-AUTO. So S2P masters the invoice RECORD, AP-AUTO retains match + pay. The prior
+  q-file's "S2P owns matching" option is dispreferred (it would re-master AP-AUTO's object). Surfaced
+  as new b2 B2-AP-BOUNDARY rather than guessed.
+- Consume map confirmed: suppliers (206) mastered by SRM (SRM-SUPPLIER-LIFECYCLE) plus a legacy MDM
+  duplicate (SRM/MDM's to resolve); legal_contracts (66) mastered by CLM (CLM-REPOSITORY);
+  contingent_invoices (191) mastered by CWM; vendor_payment_authorizations (746) mastered by
+  SPEND-MGMT. S2P consumes all of these.
+- SOW / services procurement: no statements_of_work master exists anywhere (only CWM). The SOW domain
+  is a parallel task. S2P relates / hands off (services as a spend category), masters no SOW entity.
+  Surfaced as new b2 B2-SOW-RELATION.
+
+### Phase 0 (.tmp_deploy/S2P-phase0-2026-06-19.md)
+
+7 flagship vendors (Coupa, SAP Ariba, Ivalua, GEP SMART, JAGGAER, Basware, Zip). Verdict: vendor
+evidence cleanly supports FOUR strong standalone modules (Sourcing / Req-to-PO / Invoice-Capture /
+Catalog) with goods_receipts FOLDING into Req-to-PO (no vendor sells receiving standalone) and Catalog
+a soft seam (only Ariba sells it as a separate SKU). RFP/RFQ canonically home in Sourcing across all
+six suite vendors. This REFINES the prior 5-module proposal: per Rule #22 fresh Phase 0 wins, so the
+recommendation moved from "5 modules as proposed" to the 4-module split with 5/3 alternatives.
+
+### Design (.tmp_deploy/S2P-design-2026-06-19.md)
+
+Domain metadata (Rule #8) confirmed already populated and correct (A1 passes); no metadata write owed.
+Catalog copy already non-empty and overwrite-protected; surfaced verbatim in the q-file for
+confirmation (Rule #20). Module split, masters-per-module, consume map, 5-8 capabilities, one domain
+skill all specified for the build that runs after sign-off.
+
+### state.yaml / q-file changes
+
+- Renamed the invoice module S2P-INVOICE-MATCHING -> S2P-INVOICE-CAPTURE throughout (matching lives in
+  AP-AUTO, so "matching" was the wrong name for S2P's module).
+- B2-MODULE-SPLIT rewritten with a named-vendor `evidence` field (Phase 0) and the 4/5/3-module options;
+  recommendation is now the 4-module split.
+- Added b2: B2-AP-BOUNDARY (invoice/match/pay ownership), B2-CONSUME-CONFIRM (suppliers from SRM +
+  contracts from CLM), B2-SOW-RELATION (services/SOW handoff), each with its own `evidence` field.
+- Added b1b B1B-CATALOG-COPY-CONFIRM (domain catalog copy written but awaiting user confirmation).
+- q-S2P.md restructured: q1 gate (split), q2 AP-AUTO boundary, q3 consume confirm, q4 SOW, q5 catalog
+  copy confirm, then the carried-forward judgment/destructive items (Jaggaer dedup, pattern flags,
+  send_email channel, e-invoice PII, pairwise timing, H1 approval, B9d RE-TAG/MIS-TAG) as q6-q13, and
+  the optional catalog-masters research as q14.
+- Grounding lint (`qfile_grounding_lint.ts S2P`) run: clean (see transcript).
+
+### Post-pass status
+
+`next_action_by: user`. No agent-executable catalog work remains; the domain waits on the user for the
+module-split build decision and the surfaced boundary / judgment / destructive items in q-S2P.md.
+
+### JWT-audience errors (2026-06-19)
+
+None. All `semantius` calls were GET reads. Tenant `ma@adenin.com` throughout.

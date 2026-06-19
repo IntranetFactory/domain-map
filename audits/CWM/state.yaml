@@ -1,0 +1,153 @@
+schema_version: 2
+domain: CWM
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-19"
+
+# 2026-06-19 a-CWM.md PROCESSED (Rule #22). The user answered the post-rename q-file.
+# EXECUTED this pass (all at record_status='new', Rule #1 untouched):
+#   - 5 pattern flags PATCHed: 186 has_personal_content=true; 188/189/187/191 has_single_approver=true.
+#   - domain 64 catalog_tagline + catalog_description written (q8, were empty).
+#   - domain 64 business_logic written (q9, was empty; crud_percentage=92<95).
+#   - B9D owners: process_raci R/A rows authored (CWM personas exist in domain_roles, bf 68):
+#       process 315 "Process accounts payable (AP)" -> Contingent Labor Coordinator (role 21) R+A (ids 228,229);
+#       process 815 "Monitor/Manage supplier information" -> Staffing Supplier Manager (role 20) R+A (ids 230,231).
+#     (q11 footer pointed at the legacy process 167; the live orphan/handoff-591 tag is process 815.)
+# DECIDED, EXECUTION DEFERRED:
+#   - B2-1 (entity 187 identity) = option a: it is the staffing work-order, NOT preventive maintenance.
+#     RECONCILED 2026-06-19 (SOW split): with SOW now its own SVCS-PROC domain (192), entity 187 is a CWM
+#     STAFFING REQUISITION / work-order (rename target staffing_requisitions / staffing_work_orders), NOT a
+#     SOW work-order. Its rename + re-home stays INSIDE CWM's VMS / Staff Augmentation surface (315), no longer
+#     into a SOW module. The cascade (trigger_events, aliases, labels, description, catalog_description) rides
+#     the CWM Phase-B build. The a6 flag on 187 was applied this pass and is independent of the rename.
+# 2026-06-19 SOW SPLIT RECONCILIATION (q1/q4 of the SVCS-PROC gate, decided by the user):
+#   - SOW is now its own emerging_market domain SVCS-PROC (domain_id 192, built 2026-06-19): it masters
+#     statements_of_work, services_engagements, sow_milestones, milestone_invoices (required) + service_
+#     deliverables, services_proposals, sow_change_orders, service_acceptances (optional). CWM does NOT
+#     master the SOW cluster.
+#   - The CWM Phase-B expansion's "Services Procurement / SOW" module is DROPPED as a CWM master. The CWM
+#     expansion is now 2 new modules only: Direct Sourcing / Freelance Management + Worker Classification
+#     and Compliance (down from 3). CWM EMBEDDED_MASTERS the SVCS-PROC SOW masters if/when a SOW-adjacent
+#     surface is deployed (CWM links SOW engagements to its contingent-workforce spine; never re-masters).
+#     The embedded_master rows are pending a CWM SOW-adjacent module + the SVCS-PROC build (now done), so
+#     they are deferred, not loaded here (no CWM SOW module exists to host them yet).
+# DRAFTED, NOT LOADED (Rule #21 -- expansive structure, approve-before-load):
+#   - Phase-B proposal: .tmp_deploy/CWM-phaseB-draft-2026-06-19.md (now 2 new modules + their non-SOW masters
+#     with Rule #16 necessity + entity-187 rename/re-home INSIDE CWM). Surfaced in q-CWM.md for user approval
+#     before load. The SOW module + SOW masters in that draft are SUPERSEDED by the SVCS-PROC build.
+#   - NO domain_modules and NO new data_objects were created (domain 64 still has exactly 2 modules: 315, 316).
+#
+# Prior history: VMS -> CWM rename executed + approved 2026-06-19 (B2-CWM-RENAME resolved, see history.md).
+# B2-2 / B2-3 / B2-5 resolved this pass (see above). B2-B9D-OWN-315 / B2-B9D-OWN-167 resolved (owners
+# assigned via process_raci). All removed from open items below; details in history.md 2026-06-19.
+
+b1a:
+  - id: B1A-B9D-VERIFY
+    summary: "B9d (handoff payload realization) realization still owed: owners assigned but the lifecycle-state process gating is not authored; run it on the lifecycle-realization pass."
+    finding: |
+      The b9d resolver (scripts/analytics/b9d_resolver.ts CWM --dry-run) still reports 4 ORPHANs
+      (processes 315 AP, 815 manage-supplier-info, 923 track-utilization, 1418 payroll-time-entry).
+      It marks a process RESOLVED only when the process both has R+A RACI AND gates a permission-required
+      lifecycle state (data_object_lifecycle_states.process_id = the process). This pass authored the R+A
+      RACI for 315 (role 21) and 815 (role 20), but every CWM master's gated lifecycle state still has
+      process_id=NULL, so the resolver does not yet flip them to RESOLVED. Processes 923 and 1418 also have
+      no owner RACI yet (they were never surfaced as q-file owner questions).
+    action: |
+      On the lifecycle-realization pass: PATCH data_object_lifecycle_states.process_id on the relevant
+      CWM gated states to point at their realizing APQC process (additive, fills an empty FK), so 315/815
+      flip to RESOLVED; and decide owners for the remaining orphans 923 (PSA utilization, payload
+      contingent_timesheets) and 1418 (payroll time entry, payload contingent_timesheets) and author their
+      RACI. Do not touch record_status (Rule #1).
+
+b1b:
+  - id: B1B-B1
+    summary: Resolve handoff 117 payload-vs-event mismatch (rides the entity-187 rename in CWM Phase-B).
+    finding: |
+      Outbound handoff 117 (CWM to S2P) has payload data_object_id=191 (contingent_invoices)
+      but trigger event 146 (pm_work_order.invoiced) has data_object_id=187 (the work-order).
+      The fix is part of the entity-187 rename/re-home cascade (B2-1 decided = CWM staffing
+      requisition / work-order, NOT a SOW work-order after the SOW split to SVCS-PROC), which rides
+      the CWM Phase-B build INSIDE CWM. Align event 146 or handoff 117 in that pass.
+    blocked_by:
+      - {type: build_pass, ref: B2-CWM-MODULES}
+
+b2:
+  - id: B2-CWM-MODULES
+    summary: "CWM module expansion (a1=a in principle). RECONCILED after SOW split: now 2 new modules (SOW module DROPPED to SVCS-PROC). DRAFTED, awaiting user approval of the module + master list BEFORE load (Rule #21)."
+    question: |
+      a1=a approved the expansion in principle, but the q-file told the user the new modules and their
+      new masters would be surfaced as a Phase-B DRAFT for review before loading. After the 2026-06-19
+      SOW split, the Services Procurement / SOW module is DROPPED from CWM (SOW now lives in SVCS-PROC,
+      domain 192). Keep 315 (VMS / Staff Augmentation) + 316 (Contingent Time & Invoicing); add Direct
+      Sourcing / FMS and Worker Classification & Compliance (2 new modules, not 3). CWM EMBEDDED_MASTERS
+      the SVCS-PROC SOW cluster if/when a SOW-adjacent surface is deployed; it does not master it. The
+      draft (with per-master Rule #16 necessity and the entity-187 rename/re-home INSIDE CWM as the
+      staffing requisition / work-order) is at .tmp_deploy/CWM-phaseB-draft-2026-06-19.md and is surfaced
+      in q-CWM.md. NO structure is loaded until the user approves the list.
+    options:
+      - {key: a, label: "Approve the draft minus SOW: load 2 new modules (Direct Sourcing/FMS + Worker Classification & Compliance) + their non-SOW masters + entity-187 rename/re-home as a CWM staffing requisition / work-order. SOW module + SOW masters superseded by SVCS-PROC."}
+      - {key: b, label: "Trim: approve a subset of modules/masters (say which) for the first load, stage the rest"}
+      - {key: c, label: "Hold: keep 315/316 only for now; revisit the expansion later"}
+    evidence: |
+      Fieldglass, Beeline, VNDLY all separate the sourcing/assignment surface from time/invoice
+      (validates keeping 315/316 as two modules). Beeline, Prosperix, Worksuite, WorkMarket, Stoke ship
+      Direct Sourcing/FMS; Magnit and Worksuite ship worker-classification/compliance engines. Beeline and
+      Fieldglass also bundle Services Procurement/SOW as a VMS tab, which is precisely why SOW is now its
+      own SVCS-PROC domain that CWM EMBEDS rather than a CWM-owned module: hosting the SOW masters on CWM
+      would bake in the contingent-workforce framing the services-procurement pure-play exists to deny.
+      Full report: .tmp_deploy/CWM-phase0-2026-06-19.md. Draft: .tmp_deploy/CWM-phaseB-draft-2026-06-19.md.
+      SOW design + verdict: .tmp_deploy/SOW-design-2026-06-19.md.
+    why: |
+      Net-new modules + masters + capabilities are expansive market structure (Rule #21): surfaced in a
+      q-file FIRST, written only after the a-file approves the list. a1=a is the in-principle go; this is
+      the explicit master-list approval gate the q-file promised. After the SOW split, the SOW module is
+      removed from CWM's expansion (SOW masters mastered by SVCS-PROC 192; CWM embedded_masters them).
+      Folds in B2-1 (entity-187 rename/re-home as a CWM staffing requisition).
+    extra_draft_path: ".tmp_deploy/CWM-phaseB-draft-2026-06-19.md"
+
+b3:
+  # The 3 prior candidate masters are a SUBSET of the 14 in the Phase-B draft (B2-CWM-MODULES).
+  # They are no longer independent ideas; they live in the draft and approve/load with it.
+  # Kept here as the additive-idea record pointing at the draft; not a separate gate.
+  - id: B3-CANDIDATE-SUBMISSIONS
+    candidate: candidate_submissions
+    rationale: |
+      Suppliers slate candidates against a requisition; carries scoring, hide-from-hiring-manager
+      flags, withdrawal reasons. In the Phase-B draft as a VMS / Staff Augmentation master
+      (Rule #16 necessity = optional: agency-staffing vendors master it, FMS/direct vendors skip it).
+    vendor_evidence:
+      - {vendor: SAP Fieldglass, evidence: 1st_class}
+      - {vendor: Beeline, evidence: 1st_class}
+      - {vendor: Workday VNDLY, evidence: 1st_class}
+      - {vendor: Prosperix, evidence: 1st_class}
+    proposed_module: VMS / Staff Augmentation
+    extra_draft_path: ".tmp_deploy/CWM-phaseB-draft-2026-06-19.md"
+
+  - id: B3-WORKER-ASSIGNMENTS
+    candidate: worker_assignments
+    rationale: |
+      1:1 with a winning candidate; carries start / end / billable rate / project / WBS / location.
+      In the Phase-B draft as a VMS / Staff Augmentation master (Rule #16 necessity = required:
+      engagement core, all 8 flagships master it, timesheets/invoices bind to it).
+    vendor_evidence:
+      - {vendor: SAP Fieldglass, evidence: 1st_class}
+      - {vendor: Beeline, evidence: 1st_class}
+      - {vendor: Workday VNDLY, evidence: 1st_class}
+      - {vendor: Magnit, evidence: 1st_class}
+      - {vendor: Worksuite, evidence: 1st_class}
+    proposed_module: VMS / Staff Augmentation
+    extra_draft_path: ".tmp_deploy/CWM-phaseB-draft-2026-06-19.md"
+
+  - id: B3-WORKER-CLASSIFICATIONS
+    candidate: worker_classifications
+    rationale: |
+      Typed IR35 / California AB5 / EU Platform Work determination per worker per engagement.
+      In the Phase-B draft as a Worker Classification & Compliance master (Rule #16 necessity =
+      optional, case B: statute/jurisdiction-bound).
+    vendor_evidence:
+      - {vendor: SAP Fieldglass, evidence: 1st_class}
+      - {vendor: Magnit, evidence: 1st_class}
+      - {vendor: Workday VNDLY, evidence: 1st_class}
+      - {vendor: Worksuite, evidence: 1st_class}
+    proposed_module: Worker Classification & Compliance
+    extra_draft_path: ".tmp_deploy/CWM-phaseB-draft-2026-06-19.md"

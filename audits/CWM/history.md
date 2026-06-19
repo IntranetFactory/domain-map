@@ -649,3 +649,49 @@ domain has exactly ONE domain-grain `system` skill (domain_id set, domain_module
 DERIVES its toolset; starters keep their own module-anchored skill; FULL modules carry no skill;
 cross-domain value streams use `process_tools`. `skill_tools` is dropped. Per-module tool
 re-authoring is tracked in audits/_modularization-backlog.md. Do NOT author per-module skills.
+
+## 2026-06-19 - Phase 0 (VMS to CWM recast)
+
+Fresh vendor-surface study of 8 flagships (SAP Fieldglass, Beeline, Workday VNDLY, Magnit, Prosperix, Worksuite, ADP WorkMarket, Stoke) saved at .tmp_deploy/CWM-phase0-2026-06-19.md. Added b2 decisions B2-CWM-RENAME (rename domain 64 VMS to CWM "Contingent Workforce Management", retain VMS as alias + named Staff-Augmentation sub-channel; destructive) and B2-CWM-MODULES (5-module CWM: keep 315 Worker Sourcing + 316 Time & Invoicing as the Staff-Augmentation pillar, add Services Procurement/SOW, Direct Sourcing/FMS, Worker Classification & Compliance). SUPERSEDED and removed B2-4 (confirm 2-way vs 3-way split): subsumed by B2-CWM-MODULES since 315/316 are retained under every option. Confirmed entity 187 (work_orders) is the staffing/SOW work-order, not preventive maintenance, and re-homes into the new SOW module, corroborating B2-1 option (a). q-VMS.md regenerated (rename as gate q1, module expansion q2, existing questions renumbered q3 onward). Still feedback_needed; the rename is destructive (Rule #21) and awaits explicit sign-off.
+
+## 2026-06-19 - VMS to CWM rename EXECUTED (restructure-first)
+
+User-approved. Loader: .tmp_deploy/cwm_rename_2026_06_19.ts. Executed:
+- Renamed domain 64 VMS -> CWM "Contingent Workforce Management" (domain_name + domain_code). Audit dir renamed audits/VMS -> audits/CWM; q-VMS.md -> q-CWM.md.
+- 6 aliases: VMS, Vendor Management System, contingent workforce, contingent labor, extended workforce, external workforce.
+- Repurposed domain skill id 409: vms -> cwm, trigger-shaped description + trigger_keywords set.
+- The 2 existing modules (315 VMS-WORKER-SOURCING, 316 VMS-TIME-INVOICING; VMS-* codes kept) are UNCHANGED = the Staff-Augmentation pillar. The 6 existing masters, 5 capabilities, and module catalog UX are unchanged.
+
+RESOLVED this pass (removed from state.yaml): B2-CWM-RENAME.
+
+STILL OPEN: B2-CWM-MODULES (the 3 new modules SOW / Direct-Sourcing-FMS / Worker-Classification + their ~14 new masters; expansive structure, Rule #21, stays a q-file decision and was NOT written), plus the pre-existing B2-1 (entity 187 identity), B2-2 (domain catalog UX), B2-3 (pattern flags), B2-5 (business_logic), B2-B9D-OWN-315/167. Restructure-first parallel to SRM: rename done, expansion deferred to sign-off.
+
+## 2026-06-19 - a-CWM.md processed
+
+User answered the post-rename q-file (a1=a "5 modules", a2=a "187 is staffing/SOW", a3-a9=yes, a10/a11 empty=take recommendation, a12=yes). Processed under Rule #22.
+
+**Executed this pass (all additive/corrective, record_status untouched per Rule #1):**
+
+- **5 pattern flags PATCHed (B2-3, resolved):** data_object 186 `contingent_workers` `has_personal_content=true` (a3); 188 `staffing_suppliers`, 189 `rate_cards`, 187 (work-order), 191 `contingent_invoices` `has_single_approver=true` (a4/a5/a6/a7). Pre-flight GET confirmed entity_type is operational (186 operational_workflow, 188/189/187/191 unclassified, none catalog/junction/computed), so the B15 guard passed. No `notes` writes (Rule #15).
+- **Domain catalog UX written (B2-2, resolved):** domain 64 `catalog_tagline` + `catalog_description` were empty; wrote the user-approved copy AS-IS (a8=yes). Per Rule #20 empty-guard.
+- **Domain business_logic written (B2-5, resolved):** domain 64 `business_logic` was empty (crud_percentage=92<95); wrote the user-approved wording (a9=yes).
+- **B9D owners assigned (B2-B9D-OWN-315 / B2-B9D-OWN-167, resolved):** CWM personas exist in `domain_roles` (business_function_id=68, Indirect Procurement: roles 19/20/21 + cross-functional Hiring Manager 10), so authored `process_raci` R+A rows (path = named persona owns, option a): process 315 "Process accounts payable (AP)" -> Contingent Labor Coordinator (role 21), rows 228 (responsible) + 229 (accountable); process 815 "Monitor/Manage supplier information" -> Staffing Supplier Manager (role 20), rows 230 + 231. (q11's footer pointed at the legacy process 167; the live orphan and handoff-591 tag is process 815, so the RACI was keyed to 815.) Loader: `.tmp_deploy/cwm_b9d_raci_2026_06_19.ts`.
+
+**Decided, execution deferred (B2-1, removed from open b2; folds into Phase-B):**
+
+- a2=a: entity 187 (`pm_work_orders`) is the staffing / SOW work-order, NOT preventive maintenance. The rename + relabel + re-alias + re-home cascades to its trigger_events (146), aliases, labels, description, catalog_description, and needs the new SOW module (not loaded). So it was NOT partially renamed now; the decision is recorded and folded into the Phase-B draft to execute in the SOW build. The a6 flag on 187 was applied this pass and is independent of the future rename.
+
+**Drafted, NOT loaded (Rule #21, expansive structure):**
+
+- Phase-B proposal saved at `.tmp_deploy/CWM-phaseB-draft-2026-06-19.md`: the 3 new modules (Services Procurement/SOW, Direct Sourcing/FMS, Worker Classification & Compliance) and 14 new masters, each with Rule #16 necessity (2 required: `worker_requisitions`, `worker_assignments`; 12 optional: statute/jurisdiction-bound classification + compliance masters, channel-bound SOW/FMS masters, and the >=1-flagship-lacks masters), plus the entity-187 rename/re-home plan. Surfaced as a question in the regenerated q-CWM.md (Optional, will not hold up the build) for the user to approve the module + master list before any load.
+- **NO `domain_modules` and NO new `data_objects` were created.** Domain 64 still has exactly 2 modules (315, 316) and 6 masters. a1=a is the in-principle go, not authorization to load (the q-file itself said the new structure would be a Phase-B draft for review first).
+
+**Residual B9D realization (b1a, B1A-B9D-VERIFY, still open):** the b9d resolver marks a process RESOLVED only when it both has R+A RACI AND gates a permission-required lifecycle state (`data_object_lifecycle_states.process_id` = the process). The owner RACI is now authored for 315/815, but every CWM master's gated lifecycle state still has `process_id=NULL`, so the resolver still lists them ORPHAN; processes 923 (PSA utilization) and 1418 (payroll time entry) have no owner RACI yet. PATCHing the lifecycle-state process gating and deciding owners for 923/1418 is owed at the lifecycle-realization pass.
+
+**Removed from state.yaml (now closed/decided):** B2-2, B2-3, B2-5 (executed), B2-1 (decided, rides Phase-B), B2-B9D-OWN-315 + B2-B9D-OWN-167 (owners assigned), B1B-A5 + B1B-A4-DOMAIN-CATALOG-UX (written). **Kept open:** B2-CWM-MODULES (with draft path, pending master-list approval), B3 candidate masters (subset of the 14 in the draft), B1B-B1 (handoff 117 mismatch, rides the entity-187 rename), B1A-B9D-VERIFY (lifecycle realization). Status stays `feedback_needed` / `user`.
+
+a-CWM.md and the stale q-CWM.md deleted; fresh q-CWM.md generated with only the still-open Phase-B module+master proposal.
+
+## 2026-06-19 - Module codes renamed VMS-* -> CWM-* (consistency)
+
+The two existing module codes were renamed VMS-WORKER-SOURCING -> CWM-WORKER-SOURCING (id 315) and VMS-TIME-INVOICING -> CWM-TIME-INVOICING (id 316), so the module codes match the renamed CWM domain. The domain_module_code change was made during a later build pass (unattributed); the user approved keeping CWM-* on 2026-06-19. The 14 denormalized junction labels (9 domain_module_data_objects + 5 domain_module_capabilities) were then patched VMS-* -> CWM-* to match (loader .tmp_deploy/fix_cwm_labels_2026_06_19.ts; verified 0 remaining). Module IDs 315/316 are unchanged, so handoffs (which reference modules by ID) and the emit-time-derived permissions are unaffected; only the code strings and labels changed. Earlier history entries in this file and in audits/BGV/history.md that mention VMS-WORKER-SOURCING / VMS-TIME-INVOICING are accurate for their date and are left intact (append-only). The "VMS" / "Vendor Management System" DOMAIN aliases are retained as search synonyms (those are deliberate, not the module codes).

@@ -1,0 +1,71 @@
+schema_version: 2
+domain: SRM
+status: built
+next_action_by: agent
+last_audit: "2026-06-19"
+
+# 2026-06-19 RESTRUCTURE EXECUTED (SUP-LIFE -> SRM), restructure-first pass. User approved in-chat
+# after SRM Phase 0 (.tmp_deploy/SRM-phase0-2026-06-19.md). Loader: .tmp_deploy/srm_restructure_2026_06_19.ts.
+# Full narrative + the resolved-item list in history.md 2026-06-19. Headline: domain 28 renamed to SRM;
+# 3 full modules (SRM-SUPPLIER-LIFECYCLE=405 / SRM-PERFORMANCE-MGMT=406 / SRM-RISK-COMPLIANCE=407);
+# the 6 existing masters modularized; 8 capabilities; domain skill 109 repurposed sup-life -> srm;
+# 10 mutate tools + 22 domain_module_tools; 5 aliases; module catalog UX written at record_status='new'.
+#
+# 2026-06-19 a-SRM.md (first) PROCESSED (Rule #22). RESOLVED -> history.md "a-SRM.md processed":
+#   B1B-CATALOG-SLM/SPM/SRC, B1B-B4 + B2-S2 (4 pattern flags PATCHed), B2-H1 (5 APQC re-points).
+#
+# 2026-06-19 a-SRM.md (second) PROCESSED (Rule #22). RESOLVED -> history.md "a-SRM.md (q1/q2) processed":
+#   B2-S4 (q1=a: SCRM promoted as its own new domain; moved to audits/_missing-domains.md Promoted,
+#     decision-only, needs its own Phase 0 + build before load) and
+#   B3-NEW-MASTERS (q2=yes: 19 new SRM masters + substrate loaded via
+#     .tmp_deploy/load_srm_phaseB_2026_06_19.ts at record_status='new'). Draft said 20; the 20th,
+#     supplier_esg_assessments, already exists (data_object 327, ESG-mastered), so SRC takes it as
+#     consumer+optional, not a new master (Rule M7). Loaded: 19 data_objects, 22 DMDO
+#     (19 master + supplier_questionnaires consumer on SPM/SRC + supplier_esg_assessments consumer on SRC),
+#     48 lifecycle states (11 operational_workflow masters), 35 aliases.
+#
+# Still open below (the deferred build wave; agent-doable, parked to keep each load a reviewable unit):
+#   B1B-B12 (lifecycle for the 6 EXISTING masters), B1B-B10b (handoff module-FK backfill),
+#   B1B-NEW-MASTER-WIRING (trigger_events/handoffs/relationships/users-edges for the 19 new masters),
+#   B1B-E (personas; blocked on B1B-B12). Run on the next build pass.
+
+b1a: []
+
+b1b:
+  # --- Follow-up build wave, UNBLOCKED (modules + masters exist). Agent-doable additive work; not yet
+  #     run to keep each load a reviewable unit. Runs on the next build pass.
+  - id: B1B-B12
+    summary: "Author data_object_lifecycle_states for the 6 EXISTING SRM masters, anchored to the new modules."
+    finding: "The 6 original masters are entity_type='operational_workflow' (Rule #12 requires lifecycle) but carry 0 lifecycle states. (The 19 NEW masters loaded 2026-06-19 already have their lifecycle states; this item is now only the 6 headline masters.) Unblocked: SLM/SPM/SRC exist, so domain_module_id is resolvable (M5)."
+    action: "Author state machines: suppliers (prospect, qualified, approved, suspended, blocked, archived) [SLM]; supplier_onboardings (initiated, in_review, approved, rejected, abandoned) [SLM]; supplier_qualifications (draft, submitted, approved, rejected, expired, revoked) [SLM]; supplier_scorecards (draft, in_period, finalized, disputed) [SPM]; supplier_certifications (valid, expiring_soon, expired, revoked) [SRC]; supplier_risk_assessments (scheduled, in_progress, completed, elevated, mitigated, accepted) [SRC]. requires_permission on the gate transitions; domain_module_id = realizing module."
+    affected_masters:
+      - {data_object_id: 206, name: suppliers, module: SRM-SUPPLIER-LIFECYCLE}
+      - {data_object_id: 207, name: supplier_onboardings, module: SRM-SUPPLIER-LIFECYCLE}
+      - {data_object_id: 208, name: supplier_qualifications, module: SRM-SUPPLIER-LIFECYCLE}
+      - {data_object_id: 209, name: supplier_scorecards, module: SRM-PERFORMANCE-MGMT}
+      - {data_object_id: 498, name: supplier_certifications, module: SRM-RISK-COMPLIANCE}
+      - {data_object_id: 730, name: supplier_risk_assessments, module: SRM-RISK-COMPLIANCE}
+
+  - id: B1B-B10b
+    summary: "Backfill source/target_domain_module_id on the 18 cross-domain handoffs touching SRM (now derivable)."
+    finding: "All 18 cross-domain handoffs had NULL on both module FKs because the domain had no modules. The SRM side is now derivable from the master-role DMDO rows."
+    action: "Run a backfill analogous to scripts/loaders/backfill_ats_handoff_modules_2026_05_23.ts; PATCH the SRM-side module FK on each row (source the event's data_object to its strongest-role module)."
+    affected_handoffs_outbound: [127, 128, 213, 214, 546, 547, 548, 549, 550, 596]
+    affected_handoffs_inbound: [273, 277, 336, 362, 543, 565, 586, 591]
+
+  - id: B1B-NEW-MASTER-WIRING
+    summary: "Author the remaining Phase-B substrate for the 19 new SRM masters (events, handoffs, relationships, users-edges)."
+    finding: "The 2026-06-19 q2 load shipped the approved scope (data_objects + DMDO + lifecycle states + aliases) for the 19 new masters but NOT their wiring. The new masters currently have no trigger_events, no handoffs (intra- or cross-domain), no data_object_relationships, and no users-edges, so B6/B7/B8/B9/B9b are open for them."
+    action: "Phase-B wiring pass: intra-domain data_object_relationships (suppliers -> contacts/locations/bank_accounts/documents/registrations; performance_reviews -> corrective_actions -> issues; screening/attestations/certs under the supplier master), users-edges per Rule #10 (assignee/approver/owner), trigger_events on the workflow masters' gate transitions, and intra-domain (lifecycle_progression) + any cross-domain handoffs. Anchor each to the realizing module."
+    affected_entities: [supplier_contacts, supplier_locations, supplier_bank_accounts, supplier_documents, supplier_relationships, supplier_registrations, supplier_segmentation_tiers, supplier_information_requests, supplier_tasks, supplier_questionnaires, supplier_kpis, supplier_performance_reviews, supplier_corrective_actions, supplier_issues, supplier_screening_records, supplier_beneficial_owners, supplier_diversity_classifications, supplier_insurance_certificates, supplier_attestations]
+
+  - id: B1B-E
+    summary: "Phase E personas + role_modules + process_raci for SRM (now unblocked, 3 modules)."
+    finding: "No SRM personas authored. With 3 modules the 2-module floor is satisfiable. Candidate personas: PROCUREMENT-SUPPLIER-RM, PROCUREMENT-SUPPLIER-ONBOARDING-SPEC, GRC-SUPPLIER-RISK-ANALYST, COMPLIANCE-SUPPLIER-DUE-DILIGENCE; plus role_modules tying existing PROCUREMENT-PIM-SUPPLIER-LIAISON (10092) to SRM-SUPPLIER-LIFECYCLE."
+    action: "Author personas + reach + RACI in the follow-up pass; the permission bundle derives at emit time."
+    blocked_by:
+      - {type: prerequisite_entity, ref: B1B-B12, reason: "gate permissions derive from lifecycle states"}
+
+b2: []
+
+b3: []

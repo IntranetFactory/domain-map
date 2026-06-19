@@ -1,0 +1,85 @@
+schema_version: 2
+domain: SCRM
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-19"
+
+# 2026-06-19 NEW DOMAIN, promoted from audits/_missing-domains.md (SRM audit b2 B2-S4; user chose
+# "promote as its own new domain"). UNBUILT: nothing loaded to the catalog yet. Phase 0 vendor-surface
+# research done (.tmp_deploy/SCRM-phase0-2026-06-19.md). The build (Phase A-S) is gated on the
+# market-shape decisions below per Rule #21/#22 (a NEW domain is an expansive addition: surface in a
+# q-file FIRST, load only after a-SCRM.md approves the shape). q-SCRM.md surfaces all four.
+#
+# Boundary already fixed in Phase 0 (not re-asked): SCRM consumes SRM suppliers (embedded_master) and
+# does NOT re-master supplier_risk_assessments (730, SRM/SRC keeps qualification-risk) nor
+# supplier_esg_assessments (327, ESG keeps the scorecard). SCRM masters the N-tier graph + risk events.
+
+b1a: []
+
+b1b: []
+
+b2:
+  - id: B2-SCRM-MODULES
+    summary: "SCRM module split: 3 modules vs 2."
+    question: "Split SCRM into 3 modules (NETWORK-MAPPING / RISK-INTELLIGENCE / DISRUPTION-RESPONSE) or fold disruption response into risk-intelligence (2 modules)?"
+    options:
+      - "a: 3 modules (NETWORK-MAPPING, RISK-INTELLIGENCE, DISRUPTION-RESPONSE)"
+      - "b: 2 modules (fold DISRUPTION-RESPONSE into RISK-INTELLIGENCE)"
+    evidence: >
+      The flagship pure-plays package SCRM as three separable surfaces. (1) The N-tier MAP:
+      Resilinc multi-tier part-site/BOM mapping, Interos relationship graph, Sayari Map, Everstream
+      multi-tier visibility. (2) The MONITORING/SCORING engine: Resilinc EventWatchAI, Interos
+      multi-model scoring, Everstream predictive scores, Prewave AI alerts, Sphera risk radar.
+      (3) RESPONSE: Resilinc WhatIf revenue-at-risk simulation, Everstream exposure analytics,
+      Sphera response. Resilinc and Everstream productize mapping, monitoring, and response/what-if
+      as distinct capabilities, supporting the 3-module split; Prewave and Sayari are thinner on the
+      response/what-if surface, which is the case for folding response into risk-intelligence (2).
+    why: "Module boundary is editorial/deployability judgment above the Rule #14 floor (>=3 capabilities -> >=2 full modules; both options satisfy it)."
+
+  - id: B2-SCRM-NODE-IDENTITY
+    summary: "Does SCRM master its own supply_chain_nodes, or only consume SRM suppliers?"
+    question: "Should SCRM master a supply_chain_nodes entity (graph nodes including indirect/sub-tier entities with no SRM record) and embed SRM suppliers, or only consume SRM suppliers with no separate node master?"
+    options:
+      - "a: master supply_chain_nodes + embedded_master SRM suppliers"
+      - "b: consume SRM suppliers only (no separate node master)"
+    evidence: >
+      Resilinc, Interos, Everstream, and Sayari all persist N-tier graph NODES that include
+      sub-tier and indirect entities the buyer has no direct relationship with (Interos network,
+      Sayari Map, Resilinc multi-tier map). Those sub-tier nodes have no SRM supplier_master record
+      by definition, so a consume-suppliers-only model (b) cannot represent the graph the vendors
+      sell. The vendor surface masters a node entity distinct from the direct-supplier master, with
+      the known direct suppliers linked back to SRM (option a). The SRM supplier master stays the
+      single master for direct suppliers (Rule M7); SCRM embeds it and adds the indirect nodes.
+
+  - id: B2-SCRM-FORCED-LABOR
+    summary: "Does SCRM master forced_labor_exposures or defer to ESG?"
+    question: "Should SCRM master a forced_labor_exposures entity (tier-level forced-labor / UFLPA exposure as a monitored signal), or defer forced-labor/ESG entirely to the ESG domain (21)?"
+    options:
+      - "a: SCRM masters forced_labor_exposures (monitored exposure record)"
+      - "b: defer to ESG; SCRM consumes only"
+    evidence: >
+      Prewave, Sayari, and Sphera SCRM (SupplyShift) treat forced-labor/UFLPA as a continuously
+      MONITORED supply-chain exposure across tiers (news/social/customs signals, ownership exposure),
+      not as the buyer's own supplier ESG scorecard. ESG domain 21 masters supplier_esg_assessments
+      (327), the supplier-graded scorecard. These are different records: the SCRM exposure is an
+      event-shaped, tier-level external signal (option a, masters it); the ESG scorecard is the
+      direct-supplier assessment (consumed, not re-mastered). Folding forced-labor wholly into ESG
+      (b) loses the cross-tier monitoring surface every SCRM pure-play sells.
+
+  - id: B2-SCRM-OWNER-FN
+    summary: "Owning business function for SCRM."
+    question: "Which business function owns SCRM: Supply Chain, Procurement, or GRC?"
+    options:
+      - "a: Supply Chain (owner), Procurement + GRC contributors"
+      - "b: Procurement (owner), Supply Chain + GRC contributors"
+      - "c: GRC (owner), Supply Chain + Procurement contributors"
+    evidence: >
+      SCRM pure-plays sell primarily to supply-chain / procurement risk teams: Resilinc, Interos,
+      Everstream, and Prewave position to Chief Supply Chain Officers and supply-chain risk
+      functions, with procurement as the day-to-day user of supplier-facing alerts and GRC consuming
+      elevated risk into the enterprise register. Supply Chain owner with Procurement + GRC
+      contributors (a) matches the buyer; Procurement-owner (b) fits orgs where supplier risk sits
+      under CPO; GRC-owner (c) fits a risk-register-first framing but understates the operational
+      supply-chain buyer.
+
+b3: []

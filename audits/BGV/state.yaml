@@ -1,0 +1,84 @@
+schema_version: 2
+domain: BGV
+domain_id: 191
+status: built
+next_action_by: agent
+last_audit: "2026-06-19"
+
+# 2026-06-19 BGV BUILT (a-BGV.md processed). The domain now exists in the catalog as id 191
+# ("Background Verification", established_market). All q answered approve; loader
+# .tmp_deploy/load_bgv_2026_06_19.ts ran clean and idempotent. Everything record_status='new'
+# (nothing approved, Rule #1). Full build log and the resolved decisions are in history.md.
+#
+# What landed:
+#   - domain 191 with full Rule #8 metadata + q6 catalog copy.
+#   - 3 full modules: BGV-SCREENING-ORDERS (408), BGV-ADJUDICATION-COMPLIANCE (409),
+#     BGV-CONTINUOUS-IDENTITY (410).
+#   - PROMOTION (DESTRUCTIVE, approved): 11 entities promoted to BGV masters; ATS demoted to
+#     embedded_master on all 11 (10 from ATS-BACKGROUND-CHECKS mod 7, right_to_work_verifications
+#     from ATS-PRE-EMPLOYEE-RECORD mod 8). M7 single-master integrity VERIFIED for all 11.
+#   - 22 new masters: 21 net-new data_objects + 1 co-master row on the PRE-EXISTING
+#     gdpr_consent_records (950, also mastered by LMS-CT-GDPR mod 180 - distinct slice, Rule #9;
+#     LMS row untouched). Total 33 BGV masters (16/10/7 by module).
+#   - 8 capabilities; CWM consumer row on background_checks (mod 315); domain skill 'bgv' (id 478);
+#     12 new platform tools + reuse; domain_module_tools (query+mutate+gate per module); 5 aliases;
+#     background_checks (12) claimed the canonical bare-word.
+#
+# Open work is all b1b (additive, non-blocking follow-ups now unblocked by the build). No b2
+# remains open; no destructive approval pends; so next_action_by=agent with the b1b queue.
+
+b1a:
+  # Empty: the build is done. Remaining work is the b1b additive follow-up queue below, all of
+  # which the agent can execute in a later pass without a new user decision.
+
+b1b:
+  - id: B1B-LIFECYCLE-STATES
+    summary: "Author data_object_lifecycle_states (B12) for the operational_workflow masters BGV now owns."
+    finding: |
+      BGV masters many operational_workflow entities that gate on state (background_checks,
+      background_check_adjudications, the pre/adverse-action chain, identity_verifications,
+      criminal_record_searches, rescreenings, etc.). Per Rule #12 these fail B12 until they carry
+      lifecycle states. Author states (e.g. background_checks: ordered -> pending -> in_progress
+      -> completed / disputed; adjudications: pending -> cleared / consider / adverse) with the
+      module-scoped requires_permission gates that materialize the workflow-gate permissions.
+      Additive; runs without a user gate.
+
+  - id: B1B-REGULATIONS
+    summary: "Author regulations + domain_regulations rows for the a5 full compliance scope."
+    finding: |
+      a5 approved the full compliance set and the statute-bound ENTITIES were built, but the
+      regulations + domain_regulations rows the design floated were not authored this pass.
+      Add: FCRA (mandatory), EEOC, state ban-the-box / fair-chance, I-9 / E-Verify, DOT/FMCSA,
+      OIG-LEIE / SAM, GDPR (each conditional except FCRA), with domain_regulations applicability
+      and condition_notes. Set jurisdiction_id explicitly (US / INTL / EU per regime). Additive.
+
+  - id: B1B-HANDOFFS
+    summary: "Author outbound + intra-domain handoffs into and out of BGV."
+    finding: |
+      The promotion re-homes the screening master; the cross-domain edges should be modeled as
+      handoffs. Candidates: ATS offer.accepted -> BGV screening ordered; BGV check.cleared ->
+      PAYROLL / ONBOARDING; BGV adjudication.adverse -> the adverse-action chain; BGV
+      monitoring.alert_raised -> HRSD case. Intra-domain: order.completed -> adjudication;
+      adjudication.adverse -> pre-adverse -> adverse (lifecycle_progression). Populate both
+      module FK columns. Additive.
+
+  - id: B1B-PERSONAS-RACI
+    summary: "Phase E: BGV personas (domain_roles), role_modules reach, process_raci."
+    finding: |
+      No personas authored yet. Likely set: a screening administrator / requester, an
+      adjudicator / compliance reviewer, and a candidate-facing coordinator, each with >=2
+      role_modules across the 3 modules, plus process_raci once processes are linked. Additive,
+      Phase E.
+
+  - id: B1B-HANDOFF-MODULE-FK-BACKFILL
+    summary: "Backfill source/target module FKs on the PAYROLL/HRSD consumer-driven handoffs touching background_checks."
+    finding: |
+      The pre-existing PAYROLL-RUN / HRSD-CASE-MGMT consumer relationships on background_checks
+      predate the BGV master. Any legacy handoff rows referencing those edges should be backfilled
+      with the now-correct BGV module FKs per the B10b backfill convention. Additive.
+
+# All b2 decisions resolved this pass and moved to history.md (B2-GATE, B2-MODULES,
+# B2-PROMOTION, B2-NEIGHBORS, B2-COMPLIANCE-SCOPE -> all approve, executed).
+# b3 ideas resolved: B3-NEW-ENTITIES built, B3-CANONICAL-BAREWORD claimed.
+b2: []
+b3: []

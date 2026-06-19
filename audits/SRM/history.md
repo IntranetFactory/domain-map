@@ -409,3 +409,101 @@ State-driven pass against `state.yaml` (was `next_action_by: agent`). Confirmed 
 ### JWT errors
 
 None.
+
+## 2026-06-19 - SUP-LIFE to SRM restructure EXECUTED (restructure-first)
+
+User approved in-chat after SRM Phase 0 (.tmp_deploy/SRM-phase0-2026-06-19.md). Loader: .tmp_deploy/srm_restructure_2026_06_19.ts. Executed:
+- Renamed domain 28 SUP-LIFE -> SRM "Supplier Relationship Management" (domain_name + domain_code). Audit dir renamed audits/SUP-LIFE -> audits/SRM; q-SUP-LIFE.md -> q-SRM.md.
+- 5 aliases: SRM, Supplier Lifecycle Management, SLM, Supplier Management, vendor management.
+- 3 full modules: SRM-SUPPLIER-LIFECYCLE (SLM), SRM-PERFORMANCE-MGMT (SPM), SRM-RISK-COMPLIANCE (SRC).
+- 6 existing masters modularized via domain_module_data_objects master rows: SLM <- suppliers(206), supplier_onboardings(207), supplier_qualifications(208); SPM <- supplier_scorecards(209); SRC <- supplier_risk_assessments(730), supplier_certifications(498).
+- 8 capabilities + capability_domains + 8 domain_module_capabilities.
+- Repurposed domain skill id 109: sup-life -> srm, trigger-shaped description + trigger_keywords set.
+- 10 new mutate tools + 22 domain_module_tools (20 distinct tools; F3 floor met per module).
+- Module catalog UX (catalog_tagline + catalog_description) on all 3 modules at record_status='new'.
+
+RESOLVED this pass (moved out of state.yaml): B2-S1 (module count; the user chose the 3-module SLM/SPM/SRC shape from the SRM Phase 0, superseding the older 4-module recommendation in the prior q-file), B1B-M1 (modules + DMDO masters), B1B-A2 (capabilities), B1B-F1 (skill already domain-grain, now repurposed).
+
+STILL OPEN: module catalog-copy confirmations (Rule #20, 3 new b1b), B2-S2 (pattern flags), B2-S4 (SCRM domain), B2-H1 (APQC tag reconciliation, destructive). DEFERRED to the follow-up build (now unblocked, modules exist): lifecycle states (B1B-B12), handoff module-FK backfill (B1B-B10b), personas/RBAC (B1B-E), and the 17 new SRM masters from Phase 0 (b3). Legacy domain_data_objects master rows (339-342, 1041, 1059) left in place as the now-derived rollup; their DELETE cleanup is a destructive follow-up, not done.
+
+## 2026-06-19 - a-SRM.md processed
+
+Processed the answered companion file `a-SRM.md` (Rule #22 a-file procedure). The footer mapped q1..q11 to decision ids; the a-file is the approval for the additive flips and the one destructive APQC re-point. No `record_status` was touched on any row (Rule #1); all changed rows stayed at `record_status='new'`. No commit. Files edited only under `audits/SRM/` and `.tmp_deploy/`.
+
+### Catalog copy confirmed (no DB write)
+
+- **B1B-CATALOG-SLM / SPM / SRC resolved.** a1=a2=a3="ok": the user confirmed the buyer-voice `catalog_tagline` + `catalog_description` already written at `record_status='new'` on the three modules (SRM-SUPPLIER-LIFECYCLE, SRM-PERFORMANCE-MGMT, SRM-RISK-COMPLIANCE). Confirmation means KEEP as written; no PATCH, no record_status flip. Removed from state.yaml.
+
+### Pattern flags PATCHed (B1B-B4 + B2-S2 resolved)
+
+The a-file is the per-flag approval (B2-S2). All 4 targets are `entity_type='operational_workflow'` (flags valid, no B15 conflict). PATCHed `data_objects`:
+
+- a4=yes: 206 `suppliers`.has_personal_content = true (supplier contacts are named people + emails).
+- a6=yes: 208 `supplier_qualifications`.has_single_approver = true (one Procurement/Compliance approver).
+- a7=yes: 498 `supplier_certifications`.has_submit_lock = true (uploaded cert document immutable).
+- a8=yes: 730 `supplier_risk_assessments`.has_single_approver = true (designated GRC reviewer signs the score).
+
+Decision recorded: **a5 = NO** -> `supplier_qualifications`.has_submit_lock stays false (the user declined to freeze the approved qualification). No `notes` written (Rule #15).
+
+### APQC tag reconciliation executed (B2-H1 resolved; DESTRUCTIVE, approved by a10=yes)
+
+Verified the 5 handoff_processes rows live (all process_id=167 "Manage suppliers", the generic L3 parent), and confirmed child PCFs 805 "Certify and validate suppliers" (10289), 815 "Monitor/Manage supplier information" (10299), 816 "Prepare/Analyze procurement and supplier performance" (10300) all exist before re-pointing. Re-pointed each row's process_id to the specific child:
+
+- handoff 127 (hp 4) 167 -> 805
+- handoff 128 (hp 3) 167 -> 815
+- handoff 213 (hp 5) 167 -> 815
+- handoff 214 (hp 6) 167 -> 816
+- handoff 591 (hp 661, proposal_source='agent_curated') 167 -> 815
+
+`record_status` left at 'new'; the row `key` auto-updated (e.g. "127.805").
+
+### Kept OPEN
+
+- **B2-S4 (SCRM) stays open.** a9 ("how are other vendors handling that?") is a QUESTION, not a decision, so per Rule #22 it was answered with focused named-vendor research and folded back into the q-file, not executed. Finding (now in state.yaml `evidence:` and the q-file Recommended line): SCRM is a recognized standalone market with a pure-play vendor set: Resilinc, Interos, Everstream Analytics, Prewave, Sphera SCRM (acquired riskmethods + SupplyShift), Sayari. Defining capability is N-tier/sub-tier supplier mapping plus continuous external-disruption monitoring (weather, geopolitics, financial, cyber, ESG/forced-labor) across suppliers the buyer has no direct relationship with, which is neither SRM operational risk (master-attached, gates qualification) nor TPRM (engagement/contract-gated deep diligence). Sphera draws the SCRM-vs-TPRM line explicitly. 2026 trend is partnership/integration (Black Kite + Sayari) rather than absorption. Sources: Gartner Supplier Risk Management reviews, Spend Matters Prewave analysis, Sphera SCRM pages, Everstream multi-tier launch, Sayari due-diligence pages.
+- **B3-NEW-MASTERS stays open (RESEARCH + DRAFT ONLY; not loaded).** a11=yes authorized a Phase-B pass, but per Rule #21 expansive additions are not loaded unprompted. Produced a Phase-B proposal at `.tmp_deploy/SRM-phaseB-draft-2026-06-19.md`: a per-master table (data_object_name | module SLM/SPM/SRC | role | necessity | basis | one-line purpose) for the Phase 0 NEW masters, with Rule #16 necessity applied (statute-prefixed/sector-bound/vendor-optional -> optional; only the 5 entities present in all 5 flagship vendors land `required`: supplier_contacts, supplier_bank_accounts, supplier_documents, supplier_registrations, supplier_information_requests). Count note: the audit shorthand "17 new masters" undercounts; the surface matrix flags 20 NEW, all drafted. Surfaced in q-SRM.md under "Optional (will not hold up the build)" for the user to approve the master list before any load.
+
+### Deferred build items (unchanged)
+
+B1B-B12 (lifecycle states), B1B-B10b (handoff module-FK backfill), B1B-E (personas/RBAC) remain agent-doable follow-ups for the next build pass; not touched this pass.
+
+### q-file regenerated
+
+Deleted `a-SRM.md` and the stale `q-SRM.md`; regenerated a fresh `q-SRM.md` with only the two still-open items (q1 = B2-S4 SCRM with vendor-grounded Recommended line; q2 = B3-NEW-MASTERS under "Optional"). Ran `scripts/analytics/qfile_grounding_lint.ts SRM`: pass.
+
+### Post status
+
+`status: feedback_needed`, `next_action_by: user` (B2-S4 open + new-masters proposal awaiting review). `last_audit: 2026-06-19`.
+
+### JWT errors
+
+None.
+
+## 2026-06-19 — a-SRM.md (q1/q2) processed
+
+Processed the user's renamed `a-SRM.md`. Two answers: q1 (B2-S4) = `a`, q2 (B3-NEW-MASTERS) = `yes`. Both resolved; removed from `state.yaml`.
+
+### q1 / B2-S4 — SCRM: promote as its own new domain (option a)
+
+Recorded the promotion in `audits/_missing-domains.md`: moved the SCRM candidate from "Pending review" to "## Promoted" with `Decision: promote-as-domain (2026-06-19)`, proposed `domain_code SCRM`, the named-vendor evidence (Resilinc, Interos, Everstream Analytics, Prewave, Sphera SCRM, Sayari), the point-solution-market PASS rationale, and the SRM/TPRM boundary. **Decision-only, NOT built.** The build needs its own dedicated Phase 0 (the existing `.tmp_deploy/SRM-phase0-2026-06-19.md` covered the SRM/TPRM seam, not the SCRM pure-play surface) followed by Phase A-S, and awaits explicit user approval.
+
+### q2 / B3-NEW-MASTERS — load the new SRM masters (yes)
+
+Loaded the approved Phase-B masters via `.tmp_deploy/load_srm_phaseB_2026_06_19.ts`, all at `record_status='new'`.
+
+**Correction vs the draft (Rule M7 single-master).** The draft listed 20 NEW masters, but `supplier_esg_assessments` already exists as `data_objects` id 327, **mastered by the ESG domain (21)** (only consumed by TPRM at module grain). SRM must not re-master it, so SRC takes it as `consumer + optional`. Net: **19 new SRM masters + 1 ESG consumer row**, not 20 masters.
+
+Loaded counts (verified live):
+- **19 `data_objects`** (SLM 10, SPM 4, SRC 5), with singular/plural labels, analyst `description`, reader-facing `catalog_description`, `entity_type`, and pattern flags. `has_personal_content=true` on supplier_contacts + supplier_beneficial_owners; `has_submit_lock=true` on supplier_bank_accounts, supplier_screening_records, supplier_insurance_certificates, supplier_attestations. No `notes` written (Rule #15).
+- **22 `domain_module_data_objects`**: 19 `master` rows on 405/406/407 with Rule #16 necessity (the 5 all-5-vendor entities `required`: supplier_contacts, supplier_bank_accounts, supplier_documents, supplier_registrations, supplier_information_requests; the rest `optional`), plus 3 consumer rows: supplier_questionnaires consumer on SPM + SRC (mastered once in SLM), supplier_esg_assessments consumer on SRC.
+- **48 `data_object_lifecycle_states`** across the 11 `operational_workflow` masters, anchored to the realizing module, with workflow-gate `requires_permission` + verb overrides (validate_bank_account, approve_registration, close_information_request, finalize_performance_review, verify_corrective_action, adjudicate_screening, sign_attestation). Catalog/junction/record masters carry no lifecycle (B12/B15 clean).
+- **35 `data_object_aliases`** (alias_type='synonym') on the non-self-explanatory masters (CAPA, UBO, COI, PEP screening, RFI forms, etc.).
+
+Integrity spot-checks passed: catalog-wide single master per data_object (esg stays ESG-mastered; questionnaires single master in SLM); all 11 workflow masters carry lifecycle states. UI: https://adenin.semantius.app/domain_map/data_objects
+
+### Still open (deferred build wave, agent-doable)
+
+`state.yaml` now: `b1a: []`, `b2: []`, `b3: []`. Remaining `b1b` build wave (parked to keep each load a reviewable unit): B1B-B12 (lifecycle for the **6 existing** masters — the 19 new ones now have theirs), B1B-B10b (handoff module-FK backfill), B1B-NEW-MASTER-WIRING (trigger_events/handoffs/relationships/users-edges for the 19 new masters), B1B-E (personas; blocked on B1B-B12).
+
+### q-file cleanup
+
+Deleted `a-SRM.md` and the now-stale `q-SRM.md`. No fresh `q-SRM.md` regenerated: nothing user-facing is open (no `b2`, no catalog-copy confirmation, no pending destructive step). `status: built`, `next_action_by: agent`.

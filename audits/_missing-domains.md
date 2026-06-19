@@ -1563,21 +1563,6 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
-### SCRM — Supply Chain Risk Management
-
-- **Mention count:** 1
-- **First surfaced:** 2026-05-30 (SUP-LIFE audit 2026-05-30)
-- **Most recent:** 2026-05-30 (SUP-LIFE audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 SUP-LIFE audit 2026-05-30
-- **Vendor evidence:** Resilinc, Interos, Sphera (riskmethods), Prewave, Everstream Analytics, Sayari
-- **Adjacency:** SUP-LIFE, TPRM, GRC, S2P
-- **Candidate capabilities:** n-tier supply chain mapping, supplier risk monitoring, disruption alerting, sub-tier risk discovery, geopolitical risk scoring
-- **Estimated Semantius score:** ~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
 ### HOA-MGMT — Homeowner Association Management
 
 - **Mention count:** 1
@@ -3733,6 +3718,21 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
+### SPEND-ANALYTICS — Spend Analytics
+
+- **Mention count:** 1
+- **First surfaced:** 2026-06-19 (Ariba coverage review 2026-06-19)
+- **Most recent:** 2026-06-19 (Ariba coverage review 2026-06-19)
+- **Surfaced by:**
+  - 2026-06-19 Ariba coverage review 2026-06-19
+- **Vendor evidence:** Sievo, SpendHQ, Simfoni, SAP Ariba Spend Analysis
+- **Adjacency:** S2P, SPEND-MGMT, SRM, FIN, AP-AUTO
+- **Candidate capabilities:** spend classification, supplier normalization, spend cube snapshots, savings opportunity and initiative tracking, addressable and tail-spend segmentation, diverse-spend and scope-3 reporting
+- **Estimated Semantius score:** ~85% strict (est.): classification, normalization, and savings-funnel records are internal CRUD over consumed PO, invoice, and GL data; external drag is supplier-enrichment fetch (D&B) plus optional ML auto-classification. Phase 0 (2026-06-19) concluded it QUALIFIES as a derive-heavy domain; report in .tmp_deploy/SPEND-ANALYTICS-phase0-2026-06-19.md
+- **Point-solution-market test:** _(pending human triage)_
+- **Status:** pending-review
+- **Decision:** _(empty until reviewed)_
+
 
 ---
 
@@ -3869,6 +3869,19 @@ the bottom are the resolved history.
 - **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 181 (modules EMP-ADVOCACY-CONTENT-DISTRIBUTION, EMP-ADVOCACY-GAMIFICATION-ANALYTICS). 7 capabilities, 14 masters, system skill emp-advocacy-system, 3 personas with RACI. Audit artifacts at audits/EMP-ADVOCACY/. Open q-file forks: distinct vs fold into SMM (gate); pattern-flag flips; regulation set.
 - **Rationale:** SMM names "influencer / advocacy programs" in one clause, but that is influencer scope (SMM already has the SMM-INFLUENCER module 302 for external creators) and SMM models none of the advocacy entity surface. INTRANET / EMP-EXP / HCM are internal-audience or HRIS, not external-reach. Distinct buyer (Marketing / MarComms with an HR contributor seam): employees resharing curated brand content to their personal social networks.
 - **Phase 0 report:** .tmp_deploy/EMP-ADVOCACY-phase0-2026-06-14.md
+
+### SCRM: Supply Chain Risk Management
+
+- **Mention count:** 1
+- **Surfaced by:** SUP-LIFE audit 2026-05-30 (queued); triaged during the SRM restructure audit 2026-06-19
+- **Vendor evidence:** Resilinc (multi-tier part-site mapping, disruption response), Interos (continuous AI risk intelligence, fast multi-tier discovery across financial/operational/cyber), Everstream Analytics (predictive monitoring, sub-tier visibility, external risk intelligence), Prewave (AI monitoring of news/social/public sources for operational, compliance, sustainability risk), Sphera SCRM (absorbed riskmethods + SupplyShift; N-tier mapping, continuous global-disruption monitoring), Sayari (corporate-ownership + N-tier supply-chain due diligence). 2026 trend is integration/partnership (Black Kite + Sayari) rather than absorption into SRM or TPRM suites.
+- **Adjacency:** SRM (28), TPRM (19), GRC (15), S2P (27)
+- **Candidate capabilities:** N-tier / sub-tier supplier mapping, continuous external-disruption monitoring (weather, geopolitics, financial, cyber, forced-labor/ESG), disruption alerting, supplier risk intelligence scoring, geopolitical risk scoring
+- **Point-solution-market test:** PASSES. A recognized standalone market with a pure-play vendor set (Resilinc, Interos, Everstream Analytics, Prewave, Sphera SCRM, Sayari) whose defining capability, N-tier mapping plus continuous monitoring of EXTERNAL disruption signals across suppliers the buyer has no direct relationship with, is owned by neither SRM (operational risk on the buyer's own supplier master, gating qualification) nor TPRM (engagement/contract-gated diligence on direct third parties). Sphera draws the SCRM-vs-TPRM line explicitly.
+- **Decision:** promote-as-domain (2026-06-19). Proposed domain_code SCRM. Resolves SRM b2 item B2-S4 (user chose option a). NOT yet loaded; the build needs its own dedicated Phase 0 (the existing .tmp_deploy/SRM-phase0-2026-06-19.md covered the SRM/TPRM seam, not the SCRM pure-play surface) followed by Phase A-S, and awaits explicit user approval.
+- **Rationale:** SCRM is the supply-chain-disruption-intelligence overlay (N-tier/sub-tier mapping plus continuous monitoring of external disruption signals across indirect suppliers). It is a different market from both SRM (operational supplier risk attached to the buyer's own supplier master) and TPRM (deep, tier-cadence diligence on direct third parties). A fold into either understates a distinct pure-play market; the next-best fold (into TPRM) would dilute it.
+- **Phase 0 report:** .tmp_deploy/SCRM-phase0-2026-06-19.md (done 2026-06-19; flagship pure-plays Resilinc, Interos, Everstream, Prewave, Sphera SCRM, Sayari; 3-module hypothesis NETWORK-MAPPING / RISK-INTELLIGENCE / DISRUPTION-RESPONSE).
+- **Build status:** NOT built; audit STARTED. Audit dir created at audits/SCRM/ (state.yaml, history.md, q-SCRM.md). `status: feedback_needed` on 4 market-shape b2 decisions (node identity [gate], module split, forced-labor scope, owner function). Phase A-S build runs once a-SCRM.md answers the shape.
 
 ---
 

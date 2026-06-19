@@ -458,3 +458,67 @@ executed everything it can on this UNBUILT domain. All remaining work is the B2-
 decision, the B2-2..B2-9 ownership-boundary calls, and the destructive B2-H1 (PCF-815 DELETE)
 sign-off, plus the b3 backlog. None are agent-executable while UNBUILT. The current `q-TPRM.md`
 (q1..q11) covers all of them and is unchanged.
+
+## 2026-06-19 - Phase 0 (module-shape reversal)
+
+Fresh vendor-surface study of 7 flagships (Prevalent, OneTrust, ServiceNow VRM/TPRM, Venminder, ProcessUnity/CyberGRX, BitSight/SecurityScorecard/UpGuard, Archer) saved at .tmp_deploy/TPRM-phase0-2026-06-19.md. REVERSED B2-1 module shape from single / 2-module to a 5-module recommendation (Onboarding & Intake, Due Diligence & Assessment, Continuous Monitoring, Remediation & Issue Management, Supply-Chain / Nth-Party Risk) with named-vendor evidence; the 2-module and single options retained. Confirmed (no reversal) B2-2=a, B2-3=b (broad third_parties master that consumes SRM suppliers), B2-5=b; enriched B2-8 (DORA ict_provider_registers + subcontracting_chains are genuine TPRM masters in the supply-chain module). M7 naming guards: third_party_assessments, third_party_remediation_plans, monitoring_signals. Proposed master count 28. q-TPRM.md q1 regenerated. Still feedback_needed; build gated on B2-1.
+
+## 2026-06-19 - a-TPRM.md processed
+
+Processed the answered companion file (Rule #22). ZERO catalog writes; deleted nothing in the catalog. TPRM still UNBUILT (verified live this pass: 0 domain_modules, 0 mastered data_objects, 0 capability_domains for domain_id=19).
+
+- **a1 = a DECIDED (former B2-1 resolved -> moved here).** Five modules: TPRM-ONBOARDING-INTAKE, TPRM-DUE-DILIGENCE, TPRM-CONTINUOUS-MONITORING, TPRM-REMEDIATION, TPRM-SUPPLY-CHAIN-RISK. No catalog write (unbuilt); the build proceeds once the boundary cluster is settled. B2-1 removed from state.yaml.
+- **Boundary questions researched + kept OPEN (a2/a3/a5/a6/a9 were questions, not decisions -> Rule #22 keeps them open).** They are facets of ONE entangled SRM/TPRM/vendor/supplier/third-party boundary decision. Resolved the user's core confusion with named-vendor evidence: vendors and suppliers OVERLAP but are NOT identical; a supplier is a procurement counterparty (PO/AP record), a third party is ANY external risk-introducing party, so suppliers are a SUBSET of third parties (Panorays "TPRM is the umbrella, VRM/SRM the procurement-anchored subset"; ProcessUnity "third-party is the catch-all"; Archer/OneTrust/CyberGRX key inventory on the broad third party; SAP Ariba/Coupa/Ivalua risk-manage the procurement SUPPLIER = the SRM lane). Folded into the b2 cluster, each item now carries the named-vendor evidence in its `evidence:` field. Recommendations: B2-2=a (own third_party_assessments), B2-3=b (master broad third_parties, CONSUME SRM suppliers), B2-5=b (peer-master, NOT fold-into-SRM; reassured a5 that c was never recommended), B2-6=a (own third_party_risk_findings), B2-9=c (SMP embedded_masters TPRM third_parties identity but keeps its app-specific slice).
+- **a4 = a recorded as a LEANING, NOT executed.** Moving `supplier_risk_assessments` (730) mastery out of SRM-RISK-COMPLIANCE would undo part of the just-built SRM and cannot run while TPRM has no module. B2-4 kept open; the recommended call is b (SRM keeps 730, TPRM masters its own distinct third_party_assessments). Noted explicitly that a move needs confirmation in the full boundary context.
+- **a10 EMPTY -> B2-H1 NOT deleted.** An empty answer is not an explicit yes to a destructive DELETE. Kept B2-H1 open (handoff_processes id 705, process_id 815, L4 on handoff 278; verified live still present at record_status='new' alongside the L3 row id 254 / process_id 167). Re-surfaced in the q-file as an explicit yes/no.
+- **a7 = a, a8 = a: DECIDED-but-DEFERRED build steps.** Recorded as b1b items (B1B-A7-AUDIT-FINDINGS-CONSUME: TPRM consumes audit_findings tied to remediation; B1B-A8-DORA-ENTITIES: author DORA records). Former B2-7 and B2-8 removed from state.yaml. Both deferred until a module exists. Handoff routing now decided: 258 -> TPRM-REMEDIATION, 278 -> TPRM-CONTINUOUS-MONITORING.
+- **a11 = yes: build draft produced.** `.tmp_deploy/TPRM-phaseB-draft-2026-06-19.md` maps the 5 modules + 28 masters to modules with role + necessity (Rule #16: statute-prefixed/sector-bound -> optional) + one-line purpose, marking the masters whose ownership is CONTINGENT on the boundary decision (third_party_assessments, third_parties, third_party_risk_findings, the 730 move). b3 candidates remapped to their real modules/master names; loaded during the build, not now (draft-don't-load).
+- Deleted a-TPRM.md and the now-stale q-TPRM.md projection; regenerated a fresh q-TPRM.md (taxonomy clarification first, then the boundary cluster re-posed with vendor-grounded Recommended lines, then the B2-H1 delete yes/no, then the build-on-approval summary under Optional). Ran qfile_grounding_lint.ts TPRM (clean). Status stays feedback_needed / user.
+
+## 2026-06-19 - a-TPRM.md processed: TPRM built
+
+Processed the answered companion file (Rule #22). TPRM (domain id 19) is now BUILT: the boundary cluster is settled and the full build landed. Loader: `.tmp_deploy/load_tprm_2026_06_19.ts` (idempotent). No `record_status` touched (Rule #1); no vendor names (Rule #18); no em-dashes; all `notes` left empty (Rule #15).
+
+### Boundary settled
+
+- **a1 = b**: TPRM masters a broad `third_parties` record and CONSUMES SRM `suppliers` (suppliers are a subtype/source, not a re-master). 5-module shape (former B2-1) was already decided.
+- **a2 = a**: TPRM masters its own `third_party_assessments`, distinct from GRC `risk_assessments` and SRM `supplier_risk_assessments`.
+- **a3 = b**: SRM keeps `supplier_risk_assessments` (730, still SRM master, verified live); TPRM masters its own distinct `third_party_assessments`. No move.
+- **a4 = a (leaning) NOT executed**: moving 730 mastery to TPRM would undo part of the just-built SRM-RISK-COMPLIANCE; the recommended call b prevailed (SRM keeps 730). The 730 move is a fresh destructive decision if the user ever wants it; not done.
+- **a6 = yes**: DELETED `handoff_processes` id 705 (handoff_id=278, process_id=815, the L4 PCF tag) after verifying it matched. The L3 row id 254 (process_id 167) is intact.
+- **a7 = yes**: built the 5-module domain from the draft.
+
+### Built (all agent-finished, record_status='new')
+
+| Item | Detail |
+|---|---|
+| 5 full modules | TPRM-ONBOARDING-INTAKE (411), TPRM-DUE-DILIGENCE (412), TPRM-CONTINUOUS-MONITORING (413), TPRM-REMEDIATION (414), TPRM-SUPPLY-CHAIN-RISK (415); each with buyer-voice catalog_tagline + catalog_description (Rule #20). |
+| 28 TPRM masters | data_object ids 1318-1345. Per-module master counts: 411=7, 412=10, 413=3, 414=3, 415=5. All M7-clean (each has exactly one master row, in TPRM; verified catalog-wide). entity_type classified on all 28 (B13 clean; no unclassified). necessity per Rule #16 (statute/sector-bound DORA/HIPAA/GDPR/PCI/financial-regulator masters -> optional). Pattern flags: risk_acceptances has_single_approver, third_party_contacts has_personal_content. |
+| 7 consumer rows | suppliers (206) on ONBOARDING-INTAKE + SUPPLY-CHAIN-RISK; compliance_controls (283) + control_assessments (284) on DUE-DILIGENCE; audit_findings (294) + compliance_risks (282) on REMEDIATION; supplier_esg_assessments (327) on CONTINUOUS-MONITORING. All role=consumer, never master (M7 holds: each of these is mastered elsewhere or by an unbuilt owner). |
+| 8 capabilities | + capability_domains (8) + domain_module_capabilities (8). |
+| Domain skill | id 479, skill_name='tprm', skill_type='domain', domain_id=19, non-empty description + trigger_keywords (Rule #17). |
+| Tools | 18 tools + 23 domain_module_tools; each module carries >=1 query + >=1 mutate + >=1 workflow-gate, plus notify_person/notify_team. |
+| 5 aliases | "third party risk", "vendor risk management", "VRM", "supplier risk", "TPRM". |
+| Inbound handoff FKs | PATCHed 258 target_domain_module_id -> 414 (TPRM-REMEDIATION, audit_findings); 278 -> 413 (TPRM-CONTINUOUS-MONITORING, supplier_esg_assessments). Both record_status untouched. |
+
+Domain metadata (Rule #8) + catalog copy were already complete from the 2026-06-07 pass, so NO domain PATCH and NO catalog-copy confirmation block was owed. DORA (regulation 19) is already linked via domain_regulations (plus ISO 27001, NIST CSF, NIS2), so no missing regulation rows.
+
+### Notes on consumed entities whose owners are unbuilt
+
+`audit_findings` (AUDIT), `supplier_esg_assessments` (ESG), `compliance_controls` / `control_assessments` / `compliance_risks` (GRC) currently have NO master row in `domain_module_data_objects` (their owner domains are unbuilt). TPRM adds only `consumer` rows for them, which is valid (consumer does not require a present master) and M7-coherent (TPRM never masters what it consumes). `contracts` and `risk_categories` do NOT exist as `data_objects` at all (CLM unbuilt; no GRC risk-taxonomy object), so no consumer row could be authored for them; the loader skipped them and logged it. When those owners build, the consumer rows resolve to RESOLVED/owned automatically.
+
+### Resolved -> history (removed from state.yaml)
+
+B1A-BUILD, B1B-S1, B1B-A2, B1B-A7-AUDIT-FINDINGS-CONSUME, B1B-A8-DORA-ENTITIES, B1B-B10b-258, B1B-B10b-278, B2-2, B2-3, B2-4, B2-5, B2-6, B2-H1, and all b3 candidates (built into the 28 masters).
+
+### Kept OPEN
+
+**B2-9** (SMP relationship). a5/a9 asked "when both are installed would I have one table or two, and which domain owns it?" Answered in the regenerated q-file and state.yaml: with the embedded_master shape (option c, recommended) there is ONE logical `third_parties` table mastered by TPRM; SMP's local shell defers to TPRM when both are installed; you get two only if SMP is installed without TPRM. The assessment slices stay separate (TPRM's `third_party_assessments` vs SMP's `smp_vendor_risk_assessments`). It is an SMP-side embedded_master row addable after this build; non-blocking for TPRM. Status stays feedback_needed for it.
+
+### Queued b1b follow-ups (non-blocking, next audit)
+
+B1B-LIFECYCLE-STATES (author data_object_lifecycle_states on the 9 operational_workflow masters; B12), B1B-PERSONAS-RACI (Phase E/P personas: Vendor Risk Analyst, Third-Party Risk Manager, Procurement Risk Reviewer, InfoSec Vendor Assessor), B1B-OUTBOUND-HANDOFFS (B9 symmetric back-channels: vendor_remediation.completed -> AUDIT, vendor_risk_assessment.completed -> ESG).
+
+### Closeout
+
+Deleted a-TPRM.md. Regenerated a fresh q-TPRM.md carrying ONLY B2-9 (with a5's answer folded into the Recommended line). Ran `qfile_grounding_lint.ts TPRM` (clean). Status: feedback_needed / user (B2-9 open).
