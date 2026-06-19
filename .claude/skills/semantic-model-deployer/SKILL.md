@@ -52,10 +52,12 @@ Every string the deployer extracts from the model and sends to Semantius (`descr
 // Write tool target: <cwd>/.tmp_deploy/deploy_xxx.ts  (see path note below)
 async function call(tool: string, payload: unknown) {
   const proc = Bun.spawn(["semantius", "call", "crud", tool], {
-    stdin: new Response(JSON.stringify(payload)),
+    stdin: "pipe",
     stdout: "pipe",
     stderr: "pipe",
   });
+  proc.stdin.write(JSON.stringify(payload));
+  proc.stdin.end();
   const [stdout, stderr] = await Promise.all([
     new Response(proc.stdout).text(),
     new Response(proc.stderr).text(),
@@ -1306,10 +1308,12 @@ COUNT=$(semantius call crud postgrestRequest '{"method":"GET","path":"/campaigns
 // <cwd>/.tmp_deploy/seed_<short>.ts — run with: bun run <path>
 async function pgSingle(body: unknown): Promise<any> {
   const proc = Bun.spawn(["semantius", "--single", "call", "crud", "postgrestRequest"], {
-    stdin: new Response(JSON.stringify(body)),
+    stdin: "pipe",
     stdout: "pipe",
     stderr: "pipe",
   });
+  proc.stdin.write(JSON.stringify(body));
+  proc.stdin.end();
   const [stdout, stderr] = await Promise.all([
     new Response(proc.stdout).text(),
     new Response(proc.stderr).text(),

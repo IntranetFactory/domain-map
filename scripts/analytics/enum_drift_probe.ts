@@ -25,10 +25,12 @@ const SKILL_PATH = ".claude/skills/domain-map-analyst/SKILL.md";
 
 async function postgrest(method: string, path: string): Promise<any> {
   const proc = Bun.spawn(["semantius", "call", "crud", "postgrestRequest"], {
-    stdin: new Response(JSON.stringify({ method, path })),
+    stdin: "pipe",
     stdout: "pipe",
     stderr: "pipe",
   });
+  proc.stdin.write(JSON.stringify({ method, path }));
+  proc.stdin.end();
   const [stdout, stderr] = await Promise.all([
     new Response(proc.stdout).text(),
     new Response(proc.stderr).text(),

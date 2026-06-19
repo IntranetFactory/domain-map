@@ -26,9 +26,11 @@ const SAMPLES = argv.includes("--samples");
 
 async function pg(path: string): Promise<any[]> {
   const proc = Bun.spawn(["semantius", "call", "crud", "postgrestRequest"], {
-    stdin: new Response(JSON.stringify({ method: "GET", path })),
+    stdin: "pipe",
     stdout: "pipe", stderr: "pipe",
   });
+  proc.stdin.write(JSON.stringify({ method: "GET", path }));
+  proc.stdin.end();
   const [out, err] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text()]);
   if (await proc.exited !== 0) throw new Error(`GET ${path}: ${err || out}`);
   return out.trim() ? JSON.parse(out.trim()) : [];

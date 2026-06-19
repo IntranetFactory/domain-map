@@ -38,10 +38,12 @@ async function postgrest(method: string, path: string, body?: unknown): Promise<
   const payload: Row = { method, path };
   if (body !== undefined) payload.body = body;
   const proc = Bun.spawn(["semantius", "call", "crud", "postgrestRequest"], {
-    stdin: new Response(JSON.stringify(payload)),
+    stdin: "pipe",
     stdout: "pipe",
     stderr: "pipe",
   });
+  proc.stdin.write(JSON.stringify(payload));
+  proc.stdin.end();
   const [stdout, stderr] = await Promise.all([
     new Response(proc.stdout).text(),
     new Response(proc.stderr).text(),

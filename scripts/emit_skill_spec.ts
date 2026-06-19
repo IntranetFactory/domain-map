@@ -200,10 +200,12 @@ async function orgSlug(): Promise<string> {
   if (SNAPSHOT_OVERRIDE) return SNAPSHOT_OVERRIDE.replace(/-\d{4}-\d{2}-\d{2}$/, "");
   try {
     const proc = Bun.spawn(["semantius", "call", "crud", "getCurrentUser"], {
-      stdin: new Response("{}"),
+      stdin: "pipe",
       stdout: "pipe",
       stderr: "pipe",
     });
+    proc.stdin.write("{}");
+    proc.stdin.end();
     const text = (await new Response(proc.stdout).text()).trim();
     await proc.exited;
     const cu = text ? JSON.parse(text) : {};
