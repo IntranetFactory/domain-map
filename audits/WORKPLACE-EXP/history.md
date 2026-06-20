@@ -1,0 +1,15 @@
+# WORKPLACE-EXP audit history
+
+## 2026-06-19 — Promotion + Phase 0 (new domain, unbuilt)
+
+**Origin.** Surfaced by the VIS-MGMT audit (2026-05-30) into `audits/_missing-domains.md`; triaged 2026-06-19 in a 5-candidate research pass. User confirmed (AskUserQuestion) WORKPLACE-EXP → PROMOTE as a THIRD sub-domain of REAL-EST alongside IWMS and CAFM.
+
+**Point-solution-market test: PASSES (medium confidence).** Independent pure-plays whose flagship is employee-facing desk/room booking + hybrid coordination: Robin, Kadence, Tactic (Skedda/Gable in-class). Condeco is no longer independent (acquired into Eptura); Envoy now positions as IWMS; Eptura/OfficeSpace are IWMS/facilities suites. Gartner publishes a Workplace Experience Applications market separate from IWMS. Promotion is justified by buyer identity (HR/employee, RTO/hybrid, employee-app-first) + attendance-coordination entities rather than net-new booking objects.
+
+**Decision: promote-as-domain as a sub-domain of REAL-EST** (parent_domain_id=141), `domain_kind=established_market`. Conservative fallback (recorded, not taken): fold-into-IWMS.
+
+**Phase 0 vendor surface** (`.tmp_deploy/WORKPLACE-EXP-phase0-2026-06-19.md`): ~26 entities. Live-state check found the booking/space substrate is already mastered: IWMS (23) masters `desk_bookings` (590), `room_reservations` (591), `space_utilization_reports` (593), `workplace_service_requests` (592), `workplace_experience_feedback` (594), `locations` (795); REAL-EST (141) masters `floor_plans` (346), `property_spaces` (347), `occupancy_records` (348). CAFM (142) and VIS-MGMT (24) have no modules wired. So WEX masters ~19 net-new coordination entities (amenity_bookings, resource_types, booking_rules, desk_check_ins, office_neighborhoods, office_attendance_days, in_office_schedules, coworking_intents, coworker_presence_feeds, attendance_policies, attendance_compliance_records, attendance_privacy_consents, wayfinding_routes, plus junctions), EMBEDS the ~4 IWMS/REAL-EST booking/space entities, and consumes visitors (VIS-MGMT), people (HCM), engagement (EMP-EXP).
+
+**Modularization hypothesis:** 2 modules — SPACE-BOOKING (masters resources/amenities/rules/check-ins/neighborhoods; embeds IWMS bookings) and ATTENDANCE-COORDINATION (masters attendance/RTO-policy/coworking/wayfinding). Both carry >=1 net-new master, so the Rule #14 floor holds. Metadata estimate: crud_percentage ~92, certification_required false, usa_market_size_usd_m ~650 (flagged order-of-magnitude; sources disagree ~10x), market_size_source_year 2026.
+
+**Status: feedback_needed.** Nothing loaded (Rule #21/#22). Four market-shape `b2` decisions surfaced in `q-WORKPLACE-EXP.md`: booking-entity ownership (gate: embed IWMS vs re-master), module split, workplace-communications boundary (master vs consume INTRANET/EMP-EXP), and owning function (Facilities vs HR). One sequencing dependency parked as `b1b` (visitor pre-registration needs VIS-MGMT's visitor master). Phase A-S build runs once `a-WORKPLACE-EXP.md` answers the shape.

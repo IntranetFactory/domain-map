@@ -1,0 +1,109 @@
+schema_version: 2
+domain: WORKPLACE-EXP
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-19"
+
+# 2026-06-19 NEW DOMAIN, promoted from audits/_missing-domains.md (VIS-MGMT audit candidate; triaged
+# 2026-06-19). User confirmed: promote as a THIRD sub-domain of REAL-EST (141), alongside IWMS (23) and
+# CAFM (142). UNBUILT: nothing loaded to the catalog yet. Phase 0 vendor-surface research done
+# (.tmp_deploy/WORKPLACE-EXP-phase0-2026-06-19.md): pure-plays Robin/Kadence/Tactic (+Envoy/Eptura
+# suite context); ~26 entities; ~19 net-new WEX masters, ~4 embedded from IWMS/REAL-EST, visitors/people
+# consumed. The build (Phase A-S) is gated on the market-shape decisions below per Rule #21/#22.
+#
+# Decisions FIXED in Phase 0 (not re-asked):
+#  - Sub-domain of REAL-EST (parent_domain_id=141), domain_kind=established_market (user-confirmed).
+#  - Live ownership found: IWMS (23) masters desk_bookings (590), room_reservations (591),
+#    space_utilization_reports (593), workplace_service_requests (592), workplace_experience_feedback
+#    (594), locations (795). REAL-EST (141) masters floor_plans (346), property_spaces (347),
+#    occupancy_records (348). CAFM (142) and VIS-MGMT (24) have NO modules wired yet.
+#  - WEX consumes HCM/users for people, EMP-EXP for engagement, VIS-MGMT for visitor flow (when VIS-MGMT
+#    is modularized; visitor entities 668-675 have no master yet -> see b1b sequencing note).
+#
+# Known sequencing follow-up (NOT a user decision): WEX `booking_invitee_links` (visitor pre-reg from a
+# room booking) depends on VIS-MGMT having a visitor master; until VIS-MGMT is built, that edge stays
+# unwired. Tracked here so it is not lost.
+
+b1a: []
+
+b1b:
+  - id: B1B-WEX-VISMGMT-VISITOR
+    summary: "Visitor pre-registration edge depends on VIS-MGMT visitor master (not yet mastered)."
+    finding: >
+      WEX's visitor-flow integration (e.g. booking_invitee_links: a room booking pre-registers a
+      visitor) needs a VIS-MGMT visitor master. VIS-MGMT (24) has no modules wired and its visitor
+      entities (668-675) have no master row yet. WEX will consume that master once VIS-MGMT is built;
+      until then the edge is unwired and visitor pre-reg is out of WEX's initial scope.
+    blocked_by:
+      - {type: domain_audit, blocking_domain: VIS-MGMT, milestone: visitor-master-built}
+
+b2:
+  - id: B2-WEX-BOOKING-OWNERSHIP
+    summary: "Does WEX embed IWMS's booking entities, or re-master them?"
+    question: "Should WORKPLACE-EXP EMBED IWMS's desk_bookings (590) + room_reservations (591) (employee front-end over the IWMS booking core), or RE-MASTER bookings in WEX (demoting IWMS to embed)?"
+    options:
+      - "a: WEX embeds IWMS desk_bookings + room_reservations (IWMS stays the master)"
+      - "b: WEX re-masters bookings (IWMS demotes to embedded_master)"
+    evidence: >
+      IWMS already masters desk_bookings (590, IWMS-DESK-RESERVATION) and room_reservations (591,
+      IWMS-ROOM-RESERVATION); the single-master rule (M7) forbids a second master, so option b is a
+      destructive demotion of an existing domain. The vendor topology supports embed: Eptura's Engage
+      employee app is an employee front-end over an IWMS booking core, the exact shape option a mirrors.
+      Robin/Kadence/Tactic ARE the booking system of record in a WEX-led greenfield, but in THIS
+      catalog IWMS already owns bookings, so WEX embeds them and still masters the surrounding surface
+      (check-ins, amenities, booking rules, neighborhoods) plus the entire attendance-coordination
+      layer, so it is not a thin viewer. Option b would only be right if the catalog decided WEX
+      supersedes IWMS as the booking owner, which contradicts the user's sub-domain-of-REAL-EST framing.
+    why: "Gate decision: determines whether WEX is the employee front-end over IWMS (a) or the new booking system of record (b). M7 single-master tension."
+
+  - id: B2-WEX-MODULES
+    summary: "WORKPLACE-EXP module split: 2 modules vs 1."
+    question: "Split WORKPLACE-EXP into 2 modules (SPACE-BOOKING / ATTENDANCE-COORDINATION) or ship 1 combined module?"
+    options:
+      - "a: 2 modules (SPACE-BOOKING, ATTENDANCE-COORDINATION)"
+      - "b: 1 module (combined)"
+    evidence: >
+      The pure-plays productize two separable surfaces. (1) SPACE-BOOKING: desk/room/amenity
+      reservation, resource types, booking rules, check-ins, office neighborhoods, is Robin's and
+      Tactic's core. (2) ATTENDANCE-COORDINATION: hybrid attendance days, in-office schedules, RTO/
+      attendance policies, team coworking presence, wayfinding, occupancy analytics, is Kadence's
+      center of gravity ("who's in", AI nudges) and a strong Robin/Tactic surface. Both modules carry
+      >=1 net-new master (SPACE-BOOKING masters amenity_bookings/resource_types/booking_rules/
+      desk_check_ins/office_neighborhoods even though it EMBEDS IWMS desk_bookings; ATTENDANCE-
+      COORDINATION masters the attendance/coworking/wayfinding set), so the Rule #14 floor holds and
+      the zero-master risk on SPACE-BOOKING does not materialize. A combined single module (b) is
+      defensible for a thin first release but loses the deployability split the vendors sell.
+    why: "Editorial/deployability judgment above the Rule #14 floor; both options satisfy it."
+
+  - id: B2-WEX-COMMS-BOUNDARY
+    summary: "Does WEX master workplace communications, or consume INTRANET/EMP-EXP?"
+    question: "Should WORKPLACE-EXP master a workplace-communications surface (office_announcements), or consume INTRANET / EMP-EXP / the notify abstraction for employee messaging?"
+    options:
+      - "a: consume INTRANET/EMP-EXP; WEX uses notify_person/notify_team, masters no comms surface"
+      - "b: WEX masters office_announcements (workplace-scoped messaging)"
+    evidence: >
+      Robin/Kadence/Tactic carry only light in-app announcements; employee communications is owned in
+      this catalog by INTRANET (126, "targeted employee communications"), EMP-EXP (62, engagement), and
+      FRONTLINE-COMMS (180, deskless broadcast). Option a keeps WEX a workplace-operations app that
+      fires notifications via the notify abstraction and defers messaging to those domains, avoiding a
+      fourth overlapping comms surface. Option b masters a workplace-scoped announcements record, which
+      duplicates INTRANET's surface for marginal gain; only choose it if WEX must own building-scoped
+      announcements (e.g. closures, capacity changes) the comms domains will not carry.
+    why: "Scope boundary: prevents WEX duplicating INTRANET/EMP-EXP/FRONTLINE-COMMS comms ownership."
+
+  - id: B2-WEX-OWNER-FN
+    summary: "Owning business function for WORKPLACE-EXP."
+    question: "Which business function owns WORKPLACE-EXP: Facilities and Real Estate, or HR (People/Workplace)?"
+    options:
+      - "a: Facilities and Real Estate (owner), HR + IT contributors"
+      - "b: HR / People (owner), Facilities + IT contributors"
+    evidence: >
+      WEX has a split buyer: the booking/space surface is bought by Facilities/Workplace teams (Robin,
+      Tactic, Eptura position to workplace + facilities), while the hybrid-attendance/RTO-policy surface
+      is increasingly bought by HR/People Ops (Kadence positions to people leaders coordinating hybrid
+      work). As a sub-domain of REAL-EST, Facilities owner (a) is structurally consistent and matches
+      the space-management spine, with HR contributing the attendance/RTO layer. Option b (HR owner)
+      fits orgs where return-to-office is an HR mandate; it understates the real-estate/space nature
+      that anchors WEX under REAL-EST.
+
+b3: []

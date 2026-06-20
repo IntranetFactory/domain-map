@@ -71,3 +71,36 @@ edits only; the CWM changes were not executed (CWM expansion remains its own ope
 - Lifecycle states for the 5 operational_workflow masters (Rule #12 requires them), personas / RACI,
   and the cross-domain handoffs to/from S2P + CWM + CLM, including the CWM and S2P embed rows pending
   those domains' own builds.
+
+## 2026-06-19 - a-SVCS-PROC.md processed
+
+The user renamed q-SVCS-PROC.md to a-SVCS-PROC.md with answers to the four catalog-copy /
+metadata questions. Processed under Rule #22.
+
+### Answers and disposition
+
+- **a1 (B1B-CATALOG-COPY-CONFIRM, domain) = "ok, but I think tag line should contain SOW".** The
+  domain catalog_description is CONFIRMED (resolved). The catalog_tagline is corrected per the user's
+  request: the live tagline already spelled out "statement of work" but not the acronym, so it was
+  PATCHed to "Buy outsourced services under a statement of work (SOW), then track milestones to
+  acceptance and payment." at record_status='new'. Per Rule #20 (write-and-mirror) the corrected
+  wording is re-surfaced in a fresh q-SVCS-PROC.md for a final confirm, so the tagline confirmation
+  stays OPEN and the domain stays feedback_needed.
+- **a2 (B1B-CATALOG-COPY-CONFIRM, SVCS-PROC-ENGAGEMENT) = yes.** Module tagline + description
+  CONFIRMED, resolved.
+- **a3 (B1B-CATALOG-COPY-CONFIRM, SVCS-PROC-SETTLEMENT) = yes.** Module tagline + description
+  CONFIRMED, resolved.
+- **a4 (B1B-TAM-SOURCE) = a.** Keep the triangulated US TAM ~$600M (2025) placeholder for now;
+  replace with a sourced Gartner / Spend Matters figure before the domain is released. Decided-to-defer:
+  the item stays OPEN as a deferred b1b (not a q-file item now), to resurface on the release pass when
+  the non-empty overwrite will need explicit user approval (Rule #1 / Rule #21).
+
+### State changes
+
+- catalog_release set to 2026-06-19 on the SVCS-PROC domain (192) in the same session.
+- domains.catalog_tagline (192) PATCHed to the SOW-acronym wording (record_status untouched, stays 'new').
+- B1B-CATALOG-COPY-CONFIRM narrowed to the domain catalog_tagline final-confirm only (modules + domain
+  description resolved).
+- B1B-TAM-SOURCE reframed from a pending user decision to a decided-but-deferred pre-release sourcing item.
+- a-SVCS-PROC.md deleted; q-SVCS-PROC.md regenerated with the single open tagline-confirm question.
+- status remains feedback_needed (next_action_by: user).

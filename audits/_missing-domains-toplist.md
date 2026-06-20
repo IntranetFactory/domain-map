@@ -1,6 +1,6 @@
 # Missing-domains toplist: platform-native record/workflow core (~96% est. Semantius)
 
-The 90 pending missing-domain candidates whose estimated strict Semantius score lands at ~96%: markets whose product is internal record-keeping and workflow (query/mutate plus email/notify/webhook, all platform-tier), with no material external compute, fetch, or device-telemetry dependency. Scores are coarse heuristic estimates (see `_missing-domains.md`), pending human triage.
+The 85 pending missing-domain candidates whose estimated strict Semantius score lands at ~96%: markets whose product is internal record-keeping and workflow (query/mutate plus email/notify/webhook, all platform-tier), with no material external compute, fetch, or device-telemetry dependency. Scores are coarse heuristic estimates (see `_missing-domains.md`), pending human triage.
 
 | Code | Domain | One-line description |
 |---|---|---|
@@ -26,7 +26,6 @@ The 90 pending missing-domain candidates whose estimated strict Semantius score 
 | EDISCOVERY | eDiscovery Platform | ESI collection, processing, predictive-coding review, redaction, and production. |
 | EHR | Electronic Health Record | Longitudinal patient records, clinical documentation, CPOE/e-prescribing, and HL7/FHIR interoperability. |
 | ELD-COMPLIANCE | ELD and Hours-of-Service Compliance | FMCSA HOS log capture, DVIR workflow, IFTA allocation, and RODS audit packets. |
-| EMP-JOURNEY-ORCH | Employee Journey Orchestration | Milestone-triggered employee journeys with manager-action playbooks and journey analytics. |
 | ENTERPRISE-INFO-ARCHIVING | Enterprise Information Archiving | Long-term email/message archival with supervisory review and immutable storage for compliance. |
 | EQMS | Enterprise Quality Management System | Document control, nonconformance/CAPA, change control, and supplier-quality and audit management. |
 | EQUITY-COMP-PLATFORM | Equity Compensation Platform | Equity grant proposal, acceptance, vesting administration, exercise workflow, and ESPP enrollment. |
@@ -40,7 +39,6 @@ The 90 pending missing-domain candidates whose estimated strict Semantius score 
 | HC-CMMS | Healthcare CMMS | Biomedical-equipment maintenance, PM scheduling, work-order dispatch to biomeds, and service-contract tracking. |
 | HC-PAYER | Health Plan Payer Operations | Member enrollment, benefit configuration, claims adjudication, network management, and utilization management. |
 | HC-PHARM-MGMT | Pharmacy Practice and Medication Management | Prescription dispensing, medication reconciliation, controlled-substance ledger, and pharmacy inventory. |
-| HOA-MGMT | Homeowner Association Management | Owner rosters, board governance, architectural review, dues collection, reserve studies, and violation tracking. |
 | IDP-INT-DEV-PLAT | Internal Developer Platform | Service catalog, scaffolder templates, golden paths, and developer self-service portal. (duplicate candidate) |
 | INT-DEV-PLAT | Internal Developer Platform | Service catalog, software-template scaffolding, golden paths, and developer scorecards. (duplicate candidate) |
 | INTERNAL-COMMS | Internal Communications Platform | Targeted multi-channel employee messaging with campaign orchestration and attestation tracking. |
@@ -58,7 +56,6 @@ The 90 pending missing-domain candidates whose estimated strict Semantius score 
 | MGMT-CO-ACCT | Management Company GP Accounting | GP entity books, management-fee tracking, carry allocation, and GP cap-table. |
 | PAM | Privileged Access Management | Privileged-session management, credential vaulting, just-in-time elevation, and account rotation. |
 | PCM | Profitability and Cost Management | Activity-based costing, profitability allocation, cost-driver modeling, and multi-step allocations. |
-| PMM | Product Marketing Management | Launch planning, messaging/positioning, sales-enablement content, and competitive intelligence. |
 | POLICY-AS-CODE | Policy as Code | Admission-control and runtime policy enforcement, bundle distribution, and decision logging. |
 | POLICY-MGMT | Policy and Procedure Management | Policy authoring with version control, lifecycle workflow, attestation campaigns, and exception management. |
 | PORTAL-FRAMEWORK | Enterprise Portal Framework | Authenticated portal pages, role-based access, widgets, and SSO for partner/customer/employee portals. |
@@ -77,7 +74,6 @@ The 90 pending missing-domain candidates whose estimated strict Semantius score 
 | SCP | Supply Chain Planning | Demand forecasting, S&OP, MRP-light, inventory optimization, and supply planning. |
 | SECRETS-MGMT | Secrets Management | Secret vaulting, automatic credential rotation, dynamic credentials, leasing, and access audit logging. |
 | SOC-AAS | SOC as a Service | Outsourced SOC operations with tenant onboarding, shared-analyst case routing, and SLA-bound triage. |
-| SOP-MGMT | Process Documentation and SOP Management | SOP authoring, work-instruction steps, versioning, read-acknowledgment, and periodic review cycles. |
 | SPACE-BOOKING | Space and Room Booking | Study/meeting room reservations, equipment booking, recurring bookings, waitlists, and conflict resolution. |
 | SPREADSHEET-PLATFORM | Online Spreadsheet Platform | Cell-grid editing with real-time co-editing, a formula engine, charts, and pivot tables. |
 | SSE-SASE | Security Service Edge / SASE | Secure web gateway, ZTNA, inline TLS inspection, edge DLP, and unified web/SaaS/private-app policy. |
@@ -93,6 +89,7 @@ The 90 pending missing-domain candidates whose estimated strict Semantius score 
 | VEHICLE-RECALL-MGMT | Vehicle Recall Management | NHTSA VIN-matched recall ingestion, per-vehicle campaign tracking, and OEM reimbursement claims. |
 | WMS | Warehouse Management | Picking, packing, slotting, wave planning, RF/scanner workflows, and bin management. |
 | WORKLOAD-AUTO | Workload Automation and Job Scheduling | Job definitions, calendar scheduling, cross-system orchestration, and SLA-based batch monitoring. |
-| WORKPLACE-EXP | Workplace Experience and Workspace Booking | Desk/room booking, hybrid attendance scheduling, floor planning, and occupancy analytics. |
 
-_90 candidates. Note: IDP-INT-DEV-PLAT, INT-DEV-PLAT, and INTERNAL-DEV-PLAT are three duplicate "Internal Developer Platform" entries (a dedup-at-triage item, not a scoring artifact)._
+_85 candidates. Note: IDP-INT-DEV-PLAT, INT-DEV-PLAT, and INTERNAL-DEV-PLAT are three duplicate "Internal Developer Platform" entries (a dedup-at-triage item, not a scoring artifact)._
+
+_Removed 2026-06-19 after triage (now resolved in `_missing-domains.md`): PMM (already built, domain 184), HOA-MGMT (promoted, build in progress), SOP-MGMT (promoted; scoped 2026-06-15), WORKPLACE-EXP (promoted as REAL-EST sub-domain), EMP-JOURNEY-ORCH (folded into INTRANET)._

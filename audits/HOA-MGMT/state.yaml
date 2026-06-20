@@ -1,0 +1,107 @@
+schema_version: 2
+domain: HOA-MGMT
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-19"
+
+# 2026-06-19 NEW DOMAIN, promoted from audits/_missing-domains.md (RE-PROP-MGMT audit candidate;
+# triaged 2026-06-19, user chose "Record + start loading a domain", HOA-MGMT selected as the first
+# PROMOTE to build). UNBUILT: nothing loaded to the catalog yet. Phase 0 vendor-surface research done
+# (.tmp_deploy/HOA-MGMT-phase0-2026-06-19.md): 5 pure-play CAM vendors (Vantaca, CINC Systems, PayHOA,
+# FRONTSTEPS, Condo Control), 46 entities (35 Core / 8 Common / 13 compliance). The build (Phase A-S)
+# is gated on the market-shape decisions below per Rule #21/#22 (a NEW domain is an expansive addition:
+# surface in a q-file FIRST, load only after a-HOA-MGMT.md approves the shape). q-HOA-MGMT.md surfaces
+# all four.
+#
+# Decisions FIXED in Phase 0 (not re-asked):
+#  - Standalone domain, sibling to RE-PROP-MGMT (144, itself parent_domain_id=null). domain_kind=
+#    established_market. REAL-EST (141) is the corporate-RE umbrella, not a residential parent.
+#  - Does NOT re-master RE-PROP-MGMT's landlord entities: leases, tenants, rent, tenant screening,
+#    vacancy marketing stay in RE-PROP-MGMT. Owners are MEMBERS, not tenants; no overlap.
+#  - Consumes FIN for general ledger / AP / bank-rec (embedded_master); HOA masters only the owner
+#    sub-ledger (owner_account_ledgers) + the assessment/dues surface.
+#  - Consumes platform `users` for board/owner/member identity rows.
+#  - HOA masters the governance + fiduciary + community-ops spine no current domain owns
+#    (associations, units_lots, owner_memberships, board_*, governing_documents,
+#    architectural_review_requests, covenant_violations, assessments, reserve_studies, etc.).
+
+b1a: []
+
+b1b: []
+
+b2:
+  - id: B2-HOA-MODULES
+    summary: "HOA-MGMT module split: 3 modules vs 2."
+    question: "Split HOA-MGMT into 3 modules (GOVERNANCE / ASSESSMENTS / COMMUNITY-OPERATIONS) or fold community-operations into governance (2 modules)?"
+    options:
+      - "a: 3 modules (GOVERNANCE, ASSESSMENTS, COMMUNITY-OPERATIONS)"
+      - "b: 2 modules (fold COMMUNITY-OPERATIONS into GOVERNANCE)"
+    evidence: >
+      The flagship pure-plays package CAM as three separable surfaces. (1) GOVERNANCE: board,
+      elections, meetings, governing documents (CC&Rs), architectural review, violations, fines, is
+      first-class in Vantaca, CINC Systems, FRONTSTEPS, and Condo Control. (2) ASSESSMENTS/FINANCIALS:
+      assessments, special assessments, owner sub-ledgers, dues invoicing, delinquency/collections,
+      liens, reserve studies, estoppel/resale disclosures, is the strongest surface in CINC Systems
+      (accounting + integrated banking) and PayHOA (dues/collections-first), and present in Vantaca and
+      FRONTSTEPS. (3) COMMUNITY-OPERATIONS: amenity bookings, common-area work orders, contractor
+      records, communications/surveys/directory, front-desk (visitor/package), is productized by
+      Vantaca, FRONTSTEPS, and Condo Control (amenity booking + package + communication). Vantaca,
+      CINC, and FRONTSTEPS each productize all three as distinct surfaces, supporting the 3-module split;
+      PayHOA is governance-light and dues/communication-centric, which is the case for folding
+      community-operations into governance (2 modules). The candidate has ~7 capabilities, so both
+      options satisfy the Rule #14 floor (>=3 capabilities -> >=2 full modules).
+    why: "Module boundary is editorial/deployability judgment above the Rule #14 floor; this is the gate decision the rest of the build depends on."
+
+  - id: B2-HOA-MAINTENANCE
+    summary: "Does HOA master common-area work orders, or consume RE-PROP-MGMT's maintenance?"
+    question: "Should HOA-MGMT master its own common_area_work_orders + service_requests (association-maintained common areas), or consume RE-PROP-MGMT's tenant_maintenance_requests (361)?"
+    options:
+      - "a: HOA masters common_area_work_orders + common-area service_requests"
+      - "b: consume RE-PROP-MGMT tenant_maintenance_requests (no separate HOA master)"
+    evidence: >
+      Vantaca, CINC Systems, FRONTSTEPS, and Condo Control all carry common-area work orders /
+      service requests as first-class records: the ASSOCIATION maintains shared common areas (pool,
+      clubhouse, landscaping, gates) directly, which is a different record from a landlord's per-unit
+      repair. RE-PROP-MGMT's tenant_maintenance_requests (361) is the landlord->tenant per-unit
+      maintenance portal and does not represent association common-area work. Option a masters the
+      common-area work the vendors sell; option b would force HOA common-area maintenance through a
+      landlord-tenant entity that does not fit the ownership model (there is no tenant). The two are
+      distinct records, not the same master.
+
+  - id: B2-HOA-VENDORS
+    summary: "Does HOA master community contractors, or consume the shared suppliers master?"
+    question: "Should HOA-MGMT master its own community_vendors + vendor_contracts (local contractors, COI/insurance tracking), or consume the shared suppliers master (206) via embedded_master?"
+    options:
+      - "a: HOA masters community_vendors + vendor_contracts (local contractor records + COI)"
+      - "b: embedded_master / consume the shared suppliers master (206)"
+    evidence: >
+      Vantaca, CINC Systems, FRONTSTEPS, and Condo Control all carry contractor/vendor records with
+      certificate-of-insurance (COI) and contract tracking as first-class CAM features: the
+      association engages local trades (landscapers, pool service, security) that are not enterprise
+      procurement suppliers and live in no shared supplier master. The catalog does hold a shared
+      suppliers master (206, the S2P/SRM procurement supplier), so option b (embedded_master a local
+      shell, defer to suppliers when present) is structurally available and keeps a single supplier
+      master catalog-wide (Rule M7). Option a masters a dedicated community_vendors record, which
+      better fits the SMB CAM reality where these contractors never enter an enterprise supplier
+      system; the tradeoff is a second contractor-shaped master adjacent to suppliers.
+
+  - id: B2-HOA-OWNER-FN
+    summary: "Owning business function for HOA-MGMT."
+    question: "Which business function owns HOA-MGMT: Facilities and Real Estate, Finance, or a split?"
+    options:
+      - "a: Facilities and Real Estate (owner), Finance + Legal contributors"
+      - "b: Finance (owner), Facilities + Legal contributors"
+      - "c: Business Operations (owner), Finance + Legal contributors"
+    evidence: >
+      HOA/CAM software is bought by community-association management companies and self-managing
+      boards, not a single enterprise function, so the owner maps to the buyer's closest spine
+      function. The product spine is property/community stewardship (governance + common-area ops),
+      which sits under Facilities and Real Estate, with Finance contributing the assessment/dues/
+      reserve/collections surface (CINC Systems, PayHOA financial cores) and Legal contributing
+      covenants, violation hearings, and liens (FRONTSTEPS, Vantaca governance surfaces). Option a
+      (Facilities owner) matches the real-estate-stewardship buyer; option b (Finance owner) fits
+      orgs/management-companies where the assessment/collections ledger is the center of gravity;
+      option c (Business Operations) fits a management-company-as-operations framing but understates
+      the real-estate nature.
+
+b3: []

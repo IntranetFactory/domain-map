@@ -55,22 +55,6 @@ the bottom are the resolved history.
 
 ## Pending review
 
-### PMM — Product Marketing Management
-
-- **Mention count:** 2
-- **First surfaced:** 2026-05-30 (PROD-MGMT audit 2026-05-30)
-- **Most recent:** 2026-05-30 (GTM-PLAN audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 PROD-MGMT audit 2026-05-30
-  - 2026-05-30 GTM-PLAN audit 2026-05-30
-- **Vendor evidence:** Klue, Crayon, Highspot, Showpad, Seismic, Aha! Roadmaps Create, Pendo Adopt, Reprise
-- **Adjacency:** PROD-MGMT, CRM, GTM-PLAN, REV-INTEL
-- **Candidate capabilities:** launch planning, GTM coordination, messaging and positioning, sales enablement content, competitive intelligence, win/loss interviews, persona management
-- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
 ### FEATURE-FLAGGING — Feature Flagging and Experimentation
 
 - **Mention count:** 3
@@ -1563,21 +1547,6 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
-### HOA-MGMT — Homeowner Association Management
-
-- **Mention count:** 1
-- **First surfaced:** 2026-05-30 (RE-PROP-MGMT audit 2026-05-30)
-- **Most recent:** 2026-05-30 (RE-PROP-MGMT audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 RE-PROP-MGMT audit 2026-05-30
-- **Vendor evidence:** FrontSteps, AppFolio Condo, CINC Systems, Buildium Association, PayHOA, Vantaca
-- **Adjacency:** RE-PROP-MGMT, FIN, LSD
-- **Candidate capabilities:** owner-roster management, board governance, architectural review, dues collection, reserve studies, violation tracking, community communications
-- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
 ### STR-MGMT — Short-Term Rental Management
 
 - **Mention count:** 1
@@ -1784,21 +1753,6 @@ the bottom are the resolved history.
 - **Adjacency:** OBS, DEM, APM, WEB-CONTOPS
 - **Candidate capabilities:** session replay capture, page-load performance, frontend error tracking, web vitals tracking, frustration index
 - **Estimated Semantius score:** ~55% strict (auto-est.): frontend telemetry + session-replay ingestion.
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
-### EMP-JOURNEY-ORCH — Employee Journey Orchestration Platform
-
-- **Mention count:** 1
-- **First surfaced:** 2026-05-30 (INTRANET audit 2026-05-30)
-- **Most recent:** 2026-05-30 (INTRANET audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 INTRANET audit 2026-05-30
-- **Vendor evidence:** Enboarder, ChangeEngine, Applauz, HelloTeam, Cooleaf, Pyn
-- **Adjacency:** INTRANET, EMP-EXP, HCM, ONBOARDING
-- **Candidate capabilities:** personalized employee journey design, milestone-triggered nudges, manager-action playbooks, journey analytics, cross-system event listening, multi-channel delivery
-- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -2920,21 +2874,6 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
-### WORKPLACE-EXP — Workplace Experience and Workspace Booking
-
-- **Mention count:** 1
-- **First surfaced:** 2026-05-30 (VIS-MGMT audit 2026-05-30)
-- **Most recent:** 2026-05-30 (VIS-MGMT audit 2026-05-30)
-- **Surfaced by:**
-  - 2026-05-30 VIS-MGMT audit 2026-05-30
-- **Vendor evidence:** Envoy Workplace, Robin, Eptura, OfficeSpace, Condeco, Kadence, Tactic
-- **Adjacency:** VIS-MGMT, IWMS, REAL-EST, HCM, EMP-EXP
-- **Candidate capabilities:** desk booking, room reservation, hybrid attendance scheduling, neighborhood / floor planning, visitor flow integration, occupancy analytics, hot-desking
-- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
 ### ITPA — IT Process Automation (Runbook Automation)
 
 - **Mention count:** 1
@@ -3553,21 +3492,6 @@ the bottom are the resolved history.
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
 
-### SOP-MGMT — Process Documentation and SOP Management
-
-- **Mention count:** 1
-- **First surfaced:** 2026-06-15 (SOP-MGMT scoping 2026-06-15)
-- **Most recent:** 2026-06-15 (SOP-MGMT scoping 2026-06-15)
-- **Surfaced by:**
-  - 2026-06-15 SOP-MGMT scoping 2026-06-15
-- **Vendor evidence:** SweetProcess, Trainual, Process Street, Scribe (ScribeHow), Whale, Dozuki
-- **Adjacency:** KMS, ECM, LMS, ONBOARDING, GRC, BPA, EQMS (backlog)
-- **Candidate capabilities:** SOP authoring, work-instruction steps, document versioning, publish-and-assign, read-acknowledgment tracking, comprehension quizzes, periodic review cycles, controlled-document control
-- **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
-- **Point-solution-market test:** _(pending human triage)_
-- **Status:** pending-review
-- **Decision:** _(empty until reviewed)_
-
 ### DAP — Digital Adoption Platform
 
 - **Mention count:** 1
@@ -3883,6 +3807,59 @@ the bottom are the resolved history.
 - **Phase 0 report:** .tmp_deploy/SCRM-phase0-2026-06-19.md (done 2026-06-19; flagship pure-plays Resilinc, Interos, Everstream, Prewave, Sphera SCRM, Sayari; 3-module hypothesis NETWORK-MAPPING / RISK-INTELLIGENCE / DISRUPTION-RESPONSE).
 - **Build status:** NOT built; audit STARTED. Audit dir created at audits/SCRM/ (state.yaml, history.md, q-SCRM.md). `status: feedback_needed` on 4 market-shape b2 decisions (node identity [gate], module split, forced-labor scope, owner function). Phase A-S build runs once a-SCRM.md answers the shape.
 
+### PMM: Product Marketing Management
+
+- **Mention count:** 2
+- **Surfaced by:** PROD-MGMT audit 2026-05-30, GTM-PLAN audit 2026-05-30; triaged 2026-06-19
+- **Vendor evidence:** Klue, Crayon (competitive-intelligence pure-plays); Highspot, Seismic, Showpad (sales-enablement pure-plays); Aha!, Pendo, Reprise (adjacent).
+- **Adjacency:** PROD-MGMT, CRM, GTM-PLAN, REV-INTEL
+- **Candidate capabilities:** launch planning, GTM coordination, messaging and positioning, sales enablement content, competitive intelligence, win/loss interviews, persona management
+- **Point-solution-market test:** N/A — superseded. PMM was already loaded as a live domain after this candidate was queued.
+- **Decision:** promote-as-domain — ALREADY LOADED (2026-06-19 dedup cleanup). The queue entry (surfaced 2026-05-30) predates the load.
+- **Rationale:** PMM exists as domain id 184 (`established_market`), fully built with 4 full modules (PMM-COMPETITIVE-INTEL, PMM-LAUNCH-MGMT, PMM-MESSAGING, PMM-SALES-ENABLEMENT) and 7 capabilities. GTM-PLAN's own description confirms the carve-out ("Launch orchestration moved to Product Marketing Management"). No further triage action; entry resolved as a dedup against live state.
+- **Build status:** BUILT (pre-existing) as domain id 184.
+
+### HOA-MGMT: Homeowner Association Management
+
+- **Mention count:** 1
+- **Surfaced by:** RE-PROP-MGMT audit 2026-05-30; triaged 2026-06-19
+- **Vendor evidence:** Vantaca (JMI Equity-backed; ~6.5M doors), CINC Systems (~50k communities, ~6M doors), PayHOA (self-managed boards), FRONTSTEPS, Condo Control / Enumerate (TOPS) — all pure-play community-association-management (CAM) platforms positioned explicitly against "generic property management software." AppFolio and Buildium offer HOA/association as an EDITION of a landlord-tenant suite (suite-encroaching-on-vertical), not their flagship.
+- **Adjacency:** RE-PROP-MGMT (144), FIN (65), LSD (25)
+- **Candidate capabilities:** owner-roster management, board governance, architectural review, dues/assessment collection, reserve studies, violation tracking, community communications
+- **Point-solution-market test:** PASSES (high confidence). At least five independent vendors whose flagship IS community-association management (Vantaca, CINC Systems, PayHOA, FRONTSTEPS, Condo Control/Enumerate).
+- **Decision:** promote-as-domain (2026-06-19). Proposed domain_code HOA-MGMT, standalone (sibling to RE-PROP-MGMT, NOT a child — each masters entities the other lacks).
+- **Rationale:** RE-PROP-MGMT is the landlord-to-tenant view (leases, rent, screening, vacancy, per-property GL). HOA-MGMT is the owners-self-governance view: an association of owners governs a community via board, elections, CC&Rs/covenants, an architectural-review committee, assessments and violation fines on member-owners (not rent from tenants), and statutory reserve studies for capital planning. A distinct governance/fiduciary entity spine (`associations`, `board_members`, `board_elections`, `governing_documents`, `architectural_review_requests`, `covenant_violations`/`violation_fines`, `assessments`, `reserve_studies`, `meeting_minutes`) exists in no current catalog domain. RE-PROP-MGMT names "condo/HOA management" as a buyer but models none of this surface.
+- **Suggested metadata:** domain_kind=established_market; standalone domain. Full seven-field Phase-0 estimates due in the build's Phase 0 report.
+- **Phase 0 report:** .tmp_deploy/HOA-MGMT-phase0-2026-06-19.md (done 2026-06-19; 5 pure-play CAM vendors Vantaca/CINC/PayHOA/FRONTSTEPS/Condo Control; 46 entities [35 Core / 8 Common / 13 statute-driven compliance]; 3-module hypothesis GOVERNANCE / ASSESSMENTS / COMMUNITY-OPERATIONS).
+- **Build status:** NOT built; audit STARTED 2026-06-19 (selected as the first PROMOTE to build). Audit dir created at audits/HOA-MGMT/ (state.yaml, history.md, q-HOA-MGMT.md). `status: feedback_needed` on 4 market-shape b2 decisions (module split [gate], common-area maintenance master-vs-consume, community-contractor master-vs-consume, owner function). Phase A-S build runs once a-HOA-MGMT.md answers the shape.
+
+### SOP-MGMT: Process Documentation and SOP Management
+
+- **Mention count:** 1
+- **Surfaced by:** SOP-MGMT scoping 2026-06-15; triaged 2026-06-19
+- **Vendor evidence:** SweetProcess, Process Street, Whale (usewhale.io) — pure-play SOP/process-documentation platforms; Trainual (training-leaning); Scribe/ScribeHow (step-capture tool feeding the library); Dozuki (manufacturing connected-worker work instructions).
+- **Adjacency:** KMS (33), ECM (91), LMS (57), BPA (136), GRC (15), ONBOARDING (99); sibling to the not-yet-loaded POLICY-MGMT and EQMS candidates.
+- **Candidate capabilities:** SOP authoring, work-instruction steps, document versioning, publish-and-assign, read-acknowledgment tracking, comprehension quizzes, periodic review cycles, controlled-document control
+- **Point-solution-market test:** PASSES (high confidence). At least three independent flagships whose product IS SOP/process documentation (SweetProcess, Process Street, Whale), plus Dozuki (manufacturing variant) and Scribe (capture tool).
+- **Decision:** promote-as-domain (2026-06-19). Proposed domain_code SOP-MGMT.
+- **Rationale:** Distinct masters (`sops`, `work_instructions`, `procedure_steps`, `read_acknowledgments`, `sop_review_cycles`, `comprehension_quizzes`, `sop_role_assignments`) that adjacent domains do not own: KMS lacks the assign-acknowledge-review-cycle obligation (a knowledge article carries no attestation duty; an SOP does); LMS's unit is a course/curriculum, not a procedure; BPA is architect-altitude BPMN modeling, not operational SOP text. Real adjacency with the not-yet-cataloged POLICY-MGMT (rule-attestation vs procedure-execution) and EQMS (regulated quality); vendor sets are disjoint, so promote SOP-MGMT and POLICY-MGMT as distinct siblings rather than merging.
+- **Suggested metadata:** domain_kind=established_market.
+- **Phase 0 report:** .tmp_deploy/SOP-MGMT-phase0-2026-06-15.md (pre-existing, from the 2026-06-15 scoping).
+- **Build status:** NOT built (no live domain row). ALREADY SCOPED 2026-06-15 — audit dir exists at audits/SOP-MGMT/ (state.yaml, history.md, q-SOP-MGMT.md), `status: feedback_needed`. Open b2 includes the controlled-document slice vs EQMS split (B2-SOP-EQMS-SPLIT). 2026-06-19 triage confirms promote-as-domain. Phase A-S build runs once a-SOP-MGMT.md answers the shape.
+
+### WORKPLACE-EXP: Workplace Experience and Workspace Booking
+
+- **Mention count:** 1
+- **Surfaced by:** VIS-MGMT audit 2026-05-30; triaged 2026-06-19
+- **Vendor evidence:** Robin, Kadence, Tactic (independent pure-play workplace-experience / desk-booking platforms; Skedda/Gable in-class). Condeco is no longer independent (acquired into Eptura); Envoy now positions as IWMS; Eptura and OfficeSpace are IWMS/facilities suites.
+- **Adjacency:** IWMS (23), CAFM (142, child of REAL-EST), REAL-EST (141), VIS-MGMT (24), EMP-EXP (62), HCM (54)
+- **Candidate capabilities:** desk booking, room reservation, hybrid attendance scheduling, neighborhood/floor planning, visitor flow integration, occupancy analytics, hot-desking
+- **Point-solution-market test:** PASSES (medium confidence). Independent pure-plays Robin/Kadence/Tactic; Gartner publishes a Workplace Experience Applications market separate from IWMS. Promotion is justified by buyer identity (HR/employee, RTO/hybrid, employee-app-first) plus attendance-coordination entities rather than net-new booking objects.
+- **Decision:** promote-as-domain (2026-06-19), as a THIRD sub-domain of REAL-EST (parent_domain_id=141) alongside IWMS and CAFM. Conservative fallback if minimizing domain count: fold-into-existing:IWMS.
+- **Rationale:** Core booking entities (`desk_bookings`, `room_reservations`, `floor_plans`, occupancy) are ALREADY mastered by IWMS, so WORKPLACE-EXP must SHARE (consume/embedded_master) them, NOT re-master. Its genuinely net-new masters are employee-coordination objects IWMS/CAFM do not own: `office_attendance_days`, `in_office_schedules`, `team_coworking_signals`, `attendance_policies`, `wayfinding_routes`. Boundary = direction of the data: IWMS/CAFM master the building (leases, maintenance, portfolio); WORKPLACE-EXP masters the employee's day (attendance intent, team coordination, RTO compliance, wayfinding).
+- **Suggested metadata:** domain_kind=established_market; parent_domain_id=REAL-EST (141). Scope tightly to hybrid-work coordination; cede leases/maintenance/portfolio to IWMS.
+- **Build status:** NOT built; recommendation only. Build awaits explicit user approval (own Phase 0 + q-file).
+
 ---
 
 ## Folded
@@ -3933,6 +3910,19 @@ the bottom are the resolved history.
 - **Rationale:** EMP-EXP (id 62, "Employee Experience and Engagement") already carries all five listening capabilities (engagement surveys, pulse surveys, 360 feedback, lifecycle listening, survey action planning) and the exact flagship vendors cited as EMP-LISTENING evidence. The candidate's capabilities (pulse-survey design, engagement-driver modeling, manager-action planning, eNPS) map 1:1 onto EMP-EXP. Gartner ("Voice of the Employee Solutions") and Forrester ("Employee Listening Solutions Landscape") scope listening as a component of employee experience, same buyer. PA consumes listening output as an analytics input but does not run surveys; INTRANET's own description disclaims engagement listening to EMP-EXP.
 - **Non-blocking follow-ups (b3):** optionally add Perceptyx, Medallia EX, WorkTango, Quantum Workplace as EMP-EXP solution rows; optionally surface eNPS / engagement-driver analytics as finer EMP-EXP sub-capabilities; optionally add "employee listening / Voice of the Employee" as a synonym in EMP-EXP's description (a non-empty-field overwrite, needs sign-off).
 - **Phase 0 report:** .tmp_deploy/EMP-LISTENING-phase0-2026-06-14.md
+
+### EMP-JOURNEY-ORCH: Employee Journey Orchestration
+
+- **Mention count:** 1
+- **Surfaced by:** INTRANET audit 2026-05-30; triaged 2026-06-19
+- **Vendor evidence:** Enboarder, Pyn, ChangeEngine, Tydy (pure-play employee-journey-orchestration platforms that listen to HRIS events and fan out multi-channel nudges). The originally-listed Applauz, Cooleaf, HelloTeam are recognition/engagement tools (mis-bundled) and belong to EMP-EXP.
+- **Adjacency:** INTRANET (126), EMP-EXP (62), HCM (54), ONBOARDING (99), HRSD (22)
+- **Candidate capabilities:** personalized employee journey design, milestone-triggered nudges, manager-action playbooks, journey analytics, cross-system event listening, multi-channel delivery
+- **Point-solution-market test:** PASSES the three-independent-vendors bar (Enboarder, Pyn, ChangeEngine, Tydy) — so it is a real vendor class, not a rebrand — but FAILS the distinct-entities half against this catalog: INTRANET, ONBOARDING, AND HRSD each already explicitly claim "journey orchestration," and the candidate's nouns (journeys, milestones, nudges, event triggers) duplicate those scopes.
+- **Decision:** fold-into-existing:INTRANET (2026-06-19). Onboarding-specific vendors (Enboarder) map to ONBOARDING; recognition vendors map to EMP-EXP.
+- **Rationale:** It is a cross-cutting orchestration capability layered over the HRIS, not a separate market mastering uncataloged data. Buyer (Internal Comms / HR) matches INTRANET exactly. Recommend strengthening INTRANET's stated entity coverage (journey_templates, event_listeners, nudges) rather than promoting a fourth overlapping domain. Revisit as an emerging_market PROMOTE only if the "journey orchestration" claim is later removed from INTRANET/ONBOARDING/HRSD.
+- **Non-blocking follow-ups (b3, not executed):** add Enboarder/Pyn/ChangeEngine as `solutions` (INTRANET primary; Enboarder secondary on ONBOARDING); consider INTRANET entity enrichment for journey_templates / event_listeners / nudges.
+- **Phase 0 report:** none (triaged from Phase-0-lite vendor-surface research 2026-06-19).
 
 ---
 

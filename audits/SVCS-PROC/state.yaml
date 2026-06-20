@@ -5,48 +5,51 @@ status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-19"
 
-# 2026-06-19 SVCS-PROC BUILT (domain_id 192, emerging_market). The user answered the new-domain gate
-# (q1-q6) directly: SOW becomes its own SVCS-PROC domain; CWM embeds the SOW masters as needed.
-# Loader: .tmp_deploy/load_svcs_proc_2026_06_19.ts (idempotent). Full decision record + build summary
-# in history.md (2026-06-19). q1/q2/q3/q4/q5/q6 are RESOLVED and removed from this file (Rule #22 hygiene).
+# 2026-06-19 SVCS-PROC BUILT (domain_id 192, emerging_market). New-domain gate (q1-q6) answered
+# directly; SOW is its own SVCS-PROC domain, CWM embeds the SOW masters as needed. Loader:
+# .tmp_deploy/load_svcs_proc_2026_06_19.ts (idempotent). Build summary + decision record in
+# history.md (2026-06-19).
 #
-# Built: domains row (full Rule #8 metadata + Rule #20 catalog copy); 2 full modules
-# (SVCS-PROC-ENGAGEMENT, SVCS-PROC-SETTLEMENT); 8 SOW masters (4 required + 4 optional, all entity_type-
-# classified, M7-verified single-master by SVCS-PROC); 3 consumer rows (suppliers 206 / legal_contracts 66
-# / rate_cards 189, mastered elsewhere, never here); 4 capabilities; 1 domain skill (svcs-proc) + 9 tools
-# + 11 domain_module_tools; 4 aliases. All record_status='new' (Rule #1 untouched).
-#
-# CWM q-file reconciliation RECORDED (not executed): audits/CWM/q-CWM.md + state.yaml reframed so CWM's
-# expansion drops the SOW module (now 2 modules), CWM embedded_masters the SVCS-PROC SOW cluster as needed,
-# and entity 187 = a CWM staffing requisition (not a SOW work-order). The CWM changes were NOT executed;
-# CWM expansion stays its own open gate (B2-CWM-MODULES).
+# 2026-06-19 a-SVCS-PROC.md PROCESSED (Rule #22). RESOLVED -> history.md "a-SVCS-PROC.md processed":
+#   a2 (SVCS-PROC-ENGAGEMENT module catalog copy = yes, confirmed) and
+#   a3 (SVCS-PROC-SETTLEMENT module catalog copy = yes, confirmed) and
+#   a1 domain catalog_description (confirmed) and
+#   a4 (B1B-TAM-SOURCE: q4=a, keep the triangulated ~$600M placeholder, source before release).
+# Still open: the domain catalog_tagline correction (a1 "tagline should contain SOW"): PATCHed the
+# tagline to introduce the SOW acronym at record_status='new'; the corrected wording is re-surfaced in
+# q-SVCS-PROC.md for a final confirm (Rule #20 write-and-mirror), so the domain stays feedback_needed.
 
 b1b:
   - id: B1B-CATALOG-COPY-CONFIRM
-    summary: "Catalog-copy confirmation (Rule #20): buyer-voice copy written at record_status='new' for the domain + 2 modules awaits user confirm/correct. Keeps the domain feedback_needed until confirmed."
+    summary: "Catalog-copy confirmation (Rule #20), NARROWED to the domain catalog_tagline only. a1 requested the tagline contain SOW; tagline PATCHed to '...statement of work (SOW)...' at record_status='new' and re-surfaced in q-SVCS-PROC.md for a final confirm. The 2 module taglines/descriptions (a2/a3) and the domain catalog_description (a1) are confirmed and resolved."
     finding: |
-      The buyer-voice catalog_tagline + catalog_description were authored and written (record_status='new')
-      for the SVCS-PROC domain (192) and both modules (SVCS-PROC-ENGAGEMENT, SVCS-PROC-SETTLEMENT). Per
-      Rule #20 the written copy must be surfaced in the q-file for the user to confirm or correct; an
-      unconfirmed write keeps the domain feedback_needed. Surfaced verbatim in q-SVCS-PROC.md.
+      a1 = "ok, but I think tag line should contain SOW": the domain catalog_description is confirmed, but
+      the domain catalog_tagline needs a correction to surface the SOW acronym. The live tagline already
+      spelled out "statement of work"; it was PATCHed to "Buy outsourced services under a statement of work
+      (SOW), then track milestones to acceptance and payment." at record_status='new'. Per Rule #20 the
+      corrected wording is mirrored into q-SVCS-PROC.md for the user to confirm or hand back a replacement;
+      an unconfirmed correction keeps the domain feedback_needed. a2 (SVCS-PROC-ENGAGEMENT) and a3
+      (SVCS-PROC-SETTLEMENT) module copy are confirmed (resolved).
     blocked_by:
       - {type: user_decision, ref: B1B-CATALOG-COPY-CONFIRM}
 
   - id: B1B-TAM-SOURCE
-    summary: "US TAM ~$600M (2025) is a TRIANGULATED placeholder, not a sourced figure (q6=a accepted with the figure flagged). Replace with a Gartner / Spend Matters number before the domain is released."
+    summary: "Deferred (q4=a): keep the TRIANGULATED US TAM ~$600M (2025) placeholder for now; replace with a sourced Gartner / Spend Matters figure BEFORE the domain is released. Decided-to-defer, stays open."
     finding: |
       domains.usa_market_size_usd_m=600, market_size_source_year=2025 on domain 192 is triangulated from
       the asymmetry that standalone services-procurement software is a small slice (one pure-play + one
       near-pure-play) of the larger VMS/S2P services-procurement total, whose TAM is counted under those
-      domains. The user accepted it as a placeholder (q6=a) to source before release.
+      domains. The user chose (q4=a) to keep the flagged placeholder and source it before release.
     action: |
-      Replace usa_market_size_usd_m / market_size_source_year with a sourced figure before the domain is
-      released (overwrites a non-empty value -> needs explicit user approval, Rule #1 / Rule #21).
+      Before release: research a sourced US TAM figure (Gartner / Spend Matters / IDC) and replace
+      usa_market_size_usd_m / market_size_source_year. This OVERWRITES a non-empty value, so it needs
+      explicit user approval at that time (Rule #1 / Rule #21). Not a q-file item now (the user has decided
+      to defer); it surfaces again only when the release pass runs.
     blocked_by:
       - {type: user_decision, ref: B1B-TAM-SOURCE}
 
   - id: B1B-LIFECYCLE-STATES
-    summary: "Lifecycle states owed for the 5 operational_workflow masters (Rule #12). Author on the lifecycle-realization pass."
+    summary: "Lifecycle states owed for the operational_workflow SVCS-PROC masters (Rule #12). Author on the lifecycle-realization pass."
     finding: |
       statements_of_work, services_engagements, services_proposals, sow_change_orders, sow_milestones,
       service_deliverables, milestone_invoices are entity_type='operational_workflow' and require lifecycle

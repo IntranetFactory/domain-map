@@ -84,8 +84,8 @@ hint as `modules`.
 
 > The `IT Operations Starter` domain is not deployed in your platform. No live module hosts its entities, and no module carries its catalog codes. Deploy the domain blueprint first:
 >
-> 1. Pull the blueprint: `https://www.semantius.com/blueprints/it-ops-starter`
-> 2. Run the semantic-model-deployer skill against the blueprint
+> 1. Review the blueprint for this domain at `https://www.semantius.com/blueprints/it-ops-starter`. This page describes the blueprint and how to download it with the `semantius-admin` skill.
+> 2. Use the `semantius-admin` skill to download, customize, and deploy the model. If it is not installed, install it first with `npx skills add semantius/semantius-cli --all`.
 > 3. Verify with: `semantius call crud postgrestRequest '{"method":"GET","path":"/modules?settings->>domain_code=eq.IT-OPS-STARTER&select=id,slug,name"}'` (any row returned means a module of this domain is already deployed)
 >
 > Re-run this skill once the domain is live.
