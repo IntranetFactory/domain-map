@@ -930,10 +930,32 @@ function assertBuyerCopy(code: string, tagline: string, description: string): vo
 // skill-specs/<CODE>/ holds DATA only: spec.json (DB facts) + catalog.yaml (DB projection). The
 // rendered SKILL.md is NOT stored here; it is rendered into the installable skill folder from
 // template + catalog.yaml. Any stale SKILL.md from the old behavior is removed.
+// spec.json differs day-to-day only in its date fields (`emitted`, and the date suffix of
+// `catalog_snapshot`). Compare with those normalized so a re-run that changes nothing else does
+// NOT rewrite spec.json (avoids date-only churn in git). When real content changes, the full spec
+// is written with the current date. An unparseable existing file falls through and gets rewritten.
+function specEqualIgnoringDates(a: string, b: string): boolean {
+  const strip = (s: string): string => {
+    try {
+      const o = JSON.parse(s);
+      o.emitted = "";
+      if (typeof o.catalog_snapshot === "string") o.catalog_snapshot = o.catalog_snapshot.replace(/\d{4}-\d{2}-\d{2}$/, "");
+      return JSON.stringify(o);
+    } catch {
+      return s;
+    }
+  };
+  return strip(a) === strip(b);
+}
+
 function writeFolder(code: string, specJson: string, catalogYaml: string): void {
   const dir = `${SKILL_SPECS_DIR}/${code}`;
   mkdirSync(dir, { recursive: true });
-  writeFileSync(`${dir}/spec.json`, specJson, "utf8");
+  // Only rewrite spec.json when something other than the date changed (no date-only churn).
+  const specPath = `${dir}/spec.json`;
+  if (!(existsSync(specPath) && specEqualIgnoringDates(readFileSync(specPath, "utf8"), specJson))) {
+    writeFileSync(specPath, specJson, "utf8");
+  }
   writeFileSync(`${dir}/catalog.yaml`, catalogYaml, "utf8");
   rmSync(`${dir}/SKILL.md`, { force: true }); // skill-specs no longer stores an expanded SKILL.md
 }

@@ -1544,13 +1544,23 @@ function deriveMarketRaci(parentDomains: Domain[], arel: AllRelationships): Func
 // IO + driver
 // ============================================================
 
+// A blueprint differs day-to-day only in its `created_at:` frontmatter line. Normalize that line
+// AND line endings before comparing so a re-run that changes nothing else does NOT rewrite the
+// file. git autocrlf can leave the on-disk file CRLF while the freshly emitted text is LF; without
+// the CRLF->LF pass every line would "differ" and force a rewrite regardless of content (the date
+// strip alone is not enough). Real content changes still write the full blueprint with the current
+// date. spec.json avoids this because JSON.parse ignores insignificant whitespace.
+function blueprintBodyIgnoringDate(s: string): string {
+  return s.replace(/\r\n/g, "\n").replace(/^created_at: .*$/m, "created_at:");
+}
+
 async function emitOneModuleBlueprint(m: ModuleRow): Promise<{ path: string; changed: boolean }> {
   const md = await emitBlueprint([m]);
   const outPath = resolve(BLUEPRINTS_DIR, `${moduleSlug(m.domain_module_code)}${BLUEPRINT_SUFFIX}`);
   let changed = true;
   if (existsSync(outPath)) {
     const existing = readFileSync(outPath, "utf8");
-    if (existing === md) changed = false;
+    if (blueprintBodyIgnoringDate(existing) === blueprintBodyIgnoringDate(md)) changed = false;
   }
   if (!CHECK && changed) {
     mkdirSync(dirname(outPath), { recursive: true });
