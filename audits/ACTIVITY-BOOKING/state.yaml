@@ -1,0 +1,57 @@
+schema_version: 2
+domain: ACTIVITY-BOOKING
+domain_id: 193
+status: feedback_needed
+next_action_by: user
+last_audit: "2026-06-22"
+
+# 2026-06-22 ACTIVITY-BOOKING BUILT (domain_id 193, established_market). New domain for the
+# tours / activities / experiences booking ("restech") market; subject vendor Origin
+# (exploreorigin.com). Loaders (idempotent) in .tmp_deploy/:
+#   load_activity_booking_phaseA.ts  (domain, 7 capabilities, 4 modules, 8 vendors, 10 solutions)
+#   load_activity_booking_phaseB.ts  (23 masters, 31 DMDO rows, 14 aliases, 27 lifecycle states,
+#                                     9 trigger_events, 9 handoffs, 28 relationships)
+#   load_activity_booking_phaseCS.ts (4 business_function_domains, 1 domain skill, 24 tools / 26 links)
+#   load_activity_booking_phaseE.ts  (4 personas + 10 role_modules reach)
+# Phase 0 vendor surface: .tmp_deploy/ACTIVITY-BOOKING-phase0-2026-06-22.md.
+# Build summary + decision record in history.md (2026-06-22). All rows record_status='new'.
+
+b1b:
+  - id: B1B-CATALOG-COPY-CONFIRM
+    summary: "Catalog-copy confirmation (Rule #20). Buyer-voice catalog_tagline + catalog_description were authored at record_status='new' on the domain and on all 4 modules (AB-RESERVATION-CORE, AB-RESOURCE-SCHED, AB-WAIVERS, AB-CHANNEL-DIST), and mirrored into q-ACTIVITY-BOOKING.md for confirm-or-correct. Unconfirmed copy keeps the domain feedback_needed."
+    finding: |
+      A4 (domain) and M8 (4 modules) catalog copy were empty on a fresh load; written buyer-voice per
+      Rule #20 and surfaced in the q-file. The user confirms each (or hands back a correction, which is an
+      approved overwrite). Until then the domain stays feedback_needed.
+    blocked_by:
+      - {type: user_decision, ref: B1B-CATALOG-COPY-CONFIRM}
+
+  - id: B1B-TAM-SOURCE
+    summary: "Deferred: usa_market_size_usd_m=300 (2025) on domain 193 is TRIANGULATED from the ~$756.5M global tour-operator-software figure (Astute Analytica, 2025), taking the US as roughly a third. Replace with a sourced US-only figure before release."
+    finding: |
+      No clean US-only TAM was found; 300 is a defensible triangulation from the global figure. Sourcing a
+      Gartner / Arival / Phocuswright US figure and replacing usa_market_size_usd_m would OVERWRITE a
+      non-empty value (Rule #1 / Rule #21), so it needs explicit approval at that time. Decided-to-defer.
+    blocked_by:
+      - {type: user_decision, ref: B1B-TAM-SOURCE}
+
+  - id: B1B-PERSONAS-RACI
+    summary: "RACI (process_raci) + process wiring owed. Phase E authored personas (domain_roles) + reach (role_modules); the RESPONSIBILITY layer (process_raci R/A/C/I) and the data_object_lifecycle_states.process_id gate wiring are deferred to a focused RACI pass (E4/E6)."
+    finding: |
+      4 personas with >=2-module reach exist (E1/E2/E3 pass). process_raci is empty and no lifecycle state
+      carries process_id, so E4 (RACI coverage on gated processes) and E6 (reach-to-derived reconciliation)
+      are not yet satisfiable. This mirrors the SVCS-PROC build precedent (personas authored, RACI deferred).
+    action: |
+      On the RACI pass: create the operator processes (or map to APQC), wire each gated lifecycle state's
+      process_id, and author process_raci R/A owners (Reservations Manager accountable for bookings/refunds;
+      Booking Agent responsible for booking capture; Guide responsible for assignment confirmation and rental
+      checkout; Distribution Manager responsible for channel sync). Additive, record_status='new'.
+
+  - id: B1B-HANDOFF-MODULE-FK
+    summary: "3 cross-domain outbound handoffs (-> CRM, ESIGN, FIN) carry target_domain_module_id=NULL by design; the target domains' B10b sets them on their own audits."
+    finding: |
+      Per the B8/B10 asymmetry rule, the outbound handoffs to CRM (booking.completed), ESIGN (waiver.sent),
+      and FIN (payment.captured) populate source_domain_module_id but leave target_domain_module_id NULL,
+      since this build did not audit those domains' module shapes. Not a defect of this domain's audit.
+    blocked_by:
+      - {type: build_pass, ref: TARGET-DOMAIN-B10B}
