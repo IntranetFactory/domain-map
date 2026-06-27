@@ -545,12 +545,9 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   // Front matter
   // The blueprint IS the semantic-blueprint artifact: a human-readable + machine-parseable
   // description of one deployable system (module) or its starter-kit bundle.
-  //   - system_name: the canonical name a deploy tool / agent skill addresses the system by.
-  //     Single module: the module code (`ATS-CANDIDATE-CRM`). Starter-kit / multi-module:
-  //     the parent domain code (`ATS`).
-  //   - system_description: the human-readable label. Module name / domain name from the
+  //   - system_name: the human-readable label. Module name / domain name from the
   //     catalog. Not a marketing tagline.
-  //   - system_slug: the lowercase path-safe form of `system_name`. Used as the filename
+  //   - system_slug: the lowercase path-safe form of the module/domain code. Used as the filename
   //     stem; the on-disk filename is `<system_slug>-semantic-blueprint.md`.
   // domain_modules / related_modules entries are emitted as slugs (lowercase, dashed) so
   // any downstream tool can `glob *-semantic-blueprint.md` and join entry-by-entry without
@@ -603,8 +600,7 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("artifact: semantic-blueprint");
   out.push(`blueprint_version: "${BLUEPRINT_VERSION}"`);
   out.push("license: MIT");
-  out.push(`system_name: ${systemName}`);
-  out.push(`system_description: ${escapeYaml(systemDescription)}`);
+  out.push(`system_name: ${escapeYaml(systemDescription)}`);
   if (catalogTagline) out.push(`tagline: ${escapeYaml(catalogTagline)}`);
   if (catalogDescription) pushYamlField(out, "description", catalogDescription);
   out.push(`system_slug: ${systemSlug}`);
@@ -613,6 +609,10 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   if (parentDomains.length > 0) {
     out.push(parentDomains.length === 1 ? `domain_code: ${parentDomains[0].domain_code}` : "domain_codes:");
     if (parentDomains.length > 1) for (const d of parentDomains) out.push(`  - ${d.domain_code}`);
+    // icon_name: the Lucide icon of the (primary) parent domain, surfaced for the catalog /
+    // site generator. Multi-domain scopes take the first parent's icon. Omitted when the
+    // domain carries no icon (icon_name empty), so icon-less blueprints stay byte-identical.
+    if (parentDomains[0].icon_name) out.push(`icon_name: ${escapeYaml(parentDomains[0].icon_name)}`);
   }
   if (relatedModules.length > 0) {
     out.push(`related_modules: [${relatedModules.map((m) => moduleSlug(m.domain_module_code)).join(", ")}]`);
@@ -723,7 +723,7 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
     // `data_object`; `entity_type` sits immediately before `write tier`. Downstream parses by
     // header name, not column position, but this is the canonical order. (`modules` is an
     // extra multi-module-bundle column inserted before `notes`; single-module blueprints omit it.)
-    const headers = ["#", "data_object", "canonical code", "singular", "plural", "role", "mastered in", "mastered label", "necessity", "pattern flags", "entity_type", "write tier"];
+    const headers = ["#", "data_object", "canonical code", "singular", "plural", "role", "mastered in", "mastered label", "necessity", "personal_content", "entity_type", "write tier"];
     if (showModulesCol) headers.push("modules");
     headers.push("notes");
     out.push(tableHeader(headers, ["right"]));
@@ -737,10 +737,6 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
     let i = 1;
     for (const r of sorted) {
       const o = r.data_object;
-      const flags: string[] = [];
-      if (o.has_personal_content) flags.push("personal_content");
-      if (o.has_submit_lock) flags.push("submit_lock");
-      if (o.has_single_approver) flags.push("single_approver");
       const owner = masteredIn(r, owners);
       // B2: per-entity write tier from entity_type (junctions consult their neighbors).
       const epTypes = o.entity_type === "junction" ? neighborEntityTypes(r.data_object_id, rels) : [];
@@ -762,7 +758,7 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
         owner.code,
         owner.label,
         r.necessity || "-",
-        flags.join(", "),
+        o.has_personal_content ? "yes" : "",
         o.entity_type || "unclassified",
         wtCell,
       ];
@@ -1104,10 +1100,10 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
       if (et === "operational_workflow" && !lifecycleObjIds.has(r.data_object_id)) {
         console.warn(`  ⚠ M5: \`${o.data_object_name}\` is operational_workflow but has no lifecycle states (${modCodes})`);
       }
-      // M6: pattern flags are forbidden on catalog / junction / computed (overrides suppressed).
-      const hasFlag = o.has_personal_content || o.has_submit_lock || o.has_single_approver;
-      if (hasFlag && (et === "catalog" || et === "junction" || et === "computed")) {
-        console.warn(`  ⚠ M6: \`${o.data_object_name}\` is ${et} but carries a pattern flag (overrides suppressed) (${modCodes})`);
+      // M6: the personal_content flag is forbidden on catalog / junction / computed (overrides suppressed).
+      const hasPersonalContent = o.has_personal_content;
+      if (hasPersonalContent && (et === "catalog" || et === "junction" || et === "computed")) {
+        console.warn(`  ⚠ M6: \`${o.data_object_name}\` is ${et} but carries the personal_content flag (overrides suppressed) (${modCodes})`);
       }
     }
     // B13 hard gate: refuse to emit a 3.0 blueprint that would carry any unclassified entity_type.
@@ -1318,15 +1314,15 @@ function deriveWorkflowGatesAndRules(
   }
 
   for (const r of moduleObjects) {
-    // Plan 4: pattern-flag overrides + business rules follow the ENTITY, not the role. A unit
+    // Plan 4: personal_content overrides + business rules follow the ENTITY, not the role. A unit
     // carrying an entity as `embedded_master` is its local master when deployed standalone, so it
-    // mints the same row-scope / submit / approver governance, re-prefixed to this unit (`slug`),
+    // mints the same row-scope governance, re-prefixed to this unit (`slug`),
     // exactly as the gate mint above does. (Single-module blueprints are the only kind emitted, so
     // an `embedded_master` row here always means the canonical master is out of scope.)
     if (r.role !== "master" && r.role !== "embedded_master") continue;
     const o = r.data_object as DataObject;
     if (!o) continue;
-    // M6 (plan-2-entity-type-tiers.md): pattern-flag overrides are valid only on operational
+    // M6 (plan-2-entity-type-tiers.md): personal_content overrides are valid only on operational
     // entities. Suppress on catalog / junction / computed masters (corrective where a classified
     // master still carries a legacy flag; a no-op otherwise). `unclassified` keeps its overrides
     // until classified (m2 graceful degradation).
@@ -1351,39 +1347,6 @@ function deriveWorkflowGatesAndRules(
         dataObject: o.data_object_name,
         sourceFlag: "has_personal_content",
         intent: `Row-scope by default; override via \`${slug}:view_all_${entityPlural}\` / \`${slug}:manage_all_${entityPlural}\``,
-      });
-    }
-    if (o.has_submit_lock) {
-      permissions.push({
-        code: `${slug}:submit_${entitySingular}`,
-        tier: "override (submit_lock)",
-        description: `Submit and lock a \`${o.data_object_name}\` row (post-submit edits gated)`,
-        includedInAdmin: true,
-      });
-      businessRules.push({
-        name: `submit_restricted_to_${entitySingular}_owner`,
-        dataObject: o.data_object_name,
-        sourceFlag: "has_submit_lock",
-        intent: `Only the row's authoring user can submit; post-submit the row is read-only except via \`${slug}:manage_all_${entityPlural}\``,
-      });
-    }
-    if (o.has_single_approver) {
-      // M3: name the entity's ACTUAL approval gate (honoring permission_verb_override) instead
-      // of the unconditional approve_<entity>. Find the entity's approve-class requires_permission
-      // state and resolve its gate via the shared deriveGate. Only override when such a gate
-      // exists and differs, so entities without one keep their previous (byte-identical) intent.
-      const approveState = lifecycleRows.find((ls: any) =>
-        ls.data_object_id === r.data_object_id && ls.requires_permission &&
-        /approv/i.test(String(ls.permission_verb_override || ls.state_name)));
-      const approveGate = approveState ? deriveGate(approveState, moduleObjects, emittedModuleIdSet) : null;
-      const intent = approveGate && approveGate.code !== `${slug}:approve_${entitySingular}`
-        ? `Exactly one explicit approver required; uses the module's approval gate (\`${approveGate.code}\`).`
-        : `Exactly one explicit approver required; uses the module's approval gate (\`${slug}:approve_${entitySingular}\` if surfaced as a lifecycle workflow gate).`;
-      businessRules.push({
-        name: `approve_${entitySingular}_requires_approver`,
-        dataObject: o.data_object_name,
-        sourceFlag: "has_single_approver",
-        intent,
       });
     }
   }
@@ -1421,7 +1384,7 @@ function deriveBaselineRoles(slug: string, moduleScopeRows: ScopeRow[], rels: { 
 }
 
 // B2: hierarchy from the §8 permission set. admin includes manage includes read, and admin
-// includes every workflow gate / pattern-flag override.
+// includes every workflow gate / personal_content override.
 function derivePermissionHierarchy(slug: string, permissions: Permission[]): HierarchyEdge[] {
   const edges: HierarchyEdge[] = [
     { including: `${slug}:admin`, included: `${slug}:manage` },

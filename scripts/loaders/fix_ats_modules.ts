@@ -37,8 +37,6 @@ type DataObjectSpec = {
   plural_label: string;
   description: string;
   has_personal_content?: boolean;
-  has_submit_lock?: boolean;
-  has_single_approver?: boolean;
 };
 
 async function upsertDataObjects(rows: DataObjectSpec[]): Promise<Map<string, number>> {
@@ -56,8 +54,6 @@ async function upsertDataObjects(rows: DataObjectSpec[]): Promise<Map<string, nu
       description: r.description,
       kind: "domain_owned",
       has_personal_content: r.has_personal_content ?? false,
-      has_submit_lock: r.has_submit_lock ?? false,
-      has_single_approver: r.has_single_approver ?? false,
     }));
   if (toInsert.length) {
     await semantius("POST", "/data_objects", toInsert);
@@ -397,7 +393,6 @@ async function fixBackgroundChecks() {
       plural_label: "Background Check Adjudications",
       description: "Human review decision on a completed background_check (Clear / Engaged / Decisional / Declined). Carries adjudicator, decision rationale, individualized assessment notes per EEOC guidance.",
       has_personal_content: true,
-      has_single_approver: true,
     },
     {
       data_object_name: "adverse_action_notices",
@@ -492,7 +487,6 @@ async function fixRecruitmentPipeline() {
       singular_label: "Requisition Approval",
       plural_label: "Requisition Approvals",
       description: "Approval step in the chain that gates opening a job_requisition (hiring manager -> finance -> exec). Each step carries approver, decision, timestamp, rationale.",
-      has_single_approver: true,
     },
     {
       data_object_name: "job_posting_distributions",
@@ -519,7 +513,6 @@ async function fixRecruitmentPipeline() {
       plural_label: "EEO Responses",
       description: "Voluntary self-identification submitted by an applicant for EEO-1 / OFCCP / VEVRAA reporting (gender, race/ethnicity, veteran status, disability). Required compliance artifact for US employers >100 employees; stored separately from candidates record per regulation.",
       has_personal_content: true,
-      has_submit_lock: true,
     },
   ]);
 
@@ -685,7 +678,6 @@ async function fixOffers() {
       singular_label: "Offer Approval",
       plural_label: "Offer Approvals",
       description: "Approval step in the offer-approval chain (HRBP -> Comp -> Finance -> Exec). Triggered when an offer exceeds band, includes non-standard equity, or matches other escalation rules.",
-      has_single_approver: true,
     },
     {
       data_object_name: "offer_letter_documents",

@@ -19,3 +19,29 @@ SOP-MGMT is not in the live catalog. This pass scoped it as a domain candidate a
 **Open decisions (q-SOP-MGMT.md).** Four `b2` calls: promote (gate), scope boundary (master-vs-consume + two core modules), controlled-document module in-scope vs defer to EQMS, and the DAP capture/in-app scope boundary.
 
 Left `feedback_needed`; nothing written to the catalog.
+
+## 2026-06-27 — a-file processed (2 of 4 gates resolved; still feedback_needed)
+
+User answered `a-SOP-MGMT.md`. Two decisions, two clarifying questions.
+
+**Resolved.**
+- **B2-SOP-PROMOTE = promote-as-domain (a).** SOP-MGMT will be created as its own domain mastering the operator-facing procedure + assign/acknowledge surface. Gate cleared.
+- **B2-SOP-EQMS-SPLIT = defer (b).** The regulated controlled-document slice (e-signature, change control, periodic-review attestations, Part-11/ISO audit trails) waits for a future EQMS domain. SOP-MGMT ships as **two core full modules** (Procedure Authoring; Publish & Acknowledge), no Controlled Document Control module. EQMS becomes the later migration seam.
+
+**Still open (carried into refreshed q-file).**
+- **B2-SOP-SCOPE.** User asked (a2): "isn't our solution for that question embedded master?" Answered: for the adjacent KMS/GRC/ECM records the correct role is `consumer + optional`, not `embedded_master`. SOP-MGMT masters its own distinct artifacts (procedures, process_documents, document_revisions) and only cross-links to knowledge_articles / policies / document_versions when those domains are co-installed; it carries no local copy of them. `embedded_master` is the fix only for a `consumer + required` dependency on an un-embedded foreign master (an M9 violation), which this is not. Reframed q1 for confirmation.
+- **B2-SOP-DAP-SCOPE.** User asked (a4): "verify are WalkMe and Whatfix really SOP". Verified via web research (Userpilot / Tango / Whatfix / Glitter 2026 comparisons): WalkMe and Whatfix are enterprise Digital Adoption Platforms (in-app overlay delivery + adoption analytics), not SOP tools. Supports option (a): SOP-MGMT keeps the published-document surface (Scribe/Tango capture output); in-app delivery is a separate future DAP domain. Reframed q2 for confirmation.
+
+No catalog rows written. The Phase A+B load is gated on B2-SOP-SCOPE (it fixes the master/consume footprint); held until the refreshed q-file is answered.
+
+## 2026-06-27 — second a-file processed (3 of 4 gates resolved; one confirm left)
+
+User answered the refreshed q-file. One decision, one clarifying question.
+
+**Resolved.**
+- **B2-SOP-DAP-SCOPE = document-surface-only (a).** SOP-MGMT keeps the published-document surface (Scribe/Tango capture output); in-app overlay delivery (WalkMe, Whatfix, Pendo, Userpilot) is a separate future DAP domain. (WalkMe/Whatfix verified as DAP, not SOP, in the prior pass.)
+
+**Still open (carried into refreshed q-file).**
+- **B2-SOP-SCOPE.** User asked (a1): "when I just use SOP would I not need knowledge articles or GRC policies to make SOP viable?" Answered: no, standalone SOP-MGMT is fully viable without KMS knowledge_articles or GRC policies, the full author -> publish -> assign -> acknowledge -> review loop runs on records it masters itself (as SweetProcess / Process Street / Trainual / Whale / Dozuki ship). KMS/GRC/ECM records are enrichment links only when co-installed, hence consumer + optional (not embedded_master, not consumer + required). The only outside record needed standalone is the platform built-in `users`. This confirms option (a); kept open for an explicit go.
+
+No catalog rows written. Only B2-SOP-SCOPE remains; on a "yes" the full Phase A+B+C+S load runs.

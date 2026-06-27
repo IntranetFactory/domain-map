@@ -313,7 +313,7 @@ async function loadBulk(): Promise<Bulk> {
     get(`/skills?skill_type=eq.domain&select=id,skill_name,description,trigger_keywords,domain_id&order=id.asc&limit=${L}`),
     get(`/domain_module_tools?select=domain_module_id,tool_id,requirement_level&limit=${L}`),
     get(`/role_modules?select=role_id,domain_module_id,interaction_level&limit=${L}`),
-    get(`/data_objects?select=id,data_object_name,singular_label,plural_label,description,is_canonical_bare_word,has_personal_content,has_submit_lock,has_single_approver&limit=${L}`),
+    get(`/data_objects?select=id,data_object_name,singular_label,plural_label,description,is_canonical_bare_word,has_personal_content&limit=${L}`),
     get(`/data_object_lifecycle_states?select=data_object_id,state_name,state_order,is_initial,is_terminal,requires_permission,permission_verb_override&order=data_object_id.asc,state_order.asc&limit=${L}`),
     get(`/data_object_aliases?select=data_object_id,alias_name,alias_type&order=alias_name.asc&limit=${L}`),
     get(`/data_object_relationships?select=data_object_id,related_data_object_id,relationship_type,relationship_verb,is_required&order=data_object_id.asc,related_data_object_id.asc&limit=${L}`),
@@ -478,11 +478,11 @@ function buildSpec(domainCode: string, lk: Bulk): { spec: any; masters: any[]; c
         plural_label: d.plural_label,
         description: clean(d.description ?? ""),
         is_canonical_bare_word: Boolean(d.is_canonical_bare_word),
-        pattern_flags: {
-          has_personal_content: Boolean(d.has_personal_content),
-          has_submit_lock: Boolean(d.has_submit_lock),
-          has_single_approver: Boolean(d.has_single_approver),
-        },
+        // has_personal_content is a HINT that this entity holds owner-scoped rows and an
+        // ABAC rule (JsonLogic select_rule / validation_rules) should be authored. It does
+        // not by itself enforce anything. Emitted as a direct property (the former
+        // pattern_flags wrapper was dropped 2026-06-26 once it held a single flag).
+        has_personal_content: Boolean(d.has_personal_content),
         aliases,
         lifecycle_states: states,
       };

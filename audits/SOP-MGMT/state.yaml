@@ -2,107 +2,52 @@ schema_version: 2
 domain: SOP-MGMT
 status: feedback_needed
 next_action_by: user
-last_audit: "2026-06-15"
+last_audit: "2026-06-27"
 
 # SOP-MGMT is NOT in the live catalog. This is a domain CANDIDATE, scoped 2026-06-15.
 # Phase 0 vendor surface: .tmp_deploy/SOP-MGMT-phase0-2026-06-15.md
 # Backlog entry: audits/_missing-domains.md (## Pending review, "SOP-MGMT — Process Documentation and SOP Management").
-# The controlled-document slice (B2-SOP-EQMS-SPLIT) is coupled to the existing
-# backlog candidate EQMS (audits/_missing-domains.md, capabilities include "document control").
+#
+# Decision log:
+#  - B2-SOP-PROMOTE   RESOLVED 2026-06-27 -> promote-as-domain. (history)
+#  - B2-SOP-EQMS-SPLIT RESOLVED 2026-06-27 -> defer controlled-document slice to future EQMS; 2 core modules. (history)
+#  - B2-SOP-DAP-SCOPE RESOLVED 2026-06-27 -> document-surface-only; in-app delivery is a separate future DAP domain. (history)
+#  - B2-SOP-SCOPE     STILL OPEN: user is confirming the consumer+optional treatment of KMS/GRC/ECM
+#                                  records (turned it into a viability question both times). Effectively a
+#                                  confirm of option (a); load gated on it.
 
 b1a: []
 
 b2:
-  - id: B2-SOP-PROMOTE
-    summary: "Promote SOP-MGMT (Process Documentation & SOP Management) as its own domain, fold it into KMS, or keep queued."
-    question: |
-      SOP-MGMT passes the point-solution-market test. Should it be created as its own domain, or folded
-      into Knowledge Management (KMS) as a module/capability, or left queued? This is the gate: nothing
-      is written to the catalog until it is answered.
-    options:
-      - "Promote-as-domain: create SOP-MGMT and master the operator-facing procedure + assign/acknowledge surface; consume generic knowledge_articles from KMS, policies from GRC, and document_versions from ECM rather than re-mastering them."
-      - "Fold into KMS: do not create SOP-MGMT; add SOPs/acknowledgment as a module/capability of Knowledge Management once KMS is built out."
-      - "Keep queued: leave in the backlog and revisit later."
-    evidence: |
-      Six pure-play flagships sell a product built around this surface: SweetProcess and Trainual
-      (SMB/franchise SOP authoring + role-based assign-and-acknowledge), Process Street (checklist
-      template + run-instance execution), Scribe/ScribeHow (auto-captured step-by-step guides), Whale
-      (SOP/playbook authoring with embedded comprehension quizzes), and Dozuki (controlled work
-      instructions with sign-off). The center of gravity that defines the market, assign a published
-      procedure to an audience and capture proof they read it (document_assignments +
-      acknowledgment_records + comprehension quizzes + periodic review), is absent from generic
-      knowledge management. KMS (id 33) is an unbuilt stub (no modules, only the cross-cutting
-      KNOWLEDGE-MGMT capability) and serves a different buyer (knowledge manager vs frontline ops lead).
-      Phase 0: .tmp_deploy/SOP-MGMT-phase0-2026-06-15.md.
-    why: |
-      New domain = a market-shape b2 (not b3). Creating SOP-MGMT is structural; surfaced for the user's
-      go/no-go. Gates every other SOP-MGMT item.
-
   - id: B2-SOP-SCOPE
-    summary: "Bound SOP-MGMT to master its own procedure + acknowledge surface across 2 core modules and consume KMS/GRC/ECM, vs a broad SOP-MGMT that re-masters knowledge/policies/repository."
+    summary: "Confirm bounded scope: SOP-MGMT masters its own procedure + acknowledge surface across 2 core full modules; KMS/GRC/ECM records are consumer+optional (not embedded_master, not re-mastered). Standalone viability does NOT depend on them."
     question: |
-      Should SOP-MGMT master only its distinctive operator-facing set across two core full modules and
-      consume the adjacent records, or also re-master knowledge articles, policies, and the document
-      repository itself?
+      Confirm option (a): SOP-MGMT masters procedures, process_documents, procedure_steps,
+      document_revisions, document_assignments, acknowledgment_records across two core full modules, and
+      links knowledge_articles (KMS), policies (GRC), document_versions (ECM) as consumer + optional
+      cross-links that light up only when those domains are co-installed.
     options:
-      - "Bounded: SOP-MGMT masters procedures, process_documents, procedure_steps, document_revisions, document_assignments, acknowledgment_records (Module 1 Procedure Authoring; Module 2 Publish & Acknowledge), and consumes knowledge_articles (KMS), policies (GRC), document_versions (ECM)."
-      - "Broad: SOP-MGMT additionally re-masters knowledge articles, policies, and a document repository, duplicating KMS, GRC, and ECM masters."
+      - "Bounded + consumer/optional (recommended): the distinctive operator-facing set is mastered here; KMS/GRC/ECM records are consumer + optional enrichment links; standalone SOP-MGMT is fully viable without them."
+      - "Embedded_master the adjacent records: carry local shells of knowledge_articles / policies / document_versions, demote to canonical master when KMS/GRC/ECM present."
+      - "Broad re-master: keep independent copies of knowledge articles, policies, and a document repository."
     evidence: |
-      Phase 0 ownership column: across SweetProcess, Trainual, Process Street, Scribe, Whale, and Dozuki
-      the procedure/step/checklist/acknowledgment objects are the system of record, while general
-      reference content, the governing policy, and heavyweight document storage are referenced from
-      adjacent systems, not re-built. The bounded surface uses document_revisions (not ECM's
-      document_versions id 430) and procedure_steps/step_media_attachments (the catalog name
-      work_instructions id 596 is already taken by a manufacturing/MES entity). The domain has >=3
-      capabilities, so >=2 full modules (Rule #14); the hypothesis is exactly two core modules plus a
-      conditional third (B2-SOP-EQMS-SPLIT). Re-mastering would duplicate KMS/GRC/ECM masters and break
-      the single-master rule (M7).
+      User asked twice (a2 2026-06-27 "isn't our solution embedded_master?"; a1 2026-06-27 "when I just use
+      SOP would I not need knowledge articles or GRC policies to make SOP viable?"). Answer: NO, standalone
+      SOP-MGMT is fully viable without KMS knowledge_articles or GRC policies. The full loop (author ->
+      publish -> assign -> acknowledge -> periodic review) runs entirely on records SOP-MGMT masters
+      itself. Flagships SweetProcess, Process Street, Trainual, Whale, Dozuki ship and sell without a
+      generic knowledge-article repository or a GRC policy register. The adjacent records are enrichment
+      only when co-installed: a procedure may cross-link to a related KB article (KMS) or to the policy it
+      implements (GRC), and may defer heavyweight storage to ECM document_versions. None are required to
+      operate, so the role is consumer + OPTIONAL (satisfies M9 self-containment by degrading gracefully),
+      NOT embedded_master (no local copy carried) and NOT consumer + required (that would break standalone
+      deploy). The only outside record needed standalone is the platform built-in `users` (consumer).
+      Naming: document_revisions (not ECM's document_versions id 430); procedure_steps /
+      step_media_attachments (work_instructions id 596 is taken by a manufacturing/MES entity).
+      >=3 capabilities => >=2 full modules (Rule #14).
     why: |
-      Market-shape (master-vs-consume + module count). Conditional on B2-SOP-PROMOTE = promote.
-
-  - id: B2-SOP-EQMS-SPLIT
-    summary: "Include the regulated controlled-document slice as an optional 3rd module now, or defer it to a future EQMS domain."
-    question: |
-      Regulated SOP buyers (manufacturing / medical-device / pharma) need controlled documents with
-      e-signature, change control, periodic-review attestations, and Part-11/ISO audit trails. Should
-      SOP-MGMT ship this as an optional third module (Controlled Document Control), or leave the
-      controlled-document slice to a future Enterprise Quality Management (EQMS) domain?
-    options:
-      - "In-scope now: add an optional Controlled Document Control module mastering controlled_documents (e-signature, change control, periodic review, Part-11/ISO audit trails). EQMS, if later created, becomes the migration seam."
-      - "Defer to EQMS: keep SOP-MGMT to the two core modules; the controlled-document slice waits for a dedicated EQMS domain."
-    evidence: |
-      Dozuki carries the controlled-document surface among the flagships (e-signature + revision sign-off
-      + change control for ISO/Part-11). The pure-play EQMS vendors that own the full quality system,
-      MasterControl, ETQ Reliance, Sparta Systems TrackWise, Veeva QualityOne, AssurX, already sit as a
-      pending candidate in audits/_missing-domains.md (EQMS, capabilities listed include document
-      control, CAPA, nonconformance, supplier quality, validation lifecycle). The continuity argument
-      for keeping it here: the same operator-facing procedure graduates into controlled status, so the
-      buyer journey is one product, not two. The counter-argument for deferring: EQMS spans far beyond
-      document control (CAPA / NCR / deviations / supplier quality), so the controlled-document module
-      could be its first module instead. Genuine fork, hence the user's call.
-    why: |
-      Market-shape (module count + where the controlled-document entity is mastered). Coupled to the
-      EQMS backlog candidate. Conditional on B2-SOP-PROMOTE = promote.
-
-  - id: B2-SOP-DAP-SCOPE
-    summary: "Decide whether SOP-MGMT includes the capture-first / in-app guidance slice (Scribe/Tango/WalkMe), or whether that is a separate Digital Adoption Platform (DAP) domain."
-    question: |
-      Scribe and Tango auto-capture step-by-step guides; WalkMe/Whatfix deliver the same guidance as
-      in-app overlays. This straddles SOP-MGMT (the published how-to document) and a Digital Adoption
-      Platform (in-app, just-in-time delivery). Should SOP-MGMT own only the document surface, or also
-      the in-app delivery slice?
-    options:
-      - "Document surface only: SOP-MGMT masters the captured guide as a published procedure (Scribe/Tango output); in-app overlay delivery (WalkMe/Whatfix/Pendo/Userpilot) is a separate DAP domain, not yet in the catalog."
-      - "Include in-app delivery: SOP-MGMT also masters in-app walkthrough flows and adoption analytics, absorbing the DAP surface."
-    evidence: |
-      Scribe/ScribeHow and Tango are capture-first: their output is a step-by-step guide that is a
-      document, which sits squarely in SOP-MGMT. WalkMe, Whatfix, Pendo, and Userpilot are in-app
-      delivery + adoption analytics, a distinct market with a different buyer (product/CS/PLG team) and a
-      different artifact (live overlays, not a readable SOP). DAP is also broader than onboarding
-      (ongoing change-management guidance) and narrower (in-app only). No DAP domain exists yet.
-      Recommendation is to keep SOP-MGMT to the document surface and treat DAP as its own future
-      candidate.
-    why: |
-      Market-shape (scope boundary + a possible separate DAP domain). Conditional on B2-SOP-PROMOTE = promote.
+      Market-shape (master-vs-consume + role mechanism + module count). User has turned it into a
+      clarifying/viability question twice rather than picking; answered, kept open for an explicit confirm.
+      This is the last open gate; the Phase A+B load runs once it is confirmed.
 
 b3: []

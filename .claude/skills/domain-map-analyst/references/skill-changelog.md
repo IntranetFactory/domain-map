@@ -578,6 +578,20 @@ The two changes are paired, not independent: Phase 0 prevents the failure at loa
 
 ---
 
+## 2026-06-26 — M10: module names must be self-explaining standalone (hard blocker)
+
+**Context.** A review of the 56 committed blueprints' `system_name` front-matter (which the emitter renders from `domain_modules.domain_module_name`) found roughly a dozen names that are bare generic nouns standalone (`Offers`, `Interviews`, `Knowledge Management`, `Renewal Management`, `Inventory and Sources`, `Request Intake`, `Agent Workspace and Reporting`). They only parse once you know the `domain_module_code` prefix or the surrounding domain, but `system_name` is published WITHOUT either: it is the blueprint title and the per-module catalog-card title a buyer reads cold.
+
+**Decision.** Added M10 to the M-band as a HARD BLOCKER. A `domain_module_name` passes when, read with its code prefix and domain hidden, a reader can tell roughly what market it belongs to (the self-explaining shape is qualifier + noun: `HR Knowledge`, `Contract Repository`). It fails when it is a bare generic noun phrase that plausibly fits several unrelated domains. It is a JUDGMENT check grounded in the domain review (like B13), not a mechanical string predicate; industry-standard discipline terms (`Incident Management`, `Problem Management`) pass. The only fixes are an approved rename (renaming `domain_module_name` is a destructive overwrite of a non-empty value, so it is never auto-applied: draft a disambiguated name, prepend the missing domain qualifier, and surface it as a per-name yes/no `b2` in the `q-` file) or a user waiver ("the short name is intentional"). An open M10 finding keeps the domain `feedback_needed`.
+
+**Reasoning.** The defect is invisible to every existing band: M1/M2 count modules, M8 checks the buyer-copy fields (`catalog_tagline` / `catalog_description`), none read the display name for standalone legibility. The code prefix always carries the domain; the name routinely drops it, so the name is where the legibility is lost. Made it a hard blocker (not a soft-warn) at the user's request: a published title that reads as belonging to the wrong market is a quality defect worth gating on, with the waiver as the escape hatch for intentional short names.
+
+**Scope.** `domain_modules.domain_module_name` catalog-wide; SKILL.md M-band (new M10) + the audit-recipe classification list (structural-gate note + in-scope-fix enumeration). Paired with a one-time rename pass over the ~12 weak names flagged in the blueprint set (surfaced for per-name sign-off, not auto-applied).
+
+**Status.** active.
+
+---
+
 # Incidents
 
 Append one entry per occurrence. Used by SKILL.md Rule #15 — the agent MUST log here when notes have been written without user approval, AND revert the writes, AND propose a SKILL.md edit that removes whatever passage rationalized the violation.
@@ -1046,5 +1060,33 @@ Both are the same entity-follows-the-unit principle plan-4 established for gates
 **Contradicting rationalization (historical).** The product_metrics note rode the old Rule #12 "config-shape exemption recorded in data_objects.notes" license; the nine rollup notes rode the older "Phase-B Lite defer note" loader habit. Both licenses are RESCINDED under Rule #15 (notes empty by default; populate only with per-row user-approved wording).
 
 **Remediation.** Both clusters surfaced to the user as `a-`file questions (q2 / q10 of `q-PROD-MGMT.md`); user approved clearing. All 10 `notes` values PATCHed to `''` via `.tmp_deploy/process_afiles_mechanical_2026_06_15.ts` (idempotent, verified 0 remaining nonempty). No `record_status` touched. The nine `domain_data_objects` rows are a deprecated derived rollup slated for deletion regardless.
+
+**Status.** Active.
+
+## 2026-06-26 — `has_single_approver` dropped from `data_objects` (flag retired; RACI is the source of truth)
+
+**Context.** `has_single_approver` was an entity-level boolean meaning "this approval has exactly one accountable approver" — RACI's single-Accountable constraint stored on the entity. Plan 3 (personas/RACI) later made `process_raci` the real home for accountability, with an E5 soft-warn babysitting agreement between the flag and the Accountable. A live audit on 2026-06-26 found the flag set on 86 entities but only 15 wired to a `process_raci` Accountable: 58 sit in domains with no RACI pass yet, 6 are in analyzed domains but were skipped, and 7 carry the flag with no approval gate at all. The "redundant second copy" was true only for the 15; for the rest it was an unfinished-RACI placeholder or noise.
+
+**Decision.** The flag is removed entirely. Accountability for an approval is governed solely by `process_raci` (one Accountable per gated process). There is no per-entity approver flag. The "needs an approval" fact continues to live in the lifecycle gate (`data_object_lifecycle_states.requires_permission`); only the entity-level "exactly one" duplicate is gone.
+
+**Reasoning.** User's call (hard delete, no snapshot, accepted the documented loss). Grouping an approval-cardinality concept as an entity boolean was the wrong altitude: approval gating is a per-state/transition fact, and "who is accountable" is a RACI fact. Keeping a flag that has to be reconciled with RACI via a consistency check means RACI is the real source and the flag is the redundant copy. Where RACI was incomplete (71 of 86), the flag was a to-do marker, not data; that work is tracked by E4 (RACI coverage), not by resurrecting the flag.
+
+**Removed surface.** Live column `data_objects.has_single_approver` (field row `data_objects.has_single_approver`). Emitter: the `has_single_approver` business-rule block in `generate_blueprints.ts` (the `approve_<entity>_requires_approver` rule) and its `pattern_flags`/flag-list/M6 references; the `has_single_approver` select + `pattern_flags.has_single_approver` emit in `emit_skill_spec.ts`; the `DataObject` type + select in `lib/catalog.ts`; the field in `loaders/fix_ats_modules.ts` (type + 3 data rows). Skill: B4 query, B15 query/prose, the `module-shape.md` field row, the `modules.md` derivation bullet. SKILL.md **E5** converted to a retired tombstone (band number kept so `E1–E6` stays valid; E4 already covers Accountable coverage).
+
+**Scope.** Catalog-wide. The `approve_<entity>` workflow-gate permissions are unaffected — those derive from the lifecycle, not from this flag.
+
+**Status.** Active.
+
+## 2026-06-26 — `has_submit_lock` dropped; `pattern_flags` wrapper dissolved; `has_personal_content` kept as a hint
+
+**Context.** Follow-on to the `has_single_approver` removal. `has_submit_lock` was the second "pattern flag": an entity boolean meaning "submit is owner-only and the row is read-only after submit." Like the others it compiled only to a permission name (`submit_<entity>`) + a prose business rule, never to enforced behavior — the read-only-after-submit half has no backing per-state attribute in `data_object_lifecycle_states`. It mashed a lifecycle transition (the submit) with an edit-lock (post-submit freeze), both of which belong on the state/transition, not the entity. With `has_submit_lock` and `has_single_approver` gone, `has_personal_content` was the only flag left, so the `pattern_flags` grouping in the skill-spec emit was a single-element wrapper with no remaining concept.
+
+**Decision.** (1) Dropped the live column `data_objects.has_submit_lock` and all its emit + skill surface. (2) Dissolved the `pattern_flags` wrapper in `emit_skill_spec.ts`; `has_personal_content` is now emitted as a **direct property** on the entity object in `spec.json`. (3) `has_personal_content` is **kept** but reframed as a **hint**: it marks an entity that holds owner-scoped rows and signals that a row-scoped ABAC rule (JsonLogic `select_rule` / `validation_rules`) should be authored. The flag itself enforces nothing; the platform already runs JsonLogic (`validation_rules` / `computed_fields` / `input_type_rule` compile into `BEFORE INSERT/UPDATE` triggers), so the row-ownership predicate belongs there, named with the actual owner column, rather than as an unenforced boolean.
+
+**Reasoning.** User's direction. The flags were hardcoded boolean special-cases of ABAC/edit-control, a concern the platform was explicitly designed to express in JsonLogic (`crud_percentage` = "share expressible in JsonLogic: CRUD + workflows + computed fields + ABAC"). `submit_lock`'s lifecycle/lock concern follows `single_approver` out of the entity layer. `personal_content` survives only as a to-author-an-ABAC-rule marker, not as a thing that grouping into `pattern_flags` ever justified.
+
+**Removed surface.** Live column `data_objects.has_submit_lock`. Emitter: the `has_submit_lock` business-rule + `submit_<entity>` permission block in `generate_blueprints.ts`, its flag-list push, and its M6 `hasFlag` term; the `has_submit_lock` select in `emit_skill_spec.ts` and the whole `pattern_flags` wrapper there (now `has_personal_content` direct); the `DataObject` type + select in `lib/catalog.ts`; the field in `loaders/fix_ats_modules.ts` (type + default + `eeo_responses` row). Skill: `module-shape.md` `has_submit_lock` row (and `has_personal_content` reframed as a hint), `modules.md` `has_submit_lock` derivation bullet, SKILL.md §243 / §760 reframed, B4 query/prose collapsed to the single hint, B15 retitled "No `has_personal_content` on a catalog/junction/computed master" with a single-predicate query.
+
+**Scope.** Catalog-wide. `spec.json` consumers: none read `pattern_flags` from the skill-specs (only the emitter produced it), so collapsing to a direct property breaks nothing. Generated `spec.json` / blueprints remain stale until re-emitted per domain.
 
 **Status.** Active.

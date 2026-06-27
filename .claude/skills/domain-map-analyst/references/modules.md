@@ -85,10 +85,8 @@ Permissions are **derived** from `data_object_lifecycle_states` (workflow gates)
   - Format: `<module>:<verb>_<entity_singular>`
   - `<verb>` = `data_object_lifecycle_states.permission_verb_override` if set, else `state_name`
   - `<entity_singular>` = derived from `data_objects.singular_label`
-- **Pattern-flag overrides (one set per pattern flag = true):**
+- **`has_personal_content` overrides (when the hint is true):**
   - `has_personal_content` → `<module>:view_all_<entity>` + `<module>:manage_all_<entity>`
-  - `has_submit_lock` → `<module>:submit_<entity>` + restriction rule
-  - `has_single_approver` → `<module>:approve_<entity>_requires_approver` rule
 
 ### Write tier by `entity_type` (B2)
 

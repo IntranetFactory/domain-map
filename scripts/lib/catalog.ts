@@ -55,8 +55,6 @@ export type DataObject = {
   kind: string;
   is_canonical_bare_word: boolean;
   has_personal_content: boolean;
-  has_submit_lock: boolean;
-  has_single_approver: boolean;
   // B2 (plan-2-entity-type-tiers.md): drives the per-entity write tier (deriveWriteTier) and
   // the M5/M6 invariants. Enum: operational_workflow / operational_record / catalog / junction /
   // computed / unclassified. `unclassified` (the bulk of the catalog today) degrades gracefully.
@@ -83,6 +81,9 @@ export type Domain = {
   certification_required: boolean;
   usa_market_size_usd_m: number;
   market_size_source_year: number;
+  // Lucide icon name that visually identifies the domain (e.g. shield, database, users).
+  // Empty string when no icon clearly identifies the domain.
+  icon_name: string;
 };
 
 export type IndustryRow = { id: number; industry_name: string };
@@ -211,11 +212,11 @@ export async function loadCatalogIndex(): Promise<CatalogIndex> {
   const [domains, dataObjects, industries, modules] = await Promise.all([
     pg(
       "GET",
-      "/domains?select=id,domain_code,domain_name,description,domain_kind,catalog_release,catalog_tagline,catalog_description,crud_percentage,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year&order=domain_code.asc&limit=10000",
+      "/domains?select=id,domain_code,domain_name,description,domain_kind,catalog_release,catalog_tagline,catalog_description,crud_percentage,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year,icon_name&order=domain_code.asc&limit=10000",
     ) as Promise<Domain[]>,
     pg(
       "GET",
-      "/data_objects?select=id,data_object_name,singular_label,plural_label,description,catalog_description,kind,is_canonical_bare_word,has_personal_content,has_submit_lock,has_single_approver,entity_type&limit=10000",
+      "/data_objects?select=id,data_object_name,singular_label,plural_label,description,catalog_description,kind,is_canonical_bare_word,has_personal_content,entity_type&limit=10000",
     ) as Promise<DataObject[]>,
     pg("GET", "/industries?select=id,industry_name&limit=10000") as Promise<IndustryRow[]>,
     pg(

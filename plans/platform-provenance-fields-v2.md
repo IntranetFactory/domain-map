@@ -112,7 +112,7 @@ The three facts the analyst reconstructs from sibling files or pattern-matching,
 | table | field | shape | notes |
 |---|---|---|---|
 | `entities` | `catalog_entity_code` | string, nullable, **not** unique, `is_core` | Stable design-time identity the entity was deployed under (the blueprint `data_object`, e.g. `job_applications`). Stamped on **every** provisioned entity. `table_name` may later drift (alias rename to `applications`); this stays put, so the rename is a join. Empty = created outside the pipeline. Not unique (a shared master like `users` recurs). |
-| `entities` | `canonical_owner_module` | string (module slug), nullable, soft pointer, `is_core` | For an `embedded_master` placeholder, the slug of the canonical owner module (`mastered_in`, e.g. `ats-candidate-crm`). Empty when this module **is** the owner (`role = master`) or the entity is local/custom. A non-empty value is the canonical-owner-arrival signal the analyst currently file-scans for. **Soft string, not an FK** — the target module may not exist yet. |
+| `entities` | `catalog_owner_module` | string (module slug), nullable, soft pointer, `is_core` | For an `embedded_master` placeholder, the slug of the canonical owner module (`mastered_in`, e.g. `ats-candidate-crm`). Empty when this module **is** the owner (`role = master`) or the entity is local/custom. A non-empty value is the canonical-owner-arrival signal the analyst currently file-scans for. **Soft string, not an FK** — the target module may not exist yet. |
 | `entities` | `pattern_flags` | string (semicolon-separated), nullable, `is_core` | The behavior flags the blueprint §3 authored for this entity (`personal_content`, `submit_lock`, `single_approver`, `multi_approver`, `terminal_lock`). Today these survive only as their compiled consequences (`override (personal_content)` permissions, submit-lock rules), so any skill asking "is this personal-content?" pattern-matches permission/rule names. Stamping the authored flags makes it a read. Empty = no special behavior / custom entity. |
 
 ```json
@@ -133,7 +133,7 @@ The three facts the analyst reconstructs from sibling files or pattern-matching,
 ```json
 {
   "table_name": "entities",
-  "field_name": "canonical_owner_module",
+  "field_name": "catalog_owner_module",
   "title": "Canonical Owner Module",
   "description": "For an embedded-master placeholder, the slug of the module that should eventually own this entity. Empty when this module is the canonical owner or the entity is local. Soft pointer: the target module may not be deployed yet, so this is a slug string, not a foreign key.",
   "format": "string",
@@ -161,7 +161,7 @@ The three facts the analyst reconstructs from sibling files or pattern-matching,
 ```
 
 **Optional companion (`entities.entity_role`).** A role enum (`master` / `embedded_master` /
-`derived`) the entity was deployed under. `canonical_owner_module` already carries the only
+`derived`) the entity was deployed under. `catalog_owner_module` already carries the only
 distinction the analyst acts on (placeholder vs owned-here), and `contributor` / `consumer` never
 create a local entity row, so a separate role column is largely redundant. Add only if a named
 consumer needs the explicit label.
@@ -239,7 +239,7 @@ runtime / reconcile discovery question becomes a read:
 | Discovery question | Answered today by | After this change |
 |---|---|---|
 | Is this live entity the catalog's X under a renamed table? | name heuristic + ask user | join `entities.catalog_entity_code` |
-| Is this a placeholder awaiting a canonical owner (and which)? | analyst parses sibling blueprint/spec files; discovery can't tell at all | read `entities.canonical_owner_module` |
+| Is this a placeholder awaiting a canonical owner (and which)? | analyst parses sibling blueprint/spec files; discovery can't tell at all | read `entities.catalog_owner_module` |
 | Is this entity personal-content / submit-locked / approver-gated? | infer from permission + rule name shapes | read `entities.pattern_flags` |
 | Is this field the catalog's Y, renamed? | runtime write failure, then heuristic | join `fields.catalog_field_code` |
 | Which states are terminal / gated? | reconstruct from rules + permissions | read lifecycle registry / `process_gates` |
@@ -250,7 +250,7 @@ runtime / reconcile discovery question becomes a read:
 
 - **Architect** — already single-file, no catalog awareness. Unchanged.
 - **Analyst** — its Stage 2 workspace scan (the sole sibling-file read in the pipeline) is retired:
-  `role` / `mastered_in` come from `canonical_owner_module`, rename detection from the catalog codes,
+  `role` / `mastered_in` come from `catalog_owner_module`, rename detection from the catalog codes,
   behavior from `pattern_flags`. The file scan remains only as a fallback for pre-provenance rows.
 - **Modeler** — unchanged in inputs; it gains the job of stamping the new columns at provision time.
 - **`use-*` discovery** — reads the catalog deterministically; user prompts fire only on genuine
@@ -274,7 +274,7 @@ The reads just make those questions real instead of noise.
 
 - The columns in §3.1 / §3.2 / §3.3 and the lifecycle-registry extension.
 - **Deployer stamping at provision time.** The modeler (the only catalog writer) sets
-  `catalog_entity_code`, `canonical_owner_module`, `pattern_flags` on every `create_entity`;
+  `catalog_entity_code`, `catalog_owner_module`, `pattern_flags` on every `create_entity`;
   `catalog_field_code` on every `create_field`; `catalog_module_code` + the `settings` keys on
   `create_module` / `update_module`; and the lifecycle-registry rows when it provisions a lifecycle
   column. Sourced from the spec it is executing. Mirrors how it already plans to provision `tagline`
@@ -327,7 +327,7 @@ The reads just make those questions real instead of noise.
 ## 8. Open questions
 
 - **`entity_role` companion column** — include the explicit role enum, or rely on
-  `canonical_owner_module` alone? (Leaning: rely on the owner pointer.)
+  `catalog_owner_module` alone? (Leaning: rely on the owner pointer.)
 - **Write-once on rename.** A customize pass that renames `table_name` / `field_name` must **not**
   rewrite `catalog_entity_code` / `catalog_field_code` (that would erase the provenance the rename
   detection relies on). Confirm the modeler treats the provenance columns as write-once-at-create.
