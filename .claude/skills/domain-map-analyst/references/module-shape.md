@@ -467,7 +467,7 @@ See [SKILL.md § Agent tooling layer](../SKILL.md#agent-tooling-layer-4-entities
 |---|---|---|---|
 | `domain_module_code` | text | yes | Natural key. SHOUTY-KEBAB-CASE. For `module_kind='full'`: `<DOMAIN>-<NOUN>` (`ATS-CANDIDATE-CRM`, `ITSM-INCIDENT-MGMT`) or bare-noun for cross-cutting (`KNOWLEDGE-MGMT`, `APPROVAL-WORKFLOW`). For `module_kind='starter'`: free-form per Rule #19 (`CRM-LITE`, `REAL-ESTATE-AGENT`, `SMB-CRM`). |
 | `domain_module_name` | text | yes | Human-friendly label (`Candidate CRM`, `Incident Management`) |
-| `domain_id` | reference → `domains` | no | Primary host. Nullable for cross-cutting full modules with no obvious home (`APPROVAL-WORKFLOW`) and for persona-shaped starter kits (`REAL-ESTATE-AGENT`). Cross-cutting modules with one obvious home use this column AND list additional hosts in `domain_module_host_domains`. Validation rule `full_module_requires_domain` rejects NULL when `module_kind='full'`. |
+| `domain_id` | reference → `domains` | no | The module's one and only home domain. Nullable only for cross-cutting full modules with no obvious home (`APPROVAL-WORKFLOW`) and for persona-shaped starter kits (`REAL-ESTATE-AGENT`), which home on their own `domain_kind='bundle'` domain. There is no additional-hosts table: a starter's touched markets are DERIVED from its `embedded_master` rows. Validation rule `full_module_requires_domain` rejects NULL when `module_kind='full'`. |
 | `module_kind` | enum | yes | `full` / `starter`. Default `full`. Starters never master data_objects (platform-side rule `starter_no_master` on `domain_module_data_objects` enforces this). See Rule #19. |
 | `description` | multiline | yes | Analyst voice. What this module does, what it masters, when it's used standalone vs alongside others. Read by the blueprint emitter, audit tooling, deployer. NOT marketing copy. |
 | `catalog_tagline` | string | yes | Buyer voice. One sentence for module-grain catalog list cards. Workflow + value framing. Default empty; backfill per Rule #20 with user review BEFORE writing. |
@@ -498,16 +498,9 @@ Same capability can realize in multiple modules; same module can realize multipl
 
 This is now the **authoritative** junction for module-level data_object ownership. `domain_data_objects` is a derived rollup once a domain has modules.
 
-### `domain_module_host_domains` (junction: `domain_modules` ↔ `domains`)
+### `domain_module_host_domains` — REMOVED
 
-| Field | Format | Required | Notes |
-|---|---|---|---|
-| `domain_module_id` | parent → `domain_modules` | yes | |
-| `domain_id` | parent → `domains` | yes | The additional host (NOT the module's `domain_modules.domain_id`) |
-| `notes` | multiline | yes | |
-| `record_status` | enum | yes | Default `new` |
-
-Records hosts beyond the primary `domain_modules.domain_id`. Convention: never both — if a module has a primary `domain_id`, host_domains rows name only the OTHER hosts.
+This junction is gone (dropped 2026-06-28; see [deprecations.md](deprecations.md)). A module has exactly one home domain (`domain_modules.domain_id`). A cross-domain starter's touched markets are DERIVED from its `embedded_master` rows via `deriveHostDomains(dmdo, modules)` in [scripts/lib/catalog.ts](../../../scripts/lib/catalog.ts) — do not author or read a host-junction table.
 
 ---
 

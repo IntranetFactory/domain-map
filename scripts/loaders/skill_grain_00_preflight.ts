@@ -9,7 +9,7 @@
  * Every destructive step in the plan is gated on these assertions holding. If the live state
  * has drifted from the plan, this stops the migration loudly.
  */
-export {};
+import { deriveHostDomains } from "../lib/catalog";
 
 async function pg(path: string): Promise<any[]> {
   const proc = Bun.spawn(["semantius", "call", "crud", "postgrestRequest"], {
@@ -32,14 +32,16 @@ function check(label: string, cond: boolean, detail = ""): void {
 
 const LIMIT = 200000;
 
-const [skills, modules, st, hosts, praci, entCheck] = await Promise.all([
+const [skills, modules, st, dmdo, praci, entCheck] = await Promise.all([
   pg(`/skills?select=id,skill_name,skill_type,domain_id,domain_module_id,process_id,record_status&limit=${LIMIT}`),
   pg(`/domain_modules?select=id,domain_id,domain_module_code,module_kind&limit=${LIMIT}`),
   pg(`/skill_tools?select=id,skill_id,tool_id,requirement_level,record_status&limit=${LIMIT}`),
-  pg(`/domain_module_host_domains?select=domain_module_id,domain_id&limit=${LIMIT}`),
+  pg(`/domain_module_data_objects?select=domain_module_id,data_object_id,role&limit=${LIMIT}`),
   pg(`/process_raci?select=actor_skill_id&limit=${LIMIT}`),
   pg(`/entities?table_name=in.(domain_module_tools,process_tools)&select=table_name`),
 ]);
+// host set is DERIVED (the domain_module_host_domains table was dropped); see deriveHostDomains.
+const hosts = deriveHostDomains(dmdo, modules);
 
 // guard against server-side row caps masking the true counts
 check("skills page not capped", skills.length < LIMIT, `${skills.length} rows`);

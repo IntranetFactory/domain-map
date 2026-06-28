@@ -38,7 +38,7 @@ export {};
 import { writeFileSync, readFileSync, mkdirSync, existsSync, readdirSync, rmSync, cpSync } from "node:fs";
 import { dirname } from "node:path";
 import { argv } from "node:process";
-import { pg } from "./lib/catalog";
+import { pg, deriveHostDomains } from "./lib/catalog";
 
 // ---------- CLI ----------
 
@@ -279,7 +279,6 @@ async function loadBulk(): Promise<Bulk> {
   const [
     domains,
     modules,
-    hostDomains,
     domainAliases,
     bfDomains,
     capabilities,
@@ -302,7 +301,6 @@ async function loadBulk(): Promise<Bulk> {
   ] = await Promise.all([
     get(`/domains?select=id,domain_code,domain_name,description,parent_domain_id,domain_kind,certification_required,catalog_release,catalog_tagline,catalog_description&limit=${L}`),
     get(`/domain_modules?select=id,domain_module_code,domain_module_name,domain_id,module_kind,description,catalog_tagline&limit=${L}`),
-    get(`/domain_module_host_domains?select=domain_module_id,domain_id&limit=${L}`),
     get(`/domain_aliases?select=domain_id,alias&order=alias.asc&limit=${L}`),
     get(`/business_function_domains?select=domain_id,responsibility_type,business_function_id&limit=${L}`),
     get(`/capabilities?select=id,capability_code,capability_name&limit=${L}`),
@@ -323,6 +321,10 @@ async function loadBulk(): Promise<Bulk> {
     get(`/fields?format=eq.enum&select=table_name,field_name,enum_values&limit=${L}`),
     orgSlug(),
   ]);
+
+  // hostDomains is DERIVED, not stored (the domain_module_host_domains table was dropped): a
+  // starter's host markets are the domains whose entities it embeds. See deriveHostDomains.
+  const hostDomains = deriveHostDomains(dmdo, modules);
 
   const capabilityDomainCount = new Map<number, number>();
   for (const r of capabilityDomains) {
@@ -381,19 +383,15 @@ function buildSpec(domainCode: string, lk: Bulk): { spec: any; masters: any[]; c
   if (!domainRow) throw new Error(`domain ${domainCode} not found in /domains`);
   const domainId = domainRow.id as number;
 
-  // Modules hosted on this domain: primary (domain_id) + host junction. Resolved from the one-time
-  // bulk load; no per-domain reads.
+  // A per-domain spec covers only the domain's own FULL modules — its PRIMARY modules
+  // (`domain_modules.domain_id`). A starter (module_kind='starter') is a packaged subset of the
+  // catalog served by the combination-agnostic skill via discovery, never enumerated in a domain
+  // spec; and a starter that merely embeds one of this domain's entities is a consumer of the
+  // market, not one of its modules, so it does not appear here either. Domain-less / cross-domain
+  // starters get their own bundle skill (see emitBundle). Resolved from the one-time bulk load.
   const moduleById = lk.moduleById;
   const primaryModuleIds = (lk.modulesByDomainId.get(domainId) ?? []).map((m) => m.id as number);
-  const hostModuleIds = (lk.hostByDomainId.get(domainId) ?? []).map((h) => h.domain_module_id as number);
-  const discoveredModuleIds = [...new Set([...primaryModuleIds, ...hostModuleIds])];
-
-  // A per-domain spec covers only the domain's FULL modules. A starter (module_kind='starter')
-  // is just a packaged subset of the domain; the combination-agnostic skill already handles any
-  // subset via discovery, so starters are NOT enumerated here. This single filter also keeps a
-  // starter that only reaches this domain via the host junction (e.g. the domain-less HVAC bundle
-  // on FSM) out of the domain spec. Domain-less starters get their own bundle skill (see emitBundle).
-  const moduleIds = discoveredModuleIds.filter((id) => moduleById.get(id)?.module_kind === "full");
+  const moduleIds = primaryModuleIds.filter((id) => moduleById.get(id)?.module_kind === "full");
 
   // Per-domain slices, derived in memory from the bulk indices (was 9 scoped reads + 5 follow-ups).
   const domainAliases = lk.domainAliasesByDomainId.get(domainId) ?? [];

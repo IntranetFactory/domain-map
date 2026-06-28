@@ -12,7 +12,6 @@
  *
  * Usage (from project root): bun run scripts/analytics/m11_rollup_probe.ts [--samples]
  */
-export {};
 import { argv } from "node:process";
 
 const SAMPLES = argv.includes("--samples");
@@ -31,27 +30,23 @@ async function pg(path: string): Promise<any[]> {
   return out.trim() ? JSON.parse(out.trim()) : [];
 }
 
-const [domainsKind, modules, hosts, dmdo, ddo] = await Promise.all([
+const [domainsKind, modules, dmdo, ddo] = await Promise.all([
   pg("/domains?select=id,domain_kind&limit=20000"),
   pg("/domain_modules?select=id,domain_id&limit=20000"),
-  pg("/domain_module_host_domains?select=domain_module_id,domain_id&limit=20000"),
   pg("/domain_module_data_objects?select=domain_module_id,data_object_id,role,necessity&limit=20000"),
   pg("/domain_data_objects?select=domain_id,data_object_id,role,necessity&limit=20000"),
 ]);
 // bundle-domains master nothing; exclude them from the rollup reconciliation (plan §4). Inert until §3.
 const bundleDomainIds = new Set<number>(domainsKind.filter((d: any) => d.domain_kind === "bundle").map((d: any) => Number(d.id)));
 
-// module -> set of domain_ids (primary + host domains)
+// module -> its one home domain (PRIMARY only). A starter's embedded entities attribute to the
+// starter's own (bundle) domain, never to the markets it embeds from — consistent with emit_domain_map
+// and the coverage rollup (a starter consumes a market, it does not contribute to its rollup).
 const modToDomains = new Map<number, Set<number>>();
 for (const m of modules) {
   const s = modToDomains.get(m.id) ?? new Set<number>();
   if (m.domain_id != null) s.add(Number(m.domain_id));
   modToDomains.set(m.id, s);
-}
-for (const h of hosts) {
-  const s = modToDomains.get(Number(h.domain_module_id)) ?? new Set<number>();
-  s.add(Number(h.domain_id));
-  modToDomains.set(Number(h.domain_module_id), s);
 }
 const modularizedDomains = new Set<number>();
 for (const s of modToDomains.values()) for (const d of s) if (!bundleDomainIds.has(d)) modularizedDomains.add(d);

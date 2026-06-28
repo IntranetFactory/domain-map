@@ -263,26 +263,23 @@ console.error(
     : `release gate: released-only (${RELEASED_ANY ? "any date" : "as of today"}), ${releasedDomainIds.size} released domain(s) [${[...gateDomainCodes].sort().join(", ")}]`,
 );
 
-// Modules hosted on a domain = primary host (domain_modules.domain_id) ∪ host junction.
-const moduleHostsByModule = new Map<number, Set<number>>();
-for (const h of all.hostDomains) {
-  const mid = h.domain_module_id as number;
-  if (!moduleHostsByModule.has(mid)) moduleHostsByModule.set(mid, new Set());
-  moduleHostsByModule.get(mid)!.add(h.domain_id as number);
-}
+// A domain's module grid is its PRIMARY modules only (domain_modules.domain_id). A module never
+// appears as a card on a domain it merely embeds an entity from: a starter that embeds CLM's
+// `legal_contracts` consumes from CLM, it does not add a module to CLM, so it renders only on its
+// own (bundle) domain. The cross-market "touches" relationship is carried by related_domains, not
+// by the module grid. (Formerly this folded in the dropped `domain_module_host_domains` junction,
+// which only ever held starter host rows; see references/deprecations.md.)
 const modulesByDomain = new Map<number, ModuleRow[]>();
 for (const m of index.modules) {
-  const hosts = new Set<number>();
-  if (m.domain_id !== null) hosts.add(m.domain_id);
-  const fromJunction = moduleHostsByModule.get(m.id);
-  if (fromJunction) for (const d of fromJunction) hosts.add(d);
-  for (const did of hosts) {
-    if (!modulesByDomain.has(did)) modulesByDomain.set(did, []);
-    modulesByDomain.get(did)!.push(m);
-  }
+  if (m.domain_id === null) continue;
+  if (!modulesByDomain.has(m.domain_id)) modulesByDomain.set(m.domain_id, []);
+  modulesByDomain.get(m.domain_id)!.push(m);
 }
 
-// data_objects touched by a domain = domain_data_objects ∪ (modules hosted on domain → domain_module_data_objects).
+// data_objects touched by a domain = domain_data_objects ∪ (the domain's PRIMARY modules →
+// domain_module_data_objects). A starter's embedded entities attribute to the starter's own
+// (bundle) domain, not to every market it embeds from; cross-market relatedness is still recovered
+// by the master/touch rule below (the bundle touches `legal_contracts`, CLM masters it → related).
 const domainsByModule = new Map<number, Set<number>>();
 for (const [did, mods] of modulesByDomain) {
   for (const m of mods) {
@@ -709,8 +706,8 @@ for (const rm of all.roleModules) {
 }
 const personasOut: PersonaOut[] = (all.domainRoles as any[])
   .map((p): PersonaOut => {
-    // Prune reach to GATED domains only: keep a reached module only if one of its host domains is
-    // gated, and keep only those gated host domains. A persona that reaches no gated domain ends up
+    // Prune reach to GATED domains only: keep a reached module only if one of its domains is
+    // gated, and keep only those gated domains. A persona that reaches no gated domain ends up
     // with empty modules/domains and is dropped by the filter below.
     const modIds = new Set<number>();
     const domIds = new Set<number>();

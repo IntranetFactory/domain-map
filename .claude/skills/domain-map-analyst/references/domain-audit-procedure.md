@@ -28,9 +28,8 @@ For the target domain `<CODE>`:
 1. Resolve to `<id>`:
    `semantius call crud postgrestRequest '{"method":"GET","path":"/domains?domain_code=eq.<CODE>&select=id,domain_code,domain_name,description"}'`
 
-2. Pull modules (both primary host and cross-cutting host junctions):
+2. Pull the domain's modules (its primary modules; a module has exactly one home domain):
    - `/domain_modules?domain_id=eq.<id>&select=id,domain_module_code,domain_module_name,module_kind`
-   - `/domain_module_host_domains?domain_id=eq.<id>&select=domain_module:domain_modules(id,domain_module_code,domain_module_name,module_kind)`
 
 3. Pull the full DMDO footprint across all those modules:
    `/domain_module_data_objects?domain_module_id=in.(<modIds>)&select=domain_module_id,role,necessity,data_objects(data_object_name,kind),domain_modules(domain_module_code)`
@@ -245,8 +244,6 @@ Current state (read these first; live PostgREST queries, NOT deploy scripts):
   semantius call crud postgrestRequest '{"method":"GET","path":"/domains?domain_code=eq.[DOMAIN_CODE]&select=id,domain_code,domain_name,description"}'
 
   semantius call crud postgrestRequest '{"method":"GET","path":"/domain_modules?domain_id=eq.<id>&select=id,domain_module_code,domain_module_name,module_kind"}'
-
-  semantius call crud postgrestRequest '{"method":"GET","path":"/domain_module_host_domains?domain_id=eq.<id>&select=domain_module:domain_modules(id,domain_module_code,domain_module_name,module_kind)"}'
 
   semantius call crud postgrestRequest '{"method":"GET","path":"/domain_module_data_objects?domain_module_id=in.(<modIds>)&select=domain_module_id,role,necessity,data_objects(data_object_name,kind),domain_modules(domain_module_code)"}'
 

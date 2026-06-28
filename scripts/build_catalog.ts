@@ -64,6 +64,8 @@ const releasedDomains = index.domains
   .sort((a, b) => a.domain_code.localeCompare(b.domain_code));
 const releasedDomainIds = new Set(releasedDomains.map((d) => d.id));
 
+// all.hostDomains is DERIVED (the domain_module_host_domains table was dropped): a starter's host
+// set is the markets whose entities it embeds. See deriveHostDomains / references/deprecations.md.
 const hostDomainsByModule = new Map<number, Set<number>>();
 for (const h of all.hostDomains) {
   const mid = h.domain_module_id as number;

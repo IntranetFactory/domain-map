@@ -16,7 +16,7 @@ The mandatory existence of `domain_modules` for every domain is Rule #14 in [SKI
 
 Most rows correspond ~1:1 across layers, but the concepts are separable. Some capabilities become modules; some get absorbed into a larger module; cross-cutting capabilities become modules installable across multiple domains.
 
-**Naming:** the catalog tables use `domain_modules`, `domain_module_capabilities`, `domain_module_data_objects`, `domain_module_host_domains` — the `domain_` prefix avoids collision with the Semantius platform's own `domain_modules` (the entity-grouping concept every Semantius entity belongs to). FK columns are `domain_module_id`. In prose, the concept is still "a module" — only the table/column identifiers carry the prefix.
+**Naming:** the catalog tables use `domain_modules`, `domain_module_capabilities`, `domain_module_data_objects` — the `domain_` prefix avoids collision with the Semantius platform's own `domain_modules` (the entity-grouping concept every Semantius entity belongs to). FK columns are `domain_module_id`. In prose, the concept is still "a module" — only the table/column identifiers carry the prefix. (The former `domain_module_host_domains` junction is REMOVED; see [deprecations.md](deprecations.md).)
 
 **What's explicitly out:**
 - No packages / tiers / SKUs (no "Starter / Pro / Enterprise" gates). Every module is independently deployable and structurally equal regardless of `module_kind`.
@@ -47,25 +47,16 @@ How it works:
 
 ---
 
-## 3. Cross-cutting modules — `domain_id` and host-domains
+## 3. One home domain per module; cross-market reuse and starter host-derivation
 
-A module can host on multiple domains (e.g. `KNOWLEDGE-MGMT` lives in ITSM, CSM, HRSD, LSD; `APPROVAL-WORKFLOW` is genuinely cross-functional with no obvious primary host).
+Every module has exactly ONE home domain: `domain_modules.domain_id` (REQUIRED for `module_kind='full'`; nullable only for a starter promoted to its own `domain_kind='bundle'` domain). There is **no host-junction table** — `domain_module_host_domains` was REMOVED ([deprecations.md](deprecations.md)). The catalog never shares one module across markets; it models cross-market concepts two ways:
 
-- `domain_modules.domain_id` is the **primary host** — nullable for modules with no obvious home (`APPROVAL-WORKFLOW`, `AI-TRIAGE`).
-- Additional hosts go in `domain_module_host_domains` (one row per extra host).
-- **Convention:** never both `domain_modules.domain_id = X` AND `domain_module_host_domains.domain_id = X` for the same module. If a module has a primary host, host_domains rows list only the OTHER hosts.
+- **Cross-cutting concept that is a real feature in several markets → separate per-domain modules sharing the same data_object.** "Knowledge" is `ITSM-KNOWLEDGE` + `HRSD-KNOWLEDGE` + `CSM-KNOWLEDGE`, each with its own role on `knowledge_articles` (ITSM `master`, HRSD `embedded_master`, CSM `contributor`) and its own domain-specific companions. The umbrella "KNOWLEDGE-MGMT spanning ITSM/CSM/HRSD/LSD" is a CAPABILITY via `capability_domains`, NOT a module. (A single shared module could not carry a different role or different companions per market, which is exactly why per-domain modules are required.)
+- **Cross-domain STARTER / bundle → its own bundle domain, touched markets DERIVED from embeds.** A persona bundle like `REAL-ESTATE-AGENT` homes on a `domain_kind='bundle'` domain via `domain_modules.domain_id`. The markets it composes are NOT stored: they are the domains that master its `embedded_master` entities, derived by `deriveHostDomains(dmdo, modules)` in [scripts/lib/catalog.ts](../../../scripts/lib/catalog.ts).
 
-Querying "which modules are installable on domain X?":
+A starter does NOT appear in a host market's module grid (emit_domain_map lists a domain's PRIMARY modules only). Cross-market relatedness is carried by `related_domains` (the master/touch rule: the bundle touches `legal_contracts`, CLM masters it → related), not by listing the starter as a CLM module.
 
-```
-(SELECT * FROM domain_modules WHERE domain_id = X)
-UNION
-(SELECT domain_modules.* FROM domain_modules
-   JOIN domain_module_host_domains ON domain_module_host_domains.domain_module_id = domain_modules.id
-   WHERE domain_module_host_domains.domain_id = X)
-```
-
-**Cross-cutting decision test when authoring a module:** is there a recognised standalone market for this concept? If yes (e.g. `KMS` for Knowledge Management — Bloomfire, Guru, Tettra, Document360), the module's primary host is that market's domain and the cross-cutting links are `domain_module_host_domains` entries. If no (e.g. `APPROVAL-WORKFLOW` has no standalone market), `domain_id` stays NULL and every host is a host_domains row.
+Querying "which modules does domain X own?": `SELECT * FROM domain_modules WHERE domain_id = X`. "Which starters compose markets including X (for the coverage rollup)?": derive from `embedded_master` rows via `deriveHostDomains`, never a stored junction.
 
 ---
 
@@ -162,7 +153,7 @@ A `contributor`, or a `consumer` with `necessity=required`, pointing at **anothe
 Starter kits are `domain_modules` rows with `module_kind='starter'`. Authoring contract and six invariants live in [SKILL.md Rule #19](../SKILL.md). The relevant points from a module-authoring perspective:
 
 - Starters take exactly two `domain_module_data_objects` shapes: `embedded_master` on a `kind='domain_owned'` data_object (canonical master must exist in some full module), or `consumer` on a `kind='platform_builtin'` data_object (today only `users`). Never `master`, never `derived`, never `contributor`, never `consumer + domain_owned`. The platform-side `starter_no_master` validation_rule on `domain_module_data_objects` rejects `role ∈ {master, derived}`; the broader restriction (no `contributor`, no `consumer + domain_owned`) lives in the loader pre-flight `validateStarterDataObjectJunction()` (in [loader-idiom.md](loader-idiom.md)). Why: a starter must be deployable standalone. A `consumer + domain_owned` row points at a master that may not be installed at the deployment where the starter is the entry point; a `contributor` row writes to a target that may not exist. For any domain-owned data_object the starter needs, `embedded_master` ships a local shell that defers to the canonical master via the demotion path when the full module installs alongside.
-- `domain_modules.domain_id` is nullable for starters with no obvious primary host (persona-shaped bundles like `REAL-ESTATE-AGENT` spanning CRM + CLM + light project tracking). Use `domain_module_host_domains` to list every domain whose embedded data_object a starter touches.
+- `domain_modules.domain_id` is nullable for starters with no obvious primary host (persona-shaped bundles like `REAL-ESTATE-AGENT` spanning CRM + CLM + light project tracking); such a starter is promoted to its own `domain_kind='bundle'` domain and homes there. The markets it touches are DERIVED from its `embedded_master` rows (the domains mastering what it embeds) — there is no host-junction table to author.
 - Starters carry the **three baseline permissions** (`<starter_code>:read` / `:manage` / `:admin`) **plus the full re-prefixed governance of every entity they embed whose canonical realizing module is out of the deploying unit** (plan-4, §4 "State realization at deploy"): workflow gates, pattern-flag overrides (`view_all_` / `manage_all_` / `submit_`), and the matching §8.2 business rules. A hiring starter embedding `job_offers` without `ATS-OFFERS` emits and mints `hiring-starter:approve_offer` and `hiring-starter:view_all_offers`, not a dangling `ats-offers:approve_offer`. Governance follows the entity, not the role (an embedded entity standalone is the local master and is governed in full). All of it is DERIVED by the emitter and materialized by the deployer; no loader authors permission rows. (This supersedes the earlier "exactly three baseline permissions, no workflow gates" rule, which left embedded entities ungoverned.)
 - A starter's blueprint also surfaces its embedded entities' **boundary-crossing handoffs** in §6.2 / §6.3 (events those entities publish to, or react to from, modules the starter does NOT play). A unit "plays" its own modules plus the canonical owner modules of what it embeds; handoffs internal to that played set are hidden, only the ones that cross the boundary surface. Same entity-follows-the-unit principle as the gates.
 - Starters carry **no skill of their own** (Rule #17: skills are domain-grain only). A single-domain starter is served by the host domain's skill; a cross-domain starter is promoted to a `domain_kind='bundle'` domain and served by one ordinary domain skill there. The starter's `domain_module_tools` are still authored (floor: one `query_<entity>` per embedded master plus light mutates where the workflow supports them) and roll up into whichever domain skill serves it.
@@ -184,7 +175,7 @@ The prior editorial `domain_starter_modules` junction (one recommended-install o
 
 - ❌ Adding a `domain_module_dependencies` table or any DAG-shaped relationship between modules. The data shape (`domain_module_data_objects.role`) IS the dependency.
 - ❌ Hand-editing `domain_data_objects` for a domain that has modules. It's a derived rollup once modules exist — edit `domain_module_data_objects` instead.
-- ❌ Cloning a cross-cutting module per host (e.g. `ITSM-KNOWLEDGE` + `CSM-KNOWLEDGE` + `HRSD-KNOWLEDGE` instead of one `KNOWLEDGE-MGMT` with three `domain_module_host_domains` rows). One module row, multiple host rows.
-- ❌ Domain-prefixing a permission code on a cross-cutting module (`itsm:publish_article`). The prefix is the **module's** `domain_module_code`, which is `knowledge-mgmt:publish_article` regardless of which host the deploy lives on.
+- ❌ Trying to recreate a shared cross-domain module (one module hosted on many domains). That shape was the removed `domain_module_host_domains` junction and never worked: a single module can't carry a different role or different companions per market. The CORRECT shape for a cross-cutting concept like Knowledge is **separate per-domain modules sharing one data_object** (`ITSM-KNOWLEDGE` + `HRSD-KNOWLEDGE` + `CSM-KNOWLEDGE` on `knowledge_articles`), with the umbrella as a CAPABILITY via `capability_domains`. See §3.
+- ❌ Domain-prefixing a permission code with the wrong module. The prefix is the **realizing module's** `domain_module_code` (e.g. `itsm-knowledge:publish_article` for the ITSM knowledge module), not the domain code.
 - ❌ Omitting `domain_module_id` on a workflow-gate lifecycle state. NULL is only correct for states always reachable when the master is installed; module-specific states need the FK set.
 - ❌ Trying to author a stored permission bundle for a persona. There is no `role_permissions` for `domain_roles` (Plan 3); the bundle is DERIVED (emitter §9) from `role_modules` reach + `process_raci` responsibility. Author reach + RACI, not a permission list.

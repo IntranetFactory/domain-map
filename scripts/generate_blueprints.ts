@@ -1609,8 +1609,9 @@ if (MODULE_CODE) {
   await emitModuleList(modules, "regenerate");
 } else if (RELEASED) {
   // Every module hosted on a RELEASED domain (catalog_release != null), where "hosted" means the
-  // module's primary domain (domain_id) is released OR a host-junction (domain_module_host_domains)
-  // host domain is released. Unlike --regenerate this CREATES a blueprint for a released module that
+  // module's primary domain (domain_id) is released OR a DERIVED host domain is released (for a
+  // starter, a market whose entity it embeds; see deriveHostDomains / references/deprecations.md).
+  // Unlike --regenerate this CREATES a blueprint for a released module that
   // has none yet (the build_catalog contract: "blueprints for all modules of released domains").
   const releasedDomainIds = new Set<number>();
   for (const d of index.domains) if (isDomainReleased(d)) releasedDomainIds.add(d.id);

@@ -5,8 +5,10 @@ The saved query that certifies "% Semantius OOTB" per deployable unit. Re-runnab
 Since the per-domain-skill migration (plans/per-domain-skill-restoration.md), tool requirements live on the
 modules (`domain_module_tools`) and on the value-stream processes (`process_tools`), not on per-module
 `skill_tools` (retired). A domain's coverage is the rollup of its modules' tool requirements over the domain's
-**primary AND host** modules (`domain_modules.domain_id = X` UNION `domain_module_host_domains.domain_id = X`),
-deduped by tool with `required` winning over `optional`. **NO fallback:** a domain whose modules carry no
+**primary modules only** (`domain_modules.domain_id = X`), deduped by tool with `required` winning over
+`optional`. A starter that merely embeds one of the domain's entities is a CONSUMER of the market
+(Rule #19: starters never master, only embed), not a contributor; its tools are not the market's needs
+and are excluded, so the score stays a stable property of the market. **NO fallback:** a domain whose modules carry no
 `domain_module_tools` reads as INCOMPLETE (band F3), not as 0-of-0 covered.
 
 Implementation: [scripts/analytics/coverage_rollup.ts](../../../../scripts/analytics/coverage_rollup.ts). Run from project root (the `semantius` CLI reads `.env` from cwd - see [CLAUDE.md](../../../../CLAUDE.md)).
@@ -37,8 +39,9 @@ For each deployable unit (a domain via `domain_module_tools`, or a value-stream 
     / count(distinct required tools)
 ```
 
-The domain's tool set is the union of `domain_module_tools` across the domain's primary + host modules, deduped
-by `tool_id` (`required` wins over `optional` on a collision). `optional` rows are ignored for the percentage -
+The domain's tool set is the union of `domain_module_tools` across the domain's primary modules only, deduped
+by `tool_id` (`required` wins over `optional` on a collision). Starters that embed a domain entity are
+consumers of the market, not contributors, so their tools are excluded. `optional` rows are ignored for the percentage -
 they don't drag the score down. **Per-tool aggregation, not per-operation_kind**: a domain needing 5 `query`
 tools + 1 `send_email` tool sits at **5/6 = 83%**, not 50%. The tool is the unit of count; `operation_kind`
 classifies tools. A domain with zero required tools is reported as **incomplete** (`n/a`), never as covered.
@@ -68,11 +71,11 @@ The set in parentheses is `operation_kind`. `side_effect` and `compute` are the 
 ## Equivalent SQL (for psql or any DB tool)
 
 ```sql
--- Per-domain rollup over domain_module_tools (primary + host modules), deduped by tool.
-with module_domain as (   -- each module mapped to every domain it serves (primary + host)
+-- Per-domain rollup over domain_module_tools (PRIMARY modules only), deduped by tool.
+-- A starter that merely embeds a domain's entity is a consumer of the market, not a contributor,
+-- so its tools are NOT rolled into that market's score.
+with module_domain as (   -- each module mapped to its one home domain
   select id as domain_module_id, domain_id from domain_modules where domain_id is not null
-  union
-  select domain_module_id, domain_id from domain_module_host_domains
 ),
 domain_tool as (          -- distinct required tools per domain, required wins over optional
   select md.domain_id, dmt.tool_id, bool_or(dmt.requirement_level = 'required') as is_required

@@ -3,8 +3,9 @@
 // After the per-domain-skill migration (plans/per-domain-skill-restoration.md), tool requirements
 // live on the modules (`domain_module_tools`) and on the value-stream processes (`process_tools`),
 // NOT on per-module `skill_tools` (retired). A domain's coverage is the rollup of its modules'
-// tool requirements over the domain's primary AND host modules (the same host_domains idiom as
-// m11_rollup_probe.ts), deduped by tool with `required` winning over `optional`.
+// tool requirements over the domain's PRIMARY modules only, deduped by tool with `required` winning
+// over `optional`. A starter that merely embeds a domain entity is a consumer of the market, not a
+// contributor, so its tools are NOT rolled into that market's score.
 //
 // Per-unit metric:
 //   % = (count of required tools whose operation_kind ∈ SEMANTIUS_COVERED) / (count of required tools)
@@ -86,23 +87,25 @@ async function main() {
       rows.push(rollup(p.process_key, p.process_name, byProc.get(p.id)!, toolKind, toolName));
     }
   } else {
-    const [domains, modules, hosts, dmt] = await Promise.all([
+    const [domains, modules, dmt] = await Promise.all([
       get(`/domains?select=id,domain_code,domain_kind&limit=${LIMIT}`),
       get(`/domain_modules?select=id,domain_id&limit=${LIMIT}`),
-      get(`/domain_module_host_domains?select=domain_module_id,domain_id&limit=${LIMIT}`),
       get(`/domain_module_tools?select=domain_module_id,tool_id,requirement_level&limit=${LIMIT}`) as Promise<(TR & { domain_module_id: number })[]>,
     ]);
     const domainCode = new Map(domains.map(d => [d.id, d.domain_code]));
     // bundle-domains master nothing; exclude them from the coverage rollup (plan §4). Inert until §3.
     const bundleDomainIds = new Set(domains.filter((d: any) => d.domain_kind === "bundle").map((d: any) => d.id));
-    // module -> set of domain_ids (primary + host) - the m11_rollup_probe.ts idiom.
+    // A market's coverage is computed over its PRIMARY modules only (`domain_modules.domain_id`).
+    // A starter that merely embeds one of this domain's entities is a CONSUMER of the market, not a
+    // contributor to it (Rule #19: starters never master, only embed); its tools are not this
+    // market's tool needs, so they are NOT folded in. This keeps the score a stable property of the
+    // market instead of shifting with whatever persona bundle borrows one of its entities.
     const modToDomains = new Map<number, Set<number>>();
     for (const m of modules) { const s = modToDomains.get(m.id) ?? new Set<number>(); if (m.domain_id != null) s.add(m.domain_id); modToDomains.set(m.id, s); }
-    for (const h of hosts) { const s = modToDomains.get(h.domain_module_id) ?? new Set<number>(); s.add(h.domain_id); modToDomains.set(h.domain_module_id, s); }
-    // every domain that owns or hosts a module is a deployable unit.
+    // every domain that owns a module is a deployable unit.
     const unitDomains = new Set<number>();
     for (const s of modToDomains.values()) for (const d of s) unitDomains.add(d);
-    // domain -> its tool-requirement rows (union over primary + host modules).
+    // domain -> its tool-requirement rows (over its primary modules).
     const trByDomain = new Map<number, TR[]>();
     for (const r of dmt) {
       for (const d of (modToDomains.get(r.domain_module_id) ?? new Set<number>())) {
@@ -125,7 +128,7 @@ async function main() {
     return;
   }
 
-  console.log(`Unit: ${PROCESS ? "value-stream process (process_tools)" : "domain (domain_module_tools, primary + host)"}`);
+  console.log(`Unit: ${PROCESS ? "value-stream process (process_tools)" : "domain (domain_module_tools, primary modules)"}`);
   console.log(`Semantius-covered set: { ${[...SEMANTIUS_COVERED].join(", ")} }`);
   console.log(`Mode: ${DIAGNOSTIC ? "diagnostic (<100% / incomplete only)" : "full rollup"}\n`);
 

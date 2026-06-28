@@ -362,8 +362,51 @@ function buildRelationshipIndices(raw: RawRelationships): AllRelationships {
   };
 }
 
+// Derived replacement for the removed `domain_module_host_domains` table (see
+// references/deprecations.md). That table only ever meaningfully carried the host set of STARTER
+// modules, and that set is exactly the domains that canonically master the entities a starter
+// embeds (`embedded_master`), minus the starter's own primary domain. FULL modules host nowhere:
+// cross-domain reuse is modeled as separate per-domain modules, not one shared module. Returns
+// rows shaped like the old table ({domain_module_id, domain_id}) so existing readers consume it
+// unchanged.
+export function deriveHostDomains(
+  dmdo: { domain_module_id: number; data_object_id: number; role: string }[],
+  modules: { id: number; domain_id: number | null; module_kind?: string }[],
+): { domain_module_id: number; domain_id: number }[] {
+  const primaryDomain = new Map<number, number>();
+  const moduleKind = new Map<number, string | undefined>();
+  for (const m of modules) {
+    if (m.domain_id != null) primaryDomain.set(m.id, m.domain_id);
+    moduleKind.set(m.id, m.module_kind);
+  }
+  // data_object_id -> domains that master it (a `master` DMDO row on a module with a primary domain).
+  const masterDomainsByDO = new Map<number, Set<number>>();
+  for (const r of dmdo) {
+    if (r.role !== "master") continue;
+    const dom = primaryDomain.get(r.domain_module_id);
+    if (dom == null) continue;
+    let s = masterDomainsByDO.get(r.data_object_id);
+    if (!s) masterDomainsByDO.set(r.data_object_id, (s = new Set()));
+    s.add(dom);
+  }
+  const hostsByModule = new Map<number, Set<number>>();
+  for (const r of dmdo) {
+    if (r.role !== "embedded_master") continue;
+    if (moduleKind.get(r.domain_module_id) !== "starter") continue; // only starters host
+    const owners = masterDomainsByDO.get(r.data_object_id);
+    if (!owners) continue;
+    const self = primaryDomain.get(r.domain_module_id);
+    let s = hostsByModule.get(r.domain_module_id);
+    if (!s) hostsByModule.set(r.domain_module_id, (s = new Set()));
+    for (const d of owners) if (d !== self) s.add(d);
+  }
+  const rows: { domain_module_id: number; domain_id: number }[] = [];
+  for (const [mid, doms] of hostsByModule) for (const d of doms) rows.push({ domain_module_id: mid, domain_id: d });
+  return rows;
+}
+
 export async function loadAllRelationships(): Promise<AllRelationships> {
-  const [dmdo, ddo, aliases, relationships, lifecycle, handoffs, hostDomains, domainRoles, roleModules, processRaci, businessFunctions, businessFunctionDomains, processes, handoffProcesses, processTools] = await Promise.all([
+  const [dmdo, ddo, aliases, relationships, lifecycle, handoffs, modulesForHost, domainRoles, roleModules, processRaci, businessFunctions, businessFunctionDomains, processes, handoffProcesses, processTools] = await Promise.all([
     pg("GET", "/domain_module_data_objects?select=domain_module_id,data_object_id,role,necessity,notes&limit=20000"),
     // domain_data_objects (the legacy domain-grain rollup) is RETIRED: masters derive from
     // domain_module_data_objects. The source is kept empty (not a GET) so the entity can be
@@ -375,7 +418,10 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     pg("GET", "/data_object_relationships?select=data_object_id,related_data_object_id,relationship_type,relationship_kind,relationship_verb,inverse_verb,is_required,owner_side,notes&limit=20000"),
     pg("GET", "/data_object_lifecycle_states?select=data_object_id,state_name,state_order,description,is_initial,is_terminal,requires_permission,permission_verb_override,domain_module_id,process_id&order=data_object_id.asc,state_order.asc&limit=20000"),
     pg("GET", "/handoffs?select=source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,data_object_id,integration_pattern,friction_level,description,notes,data_objects(data_object_name),trigger_events(event_name,description,from_state,to_state,event_category)&order=target_domain_id.asc&limit=20000"),
-    pg("GET", "/domain_module_host_domains?select=domain_module_id,domain_id&limit=10000"),
+    // hostDomains is DERIVED, not stored (the `domain_module_host_domains` table was dropped).
+    // Fetch the modules needed to derive it (id + primary domain + kind); deriveHostDomains() below
+    // turns this plus dmdo into the same {domain_module_id, domain_id} shape every reader expects.
+    pg("GET", "/domain_modules?select=id,domain_id,module_kind&limit=20000"),
     // Plan 3 persona / RACI / function loads (B0).
     pg("GET", "/domain_roles?select=id,role_code,role_name,description,business_function_id,record_status&limit=20000"),
     pg("GET", "/role_modules?select=id,role_id,domain_module_id,interaction_level,notes&limit=20000"),
@@ -399,7 +445,7 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     relationships: relationships ?? [],
     lifecycle: lifecycle ?? [],
     handoffs: handoffs ?? [],
-    hostDomains: hostDomains ?? [],
+    hostDomains: deriveHostDomains(dmdo ?? [], modulesForHost ?? []),
     domainRoles: domainRoles ?? [],
     roleModules: roleModules ?? [],
     processRaci: processRaci ?? [],

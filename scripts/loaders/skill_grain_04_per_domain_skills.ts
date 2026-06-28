@@ -32,11 +32,10 @@ const patch = (path: string, body: Row) => semCall("postgrestRequest", { method:
 
 const LIMIT = 200000;
 
-const [allSystem, modules, domains, hosts] = await Promise.all([
+const [allSystem, modules, domains] = await Promise.all([
   get(`/skills?skill_type=eq.system&select=id,skill_name,domain_id,domain_module_id&limit=${LIMIT}`),
   get(`/domain_modules?select=id,domain_id,module_kind&limit=${LIMIT}`),
   get(`/domains?select=id,domain_code,domain_name&limit=${LIMIT}`),
-  get(`/domain_module_host_domains?select=domain_module_id,domain_id&limit=${LIMIT}`),
 ]);
 
 const domainById = new Map<number, any>(domains.map(d => [d.id, d]));
