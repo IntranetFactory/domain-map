@@ -1,0 +1,786 @@
+[
+  {
+    "id": 605,
+    "data_object_name": "banking_kyc_reviews",
+    "singular_label": "Banking KYC/AML Review",
+    "plural_label": "Banking KYC/AML Reviews",
+    "entity_type": "operational_workflow",
+    "description": "Know-Your-Customer / Anti-Money-Laundering assessment: customer risk classification, beneficial-ownership confirmation, source-of-funds verification, PEP screening, sanctions-list match, watchlist refresh cadence, reviewer sign-off, refresh-due date. Required for origination and annual recertification."
+  },
+  {
+    "id": 609,
+    "data_object_name": "banking_transactions",
+    "singular_label": "Banking Transaction",
+    "plural_label": "Banking Transactions",
+    "entity_type": "operational_record",
+    "description": "Posted transaction on a bank account: posting date, type (debit / credit / transfer / fee / interest), amount, currency, counterparty, reference, reconciliation status vs bank statement. Distinct from ERP-FIN journal_entries (the accounting side)."
+  },
+  {
+    "id": 1203,
+    "data_object_name": "battlecards",
+    "singular_label": "Battlecard",
+    "plural_label": "Battlecards",
+    "entity_type": "catalog",
+    "description": "A seller-facing competitive card: how we win against a named competitor, with objections and counters."
+  },
+  {
+    "id": 151,
+    "data_object_name": "benefit_carriers",
+    "singular_label": "Benefit Carrier",
+    "plural_label": "Benefit Carriers",
+    "entity_type": "operational_workflow",
+    "description": "Insurance provider, 401(k) recordkeeper, or COBRA administrator that fulfills a benefit_plan. Drives the carrier_feeds integration."
+  },
+  {
+    "id": 148,
+    "data_object_name": "benefit_dependents",
+    "singular_label": "Benefit Dependent",
+    "plural_label": "Benefit Dependents",
+    "entity_type": "operational_workflow",
+    "description": "Person covered under an employee's benefit plan (spouse, domestic partner, child, disabled adult). Carries relationship, DOB, SSN, dependent-eligibility documents."
+  },
+  {
+    "id": 147,
+    "data_object_name": "benefit_enrollments",
+    "singular_label": "Benefit Enrollment",
+    "plural_label": "Benefit Enrollments",
+    "entity_type": "operational_workflow",
+    "description": "Per-employee per-plan elected coverage record with effective dates, covered dependents, contribution amounts, and beneficiary designations. The source of truth for deduction calculation in payroll."
+  },
+  {
+    "id": 150,
+    "data_object_name": "benefit_open_enrollments",
+    "singular_label": "Open Enrollment Window",
+    "plural_label": "Open Enrollment Windows",
+    "entity_type": "operational_workflow",
+    "description": "Annual employer-defined window during which employees may elect or change benefit_plans for the next plan year. Drives mass campaign communications, decision-support tooling, and a synchronous load on the carrier_feeds layer at close."
+  },
+  {
+    "id": 146,
+    "data_object_name": "benefit_plans",
+    "singular_label": "Benefit Plan",
+    "plural_label": "Benefit Plans",
+    "entity_type": "catalog",
+    "description": "Configurable employer-sponsored benefit offering: medical, dental, vision, life, disability, 401(k), HSA/FSA, voluntary. Carries eligibility rules, contribution structure, plan year, carrier and coverage tiers."
+  },
+  {
+    "id": 281,
+    "data_object_name": "benefits_tracking_records",
+    "singular_label": "Benefits Tracking Record",
+    "plural_label": "Benefits Tracking Records",
+    "entity_type": "operational_workflow",
+    "description": "Post-initiative metric capture: realized ROI, strategic-goal achievement, scope-vs-plan variance. Closes the loop from business_value_assessments."
+  },
+  {
+    "id": 409,
+    "data_object_name": "beta_programs",
+    "singular_label": "Beta Program",
+    "plural_label": "Beta Programs",
+    "entity_type": "operational_workflow",
+    "description": "Controlled release cohort (customers, features, date range) for validation before GA."
+  },
+  {
+    "id": 692,
+    "data_object_name": "bi_dashboards",
+    "singular_label": "BI Dashboard",
+    "plural_label": "BI Dashboards",
+    "entity_type": "operational_workflow",
+    "description": "Interactive multi-visualization dashboard bound to semantic models in the BI tool."
+  },
+  {
+    "id": 693,
+    "data_object_name": "bi_queries",
+    "singular_label": "BI Saved Query",
+    "plural_label": "BI Saved Queries",
+    "entity_type": "catalog",
+    "description": "Saved exploration or prepared query authored in the BI tool."
+  },
+  {
+    "id": 691,
+    "data_object_name": "bi_reports",
+    "singular_label": "BI Report",
+    "plural_label": "BI Reports",
+    "entity_type": "operational_workflow",
+    "description": "Published BI report authored and served by a BI tool (workbook, dashboard-bound report, or saved look)."
+  },
+  {
+    "id": 694,
+    "data_object_name": "bi_subscriptions",
+    "singular_label": "BI Subscription",
+    "plural_label": "BI Subscriptions",
+    "entity_type": "operational_workflow",
+    "description": "Scheduled delivery configuration (email report, chat alert, webhook push) for a BI report or dashboard."
+  },
+  {
+    "id": 823,
+    "data_object_name": "bibliographic_records",
+    "singular_label": "Bibliographic Record",
+    "plural_label": "Bibliographic Records",
+    "entity_type": "operational_workflow",
+    "description": "Medium-neutral catalog description of an intellectual work or expression, encoded in MARC21 or BIBFRAME. Covers books, ebooks, periodicals, serials, audio recordings, video, maps, manuscripts, datasets, and any other library material regardless of format."
+  },
+  {
+    "id": 1192,
+    "data_object_name": "boater_house_accounts",
+    "singular_label": "Boater House Account",
+    "plural_label": "Boater House Accounts",
+    "entity_type": "operational_record",
+    "description": "A running on-account balance for a boater that fuel, store, and service charges post to and that is settled periodically."
+  },
+  {
+    "id": 1184,
+    "data_object_name": "boaters",
+    "singular_label": "Boater",
+    "plural_label": "Boaters",
+    "entity_type": "operational_record",
+    "description": "A marina customer: contact details, communication preferences, account balance, and the vessels and contracts they hold."
+  },
+  {
+    "id": 1193,
+    "data_object_name": "boatyard_work_orders",
+    "singular_label": "Boatyard Work Order",
+    "plural_label": "Boatyard Work Orders",
+    "entity_type": "operational_workflow",
+    "description": "A boatyard service job on a vessel: repairs, winterization, detailing, or commissioning, with labor, parts, and status."
+  },
+  {
+    "id": 699,
+    "data_object_name": "bot_definitions",
+    "singular_label": "Bot Definition",
+    "plural_label": "Bot Definitions",
+    "entity_type": "operational_workflow",
+    "description": "Static conversational-AI bot configuration: persona, instructions, system prompt, disambiguation rules."
+  },
+  {
+    "id": 689,
+    "data_object_name": "brand_voice_violations",
+    "singular_label": "Brand Voice Violation",
+    "plural_label": "Brand Voice Violations",
+    "entity_type": "unclassified",
+    "description": "Style/tone deviation from brand guidelines detected by AI/pattern-matching (unauthorized terminology, off-brand phrasing, regulatory language drift): violation type, recommended fix, detected date."
+  },
+  {
+    "id": 503,
+    "data_object_name": "breeding_events",
+    "singular_label": "Breeding Event",
+    "plural_label": "Breeding Events",
+    "entity_type": "operational_workflow",
+    "description": "Reproductive event: natural service / AI / embryo transfer with sire, technician, date; preg-check result downstream."
+  },
+  {
+    "id": 1103,
+    "data_object_name": "breeding_records",
+    "singular_label": "Breeding Record",
+    "plural_label": "Breeding Records",
+    "entity_type": "operational_workflow",
+    "description": "A breeding-cycle event: joining, pregnancy test, calving or lambing, with sire, dam, offspring, and birth weight. Tracks reproductive performance across the season."
+  },
+  {
+    "id": 687,
+    "data_object_name": "broken_link_findings",
+    "singular_label": "Broken Link Finding",
+    "plural_label": "Broken Link Findings",
+    "entity_type": "unclassified",
+    "description": "HTTP 404 / timeout / redirect-chain detected by link audit: source URL, target URL, status code, first-detected date, affected content count. High-friction signal across multi-vendor properties."
+  },
+  {
+    "id": 19,
+    "data_object_name": "buddy_assignments",
+    "singular_label": "Buddy Assignment",
+    "plural_label": "Buddy Assignments",
+    "entity_type": "operational_workflow",
+    "description": "Pairing of a new hire with an existing employee for the onboarding period — buddy, mentor, peer-coach, or sponsor depending on the program. Carries scope (peer / cross-functional), start and end dates, and meeting cadence."
+  },
+  {
+    "id": 681,
+    "data_object_name": "build_artifacts",
+    "singular_label": "Build Artifact",
+    "plural_label": "Build Artifacts",
+    "entity_type": "operational_record",
+    "description": "Binary, container image, package, or other output produced by a ci_pipeline_run: type (docker_image / npm_package / jar / binary / archive), version, registry URL, SBOM reference, signed flag. Promotion source for deployments."
+  },
+  {
+    "id": 721,
+    "data_object_name": "building_certifications",
+    "singular_label": "Building Certification",
+    "plural_label": "Building Certifications",
+    "entity_type": "unclassified",
+    "description": "Property certification record (LEED, BREEAM, WiredScore, seismic, accessibility) supporting underwriting + tenant appeal."
+  },
+  {
+    "id": 506,
+    "data_object_name": "bulk_milk_shipments",
+    "singular_label": "Bulk Milk Shipment",
+    "plural_label": "Bulk Milk Shipments",
+    "entity_type": "operational_workflow",
+    "description": "Outbound milk-tank shipment to processor / co-op: pickup time, volume, milk-quality grade, hauler."
+  },
+  {
+    "id": 248,
+    "data_object_name": "business_capability_maps",
+    "singular_label": "Business Capability Map",
+    "plural_label": "Business Capability Maps",
+    "entity_type": "operational_workflow",
+    "description": "Hierarchical map of an organization's business capabilities (typically L1/L2/L3), with maturity/investment/strategic-fit heatmaps and linkage to applications, processes, value streams, and owners."
+  },
+  {
+    "id": 247,
+    "data_object_name": "business_process_models",
+    "singular_label": "Business Process Model",
+    "plural_label": "Business Process Models",
+    "entity_type": "operational_workflow",
+    "description": "A modeled artifact representing a business process (BPMN 2.0, EPC, or proprietary diagram), with version graph, lifecycle state, and metadata (owner, scope, framework lineage). Distinct from a process instance (runtime execution); this is the design-time definition."
+  },
+  {
+    "id": 584,
+    "data_object_name": "business_rules_extracted",
+    "singular_label": "Extracted Business Rule",
+    "plural_label": "Extracted Business Rules",
+    "entity_type": "operational_workflow",
+    "description": "Declarative rule inferred from event-log patterns: conditional activity orderings, forbidden sequences, timing constraints, resource allocations, decision thresholds. Captures hidden control logic."
+  },
+  {
+    "id": 1057,
+    "data_object_name": "business_trips",
+    "singular_label": "Business Trip",
+    "plural_label": "Business Trips",
+    "entity_type": "operational_workflow",
+    "description": "The container for a single corporate journey: the purpose, dates, traveler, and the set of booked segments that make it up. The unit that is approved, tracked, reconciled, and handed to expense and spend."
+  },
+  {
+    "id": 276,
+    "data_object_name": "business_value_assessments",
+    "singular_label": "Business Value Assessment",
+    "plural_label": "Business Value Assessments",
+    "entity_type": "operational_workflow",
+    "description": "Scoring model for prioritizing portfolio items: NPV, strategic alignment, risk, dependencies, resource constraints. Ranked backlog."
+  },
+  {
+    "id": 520,
+    "data_object_name": "butcher_orders",
+    "singular_label": "Butcher Order",
+    "plural_label": "Butcher Orders",
+    "entity_type": "operational_workflow",
+    "description": "Whole / half / quarter-animal pre-order: deposit status, customer cut-sheet preferences, processor coordination, pickup date."
+  },
+  {
+    "id": 1263,
+    "data_object_name": "cab_meetings",
+    "singular_label": "CAB Meeting",
+    "plural_label": "CAB Meetings",
+    "entity_type": "operational_record",
+    "description": "A Change Advisory Board meeting record: agenda, attendees, the changes reviewed, decisions, and minutes. The first-class artifact of the CAB review step in change management."
+  },
+  {
+    "id": 801,
+    "data_object_name": "cad_drawings",
+    "singular_label": "CAD Drawing",
+    "plural_label": "CAD Drawings",
+    "entity_type": "unclassified",
+    "description": "2D drawing records derived from CAD models, with their own revision, approval, and title-block metadata. Drawings often have a release cycle distinct from the 3D model they reference, especially in regulated industries where the drawing IS the controlled artifact."
+  },
+  {
+    "id": 800,
+    "data_object_name": "cad_models",
+    "singular_label": "CAD Model",
+    "plural_label": "CAD Models",
+    "entity_type": "unclassified",
+    "description": "CAD file metadata records (parts and assemblies). The vault stores the source CAD file (mechanical part and assembly files, electronic schematic and PCB files); this is the database record that tracks owner, check-in/out state, revision, viewable, and which engineering_revision it backs."
+  },
+  {
+    "id": 122,
+    "data_object_name": "call_recordings",
+    "singular_label": "Call Recording",
+    "plural_label": "Call Recordings",
+    "entity_type": "unclassified",
+    "description": "Recorded sales call: audio/video, transcript, participants, talk-track / topic / sentiment metadata. Conversation-intelligence tooling attaches this to deals and feeds conversation_intelligence_records downstream."
+  },
+  {
+    "id": 1016,
+    "data_object_name": "call_review_comments",
+    "singular_label": "Call Review Comment",
+    "plural_label": "Call Review Comments",
+    "entity_type": "operational_record",
+    "description": "Timestamped annotations left on a recorded call during review, tied to the moment in the conversation they refer to."
+  },
+  {
+    "id": 365,
+    "data_object_name": "cam_charges",
+    "singular_label": "CAM Charge",
+    "plural_label": "CAM Charges",
+    "entity_type": "unclassified",
+    "description": "Common-area-maintenance expense pool tracked annually, allocated to tenants based on pro-rata share with gross-up to occupancy, audit caps, and exclusion of capital items."
+  },
+  {
+    "id": 892,
+    "data_object_name": "candidate_assessment_templates",
+    "singular_label": "Candidate Assessment Template",
+    "plural_label": "Candidate Assessment Templates",
+    "entity_type": "catalog",
+    "description": "Library item for assessments (coding challenge, work sample, take-home, skills test). Carries title, vendor, time limit, scoring rubric. Materializes into candidate_assessments when assigned."
+  },
+  {
+    "id": 10,
+    "data_object_name": "candidate_assessments",
+    "singular_label": "Assessment",
+    "plural_label": "Assessments",
+    "entity_type": "operational_workflow",
+    "description": "Skills, cognitive, technical, or personality test result attached to an application. Often sourced from an external assessment provider and referenced here."
+  },
+  {
+    "id": 870,
+    "data_object_name": "candidate_consents",
+    "singular_label": "Candidate Consent",
+    "plural_label": "Candidate Consents",
+    "entity_type": "operational_workflow",
+    "description": "Per-candidate opt-in record for GDPR / CCPA / data retention. Carries consent type, jurisdiction, granted timestamp, withdrawal timestamp, retention window."
+  },
+  {
+    "id": 1000,
+    "data_object_name": "candidate_documents",
+    "singular_label": "Candidate Document",
+    "plural_label": "Candidate Documents",
+    "entity_type": "operational_record",
+    "description": "File artifact attached to a candidate (resume, cover letter, portfolio, work sample, signed disclosure, reference letter, right-to-work proof). Carries document type, MIME type, storage URI, uploaded-by actor, uploaded-at timestamp, and visibility scope."
+  },
+  {
+    "id": 1040,
+    "data_object_name": "candidate_emails",
+    "singular_label": "Candidate Email",
+    "plural_label": "Candidate Emails",
+    "entity_type": "operational_record",
+    "description": "Persisted email correspondence with a candidate as a first-class threaded record, distinct from free-text application notes and engagement summaries. Captures sent and received messages, the template used, and delivery status across the candidate relationship."
+  },
+  {
+    "id": 866,
+    "data_object_name": "candidate_engagements",
+    "singular_label": "Candidate Engagement",
+    "plural_label": "Candidate Engagements",
+    "entity_type": "operational_record",
+    "description": "Single recruiter-to-candidate touchpoint (email, InMail, call, SMS, event invite). Carries channel, direction, timestamp, status, and content reference."
+  },
+  {
+    "id": 1001,
+    "data_object_name": "candidate_notes",
+    "singular_label": "Candidate Note",
+    "plural_label": "Candidate Notes",
+    "entity_type": "operational_record",
+    "description": "Free-form recruiter or hiring-team note on a candidate, internal-only, never sent to the candidate. Carries author, body, visibility scope (private to author, team, or hiring panel), timestamp, and optional at-mentions to other team members."
+  },
+  {
+    "id": 867,
+    "data_object_name": "candidate_nurture_campaigns",
+    "singular_label": "Candidate Nurture Campaign",
+    "plural_label": "Candidate Nurture Campaigns",
+    "entity_type": "operational_workflow",
+    "description": "Multi-touch automated outreach sequence targeting talent-pool segments. Carries cadence, step templates, audience filter, and lifecycle state."
+  },
+  {
+    "id": 6,
+    "data_object_name": "candidate_referrals",
+    "singular_label": "Referral",
+    "plural_label": "Referrals",
+    "entity_type": "operational_workflow",
+    "description": "Employee-submitted candidate suggestion linked to a requisition. Tracks the referring employee, candidate, status, and any payable bonus."
+  },
+  {
+    "id": 1003,
+    "data_object_name": "candidate_tag_assignments",
+    "singular_label": "Candidate Tag Assignment",
+    "plural_label": "Candidate Tag Assignments",
+    "entity_type": "junction",
+    "description": "Many-to-many junction between candidates and candidate_tags. Carries assigned_by, assigned_at, and optional context."
+  },
+  {
+    "id": 1002,
+    "data_object_name": "candidate_tags",
+    "singular_label": "Candidate Tag",
+    "plural_label": "Candidate Tags",
+    "entity_type": "catalog",
+    "description": "Free-form label applied to a candidate to support segmentation, search, and pool inclusion rules. Distinct from talent pools (curated membership lists). Carries name, optional category, and color."
+  },
+  {
+    "id": 3,
+    "data_object_name": "candidates",
+    "singular_label": "Candidate",
+    "plural_label": "Candidates",
+    "entity_type": "operational_workflow",
+    "description": "Person known to the recruiting org, with or without an active application. Carries contact details, resume, tags, GDPR consent, and source. Distinct from Employee until hired."
+  },
+  {
+    "id": 770,
+    "data_object_name": "cap_tables",
+    "singular_label": "Cap Table",
+    "plural_label": "Cap Tables",
+    "entity_type": "operational_workflow",
+    "description": "Authoritative shareholder ledger for an issuing company: securities, classes, holders, transaction history."
+  },
+  {
+    "id": 1226,
+    "data_object_name": "capacity_plans",
+    "singular_label": "Capacity Plan",
+    "plural_label": "Capacity Plans",
+    "entity_type": "operational_workflow",
+    "description": "A sales-capacity model: coverage, ramp, and productivity assumptions sized against the revenue target."
+  },
+  {
+    "id": 87,
+    "data_object_name": "capacity_records",
+    "singular_label": "Capacity Record",
+    "plural_label": "Capacity Records",
+    "entity_type": "operational_record",
+    "description": "Resource utilization snapshots (CPU, memory, disk, throughput, IOPS) at fixed intervals for capacity planning, trend analysis, and FinOps cost allocation. The infra-side counterpart to OBS metric_series."
+  },
+  {
+    "id": 1024,
+    "data_object_name": "capital_call_notices",
+    "singular_label": "Capital Call Notice",
+    "plural_label": "Capital Call Notices",
+    "entity_type": "operational_workflow",
+    "description": "LP-facing notice document for a capital call, in standard reporting format, with publication timestamps; stored separately from the capital-call record."
+  },
+  {
+    "id": 761,
+    "data_object_name": "capital_call_responses",
+    "singular_label": "Capital Call Response",
+    "plural_label": "Capital Call Responses",
+    "entity_type": "operational_workflow",
+    "description": "Per-LP line item against a capital call: allocated amount, due date, funded amount, funded date."
+  },
+  {
+    "id": 367,
+    "data_object_name": "capital_calls",
+    "singular_label": "Capital Call",
+    "plural_label": "Capital Calls",
+    "entity_type": "operational_workflow",
+    "description": "Notice issued by GP to LPs requesting funding per commitment percentages; carries call amount, allocation, due date, funding receipt tracking."
+  },
+  {
+    "id": 351,
+    "data_object_name": "capital_projects",
+    "singular_label": "Capital Project",
+    "plural_label": "Capital Projects",
+    "entity_type": "operational_workflow",
+    "description": "Building improvement, renovation, or expansion; budget, timeline, completion status."
+  },
+  {
+    "id": 530,
+    "data_object_name": "capture_batches",
+    "singular_label": "Capture Batch",
+    "plural_label": "Capture Batches",
+    "entity_type": "operational_workflow",
+    "description": "Collection of physical or digital documents submitted together for IDP processing. Carries batch_id, source_system, capture_date, document_count, status (received / in_progress / completed / failed), and audit metadata."
+  },
+  {
+    "id": 1017,
+    "data_object_name": "captured_activities",
+    "singular_label": "Captured Activity",
+    "plural_label": "Captured Activities",
+    "entity_type": "operational_record",
+    "description": "An automatically captured email, meeting, or call attributed to an opportunity and account, removing the manual logging burden and keeping the activity record complete."
+  },
+  {
+    "id": 745,
+    "data_object_name": "card_authorizations",
+    "singular_label": "Card Authorization",
+    "plural_label": "Card Authorizations",
+    "entity_type": "operational_workflow",
+    "description": "Real-time pre-authorization event from card network with policy decision — distinct from EXPENSE settled card_transactions."
+  },
+  {
+    "id": 213,
+    "data_object_name": "card_transactions",
+    "singular_label": "Card Transaction",
+    "plural_label": "Card Transactions",
+    "entity_type": "operational_workflow",
+    "description": "Authorization / settlement record from a corporate_card feed: merchant, MCC, amount, FX, posting date. Matched to expense_lines for full audit trail."
+  },
+  {
+    "id": 619,
+    "data_object_name": "care_plans",
+    "singular_label": "Care Plan",
+    "plural_label": "Care Plans",
+    "entity_type": "operational_workflow",
+    "description": "Coordinated care document for a patient condition: goals, interventions, target dates, responsible providers, monitoring frequency, escalation triggers. Used in chronic-disease management, transitions of care, and oncology pathways. Patient-centric (distinct from project plans, treatment protocols)."
+  },
+  {
+    "id": 179,
+    "data_object_name": "career_aspirations",
+    "singular_label": "Career Aspiration",
+    "plural_label": "Career Aspirations",
+    "entity_type": "operational_workflow",
+    "description": "Worker-declared career interest: target roles, mobility preferences (geographic, functional), aspired timeline. Drives internal-mobility matching."
+  },
+  {
+    "id": 863,
+    "data_object_name": "career_path_suggestions",
+    "singular_label": "Career Path",
+    "plural_label": "Career Paths",
+    "entity_type": "computed",
+    "description": "AI-projected route from a current role toward an aspiration, with required skills (distinct from employee-authored career_aspirations)."
+  },
+  {
+    "id": 152,
+    "data_object_name": "carrier_feeds",
+    "singular_label": "Carrier Feed",
+    "plural_label": "Carrier Feeds",
+    "entity_type": "operational_workflow",
+    "description": "Outbound integration to a benefit_carrier (EDI 834 enrollment, 820 remittance, custom API, file_drop). Mostly weekly batch; failures cause coverage discrepancies between HR system of record and carrier of record."
+  },
+  {
+    "id": 383,
+    "data_object_name": "carts",
+    "singular_label": "Shopping Cart",
+    "plural_label": "Shopping Carts",
+    "entity_type": "operational_workflow",
+    "description": "Session-scoped cart holding products before checkout; item quantities, pricing, promotions. Abandoned carts feed MA nurture."
+  },
+  {
+    "id": 193,
+    "data_object_name": "case_categories",
+    "singular_label": "HR Case Category",
+    "plural_label": "HR Case Categories",
+    "entity_type": "catalog",
+    "description": "Taxonomy of HR ask types (Pay, Benefits, Leave, Policy, Time, Compensation, Performance, Employee Relations, Compliance). Drives routing, SLA, knowledge-article lookup, and trend analytics."
+  },
+  {
+    "id": 1137,
+    "data_object_name": "case_records",
+    "singular_label": "Case Record",
+    "plural_label": "Case Records",
+    "entity_type": "operational_workflow",
+    "description": "A case file for flexible, non-sequential knowledge work: a container of ad-hoc and planned activities, milestones, and stage gates where the path is decided by workers at runtime rather than fixed in a process model."
+  },
+  {
+    "id": 200,
+    "data_object_name": "cash_transactions",
+    "singular_label": "Cash Transaction",
+    "plural_label": "Cash Transactions",
+    "entity_type": "unclassified",
+    "description": "Posting to a bank_account: incoming receipt, outgoing payment, transfer, fee. Drives reconciliation against journal_entries and bank statements."
+  },
+  {
+    "id": 735,
+    "data_object_name": "ccaas_call_recordings",
+    "singular_label": "CCaaS Call Recording",
+    "plural_label": "CCaaS Call Recordings",
+    "entity_type": "operational_workflow",
+    "description": "Call and screen recording from a contact-center session. Distinct from SALES-ENG call_recordings."
+  },
+  {
+    "id": 509,
+    "data_object_name": "ccp_measurements",
+    "singular_label": "CCP Measurement",
+    "plural_label": "CCP Measurements",
+    "entity_type": "operational_workflow",
+    "description": "Real-time or shift-frequency CCP monitoring reading; deviation triggers corrective-action workflow."
+  },
+  {
+    "id": 932,
+    "data_object_name": "certificate_templates",
+    "singular_label": "Certificate Template",
+    "plural_label": "Certificate Templates",
+    "entity_type": "catalog",
+    "description": "PDF / image template used to issue a certificate to a learner; carries layout and dynamic fields."
+  },
+  {
+    "id": 931,
+    "data_object_name": "certification_definitions",
+    "singular_label": "Certification Definition",
+    "plural_label": "Certification Definitions",
+    "entity_type": "catalog",
+    "description": "Catalog of certification types: name, issuing authority, validity period, recertification policy, prerequisite courses."
+  },
+  {
+    "id": 1280,
+    "data_object_name": "certification_renewals",
+    "singular_label": "Certification Renewal",
+    "plural_label": "Certification Renewals",
+    "entity_type": "operational_workflow",
+    "description": "Renewal cycle of an existing certification, distinct from initial issuance."
+  },
+  {
+    "id": 936,
+    "data_object_name": "ceu_records",
+    "singular_label": "CEU Record",
+    "plural_label": "CEU Records",
+    "entity_type": "operational_workflow",
+    "description": "Earned-credit ledger row per learner; CEU evidence for state-CE, NASBA, and similar professional licensure reporting."
+  },
+  {
+    "id": 1264,
+    "data_object_name": "change_collisions",
+    "singular_label": "Change Collision",
+    "plural_label": "Change Collisions",
+    "entity_type": "operational_record",
+    "description": "A detected conflict between overlapping changes or a change scheduled inside a blackout window. Records the colliding changes, the window in question, and the resolution. Surfaces scheduling conflicts before they reach implementation."
+  },
+  {
+    "id": 439,
+    "data_object_name": "change_data_capture_streams",
+    "singular_label": "CDC Stream",
+    "plural_label": "CDC Streams",
+    "entity_type": "operational_workflow",
+    "description": "Change-data-capture log metadata: source database table, captured columns, capture mode (row-level / query-level), watermark positions."
+  },
+  {
+    "id": 571,
+    "data_object_name": "channel_file_shares",
+    "singular_label": "Channel File Share",
+    "plural_label": "Channel File Shares",
+    "entity_type": "junction",
+    "description": "File pinned or shared at channel level (not per-message): file_id, channel_id, shared_by_user, shared_at, expiry_policy, access_permissions. Distinct from KMS authored knowledge."
+  },
+  {
+    "id": 568,
+    "data_object_name": "channel_members",
+    "singular_label": "Channel Member",
+    "plural_label": "Channel Members",
+    "entity_type": "junction",
+    "description": "Membership relationship linking a user/external guest to a channel: join_date, role (owner / moderator / member), notification settings, access_level."
+  },
+  {
+    "id": 1223,
+    "data_object_name": "channel_mix_plans",
+    "singular_label": "Channel Mix Plan",
+    "plural_label": "Channel Mix Plans",
+    "entity_type": "operational_workflow",
+    "description": "The strategic channel-mix master: which routes (direct, partner, digital, PLG) carry which segments. Spend-execution allocation lives downstream in Marketing Automation and the ABM platform."
+  },
+  {
+    "id": 564,
+    "data_object_name": "chat_channels",
+    "singular_label": "Chat Channel",
+    "plural_label": "Chat Channels",
+    "entity_type": "operational_workflow",
+    "description": "Persistent conversation space: private, public, or DM. Carries name, topic, member list, retention policy, external guest federation. The foundational WSC organizing unit."
+  },
+  {
+    "id": 567,
+    "data_object_name": "chat_huddles",
+    "singular_label": "Chat Huddle",
+    "plural_label": "Chat Huddles",
+    "entity_type": "operational_workflow",
+    "description": "Synchronous audio/video meeting spawned from a channel or DM: huddle_type (voice / video), participants, start/end, duration, recording_reference, transcription_reference."
+  },
+  {
+    "id": 570,
+    "data_object_name": "chat_message_attachments",
+    "singular_label": "Chat Message Attachment",
+    "plural_label": "Chat Message Attachments",
+    "entity_type": "operational_record",
+    "description": "File or link embedded in a message: attachment_type (file / link / image / video / integration_card), file_id/url, file_size, upload_timestamp, virus_scan_status."
+  },
+  {
+    "id": 565,
+    "data_object_name": "chat_messages",
+    "singular_label": "Chat Message",
+    "plural_label": "Chat Messages",
+    "entity_type": "operational_record",
+    "description": "Single message posted to a channel or thread: author, timestamp, content (text, emoji, markdown, rich-text preview), attachments, edit history, reactions. Distinct from email messages or SMS."
+  },
+  {
+    "id": 566,
+    "data_object_name": "chat_threads",
+    "singular_label": "Chat Thread",
+    "plural_label": "Chat Threads",
+    "entity_type": "operational_record",
+    "description": "Nested conversation branch within a channel message: parent_message_id, replies, thread participants, read state. Enables focused sub-conversations."
+  },
+  {
+    "id": 386,
+    "data_object_name": "checkouts",
+    "singular_label": "Checkout Session",
+    "plural_label": "Checkout Sessions",
+    "entity_type": "operational_workflow",
+    "description": "Transactional checkout session capturing customer identity, payment method, shipping address, and final order conversion."
+  },
+  {
+    "id": 1081,
+    "data_object_name": "chemical_inventory",
+    "singular_label": "Chemical Inventory Item",
+    "plural_label": "Chemical Inventory",
+    "entity_type": "operational_record",
+    "description": "A hazardous substance in the chemical inventory, with quantity, location, and links to its safety data sheet and exposure limits."
+  },
+  {
+    "id": 80,
+    "data_object_name": "ci_baselines",
+    "singular_label": "CI Baseline",
+    "plural_label": "CI Baselines",
+    "entity_type": "operational_workflow",
+    "description": "Captured configuration state at a point in time, used for drift detection, approved-state validation, and audit evidence. Triggers an unauthorized-change incident when current state diverges."
+  },
+  {
+    "id": 78,
+    "data_object_name": "ci_classes",
+    "singular_label": "CI Class",
+    "plural_label": "CI Classes",
+    "entity_type": "catalog",
+    "description": "The CI type hierarchy (Computer → Linux Server → Web Server, Application → Microservice → REST API) defining schema, inherited attributes, and class-level monitoring/discovery policies. The schema-of-schemas for the CMDB."
+  },
+  {
+    "id": 680,
+    "data_object_name": "ci_pipeline_runs",
+    "singular_label": "CI/CD Pipeline Run",
+    "plural_label": "CI/CD Pipeline Runs",
+    "entity_type": "operational_workflow",
+    "description": "Single execution of a ci_pipeline: triggering commit, start/end timestamps, duration, overall status (success / failed / canceled), per-stage results, runner. The unit for DORA deploy-frequency and change-fail-rate metrics."
+  },
+  {
+    "id": 679,
+    "data_object_name": "ci_pipelines",
+    "singular_label": "CI/CD Pipeline",
+    "plural_label": "CI/CD Pipelines",
+    "entity_type": "catalog",
+    "description": "Pipeline definition (build / test / scan / deploy): source_repository reference, trigger conditions (push / PR / scheduled / manual), stage configuration, secrets binding. Scope-qualified vs DI data-pipelines."
+  },
+  {
+    "id": 77,
+    "data_object_name": "ci_relationships",
+    "singular_label": "CI Relationship",
+    "plural_label": "CI Relationships",
+    "entity_type": "junction",
+    "description": "Edges in the CI graph: depends-on, runs-on, contains, member-of, hosted-by, communicates-with. The topology that makes service mapping, impact analysis, and event correlation possible."
+  },
+  {
+    "id": 627,
+    "data_object_name": "claim_adjuster_assignments",
+    "singular_label": "Claim Adjuster Assignment",
+    "plural_label": "Claim Adjuster Assignments",
+    "entity_type": "operational_record",
+    "description": "Allocation of claims to adjusters: adjuster, assigned_date, claim_count, caseload_status, assignment_reason (intake / escalation / specialty / reassignment). Drives adjuster workload analytics."
+  },
+  {
+    "id": 629,
+    "data_object_name": "claim_payments",
+    "singular_label": "Claim Payment",
+    "plural_label": "Claim Payments",
+    "entity_type": "operational_workflow",
+    "description": "Disbursement to claimant, provider, or vendor: amount, payment date, check/EFT reference, reserve basis, line-item allocation to coverages. Distinct from generic payments (rent, AR, supplier)."
+  },
+  {
+    "id": 628,
+    "data_object_name": "claim_settlements",
+    "singular_label": "Claim Settlement",
+    "plural_label": "Claim Settlements",
+    "entity_type": "operational_workflow",
+    "description": "Settlement agreement specifying approved amount, conditions, releases, and closure terms for a resolved claim: settlement_date, payee, breakdown by coverage, structured-settlement schedule, release language."
+  },
+  {
+    "id": 1050,
+    "data_object_name": "clause_libraries",
+    "singular_label": "Clause Library",
+    "plural_label": "Clause Libraries",
+    "entity_type": "catalog",
+    "description": "A versioned, governed collection of approved contract clauses, often organized by jurisdiction or contract type, that authors draw from."
+  },
+  {
+    "id": 401,
+    "data_object_name": "client_engagements",
+    "singular_label": "Client Engagement",
+    "plural_label": "Client Engagements",
+    "entity_type": "unclassified",
+    "description": "Professional-services engagement record (used by ACCT primarily but generic across professional services): client, service line, scope, fee model, period, status. Distinct from `engagement_letters` (the contract artifact)."
+  }
+]

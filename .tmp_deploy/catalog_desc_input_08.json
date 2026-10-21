@@ -1,0 +1,786 @@
+[
+  {
+    "id": 60,
+    "data_object_name": "license_audits",
+    "singular_label": "License Audit",
+    "plural_label": "License Audits",
+    "entity_type": "unclassified",
+    "description": "Audit / true-up record: entitled count, installed count, the resulting gap, true-up cost, and audit-defense evidence. Triggered by vendor audit or proactive internal review. The artifact that justifies a SAM tool's ROI."
+  },
+  {
+    "id": 642,
+    "data_object_name": "license_records",
+    "singular_label": "Issued License Record",
+    "plural_label": "Issued License Records",
+    "entity_type": "operational_workflow",
+    "description": "Active issued license or permit: license number, holder, type, issue date, expiration date, conditions, jurisdiction, current status (active / suspended / expired / revoked). The post-approval authoritative record."
+  },
+  {
+    "id": 644,
+    "data_object_name": "license_renewals",
+    "singular_label": "License Renewal",
+    "plural_label": "License Renewals",
+    "entity_type": "operational_workflow",
+    "description": "Renewal application for an existing license: source license, renewal cycle, submission date, updated requirements, fees, conditions changes, outcome. Workflow distinct from initial issuance."
+  },
+  {
+    "id": 149,
+    "data_object_name": "life_events",
+    "singular_label": "Life Event",
+    "plural_label": "Life Events",
+    "entity_type": "operational_workflow",
+    "description": "Qualifying event (marriage, birth, adoption, divorce, dependent loss-of-coverage, employment change) that opens a mid-year enrollment window. Triggers benefit_enrollments changes outside open enrollment."
+  },
+  {
+    "id": 728,
+    "data_object_name": "limited_partners",
+    "singular_label": "Limited Partner",
+    "plural_label": "Limited Partners",
+    "entity_type": "unclassified",
+    "description": "LP entity + commitment + contributions-to-date + governance rights — required for LP compliance (K-1, consent tracking)."
+  },
+  {
+    "id": 1099,
+    "data_object_name": "livestock_animals",
+    "singular_label": "Animal",
+    "plural_label": "Animals",
+    "entity_type": "operational_workflow",
+    "description": "An individual head of livestock: identity, breed, sex, birth or acquisition date, current status, parentage, and the mob it belongs to. The animal-centric core record beef and sheep operations build their schema around."
+  },
+  {
+    "id": 1106,
+    "data_object_name": "livestock_identifiers",
+    "singular_label": "Livestock Identifier",
+    "plural_label": "Livestock Identifiers",
+    "entity_type": "operational_record",
+    "description": "An electronic or visual identifier attached to an animal (RFID / EID ear tag, national-scheme device number, management tag) and the traceability registration it carries. Jurisdiction-gated: the applicable scheme depends on where the operation runs."
+  },
+  {
+    "id": 1100,
+    "data_object_name": "livestock_mobs",
+    "singular_label": "Mob",
+    "plural_label": "Mobs",
+    "entity_type": "operational_workflow",
+    "description": "A managed group of animals (mob, group, or lot) handled collectively for movements, treatments, and pasture allocation. The unit most day-to-day grazing operations actually operate on."
+  },
+  {
+    "id": 602,
+    "data_object_name": "loan_applications",
+    "singular_label": "Loan Application",
+    "plural_label": "Loan Applications",
+    "entity_type": "operational_workflow",
+    "description": "Borrower request to originate a loan: application date, requested amount, purpose, personal/commercial distinction, loan type (mortgage, auto, commercial line, term loan), requested tenor, collateral, guarantor status, lifecycle state (draft / submitted / approved / declined / funded)."
+  },
+  {
+    "id": 608,
+    "data_object_name": "loan_disbursements",
+    "singular_label": "Loan Disbursement",
+    "plural_label": "Loan Disbursements",
+    "entity_type": "operational_workflow",
+    "description": "Release of approved loan funds: loan_application reference, disbursement date, amount, tranching (full / phased), destination account, conditions satisfied, regulatory reporting flags. Carries funding state."
+  },
+  {
+    "id": 795,
+    "data_object_name": "locations",
+    "singular_label": "Location",
+    "plural_label": "Locations",
+    "entity_type": "catalog",
+    "description": ""
+  },
+  {
+    "id": 89,
+    "data_object_name": "log_entries",
+    "singular_label": "Log Entry",
+    "plural_label": "Log Entries",
+    "entity_type": "operational_record",
+    "description": "Application log stream entries, structured and unstructured. Indexed for search; correlated with metrics and traces for root-cause analysis."
+  },
+  {
+    "id": 626,
+    "data_object_name": "loss_incidents",
+    "singular_label": "Loss Incident",
+    "plural_label": "Loss Incidents",
+    "entity_type": "operational_record",
+    "description": "FNOL event giving rise to a claim: occurrence date, location, loss description, cause, subtype (property damage, liability, injury, death), first-reported date. P&C-primary; distinct from ITSM incidents (internal IT operational events)."
+  },
+  {
+    "id": 263,
+    "data_object_name": "loyalty_members",
+    "singular_label": "Loyalty Member",
+    "plural_label": "Loyalty Members",
+    "entity_type": "unclassified",
+    "description": "A customer enrolled in the loyalty program. Captures tier, accrued points balance, enrollment date, opt-in status. Distinct from the broader customers entity (CDP/CRM-mastered): a loyalty member is the program-side identity which may or may not match a CRM customer one-to-one (households, joint accounts, anonymous tier members in pre-identification flows)."
+  },
+  {
+    "id": 265,
+    "data_object_name": "loyalty_tiers",
+    "singular_label": "Loyalty Tier",
+    "plural_label": "Loyalty Tiers",
+    "entity_type": "unclassified",
+    "description": "A tier definition in the loyalty program (Bronze / Silver / Gold / Platinum or equivalent). Captures qualifying thresholds, benefits, retention rules. The reference catalog every loyalty_member is assigned to."
+  },
+  {
+    "id": 264,
+    "data_object_name": "loyalty_transactions",
+    "singular_label": "Loyalty Transaction",
+    "plural_label": "Loyalty Transactions",
+    "entity_type": "unclassified",
+    "description": "A point-earning or point-spending event for a loyalty_member: purchase points, bonus-promo points, redemption, expiry, adjustment. The atomic accounting record for the loyalty program."
+  },
+  {
+    "id": 759,
+    "data_object_name": "lp_commitments",
+    "singular_label": "LP Commitment",
+    "plural_label": "LP Commitments",
+    "entity_type": "operational_workflow",
+    "description": "Active capital commitment from an LP to a fund: committed_amount, called-to-date, distributed-to-date, NAV. The lifecycle record that capital_calls and fund_distributions reference."
+  },
+  {
+    "id": 1022,
+    "data_object_name": "lp_kyc_records",
+    "singular_label": "LP KYC Record",
+    "plural_label": "LP KYC Records",
+    "entity_type": "operational_workflow",
+    "description": "KYC and AML output for an LP, including sanction-screening results, captured at subscription time and re-screened periodically."
+  },
+  {
+    "id": 754,
+    "data_object_name": "lp_prospects",
+    "singular_label": "LP Prospect",
+    "plural_label": "LP Prospects",
+    "entity_type": "operational_workflow",
+    "description": "Limited partners being fundraised — pre-commitment relationship stage. Distinct from `lp_commitments` which is post-close."
+  },
+  {
+    "id": 769,
+    "data_object_name": "lp_quarterly_reports",
+    "singular_label": "LP Quarterly Report",
+    "plural_label": "LP Quarterly Reports",
+    "entity_type": "operational_workflow",
+    "description": "LP-facing performance report per fund per quarter: position-level marks, fund-level performance metrics, GP commentary, portfolio highlights. Locked when distributed."
+  },
+  {
+    "id": 758,
+    "data_object_name": "lp_subscriptions",
+    "singular_label": "LP Subscription",
+    "plural_label": "LP Subscriptions",
+    "entity_type": "operational_workflow",
+    "description": "Subscription document collected during LP onboarding: legal commitment to the fund at a stated dollar amount, KYC/AML results, accreditation attestation."
+  },
+  {
+    "id": 1271,
+    "data_object_name": "lrs_statement_endpoints",
+    "singular_label": "LRS Statement Endpoint",
+    "plural_label": "LRS Statement Endpoints",
+    "entity_type": "catalog",
+    "description": "External Learning Record Store endpoints xAPI statements are routed to."
+  },
+  {
+    "id": 493,
+    "data_object_name": "machinery_telemetry_records",
+    "singular_label": "Machinery Telemetry Record",
+    "plural_label": "Machinery Telemetry Records",
+    "entity_type": "unclassified",
+    "description": "Per-job equipment telemetry log from CAN-bus / ISOBUS / OEM API (planting depth, application rate, GPS track, alarms)."
+  },
+  {
+    "id": 703,
+    "data_object_name": "maintenance_defects",
+    "singular_label": "Maintenance Defect",
+    "plural_label": "Maintenance Defects",
+    "entity_type": "operational_workflow",
+    "description": "Structured defect / non-conformance record (pre-work-order capture from DVIR or inspection)."
+  },
+  {
+    "id": 962,
+    "data_object_name": "manager_nudges",
+    "singular_label": "Manager Nudge",
+    "plural_label": "Manager Nudges",
+    "entity_type": "operational_workflow",
+    "description": "Manager-directed reminder triggered when a direct report has overdue or upcoming training."
+  },
+  {
+    "id": 802,
+    "data_object_name": "manufacturing_boms",
+    "singular_label": "Manufacturing BOM",
+    "plural_label": "Manufacturing BOMs",
+    "entity_type": "operational_workflow",
+    "description": "Manufacturing BOM (mBOM). The eBOM restructured for manufacturing assembly order, with phantom-part rollups, kitting, and process-specific decompositions. The mBOM feeds the MES / production planning system."
+  },
+  {
+    "id": 803,
+    "data_object_name": "manufacturing_routings",
+    "singular_label": "Manufacturing Routing",
+    "plural_label": "Manufacturing Routings",
+    "entity_type": "unclassified",
+    "description": "Routing master: ordered sequence of operations required to produce a part, with work center, setup time, run time, and resource allocations. Drives MES work-instruction generation and ERP standard-cost calculations."
+  },
+  {
+    "id": 1177,
+    "data_object_name": "marina_moorings",
+    "singular_label": "Mooring",
+    "plural_label": "Moorings",
+    "entity_type": "operational_record",
+    "description": "A mooring ball in a mooring field: position, tackle, weight rating, and assigned vessel."
+  },
+  {
+    "id": 1176,
+    "data_object_name": "marina_slips",
+    "singular_label": "Slip",
+    "plural_label": "Slips",
+    "entity_type": "operational_workflow",
+    "description": "A wet berth at a dock: number, dock, length/beam/draft limits, utilities (power, water), and service status."
+  },
+  {
+    "id": 1219,
+    "data_object_name": "market_segments",
+    "singular_label": "Market Segment",
+    "plural_label": "Market Segments",
+    "entity_type": "catalog",
+    "description": "A defined slice of the market (industry, size, geography, motion) the plan targets."
+  },
+  {
+    "id": 1007,
+    "data_object_name": "market_signals",
+    "singular_label": "Market Signal",
+    "plural_label": "Market Signals",
+    "entity_type": "operational_record",
+    "description": "Competitive, pricing, and churn-risk signals aggregated across the conversation corpus, summarizing what the market is saying in aggregate rather than on a single call."
+  },
+  {
+    "id": 1070,
+    "data_object_name": "marketing_budget_allocations",
+    "singular_label": "Marketing Budget Allocation",
+    "plural_label": "Marketing Budget Allocations",
+    "entity_type": "operational_workflow",
+    "description": "A top-down assignment of budget from a marketing budget to a specific plan line, campaign, or channel, routed through approval and the unit against which spend is reconciled."
+  },
+  {
+    "id": 1069,
+    "data_object_name": "marketing_budgets",
+    "singular_label": "Marketing Budget",
+    "plural_label": "Marketing Budgets",
+    "entity_type": "operational_workflow",
+    "description": "A pool of marketing funds for a period, business unit, or region that is approved and then allocated top-down across plans, plan lines, campaigns, and channels."
+  },
+  {
+    "id": 1068,
+    "data_object_name": "marketing_calendars",
+    "singular_label": "Marketing Calendar",
+    "plural_label": "Marketing Calendars",
+    "entity_type": "operational_record",
+    "description": "A shared campaign and content calendar that lays marketing activity out across time, teams, and channels, drawing its entries from plan lines for cross-team visibility and coordination."
+  },
+  {
+    "id": 116,
+    "data_object_name": "marketing_campaigns",
+    "singular_label": "Campaign",
+    "plural_label": "Campaigns",
+    "entity_type": "operational_workflow",
+    "description": "Marketing campaign definitions — email blast, drip sequence, multi-channel, paid social tie-in, webinar series, ABM play. Carries target audience (segments), schedule, content variants, attribution settings, performance KPIs."
+  },
+  {
+    "id": 117,
+    "data_object_name": "marketing_emails",
+    "singular_label": "Marketing Email",
+    "plural_label": "Marketing Emails",
+    "entity_type": "operational_workflow",
+    "description": "Email templates and sent instances at marketing scale: list-driven, volume-heavy, branded. Carries open/click/bounce/unsubscribe metrics, deliverability state, sender-reputation impact. Distinct from SALES-ENG `sales_emails` (1-1, rep-driven)."
+  },
+  {
+    "id": 120,
+    "data_object_name": "marketing_forms",
+    "singular_label": "Form",
+    "plural_label": "Forms",
+    "entity_type": "operational_workflow",
+    "description": "Lead-capture form definitions: fields, mapping to leads/contacts, hidden field rules, conditional logic, post-submit routing (lead score boost, nurture enroll, sales-rep notification)."
+  },
+  {
+    "id": 1072,
+    "data_object_name": "marketing_performance_metrics",
+    "singular_label": "Marketing Performance Metric",
+    "plural_label": "Marketing Performance Metrics",
+    "entity_type": "computed",
+    "description": "A plan-level performance or marketing-ROI measure (results, pipeline contribution, return on marketing investment) computed against the plans and budgets that funded the activity."
+  },
+  {
+    "id": 1067,
+    "data_object_name": "marketing_plan_lines",
+    "singular_label": "Marketing Plan Line",
+    "plural_label": "Marketing Plan Lines",
+    "entity_type": "operational_record",
+    "description": "A line within a marketing plan representing a planned activity, campaign, program, or initiative, carrying its objective, owner, time window, and allocated budget. The grain at which budget is allocated and spend is reconciled."
+  },
+  {
+    "id": 1066,
+    "data_object_name": "marketing_plans",
+    "singular_label": "Marketing Plan",
+    "plural_label": "Marketing Plans",
+    "entity_type": "operational_workflow",
+    "description": "Annual or quarterly marketing plan: the top-level container that organizes objectives, plan lines, and budget for a marketing period and is approved before execution."
+  },
+  {
+    "id": 1071,
+    "data_object_name": "marketing_spend_records",
+    "singular_label": "Marketing Spend Record",
+    "plural_label": "Marketing Spend Records",
+    "entity_type": "operational_workflow",
+    "description": "A committed or actual marketing expenditure (purchase order, invoice, or actual) attributed to a budget allocation and plan line, reconciled against allocated budget to compute remaining budget and variance."
+  },
+  {
+    "id": 865,
+    "data_object_name": "match_inference_runs",
+    "singular_label": "Match Inference Run",
+    "plural_label": "Match Inference Runs",
+    "entity_type": "operational_record",
+    "description": "Audit record of a matching or scoring batch: model version, inputs (skill profiles, opportunities, roles), outputs (fit scores, recommendations), timestamp."
+  },
+  {
+    "id": 318,
+    "data_object_name": "match_rules",
+    "singular_label": "MDM Match Rule",
+    "plural_label": "MDM Match Rules",
+    "entity_type": "catalog",
+    "description": "Decision logic (exact / fuzzy / ML) identifying candidate duplicate records within or across sources; field weights, threshold scores."
+  },
+  {
+    "id": 166,
+    "data_object_name": "meal_break_records",
+    "singular_label": "Meal Break Record",
+    "plural_label": "Meal Break Records",
+    "entity_type": "operational_record",
+    "description": "Recorded meal and rest-break event evidencing compliance with labor-law break requirements (US state mandates, EU Working Time Directive). Carries waiver attestation where applicable."
+  },
+  {
+    "id": 481,
+    "data_object_name": "media_plans",
+    "singular_label": "Media Plan",
+    "plural_label": "Media Plans",
+    "entity_type": "unclassified",
+    "description": "Per-campaign media-buying plan broken down by outlet, channel, daypart, audience, flight dates, and budget allocation. Approved media plans convert into insertion_orders."
+  },
+  {
+    "id": 610,
+    "data_object_name": "medical_devices",
+    "singular_label": "Medical Device",
+    "plural_label": "Medical Devices",
+    "entity_type": "operational_workflow",
+    "description": "Medical equipment in clinical use (infusion pumps, ventilators, patient monitors, imaging systems, patient transport). Specialized regulated asset (FDA/MDR, biocompatibility); distinct from EAM industrial_assets (plant) and HAM hardware_assets (IT)."
+  },
+  {
+    "id": 864,
+    "data_object_name": "mentorship_engagements",
+    "singular_label": "Mentorship",
+    "plural_label": "Mentorships",
+    "entity_type": "operational_workflow",
+    "description": "Matched mentor-mentee relationship with goals, cadence, and status."
+  },
+  {
+    "id": 319,
+    "data_object_name": "merge_rules",
+    "singular_label": "MDM Merge Rule",
+    "plural_label": "MDM Merge Rules",
+    "entity_type": "catalog",
+    "description": "Defines which source system's value wins per field when two records merge (survivorship: first/last/most-populated/highest-quality/custom)."
+  },
+  {
+    "id": 155,
+    "data_object_name": "merit_cycles",
+    "singular_label": "Merit Cycle",
+    "plural_label": "Merit Cycles",
+    "entity_type": "operational_workflow",
+    "description": "Periodic compensation review cycle (annual, semi-annual, focal): budget pool, eligibility, calibration step, approval chain, effective date. The recurring operating model of comp management."
+  },
+  {
+    "id": 156,
+    "data_object_name": "merit_recommendations",
+    "singular_label": "Merit Recommendation",
+    "plural_label": "Merit Recommendations",
+    "entity_type": "operational_workflow",
+    "description": "Per-employee per-cycle proposed merit increase, bonus, and equity refresh from manager, with calibration adjustments and final approval. Approved values become the pay-rate change posted to payroll."
+  },
+  {
+    "id": 1212,
+    "data_object_name": "messaging_frameworks",
+    "singular_label": "Messaging Framework",
+    "plural_label": "Messaging Frameworks",
+    "entity_type": "operational_workflow",
+    "description": "A positioning and messaging house for a product or segment: pillars, proof points, and approved copy."
+  },
+  {
+    "id": 1190,
+    "data_object_name": "meter_readings",
+    "singular_label": "Meter Reading",
+    "plural_label": "Meter Readings",
+    "entity_type": "operational_record",
+    "description": "A periodic read of a utility meter, manual or wireless, that becomes a billable utility line."
+  },
+  {
+    "id": 662,
+    "data_object_name": "meter_reads",
+    "singular_label": "Meter Read",
+    "plural_label": "Meter Reads",
+    "entity_type": "operational_workflow",
+    "description": "Operator-collected or AMI-transmitted consumption reading: read date, consumption value, unit, read method (manual / AMR / AMI), anomaly flags. Billing-facing time-series at utility scale (millions of reads/day)."
+  },
+  {
+    "id": 711,
+    "data_object_name": "metric_access_policies",
+    "singular_label": "Metric Access Policy",
+    "plural_label": "Metric Access Policies",
+    "entity_type": "operational_workflow",
+    "description": "Row-level / metric-level ABAC policy at the semantic-definition tier (which BU sees which metric)."
+  },
+  {
+    "id": 252,
+    "data_object_name": "metric_definitions",
+    "singular_label": "Metric Definition",
+    "plural_label": "Metric Definitions",
+    "entity_type": "operational_workflow",
+    "description": "Canonical, certified definition of a business metric: numerator, denominator, filters, dimensions, time grain, ownership, certification status, and lineage to physical sources. The atom that the metrics-layer market exists to centralize and govern."
+  },
+  {
+    "id": 709,
+    "data_object_name": "metric_materializations",
+    "singular_label": "Metric Materialization",
+    "plural_label": "Metric Materializations",
+    "entity_type": "operational_workflow",
+    "description": "Cached or pre-aggregated metric rollup served from columnar storage by the semantic layer."
+  },
+  {
+    "id": 88,
+    "data_object_name": "metric_series",
+    "singular_label": "Metric Series",
+    "plural_label": "Metric Series",
+    "entity_type": "operational_record",
+    "description": "Time-series metric streams from instrumented applications — counters, gauges, histograms, summaries. The dev-instrumentation counterpart to ITOM's capacity_records, typically higher-cardinality and tied to release versions."
+  },
+  {
+    "id": 502,
+    "data_object_name": "milk_quality_tests",
+    "singular_label": "Milk Quality Test",
+    "plural_label": "Milk Quality Tests",
+    "entity_type": "operational_workflow",
+    "description": "Bulk-tank or per-cow milk-quality result: SCC, bacterial count, butterfat, protein, antibiotic-residue screen."
+  },
+  {
+    "id": 501,
+    "data_object_name": "milkings",
+    "singular_label": "Milking",
+    "plural_label": "Milkings",
+    "entity_type": "operational_workflow",
+    "description": "Per-cow per-session milking event: parlor / robot ID, milk yield, conductivity, milking duration; from parlor / AMS telemetry."
+  },
+  {
+    "id": 723,
+    "data_object_name": "ml_model_training_records",
+    "singular_label": "ML Model Training Record",
+    "plural_label": "ML Model Training Records",
+    "entity_type": "operational_record",
+    "description": "Training metadata for AIOps ML models (feature set, training window, model version, accuracy, retraining schedule)."
+  },
+  {
+    "id": 228,
+    "data_object_name": "ml_models",
+    "singular_label": "ML Model",
+    "plural_label": "ML Models",
+    "entity_type": "unclassified",
+    "description": "Registered machine-learning model with versions, training-data lineage, evaluation metrics, deployment endpoints, and approval state. Backed by the platform's model registry. Distinct from PA's predictive_models, which is the HR-specific attrition-modeling concept consumed inside People Analytics workflows."
+  },
+  {
+    "id": 1101,
+    "data_object_name": "mob_movements",
+    "singular_label": "Mob Movement",
+    "plural_label": "Mob Movements",
+    "entity_type": "operational_workflow",
+    "description": "A recorded movement of a mob between paddocks, properties, or to an external destination, with date, head count, origin, destination, and reason. Feeds traceability-scheme movement reporting."
+  },
+  {
+    "id": 559,
+    "data_object_name": "mobile_app_packages",
+    "singular_label": "Mobile App Package",
+    "plural_label": "Mobile App Packages",
+    "entity_type": "operational_workflow",
+    "description": "App distribution unit: app identifier, version, manifest, app-store link (public store or custom), install silently flag. Distinct from APM `enterprise_applications` (business app portfolio)."
+  },
+  {
+    "id": 861,
+    "data_object_name": "mobility_recommendations",
+    "singular_label": "Mobility Recommendation",
+    "plural_label": "Mobility Recommendations",
+    "entity_type": "computed",
+    "description": "AI-generated next-move suggestions for an employee, with rationale and freshness."
+  },
+  {
+    "id": 1124,
+    "data_object_name": "monitored_activities",
+    "singular_label": "Monitored Activity",
+    "plural_label": "Monitored Activities",
+    "entity_type": "operational_record",
+    "description": "An observed insider activity event captured from endpoint, email, file, cloud, identity, or removable-media telemetry. The raw substrate that scoring and detection rules evaluate."
+  },
+  {
+    "id": 85,
+    "data_object_name": "monitoring_alerts",
+    "singular_label": "Alert",
+    "plural_label": "Alerts",
+    "entity_type": "operational_workflow",
+    "description": "Filtered, human-relevant subset of events that crossed a threshold, matched a pattern, or were enriched with priority and routing. Alerts are what gets paged or ticketed; events are what feeds the correlation engine."
+  },
+  {
+    "id": 84,
+    "data_object_name": "monitoring_events",
+    "singular_label": "Event",
+    "plural_label": "Events",
+    "entity_type": "operational_workflow",
+    "description": "Raw event from a monitored system — state change, threshold crossing, status update, log signal. The firehose, volume-heavy and noisy. AIOPS consumes the full stream for correlation; alerts are the human-relevant subset."
+  },
+  {
+    "id": 86,
+    "data_object_name": "monitoring_policies",
+    "singular_label": "Monitoring Policy",
+    "plural_label": "Monitoring Policies",
+    "entity_type": "operational_workflow",
+    "description": "What to monitor, at what frequency, with what thresholds, for which CIs. Often auto-bound to CIs by class via DISCOVERY — a new web-server CI inherits the web-server monitoring policy by default."
+  },
+  {
+    "id": 237,
+    "data_object_name": "msp_clients",
+    "singular_label": "MSP Client Organization",
+    "plural_label": "MSP Client Organizations",
+    "entity_type": "operational_record",
+    "description": "An MSP's end-customer organization: site/location hierarchy, contact directory, contract portfolio, and asset estate. The MSP's view of its client roster; distinct from customers (which represent product-company customers in CRM/CSM context)."
+  },
+  {
+    "id": 234,
+    "data_object_name": "msp_contracts",
+    "singular_label": "MSP Service Contract",
+    "plural_label": "MSP Service Contracts",
+    "entity_type": "operational_workflow",
+    "description": "Multi-flavor service contract between an MSP and an end-customer: block-hour, retainer, value-based, per-device, or managed-services. Tracks consumption, renewal dates, SLA terms, and per-contract billing rules."
+  },
+  {
+    "id": 236,
+    "data_object_name": "msp_invoices",
+    "singular_label": "MSP Customer Invoice",
+    "plural_label": "MSP Customer Invoices",
+    "entity_type": "operational_workflow",
+    "description": "Invoice generated by the MSP to its end-customer: recurring service-subscription line items + out-of-contract billable work + tax. Distinct from customer_invoices (SUB-MGMT, software-vendor-issued) and invoices (S2P, AP-side)."
+  },
+  {
+    "id": 233,
+    "data_object_name": "msp_tickets",
+    "singular_label": "MSP Ticket",
+    "plural_label": "MSP Tickets",
+    "entity_type": "operational_workflow",
+    "description": "Billable service ticket against an MSP service contract: customer tenant, contract reference, time-tracked work logs, billable/non-billable category, SLA timer, dispatch state. Distinct from ITSM-mastered incidents (internal-IT-flavored) — same shape, different buyer and lifecycle."
+  },
+  {
+    "id": 235,
+    "data_object_name": "msp_time_entries",
+    "singular_label": "MSP Time Entry",
+    "plural_label": "MSP Time Entries",
+    "entity_type": "operational_workflow",
+    "description": "Per-ticket / per-contract / per-customer technician time entry, with category tagging, billable/non-billable classification, approval state, and downstream feed into payroll and billing."
+  },
+  {
+    "id": 650,
+    "data_object_name": "mystery_shopper_records",
+    "singular_label": "Mystery Shopper Record",
+    "plural_label": "Mystery Shopper Records",
+    "entity_type": "operational_workflow",
+    "description": "Third-party store quality assessment (customer experience, compliance, staff courtesy). Distinct from internal store_audits."
+  },
+  {
+    "id": 1036,
+    "data_object_name": "national_ids",
+    "singular_label": "National ID",
+    "plural_label": "National IDs",
+    "entity_type": "operational_record",
+    "description": "Government-issued identity numbers for a worker, such as social security or national insurance numbers, held with restricted access and validity dates. Jurisdiction-specific."
+  },
+  {
+    "id": 1051,
+    "data_object_name": "negotiation_playbooks",
+    "singular_label": "Negotiation Playbook",
+    "plural_label": "Negotiation Playbooks",
+    "entity_type": "catalog",
+    "description": "A set of negotiation rules and fallback positions that guide how clauses may be redlined and what concessions are pre-approved."
+  },
+  {
+    "id": 545,
+    "data_object_name": "network_baseline_thresholds",
+    "singular_label": "Network Baseline Threshold",
+    "plural_label": "Network Baseline Thresholds",
+    "entity_type": "computed",
+    "description": "Historical baseline performance profile (median/p95 latency, loss, jitter) per path/flow/link segment. Used for anomaly detection and alert tuning."
+  },
+  {
+    "id": 538,
+    "data_object_name": "network_flow_records",
+    "singular_label": "Network Flow Record",
+    "plural_label": "Network Flow Records",
+    "entity_type": "operational_record",
+    "description": "Captured packet/session flows with source/destination IPs, ports, protocols, bytes transferred, duration. The raw observation unit for NPMD traffic analysis."
+  },
+  {
+    "id": 542,
+    "data_object_name": "network_interfaces",
+    "singular_label": "Network Interface",
+    "plural_label": "Network Interfaces",
+    "entity_type": "operational_record",
+    "description": "Physical or virtual network interface on monitored devices (adapters, ports, logical channels). Collection point for flow capture; distinct from CMDB device CI."
+  },
+  {
+    "id": 657,
+    "data_object_name": "network_inventory_records",
+    "singular_label": "Network Inventory Record",
+    "plural_label": "Network Inventory Records",
+    "entity_type": "operational_workflow",
+    "description": "Logical/physical network inventory mastered by the telco operator: ports, circuits, IP address blocks, fiber routes, MSAN/DSLAM ports, allocated/free status. Distinct from NPMD network observability (`network_flow_records` etc.) and CMDB `configuration_items`."
+  },
+  {
+    "id": 539,
+    "data_object_name": "network_paths",
+    "singular_label": "Network Path",
+    "plural_label": "Network Paths",
+    "entity_type": "operational_record",
+    "description": "Path trace result from source to destination: ordered hop sequence with per-hop latency, cumulative loss rates, RTT. Used for end-to-end path diagnostics."
+  },
+  {
+    "id": 541,
+    "data_object_name": "network_performance_alerts",
+    "singular_label": "Network Performance Alert",
+    "plural_label": "Network Performance Alerts",
+    "entity_type": "operational_workflow",
+    "description": "Threshold breach or anomaly on network performance metrics. Carries severity, affected path/flow, baseline correlation. Network-specific (vs generic OBS alerts)."
+  },
+  {
+    "id": 540,
+    "data_object_name": "network_performance_metrics",
+    "singular_label": "Network Performance Metric",
+    "plural_label": "Network Performance Metrics",
+    "entity_type": "operational_record",
+    "description": "Time-series of latency, jitter, packet loss, throughput sampled across flows, links, application paths. Primary signal for network SLO/KPI reporting."
+  },
+  {
+    "id": 544,
+    "data_object_name": "network_topology_snapshots",
+    "singular_label": "Network Topology Snapshot",
+    "plural_label": "Network Topology Snapshots",
+    "entity_type": "operational_record",
+    "description": "Periodic capture of network connectivity: device adjacency, link status, interface roles. Used for topology visualization and root-cause correlation."
+  },
+  {
+    "id": 178,
+    "data_object_name": "nine_box_placements",
+    "singular_label": "Nine-Box Placement",
+    "plural_label": "Nine-Box Placements",
+    "entity_type": "operational_workflow",
+    "description": "Performance × Potential 3x3 grid placement per worker per cycle. Drives succession_plans, high-potential identification, and differentiated investment."
+  },
+  {
+    "id": 714,
+    "data_object_name": "nocode_automations",
+    "singular_label": "No-Code Automation",
+    "plural_label": "No-Code Automations",
+    "entity_type": "unclassified",
+    "description": "Record-triggered workflow / scheduled job / external API call defined in the no-code platform."
+  },
+  {
+    "id": 241,
+    "data_object_name": "nocode_bases",
+    "singular_label": "No-Code Base",
+    "plural_label": "No-Code Bases",
+    "entity_type": "unclassified",
+    "description": "User-defined container for a no-code-database deployment: a self-contained namespace for tables, views, automations, and access."
+  },
+  {
+    "id": 712,
+    "data_object_name": "nocode_forms",
+    "singular_label": "No-Code Form",
+    "plural_label": "No-Code Forms",
+    "entity_type": "unclassified",
+    "description": "Public or authenticated intake form authored in the no-code database."
+  },
+  {
+    "id": 242,
+    "data_object_name": "nocode_record_definitions",
+    "singular_label": "No-Code Record Definition",
+    "plural_label": "No-Code Record Definitions",
+    "entity_type": "unclassified",
+    "description": "User-defined schema inside a no-code base — tables, fields with types, linked-record relationships, formulas, and views. The 'meta' the platform actually masters; the records themselves are user-owned data the platform stores without owning their semantics."
+  },
+  {
+    "id": 713,
+    "data_object_name": "nocode_views",
+    "singular_label": "No-Code View",
+    "plural_label": "No-Code Views",
+    "entity_type": "unclassified",
+    "description": "Switchable presentation layer (grid, gallery, kanban, calendar, timeline) over a no-code base."
+  },
+  {
+    "id": 961,
+    "data_object_name": "notification_templates",
+    "singular_label": "Notification Template",
+    "plural_label": "Notification Templates",
+    "entity_type": "catalog",
+    "description": "Reusable email / in-app / chat template with merge fields, used by automation rules and manager nudges."
+  },
+  {
+    "id": 119,
+    "data_object_name": "nurture_journeys",
+    "singular_label": "Nurture Journey",
+    "plural_label": "Nurture Journeys",
+    "entity_type": "operational_workflow",
+    "description": "Multi-touch outbound nurture flows — branching paths, wait conditions, exit criteria, content trees. The orchestrated counterpart to CDP `customer_journeys`; MA defines, CDP observes resulting behavior."
+  },
+  {
+    "id": 1273,
+    "data_object_name": "observation_checklist_results",
+    "singular_label": "Observation Checklist Result",
+    "plural_label": "Observation Checklist Results",
+    "entity_type": "operational_workflow",
+    "description": "A learner's scored result against an observation checklist, with observer signoff."
+  },
+  {
+    "id": 1272,
+    "data_object_name": "observation_checklists",
+    "singular_label": "Observation Checklist",
+    "plural_label": "Observation Checklists",
+    "entity_type": "catalog",
+    "description": "On-the-job competency checklist an observer scores against; field-skill assessment."
+  },
+  {
+    "id": 348,
+    "data_object_name": "occupancy_records",
+    "singular_label": "Occupancy Record",
+    "plural_label": "Occupancy Records",
+    "entity_type": "unclassified",
+    "description": "Real-time or snapshot occupancy state for a space: desk booked, room reserved, actual check-in via badge/mobile."
+  },
+  {
+    "id": 1080,
+    "data_object_name": "occupational_health_records",
+    "singular_label": "Occupational Health Record",
+    "plural_label": "Occupational Health Records",
+    "entity_type": "operational_record",
+    "description": "A medical surveillance and exposure record such as a respirator fit test, audiometric test, or fitness-for-duty evaluation, retained per occupational-health rules."
+  },
+  {
+    "id": 904,
+    "data_object_name": "ofccp_audit_trails",
+    "singular_label": "OFCCP Audit Trail",
+    "plural_label": "OFCCP Audit Trails",
+    "entity_type": "operational_record",
+    "description": "Federal-contractor audit log of every applicant-flow event (requisition open, application receipt, disposition, hire) carrying the actor, timestamp, and OFCCP-relevant fields needed to reconstruct compliance decisions during an audit. Immutable append-only."
+  },
+  {
+    "id": 896,
+    "data_object_name": "offer_approvals",
+    "singular_label": "Offer Approval",
+    "plural_label": "Offer Approvals",
+    "entity_type": "operational_workflow",
+    "description": "Approval step in the offer-approval chain (HRBP -> Comp -> Finance -> Exec). Triggered when an offer exceeds band, includes non-standard equity, or matches other escalation rules."
+  }
+]

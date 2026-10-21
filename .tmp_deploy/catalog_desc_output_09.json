@@ -1,0 +1,394 @@
+[
+  {
+    "id": 897,
+    "catalog_description": "Generated PDF letters of the offer terms, versioned alongside the structured offer and linked to the e-signature envelope."
+  },
+  {
+    "id": 1004,
+    "catalog_description": "Reusable offer-letter templates with merge tokens for candidate, role, and pay terms, versioned by jurisdiction and language to render offer letters."
+  },
+  {
+    "id": 895,
+    "catalog_description": "Versioned snapshots of a job offer during negotiation, each holding the structured terms and the author of the change, from initial through accepted."
+  },
+  {
+    "id": 967,
+    "catalog_description": "Periodic status updates on an objective or key result during the active cycle, the cadence of record for OKR programs."
+  },
+  {
+    "id": 966,
+    "catalog_description": "Measurable results attached to an objective, the unit of scoring that tracks progress toward the goal."
+  },
+  {
+    "id": 245,
+    "catalog_description": "Goals with measurable key results, owner accountability, and weighted progress rollup, organized in a hierarchy and reviewed on a quarterly or annual cadence."
+  },
+  {
+    "id": 20,
+    "catalog_description": "Groups of new hires onboarding together, such as a campus class or training batch, enabling shared activities and cohort-level reporting."
+  },
+  {
+    "id": 22,
+    "catalog_description": "Paperwork collected from a new hire during onboarding, such as tax and eligibility forms, with signature state and e-signature envelope references."
+  },
+  {
+    "id": 16,
+    "catalog_description": "Live onboarding journeys for a specific new hire, carrying assigned tasks, current stage, completion state, and milestone timestamps."
+  },
+  {
+    "id": 15,
+    "catalog_description": "Reusable templates defining the stages, tasks, timing, and assignees for onboarding a class of new hire, versioned and selected by role, location, or type."
+  },
+  {
+    "id": 17,
+    "catalog_description": "Phases within an onboarding plan or journey, such as pre-boarding or 30/60/90 day, defining task grouping, duration, and gate conditions."
+  },
+  {
+    "id": 18,
+    "catalog_description": "Discrete to-do items within an onboarding journey, each with an assignee, due date, type, and completion state, some triggering handoffs to other systems."
+  },
+  {
+    "id": 254,
+    "catalog_description": "Formal models of concepts, properties, relationships, and rules that define the schema tier of a knowledge graph, including namespaces and constraint shapes."
+  },
+  {
+    "id": 809,
+    "catalog_description": "Operating-cadence meeting records (quarterly, monthly, weekly) with agenda, participants, commentary, and action items, locked as an audit trail once closed."
+  },
+  {
+    "id": 453,
+    "catalog_description": "Deployments of cluster operators and controllers, such as certificate management, monitoring, and GitOps lifecycle controllers."
+  },
+  {
+    "id": 860,
+    "catalog_description": "Employee expressions of interest in an internal opportunity, tracking status from submitted through accepted, rejected, or withdrawn."
+  },
+  {
+    "id": 773,
+    "catalog_description": "Equity pools reserved for employee grants, tracking pool size, available headroom, reservation workflows, and board-approved expansions."
+  },
+  {
+    "id": 1238,
+    "catalog_description": "Reusable multichannel plays defining the triggers, audience, channel sequence, and exit criteria for an automated campaign."
+  },
+  {
+    "id": 424,
+    "catalog_description": "Inventory allocation decisions per order line across warehouses, stores, and fulfillment partners, tracking allocated, partial, or backorder state."
+  },
+  {
+    "id": 382,
+    "catalog_description": "Individual product lines within an order, with quantity, price, discount, and tax breakdown."
+  },
+  {
+    "id": 28,
+    "catalog_description": "Proposed organization structure changes such as new or eliminated positions and reporting-line shifts, capturing current versus proposed state and the migration path."
+  },
+  {
+    "id": 34,
+    "catalog_description": "Nodes in the organizational hierarchy such as divisions, departments, and teams, with manager, cost center alignment, geographic scope, and parent-child links."
+  },
+  {
+    "id": 1077,
+    "catalog_description": "OSHA Form 300 logs of work-related injuries and illnesses, maintained per establishment per year, with the annual 300A summary."
+  },
+  {
+    "id": 1078,
+    "catalog_description": "OSHA Form 301 injury and illness incident reports, filed per recordable incident."
+  },
+  {
+    "id": 665,
+    "catalog_description": "Unplanned losses of service affecting customer connections, with detection time, cause, estimated restoration, and affected customer count."
+  },
+  {
+    "id": 1260,
+    "catalog_description": "Ordered steps within an outreach sequence, each defining the channel, day offset, message template, and whether the step is automated or needs a recruiter action."
+  },
+  {
+    "id": 1259,
+    "catalog_description": "Named multi-step sourcing cadences that automate candidate outreach across channels, holding the sequence name, owner, channel mix, and active status."
+  },
+  {
+    "id": 637,
+    "catalog_description": "Engagements with external law firms, covering firm, attorney, matter, scope, billing arrangement, budget, and status to track spend and coordination."
+  },
+  {
+    "id": 467,
+    "catalog_description": "Backing services attached to an app, such as databases, queues, caches, and logging, with type, plan, provisioning status, and cost."
+  },
+  {
+    "id": 463,
+    "catalog_description": "Core application records on the platform, with name, region, runtime, git repository, environment variables, and domain bindings."
+  },
+  {
+    "id": 468,
+    "catalog_description": "Build artifacts captured during continuous integration, with buildpack output, slug size, build time, version, and environment changes."
+  },
+  {
+    "id": 464,
+    "catalog_description": "Release records that activate a build, with app reference, version, status, timestamp, and the person who deployed it."
+  },
+  {
+    "id": 465,
+    "catalog_description": "Deployment environments such as dev, staging, and production, with environment-specific config overrides, resource limits, and addon bindings."
+  },
+  {
+    "id": 466,
+    "catalog_description": "Running compute units (process containers) for an app, with type, size, uptime, memory and CPU metrics, and status."
+  },
+  {
+    "id": 1108,
+    "catalog_description": "Assignments of a herd to a paddock for a grazing period, with start and end dates, stocking rate, and expected versus actual rest."
+  },
+  {
+    "id": 224,
+    "catalog_description": "Scheduled or ad-hoc deployments of OS and software patches to a set of endpoints, with per-endpoint approval, execution status, and rollback state."
+  },
+  {
+    "id": 617,
+    "catalog_description": "Scheduled visits between patient and provider, with location, time, visit type, reason, and status from scheduled through completed or no-show."
+  },
+  {
+    "id": 620,
+    "catalog_description": "Provider-initiated requests for specialist consultation or external service, with clinical indication, urgency, insurance authorization, and status."
+  },
+  {
+    "id": 138,
+    "catalog_description": "Payroll cycle executions scoped to a pay group, country, and period, driving gross-to-net calculation and producing pay slips, journal entries, and tax filings."
+  },
+  {
+    "id": 139,
+    "catalog_description": "Per-employee per-cycle gross-to-net pay statements, showing earnings, deductions, contributions, withholdings, net pay, and year-to-date totals."
+  },
+  {
+    "id": 205,
+    "catalog_description": "Scheduled batches of supplier payments grouped by bank account, currency, and method, driving the accounts-payable payment cycle."
+  },
+  {
+    "id": 387,
+    "catalog_description": "Payment attempts and authorizations on an order (charge, decline, refund, capture) tracked through a multi-state lifecycle."
+  },
+  {
+    "id": 145,
+    "catalog_description": "General-ledger postings produced by a pay run, broken down into debit and credit lines by cost center, department, and pay code."
+  },
+  {
+    "id": 760,
+    "catalog_description": "Partner capital account statements per investor per close period, showing contributions, distributions, gains, fees, and ending balance, locked once distributed."
+  },
+  {
+    "id": 1285,
+    "catalog_description": "Security-awareness training records for staff who handle card data, kept for PCI DSS compliance."
+  },
+  {
+    "id": 43,
+    "catalog_description": "Calculated workforce metrics such as time-to-fill, attrition, retention, and cost-per-hire, derived from HR, recruiting, learning, and payroll event streams."
+  },
+  {
+    "id": 175,
+    "catalog_description": "Individual performance goals with owner, period, metric, weight, and status, aligned to organizational objectives and reviewed within performance cycles."
+  },
+  {
+    "id": 174,
+    "catalog_description": "Per-cycle per-worker review records holding self and manager assessments, ratings, narrative, and calibration outcome."
+  },
+  {
+    "id": 641,
+    "catalog_description": "Citizen or business submissions requesting a license or permit, with applicant, permit type, fees due, supporting documents, and review status."
+  },
+  {
+    "id": 643,
+    "catalog_description": "Field inspections tied to a permit, with type, scheduled date, inspector, location, outcome, and required corrections or follow-up."
+  },
+  {
+    "id": 1213,
+    "catalog_description": "Buyer or user personas describing role, goals, pains, and buying triggers, referenced by messaging and content."
+  },
+  {
+    "id": 444,
+    "catalog_description": "Context-aware branching rules that show a tailored variant to a given audience segment within an experience."
+  },
+  {
+    "id": 396,
+    "catalog_description": "Owner and client records for a veterinary practice, with contact details, payment method on file, communication preferences, and account balance history."
+  },
+  {
+    "id": 1283,
+    "catalog_description": "Per-recipient outcomes of a phishing simulation, recording whether each person clicked, reported, or ignored the test message."
+  },
+  {
+    "id": 1282,
+    "catalog_description": "Configured simulated-phishing campaigns used for security-awareness training and PCI DSS compliance."
+  },
+  {
+    "id": 1248,
+    "catalog_description": "Business or technical goals a team commits to for a program increment, scored on planned versus actual business value at the review."
+  },
+  {
+    "id": 519,
+    "catalog_description": "Pickup sites such as host locations, depots, or on-farm points, with operating hours and self-serve member capacity."
+  },
+  {
+    "id": 812,
+    "catalog_description": "Definitions of product attributes available to products, with data type, validation rules, attribute group, locale awareness, and channel overrides."
+  },
+  {
+    "id": 814,
+    "catalog_description": "Hierarchical taxonomy nodes used to classify products, supporting multiple parallel category trees through a parent self-reference."
+  },
+  {
+    "id": 816,
+    "catalog_description": "Image, video, 3D model, and document assets tied to products, with rights metadata, renditions, and delivery URLs."
+  },
+  {
+    "id": 811,
+    "catalog_description": "Merchandising master records for sellable products, hubs of attributes, descriptions, variants, categories, translations, and assets consumed across channels."
+  },
+  {
+    "id": 817,
+    "catalog_description": "Definitions of outbound publishing channels such as marketplaces and merchant feeds, holding destination mappings, credentials, and per-channel overrides."
+  },
+  {
+    "id": 818,
+    "catalog_description": "Publish runs that send a product or batch to a syndication channel, with queue position, status, validation results, and rejection reasons."
+  },
+  {
+    "id": 815,
+    "catalog_description": "Locale-keyed translations of a product attribute or description, driving multi-language publishing through machine, human, or hybrid pipelines."
+  },
+  {
+    "id": 813,
+    "catalog_description": "Specific size, color, or pack-size variants of a parent product, each with its own SKU and publish state, inheriting attribute defaults from the parent."
+  },
+  {
+    "id": 434,
+    "catalog_description": "Execution instances of a data pipeline, with runtime status, lineage snapshot, and error state."
+  },
+  {
+    "id": 101,
+    "catalog_description": "Sales-process stage definitions with exit criteria, default probability, and allowed transitions, the configuration behind the opportunity pipeline."
+  },
+  {
+    "id": 1231,
+    "catalog_description": "Append-only records of plan approvals, locks, and the downstream push events they trigger."
+  },
+  {
+    "id": 1229,
+    "catalog_description": "Saved snapshots of a plan at a point in time, kept for comparison and audit."
+  },
+  {
+    "id": 651,
+    "catalog_description": "Shelf-layout and product-placement compliance checks against corporate planogram standards, with deviations, remediation, and photo evidence."
+  },
+  {
+    "id": 488,
+    "catalog_description": "Per-pass planting events, recording seed variety, rate, depth, date, and weather conditions."
+  },
+  {
+    "id": 454,
+    "catalog_description": "Continuous-delivery pipelines wired into the cluster, covering GitOps, fleet orchestration, and in-cluster build and deploy."
+  },
+  {
+    "id": 804,
+    "catalog_description": "Resolved product configurations, each a validated combination of option selections that is sellable or buildable, with its own price, lead time, and bill of materials."
+  },
+  {
+    "id": 187,
+    "catalog_description": "Preventive maintenance work orders covering scope, schedule, assignee, and execution status for planned upkeep."
+  },
+  {
+    "id": 286,
+    "catalog_description": "Records that a user read and acknowledged a policy, with timestamp, policy version, medium, and completion evidence."
+  },
+  {
+    "id": 625,
+    "catalog_description": "Individual coverage lines within an insurance policy, with line of business, limit, deductible, coinsurance, and effective period that govern claim eligibility."
+  },
+  {
+    "id": 765,
+    "catalog_description": "ESG and diversity metric submissions per portfolio company per period, supporting regulatory and investor ESG reporting."
+  },
+  {
+    "id": 764,
+    "catalog_description": "KPI submission cycles per portfolio company per period, capturing recurring revenue, headcount, runway, cash, margin, and churn."
+  },
+  {
+    "id": 766,
+    "catalog_description": "Fair-value marks per portfolio company per close cycle, the investor-side valuation of each holding."
+  },
+  {
+    "id": 763,
+    "catalog_description": "Investee companies held by one or more funds, with headline financials, board composition, ownership percentage, exit status, and sector tagging."
+  },
+  {
+    "id": 1244,
+    "catalog_description": "Large bodies of work in the portfolio backlog that are funded, analyzed, and delivered through a funnel before decomposing into features."
+  },
+  {
+    "id": 1201,
+    "catalog_description": "Ship-store retail sales of non-fuel goods, paid at the register or posted to a customer house account."
+  },
+  {
+    "id": 25,
+    "catalog_description": "Projected need for specific roles derived from the capacity model: which positions, when, where, and at what level, feeding the requisition pipeline."
+  },
+  {
+    "id": 898,
+    "catalog_description": "FCRA-mandated notices sent to a candidate before a final adverse-action decision, including the report and rights summary and opening a dispute waiting period."
+  },
+  {
+    "id": 749,
+    "catalog_description": "Pre-employment records covering the window between offer acceptance and start date, tracking paperwork, background checks, and pre-boarding tasks."
+  },
+  {
+    "id": 46,
+    "catalog_description": "Outputs of machine-learning and statistical models such as flight-risk and mobility scores, with model identifier, training window, and per-employee scores."
+  },
+  {
+    "id": 96,
+    "catalog_description": "Proactive forecasts emitted before symptoms surface, such as predicted capacity exhaustion, component failure, or an upcoming service-level breach."
+  },
+  {
+    "id": 957,
+    "catalog_description": "Gating rules that control learning-path progression, requiring completions, scores, certifications, or competencies before the next step."
+  },
+  {
+    "id": 380,
+    "catalog_description": "Per-vehicle-class preventive maintenance schedule templates, defining trigger basis, task list, and due-date generation rules."
+  },
+  {
+    "id": 419,
+    "catalog_description": "Pricing rules for the quoting engine, covering tiered and volume discounts, seat and duration pricing, bundle discounts, and segment overrides."
+  },
+  {
+    "id": 1132,
+    "catalog_description": "Activity executions within a process instance such as a service task or gateway, each with its own lifecycle and dispatched job."
+  },
+  {
+    "id": 583,
+    "catalog_description": "Resource-constrained or time-trapped steps found in a process, with severity, estimated throughput impact, and recommended mitigation."
+  },
+  {
+    "id": 581,
+    "catalog_description": "Results of conformance checking that compare an event log against a reference process model, flagging deviations with severity, type, and root cause."
+  },
+  {
+    "id": 1130,
+    "catalog_description": "Deployed, executable process models with a unique key and version, from which process instances are started."
+  },
+  {
+    "id": 1134,
+    "catalog_description": "Append-only records of individual state changes in the process engine, the immutable execution history used for replay, recovery, and mining."
+  },
+  {
+    "id": 1135,
+    "catalog_description": "Blocked process executions such as exhausted retries or unhandled errors that halt an activity until an operator resolves them, with failure detail."
+  },
+  {
+    "id": 1131,
+    "catalog_description": "Running or completed executions of a process definition, holding token position, variables, and correlation key as the durable unit the engine advances."
+  },
+  {
+    "id": 250,
+    "catalog_description": "Executions of a process simulation scenario against a process model, with input variables, outputs such as throughput and bottlenecks, and run metadata."
+  }
+]

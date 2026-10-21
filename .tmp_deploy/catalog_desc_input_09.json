@@ -1,0 +1,786 @@
+[
+  {
+    "id": 897,
+    "data_object_name": "offer_letter_documents",
+    "singular_label": "Offer Letter Document",
+    "plural_label": "Offer Letter Documents",
+    "entity_type": "operational_workflow",
+    "description": "Generated PDF artifact of the offer terms, distinct from the structured offer record. Versioned in lockstep with offer_versions. Carries template_id, render timestamp, e-sign envelope link."
+  },
+  {
+    "id": 1004,
+    "data_object_name": "offer_letter_templates",
+    "singular_label": "Offer Letter Template",
+    "plural_label": "Offer Letter Templates",
+    "entity_type": "catalog",
+    "description": "Reusable letter template with merge tokens (candidate name, role, base salary, start date, equity, bonus terms). Versioned. Renders offer_letter_documents at offer time. Carries template name, body, token schema, jurisdiction, language, active flag, and version."
+  },
+  {
+    "id": 895,
+    "data_object_name": "offer_versions",
+    "singular_label": "Offer Version",
+    "plural_label": "Offer Versions",
+    "entity_type": "operational_workflow",
+    "description": "Versioned snapshot of a job_offer during negotiation (initial -> counter -> revised -> accepted). Each version carries the structured terms (base, bonus, equity, start_date) and the author of the change."
+  },
+  {
+    "id": 967,
+    "data_object_name": "okr_check_ins",
+    "singular_label": "OKR Check-in",
+    "plural_label": "OKR Check-ins",
+    "entity_type": "operational_record",
+    "description": "Periodic status update on an okr_objective or key_result during the active cycle. Cadence-of-record (weekly/bi-weekly) for OKR programs. May discuss individual performance — flagged as personal content."
+  },
+  {
+    "id": 966,
+    "data_object_name": "okr_key_results",
+    "singular_label": "Key Result",
+    "plural_label": "Key Results",
+    "entity_type": "operational_record",
+    "description": "Measurable result attached to an okr_objective. The unit of scoring on OKR programs — vendors universally model KR as first-class (Asana, Monday, ClickUp, Workfront)."
+  },
+  {
+    "id": 245,
+    "data_object_name": "okr_objectives",
+    "singular_label": "Objective / OKR",
+    "plural_label": "Objective / OKRs",
+    "entity_type": "operational_workflow",
+    "description": "Hierarchical objective with measurable key results, weighted progress rollup from child objectives or linked work_items, owner accountability, and cadence (quarterly/annual). Mastered by three distinct domains: WORK-MGMT (team-level execution OKRs), SPM (strategic portfolio OKRs), TALENT-MGMT (individual performance-management OKRs). Same primitive, three different lifecycles and review processes — canonical Signal-1 multi-master."
+  },
+  {
+    "id": 20,
+    "data_object_name": "onboarding_cohorts",
+    "singular_label": "Onboarding Cohort",
+    "plural_label": "Onboarding Cohorts",
+    "entity_type": "operational_workflow",
+    "description": "Group of new hires onboarding together (campus intake class, training boot-camp batch, executive cohort, frontline class). Enables shared activities (group orientation, cohort meetings) and cohort-level analytics distinct from the per-journey view."
+  },
+  {
+    "id": 22,
+    "data_object_name": "onboarding_document_collections",
+    "singular_label": "Onboarding Document Collection",
+    "plural_label": "Onboarding Document Collections",
+    "entity_type": "operational_workflow",
+    "description": "Record of paperwork collected from a new hire as part of the journey: I-9, NDA, handbook acknowledgment, direct-deposit form, country-specific tax forms, country-specific work-permit evidence. Captures signature state, external e-signature envelope reference ids, and audit metadata. Distinct from the canonical document templates, which would be mastered by a Document Management domain (not yet in catalog)."
+  },
+  {
+    "id": 16,
+    "data_object_name": "onboarding_journeys",
+    "singular_label": "Onboarding Journey",
+    "plural_label": "Onboarding Journeys",
+    "entity_type": "operational_workflow",
+    "description": "Instance of an onboarding plan applied to a specific new hire. Materialized when offer.accepted (ATS) or employee.created (HCM) fires. Carries the bound employee_id, assigned tasks, completion state, current stage, and milestone timestamps (pre-boarding start, Day-1 reached, 30/60/90 completion)."
+  },
+  {
+    "id": 15,
+    "data_object_name": "onboarding_plans",
+    "singular_label": "Onboarding Plan",
+    "plural_label": "Onboarding Plans",
+    "entity_type": "operational_workflow",
+    "description": "Reusable template defining the stages, tasks, timing, and assignees that make up an onboarding journey for a class of new hire (e.g. engineering, sales, executive, hourly retail, contractor). Plans are versioned and selected based on role / location / employment type when a journey is instantiated."
+  },
+  {
+    "id": 17,
+    "data_object_name": "onboarding_stages",
+    "singular_label": "Onboarding Stage",
+    "plural_label": "Onboarding Stages",
+    "entity_type": "operational_workflow",
+    "description": "Phase within a plan or journey (pre-boarding, Day-1, week-1, month-1, 30/60/90 day). Defines task grouping, expected duration, and gate conditions. Stages can be sequenced or run in parallel."
+  },
+  {
+    "id": 18,
+    "data_object_name": "onboarding_tasks",
+    "singular_label": "Onboarding Task",
+    "plural_label": "Onboarding Tasks",
+    "entity_type": "operational_workflow",
+    "description": "Discrete to-do within a journey: sign I-9, attend orientation, complete compliance training, meet buddy, receive laptop. Carries assignee (new hire / manager / IT / facilities / HR), due date, completion state, evidence, and task type (form / training / meeting / provisioning / acknowledgment). Many tasks are local; a subset triggers cross-domain handoffs into ITSM, IWMS, Payroll, LMS, IGA, or HRSD."
+  },
+  {
+    "id": 254,
+    "data_object_name": "ontologies",
+    "singular_label": "Ontology",
+    "plural_label": "Ontologies",
+    "entity_type": "operational_workflow",
+    "description": "Formal model of concepts (OWL classes / RDF schemas / labeled-property-graph schemas), properties, relationships, hierarchies, and axioms. Includes namespaces, prefixes, imports, and constraint shapes (SHACL/SHEX). The 'schema' tier of a knowledge graph."
+  },
+  {
+    "id": 809,
+    "data_object_name": "operating_reviews",
+    "singular_label": "Operating Review",
+    "plural_label": "Operating Reviews",
+    "entity_type": "operational_workflow",
+    "description": "QBR, MBR, and WBR operating-cadence meeting records. Carries agenda, participants, structured commentary against initiatives and KRs, action items, and outcome summary. Once closed, the record is locked as the audit trail of the cadence."
+  },
+  {
+    "id": 453,
+    "data_object_name": "operator_installations",
+    "singular_label": "Operator Installation",
+    "plural_label": "Operator Installations",
+    "entity_type": "operational_workflow",
+    "description": "CRDs + controller deployments (certificate management, monitoring, GitOps controllers, lifecycle operators)."
+  },
+  {
+    "id": 860,
+    "data_object_name": "opportunity_applications",
+    "singular_label": "Application",
+    "plural_label": "Applications",
+    "entity_type": "operational_workflow",
+    "description": "Employee expression of interest in an internal opportunity, with status workflow (submitted, reviewed, accepted, rejected, withdrawn)."
+  },
+  {
+    "id": 773,
+    "data_object_name": "option_pools",
+    "singular_label": "Option Pool",
+    "plural_label": "Option Pools",
+    "entity_type": "operational_workflow",
+    "description": "Equity pool reserved for employee grants. Tracks pool size, available headroom, reservation workflows, board-approved expansions."
+  },
+  {
+    "id": 1238,
+    "data_object_name": "orchestration_playbooks",
+    "singular_label": "Orchestration Playbook",
+    "plural_label": "Orchestration Playbooks",
+    "entity_type": "catalog",
+    "description": "A reusable multichannel play: triggers, audience, channel sequence, and exit criteria."
+  },
+  {
+    "id": 424,
+    "data_object_name": "order_allocations",
+    "singular_label": "Order Allocation",
+    "plural_label": "Order Allocations",
+    "entity_type": "operational_workflow",
+    "description": "Inventory-allocation decision per order line across warehouses/stores/3PLs. State: allocated / partially_allocated / backorder_pending. Core OMS function for split orders and cross-dock routing."
+  },
+  {
+    "id": 382,
+    "data_object_name": "order_lines",
+    "singular_label": "Order Line",
+    "plural_label": "Order Lines",
+    "entity_type": "operational_record",
+    "description": "Individual product line within an order: quantity, price, discount, tax breakdown. Parent = orders (cascade delete)."
+  },
+  {
+    "id": 28,
+    "data_object_name": "org_designs",
+    "singular_label": "Org Design",
+    "plural_label": "Org Designs",
+    "entity_type": "operational_workflow",
+    "description": "Proposed structure changes: new positions, eliminated positions, reporting-line changes, span-of-control adjustments, layer-level redesign. Carries current vs proposed state and the migration path between them."
+  },
+  {
+    "id": 34,
+    "data_object_name": "org_units",
+    "singular_label": "Org Unit",
+    "plural_label": "Org Units",
+    "entity_type": "operational_workflow",
+    "description": "Node in the organizational hierarchy: division, business unit, department, team. Carries manager, cost center alignment, geographic scope, and parent/child relationships. HCM masters the operational hierarchy; EPM contributes the cost-center mapping (which would be Finance-mastered once a Finance/GL domain is loaded)."
+  },
+  {
+    "id": 1077,
+    "data_object_name": "osha_300_logs",
+    "singular_label": "OSHA 300 Log",
+    "plural_label": "OSHA 300 Logs",
+    "entity_type": "operational_record",
+    "description": "The OSHA Form 300 log of work-related injuries and illnesses, maintained per establishment per year, with the annual 300A summary."
+  },
+  {
+    "id": 1078,
+    "data_object_name": "osha_301_reports",
+    "singular_label": "OSHA 301 Report",
+    "plural_label": "OSHA 301 Reports",
+    "entity_type": "operational_record",
+    "description": "The OSHA Form 301 injury and illness incident report filed per recordable incident."
+  },
+  {
+    "id": 665,
+    "data_object_name": "outage_events",
+    "singular_label": "Outage Event",
+    "plural_label": "Outage Events",
+    "entity_type": "operational_workflow",
+    "description": "Unplanned loss-of-service affecting one or more service_connections: detection time, cause (storm / fault / equipment failure / load), estimated restoration, affected customer count. Distinct from ITSM `incidents` (IT) and EAM `eam_work_orders`."
+  },
+  {
+    "id": 1260,
+    "data_object_name": "outreach_sequence_steps",
+    "singular_label": "Outreach Sequence Step",
+    "plural_label": "Outreach Sequence Steps",
+    "entity_type": "catalog",
+    "description": "One ordered step within an outreach sequence: the channel, the day offset from enrollment, the message template, and whether the step is automated or requires a recruiter action. Defines the cadence the platform follows when a candidate is enrolled in the parent sequence."
+  },
+  {
+    "id": 1259,
+    "data_object_name": "outreach_sequences",
+    "singular_label": "Outreach Sequence",
+    "plural_label": "Outreach Sequences",
+    "entity_type": "operational_workflow",
+    "description": "Named multi-step sourcing cadence definition (for example day 0 email, day 3 nudge, day 7 message) that automates candidate outreach. Holds the sequence name, owner, channel mix, and active status, and is the parent of its ordered steps."
+  },
+  {
+    "id": 637,
+    "data_object_name": "outside_counsel_engagements",
+    "singular_label": "Outside Counsel Engagement",
+    "plural_label": "Outside Counsel Engagements",
+    "entity_type": "operational_workflow",
+    "description": "Engagement with external law firm/counsel: firm, attorney, matter reference, scope, billing arrangement (hourly / fixed / contingent), budget, contract reference, status. Tracks spend and coordination."
+  },
+  {
+    "id": 467,
+    "data_object_name": "paas_addons",
+    "singular_label": "PaaS Addon",
+    "plural_label": "PaaS Addons",
+    "entity_type": "operational_workflow",
+    "description": "Backing service (database, queue, cache, logging) per app: type, plan, provisioning status, plan cost."
+  },
+  {
+    "id": 463,
+    "data_object_name": "paas_applications",
+    "singular_label": "PaaS Application",
+    "plural_label": "PaaS Applications",
+    "entity_type": "operational_workflow",
+    "description": "Core app record: name, slug, region, buildpack/runtime, git repo, environment variables, domain bindings."
+  },
+  {
+    "id": 468,
+    "data_object_name": "paas_build_records",
+    "singular_label": "PaaS Build Record",
+    "plural_label": "PaaS Build Records",
+    "entity_type": "operational_workflow",
+    "description": "CI-side artifact capture: buildpack output, slug size, build time, buildpack version, env changes."
+  },
+  {
+    "id": 464,
+    "data_object_name": "paas_deployments",
+    "singular_label": "PaaS Deployment",
+    "plural_label": "PaaS Deployments",
+    "entity_type": "operational_workflow",
+    "description": "Activation/release record: app reference, version/commit, build status, release timestamp, deployment status (success / rollback / in_progress), deployer."
+  },
+  {
+    "id": 465,
+    "data_object_name": "paas_environments",
+    "singular_label": "PaaS Environment",
+    "plural_label": "PaaS Environments",
+    "entity_type": "operational_workflow",
+    "description": "Multi-tenancy: dev/staging/prod with env-specific config overrides, resource limits, addon bindings."
+  },
+  {
+    "id": 466,
+    "data_object_name": "paas_runtime_instances",
+    "singular_label": "PaaS Runtime Instance",
+    "plural_label": "PaaS Runtime Instances",
+    "entity_type": "operational_workflow",
+    "description": "Running compute unit (generic process container): type/size, process type, uptime, memory/CPU metrics, status."
+  },
+  {
+    "id": 1108,
+    "data_object_name": "pasture_allocations",
+    "singular_label": "Pasture Allocation",
+    "plural_label": "Pasture Allocations",
+    "entity_type": "operational_workflow",
+    "description": "An assignment of a mob to a paddock for a grazing period, with start and end dates, stocking rate, and expected versus actual rest. The junction that realizes a grazing plan on the ground."
+  },
+  {
+    "id": 224,
+    "data_object_name": "patch_jobs",
+    "singular_label": "Patch Job",
+    "plural_label": "Patch Jobs",
+    "entity_type": "operational_workflow",
+    "description": "A scheduled or ad-hoc deployment of OS or third-party patches to a defined set of endpoints, with per-endpoint approval, execution status, success/failure, and rollback state. Tied to maintenance windows and approval workflows."
+  },
+  {
+    "id": 617,
+    "data_object_name": "patient_appointments",
+    "singular_label": "Patient Appointment",
+    "plural_label": "Patient Appointments",
+    "entity_type": "operational_workflow",
+    "description": "Scheduled visit between patient and provider: provider, location, scheduled time, visit type (new / follow-up / annual / urgent), status (scheduled / confirmed / arrived / completed / no-show / canceled), reason for visit. Drives front-of-house workflow and resource utilization."
+  },
+  {
+    "id": 620,
+    "data_object_name": "patient_referrals",
+    "singular_label": "Patient Referral",
+    "plural_label": "Patient Referrals",
+    "entity_type": "operational_workflow",
+    "description": "Provider-initiated request for specialist consultation or external service: referring provider, target specialist/facility, clinical indication, urgency, status (requested / scheduled / completed / declined), insurance authorization status. Drives in-network coordination and revenue capture."
+  },
+  {
+    "id": 138,
+    "data_object_name": "pay_runs",
+    "singular_label": "Pay Run",
+    "plural_label": "Pay Runs",
+    "entity_type": "operational_workflow",
+    "description": "A single payroll cycle execution, scoped to pay group, country, and pay period. Drives gross-to-net calculation across the eligible employee population and produces pay_slips, payroll_journal_entries, and tax_filings. The atomic unit of payroll operations."
+  },
+  {
+    "id": 139,
+    "data_object_name": "pay_slips",
+    "singular_label": "Pay Slip",
+    "plural_label": "Pay Slips",
+    "entity_type": "operational_workflow",
+    "description": "Per-employee per-cycle gross-to-net statement: earnings, pre/post-tax deductions, employer contributions, tax withholdings, net pay, YTD totals. Called Pay Stub (US), Payslip (UK/AU/IE), Bulletin de Paie (FR), Lohnzettel (DE), Holerite (BR). Worker-portal accessible; legally retained per jurisdiction."
+  },
+  {
+    "id": 205,
+    "data_object_name": "payment_runs",
+    "singular_label": "Payment Run",
+    "plural_label": "Payment Runs",
+    "entity_type": "operational_workflow",
+    "description": "Scheduled batch of supplier payments grouped by bank_account, currency, payment method (ACH, wire, check, SEPA). Drives the AP payment cycle."
+  },
+  {
+    "id": 387,
+    "data_object_name": "payment_transactions",
+    "singular_label": "Payment Transaction",
+    "plural_label": "Payment Transactions",
+    "entity_type": "operational_workflow",
+    "description": "Payment attempt / authorization on an order (charge, decline, refund, capture). Multi-state lifecycle; ERP-FIN AR sees settled payments via handoff."
+  },
+  {
+    "id": 145,
+    "data_object_name": "payroll_journal_entries",
+    "singular_label": "Payroll Journal Entry",
+    "plural_label": "Payroll Journal Entries",
+    "entity_type": "operational_workflow",
+    "description": "GL posting produced by a pay_run, decomposed by cost_center / department / earning_code / deduction_code into debit and credit lines. The payroll-to-finance handoff payload."
+  },
+  {
+    "id": 760,
+    "data_object_name": "pcap_statements",
+    "singular_label": "PCAP Statement",
+    "plural_label": "PCAP Statements",
+    "entity_type": "operational_workflow",
+    "description": "Partner Capital Account statement per LP per close period: contributions, distributions, gains/losses, fees, ending balance. Sent to LPs; submit-locked once distributed."
+  },
+  {
+    "id": 1285,
+    "data_object_name": "pci_dss_awareness_records",
+    "singular_label": "PCI DSS Awareness Record",
+    "plural_label": "PCI DSS Awareness Records",
+    "entity_type": "operational_record",
+    "description": "Card-handler security-awareness training record (PCI DSS 12.6)."
+  },
+  {
+    "id": 43,
+    "data_object_name": "people_kpis",
+    "singular_label": "People KPI",
+    "plural_label": "People KPIs",
+    "entity_type": "computed",
+    "description": "Calculated workforce KPIs and metrics: time-to-fill, attrition rate, retention rate, span-of-control, internal-mobility rate, training completion rate, cost-per-hire, time-to-productivity. Derived from HCM, ATS, LMS, Payroll event streams. PA is the master of the calculated KPI definitions and the materialized metric values; source systems master the underlying events."
+  },
+  {
+    "id": 175,
+    "data_object_name": "performance_goals",
+    "singular_label": "Performance Goal",
+    "plural_label": "Performance Goals",
+    "entity_type": "operational_workflow",
+    "description": "Individual goal or OKR with owner, period, metric, weight, status, alignment to organizational objectives. Reviewed within performance_reviews cycles."
+  },
+  {
+    "id": 174,
+    "data_object_name": "performance_reviews",
+    "singular_label": "Performance Review",
+    "plural_label": "Performance Reviews",
+    "entity_type": "operational_workflow",
+    "description": "Per-cycle per-worker review artifact: self-assessment, manager assessment, ratings, narrative, calibration outcome. Drives merit_recommendations and succession_plans."
+  },
+  {
+    "id": 641,
+    "data_object_name": "permit_applications",
+    "singular_label": "Permit Application",
+    "plural_label": "Permit Applications",
+    "entity_type": "operational_workflow",
+    "description": "Citizen or business submission requesting a license or permit: applicant, permit type (building / business / professional / event / environmental), submission date, jurisdiction, supporting documents, fees due, status (submitted / under-review / approved / denied / withdrawn). Scope-qualified to avoid collision with ATS, IDP, banking, healthcare applications."
+  },
+  {
+    "id": 643,
+    "data_object_name": "permit_inspections",
+    "singular_label": "Permit Inspection",
+    "plural_label": "Permit Inspections",
+    "entity_type": "operational_workflow",
+    "description": "Field inspection tied to a permit (pre-construction, in-progress, final, complaint-driven): inspection type, scheduled date, inspector, location, outcome (pass / fail / conditional), required corrections, follow-up inspection. Scope-qualified vs CLIN-DEV / EAM / FSM inspections."
+  },
+  {
+    "id": 1213,
+    "data_object_name": "persona_definitions",
+    "singular_label": "Persona Definition",
+    "plural_label": "Persona Definitions",
+    "entity_type": "catalog",
+    "description": "A buyer or user persona: role, goals, pains, and buying triggers, referenced by messaging and content."
+  },
+  {
+    "id": 444,
+    "data_object_name": "personalization_rules",
+    "singular_label": "Personalization Rule",
+    "plural_label": "Personalization Rules",
+    "entity_type": "operational_workflow",
+    "description": "Context-aware branching logic (IF segment X THEN show variant Y) applied to experiences."
+  },
+  {
+    "id": 396,
+    "data_object_name": "pet_owners",
+    "singular_label": "Pet Owner",
+    "plural_label": "Pet Owners",
+    "entity_type": "unclassified",
+    "description": "Owner / client relationship for veterinary practice: contact info, payment method on file, communication preferences, household-pet-list, financial-balance history."
+  },
+  {
+    "id": 1283,
+    "data_object_name": "phishing_simulation_results",
+    "singular_label": "Phishing Simulation Result",
+    "plural_label": "Phishing Simulation Results",
+    "entity_type": "operational_record",
+    "description": "Per-recipient outcome of a phishing simulation (clicked, reported, ignored)."
+  },
+  {
+    "id": 1282,
+    "data_object_name": "phishing_simulations",
+    "singular_label": "Phishing Simulation",
+    "plural_label": "Phishing Simulations",
+    "entity_type": "catalog",
+    "description": "Configured simulated-phishing campaign for security-awareness training (PCI DSS 12.6)."
+  },
+  {
+    "id": 1248,
+    "data_object_name": "pi_objectives",
+    "singular_label": "PI Objective",
+    "plural_label": "PI Objectives",
+    "entity_type": "operational_record",
+    "description": "A business or technical goal a team commits to for a program increment, scored on planned versus actual business value at the inspect-and-adapt review."
+  },
+  {
+    "id": 519,
+    "data_object_name": "pickup_locations",
+    "singular_label": "Pickup Location",
+    "plural_label": "Pickup Locations",
+    "entity_type": "catalog",
+    "description": "Host-pickup-site, depot, or on-farm pickup point with operating hours, member-self-serve capacity."
+  },
+  {
+    "id": 812,
+    "data_object_name": "pim_attributes",
+    "singular_label": "PIM Attribute",
+    "plural_label": "PIM Attributes",
+    "entity_type": "catalog",
+    "description": "Definition of a single attribute available to PIM products: data type, validation rules, attribute group, locale-awareness, and channel-specific overrides. Distinct from runtime attribute values on a product instance."
+  },
+  {
+    "id": 814,
+    "data_object_name": "pim_categories",
+    "singular_label": "PIM Category",
+    "plural_label": "PIM Categories",
+    "entity_type": "catalog",
+    "description": "Hierarchical taxonomy node used to classify PIM products. Multiple parallel taxonomies coexist (merchandising tree, channel-specific trees, ERP category tree); each one's tree lives in this table with a parent_category_id self-reference."
+  },
+  {
+    "id": 816,
+    "data_object_name": "pim_digital_assets",
+    "singular_label": "PIM Digital Asset",
+    "plural_label": "PIM Digital Assets",
+    "entity_type": "operational_workflow",
+    "description": "Image, video, 3D model, or document asset tied to one or more PIM products. Carries rights metadata, renditions / derivatives, and CDN-delivery URLs. The DAM slice that lives inside PIM in v1; can be split out to a DAM domain when warranted."
+  },
+  {
+    "id": 811,
+    "data_object_name": "pim_products",
+    "singular_label": "PIM Product",
+    "plural_label": "PIM Products",
+    "entity_type": "operational_workflow",
+    "description": "The merchandising-master record for a sellable SKU as PIM models it: a hub of attributes, descriptions, variants, categorizations, translations, digital assets, and channel-specific overrides. Distinct from B2C-COMM commerce_products (storefront runtime view) and PLM engineering_parts (engineering record). Authoritative for marketing / catalog content; consumed by commerce, inventory, CPQ, and marketplaces."
+  },
+  {
+    "id": 817,
+    "data_object_name": "pim_syndication_channels",
+    "singular_label": "PIM Syndication Channel",
+    "plural_label": "PIM Syndication Channels",
+    "entity_type": "catalog",
+    "description": "Definition of an outbound publishing channel: marketplace seller portals, merchant feeds, storefront platforms, retailer feeds, GDSN datapools, or a custom partner endpoint. Holds destination-schema mapping rules, credentials, and per-channel attribute overrides."
+  },
+  {
+    "id": 818,
+    "data_object_name": "pim_syndication_jobs",
+    "singular_label": "PIM Syndication Job",
+    "plural_label": "PIM Syndication Jobs",
+    "entity_type": "operational_workflow",
+    "description": "A single publish run of a product (or batch) to a syndication channel. Carries queue position, run status, per-record validation results, and rejection reasons from the destination."
+  },
+  {
+    "id": 815,
+    "data_object_name": "pim_translations",
+    "singular_label": "PIM Translation",
+    "plural_label": "PIM Translations",
+    "entity_type": "operational_workflow",
+    "description": "Locale-keyed string variant of an attribute or description on a PIM product or attribute. Drives multi-language publishing; can be machine-generated, human-translated, or a hybrid pipeline."
+  },
+  {
+    "id": 813,
+    "data_object_name": "pim_variants",
+    "singular_label": "PIM Variant",
+    "plural_label": "PIM Variants",
+    "entity_type": "operational_workflow",
+    "description": "Specific size / color / locale / pack-size variant of a parent PIM product. Each variant has its own SKU, can have its own publish state, and inherits attribute defaults from the parent."
+  },
+  {
+    "id": 434,
+    "data_object_name": "pipeline_runs",
+    "singular_label": "Pipeline Run",
+    "plural_label": "Pipeline Runs",
+    "entity_type": "operational_workflow",
+    "description": "Execution instance of a data pipeline: runtime status, lineage snapshot, error state. References `data_pipelines` (DATA-AI-PLAT-mastered)."
+  },
+  {
+    "id": 101,
+    "data_object_name": "pipeline_stages",
+    "singular_label": "Pipeline Stage",
+    "plural_label": "Pipeline Stages",
+    "entity_type": "catalog",
+    "description": "Sales-process taxonomy: stage definitions, exit criteria, default probability, allowed-next-stage transitions. The configuration object behind the opportunity pipeline."
+  },
+  {
+    "id": 1231,
+    "data_object_name": "plan_lock_records",
+    "singular_label": "Plan Lock Record",
+    "plural_label": "Plan Lock Records",
+    "entity_type": "operational_record",
+    "description": "An append-only record of plan approvals, locks, and the downstream push events."
+  },
+  {
+    "id": 1229,
+    "data_object_name": "plan_versions",
+    "singular_label": "Plan Version",
+    "plural_label": "Plan Versions",
+    "entity_type": "operational_record",
+    "description": "A saved snapshot of the plan at a point in time, for comparison and audit."
+  },
+  {
+    "id": 651,
+    "data_object_name": "planogram_compliance_records",
+    "singular_label": "Planogram Compliance Record",
+    "plural_label": "Planogram Compliance Records",
+    "entity_type": "operational_workflow",
+    "description": "Shelf-layout and product-placement compliance vs corporate planogram standards: deviation, remediation, photo evidence, visual compliance verification."
+  },
+  {
+    "id": 488,
+    "data_object_name": "planting_records",
+    "singular_label": "Planting Record",
+    "plural_label": "Planting Records",
+    "entity_type": "unclassified",
+    "description": "Per-pass planting event: seed variety, rate, depth, date, weather; ISOBUS-compliant."
+  },
+  {
+    "id": 454,
+    "data_object_name": "platform_pipelines",
+    "singular_label": "Platform Pipeline",
+    "plural_label": "Platform Pipelines",
+    "entity_type": "operational_workflow",
+    "description": "CI/CD wired into cluster: GitOps, fleet orchestration, in-cluster build and deploy pipelines."
+  },
+  {
+    "id": 804,
+    "data_object_name": "plm_product_variants",
+    "singular_label": "Product Variant",
+    "plural_label": "Product Variants",
+    "entity_type": "catalog",
+    "description": "Resolved configurations of a configurable product: a specific combination of option-and-variant selections that the configurator engine has validated against the 150% BOM and configuration rules. Each variant is a sellable / buildable configuration with its own price, lead time, and resolved BOM."
+  },
+  {
+    "id": 187,
+    "data_object_name": "pm_work_orders",
+    "singular_label": "Preventive Maintenance Work Order",
+    "plural_label": "Preventive Maintenance Work Orders",
+    "entity_type": "unclassified",
+    "description": "Staff-augmentation or statement-of-work requisition: scope, role, rate range, duration, location, hiring manager, supplier-tier rules. Drives supplier distribution and candidate submission."
+  },
+  {
+    "id": 286,
+    "data_object_name": "policy_attestations",
+    "singular_label": "Policy Attestation",
+    "plural_label": "Policy Attestations",
+    "entity_type": "operational_workflow",
+    "description": "Record that a user read, understood, and acknowledged a policy; timestamp, version, medium, completion evidence."
+  },
+  {
+    "id": 625,
+    "data_object_name": "policy_coverages",
+    "singular_label": "Policy Coverage",
+    "plural_label": "Policy Coverages",
+    "entity_type": "catalog",
+    "description": "Individual coverage line within an insurance_policy: line of business, coverage code, limit amount, deductible, coinsurance %, effective period. Determines claim eligibility and adjudication."
+  },
+  {
+    "id": 765,
+    "data_object_name": "portco_esg_records",
+    "singular_label": "Portco ESG Record",
+    "plural_label": "Portco ESG Records",
+    "entity_type": "operational_workflow",
+    "description": "ESG and diversity metric submission per portfolio company per reporting period. Drives SFDR Article 8/9 disclosures and LP-side ESG reporting."
+  },
+  {
+    "id": 764,
+    "data_object_name": "portco_kpi_periods",
+    "singular_label": "Portco KPI Period",
+    "plural_label": "Portco KPI Periods",
+    "entity_type": "operational_workflow",
+    "description": "KPI submission cycle per portfolio company per reporting period (monthly / quarterly). Captures ARR, headcount, runway, cash, gross margin, NPS, churn."
+  },
+  {
+    "id": 766,
+    "data_object_name": "portco_valuations",
+    "singular_label": "Portco Valuation",
+    "plural_label": "Portco Valuations",
+    "entity_type": "operational_workflow",
+    "description": "Fair-value mark per portfolio company per close cycle, per ASC 820 methodology. LP-side valuation distinct from issuer-side 409A valuations."
+  },
+  {
+    "id": 763,
+    "data_object_name": "portfolio_companies",
+    "singular_label": "Portfolio Company",
+    "plural_label": "Portfolio Companies",
+    "entity_type": "operational_workflow",
+    "description": "Investee company held by one or more funds. Carries headline financials, board composition, current ownership %, exit status, sector tagging."
+  },
+  {
+    "id": 1244,
+    "data_object_name": "portfolio_epics",
+    "singular_label": "Portfolio Epic",
+    "plural_label": "Portfolio Epics",
+    "entity_type": "operational_workflow",
+    "description": "A large body of work in the portfolio backlog that is funded, analyzed, and delivered through a kanban funnel before decomposing into features."
+  },
+  {
+    "id": 1201,
+    "data_object_name": "pos_transactions",
+    "singular_label": "Ship Store Sale",
+    "plural_label": "Ship Store Sales",
+    "entity_type": "operational_record",
+    "description": "A ship-store retail sale of non-fuel goods, paid at the register or posted to a boater house account."
+  },
+  {
+    "id": 25,
+    "data_object_name": "position_demand_forecasts",
+    "singular_label": "Position Demand Forecast",
+    "plural_label": "Position Demand Forecasts",
+    "entity_type": "computed",
+    "description": "Projected need for specific roles derived from the capacity model: which positions, when, where, at what level. Feeds the requisition pipeline — approved demand becomes an authorized requisition in ATS via the headcount.approved handoff."
+  },
+  {
+    "id": 898,
+    "data_object_name": "pre_adverse_action_notices",
+    "singular_label": "Pre-Adverse Action Notice",
+    "plural_label": "Pre-Adverse Action Notices",
+    "entity_type": "operational_workflow",
+    "description": "FCRA-mandated notice sent to a candidate before a final adverse-action decision based on a consumer report. Carries a copy of the report and Summary of Rights, and opens a waiting period (typically 5 business days) during which the candidate may dispute findings before the final adverse-action notice issues."
+  },
+  {
+    "id": 749,
+    "data_object_name": "pre_employees",
+    "singular_label": "Pre-Employee",
+    "plural_label": "Pre-Employees",
+    "entity_type": "operational_workflow",
+    "description": "ATS-owned pre-employment record covering the post-offer-acceptance window before the new-hire start date: paperwork in flight, background check pending, pre-boarding tasks open. At start-date the pre-employee row is reconciled into HCM-mastered `employees` (the canonical employee record). HCM owns the canonical employee record; ATS owns the pre-employee lifecycle stage so recruiting and HCM can each move at their own pace."
+  },
+  {
+    "id": 46,
+    "data_object_name": "predictive_models",
+    "singular_label": "Predictive Model",
+    "plural_label": "Predictive Models",
+    "entity_type": "operational_workflow",
+    "description": "ML / statistical model outputs deployed in PA: flight-risk scores, performance trajectory, internal-mobility likelihood. Carries the model identifier, training window, target metric, and the materialized scores per employee. Consumes employees and employment_events as features."
+  },
+  {
+    "id": 96,
+    "data_object_name": "predictive_signals",
+    "singular_label": "Predictive Signal",
+    "plural_label": "Predictive Signals",
+    "entity_type": "computed",
+    "description": "Proactive forecast emitted before symptoms surface: predicted capacity exhaustion, predicted failure of a CI based on degradation pattern, predicted SLO breach within the burn-rate window."
+  },
+  {
+    "id": 957,
+    "data_object_name": "prerequisite_rules",
+    "singular_label": "Prerequisite Rule",
+    "plural_label": "Prerequisite Rules",
+    "entity_type": "catalog",
+    "description": "Gating logic that controls path progression: required completions, scores, certifications, or competencies."
+  },
+  {
+    "id": 380,
+    "data_object_name": "preventive_maintenance_schedules",
+    "singular_label": "Preventive Maintenance Schedule",
+    "plural_label": "Preventive Maintenance Schedules",
+    "entity_type": "catalog",
+    "description": "Per-vehicle-class PM schedule template: trigger basis (mileage / engine hours / calendar time / DTC), task list, due-date generation rules."
+  },
+  {
+    "id": 419,
+    "data_object_name": "pricing_rules",
+    "singular_label": "CPQ Pricing Rule",
+    "plural_label": "CPQ Pricing Rules",
+    "entity_type": "catalog",
+    "description": "Calculation engine: tiered/volume discounts, seat-based pricing, duration-based pricing, bundle discounts, segment overrides."
+  },
+  {
+    "id": 1132,
+    "data_object_name": "process_activities",
+    "singular_label": "Process Activity",
+    "plural_label": "Process Activities",
+    "entity_type": "operational_workflow",
+    "description": "An activity execution within a process instance: a service task, script, call activity, gateway, or event, with its own lifecycle (activated, completed, failed, compensated) and the job dispatched to a task worker."
+  },
+  {
+    "id": 583,
+    "data_object_name": "process_bottleneck_findings",
+    "singular_label": "Process Bottleneck Finding",
+    "plural_label": "Process Bottleneck Findings",
+    "entity_type": "operational_workflow",
+    "description": "Resource-constrained or time-trapped steps in a process: high-wait-time activities, resource queue depth, throughput loss points. Carries activity name, severity, estimated throughput impact, recommended mitigation."
+  },
+  {
+    "id": 581,
+    "data_object_name": "process_conformance_results",
+    "singular_label": "Process Conformance Result",
+    "plural_label": "Process Conformance Results",
+    "entity_type": "computed",
+    "description": "Diagnostic from conformance checking: comparison of event log vs reference process model, flagging deviations with severity, deviation_type (missing / extra / out-of-order / timing), trace-level root cause. Supports regulatory audit."
+  },
+  {
+    "id": 1130,
+    "data_object_name": "process_definitions",
+    "singular_label": "Process Definition",
+    "plural_label": "Process Definitions",
+    "entity_type": "operational_workflow",
+    "description": "A deployed, executable process model (BPMN or code-defined) with a unique key and version. Instances are started from a definition; a new deployment publishes a new version while running instances stay pinned to the version they started on."
+  },
+  {
+    "id": 1134,
+    "data_object_name": "process_events",
+    "singular_label": "Process Event",
+    "plural_label": "Process Events",
+    "entity_type": "operational_record",
+    "description": "An append-only record of a single state change in the engine (instance started, activity completed, variable updated, incident raised). The immutable execution history used for replay, recovery, and as the source log downstream process mining consumes."
+  },
+  {
+    "id": 1135,
+    "data_object_name": "process_incidents",
+    "singular_label": "Process Incident",
+    "plural_label": "Process Incidents",
+    "entity_type": "operational_workflow",
+    "description": "A blocked execution: a job that exhausted its retries, an unhandled error, or a failed condition that halts an activity until an operator resolves it. Carries the failure detail and the activity it is attached to."
+  },
+  {
+    "id": 1131,
+    "data_object_name": "process_instances",
+    "singular_label": "Process Instance",
+    "plural_label": "Process Instances",
+    "entity_type": "operational_workflow",
+    "description": "A single running (or completed) execution of a process definition, holding the current token position, scope variables, and a correlation key. The durable, recoverable unit the engine advances through activities and gateways."
+  },
+  {
+    "id": 250,
+    "data_object_name": "process_simulation_runs",
+    "singular_label": "Process Simulation Run",
+    "plural_label": "Process Simulation Runs",
+    "entity_type": "operational_workflow",
+    "description": "A single execution of a process simulation scenario (Monte Carlo or discrete-event) against a business_process_model, with inputs (resource pools, cost/time variables), outputs (throughput, bottleneck nodes), and run metadata."
+  }
+]

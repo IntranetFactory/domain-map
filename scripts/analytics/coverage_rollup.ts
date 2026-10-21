@@ -77,7 +77,7 @@ async function main() {
 
   if (PROCESS) {
     const [processes, pt] = await Promise.all([
-      get(`/processes?source_framework=eq.custom&select=id,process_key,process_name&limit=${LIMIT}`),
+      get(`/business_processes?source_framework=eq.custom&select=id,process_key,process_name&limit=${LIMIT}`),
       get(`/process_tools?select=process_id,tool_id,requirement_level&limit=${LIMIT}`) as Promise<(TR & { process_id: number })[]>,
     ]);
     const byProc = new Map<number, TR[]>();

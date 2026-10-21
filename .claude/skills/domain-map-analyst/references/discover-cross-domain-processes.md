@@ -47,7 +47,7 @@ Read-only by construction.
 
 ### Pass 1 — PCF_OVERRIDES sanity
 
-For every non-null entry in [scripts/analytics/discovery_query.ts:135](../../../../scripts/analytics/discovery_query.ts#L135) `PCF_OVERRIDES`, look up the `external_id` in `processes`. If the resolved row's `process_name` does not contain the override's intended `name` substring (or vice versa), flag.
+For every non-null entry in [scripts/analytics/discovery_query.ts:135](../../../../scripts/analytics/discovery_query.ts#L135) `PCF_OVERRIDES`, look up the `external_id` in `business_processes`. If the resolved row's `process_name` does not contain the override's intended `name` substring (or vice versa), flag.
 
 Output table:
 
@@ -105,16 +105,16 @@ Apply choices via PATCH `record_status`. Rule #1 applies: the agent never auto-f
 **3b. Process-skill linkage.** For each process where `handoff_processes` accumulates `record_status='approved'` rows above some threshold (default: ≥3 approved rows on a process means the orchestration is real), check whether a `skills` row exists with `skill_type='process' AND process_id=<id>`. Three sub-cases:
 
 1. **Process-skill exists with `process_id` set correctly:** nothing to do. Score the skill via the existing tools layer and surface in the report.
-2. **Process-skill exists with `process_id=NULL`:** propose PATCH to set `process_id`. The 3 process skills (`employee-jml-process`, `opportunity-l2c-process`, `case-service-process`) were linked to their value-stream `processes` rows by the per-domain-skill migration (2026-06-06); pre-migration they sat in this state.
-3. **No process-skill exists yet:** propose authoring one. First create or reuse the value-stream `processes` row, then derive the involved-domain set from the bucket's source + target domains and author its required tools as `process_tools` on the process (auto-derive `query_<master>` tools across all involved domains' masters; mutates from target-side writes; cross-tranche externals like `send_email`, `sign_document` per the cross-tranche patterns). Link the `skills` row via `process_id`; the skill derives its toolset from the `process_tools`. Surface for user approval per Rule #1. All new `skills`, `processes`, and `process_tools` rows ship as `record_status='new'`.
+2. **Process-skill exists with `process_id=NULL`:** propose PATCH to set `process_id`. The 3 process skills (`employee-jml-process`, `opportunity-l2c-process`, `case-service-process`) were linked to their value-stream `business_processes` rows by the per-domain-skill migration (2026-06-06); pre-migration they sat in this state.
+3. **No process-skill exists yet:** propose authoring one. First create or reuse the value-stream `business_processes` row, then derive the involved-domain set from the bucket's source + target domains and author its required tools as `process_tools` on the process (auto-derive `query_<master>` tools across all involved domains' masters; mutates from target-side writes; cross-tranche externals like `send_email`, `sign_document` per the cross-tranche patterns). Link the `skills` row via `process_id`; the skill derives its toolset from the `process_tools`. Surface for user approval per Rule #1. All new `skills`, `business_processes`, and `process_tools` rows ship as `record_status='new'`.
 
-Pass 3 is the only pass that writes outside the `handoff_processes.record_status` PATCH and the optional `skills.process_id` PATCH. Loader writes (a new `skills` row, its `processes` row, and that process's `process_tools` set) only happen on explicit per-row approval.
+Pass 3 is the only pass that writes outside the `handoff_processes.record_status` PATCH and the optional `skills.process_id` PATCH. Loader writes (a new `skills` row, its `business_processes` row, and that process's `process_tools` set) only happen on explicit per-row approval.
 
 ## Re-runnability
 
 The mode is idempotent end-to-end:
 - Pass 0 reads live state; re-running after Validate fixes land surfaces the new clean state.
-- Pass 1 reads `PCF_OVERRIDES` from the script file + `processes` from live state; deterministic.
+- Pass 1 reads `PCF_OVERRIDES` from the script file + `business_processes` from live state; deterministic.
 - Pass 2's `--persist` honors the sticky-rejection contract (existing `(handoff_id, process_id)` pairs are skipped regardless of `record_status`).
 - Pass 3's review queue shrinks monotonically as the user approves / rejects rows.
 

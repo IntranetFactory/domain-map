@@ -1,0 +1,228 @@
+{
+  "domain": {
+    "id": 13,
+    "domain_name": "Vulnerability Management",
+    "created_at": "2026-05-18T14:31:01.495936+00:00",
+    "updated_at": "2026-06-07T04:43:06.778379+00:00",
+    "domain_code": "VULN-MGMT",
+    "description": "Identification, prioritization, and remediation of security vulnerabilities across endpoints, cloud, and applications.",
+    "record_status": "new",
+    "parent_domain_id": 11,
+    "industry_id": null,
+    "certification_required": true,
+    "crud_percentage": 35,
+    "business_logic": "Vulnerability scanning engines (network, host, web, container, code), CVE matching, and risk scoring: the algorithmic surface is the product.",
+    "min_org_size": "30 m <2500",
+    "cost_band": "$$$",
+    "usa_market_size_usd_m": 3500,
+    "market_size_source_year": 2025,
+    "search_vector": "'management':2A 'mgmt':5C 'vuln':4C 'vuln-mgmt':3C 'vulnerability':1A",
+    "notes": "",
+    "catalog": false,
+    "catalog_tagline": "Find every weakness across your estate, fix the ones an attacker would actually use first, and prove it stayed fixed.",
+    "catalog_description": "Run a closed loop that turns a sprawling, noisy list of security weaknesses into a short list of fixes the right team actually completes. Discover what you own first, from endpoints, servers, and network gear to cloud workloads, containers, web apps, and source code, then scan it continuously so new exposures surface within hours instead of at the next quarterly review. Each scan produces findings tied to a specific asset and a specific vulnerability, deduplicated and tracked through their own lifecycle so a weakness opened today is the same record you confirm, remediate, and verify weeks later.\n\nNot every finding deserves the same urgency, so layer risk on top of raw severity. Combine base severity scores with exploit-prediction signals, known-exploited and actively-attacked intelligence, asset criticality, and exposure to produce a ranked queue that answers the only question that matters at scale: what do we fix this week. Route the winners to the team that owns the fix as remediation work with due dates and ownership, and give the business a governed path to formally accept and time-box the risks it chooses not to fix yet.\n\nClose the loop and keep it auditable. Re-scan to confirm fixes actually landed, reopen anything that regresses, and watch mean-time-to-remediate trend down by asset group, business unit, and severity. Hand auditors defensible evidence that scanning cadence, remediation timelines, and exception approvals meet the obligations that frameworks such as PCI-DSS, FedRAMP, and NIS2 expect, so vulnerability work stops being a spreadsheet fire drill and becomes a measured, repeatable control."
+  },
+  "capabilities": [
+    {
+      "capabilities": {
+        "capability_code": "VULN-MGMT-SCAN-DETECT",
+        "capability_name": "Scanning and Detection",
+        "description": "Authenticated and unauthenticated assessment of endpoints, servers, network gear, cloud workloads, containers, and web apps to detect security weaknesses, producing per-asset findings matched to a vulnerability definition."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "VULN-MGMT-CVE-CATALOG",
+        "capability_name": "Vulnerability Knowledge Base",
+        "description": "A maintained catalog of known vulnerability definitions (CVE, vendor advisories, plugin/check metadata, affected products, base severity) that incoming findings are matched against and enriched from."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "VULN-MGMT-RISK-PRIORITIZE",
+        "capability_name": "Risk-Based Prioritization",
+        "description": "Layering exploit-prediction signals, known-exploited and active-attack intelligence, asset criticality, and exposure on top of base severity to produce a ranked queue answering what to fix first."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "VULN-MGMT-REMEDIATE-ORCH",
+        "capability_name": "Remediation Orchestration",
+        "description": "Routing prioritized findings to the owning team as remediation work with due dates, ownership, SLAs, and patch or configuration guidance, tracked to completion."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "VULN-MGMT-EXCEPTION-GOV",
+        "capability_name": "Exception and Risk Acceptance",
+        "description": "A governed, time-boxed path to formally accept, defer, or mark as false-positive vulnerabilities the business chooses not to fix, with approver sign-off and expiry-driven re-review."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "VULN-MGMT-VERIFY-CLOSE",
+        "capability_name": "Verification and Closure",
+        "description": "Re-scanning to confirm fixes landed, reopening regressions, and closing findings only on verified evidence so the loop is auditable end to end."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "VULN-MGMT-COMPLIANCE-EVIDENCE",
+        "capability_name": "Compliance Evidence and Reporting",
+        "description": "Defensible reporting on scanning cadence, mean-time-to-remediate, and exception approvals against framework obligations such as PCI-DSS, FedRAMP, and NIS2."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "VULN-MGMT-ASSESS-CAMPAIGN",
+        "capability_name": "Assessment Scoping and Campaigns",
+        "description": "Scoping a vulnerability assessment or remediation campaign over an asset population for a point-in-time posture snapshot, audit window, or program milestone."
+      }
+    }
+  ],
+  "solutions": [
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "ServiceNow Vulnerability Response",
+        "vendor_id": 1,
+        "vendors": {
+          "vendor_name": "ServiceNow Inc"
+        }
+      }
+    },
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "Tenable One",
+        "vendor_id": 33,
+        "vendors": {
+          "vendor_name": "Tenable"
+        }
+      }
+    },
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "Qualys VMDR",
+        "vendor_id": 34,
+        "vendors": {
+          "vendor_name": "Qualys"
+        }
+      }
+    },
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "Rapid7 InsightVM",
+        "vendor_id": 35,
+        "vendors": {
+          "vendor_name": "Rapid7"
+        }
+      }
+    },
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "Wiz Cloud Security Platform",
+        "vendor_id": 36,
+        "vendors": {
+          "vendor_name": "Wiz"
+        }
+      }
+    }
+  ],
+  "modules": [
+    {
+      "domain_module_code": "VULN-MGMT-DETECT",
+      "domain_module_name": "Scanning and Detection",
+      "module_kind": "full",
+      "description": "Owns the discovery-to-finding pipeline: scan jobs run against an asset population, results are matched to the vulnerability knowledge base, and per-asset findings are created and deduplicated into the vulnerability lifecycle. Consumes asset masters from ITAM/CMDB and software inventory from SAM rather than mastering them."
+    },
+    {
+      "domain_module_code": "VULN-MGMT-RISK",
+      "domain_module_name": "Prioritization and Risk",
+      "module_kind": "full",
+      "description": "Owns the ranking layer and the point-in-time assessment lens. Computes risk-based priority over open vulnerabilities using exploit intel, asset criticality, and exposure, and groups vulnerabilities into scoped assessments or campaigns for posture snapshots and audit windows. Consumes exploit and known-exploited intelligence from THREAT-INTEL."
+    },
+    {
+      "domain_module_code": "VULN-MGMT-REMEDIATE",
+      "domain_module_name": "Remediation and Governance",
+      "module_kind": "full",
+      "description": "Owns the closed loop after prioritization: remediation work with ownership and due dates, governed exceptions and risk acceptances, verification re-scans, and compliance evidence. Remediation records are mastered here as the security-side workflow; where an org routes fixes through a service desk, these hand off to ITSM change/incident records rather than duplicating them."
+    }
+  ],
+  "data_objects": [
+    {
+      "role": "consumer",
+      "necessity": "required",
+      "data_objects": {
+        "id": 59,
+        "data_object_name": "software_installations",
+        "singular_label": "Software Installation",
+        "entity_type": "unclassified",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "embedded_master",
+      "necessity": "optional",
+      "data_objects": {
+        "id": 34,
+        "data_object_name": "org_units",
+        "singular_label": "Org Unit",
+        "entity_type": "operational_workflow",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    }
+  ],
+  "lifecycle_states": [],
+  "trigger_events": [],
+  "outbound_handoffs": [],
+  "inbound_handoffs": [
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "software_install.detected"
+      },
+      "source_domain": {
+        "domain_code": "SAM"
+      },
+      "data_object": {
+        "data_object_name": "software_installations"
+      }
+    }
+  ],
+  "skills": [
+    {
+      "skill_name": "vuln-mgmt-system",
+      "skill_type": "system",
+      "domain_module_id": null
+    }
+  ],
+  "business_function_domains": [
+    {
+      "responsibility_type": "contributor",
+      "business_functions": {
+        "business_function_name": "IT Operations"
+      }
+    },
+    {
+      "responsibility_type": "contributor",
+      "business_functions": {
+        "business_function_name": "Software Engineering"
+      }
+    },
+    {
+      "responsibility_type": "owner",
+      "business_functions": {
+        "business_function_name": "Security Operations Center"
+      }
+    }
+  ]
+}

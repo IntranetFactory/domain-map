@@ -100,7 +100,7 @@ group by d.domain_code
 order by d.domain_code;
 ```
 
-For the value-stream processes, substitute `process_tools` keyed on `processes.id` for the `domain_tool` CTE.
+For the value-stream processes, substitute `process_tools` keyed on `business_processes.id` for the `domain_tool` CTE.
 
 ## Interpreting results
 

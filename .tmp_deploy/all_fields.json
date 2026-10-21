@@ -1,0 +1,757 @@
+[
+  {
+    "table_name": "business_function_capabilities",
+    "field_name": "business_function_id",
+    "format": "parent",
+    "reference_table": "business_functions",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "business_function_capabilities",
+    "field_name": "capability_id",
+    "format": "parent",
+    "reference_table": "capabilities",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "business_function_capabilities",
+    "field_name": "notes",
+    "format": "multiline",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "business_function_capabilities",
+    "field_name": "record_status",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "new",
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "is_nullable": false,
+    "default_value": "new"
+  },
+  {
+    "table_name": "business_function_capabilities",
+    "field_name": "responsibility_type",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "owner",
+      "contributor",
+      "consumer"
+    ],
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "business_function_domains",
+    "field_name": "domain_id",
+    "format": "parent",
+    "reference_table": "domains",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "business_function_domains",
+    "field_name": "business_function_id",
+    "format": "parent",
+    "reference_table": "business_functions",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "business_function_domains",
+    "field_name": "responsibility_type",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "owner",
+      "contributor",
+      "consumer"
+    ],
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "business_function_domains",
+    "field_name": "notes",
+    "format": "multiline",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "business_function_domains",
+    "field_name": "record_status",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "new",
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "is_nullable": false,
+    "default_value": "new"
+  },
+  {
+    "table_name": "business_functions",
+    "field_name": "description",
+    "format": "multiline",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "business_functions",
+    "field_name": "record_status",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "new",
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "is_nullable": false,
+    "default_value": "new"
+  },
+  {
+    "table_name": "business_functions",
+    "field_name": "parent_business_function_id",
+    "format": "reference",
+    "reference_table": "business_functions",
+    "enum_values": null,
+    "is_nullable": true,
+    "default_value": ""
+  },
+  {
+    "table_name": "capability_domains",
+    "field_name": "record_status",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "new",
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "is_nullable": false,
+    "default_value": "new"
+  },
+  {
+    "table_name": "capability_domains",
+    "field_name": "capability_id",
+    "format": "parent",
+    "reference_table": "capabilities",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "capability_domains",
+    "field_name": "domain_id",
+    "format": "parent",
+    "reference_table": "domains",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "capability_domains",
+    "field_name": "notes",
+    "format": "multiline",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "data_object_aliases",
+    "field_name": "data_object_id",
+    "format": "reference",
+    "reference_table": "data_objects",
+    "enum_values": null,
+    "is_nullable": true,
+    "default_value": ""
+  },
+  {
+    "table_name": "data_object_aliases",
+    "field_name": "alias_type",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "synonym",
+      "industry_term",
+      "solution_term"
+    ],
+    "is_nullable": false,
+    "default_value": "synonym"
+  },
+  {
+    "table_name": "data_object_aliases",
+    "field_name": "industry_id",
+    "format": "reference",
+    "reference_table": "industries",
+    "enum_values": null,
+    "is_nullable": true,
+    "default_value": ""
+  },
+  {
+    "table_name": "data_object_aliases",
+    "field_name": "solution_id",
+    "format": "reference",
+    "reference_table": "solutions",
+    "enum_values": null,
+    "is_nullable": true,
+    "default_value": ""
+  },
+  {
+    "table_name": "data_object_aliases",
+    "field_name": "is_preferred",
+    "format": "boolean",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": "false"
+  },
+  {
+    "table_name": "data_object_aliases",
+    "field_name": "record_status",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "new",
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "is_nullable": false,
+    "default_value": "new"
+  },
+  {
+    "table_name": "data_object_aliases",
+    "field_name": "notes",
+    "format": "multiline",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "data_object_relationships",
+    "field_name": "data_object_id",
+    "format": "reference",
+    "reference_table": "data_objects",
+    "enum_values": null,
+    "is_nullable": true,
+    "default_value": ""
+  },
+  {
+    "table_name": "data_object_relationships",
+    "field_name": "related_data_object_id",
+    "format": "reference",
+    "reference_table": "data_objects",
+    "enum_values": null,
+    "is_nullable": true,
+    "default_value": ""
+  },
+  {
+    "table_name": "data_object_relationships",
+    "field_name": "relationship_type",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "one_to_one",
+      "one_to_many",
+      "many_to_many"
+    ],
+    "is_nullable": false,
+    "default_value": "one_to_many"
+  },
+  {
+    "table_name": "data_object_relationships",
+    "field_name": "relationship_kind",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "composition",
+      "reference",
+      "association",
+      "inheritance"
+    ],
+    "is_nullable": false,
+    "default_value": "reference"
+  },
+  {
+    "table_name": "data_object_relationships",
+    "field_name": "relationship_verb",
+    "format": "string",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "data_object_relationships",
+    "field_name": "inverse_verb",
+    "format": "string",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "data_object_relationships",
+    "field_name": "is_required",
+    "format": "boolean",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": "false"
+  },
+  {
+    "table_name": "data_object_relationships",
+    "field_name": "record_status",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "new",
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "is_nullable": false,
+    "default_value": "new"
+  },
+  {
+    "table_name": "data_object_relationships",
+    "field_name": "notes",
+    "format": "multiline",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "data_objects",
+    "field_name": "description",
+    "format": "multiline",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "data_objects",
+    "field_name": "record_status",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "new",
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "is_nullable": false,
+    "default_value": "new"
+  },
+  {
+    "table_name": "domain_data_objects",
+    "field_name": "domain_id",
+    "format": "parent",
+    "reference_table": "domains",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "domain_data_objects",
+    "field_name": "notes",
+    "format": "multiline",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "domain_data_objects",
+    "field_name": "record_status",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "new",
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "is_nullable": false,
+    "default_value": "new"
+  },
+  {
+    "table_name": "domain_data_objects",
+    "field_name": "mastery_role",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "primary",
+      "secondary",
+      "derived"
+    ],
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "domain_data_objects",
+    "field_name": "data_object_id",
+    "format": "parent",
+    "reference_table": "data_objects",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "domain_regulations",
+    "field_name": "domain_id",
+    "format": "parent",
+    "reference_table": "domains",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "domain_regulations",
+    "field_name": "applicability",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "mandatory",
+      "recommended",
+      "conditional",
+      "optional"
+    ],
+    "is_nullable": false,
+    "default_value": "recommended"
+  },
+  {
+    "table_name": "domain_regulations",
+    "field_name": "condition_notes",
+    "format": "multiline",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "domain_regulations",
+    "field_name": "record_status",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "new",
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "is_nullable": false,
+    "default_value": "new"
+  },
+  {
+    "table_name": "domain_regulations",
+    "field_name": "regulation_id",
+    "format": "parent",
+    "reference_table": "regulations",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "domain_regulations",
+    "field_name": "notes",
+    "format": "multiline",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "industries",
+    "field_name": "description",
+    "format": "multiline",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "industries",
+    "field_name": "naics_code",
+    "format": "string",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "industries",
+    "field_name": "record_status",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "new",
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "is_nullable": false,
+    "default_value": "new"
+  },
+  {
+    "table_name": "industries",
+    "field_name": "parent_industry_id",
+    "format": "reference",
+    "reference_table": "industries",
+    "enum_values": null,
+    "is_nullable": true,
+    "default_value": ""
+  },
+  {
+    "table_name": "industry_business_functions",
+    "field_name": "industry_id",
+    "format": "parent",
+    "reference_table": "industries",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "industry_business_functions",
+    "field_name": "business_function_id",
+    "format": "parent",
+    "reference_table": "business_functions",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "industry_business_functions",
+    "field_name": "notes",
+    "format": "multiline",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "jurisdictions",
+    "field_name": "jurisdiction_code",
+    "format": "string",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "jurisdictions",
+    "field_name": "jurisdiction_type",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "country",
+      "region",
+      "state_or_province",
+      "supranational",
+      "municipal"
+    ],
+    "is_nullable": false,
+    "default_value": "country"
+  },
+  {
+    "table_name": "jurisdictions",
+    "field_name": "description",
+    "format": "multiline",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "jurisdictions",
+    "field_name": "record_status",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "new",
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "is_nullable": false,
+    "default_value": "new"
+  },
+  {
+    "table_name": "jurisdictions",
+    "field_name": "parent_jurisdiction_id",
+    "format": "reference",
+    "reference_table": "jurisdictions",
+    "enum_values": null,
+    "is_nullable": true,
+    "default_value": ""
+  },
+  {
+    "table_name": "regulations",
+    "field_name": "regulation_code",
+    "format": "string",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "regulations",
+    "field_name": "regulation_type",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "data_privacy",
+      "financial_reporting",
+      "security",
+      "country_localization",
+      "accounting_standard",
+      "industry_standard",
+      "environmental",
+      "labor_law",
+      "other"
+    ],
+    "is_nullable": false,
+    "default_value": "other"
+  },
+  {
+    "table_name": "regulations",
+    "field_name": "jurisdiction_id",
+    "format": "reference",
+    "reference_table": "jurisdictions",
+    "enum_values": null,
+    "is_nullable": true,
+    "default_value": ""
+  },
+  {
+    "table_name": "regulations",
+    "field_name": "issuing_body",
+    "format": "string",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "regulations",
+    "field_name": "effective_date",
+    "format": "date",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": true,
+    "default_value": ""
+  },
+  {
+    "table_name": "regulations",
+    "field_name": "regulation_url",
+    "format": "url",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "regulations",
+    "field_name": "description",
+    "format": "multiline",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "regulations",
+    "field_name": "record_status",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "new",
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "is_nullable": false,
+    "default_value": "new"
+  },
+  {
+    "table_name": "solution_data_objects",
+    "field_name": "solution_id",
+    "format": "parent",
+    "reference_table": "solutions",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "solution_data_objects",
+    "field_name": "ownership_role",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "system_of_record",
+      "system_of_reference",
+      "system_of_engagement",
+      "derived"
+    ],
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "solution_data_objects",
+    "field_name": "data_object_id",
+    "format": "parent",
+    "reference_table": "data_objects",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "solution_data_objects",
+    "field_name": "notes",
+    "format": "multiline",
+    "reference_table": "",
+    "enum_values": null,
+    "is_nullable": false,
+    "default_value": ""
+  },
+  {
+    "table_name": "solution_data_objects",
+    "field_name": "record_status",
+    "format": "enum",
+    "reference_table": "",
+    "enum_values": [
+      "new",
+      "pending",
+      "approved",
+      "rejected"
+    ],
+    "is_nullable": false,
+    "default_value": "new"
+  }
+]

@@ -1,0 +1,786 @@
+[
+  {
+    "id": 891,
+    "data_object_name": "interview_panels",
+    "singular_label": "Interview Panel",
+    "plural_label": "Interview Panels",
+    "entity_type": "junction",
+    "description": "Composition of interviewers assigned to a specific interview, including their role on the panel (lead, technical, behavioral, debrief moderator) and weighting on the consolidated scorecard."
+  },
+  {
+    "id": 893,
+    "data_object_name": "interview_questions",
+    "singular_label": "Interview Question",
+    "plural_label": "Interview Questions",
+    "entity_type": "catalog",
+    "description": "Question bank entry tied to competencies. Carries question text, type (behavioral / technical / situational), competency tags, suggested follow-ups, rubric."
+  },
+  {
+    "id": 9,
+    "data_object_name": "interview_scorecards",
+    "singular_label": "Interview Scorecard",
+    "plural_label": "Interview Scorecards",
+    "entity_type": "operational_workflow",
+    "description": "Structured interviewer feedback against a defined rubric: per-competency ratings, written notes, and a hire/no-hire recommendation."
+  },
+  {
+    "id": 894,
+    "data_object_name": "interviewer_availability_slots",
+    "singular_label": "Interviewer Availability Slot",
+    "plural_label": "Interviewer Availability Slots",
+    "entity_type": "operational_workflow",
+    "description": "Bookable time window an interviewer has marked available. Drives self-serve scheduling (Goodtime / Modern Hire / Calendly for Recruiting). Carries interviewer, start, end, allowed interview types."
+  },
+  {
+    "id": 8,
+    "data_object_name": "interviews",
+    "singular_label": "Interview",
+    "plural_label": "Interviews",
+    "entity_type": "operational_workflow",
+    "description": "Scheduled assessment event between a candidate and one or more interviewers. Carries time, location/medium, panel, interview kit, and outcome."
+  },
+  {
+    "id": 1047,
+    "data_object_name": "intranet_content_attestations",
+    "singular_label": "Content Attestation",
+    "plural_label": "Content Attestations",
+    "entity_type": "operational_workflow",
+    "description": "A recertification record: an owner attests that a piece of content is current, or flags it stale for remediation or archival."
+  },
+  {
+    "id": 1045,
+    "data_object_name": "intranet_content_health_scores",
+    "singular_label": "Content Health Score",
+    "plural_label": "Content Health Scores",
+    "entity_type": "computed",
+    "description": "Derived freshness, quality, accessibility, and ownership-coverage score per inventory record."
+  },
+  {
+    "id": 1043,
+    "data_object_name": "intranet_content_inventory_records",
+    "singular_label": "Content Inventory Record",
+    "plural_label": "Content Inventory Records",
+    "entity_type": "operational_record",
+    "description": "A discovered or registered piece of intranet content (page, hub, space, library, form) across connected intranets, with source, type, last-modified, owner, and governance status."
+  },
+  {
+    "id": 1046,
+    "data_object_name": "intranet_content_ownership_assignments",
+    "singular_label": "Content Ownership Assignment",
+    "plural_label": "Content Ownership Assignments",
+    "entity_type": "junction",
+    "description": "Assignment of an accountable owner and backup to an inventory record, with the review cadence the owner is responsible for."
+  },
+  {
+    "id": 1044,
+    "data_object_name": "intranet_content_types",
+    "singular_label": "Intranet Content Type",
+    "plural_label": "Intranet Content Types",
+    "entity_type": "catalog",
+    "description": "A governed content-type definition (policy, news post, hub, library, form, FAQ) carrying its default review cadence, criticality, and retention rule."
+  },
+  {
+    "id": 790,
+    "data_object_name": "inv_cycle_counts",
+    "singular_label": "Cycle Count",
+    "plural_label": "Cycle Counts",
+    "entity_type": "operational_workflow",
+    "description": "Scheduled or ad-hoc inventory count session: location, item-filter scope (ABC class, last-counted-before, all), assigned counter, status (scheduled, counting, variance_review, posted), per-line variances."
+  },
+  {
+    "id": 791,
+    "data_object_name": "inv_inventory_lots",
+    "singular_label": "Inventory Lot",
+    "plural_label": "Inventory Lots",
+    "entity_type": "operational_record",
+    "description": "INV-MGMT-scoped lot or batch identifier: lot_code, item, supplier, manufacture_date, expiry_date, originating receipt. Distinct from FDS `traceability_lots` (FSMA-204 food-traceability scope)."
+  },
+  {
+    "id": 794,
+    "data_object_name": "inv_kit_definitions",
+    "singular_label": "Kit Definition",
+    "plural_label": "Kit Definitions",
+    "entity_type": "catalog",
+    "description": "Bill-of-kit for sellable bundles: parent item, list of component items with quantities, assembly_required flag (vs. explode-at-order)."
+  },
+  {
+    "id": 793,
+    "data_object_name": "inv_reorder_rules",
+    "singular_label": "Reorder Rule",
+    "plural_label": "Reorder Rules",
+    "entity_type": "catalog",
+    "description": "Item by location replenishment policy: reorder_point, reorder_quantity, safety_stock, lead_time_days, preferred_supplier, auto_generate_po flag."
+  },
+  {
+    "id": 792,
+    "data_object_name": "inv_serialized_units",
+    "singular_label": "Serialized Unit",
+    "plural_label": "Serialized Units",
+    "entity_type": "operational_record",
+    "description": "Individually-tracked unit with a unique serial: item, current location, current status (in_stock, reserved, issued, returned, scrapped), warranty_start."
+  },
+  {
+    "id": 787,
+    "data_object_name": "inv_stock_balances",
+    "singular_label": "Stock Balance",
+    "plural_label": "Stock Balances",
+    "entity_type": "computed",
+    "description": "Per-item by per-location quantity record: on_hand, reserved, in_transit, available_for_allocation. Real-time maintained by stock_movements; not directly edited."
+  },
+  {
+    "id": 785,
+    "data_object_name": "inv_stock_items",
+    "singular_label": "Stock Item",
+    "plural_label": "Stock Items",
+    "entity_type": "catalog",
+    "description": "Inventory-scoped item record: SKU, unit of measure, lot/serial-controlled flag, ABC/XYZ class, default cost method (FIFO, LIFO, weighted-average), weight, and dimensions. INV-MGMT-mastered for standalone deployments; embedded-masters `commerce_products` when B2C-COMM is canonical."
+  },
+  {
+    "id": 786,
+    "data_object_name": "inv_stock_locations",
+    "singular_label": "Stock Location",
+    "plural_label": "Stock Locations",
+    "entity_type": "catalog",
+    "description": "INV-MGMT's finer-grain location catalog: warehouse, store, bin, zone, or hub. Defers to OMS `inventory_locations` (canonical) when present; deployable standalone otherwise."
+  },
+  {
+    "id": 788,
+    "data_object_name": "inv_stock_movements",
+    "singular_label": "Stock Movement",
+    "plural_label": "Stock Movements",
+    "entity_type": "operational_workflow",
+    "description": "Append-only event ledger of inventory transactions: receipt, issue, transfer-in, transfer-out, adjustment-positive, adjustment-negative. Underlies stock_balances; posted movements are immutable."
+  },
+  {
+    "id": 789,
+    "data_object_name": "inv_stock_transfers",
+    "singular_label": "Stock Transfer",
+    "plural_label": "Stock Transfers",
+    "entity_type": "operational_workflow",
+    "description": "Inter-location transfer header with lines: source location, destination location, requested-by user, status (requested, approved, in_transit, received, discrepancy, reconciled), expected arrival date."
+  },
+  {
+    "id": 425,
+    "data_object_name": "inventory_locations",
+    "singular_label": "Inventory Location",
+    "plural_label": "Inventory Locations",
+    "entity_type": "catalog",
+    "description": "Stock-location catalog: location_code, type (warehouse / store / 3pl / hub), on_hand, reserved, available_for_allocation. WMS will co-master balances when loaded."
+  },
+  {
+    "id": 1128,
+    "data_object_name": "investigation_evidence",
+    "singular_label": "Investigation Evidence Item",
+    "plural_label": "Investigation Evidence Items",
+    "entity_type": "operational_record",
+    "description": "A preserved evidence artifact attached to an insider-risk case (file copy, activity snapshot, screen capture, lineage trace, exported report) with chain-of-custody metadata for HR and Legal review."
+  },
+  {
+    "id": 727,
+    "data_object_name": "investment_funds",
+    "singular_label": "Investment Fund",
+    "plural_label": "Investment Funds",
+    "entity_type": "unclassified",
+    "description": "Fund entity (name, vintage, size, type, GP, fee schedule, dissolution date) — organizes capital calls + distributions."
+  },
+  {
+    "id": 751,
+    "data_object_name": "investment_memos",
+    "singular_label": "Investment Memo",
+    "plural_label": "Investment Memos",
+    "entity_type": "operational_workflow",
+    "description": "Internal IC document per deal capturing thesis, financials, risks, deal-team commentary, and IC vote. Locked at final IC vote."
+  },
+  {
+    "id": 366,
+    "data_object_name": "investment_properties",
+    "singular_label": "Investment Property",
+    "plural_label": "Investment Properties",
+    "entity_type": "unclassified",
+    "description": "Real-estate asset held for investment return (acquired/operated/disposed for cash flow and appreciation); carries acquisition basis, debt structure, current valuation, NOI history. Distinct from REAL-EST `real_estate_properties` (the corporate-tenant occupancy view) — same physical asset can underlie both rows in different domains."
+  },
+  {
+    "id": 753,
+    "data_object_name": "investor_contacts",
+    "singular_label": "Investor Contact",
+    "plural_label": "Investor Contacts",
+    "entity_type": "operational_record",
+    "description": "People in the firm's external network: founders, executives, co-investors, advisors, LP-side contacts. Distinct from CRM's customer-side `contacts`. The minimum-embedded-shape is the GDPR-relevant subset every module embedding this record must support."
+  },
+  {
+    "id": 204,
+    "data_object_name": "invoice_matches",
+    "singular_label": "Invoice Match",
+    "plural_label": "Invoice Matches",
+    "entity_type": "operational_workflow",
+    "description": "Three-way-match outcome record: invoice, purchase_order, goods_receipt with line-level match status (matched / quantity_variance / price_variance / no_po / exception). Drives auto-post or exception-queue routing."
+  },
+  {
+    "id": 4,
+    "data_object_name": "job_applications",
+    "singular_label": "Application",
+    "plural_label": "Applications",
+    "entity_type": "operational_workflow",
+    "description": "A candidate's submission against a specific requisition. Carries pipeline stage, status (active / rejected / withdrawn / hired), source, and the full evaluation history."
+  },
+  {
+    "id": 11,
+    "data_object_name": "job_offers",
+    "singular_label": "Offer",
+    "plural_label": "Offers",
+    "entity_type": "operational_workflow",
+    "description": "Formal employment offer extended to a candidate. Carries compensation components, start date, terms, approval chain, and status (draft / approved / sent / accepted / declined / rescinded)."
+  },
+  {
+    "id": 886,
+    "data_object_name": "job_posting_distributions",
+    "singular_label": "Job Posting Distribution",
+    "plural_label": "Job Posting Distributions",
+    "entity_type": "operational_workflow",
+    "description": "Syndication of a job_posting to an external board (LinkedIn, Indeed, ZipRecruiter, Glassdoor, internal mobility portal). Carries board name, post timestamp, expiry, cost, applicant attribution."
+  },
+  {
+    "id": 2,
+    "data_object_name": "job_postings",
+    "singular_label": "Job Posting",
+    "plural_label": "Job Postings",
+    "entity_type": "operational_workflow",
+    "description": "Published, candidate-facing version of a requisition on a career site or job board. One requisition can have many postings (per board, language, or region)."
+  },
+  {
+    "id": 33,
+    "data_object_name": "job_profiles",
+    "singular_label": "Job Profile",
+    "plural_label": "Job Profiles",
+    "entity_type": "catalog",
+    "description": "Canonical role definition in the job catalog: title, family, level, responsibilities, required skills and competencies, pay range, FLSA classification. Distinct from positions (which are slots referencing a profile). Many positions share a single job profile."
+  },
+  {
+    "id": 1,
+    "data_object_name": "job_requisitions",
+    "singular_label": "Job Requisition",
+    "plural_label": "Job Requisitions",
+    "entity_type": "operational_workflow",
+    "description": "Approved request to hire for a specific role. The master ATS work item, carries headcount, level, location, hiring manager, recruiter, and status (draft / open / on_hold / filled / canceled)."
+  },
+  {
+    "id": 194,
+    "data_object_name": "journal_entries",
+    "singular_label": "Journal Entry",
+    "plural_label": "Journal Entries",
+    "entity_type": "unclassified",
+    "description": "Individual posting to the general ledger: header (date, source, period) plus balanced debit / credit lines tagged with GL account, cost center, dimension members. The atomic accounting unit."
+  },
+  {
+    "id": 447,
+    "data_object_name": "journey_steps",
+    "singular_label": "Journey Step",
+    "plural_label": "Journey Steps",
+    "entity_type": "operational_workflow",
+    "description": "Sequential node in an experience flow (step 1 → step 2 → exit)."
+  },
+  {
+    "id": 496,
+    "data_object_name": "key_data_elements",
+    "singular_label": "Key Data Element",
+    "plural_label": "Key Data Elements",
+    "entity_type": "operational_workflow",
+    "description": "FSMA-204-defined KDE attached to a CTE; sortable into FDA spreadsheet response format."
+  },
+  {
+    "id": 743,
+    "data_object_name": "kgp_knowledge_graph_entities",
+    "singular_label": "KGP Knowledge Graph Entity",
+    "plural_label": "KGP Knowledge Graph Entities",
+    "entity_type": "unclassified",
+    "description": "Knowledge-graph-platform-mastered entities — distinct from DATA-AI-PLAT shared knowledge_graph_entities."
+  },
+  {
+    "id": 742,
+    "data_object_name": "kgp_ontologies",
+    "singular_label": "KGP Ontology",
+    "plural_label": "KGP Ontologies",
+    "entity_type": "unclassified",
+    "description": "Knowledge-graph-platform-specific ontology. Distinct from DATA-AI-PLAT shared ontologies."
+  },
+  {
+    "id": 51,
+    "data_object_name": "knowledge_articles",
+    "singular_label": "Knowledge Article",
+    "plural_label": "Knowledge Articles",
+    "entity_type": "operational_workflow",
+    "description": "KB content backing both self-service portals and agent-assist tooling. Lifecycle: draft → review → published → retired. Quality and freshness are the silent ITSM KPIs that drive deflection rate."
+  },
+  {
+    "id": 410,
+    "data_object_name": "knowledge_base_articles",
+    "singular_label": "Knowledge Base Article",
+    "plural_label": "Knowledge Base Articles",
+    "entity_type": "operational_workflow",
+    "description": "Authored, versioned content unit. The KMS standalone-market master, distinct from ITSM/CSM/HRSD/LSD bundled `knowledge_articles` (which are platform-embedded). Lifecycle: draft → published → archived."
+  },
+  {
+    "id": 411,
+    "data_object_name": "knowledge_categories",
+    "singular_label": "Knowledge Category",
+    "plural_label": "Knowledge Categories",
+    "entity_type": "catalog",
+    "description": "Hierarchical organization of articles (topics, sections, tags, search facets)."
+  },
+  {
+    "id": 415,
+    "data_object_name": "knowledge_collections",
+    "singular_label": "Knowledge Collection",
+    "plural_label": "Knowledge Collections",
+    "entity_type": "catalog",
+    "description": "Curated groupings of articles (product docs, process guides, FAQs, onboarding playbooks). Audience tags + expiration."
+  },
+  {
+    "id": 255,
+    "data_object_name": "knowledge_graph_entities",
+    "singular_label": "Knowledge Graph Entity",
+    "plural_label": "Knowledge Graph Entities",
+    "entity_type": "unclassified",
+    "description": "Typed instances of ontology classes — RDF named individuals or LPG nodes — with assertions, relationships, embeddings, and provenance. The 'data' tier of a knowledge graph that AI agents query and operational apps write back to."
+  },
+  {
+    "id": 414,
+    "data_object_name": "knowledge_search_queries",
+    "singular_label": "Knowledge Search Query",
+    "plural_label": "Knowledge Search Queries",
+    "entity_type": "operational_record",
+    "description": "Logged search events for analytics; identifies gaps (zero-result queries)."
+  },
+  {
+    "id": 448,
+    "data_object_name": "kubernetes_clusters",
+    "singular_label": "Kubernetes Cluster",
+    "plural_label": "Kubernetes Clusters",
+    "entity_type": "operational_workflow",
+    "description": "Cluster resource: name, version, control-plane config, network CIDR, CNI choice, feature gates, API-server settings."
+  },
+  {
+    "id": 29,
+    "data_object_name": "labor_market_benchmarks",
+    "singular_label": "Labor Market Benchmark",
+    "plural_label": "Labor Market Benchmarks",
+    "entity_type": "catalog",
+    "description": "External labor-market overlay used to validate plan assumptions: availability, prevailing salary, time-to-hire, and supply concentration by role × geography × level. Typically sourced from third-party labor-market data providers rather than generated internally; the SWP-side record is the imported/cached view used for planning."
+  },
+  {
+    "id": 500,
+    "data_object_name": "lactation_records",
+    "singular_label": "Lactation Record",
+    "plural_label": "Lactation Records",
+    "entity_type": "operational_workflow",
+    "description": "Per-cow per-lactation cycle: calving date, dry-off date, peak milk yield, 305-day projection, days-in-milk."
+  },
+  {
+    "id": 226,
+    "data_object_name": "lakehouse_tables",
+    "singular_label": "Lakehouse Table",
+    "plural_label": "Lakehouse Tables",
+    "entity_type": "unclassified",
+    "description": "Registered table or view in the platform catalog, materialized over open table formats (Delta Lake, Apache Iceberg, Apache Hudi) on object storage or as native warehouse tables. Carries catalog/schema/name, ownership, tags, classification, format metadata, and a pointer to the underlying physical layout. The unit of data on which lineage, governance, BI queries, and ML training all sit."
+  },
+  {
+    "id": 1211,
+    "data_object_name": "launch_activities",
+    "singular_label": "Launch Activity",
+    "plural_label": "Launch Activities",
+    "entity_type": "junction",
+    "description": "A cross-functional task within a launch plan, assigned to a function and tied to a milestone."
+  },
+  {
+    "id": 1209,
+    "data_object_name": "launch_milestones",
+    "singular_label": "Launch Milestone",
+    "plural_label": "Launch Milestones",
+    "entity_type": "junction",
+    "description": "A dated checkpoint inside a launch plan (kickoff, content-complete, sales-ready, GA)."
+  },
+  {
+    "id": 1207,
+    "data_object_name": "launch_plans",
+    "singular_label": "Launch Plan",
+    "plural_label": "Launch Plans",
+    "entity_type": "operational_workflow",
+    "description": "A working go-to-market plan for a launch: scope, milestones, readiness gate, and owners."
+  },
+  {
+    "id": 220,
+    "data_object_name": "lcap_apps",
+    "singular_label": "Low-Code App",
+    "plural_label": "Low-Code Apps",
+    "entity_type": "operational_workflow",
+    "description": "User-built application on the low-code platform: name, owner, deployment, permissions, status. The unit of LCAP delivery."
+  },
+  {
+    "id": 221,
+    "data_object_name": "lcap_business_objects",
+    "singular_label": "Low-Code Business Object",
+    "plural_label": "Low-Code Business Objects",
+    "entity_type": "operational_workflow",
+    "description": "Custom domain object defined within an LCAP app: schema, fields, references, validation rules, security model. The data layer of the LCAP delivery."
+  },
+  {
+    "id": 716,
+    "data_object_name": "lcap_data_sources",
+    "singular_label": "Low-Code Data Source",
+    "plural_label": "Low-Code Data Sources",
+    "entity_type": "operational_workflow",
+    "description": "Configured external connection (CRM, database, REST API) bound to a low-code app with schema introspection."
+  },
+  {
+    "id": 715,
+    "data_object_name": "lcap_pages",
+    "singular_label": "Low-Code Page",
+    "plural_label": "Low-Code Pages",
+    "entity_type": "operational_workflow",
+    "description": "UI screen or page authored as a versioned LCAP application artifact (page, screen, or canvas)."
+  },
+  {
+    "id": 222,
+    "data_object_name": "lcap_workflows",
+    "singular_label": "Low-Code Workflow",
+    "plural_label": "Low-Code Workflows",
+    "entity_type": "operational_workflow",
+    "description": "Business process definition inside an LCAP app: states, transitions, role-based steps, integrations, escalations. The behavior layer of the LCAP delivery."
+  },
+  {
+    "id": 118,
+    "data_object_name": "lead_scores",
+    "singular_label": "Lead Score",
+    "plural_label": "Lead Scores",
+    "entity_type": "computed",
+    "description": "Scoring records per lead/contact — explicit signals (form-fill, demo-request, content-download) + implicit signals (behavior, fit/firmographic match). The mechanism behind the MQL handoff to CRM; thresholds and decay rules drive routing."
+  },
+  {
+    "id": 934,
+    "data_object_name": "learner_badges",
+    "singular_label": "Learner Badge",
+    "plural_label": "Learner Badges",
+    "entity_type": "operational_workflow",
+    "description": "Earned-badge junction per learner per badge; carries earn date, evidence URL, and verification token."
+  },
+  {
+    "id": 171,
+    "data_object_name": "learner_certifications",
+    "singular_label": "Certification",
+    "plural_label": "Certifications",
+    "entity_type": "operational_workflow",
+    "description": "Issued credential against a worker (internal certification, vendor cert, regulatory cert) with issue date, expiry, issuing body, and renewal rules. Drives recertification campaigns."
+  },
+  {
+    "id": 960,
+    "data_object_name": "learner_notifications",
+    "singular_label": "Learner Notification",
+    "plural_label": "Learner Notifications",
+    "entity_type": "operational_record",
+    "description": "Per-learner sent-notification log row for reminders, nudges, completions, and escalations."
+  },
+  {
+    "id": 909,
+    "data_object_name": "learning_content_assets",
+    "singular_label": "Learning Content Asset",
+    "plural_label": "Learning Content Assets",
+    "entity_type": "catalog",
+    "description": "Reusable content asset (video, PDF, image, audio) referenced by lessons and modules."
+  },
+  {
+    "id": 955,
+    "data_object_name": "learning_path_assignments",
+    "singular_label": "Learning Path Assignment",
+    "plural_label": "Learning Path Assignments",
+    "entity_type": "operational_workflow",
+    "description": "Path-to-learner assignment row distinct from course_enrollments; tracks overall path progress and completion percentage."
+  },
+  {
+    "id": 953,
+    "data_object_name": "learning_path_steps",
+    "singular_label": "Learning Path Step",
+    "plural_label": "Learning Path Steps",
+    "entity_type": "junction",
+    "description": "Ordered step inside a learning path: pointer to a course, sub-path, or external resource with sequencing rules."
+  },
+  {
+    "id": 168,
+    "data_object_name": "learning_paths",
+    "singular_label": "Learning Path",
+    "plural_label": "Learning Paths",
+    "entity_type": "operational_workflow",
+    "description": "Curated sequence of courses targeting a role, skill, or certification. Drives ordered enrollment and progress tracking across multiple courses."
+  },
+  {
+    "id": 956,
+    "data_object_name": "learning_plans",
+    "singular_label": "Learning Plan",
+    "plural_label": "Learning Plans",
+    "entity_type": "operational_workflow",
+    "description": "Personalized plan composed of multiple paths or courses, often manager-curated or AI-recommended against skill gaps."
+  },
+  {
+    "id": 1278,
+    "data_object_name": "learning_recommendations",
+    "singular_label": "Learning Recommendation",
+    "plural_label": "Learning Recommendations",
+    "entity_type": "operational_workflow",
+    "description": "Per-learner suggested content generated from skill gaps and role profile."
+  },
+  {
+    "id": 170,
+    "data_object_name": "learning_records",
+    "singular_label": "Learning Record",
+    "plural_label": "Learning Records",
+    "entity_type": "operational_record",
+    "description": "Granular completion event for a course or activity, often xAPI / SCORM / cmi5 statement: actor, verb, object, result, timestamp. Feeds skill_profiles and certifications."
+  },
+  {
+    "id": 1096,
+    "data_object_name": "lease_agreements",
+    "singular_label": "Lease Agreement",
+    "plural_label": "Lease Agreements",
+    "entity_type": "operational_workflow",
+    "description": "The lessee lease contract as the accounting subledger record: parties, leased asset, commencement and end dates, term, options, components, and the payment terms the accounting is built from. The lessee-accounting view, distinct from the workplace occupancy record and the landlord operations record."
+  },
+  {
+    "id": 1091,
+    "data_object_name": "lease_classifications",
+    "singular_label": "Lease Classification",
+    "plural_label": "Lease Classifications",
+    "entity_type": "operational_workflow",
+    "description": "The classification decision for a lease and its supporting test results: finance versus operating for ASC 842 lessees (and lessor sales-type, direct-financing, operating buckets); single lessee model under IFRS 16. Re-tested on modification."
+  },
+  {
+    "id": 1097,
+    "data_object_name": "lease_critical_dates",
+    "singular_label": "Lease Critical Date",
+    "plural_label": "Lease Critical Dates",
+    "entity_type": "operational_workflow",
+    "description": "A tracked obligation deadline on a lease: option-exercise windows, renewal and notice dates, rent reviews, and termination deadlines, with alerting so the obligation is acted on before it lapses."
+  },
+  {
+    "id": 1094,
+    "data_object_name": "lease_disclosures",
+    "singular_label": "Lease Disclosure",
+    "plural_label": "Lease Disclosures",
+    "entity_type": "operational_workflow",
+    "description": "A prepared lease-accounting disclosure for a reporting period: weighted-average discount rate and remaining term, maturity analysis of undiscounted cash flows, lease cost by type, and the standard reconciliations, frozen once filed."
+  },
+  {
+    "id": 1098,
+    "data_object_name": "lease_documents",
+    "singular_label": "Lease Document",
+    "plural_label": "Lease Documents",
+    "entity_type": "operational_record",
+    "description": "A source document attached to a lease: the executed contract, amendments, abstracts, and correspondence that evidence the terms feeding the accounting."
+  },
+  {
+    "id": 1090,
+    "data_object_name": "lease_liabilities",
+    "singular_label": "Lease Liability",
+    "plural_label": "Lease Liabilities",
+    "entity_type": "operational_workflow",
+    "description": "The lease liability measured at the present value of unpaid lease payments, unwound with effective interest over the lease term and remeasured on modification or reassessment."
+  },
+  {
+    "id": 1093,
+    "data_object_name": "lease_modifications",
+    "singular_label": "Lease Modification",
+    "plural_label": "Lease Modifications",
+    "entity_type": "operational_workflow",
+    "description": "A change to a lease and its accounting consequence: scope or consideration changes, remeasurements, reassessments, discount-rate updates, index and rate true-ups, and right-of-use asset impairment, with before-and-after balances."
+  },
+  {
+    "id": 1092,
+    "data_object_name": "lease_payment_schedules",
+    "singular_label": "Lease Payment Schedule",
+    "plural_label": "Lease Payment Schedules",
+    "entity_type": "operational_record",
+    "description": "The period-by-period schedule of lease cash flows, liability amortization (principal and interest), and right-of-use asset amortization that drives recognition and the maturity-analysis disclosure."
+  },
+  {
+    "id": 638,
+    "data_object_name": "legal_advice_records",
+    "singular_label": "Legal Advice Record",
+    "plural_label": "Legal Advice Records",
+    "entity_type": "operational_workflow",
+    "description": "Documented legal opinion / consultation: matter or requestor reference, advice narrative, applicability scope, confidence, expiry/review date, privilege classification."
+  },
+  {
+    "id": 640,
+    "data_object_name": "legal_case_dockets",
+    "singular_label": "Legal Case Docket",
+    "plural_label": "Legal Case Dockets",
+    "entity_type": "operational_workflow",
+    "description": "Court-centric tracking for litigated matters: court/jurisdiction, case number, judge, calendar (filing, hearing, trial, appeal dates), opposing counsel, key documents. Subset of in_house_legal_matters with litigation metadata."
+  },
+  {
+    "id": 66,
+    "data_object_name": "legal_contracts",
+    "singular_label": "Contract",
+    "plural_label": "Contracts",
+    "entity_type": "operational_workflow",
+    "description": "Canonical contract record: counterparty / supplier, contract type (MSA, SOW, NDA, DPA, subscription, lease), effective and expiry dates, total value, governing law, status (draft, in-negotiation, signed, active, expired, terminated). The most multi-mastered SaaS-related object — CLM owns the document, S2P and SMP contribute context."
+  },
+  {
+    "id": 197,
+    "data_object_name": "legal_entities",
+    "singular_label": "Legal Entity",
+    "plural_label": "Legal Entities",
+    "entity_type": "unclassified",
+    "description": "Statutory company: legal name, registration, jurisdiction, currency, fiscal calendar. Books are kept per legal entity; consolidation rolls them up."
+  },
+  {
+    "id": 635,
+    "data_object_name": "legal_holds",
+    "singular_label": "Legal Hold",
+    "plural_label": "Legal Holds",
+    "entity_type": "operational_workflow",
+    "description": "eDiscovery / litigation preservation notice: matter reference, affected record types (email, documents, messages, files), custodian scope, issued date, lifting date. Drives enforcement across data systems."
+  },
+  {
+    "id": 634,
+    "data_object_name": "legal_intake_requests",
+    "singular_label": "Legal Intake Request",
+    "plural_label": "Legal Intake Requests",
+    "entity_type": "operational_workflow",
+    "description": "Demand-signal record: business-unit request for legal advice or service. Carries description, priority, required-by date, requesting department, triage outcome (matter creation / policy guidance / escalation). The front door to LSD."
+  },
+  {
+    "id": 391,
+    "data_object_name": "legal_matters",
+    "singular_label": "Legal Matter",
+    "plural_label": "Legal Matters",
+    "entity_type": "operational_workflow",
+    "description": "Law-firm matter (case, transaction, advisory engagement): client, opposing parties, matter type, key dates (statute of limitations, court dates), responsible attorneys, billing rates, status. The central organizing entity of law-firm operations."
+  },
+  {
+    "id": 908,
+    "data_object_name": "lessons",
+    "singular_label": "Lesson",
+    "plural_label": "Lessons",
+    "entity_type": "catalog",
+    "description": "Leaf consumable inside a course module: video, document, SCORM block, or live activity."
+  },
+  {
+    "id": 833,
+    "data_object_name": "library_acquisition_orders",
+    "singular_label": "Library Acquisition Order",
+    "plural_label": "Library Acquisition Orders",
+    "entity_type": "operational_workflow",
+    "description": "Order for library materials from a book vendor, including line items, fund allocations, EDI exchange status, and receiving workflow."
+  },
+  {
+    "id": 825,
+    "data_object_name": "library_authorities",
+    "singular_label": "Library Authority Record",
+    "plural_label": "Library Authority Records",
+    "entity_type": "operational_workflow",
+    "description": "Controlled-vocabulary record for a name, subject, organization, or uniform title used as a heading in bibliographic records, supporting consistent retrieval and disambiguation."
+  },
+  {
+    "id": 830,
+    "data_object_name": "library_circulation_policies",
+    "singular_label": "Library Circulation Policy",
+    "plural_label": "Library Circulation Policies",
+    "entity_type": "catalog",
+    "description": "Configuration rule defining loan period, renewal limits, fine accrual, and hold behavior for a combination of item type and patron category."
+  },
+  {
+    "id": 836,
+    "data_object_name": "library_eresource_licenses",
+    "singular_label": "Library E-Resource License",
+    "plural_label": "Library E-Resource Licenses",
+    "entity_type": "operational_workflow",
+    "description": "License agreement for an electronic resource (database, ebook collection, ejournal package), including authorized users, concurrent-user limits, ILL permissions, and renewal terms."
+  },
+  {
+    "id": 829,
+    "data_object_name": "library_fines",
+    "singular_label": "Library Fine",
+    "plural_label": "Library Fines",
+    "entity_type": "operational_workflow",
+    "description": "Monetary charge against a patron account for overdue, lost, or damaged library items, including assessment, payment, and waiver workflow."
+  },
+  {
+    "id": 826,
+    "data_object_name": "library_holdings",
+    "singular_label": "Library Holdings Record",
+    "plural_label": "Library Holdings Records",
+    "entity_type": "unclassified",
+    "description": "Summary of which copies of a bibliographic record exist at a given location, including coverage statements for serials and shelf-location information."
+  },
+  {
+    "id": 828,
+    "data_object_name": "library_holds",
+    "singular_label": "Library Hold",
+    "plural_label": "Library Holds",
+    "entity_type": "operational_workflow",
+    "description": "Patron request to reserve a bibliographic record or specific item for later pickup, including position in queue, pickup location, and trap status."
+  },
+  {
+    "id": 824,
+    "data_object_name": "library_items",
+    "singular_label": "Library Item",
+    "plural_label": "Library Items",
+    "entity_type": "operational_workflow",
+    "description": "Physical or digital copy of a work held by the library. One bibliographic record may have many items, each with its own barcode, location, status, and circulation history."
+  },
+  {
+    "id": 827,
+    "data_object_name": "library_loans",
+    "singular_label": "Library Loan",
+    "plural_label": "Library Loans",
+    "entity_type": "operational_workflow",
+    "description": "Circulation transaction recording the loan of a library item to a patron, including due date, renewal history, and return status."
+  },
+  {
+    "id": 832,
+    "data_object_name": "library_patron_categories",
+    "singular_label": "Library Patron Category",
+    "plural_label": "Library Patron Categories",
+    "entity_type": "catalog",
+    "description": "Classification of patrons (e.g. student, faculty, staff, public, juvenile) that drives circulation policy and access entitlement."
+  },
+  {
+    "id": 831,
+    "data_object_name": "library_patrons",
+    "singular_label": "Library Patron",
+    "plural_label": "Library Patrons",
+    "entity_type": "operational_workflow",
+    "description": "Registered library member with borrowing privileges, contact information, patron category, and account history. Distinct from platform users; a patron may or may not have a linked user account for self-service."
+  },
+  {
+    "id": 837,
+    "data_object_name": "library_saved_searches",
+    "singular_label": "Library Saved Search",
+    "plural_label": "Library Saved Searches",
+    "entity_type": "operational_record",
+    "description": "Patron-owned saved query or reading list in the discovery layer, optionally configured to send alerts when new matching items are added to the catalog."
+  },
+  {
+    "id": 835,
+    "data_object_name": "library_serial_subscriptions",
+    "singular_label": "Library Serial Subscription",
+    "plural_label": "Library Serial Subscriptions",
+    "entity_type": "operational_workflow",
+    "description": "Active subscription to a periodical or other continuing resource, including issue prediction, check-in records, claim history, and renewal schedule."
+  },
+  {
+    "id": 839,
+    "data_object_name": "library_sharing_partners",
+    "singular_label": "Library Sharing Partner",
+    "plural_label": "Library Sharing Partners",
+    "entity_type": "catalog",
+    "description": "Partner library or consortium member with which this library participates in resource sharing, including agreement terms, default lending policies, and contact endpoints."
+  },
+  {
+    "id": 834,
+    "data_object_name": "library_vendor_accounts",
+    "singular_label": "Library Vendor Account",
+    "plural_label": "Library Vendor Accounts",
+    "entity_type": "catalog",
+    "description": "Book or serials vendor relationship managed by the library, including account credentials, EDI settings, claiming defaults, and contact information."
+  }
+]

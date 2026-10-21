@@ -1,0 +1,162 @@
+[
+  {
+    "id": 1186,
+    "data_object_id": 353,
+    "related_data_object_id": 356,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "requires disclosures",
+    "inverse_verb": "discloses for",
+    "is_required": true,
+    "owner_side": "target"
+  },
+  {
+    "id": 1187,
+    "data_object_id": 353,
+    "related_data_object_id": 354,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "produces commission splits",
+    "inverse_verb": "splits commission on",
+    "is_required": true,
+    "owner_side": "target"
+  },
+  {
+    "id": 1437,
+    "data_object_id": 966,
+    "related_data_object_id": 245,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "belongs_to",
+    "inverse_verb": "has_key_results",
+    "is_required": true,
+    "owner_side": "target"
+  },
+  {
+    "id": 1438,
+    "data_object_id": 967,
+    "related_data_object_id": 245,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "belongs_to",
+    "inverse_verb": "has_check_ins",
+    "is_required": true,
+    "owner_side": "target"
+  },
+  {
+    "id": 1441,
+    "data_object_id": 969,
+    "related_data_object_id": 244,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "belongs_to",
+    "inverse_verb": "has_milestones",
+    "is_required": true,
+    "owner_side": "target"
+  },
+  {
+    "id": 1442,
+    "data_object_id": 970,
+    "related_data_object_id": 971,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "belongs_to",
+    "inverse_verb": "has_steps",
+    "is_required": true,
+    "owner_side": "target"
+  },
+  {
+    "id": 1447,
+    "data_object_id": 974,
+    "related_data_object_id": 973,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "valued_for",
+    "inverse_verb": "has_values",
+    "is_required": true,
+    "owner_side": "target"
+  },
+  {
+    "id": 1448,
+    "data_object_id": 974,
+    "related_data_object_id": 243,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "set_on",
+    "inverse_verb": "has_field_values",
+    "is_required": true,
+    "owner_side": "target"
+  },
+  {
+    "id": 1449,
+    "data_object_id": 975,
+    "related_data_object_id": 244,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "belongs_to",
+    "inverse_verb": "has_sections",
+    "is_required": true,
+    "owner_side": "target"
+  },
+  {
+    "id": 1453,
+    "data_object_id": 979,
+    "related_data_object_id": 978,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "references_tag",
+    "inverse_verb": "applied_via",
+    "is_required": true,
+    "owner_side": "target"
+  },
+  {
+    "id": 1454,
+    "data_object_id": 979,
+    "related_data_object_id": 243,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "tagged_on",
+    "inverse_verb": "has_tag_assignments",
+    "is_required": true,
+    "owner_side": "target"
+  },
+  {
+    "id": 1455,
+    "data_object_id": 980,
+    "related_data_object_id": 243,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "belongs_to",
+    "inverse_verb": "has_comments",
+    "is_required": true,
+    "owner_side": "target"
+  },
+  {
+    "id": 1456,
+    "data_object_id": 981,
+    "related_data_object_id": 243,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "belongs_to",
+    "inverse_verb": "has_attachments",
+    "is_required": true,
+    "owner_side": "target"
+  },
+  {
+    "id": 1457,
+    "data_object_id": 983,
+    "related_data_object_id": 982,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "submitted_against",
+    "inverse_verb": "has_submissions",
+    "is_required": true,
+    "owner_side": "target"
+  },
+  {
+    "id": 1487,
+    "data_object_id": 993,
+    "related_data_object_id": 994,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "negotiated_under",
+    "inverse_verb": "has_negotiations",
+    "is_required": true,
+    "owner_side": "target"
+  },
+  {
+    "id": 1491,
+    "data_object_id": 997,
+    "related_data_object_id": 998,
+    "relationship_type": "one_to_many",
+    "relationship_verb": "runs_for",
+    "inverse_verb": "has_runs",
+    "is_required": true,
+    "owner_side": "target"
+  }
+]

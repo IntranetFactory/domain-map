@@ -1,0 +1,394 @@
+[
+  {
+    "id": 605,
+    "catalog_description": "Know-your-customer and anti-money-laundering reviews assessing customer risk, ownership, source of funds, and sanctions screening, required at onboarding and annual recertification."
+  },
+  {
+    "id": 609,
+    "catalog_description": "Posted transactions on a bank account: date, type, amount, currency, counterparty, and reconciliation status against the bank statement."
+  },
+  {
+    "id": 1203,
+    "catalog_description": "Seller-facing competitive cards showing how to win against a named competitor, with common objections and the counters to them."
+  },
+  {
+    "id": 151,
+    "catalog_description": "Insurance providers, retirement recordkeepers, and benefit administrators that fulfill a benefit plan and receive enrollment feeds."
+  },
+  {
+    "id": 148,
+    "catalog_description": "People covered under an employee's benefit plan, such as a spouse, partner, or child, with relationship, birth date, and eligibility documents."
+  },
+  {
+    "id": 147,
+    "catalog_description": "Per-employee, per-plan elected coverage with effective dates, covered dependents, contributions, and beneficiaries. The basis for payroll deductions."
+  },
+  {
+    "id": 150,
+    "catalog_description": "Annual windows during which employees may elect or change benefit plans for the next plan year, driving enrollment communications and carrier updates."
+  },
+  {
+    "id": 146,
+    "catalog_description": "Employer-sponsored benefit offerings such as medical, dental, vision, life, disability, and retirement, with eligibility rules, contributions, and coverage tiers."
+  },
+  {
+    "id": 281,
+    "catalog_description": "Post-initiative metric captures recording realized ROI, goal achievement, and variance against plan, closing the loop on the expected business value."
+  },
+  {
+    "id": 409,
+    "catalog_description": "Controlled pre-release programs with a defined cohort, features, and date range for validating a product before general availability."
+  },
+  {
+    "id": 692,
+    "catalog_description": "Interactive dashboards combining multiple visualizations, bound to underlying data models for self-service analytics."
+  },
+  {
+    "id": 693,
+    "catalog_description": "Saved explorations and prepared queries authored for reuse in analytics and reporting."
+  },
+  {
+    "id": 691,
+    "catalog_description": "Published reports authored and served for business intelligence, including workbooks, dashboard-bound reports, and saved views."
+  },
+  {
+    "id": 694,
+    "catalog_description": "Scheduled delivery configurations that push a report or dashboard to recipients by email, chat, or webhook on a set cadence."
+  },
+  {
+    "id": 823,
+    "catalog_description": "Catalog descriptions of intellectual works across all formats, from books and periodicals to audio, video, maps, and datasets, encoded in library standards."
+  },
+  {
+    "id": 1192,
+    "catalog_description": "Running on-account balances for a boater that fuel, store, and service charges post to, settled periodically."
+  },
+  {
+    "id": 1184,
+    "catalog_description": "Marina customers with contact details, communication preferences, account balance, and the vessels and contracts they hold."
+  },
+  {
+    "id": 1193,
+    "catalog_description": "Boatyard service jobs on a vessel, such as repairs, winterization, detailing, or commissioning, with labor, parts, and status."
+  },
+  {
+    "id": 699,
+    "catalog_description": "Conversational AI bot configurations defining persona, instructions, system prompt, and disambiguation rules."
+  },
+  {
+    "id": 689,
+    "catalog_description": "Deviations from brand guidelines detected automatically, such as off-brand phrasing or unauthorized terms, with violation type and recommended fix."
+  },
+  {
+    "id": 503,
+    "catalog_description": "Reproductive events such as natural service, artificial insemination, or embryo transfer, with sire, technician, and date."
+  },
+  {
+    "id": 1103,
+    "catalog_description": "Breeding-cycle events such as joining, pregnancy test, and birth, with sire, dam, offspring, and birth weight, tracking reproductive performance."
+  },
+  {
+    "id": 687,
+    "catalog_description": "Broken links found by automated audits, with source and target URL, status code, first-detected date, and how many pages are affected."
+  },
+  {
+    "id": 19,
+    "catalog_description": "Pairings of a new hire with an existing employee for onboarding support, with scope, start and end dates, and meeting cadence."
+  },
+  {
+    "id": 681,
+    "catalog_description": "Binaries, container images, and packages produced by a pipeline run, with type, version, registry location, and signing status, ready for deployment."
+  },
+  {
+    "id": 721,
+    "catalog_description": "Property certifications such as LEED, BREEAM, or seismic ratings that support underwriting and tenant appeal."
+  },
+  {
+    "id": 506,
+    "catalog_description": "Outbound bulk milk shipments to a processor or co-op, with pickup time, volume, quality grade, and hauler."
+  },
+  {
+    "id": 248,
+    "catalog_description": "Hierarchical maps of an organization's business capabilities, with maturity and investment ratings and links to applications, processes, and owners."
+  },
+  {
+    "id": 247,
+    "catalog_description": "Design-time definitions of business processes as diagrams, with version history, lifecycle state, and ownership, distinct from runtime executions."
+  },
+  {
+    "id": 584,
+    "catalog_description": "Business rules inferred from event-log patterns, such as activity orderings, forbidden sequences, and decision thresholds, capturing hidden control logic."
+  },
+  {
+    "id": 1057,
+    "catalog_description": "Corporate journeys grouping purpose, dates, traveler, and booked segments into one unit that is approved, tracked, and reconciled to expenses."
+  },
+  {
+    "id": 276,
+    "catalog_description": "Scoring models for prioritizing portfolio items by value, strategic alignment, risk, and dependencies, producing a ranked backlog."
+  },
+  {
+    "id": 520,
+    "catalog_description": "Whole, half, or quarter-animal pre-orders, with deposit status, customer cut-sheet preferences, processor coordination, and pickup date."
+  },
+  {
+    "id": 1263,
+    "catalog_description": "Change Advisory Board meeting records covering agenda, attendees, changes reviewed, decisions, and minutes."
+  },
+  {
+    "id": 801,
+    "catalog_description": "Two-dimensional drawings derived from CAD models, with their own revision, approval, and title-block metadata and a separate release cycle."
+  },
+  {
+    "id": 800,
+    "catalog_description": "Metadata records for CAD parts and assemblies, tracking owner, check-in and check-out state, revision, and the file they reference."
+  },
+  {
+    "id": 122,
+    "catalog_description": "Recorded sales calls with audio or video, transcript, participants, and topic and sentiment metadata, attached to deals for review."
+  },
+  {
+    "id": 1016,
+    "catalog_description": "Timestamped annotations left on a recorded call during review, tied to the moment in the conversation they refer to."
+  },
+  {
+    "id": 365,
+    "catalog_description": "Common-area-maintenance expense pools allocated to tenants by pro-rata share, with gross-up, audit caps, and exclusion of capital items."
+  },
+  {
+    "id": 892,
+    "catalog_description": "Reusable assessment definitions such as coding challenges, work samples, and skills tests, with time limit and scoring rubric, assigned to candidates."
+  },
+  {
+    "id": 10,
+    "catalog_description": "Skills, cognitive, technical, or personality test results attached to an application, often sourced from an external assessment provider."
+  },
+  {
+    "id": 870,
+    "catalog_description": "Per-candidate opt-in records for privacy and data retention, with consent type, jurisdiction, and granted and withdrawal timestamps."
+  },
+  {
+    "id": 1000,
+    "catalog_description": "Files attached to a candidate such as resumes, cover letters, portfolios, and signed disclosures, with document type, storage location, and visibility."
+  },
+  {
+    "id": 1040,
+    "catalog_description": "Threaded email correspondence with a candidate as a first-class record, capturing sent and received messages, the template used, and delivery status."
+  },
+  {
+    "id": 866,
+    "catalog_description": "Single recruiter-to-candidate touchpoints across channels such as email, call, or SMS, with direction, timestamp, status, and content reference."
+  },
+  {
+    "id": 1001,
+    "catalog_description": "Internal-only recruiter or hiring-team notes on a candidate, with author, body, visibility scope, and optional mentions, never sent to the candidate."
+  },
+  {
+    "id": 867,
+    "catalog_description": "Multi-touch automated outreach sequences targeting talent-pool segments, with cadence, step templates, audience filter, and lifecycle state."
+  },
+  {
+    "id": 6,
+    "catalog_description": "Employee-submitted candidate suggestions linked to a requisition, tracking the referring employee, candidate, status, and any payable bonus."
+  },
+  {
+    "id": 1003,
+    "catalog_description": "Links between candidates and tags, recording who assigned each tag and when, with optional context."
+  },
+  {
+    "id": 1002,
+    "catalog_description": "Free-form labels applied to candidates to support segmentation, search, and pool inclusion, with name, optional category, and color."
+  },
+  {
+    "id": 3,
+    "catalog_description": "People known to the recruiting organization, with or without an active application, carrying contact details, resume, tags, consent, and source."
+  },
+  {
+    "id": 770,
+    "catalog_description": "Authoritative shareholder ledgers for an issuing company, listing securities, classes, holders, and transaction history."
+  },
+  {
+    "id": 1226,
+    "catalog_description": "Sales-capacity models setting coverage, ramp, and productivity assumptions sized against the revenue target."
+  },
+  {
+    "id": 87,
+    "catalog_description": "Periodic resource utilization snapshots such as CPU, memory, disk, and throughput, used for capacity planning, trend analysis, and cost allocation."
+  },
+  {
+    "id": 1024,
+    "catalog_description": "Investor-facing notice documents for a capital call, in standard reporting format with publication timestamps, stored apart from the call record."
+  },
+  {
+    "id": 761,
+    "catalog_description": "Per-investor line items against a capital call, with allocated amount, due date, funded amount, and funded date."
+  },
+  {
+    "id": 367,
+    "catalog_description": "Notices requesting investor funding against commitments, carrying call amount, allocation, due date, and funding receipt tracking."
+  },
+  {
+    "id": 351,
+    "catalog_description": "Building improvement, renovation, or expansion projects, with budget, timeline, and completion status."
+  },
+  {
+    "id": 530,
+    "catalog_description": "Collections of physical or digital documents submitted together for automated processing, with source, capture date, document count, and status."
+  },
+  {
+    "id": 1017,
+    "catalog_description": "Automatically captured emails, meetings, and calls attributed to an opportunity and account, removing manual logging and keeping the record complete."
+  },
+  {
+    "id": 745,
+    "catalog_description": "Real-time card pre-authorization events from the card network, with the policy decision, distinct from settled card transactions."
+  },
+  {
+    "id": 213,
+    "catalog_description": "Authorization and settlement records from a corporate card feed, with merchant, category, amount, and posting date, matched to expense lines."
+  },
+  {
+    "id": 619,
+    "catalog_description": "Coordinated care documents for a patient condition, with goals, interventions, target dates, responsible providers, and escalation triggers."
+  },
+  {
+    "id": 179,
+    "catalog_description": "Worker-declared career interests, including target roles, mobility preferences, and timeline, used to drive internal-mobility matching."
+  },
+  {
+    "id": 863,
+    "catalog_description": "Projected routes from a worker's current role toward an aspiration, with the skills required, distinct from employee-authored aspirations."
+  },
+  {
+    "id": 152,
+    "catalog_description": "Outbound integrations that send enrollment and remittance data to a benefit carrier, typically as weekly batches whose failures cause coverage discrepancies."
+  },
+  {
+    "id": 383,
+    "catalog_description": "Session-scoped carts holding products before checkout, with item quantities, pricing, and promotions. Abandoned carts feed marketing nurture."
+  },
+  {
+    "id": 193,
+    "catalog_description": "Taxonomy of HR request types such as pay, benefits, leave, and policy, driving routing, SLAs, knowledge lookup, and trend analytics."
+  },
+  {
+    "id": 1137,
+    "catalog_description": "Case files for flexible, non-sequential knowledge work: containers of ad-hoc and planned activities, milestones, and gates decided at runtime."
+  },
+  {
+    "id": 200,
+    "catalog_description": "Postings to a bank account such as receipts, payments, transfers, and fees, used to reconcile against journal entries and bank statements."
+  },
+  {
+    "id": 735,
+    "catalog_description": "Call and screen recordings from contact-center sessions, distinct from sales call recordings."
+  },
+  {
+    "id": 509,
+    "catalog_description": "Monitoring readings at critical control points in food safety, where a deviation triggers a corrective-action workflow."
+  },
+  {
+    "id": 932,
+    "catalog_description": "Templates used to issue completion certificates to learners, carrying layout and dynamic fields."
+  },
+  {
+    "id": 931,
+    "catalog_description": "Catalog of certification types, with issuing authority, validity period, recertification policy, and prerequisite courses."
+  },
+  {
+    "id": 1280,
+    "catalog_description": "Renewal cycles of an existing certification, distinct from its initial issuance."
+  },
+  {
+    "id": 936,
+    "catalog_description": "Per-learner ledger of earned continuing-education credits, serving as evidence for professional licensure reporting."
+  },
+  {
+    "id": 1264,
+    "catalog_description": "Detected conflicts between overlapping changes or a change scheduled in a blackout window, recording the colliding changes and the resolution."
+  },
+  {
+    "id": 439,
+    "catalog_description": "Change-data-capture stream metadata, including source table, captured columns, capture mode, and watermark positions."
+  },
+  {
+    "id": 571,
+    "catalog_description": "Files pinned or shared at the channel level rather than on an individual message, with who shared them, access permissions, and expiry."
+  },
+  {
+    "id": 568,
+    "catalog_description": "Membership records linking a user or external guest to a channel, with join date, role, notification settings, and access level."
+  },
+  {
+    "id": 1223,
+    "catalog_description": "Strategic plans defining which sales routes, such as direct, partner, or digital, carry which market segments."
+  },
+  {
+    "id": 564,
+    "catalog_description": "Persistent conversation spaces that are private, public, or direct, with name, topic, members, retention policy, and guest federation."
+  },
+  {
+    "id": 567,
+    "catalog_description": "Synchronous audio or video meetings spawned from a channel or direct message, with participants, duration, and recording and transcription references."
+  },
+  {
+    "id": 570,
+    "catalog_description": "Files or links embedded in a chat message, with attachment type, size, upload time, and virus-scan status."
+  },
+  {
+    "id": 565,
+    "catalog_description": "Individual messages posted to a channel or thread, with author, timestamp, content, attachments, edit history, and reactions."
+  },
+  {
+    "id": 566,
+    "catalog_description": "Nested conversation branches within a channel message, with the parent message, replies, participants, and read state."
+  },
+  {
+    "id": 386,
+    "catalog_description": "Transactional checkout sessions capturing customer identity, payment method, shipping address, and conversion into a final order."
+  },
+  {
+    "id": 1081,
+    "catalog_description": "Hazardous substances on hand, with quantity, location, and links to their safety data sheet and exposure limits."
+  },
+  {
+    "id": 80,
+    "catalog_description": "Captured configuration states at a point in time, used for drift detection, approved-state validation, and audit evidence."
+  },
+  {
+    "id": 78,
+    "catalog_description": "The configuration-item type hierarchy defining schema, inherited attributes, and class-level monitoring and discovery policies for the CMDB."
+  },
+  {
+    "id": 680,
+    "catalog_description": "Single executions of a pipeline, with triggering commit, timestamps, duration, overall and per-stage status, and runner, used for delivery metrics."
+  },
+  {
+    "id": 679,
+    "catalog_description": "Pipeline definitions for build, test, scan, and deploy, with source repository, trigger conditions, stage configuration, and secrets binding."
+  },
+  {
+    "id": 77,
+    "catalog_description": "Edges in the configuration-item graph such as depends-on, runs-on, and hosted-by, the topology behind service mapping and impact analysis."
+  },
+  {
+    "id": 627,
+    "catalog_description": "Allocations of claims to adjusters, with assigned date, caseload status, and reason, driving adjuster workload analytics."
+  },
+  {
+    "id": 629,
+    "catalog_description": "Disbursements to a claimant, provider, or vendor, with amount, payment date, reference, and allocation to coverages."
+  },
+  {
+    "id": 628,
+    "catalog_description": "Settlement agreements for a resolved claim, with approved amount, conditions, releases, payee, and closure terms."
+  },
+  {
+    "id": 1050,
+    "catalog_description": "Versioned, governed collections of approved contract clauses, often organized by jurisdiction or contract type, that authors draw from."
+  },
+  {
+    "id": 401,
+    "catalog_description": "Professional-services engagement records with client, service line, scope, fee model, period, and status, distinct from the contract artifact."
+  }
+]

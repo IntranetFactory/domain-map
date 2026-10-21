@@ -1,0 +1,641 @@
+{
+  "domain": {
+    "id": 84,
+    "domain_name": "Data Center Infrastructure Management",
+    "created_at": "2026-05-18T20:11:52.969853+00:00",
+    "updated_at": "2026-06-07T01:06:13.032428+00:00",
+    "domain_code": "DCIM",
+    "description": "Asset, capacity, power, cooling, and floor-plan management for physical data centres and edge sites.",
+    "record_status": "new",
+    "parent_domain_id": 2,
+    "industry_id": null,
+    "certification_required": false,
+    "crud_percentage": 80,
+    "business_logic": "Power, cooling, and capacity calculations across racks and rooms; physical-asset register and workflow form the larger surface.",
+    "min_org_size": "30 m <2500",
+    "cost_band": "$$$",
+    "usa_market_size_usd_m": 1500,
+    "market_size_source_year": 2025,
+    "search_vector": "'center':2A 'data':1A 'dcim':5C 'infrastructure':3A 'management':4A",
+    "notes": "",
+    "catalog": false,
+    "catalog_tagline": "See, power, cool, and plan every rack in your data centers from one live model, so you never run out of space, power, or cooling by surprise.",
+    "catalog_description": "Data center infrastructure management gives facilities and IT infrastructure teams a single, authoritative model of the physical estate: every site, rack, and cabinet, the power chain that feeds them, the cooling that keeps them within range, and the cables and ports that connect them. Instead of spreadsheets and tribal knowledge, you get a live register of what is installed, where it sits, and how much headroom is left.\n\nOperators track power from the incoming circuit through distribution units and uninterruptible supplies down to the outlet, monitor temperature and humidity from cabinet-level sensors, and map physical connectivity port by port and cable by cable. When a circuit overloads, a cooling unit fails, or an environmental threshold is breached, the event is captured and routed to the teams and systems that need to act.\n\nOn top of the asset and telemetry layer sits capacity planning: forward-looking projections of power, cooling, space, and bandwidth per site and zone. Planners use that headroom view to schedule growth, justify build-outs, and negotiate colocation with confidence, while changes to the physical layer flow out to the configuration database and downstream operations so the rest of IT stays in step."
+  },
+  "capabilities": [
+    {
+      "capabilities": {
+        "capability_code": "DCIM-ASSET-REG",
+        "capability_name": "Physical Asset and Space Register",
+        "description": "Authoritative model of the physical estate: sites, rooms, rows, cabinets, racks, and rack-unit occupancy, recording what is installed, where it sits, and how much space remains."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "DCIM-POWER-CHAIN",
+        "capability_name": "Power Chain Modeling",
+        "description": "End-to-end power path from incoming circuit through distribution units and uninterruptible supplies down to the outlet, with phase balance, redundancy, and draw against rated capacity tracked at each link."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "DCIM-THERMAL",
+        "capability_name": "Cooling and Thermal Management",
+        "description": "Modeling of cooling units, thermal zones, and airflow alongside cabinet-level temperature and humidity, keeping equipment inside its operating envelope."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "DCIM-ENV-MON",
+        "capability_name": "Environmental Monitoring",
+        "description": "Continuous capture of sensor telemetry (temperature, humidity, smoke, water leak, airflow) with threshold alarming routed to the teams and systems that must act."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "DCIM-CAP-PLAN",
+        "capability_name": "Capacity Planning",
+        "description": "Forward-looking projection of power, cooling, space, and bandwidth headroom per site and zone, with what-if modeling to schedule growth and justify build-outs."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "DCIM-CONN-MAP",
+        "capability_name": "Physical Connectivity Mapping",
+        "description": "Port-by-port and cable-by-cable map of physical connectivity, including patch panels and trunk runs, feeding the configuration database and network operations."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "DCIM-MAC",
+        "capability_name": "Moves, Adds, and Changes Workflow",
+        "description": "Structured request, approval, and execution of equipment installs, decommissions, and relocations across the floor, keeping the live model in step with physical reality."
+      }
+    }
+  ],
+  "solutions": [
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "Sunbird dcTrack",
+        "vendor_id": 271,
+        "vendors": {
+          "vendor_name": "Sunbird Software"
+        }
+      }
+    },
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "Schneider Electric EcoStruxure IT",
+        "vendor_id": 273,
+        "vendors": {
+          "vendor_name": "Schneider Electric"
+        }
+      }
+    },
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "Vertiv Environet Alert",
+        "vendor_id": 274,
+        "vendors": {
+          "vendor_name": "Vertiv"
+        }
+      }
+    },
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "Nlyte DCIM Suite",
+        "vendor_id": 272,
+        "vendors": {
+          "vendor_name": "Nlyte Software"
+        }
+      }
+    },
+    {
+      "coverage_level": "secondary",
+      "solutions": {
+        "solution_name": "FNT Command",
+        "vendor_id": 275,
+        "vendors": {
+          "vendor_name": "FNT Software"
+        }
+      }
+    },
+    {
+      "coverage_level": "partial",
+      "solutions": {
+        "solution_name": "Device42 DCIM",
+        "vendor_id": 10,
+        "vendors": {
+          "vendor_name": "Device42"
+        }
+      }
+    }
+  ],
+  "modules": [
+    {
+      "domain_module_code": "DCIM-ASSET-SPACE",
+      "domain_module_name": "Asset and Space Management",
+      "module_kind": "full",
+      "description": "Owns the physical-asset register and the space hierarchy: sites, rooms, rows, cabinets, racks, and rack-unit occupancy, plus the moves/adds/changes workflow that keeps the live model aligned with what is physically installed. This module is the system of record for where every piece of equipment sits and how much rack and floor space remains."
+    },
+    {
+      "domain_module_code": "DCIM-POWER-ENV",
+      "domain_module_name": "Power and Environmental Monitoring",
+      "module_kind": "full",
+      "description": "Models the full power chain from incoming circuit through PDUs and uninterruptible supplies to the outlet, the cooling estate that keeps equipment in range, and the environmental sensor telemetry that triggers alarms. This module realizes the power, thermal, and environmental capabilities and emits the failure, overload, failover, and threshold-breach events the catalog already hands off to ITSM, ITOM, and AIOPS."
+    },
+    {
+      "domain_module_code": "DCIM-CAP-CONN",
+      "domain_module_name": "Capacity and Connectivity Planning",
+      "module_kind": "full",
+      "description": "Combines forward-looking capacity planning for power, cooling, space, and bandwidth with the physical connectivity map of ports and cables. Capacity plans roll up utilization and growth forecasts per site and zone (handed off to SPM for build-out decisions), while the port and cable register feeds the configuration database and is cross-validated by NPMD."
+    }
+  ],
+  "data_objects": [
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 546,
+        "data_object_name": "dc_racks",
+        "singular_label": "Data Center Rack",
+        "entity_type": "operational_workflow",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 547,
+        "data_object_name": "dc_cabinets",
+        "singular_label": "Data Center Cabinet",
+        "entity_type": "operational_record",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 548,
+        "data_object_name": "dc_power_distribution_units",
+        "singular_label": "Power Distribution Unit (PDU)",
+        "entity_type": "operational_record",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 549,
+        "data_object_name": "dc_power_circuits",
+        "singular_label": "DC Power Circuit",
+        "entity_type": "operational_workflow",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 550,
+        "data_object_name": "dc_uninterruptible_power_supplies",
+        "singular_label": "UPS / RPP",
+        "entity_type": "operational_record",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 551,
+        "data_object_name": "dc_cooling_units",
+        "singular_label": "Data Center Cooling Unit",
+        "entity_type": "operational_record",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 552,
+        "data_object_name": "dc_environmental_readings",
+        "singular_label": "DC Environmental Reading",
+        "entity_type": "operational_record",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 553,
+        "data_object_name": "dc_capacity_plans",
+        "singular_label": "DC Capacity Plan",
+        "entity_type": "operational_workflow",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 554,
+        "data_object_name": "dc_port_connections",
+        "singular_label": "DC Port Connection",
+        "entity_type": "operational_record",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 555,
+        "data_object_name": "dc_cable_connections",
+        "singular_label": "DC Cable Connection",
+        "entity_type": "operational_record",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    }
+  ],
+  "lifecycle_states": [
+    {
+      "data_object_id": 546,
+      "state_name": "planned",
+      "state_order": 10,
+      "is_initial": true,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 546,
+      "state_name": "installed",
+      "state_order": 20,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 546,
+      "state_name": "active",
+      "state_order": 30,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 546,
+      "state_name": "at_capacity",
+      "state_order": 40,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 546,
+      "state_name": "decommissioning",
+      "state_order": 50,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": true
+    },
+    {
+      "data_object_id": 546,
+      "state_name": "retired",
+      "state_order": 60,
+      "is_initial": false,
+      "is_terminal": true,
+      "requires_permission": true
+    },
+    {
+      "data_object_id": 549,
+      "state_name": "planned",
+      "state_order": 10,
+      "is_initial": true,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 549,
+      "state_name": "provisioned",
+      "state_order": 20,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": true
+    },
+    {
+      "data_object_id": 549,
+      "state_name": "energized",
+      "state_order": 30,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": true
+    },
+    {
+      "data_object_id": 549,
+      "state_name": "overloaded",
+      "state_order": 40,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 549,
+      "state_name": "de_energized",
+      "state_order": 50,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": true
+    },
+    {
+      "data_object_id": 549,
+      "state_name": "decommissioned",
+      "state_order": 60,
+      "is_initial": false,
+      "is_terminal": true,
+      "requires_permission": true
+    },
+    {
+      "data_object_id": 553,
+      "state_name": "draft",
+      "state_order": 10,
+      "is_initial": true,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 553,
+      "state_name": "in_review",
+      "state_order": 20,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 553,
+      "state_name": "approved",
+      "state_order": 30,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": true
+    },
+    {
+      "data_object_id": 553,
+      "state_name": "published",
+      "state_order": 40,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": true
+    },
+    {
+      "data_object_id": 553,
+      "state_name": "superseded",
+      "state_order": 50,
+      "is_initial": false,
+      "is_terminal": true,
+      "requires_permission": false
+    }
+  ],
+  "trigger_events": [
+    {
+      "event_name": "dc_cabinet.environmental_alert",
+      "description": "DCIM detected an environmental issue (temperature, humidity, water leak) at a cabinet. ITSM ticket opens; AIOPS correlates with ITOM.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "threshold"
+    },
+    {
+      "event_name": "dc_power_distribution_unit.failure",
+      "description": "DCIM PDU reported a failure or imbalance. ITSM major incident may open; AIOPS correlates downstream impact.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "state_change"
+    },
+    {
+      "event_name": "dc_power_circuit.overload",
+      "description": "DCIM detected a power circuit exceeding its breaker threshold. ITSM emergency ticket; load rebalance triggered.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "threshold"
+    },
+    {
+      "event_name": "dc_uninterruptible_power_supply.failover",
+      "description": "A DCIM UPS failed over to battery or generator power. ITOM/AIOPS correlate; ITSM major-incident workflow.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "state_change"
+    },
+    {
+      "event_name": "dc_cooling_unit.failure",
+      "description": "DCIM cooling unit reported a failure. ITSM emergency ticket; AIOPS predicts downstream thermal impact.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "state_change"
+    },
+    {
+      "event_name": "dc_capacity_plan.refreshed",
+      "description": "DCIM capacity plan refreshed with latest utilisation and growth forecasts. ITOM/SPM use for build-out decisions.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "lifecycle"
+    },
+    {
+      "event_name": "dc_port_connection.changed",
+      "description": "DCIM detected a port connection added or removed. CMDB updates physical topology; NPMD cross-validates logical paths.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "state_change"
+    },
+    {
+      "event_name": "dc_cable_connection.added",
+      "description": "DCIM cable connection added between devices. CMDB topology refresh; documentation updated.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "lifecycle"
+    },
+    {
+      "event_name": "dc_rack.capacity_threshold_breached",
+      "description": "A DCIM rack reached space, power, or weight capacity threshold. ITOM/ITSM coordinate placement of new equipment.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "threshold"
+    },
+    {
+      "event_name": "dc_environmental_reading.threshold_breached",
+      "description": "DCIM environmental sensor reading (temp, humidity, smoke) crossed alarm threshold. ITSM ticket; ITOM remediation.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "threshold"
+    }
+  ],
+  "outbound_handoffs": [
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "dc_environmental_reading.threshold_breached"
+      },
+      "target_domain": {
+        "domain_code": "ITOM"
+      },
+      "data_object": {
+        "data_object_name": "dc_environmental_readings"
+      }
+    },
+    {
+      "integration_pattern": "api_call",
+      "friction_level": "medium",
+      "trigger_event": {
+        "event_name": "dc_cabinet.environmental_alert"
+      },
+      "target_domain": {
+        "domain_code": "ITSM"
+      },
+      "data_object": {
+        "data_object_name": "service_incidents"
+      }
+    },
+    {
+      "integration_pattern": "batch_sync",
+      "friction_level": "medium",
+      "trigger_event": {
+        "event_name": "dc_capacity_plan.refreshed"
+      },
+      "target_domain": {
+        "domain_code": "SPM"
+      },
+      "data_object": {
+        "data_object_name": "dc_capacity_plans"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "medium",
+      "trigger_event": {
+        "event_name": "dc_rack.capacity_threshold_breached"
+      },
+      "target_domain": {
+        "domain_code": "ITOM"
+      },
+      "data_object": {
+        "data_object_name": "dc_racks"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "dc_power_distribution_unit.failure"
+      },
+      "target_domain": {
+        "domain_code": "AIOPS"
+      },
+      "data_object": {
+        "data_object_name": "dc_power_distribution_units"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "medium",
+      "trigger_event": {
+        "event_name": "dc_port_connection.changed"
+      },
+      "target_domain": {
+        "domain_code": "CMDB"
+      },
+      "data_object": {
+        "data_object_name": "dc_port_connections"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "high",
+      "trigger_event": {
+        "event_name": "dc_power_distribution_unit.failure"
+      },
+      "target_domain": {
+        "domain_code": "ITSM"
+      },
+      "data_object": {
+        "data_object_name": "service_incidents"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "high",
+      "trigger_event": {
+        "event_name": "dc_uninterruptible_power_supply.failover"
+      },
+      "target_domain": {
+        "domain_code": "ITSM"
+      },
+      "data_object": {
+        "data_object_name": "service_incidents"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "high",
+      "trigger_event": {
+        "event_name": "dc_cooling_unit.failure"
+      },
+      "target_domain": {
+        "domain_code": "ITSM"
+      },
+      "data_object": {
+        "data_object_name": "service_incidents"
+      }
+    }
+  ],
+  "inbound_handoffs": [],
+  "skills": [
+    {
+      "skill_name": "dcim-system",
+      "skill_type": "system",
+      "domain_module_id": null
+    }
+  ],
+  "business_function_domains": [
+    {
+      "responsibility_type": "contributor",
+      "business_functions": {
+        "business_function_name": "Facilities and Real Estate"
+      }
+    },
+    {
+      "responsibility_type": "owner",
+      "business_functions": {
+        "business_function_name": "IT Infrastructure"
+      }
+    }
+  ]
+}

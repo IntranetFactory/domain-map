@@ -1,0 +1,786 @@
+[
+  {
+    "id": 432,
+    "data_object_name": "document_classifications",
+    "singular_label": "Document Classification",
+    "plural_label": "Document Classifications",
+    "entity_type": "catalog",
+    "description": "Metadata classification per ECM taxonomy (DCAT-style, custom records-class). Distinct from DCG `data_classifications` (sensitivity)."
+  },
+  {
+    "id": 431,
+    "data_object_name": "document_folders",
+    "singular_label": "Document Folder",
+    "plural_label": "Document Folders",
+    "entity_type": "catalog",
+    "description": "Hierarchical containment for documents (folders, libraries, nested collections)."
+  },
+  {
+    "id": 430,
+    "data_object_name": "document_versions",
+    "singular_label": "Document Version",
+    "plural_label": "Document Versions",
+    "entity_type": "operational_workflow",
+    "description": "Version history / audit trail per document; tracks publication and revision lineage."
+  },
+  {
+    "id": 1256,
+    "data_object_name": "dora_metrics",
+    "singular_label": "DORA Metric",
+    "plural_label": "DORA Metrics",
+    "entity_type": "computed",
+    "description": "A computed delivery-performance benchmark (deployment frequency, lead time for changes, change failure rate, time to restore) for a value stream."
+  },
+  {
+    "id": 1284,
+    "data_object_name": "dpo_training_acknowledgements",
+    "singular_label": "DPO Training Acknowledgment",
+    "plural_label": "DPO Training Acknowledgments",
+    "entity_type": "operational_record",
+    "description": "Data-protection-officer training acknowledgment record (GDPR Art. 39)."
+  },
+  {
+    "id": 312,
+    "data_object_name": "dq_dimensions",
+    "singular_label": "Data Quality Dimension",
+    "plural_label": "Data Quality Dimensions",
+    "entity_type": "catalog",
+    "description": "Canonical quality dimension (completeness, uniqueness, validity, timeliness, consistency, accuracy). DAMA/ISO reference data."
+  },
+  {
+    "id": 313,
+    "data_object_name": "dq_scorecards",
+    "singular_label": "Data Quality Scorecard",
+    "plural_label": "Data Quality Scorecards",
+    "entity_type": "computed",
+    "description": "Aggregated quality score per asset/time-slice: weighted roll-up of dimension scores, trend, direction. Consumed by BI dashboards."
+  },
+  {
+    "id": 314,
+    "data_object_name": "dq_sla_definitions",
+    "singular_label": "Data Quality SLA Definition",
+    "plural_label": "Data Quality SLA Definitions",
+    "entity_type": "operational_workflow",
+    "description": "Contractual thresholds: max % null, max duplicate rate, max rule-breach count per day, incident response time."
+  },
+  {
+    "id": 376,
+    "data_object_name": "driver_behavior_events",
+    "singular_label": "Driver Behavior Event",
+    "plural_label": "Driver Behavior Events",
+    "entity_type": "unclassified",
+    "description": "Telemetry-detected risky-event record: harsh braking, hard acceleration, cornering, speeding, fatigue, or distraction. Carries severity, location, video clip reference (when dashcam present)."
+  },
+  {
+    "id": 734,
+    "data_object_name": "driver_safety_scorecards",
+    "singular_label": "Driver Safety Scorecard",
+    "plural_label": "Driver Safety Scorecards",
+    "entity_type": "unclassified",
+    "description": "Aggregated safety + efficiency risk metrics per driver (speeding, harsh braking, idle)."
+  },
+  {
+    "id": 1041,
+    "data_object_name": "drug_health_screenings",
+    "singular_label": "Drug and Health Screening",
+    "plural_label": "Drug and Health Screenings",
+    "entity_type": "operational_workflow",
+    "description": "Pre-employment drug test or occupational health screening ordered as a check distinct from the criminal and employment background check. Tracks the order, provider, result, and any adverse-finding review, and handles sensitive medical data subject to ADA and state-law restrictions."
+  },
+  {
+    "id": 1196,
+    "data_object_name": "dry_stack_launch_requests",
+    "singular_label": "Dry Stack Launch Request",
+    "plural_label": "Dry Stack Launch Requests",
+    "entity_type": "operational_workflow",
+    "description": "A request to launch a dry-stacked vessel for use and return it to its rack, scheduled against forklift capacity."
+  },
+  {
+    "id": 1178,
+    "data_object_name": "dry_stack_racks",
+    "singular_label": "Dry Stack Rack",
+    "plural_label": "Dry Stack Racks",
+    "entity_type": "operational_record",
+    "description": "A rack position in a dry-stack storage building: bay, level, and maximum vessel length and weight."
+  },
+  {
+    "id": 110,
+    "data_object_name": "dunning_events",
+    "singular_label": "Dunning Event",
+    "plural_label": "Dunning Events",
+    "entity_type": "operational_workflow",
+    "description": "Payment failure / retry / collection / past-due-warning records driving the involuntary-churn workflow. Surfaces as customer cases when CSM intervention is required; escalates to write-off if collection fails."
+  },
+  {
+    "id": 1065,
+    "data_object_name": "duty_of_care_alerts",
+    "singular_label": "Duty-of-Care Alert",
+    "plural_label": "Duty-of-Care Alerts",
+    "entity_type": "operational_workflow",
+    "description": "A raised notification that a traveler may be exposed to an emerging risk at their destination, correlating traveler location from active trips against destination risk intelligence, and tracked through acknowledged and resolved states during assistance."
+  },
+  {
+    "id": 476,
+    "data_object_name": "eam_work_orders",
+    "singular_label": "EAM Work Order",
+    "plural_label": "EAM Work Orders",
+    "entity_type": "operational_workflow",
+    "description": "Preventive or corrective maintenance task on an industrial asset: PM cycle, breakdown repair, inspection, calibration. Carries asset reference, trigger source (PM schedule / meter threshold / fault / inspection), task lines (labor + parts + downtime), assigned technician/crew, status lifecycle. Distinct from REAL-EST `facility_work_orders` (building maintenance), FLEET-MAINT `vehicle_work_orders` (fleet), and FSM customer-facing work orders."
+  },
+  {
+    "id": 140,
+    "data_object_name": "earning_codes",
+    "singular_label": "Earning Code",
+    "plural_label": "Earning Codes",
+    "entity_type": "catalog",
+    "description": "Configurable definition of an earning type (regular, overtime, bonus, commission, severance, retro-pay) with tax treatment, GL mapping, accumulator rules, and country localization. Foundation of the payroll calculation engine."
+  },
+  {
+    "id": 636,
+    "data_object_name": "ediscovery_requests",
+    "singular_label": "eDiscovery Request",
+    "plural_label": "eDiscovery Requests",
+    "entity_type": "operational_workflow",
+    "description": "Litigation data request (internal or from external counsel): matter reference, scope (custodians, date range, keywords), requested record types, production timeline, chain-of-custody."
+  },
+  {
+    "id": 134,
+    "data_object_name": "editorial_workflows",
+    "singular_label": "Editorial Workflow",
+    "plural_label": "Editorial Workflows",
+    "entity_type": "unclassified",
+    "description": "Workflow definition for editorial review and publishing: named states (draft / in_review / approved / published), transitions, and role-based step ownership. Distinct from ECM document workflows (different content shape and lifecycle)."
+  },
+  {
+    "id": 889,
+    "data_object_name": "eeo_responses",
+    "singular_label": "EEO Response",
+    "plural_label": "EEO Responses",
+    "entity_type": "operational_workflow",
+    "description": "Voluntary self-identification submitted by an applicant for EEO-1 / OFCCP / VEVRAA reporting (gender, race/ethnicity, veteran status, disability). Required compliance artifact for US employers >100 employees; stored separately from candidates record per regulation."
+  },
+  {
+    "id": 1085,
+    "data_object_name": "ehs_audits",
+    "singular_label": "EHS Audit",
+    "plural_label": "EHS Audits",
+    "entity_type": "operational_workflow",
+    "description": "A management-system audit against a standard such as ISO 45001 or ISO 14001, with nonconformities and findings routed into corrective actions."
+  },
+  {
+    "id": 1084,
+    "data_object_name": "ehs_inspections",
+    "singular_label": "EHS Inspection",
+    "plural_label": "EHS Inspections",
+    "entity_type": "operational_workflow",
+    "description": "A safety inspection or observation conducted against a checklist, with findings routed into corrective actions."
+  },
+  {
+    "id": 1075,
+    "data_object_name": "ehs_risk_assessments",
+    "singular_label": "EHS Risk Assessment",
+    "plural_label": "EHS Risk Assessments",
+    "entity_type": "operational_workflow",
+    "description": "An occupational risk assessment such as a job hazard analysis or job safety analysis that scores the likelihood and consequence of identified hazards and assigns controls."
+  },
+  {
+    "id": 1087,
+    "data_object_name": "ehs_training_records",
+    "singular_label": "EHS Training Record",
+    "plural_label": "EHS Training Records",
+    "entity_type": "operational_record",
+    "description": "A record of EHS training, competency, or certification completed by a worker, mapped to the roles and regulations that require it."
+  },
+  {
+    "id": 377,
+    "data_object_name": "eld_logs",
+    "singular_label": "ELD Log",
+    "plural_label": "ELD Logs",
+    "entity_type": "unclassified",
+    "description": "Electronic Logging Device hours-of-service record per FMCSA Part 395: driving / on-duty / off-duty / sleeper-berth status changes, supporting roadside-inspection mode."
+  },
+  {
+    "id": 1034,
+    "data_object_name": "emergency_contacts",
+    "singular_label": "Emergency Contact",
+    "plural_label": "Emergency Contacts",
+    "entity_type": "operational_record",
+    "description": "People to contact in an emergency for a worker, with priority ordering and relationship. Holds personal data on third parties beyond the employee."
+  },
+  {
+    "id": 322,
+    "data_object_name": "emission_factors",
+    "singular_label": "Emission Factor",
+    "plural_label": "Emission Factors",
+    "entity_type": "catalog",
+    "description": "Lookup mapping activity (natural gas, electricity, freight) to emissions coefficient; sourced from IPCC/EPA/Defra; versioned by effective date."
+  },
+  {
+    "id": 321,
+    "data_object_name": "emissions_records",
+    "singular_label": "Emissions Record",
+    "plural_label": "Emissions Records",
+    "entity_type": "operational_record",
+    "description": "Physical fact of Scope 1, 2, or 3 GHG emissions from a facility, activity, or supply-chain tier; CO2-equivalents with timestamp and source."
+  },
+  {
+    "id": 1038,
+    "data_object_name": "employee_dependents",
+    "singular_label": "Employee Dependent",
+    "plural_label": "Employee Dependents",
+    "entity_type": "operational_record",
+    "description": "Spouse, children, and other dependents of a worker, held as person-level records on the worker. Benefits administration reads these for eligibility and beneficiary designation; the plan-enrollment record is held separately by benefits."
+  },
+  {
+    "id": 779,
+    "data_object_name": "employee_equity_accounts",
+    "singular_label": "Employee Equity Account",
+    "plural_label": "Employee Equity Accounts",
+    "entity_type": "operational_workflow",
+    "description": "Per-employee portal account in the equity-administration product. Embedded_masters equity_grants for portal visibility."
+  },
+  {
+    "id": 317,
+    "data_object_name": "employee_golden_records",
+    "singular_label": "Employee Golden Record",
+    "plural_label": "Employee Golden Records",
+    "entity_type": "operational_workflow",
+    "description": "Single resolved employee identity across HCM/Payroll/IGA/T&A sources."
+  },
+  {
+    "id": 31,
+    "data_object_name": "employees",
+    "singular_label": "Employee",
+    "plural_label": "Employees",
+    "entity_type": "operational_workflow",
+    "description": "Canonical record of a person currently or formerly employed by the organization. Carries identity (legal name, contact, IDs), employment metadata (start date, end date, employment type, country), and pointers to position, job profile, org unit, manager, and life-event history. The most multi-mastered data object in the catalog: HCM masters the core HR slice, Payroll masters the comp/withholding slice, and IGA masters the identity/access slice. Onboarding, PA, and Talent Management consume or contribute."
+  },
+  {
+    "id": 35,
+    "data_object_name": "employment_contracts",
+    "singular_label": "Employment Contract",
+    "plural_label": "Employment Contracts",
+    "entity_type": "operational_workflow",
+    "description": "Contractual terms of employment: contract type (permanent, fixed-term, contractor, intern), start and end dates, governing jurisdiction, working hours, notice period, IP and non-compete clauses, references to the signed document. HCM masters; HRSD contributes when employee-relations cases reference contract terms."
+  },
+  {
+    "id": 36,
+    "data_object_name": "employment_events",
+    "singular_label": "Employment Event",
+    "plural_label": "Employment Events",
+    "entity_type": "operational_workflow",
+    "description": "Lifecycle event records for an employee: hire, promotion, transfer, leave start, leave return, comp change, termination. The audit history that drives plan-vs-actual analytics (PA consumer) and downstream system updates. HCM masters; PA derives metrics from the event stream."
+  },
+  {
+    "id": 1217,
+    "data_object_name": "enablement_trainings",
+    "singular_label": "Enablement Training",
+    "plural_label": "Enablement Trainings",
+    "entity_type": "catalog",
+    "description": "A seller training tied to content or a launch: certification, pitch practice, or onboarding module."
+  },
+  {
+    "id": 589,
+    "data_object_name": "endpoint_anomaly_findings",
+    "singular_label": "Endpoint Anomaly Finding",
+    "plural_label": "Endpoint Anomaly Findings",
+    "entity_type": "operational_workflow",
+    "description": "ML-derived behavioral deviation on a device: CPU spike during login, memory leak, unexpected network egress, certificate validation failure, impossible-travel pattern. Scored, triaged, feeds InfoSec dashboards."
+  },
+  {
+    "id": 585,
+    "data_object_name": "endpoint_experience_scores",
+    "singular_label": "Endpoint Experience Score",
+    "plural_label": "Endpoint Experience Scores",
+    "entity_type": "computed",
+    "description": "Quality-of-experience metric for a user/device/SaaS-app triplet: latency, availability %, error rate, device responsiveness (boot time, app launch, login success %). Aggregates synthetic + RUM signals. DEM flagship."
+  },
+  {
+    "id": 183,
+    "data_object_name": "engagement_drivers",
+    "singular_label": "Engagement Driver",
+    "plural_label": "Engagement Drivers",
+    "entity_type": "computed",
+    "description": "Calculated driver score (e.g. Strategy, Growth, Recognition, Wellbeing, Leadership) at a team/department/segment grain. The action layer of engagement listening."
+  },
+  {
+    "id": 394,
+    "data_object_name": "engagement_letters",
+    "singular_label": "Engagement Letter",
+    "plural_label": "Engagement Letters",
+    "entity_type": "operational_workflow",
+    "description": "Formal engagement letter or proposal between professional-services firm and client: scope of work, fee structure, retention period, e-signature evidence, retainer-payment receipt. Used by legal, accounting, and consulting practices."
+  },
+  {
+    "id": 1019,
+    "data_object_name": "engagement_scores",
+    "singular_label": "Engagement Score",
+    "plural_label": "Engagement Scores",
+    "entity_type": "computed",
+    "description": "A computed rollup of activity intensity per account or per contact, summarizing how engaged a buying group is over a period."
+  },
+  {
+    "id": 45,
+    "data_object_name": "engagement_surveys",
+    "singular_label": "Engagement Survey",
+    "plural_label": "Engagement Surveys",
+    "entity_type": "operational_workflow",
+    "description": "Employee engagement, pulse, and sentiment survey responses. Mastered by PA (or by a specialized engagement-platform when used). Drives segment-level engagement scoring and intervention triggers."
+  },
+  {
+    "id": 799,
+    "data_object_name": "engineering_bom_items",
+    "singular_label": "Engineering BOM Item",
+    "plural_label": "Engineering BOM Items",
+    "entity_type": "junction",
+    "description": "Parent-child line items in the engineering BOM. Each row represents one child part under a parent assembly, with quantity, reference designator (for PCB / mechanical), effectivity (from-revision / from-date / from-serial), and find number. ECOs add, remove, or alter these lines."
+  },
+  {
+    "id": 798,
+    "data_object_name": "engineering_change_orders",
+    "singular_label": "Engineering Change Order",
+    "plural_label": "Engineering Change Orders",
+    "entity_type": "operational_workflow",
+    "description": "Engineering Change Order (ECO) master. Captures the proposed change, impact analysis (where-used traversal), CAB approval routing, effective date, and the set of affected parts / BOMs / drawings. Frozen on submission; only the CAB can override after that."
+  },
+  {
+    "id": 796,
+    "data_object_name": "engineering_parts",
+    "singular_label": "Engineering Part",
+    "plural_label": "Engineering Parts",
+    "entity_type": "operational_workflow",
+    "description": "The engineering item master: every distinct part number, assembly, or purchased component the engineering organization recognizes. Anchors revisions, BOMs, CAD files, and the downstream item-master feed to ERP and MES."
+  },
+  {
+    "id": 807,
+    "data_object_name": "engineering_requirements",
+    "singular_label": "Engineering Requirement",
+    "plural_label": "Engineering Requirements",
+    "entity_type": "operational_workflow",
+    "description": "System, software, and hardware requirements with parent-child decomposition (system → subsystem → component requirements). Carries verification method (test / inspection / analysis / demonstration), allocated subsystem, and traceability links to test cases (via the existing requirements_to_test_traceability junction)."
+  },
+  {
+    "id": 797,
+    "data_object_name": "engineering_revisions",
+    "singular_label": "Engineering Revision",
+    "plural_label": "Engineering Revisions",
+    "entity_type": "operational_workflow",
+    "description": "Revision records on an engineering part (rev A, B, C). Each released revision is a frozen snapshot of the part's attributes, BOM, and CAD references; engineering change orders are the only mechanism that mints a new released revision."
+  },
+  {
+    "id": 556,
+    "data_object_name": "enrolled_devices",
+    "singular_label": "Enrolled Device",
+    "plural_label": "Enrolled Devices",
+    "entity_type": "operational_workflow",
+    "description": "Device under MDM/UEM management: enrollment identity, status (active / suspended / unenrolled), ownership (corp / byod), managed-by-profile reference, last sync timestamp. Distinct from HAM `hardware_assets` (financial lifecycle) and CMDB `configuration_items` (topology)."
+  },
+  {
+    "id": 561,
+    "data_object_name": "enrollment_tokens",
+    "singular_label": "UEM Enrollment Token",
+    "plural_label": "UEM Enrollment Tokens",
+    "entity_type": "operational_workflow",
+    "description": "Zero-touch provisioning credential: token string, QR code, validity window, device-assignment batch, redemption count, expiry. Distributed for device onboarding."
+  },
+  {
+    "id": 267,
+    "data_object_name": "enterprise_applications",
+    "singular_label": "Enterprise Application",
+    "plural_label": "Enterprise Applications",
+    "entity_type": "operational_workflow",
+    "description": "Individual business application in the enterprise portfolio (custom-built, on-prem, SaaS, hybrid) with owner, criticality, lifecycle state, vendor/platform, strategic value. Distinct from ATS `applications` (job-submission). APM's flagship entity."
+  },
+  {
+    "id": 251,
+    "data_object_name": "envelopes",
+    "singular_label": "Envelope",
+    "plural_label": "Envelopes",
+    "entity_type": "operational_workflow",
+    "description": "An e-signature transaction wrapping one or more signature requests against a contract or document. Lifecycle: created → sent → in_progress → completed (or declined / voided / expired). Distinct from CLM's signature_records (the legal-side authoritative record of signed agreements); ESIGN's envelopes capture the e-sign-platform lifecycle while CLM consumes the completed result."
+  },
+  {
+    "id": 512,
+    "data_object_name": "environmental_monitoring_samples",
+    "singular_label": "Environmental Monitoring Sample",
+    "plural_label": "Environmental Monitoring Samples",
+    "entity_type": "operational_workflow",
+    "description": "Pathogen-EMP sample: zone (1-4), site, sampling date, lab result; aggregated into trend analytics."
+  },
+  {
+    "id": 1083,
+    "data_object_name": "environmental_permits",
+    "singular_label": "Environmental Permit",
+    "plural_label": "Environmental Permits",
+    "entity_type": "operational_workflow",
+    "description": "An environmental permit for air, water, or waste, with its conditions, limits, monitoring obligations, and renewal schedule."
+  },
+  {
+    "id": 477,
+    "data_object_name": "equipment_pm_schedules",
+    "singular_label": "Equipment PM Schedule",
+    "plural_label": "Equipment PM Schedules",
+    "entity_type": "catalog",
+    "description": "Per-asset or per-asset-class preventive-maintenance template: trigger basis (runtime hours / cycle count / calendar time / meter threshold), task list, frequency, due-date generation rules. Drives EAM `eam_work_orders`. Distinct from FLEET-MAINT `preventive_maintenance_schedules` (vehicle-specific: mileage / engine hours / DTC)."
+  },
+  {
+    "id": 158,
+    "data_object_name": "equity_grants",
+    "singular_label": "Equity Grant",
+    "plural_label": "Equity Grants",
+    "entity_type": "operational_workflow",
+    "description": "RSU, option, or PSU award tied to a vesting schedule. Carries grant date, type, share count, strike (if option), vesting cadence, performance metrics, and forfeiture rules. Integrates with external equity-administration platforms."
+  },
+  {
+    "id": 92,
+    "data_object_name": "error_groups",
+    "singular_label": "Error Group",
+    "plural_label": "Error Groups",
+    "entity_type": "operational_workflow",
+    "description": "Aggregated exception records: unique exception fingerprint, first/last seen, occurrence count, affected releases, environments, owners, status (unresolved/resolved/ignored)."
+  },
+  {
+    "id": 963,
+    "data_object_name": "escalation_rules",
+    "singular_label": "Escalation Rule",
+    "plural_label": "Escalation Rules",
+    "entity_type": "catalog",
+    "description": "Policy that escalates overdue training through manager, skip-level, HR Business Partner, or compliance officer."
+  },
+  {
+    "id": 326,
+    "data_object_name": "esg_disclosures",
+    "singular_label": "ESG Disclosure",
+    "plural_label": "ESG Disclosures",
+    "entity_type": "operational_workflow",
+    "description": "Prepared report per framework (CSRD, CDP, GRI, SASB, TCFD, SEC Climate Rule, ISSB) for a fiscal year; narrative + metrics + assurance status."
+  },
+  {
+    "id": 329,
+    "data_object_name": "esg_initiatives",
+    "singular_label": "ESG Initiative",
+    "plural_label": "ESG Initiatives",
+    "entity_type": "operational_workflow",
+    "description": "Action program to reduce emissions or improve social/governance KPI: renewable project, waste reduction, DEI hiring program. Tracks budget, actuals, impact."
+  },
+  {
+    "id": 325,
+    "data_object_name": "esg_metrics",
+    "singular_label": "ESG Metric",
+    "plural_label": "ESG Metrics",
+    "entity_type": "computed",
+    "description": "Derived KPI roll-up: total Scope 1/2/3 emissions, intensity ratios (per $M revenue, per FTE), water/waste/DEI/governance metrics. Reporting-cycle refresh."
+  },
+  {
+    "id": 324,
+    "data_object_name": "esg_targets",
+    "singular_label": "ESG Target",
+    "plural_label": "ESG Targets",
+    "entity_type": "operational_workflow",
+    "description": "Commitment goal (SBTi, Net Zero, reduction %): target year, baseline year, scope coverage, approval status. Tracked vs actuals."
+  },
+  {
+    "id": 1027,
+    "data_object_name": "evaluation_forms",
+    "singular_label": "Evaluation Form",
+    "plural_label": "Evaluation Forms",
+    "entity_type": "catalog",
+    "description": "A reusable quality scorecard definition: sections, weighted items, scoring scale, auto-fail criteria, and the queues or skills it applies to. Versioned so historical scores remain interpretable against the form in force when scored."
+  },
+  {
+    "id": 93,
+    "data_object_name": "event_correlations",
+    "singular_label": "Event Correlation",
+    "plural_label": "Event Correlations",
+    "entity_type": "computed",
+    "description": "Clustered group of events and alerts identified as a single underlying incident — the noise-reduction artifact. A storm of 200 alerts collapses to one correlation with a candidate root-cause CI and the suggested incident."
+  },
+  {
+    "id": 579,
+    "data_object_name": "event_logs",
+    "singular_label": "Event Log",
+    "plural_label": "Event Logs",
+    "entity_type": "operational_workflow",
+    "description": "Raw timestamped sequence of business-process events (state transitions, activities, timestamps, actors, resource allocations) extracted from system logs, business documents, or event streams. Primary input artifact for process discovery and conformance checking."
+  },
+  {
+    "id": 1129,
+    "data_object_name": "exit_risk_assessments",
+    "singular_label": "Exit Risk Assessment",
+    "plural_label": "Exit Risk Assessments",
+    "entity_type": "operational_workflow",
+    "description": "A heightened-monitoring assessment of a departing employee during the resignation, transfer, or termination window, scoring exit-related data-theft risk and driving watchlist placement."
+  },
+  {
+    "id": 777,
+    "data_object_name": "exit_scenarios",
+    "singular_label": "Exit Scenario",
+    "plural_label": "Exit Scenarios",
+    "entity_type": "operational_workflow",
+    "description": "Hypothetical or committed exit-proceeds scenario: total deal value, structure, deal terms. Drives the exit_waterfall_calculation."
+  },
+  {
+    "id": 778,
+    "data_object_name": "exit_waterfall_calculations",
+    "singular_label": "Exit Waterfall Calculation",
+    "plural_label": "Exit Waterfall Calculations",
+    "entity_type": "computed",
+    "description": "Per-shareholder proceeds calculation under an exit_scenario, respecting liquidation preferences, participation rights, conversion economics."
+  },
+  {
+    "id": 211,
+    "data_object_name": "expense_lines",
+    "singular_label": "Expense Line",
+    "plural_label": "Expense Lines",
+    "entity_type": "operational_workflow",
+    "description": "Individual line on an expense_report: date, merchant, category, amount, tax, billable flag, receipt reference. The atomic expense unit feeding GL coding."
+  },
+  {
+    "id": 214,
+    "data_object_name": "expense_policies",
+    "singular_label": "Expense Policy",
+    "plural_label": "Expense Policies",
+    "entity_type": "catalog",
+    "description": "Configurable rule: per-diem caps, category limits, mandatory receipts, mileage rates, FX rounding. Applied at expense_line entry to flag violations."
+  },
+  {
+    "id": 210,
+    "data_object_name": "expense_reports",
+    "singular_label": "Expense Report",
+    "plural_label": "Expense Reports",
+    "entity_type": "operational_workflow",
+    "description": "Employee-submitted bundle of expense_lines for a trip, project, or period. Carries submission status, approval chain, reimbursement / payroll-payback routing."
+  },
+  {
+    "id": 738,
+    "data_object_name": "external_court_filings",
+    "singular_label": "External Court Filing",
+    "plural_label": "External Court Filings",
+    "entity_type": "operational_workflow",
+    "description": "Court filing on behalf of a law-firm client (venue, judge, docket, key dates) — distinct from LSD in-house dockets."
+  },
+  {
+    "id": 569,
+    "data_object_name": "external_guest_invitations",
+    "singular_label": "External Guest Invitation",
+    "plural_label": "External Guest Invitations",
+    "entity_type": "operational_workflow",
+    "description": "Federated external-user/cross-workspace access invitation: inviting_user, invited_email_or_tenant, status (pending / accepted / revoked), expiry, scope."
+  },
+  {
+    "id": 532,
+    "data_object_name": "extracted_fields",
+    "singular_label": "Extracted Field",
+    "plural_label": "Extracted Fields",
+    "entity_type": "computed",
+    "description": "Single structured value extracted from a document by an IDP model. Carries document_id, field_name, field_value, extraction_confidence, model_version, extraction_timestamp. The granularity unit for field-level validation."
+  },
+  {
+    "id": 533,
+    "data_object_name": "extracted_records",
+    "singular_label": "Extracted Record",
+    "plural_label": "Extracted Records",
+    "entity_type": "operational_workflow",
+    "description": "Logical grouping of extracted fields as a single business entity (invoice with line_items, form with section_answers). Carries record_type, aggregate_confidence, extraction_timestamp, status."
+  },
+  {
+    "id": 328,
+    "data_object_name": "facility_emissions",
+    "singular_label": "Facility Emissions",
+    "plural_label": "Facility Emissions",
+    "entity_type": "operational_workflow",
+    "description": "Emissions inventory at facility/plant/building granularity: metered utility data → activity_data → emissions by scope/source."
+  },
+  {
+    "id": 349,
+    "data_object_name": "facility_work_orders",
+    "singular_label": "Facility Work Order",
+    "plural_label": "Facility Work Orders",
+    "entity_type": "operational_workflow",
+    "description": "Preventive or corrective maintenance task on a building, facility, or workplace asset (HVAC, lighting, doors, plumbing, janitorial, grounds). REAL-EST-mastered; FSM consumes/contributes via handoff. Distinct from EAM `eam_work_orders` (industrial plant/equipment) and FLEET-MAINT `vehicle_work_orders` (fleet vehicles)."
+  },
+  {
+    "id": 486,
+    "data_object_name": "farm_fields",
+    "singular_label": "Field",
+    "plural_label": "Fields",
+    "entity_type": "unclassified",
+    "description": "Geographical field / paddock boundary record with soil-type, productivity zones, and crop-history; the spatial unit of farm operations."
+  },
+  {
+    "id": 522,
+    "data_object_name": "farm_storefronts",
+    "singular_label": "Farm Storefront",
+    "plural_label": "Farm Storefronts",
+    "entity_type": "catalog",
+    "description": "Branded farm e-commerce storefront configuration: catalog scope, member-only pricing tiers, gift-card setup, mobile UX skin."
+  },
+  {
+    "id": 516,
+    "data_object_name": "farmers_market_sales",
+    "singular_label": "Farmers Market Sale",
+    "plural_label": "Farmers Market Sales",
+    "entity_type": "operational_workflow",
+    "description": "On-site farmers-market transaction or reconciliation summary; SKU-level line items, tender mix (cash / card / EBT-SNAP)."
+  },
+  {
+    "id": 879,
+    "data_object_name": "fcra_disclosures",
+    "singular_label": "FCRA Disclosure",
+    "plural_label": "FCRA Disclosures",
+    "entity_type": "operational_workflow",
+    "description": "Pre-check legally required disclosure form presented to the candidate before any consumer report is requested. Carries the disclosure text version, candidate acknowledgment signature, timestamp, and jurisdiction-specific addenda (CA, NY, etc.)."
+  },
+  {
+    "id": 902,
+    "data_object_name": "fcra_summary_of_rights_acknowledgements",
+    "singular_label": "FCRA Summary of Rights Acknowledgment",
+    "plural_label": "FCRA Summary of Rights Acknowledgments",
+    "entity_type": "operational_record",
+    "description": "Candidate acknowledgment of receipt of the FCRA Summary of Consumer Rights at consent time, prior to a background check. Required by 15 U.S.C. §1681g(c). Captured separately from the consent itself so the disclosure copy and acknowledgment timestamp persist for audit."
+  },
+  {
+    "id": 948,
+    "data_object_name": "fda_part11_audit_trails",
+    "singular_label": "FDA Part 11 Audit Trail",
+    "plural_label": "FDA Part 11 Audit Trails",
+    "entity_type": "operational_workflow",
+    "description": "21 CFR Part 11 audit trail row for GxP-relevant training; tamper-evident, retention-locked."
+  },
+  {
+    "id": 406,
+    "data_object_name": "feature_requests",
+    "singular_label": "Feature Request",
+    "plural_label": "Feature Requests",
+    "entity_type": "operational_workflow",
+    "description": "Customer request for new capability; input to the prioritization workflow."
+  },
+  {
+    "id": 229,
+    "data_object_name": "feature_sets",
+    "singular_label": "Feature Set",
+    "plural_label": "Feature Sets",
+    "entity_type": "unclassified",
+    "description": "Versioned feature-store entry: feature definitions, materialization logic, online/offline serving configuration, freshness SLA, and lineage to source tables. The intermediate artifact between raw data and trained models."
+  },
+  {
+    "id": 505,
+    "data_object_name": "feed_rations",
+    "singular_label": "Feed Ration",
+    "plural_label": "Feed Rations",
+    "entity_type": "catalog",
+    "description": "Per-group TMR (total mixed ration) formulation: ingredients, inclusion %, mixing log; income-over-feed-cost calculation."
+  },
+  {
+    "id": 180,
+    "data_object_name": "feedback_records",
+    "singular_label": "Feedback Record",
+    "plural_label": "Feedback Records",
+    "entity_type": "operational_workflow",
+    "description": "Continuous-feedback artifact: kudos, 1-on-1 notes, requested feedback, peer comments. Independent of formal cycle structure; aggregated into performance_reviews summaries."
+  },
+  {
+    "id": 489,
+    "data_object_name": "field_applications",
+    "singular_label": "Field Application",
+    "plural_label": "Field Applications",
+    "entity_type": "unclassified",
+    "description": "Per-pass chemical / fertilizer / micronutrient application event with product, rate, applicator, restricted-use justification."
+  },
+  {
+    "id": 261,
+    "data_object_name": "field_visits",
+    "singular_label": "Field Visit",
+    "plural_label": "Field Visits",
+    "entity_type": "operational_workflow",
+    "description": "A scheduled or completed on-site visit by a field technician. Captures arrival, departure, work performed, parts used, customer signature, outcome. Distinct from work_orders (the demand-side artifact); a single work_order may produce multiple field_visits if the work spans days or requires re-dispatch."
+  },
+  {
+    "id": 38,
+    "data_object_name": "financial_budgets",
+    "singular_label": "Budget",
+    "plural_label": "Budgets",
+    "entity_type": "operational_workflow",
+    "description": "Approved annual or quarterly budget by org unit, cost center, account, and period. Once approved, drives spend authorization downstream (procurement, headcount, capex). Plan-vs-actual variance is the operational output."
+  },
+  {
+    "id": 39,
+    "data_object_name": "financial_forecasts",
+    "singular_label": "Forecast",
+    "plural_label": "Forecasts",
+    "entity_type": "operational_workflow",
+    "description": "Rolling forecast records (typically monthly or quarterly refresh): updated view of expected revenue, cost, and headcount given current actuals. Distinct from the static budget. Refreshing forecasts upstream of SWP triggers workforce plan re-alignment."
+  },
+  {
+    "id": 37,
+    "data_object_name": "financial_plans",
+    "singular_label": "Financial Plan",
+    "plural_label": "Financial Plans",
+    "entity_type": "operational_workflow",
+    "description": "Umbrella entity for financial planning artifacts: annual budget, rolling forecast, long-range plan (LRP). Carries planning period, version, approval state, and pointers to the line-item budgets, forecasts, and variances that compose it. Consumes workforce_cost_projections from SWP for the people-cost line."
+  },
+  {
+    "id": 40,
+    "data_object_name": "financial_scenarios",
+    "singular_label": "Financial Scenario",
+    "plural_label": "Financial Scenarios",
+    "entity_type": "operational_workflow",
+    "description": "What-if financial models layered on top of a base plan: revenue upside / downside cases, cost-cutting scenarios, M&A scenarios. Mirrors the structure of SWP's workforce_scenarios for the financial dimension; the two are usually linked via the cost projection."
+  },
+  {
+    "id": 937,
+    "data_object_name": "finra_ce_records",
+    "singular_label": "FINRA CE Record",
+    "plural_label": "FINRA CE Records",
+    "entity_type": "operational_workflow",
+    "description": "FINRA Rule 1240 continuing-education ledger row per registered representative; regulator-evidence retention."
+  },
+  {
+    "id": 862,
+    "data_object_name": "fit_scores",
+    "singular_label": "Fit Score",
+    "plural_label": "Fit Scores",
+    "entity_type": "computed",
+    "description": "Computed match between a person and a role or opportunity, with score, model version, drivers."
+  },
+  {
+    "id": 201,
+    "data_object_name": "fixed_assets",
+    "singular_label": "Fixed Asset",
+    "plural_label": "Fixed Assets",
+    "entity_type": "unclassified",
+    "description": "Capitalized property/plant/equipment record: acquisition date, cost basis, useful life, depreciation method, location, status. Distinct from operational hardware_assets (CMDB/HAM)."
+  },
+  {
+    "id": 373,
+    "data_object_name": "fleet_assignments",
+    "singular_label": "Fleet Assignment",
+    "plural_label": "Fleet Assignments",
+    "entity_type": "operational_workflow",
+    "description": "Time-bound assignment of a vehicle to a driver, a route, or a job; carries start/end time, purpose, expected mileage."
+  },
+  {
+    "id": 371,
+    "data_object_name": "fleet_drivers",
+    "singular_label": "Driver",
+    "plural_label": "Drivers",
+    "entity_type": "operational_workflow",
+    "description": "Person authorized to operate fleet vehicles: license class and expiration, medical card status, training/certifications, employer (employee or contractor), HOS status. Multi-master with `employees` for employed drivers; contractors are driver-only."
+  },
+  {
+    "id": 370,
+    "data_object_name": "fleet_vehicles",
+    "singular_label": "Vehicle",
+    "plural_label": "Vehicles",
+    "entity_type": "operational_workflow",
+    "description": "Fleet vehicle master record: VIN, make/model/year, registration, fuel type (ICE/EV/hybrid), in-service date, assigned base/depot, current lifecycle status. The anchor of fleet management."
+  },
+  {
+    "id": 346,
+    "data_object_name": "floor_plans",
+    "singular_label": "Floor Plan",
+    "plural_label": "Floor Plans",
+    "entity_type": "operational_workflow",
+    "description": "Floor layout, desk/room locations, capacity, zone assignments."
+  }
+]

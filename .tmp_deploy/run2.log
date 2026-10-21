@@ -1,0 +1,58 @@
+=== Stage 4a: module + scaffold ===
+  ♻ Module exists (id=1001)
+  ♻ Permission domain_map:read (id=10001)
+  ♻ Permission domain_map:manage (id=10002)
+  ♻ Hierarchy 10002→10001
+  ♻ Role domain_map_viewer (id=10001)
+  ♻ Role domain_map_manager (id=10002)
+  ✓ Module FKs updated
+
+=== Stage 4c: entities ===
+  ♻ industries exists
+  ♻ business_functions exists
+  ♻ domains exists
+  ♻ capabilities exists
+  ♻ data_objects exists
+  ♻ vendors exists
+  ♻ solutions exists
+  ♻ jurisdictions exists
+  ♻ regulations exists
+  ♻ data_object_aliases exists
+  ♻ data_object_relationships exists
+  ♻ industry_business_functions exists
+  ♻ business_function_domains exists
+  ♻ business_function_capabilities exists
+  ♻ domain_data_objects exists
+  ♻ capability_domains exists
+  ♻ solution_domains exists
+  ♻ solution_data_objects exists
+  ♻ solution_capabilities exists
+  ♻ domain_regulations exists
+
+=== Stage 4c: label_column title fixups ===
+  ✓ industries.industry_name title → "Industry Name"
+  ✓ business_functions.business_function_name title → "Function Name"
+  ✓ domains.domain_name title → "Domain Name"
+  ✓ capabilities.capability_name title → "Capability Name"
+  ✓ data_objects.data_object_name title → "Data Object Name"
+  ✓ vendors.vendor_name title → "Vendor Name"
+  ✓ solutions.solution_name title → "Solution Name"
+  ✓ jurisdictions.jurisdiction_name title → "Jurisdiction Name"
+  ✓ regulations.regulation_name title → "Regulation Name"
+  ✓ data_object_aliases.alias_name title → "Alias Name"
+  ✓ data_object_relationships.data_object_relationship_label title → "Relationship"
+  ✓ industry_business_functions.industry_business_function_label title → "Mapping"
+  ✓ business_function_domains.business_function_domain_label title → "Mapping"
+  ✓ business_function_capabilities.business_function_capability_label title → "Mapping"
+  ✓ domain_data_objects.domain_data_object_label title → "Mapping"
+  ✓ capability_domains.capability_domain_label title → "Mapping"
+  ✓ solution_domains.solution_domain_label title → "Mapping"
+  ✓ solution_data_objects.solution_data_object_label title → "Mapping"
+  ✓ solution_capabilities.solution_capability_label title → "Mapping"
+  ✓ domain_regulations.domain_regulation_label title → "Mapping"
+
+=== Stage 4d: fields (non-self-ref) ===
+  ♻ industries.description
+  ♻ industries.naics_code
+  ♻ industries.record_status
+  ♻ business_functions.description

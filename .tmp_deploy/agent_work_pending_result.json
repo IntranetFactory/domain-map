@@ -1,0 +1,723 @@
+[
+  {
+    "code": "MDM",
+    "blocked": 43,
+    "reason": "agent work (b1a 2)",
+    "status": "feedback_needed",
+    "b1a": 2
+  },
+  {
+    "code": "HCM",
+    "blocked": 40,
+    "reason": "agent work (b1a 5)",
+    "status": "feedback_needed",
+    "b1a": 5
+  },
+  {
+    "code": "PAYROLL",
+    "blocked": 24,
+    "reason": "agent work (b1a 9)",
+    "status": "feedback_needed",
+    "b1a": 9
+  },
+  {
+    "code": "IGA",
+    "blocked": 23,
+    "reason": "agent work (b1a 7)",
+    "status": "feedback_needed",
+    "b1a": 7
+  },
+  {
+    "code": "CRM",
+    "blocked": 21,
+    "reason": "agent work (b1a 4)",
+    "status": "feedback_needed",
+    "b1a": 4
+  },
+  {
+    "code": "S2P",
+    "blocked": 14,
+    "reason": "agent work (b1a 6)",
+    "status": "feedback_needed",
+    "b1a": 6
+  },
+  {
+    "code": "CLM",
+    "blocked": 13,
+    "reason": "agent work (b1a 3)",
+    "status": "feedback_needed",
+    "b1a": 3
+  },
+  {
+    "code": "ITSM",
+    "blocked": 13,
+    "reason": "agent work (b1a 4)",
+    "status": "feedback_needed",
+    "b1a": 4
+  },
+  {
+    "code": "IWMS",
+    "blocked": 13,
+    "reason": "agent work (b1a 6)",
+    "status": "feedback_needed",
+    "b1a": 6
+  },
+  {
+    "code": "SUP-LIFE",
+    "blocked": 13,
+    "reason": "agent work (b1a 1)",
+    "status": "feedback_needed",
+    "b1a": 1
+  },
+  {
+    "code": "CMDB",
+    "blocked": 10,
+    "reason": "agent work (b1a 10)",
+    "status": "feedback_needed",
+    "b1a": 10
+  },
+  {
+    "code": "CSM",
+    "blocked": 10,
+    "reason": "agent work (b1a 4)",
+    "status": "feedback_needed",
+    "b1a": 4
+  },
+  {
+    "code": "COMP-MGMT",
+    "blocked": 9,
+    "reason": "agent work (b1a 9)",
+    "status": "feedback_needed",
+    "b1a": 9
+  },
+  {
+    "code": "GRC",
+    "blocked": 9,
+    "reason": "agent work (b1a 4)",
+    "status": "feedback_needed",
+    "b1a": 4
+  },
+  {
+    "code": "HAM",
+    "blocked": 9,
+    "reason": "agent work (b1a 8)",
+    "status": "feedback_needed",
+    "b1a": 8
+  },
+  {
+    "code": "PA",
+    "blocked": 9,
+    "reason": "agent work (b1a 10)",
+    "status": "feedback_needed",
+    "b1a": 10
+  },
+  {
+    "code": "VSDP",
+    "blocked": 9,
+    "reason": "agent work (b1a 4)",
+    "status": "feedback_needed",
+    "b1a": 4
+  },
+  {
+    "code": "APM",
+    "blocked": 8,
+    "reason": "agent work (b1a 6)",
+    "status": "feedback_needed",
+    "b1a": 6
+  },
+  {
+    "code": "ONBOARDING",
+    "blocked": 8,
+    "reason": "agent work (b1a 4)",
+    "status": "feedback_needed",
+    "b1a": 4
+  },
+  {
+    "code": "SWP",
+    "blocked": 8,
+    "reason": "agent work (b1a 6)",
+    "status": "feedback_needed",
+    "b1a": 6
+  },
+  {
+    "code": "APIM",
+    "blocked": 7,
+    "reason": "agent work (b1a 6)",
+    "status": "feedback_needed",
+    "b1a": 6
+  },
+  {
+    "code": "DISCOVERY",
+    "blocked": 7,
+    "reason": "agent work (b1a 5)",
+    "status": "feedback_needed",
+    "b1a": 5
+  },
+  {
+    "code": "HRSD",
+    "blocked": 7,
+    "reason": "agent work (b1a 5)",
+    "status": "feedback_needed",
+    "b1a": 5
+  },
+  {
+    "code": "ITOM",
+    "blocked": 7,
+    "reason": "agent work (b1a 1)",
+    "status": "feedback_needed",
+    "b1a": 1
+  },
+  {
+    "code": "KUBE-PLAT",
+    "blocked": 7,
+    "reason": "agent work (b1a 2)",
+    "status": "feedback_needed",
+    "b1a": 2
+  },
+  {
+    "code": "LEGAL-PRACT-MGMT",
+    "blocked": 7,
+    "reason": "agent work (b1a 4)",
+    "status": "feedback_needed",
+    "b1a": 4
+  },
+  {
+    "code": "TALENT-MGMT",
+    "blocked": 7,
+    "reason": "agent work (b1a 7)",
+    "status": "feedback_needed",
+    "b1a": 7
+  },
+  {
+    "code": "AP-AUTO",
+    "blocked": 6,
+    "reason": "agent work (b1a 2)",
+    "status": "feedback_needed",
+    "b1a": 2
+  },
+  {
+    "code": "APP-PAAS",
+    "blocked": 6,
+    "reason": "agent work (b1a 2)",
+    "status": "feedback_needed",
+    "b1a": 2
+  },
+  {
+    "code": "AUDIT",
+    "blocked": 6,
+    "reason": "agent work (b1a 3)",
+    "status": "feedback_needed",
+    "b1a": 3
+  },
+  {
+    "code": "DI",
+    "blocked": 6,
+    "reason": "agent work (b1a 2)",
+    "status": "feedback_needed",
+    "b1a": 2
+  },
+  {
+    "code": "FSM",
+    "blocked": 6,
+    "reason": "agent work (b1a 6)",
+    "status": "feedback_needed",
+    "b1a": 6
+  },
+  {
+    "code": "INV-MGMT",
+    "blocked": 6,
+    "reason": "agent work (b1a 3)",
+    "status": "feedback_needed",
+    "b1a": 3
+  },
+  {
+    "code": "IPAAS",
+    "blocked": 6,
+    "reason": "agent work (b1a 1)",
+    "status": "feedback_needed",
+    "b1a": 1
+  },
+  {
+    "code": "ITAM",
+    "blocked": 6,
+    "reason": "agent work (b1a 6)",
+    "status": "feedback_needed",
+    "b1a": 6
+  },
+  {
+    "code": "MFG-OPS",
+    "blocked": 6,
+    "reason": "agent work (b1a 5)",
+    "status": "feedback_needed",
+    "b1a": 5
+  },
+  {
+    "code": "PROD-MGMT",
+    "blocked": 6,
+    "reason": "agent work (b1a 6)",
+    "status": "feedback_needed",
+    "b1a": 6
+  },
+  {
+    "code": "SPM",
+    "blocked": 6,
+    "reason": "agent work (b1a 4)",
+    "status": "feedback_needed",
+    "b1a": 4
+  },
+  {
+    "code": "WSC",
+    "blocked": 6,
+    "reason": "agent work (b1a 5)",
+    "status": "feedback_needed",
+    "b1a": 5
+  },
+  {
+    "code": "BEN-ADMIN",
+    "blocked": 5,
+    "reason": "agent work (b1a 5)",
+    "status": "feedback_needed",
+    "b1a": 5
+  },
+  {
+    "code": "BI",
+    "blocked": 5,
+    "reason": "agent work (b1a 4)",
+    "status": "feedback_needed",
+    "b1a": 4
+  },
+  {
+    "code": "DCIM",
+    "blocked": 5,
+    "reason": "agent work (b1a 4)",
+    "status": "feedback_needed",
+    "b1a": 4
+  },
+  {
+    "code": "ESG",
+    "blocked": 5,
+    "reason": "agent work (b1a 14)",
+    "status": "feedback_needed",
+    "b1a": 14
+  },
+  {
+    "code": "NPMD",
+    "blocked": 5,
+    "reason": "agent work (b1a 6)",
+    "status": "feedback_needed",
+    "b1a": 6
+  },
+  {
+    "code": "OMS",
+    "blocked": 5,
+    "reason": "agent work (b1a 10)",
+    "status": "feedback_needed",
+    "b1a": 10
+  },
+  {
+    "code": "PLM",
+    "blocked": 5,
+    "reason": "agent work (b1a 4)",
+    "status": "feedback_needed",
+    "b1a": 4
+  },
+  {
+    "code": "RE-BROKERAGE",
+    "blocked": 5,
+    "reason": "agent work (b1a 3)",
+    "status": "feedback_needed",
+    "b1a": 3
+  },
+  {
+    "code": "SKILLS-MGMT",
+    "blocked": 5,
+    "reason": "agent work (b1a 8)",
+    "status": "feedback_needed",
+    "b1a": 8
+  },
+  {
+    "code": "TEST-MGMT",
+    "blocked": 5,
+    "reason": "agent work (b1a 3)",
+    "status": "feedback_needed",
+    "b1a": 3
+  },
+  {
+    "code": "CONV-AI",
+    "blocked": 4,
+    "reason": "agent work (b1a 1)",
+    "status": "feedback_needed",
+    "b1a": 1
+  },
+  {
+    "code": "CPQ",
+    "blocked": 4,
+    "reason": "agent work (b1a 7)",
+    "status": "feedback_needed",
+    "b1a": 7
+  },
+  {
+    "code": "DAIRY-MGMT",
+    "blocked": 4,
+    "reason": "agent work (b1a 1)",
+    "status": "feedback_needed",
+    "b1a": 1
+  },
+  {
+    "code": "EMP-EXP",
+    "blocked": 4,
+    "reason": "agent work (b1a 8)",
+    "status": "feedback_needed",
+    "b1a": 8
+  },
+  {
+    "code": "KMS",
+    "blocked": 4,
+    "reason": "agent work (b1a 3)",
+    "status": "feedback_needed",
+    "b1a": 3
+  },
+  {
+    "code": "LSD",
+    "blocked": 4,
+    "reason": "agent work (b1a 3)",
+    "status": "feedback_needed",
+    "b1a": 3
+  },
+  {
+    "code": "MSP-PSA",
+    "blocked": 4,
+    "reason": "agent work (b1a 4)",
+    "status": "feedback_needed",
+    "b1a": 4
+  },
+  {
+    "code": "OBS",
+    "blocked": 4,
+    "reason": "agent work (b1a 3)",
+    "status": "feedback_needed",
+    "b1a": 3
+  },
+  {
+    "code": "UTIL-OPS",
+    "blocked": 4,
+    "reason": "agent work (b1a 2)",
+    "status": "feedback_needed",
+    "b1a": 2
+  },
+  {
+    "code": "AIOPS",
+    "blocked": 3,
+    "reason": "agent work (b1a 2)",
+    "status": "feedback_needed",
+    "b1a": 2
+  },
+  {
+    "code": "BANK-OPS",
+    "blocked": 3,
+    "reason": "agent work (b1a 2)",
+    "status": "feedback_needed",
+    "b1a": 2
+  },
+  {
+    "code": "CAP-TABLE",
+    "blocked": 3,
+    "reason": "agent work (b1a 4)",
+    "status": "feedback_needed",
+    "b1a": 4
+  },
+  {
+    "code": "CCAAS",
+    "blocked": 3,
+    "reason": "agent work (b1a 6)",
+    "status": "feedback_needed",
+    "b1a": 6
+  },
+  {
+    "code": "CLIN-DEV",
+    "blocked": 3,
+    "reason": "agent work (b1a 5)",
+    "status": "feedback_needed",
+    "b1a": 5
+  },
+  {
+    "code": "DEM",
+    "blocked": 3,
+    "reason": "agent work (b1a 7)",
+    "status": "feedback_needed",
+    "b1a": 7
+  },
+  {
+    "code": "DQ",
+    "blocked": 3,
+    "reason": "agent work (b1a 2)",
+    "status": "feedback_needed",
+    "b1a": 2
+  },
+  {
+    "code": "EAM",
+    "blocked": 3,
+    "reason": "agent work (b1a 3)",
+    "status": "feedback_needed",
+    "b1a": 3
+  },
+  {
+    "code": "FARMER-DIRECT-SALES",
+    "blocked": 3,
+    "reason": "agent work (b1a 2)",
+    "status": "feedback_needed",
+    "b1a": 2
+  },
+  {
+    "code": "FUND-ADMIN",
+    "blocked": 3,
+    "reason": "agent work (b1a 15)",
+    "status": "feedback_needed",
+    "b1a": 15
+  },
+  {
+    "code": "HC-PATIENT",
+    "blocked": 3,
+    "reason": "agent work (b1a 14)",
+    "status": "feedback_needed",
+    "b1a": 14
+  },
+  {
+    "code": "INS-CLAIMS",
+    "blocked": 3,
+    "reason": "agent work (b1a 3)",
+    "status": "feedback_needed",
+    "b1a": 3
+  },
+  {
+    "code": "PIM",
+    "blocked": 3,
+    "reason": "agent work (b1a 2)",
+    "status": "feedback_needed",
+    "b1a": 2
+  },
+  {
+    "code": "PS-LIC",
+    "blocked": 3,
+    "reason": "agent work (b1a 1)",
+    "status": "feedback_needed",
+    "b1a": 1
+  },
+  {
+    "code": "REMOTE-ACCESS",
+    "blocked": 3,
+    "reason": "agent work (b1a 2)",
+    "status": "feedback_needed",
+    "b1a": 2
+  },
+  {
+    "code": "RET-STORE",
+    "blocked": 3,
+    "reason": "agent work (b1a 1)",
+    "status": "feedback_needed",
+    "b1a": 1
+  },
+  {
+    "code": "TELCO-BSS",
+    "blocked": 3,
+    "reason": "agent work (b1a 4)",
+    "status": "feedback_needed",
+    "b1a": 4
+  },
+  {
+    "code": "VIS-MGMT",
+    "blocked": 3,
+    "reason": "agent work (b1a 3)",
+    "status": "feedback_needed",
+    "b1a": 3
+  },
+  {
+    "code": "ACCT-PLAN",
+    "blocked": 2,
+    "reason": "review needed (audit_stale)",
+    "status": "audit_stale",
+    "b1a": 2
+  },
+  {
+    "code": "IDP",
+    "blocked": 2,
+    "reason": "agent work (b1a 1)",
+    "status": "feedback_needed",
+    "b1a": 1
+  },
+  {
+    "code": "INV-CRM",
+    "blocked": 2,
+    "reason": "agent work (b1a 13)",
+    "status": "feedback_needed",
+    "b1a": 13
+  },
+  {
+    "code": "PORT-MONIT",
+    "blocked": 2,
+    "reason": "agent work (b1a 11)",
+    "status": "feedback_needed",
+    "b1a": 11
+  },
+  {
+    "code": "PROC-MIN",
+    "blocked": 2,
+    "reason": "agent work (b1a 2)",
+    "status": "feedback_needed",
+    "b1a": 2
+  },
+  {
+    "code": "RPA",
+    "blocked": 2,
+    "reason": "agent work (b1a 5)",
+    "status": "feedback_needed",
+    "b1a": 5
+  },
+  {
+    "code": "SEM",
+    "blocked": 2,
+    "reason": "agent work (b1a 5)",
+    "status": "feedback_needed",
+    "b1a": 5
+  },
+  {
+    "code": "DAM",
+    "blocked": 1,
+    "reason": "agent work (b1a 2)",
+    "status": "feedback_needed",
+    "b1a": 2
+  },
+  {
+    "code": "EM-FUND-PLATFORM",
+    "blocked": 1,
+    "reason": "agent work (b1a 10)",
+    "status": "feedback_needed",
+    "b1a": 10
+  },
+  {
+    "code": "ESIGN",
+    "blocked": 1,
+    "reason": "agent work (b1a 4)",
+    "status": "feedback_needed",
+    "b1a": 4
+  },
+  {
+    "code": "FINOPS",
+    "blocked": 1,
+    "reason": "review needed (audit_stale)",
+    "status": "audit_stale",
+    "b1a": 10
+  },
+  {
+    "code": "PRM",
+    "blocked": 1,
+    "reason": "agent work (b1a 1)",
+    "status": "feedback_needed",
+    "b1a": 1
+  },
+  {
+    "code": "BCM",
+    "blocked": 0,
+    "reason": "review needed (audit_stale)",
+    "status": "audit_stale",
+    "b1a": 2
+  },
+  {
+    "code": "CAFM",
+    "blocked": 0,
+    "reason": "agent work (b1a 1)",
+    "status": "feedback_needed",
+    "b1a": 1
+  },
+  {
+    "code": "COLLAB-GOV",
+    "blocked": 0,
+    "reason": "review needed (audit_stale)",
+    "status": "audit_stale",
+    "b1a": 2
+  },
+  {
+    "code": "GTM-PLAN",
+    "blocked": 0,
+    "reason": "review needed (audit_stale)",
+    "status": "audit_stale",
+    "b1a": 2
+  },
+  {
+    "code": "INTRANET",
+    "blocked": 0,
+    "reason": "review needed (audit_stale)",
+    "status": "audit_stale",
+    "b1a": 2
+  },
+  {
+    "code": "LIB-MGMT",
+    "blocked": 0,
+    "reason": "agent work (b1a 3)",
+    "status": "feedback_needed",
+    "b1a": 3
+  },
+  {
+    "code": "OP-RES",
+    "blocked": 0,
+    "reason": "review needed (audit_stale)",
+    "status": "audit_stale",
+    "b1a": 2
+  },
+  {
+    "code": "PRIV-MGMT",
+    "blocked": 0,
+    "reason": "review needed (audit_stale)",
+    "status": "audit_stale",
+    "b1a": 3
+  },
+  {
+    "code": "SALES-PERF",
+    "blocked": 0,
+    "reason": "review needed (audit_stale)",
+    "status": "audit_stale",
+    "b1a": 2
+  },
+  {
+    "code": "SECOPS",
+    "blocked": 0,
+    "reason": "review needed (audit_stale)",
+    "status": "audit_stale",
+    "b1a": 3
+  },
+  {
+    "code": "SOAR",
+    "blocked": 0,
+    "reason": "review needed (audit_stale)",
+    "status": "audit_stale",
+    "b1a": 5
+  },
+  {
+    "code": "THREAT-INTEL",
+    "blocked": 0,
+    "reason": "review needed (audit_stale)",
+    "status": "audit_stale",
+    "b1a": 3
+  },
+  {
+    "code": "TLNT-INTEL",
+    "blocked": 0,
+    "reason": "agent work (b1a 7)",
+    "status": "feedback_needed",
+    "b1a": 7
+  },
+  {
+    "code": "TPRM",
+    "blocked": 0,
+    "reason": "review needed (audit_stale)",
+    "status": "audit_stale",
+    "b1a": 3
+  },
+  {
+    "code": "VULN-MGMT",
+    "blocked": 0,
+    "reason": "review needed (audit_stale)",
+    "status": "audit_stale",
+    "b1a": 3
+  }
+]

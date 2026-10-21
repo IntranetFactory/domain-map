@@ -56,7 +56,7 @@ The substring auto-matcher in v1 picks the lowest-level PCF row whose `process_n
 - `case` → auto-matched "Manage financial fraud/dispute cases" (L3). Better: a generic case-management L3 in the customer-service or HR-services categories.
 - `alert` → auto-matched "Manage plant alarms and alerts" (L5). Better: an IT/security-incident L3.
 
-**For each bucket the agent acts on, dispatch a focused PCF lookup** (search `/processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry`) before committing to a `processes` row reference. Some buckets (e.g. `data_asset`, `dlp_incident`, `customer_golden_record`, `subscription`) have **no good PCF match** and should be promoted to `source_framework='custom'` rows with the `CUSTOM-<CLUSTER>-<SHORT-NAME>` naming convention.
+**For each bucket the agent acts on, dispatch a focused PCF lookup** (search `/business_processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry`) before committing to a `business_processes` row reference. Some buckets (e.g. `data_asset`, `dlp_incident`, `customer_golden_record`, `subscription`) have **no good PCF match** and should be promoted to `source_framework='custom'` rows with the `CUSTOM-<CLUSTER>-<SHORT-NAME>` naming convention.
 
 ## Interpreting the output
 

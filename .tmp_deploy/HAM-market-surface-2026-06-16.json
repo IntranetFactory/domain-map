@@ -1,0 +1,100 @@
+{
+  "domain_code": "HAM",
+  "domain_id": 51,
+  "audit_date": "2026-06-16",
+  "audit_type": "read_only_market_surface",
+  "current_footprint": {
+    "modules": [
+      { "code": "HAM-ASSET-REGISTRY", "id": 169, "kind": "full", "entities": ["hardware_assets", "hardware_models"] },
+      { "code": "HAM-WARRANTY-PARTS", "id": 170, "kind": "full", "entities": ["hardware_warranties", "hardware_disposal_records", "spare_parts_inventory"] }
+    ],
+    "host_linked_starter": {
+      "code": "HVAC-SVC-MGMT", "id": 171, "kind": "starter",
+      "note": "Host-linked to HAM AND to FSM, CRM, CPQ, SUB-MGMT, FIN. Content is HVAC field service (customers, crm_contacts, customer_sites, installed_equipment, service_pm_schedules, service_work_orders, field_visits, dispatch_records, service_contracts, sales_quotes, customer_invoices, spare_parts_inventory). NOT IT hardware. See boundary finding.",
+      "entities": ["customers", "crm_contacts", "customer_sites", "installed_equipment", "service_pm_schedules", "service_work_orders", "field_visits", "dispatch_records", "service_contracts", "sales_quotes", "customer_invoices", "spare_parts_inventory", "users"]
+    },
+    "ham_owned_entity_count": 5
+  },
+  "vendors": [
+    { "name": "Lansweeper", "url": "https://docs.lansweeper.com", "specialist_in": "Network discovery + IT hardware asset inventory (agentless + agent), warranty tracking, lifecycle", "included_because": "Discovery-first HAM/ITAM leader; canonical for auto-discovered hardware inventory, asset states, warranty enrichment" },
+    { "name": "Device42", "url": "https://docs.device42.com", "specialist_in": "Data-center/infrastructure hardware discovery, rack/space/power, asset lifecycle, dependency mapping", "included_because": "Strongest data-center hardware model: racks, devices, ports, power circuits, lifecycle, depreciation; mid-to-enterprise" },
+    { "name": "Snipe-IT", "url": "https://snipe-it.readme.io", "specialist_in": "Open-source IT asset management; assets, models, components, consumables, check-in/out, maintenance, audits", "included_because": "Reference open schema for HAM; explicit master/junction/audit model (assets, models, manufacturers, categories, components, consumables, asset maintenances, asset audits)" },
+    { "name": "Asset Panda", "url": "https://www.assetpanda.com", "specialist_in": "Configurable fixed-asset + IT asset tracking, check-in/out, maintenance, depreciation, barcode/RFID", "included_because": "Mid-market configurable tracker; strong on physical custody, location, maintenance, depreciation, audits" },
+    { "name": "EZOfficeInventory / AssetSonar", "url": "https://faq.ezofficeinventory.com", "specialist_in": "Mid-market (50-250 user) IT + equipment asset management; reservations, maintenance, check-out, procurement, depreciation", "included_because": "Mid-market specialist; reservations/bookings, maintenance schedules, purchase orders, vendors, custody history" },
+    { "name": "ServiceNow Hardware Asset Management (HAM Pro)", "url": "https://docs.servicenow.com", "specialist_in": "Enterprise HAM lifecycle: stockroom, transfer orders, asset states, hardware models, disposal, refresh", "included_because": "Enterprise reference for HAM lifecycle states, stockrooms, transfer orders, model normalization, retirement/disposal workflow" }
+  ],
+  "surface_matrix": [
+    { "entity": "hardware_assets", "category": "master", "vendors_with": ["Lansweeper","Device42","Snipe-IT","Asset Panda","EZOfficeInventory","ServiceNow"], "classification": "core", "proposed_module": "HAM-ASSET-REGISTRY", "compliance_basis": null },
+    { "entity": "hardware_models", "category": "master", "vendors_with": ["Lansweeper","Device42","Snipe-IT","Asset Panda","EZOfficeInventory","ServiceNow"], "classification": "core", "proposed_module": "HAM-ASSET-REGISTRY", "compliance_basis": null },
+    { "entity": "hardware_manufacturers", "category": "master", "vendors_with": ["Snipe-IT","Device42","Asset Panda","EZOfficeInventory","ServiceNow"], "classification": "common", "proposed_module": "HAM-ASSET-REGISTRY", "compliance_basis": null },
+    { "entity": "asset_categories", "category": "config", "vendors_with": ["Snipe-IT","Asset Panda","EZOfficeInventory","Lansweeper"], "classification": "common", "proposed_module": "HAM-ASSET-REGISTRY", "compliance_basis": null },
+    { "entity": "asset_status_labels", "category": "config", "vendors_with": ["Snipe-IT","ServiceNow","Lansweeper","Asset Panda"], "classification": "common", "proposed_module": "HAM-ASSET-REGISTRY", "compliance_basis": null },
+    { "entity": "asset_locations", "category": "master", "vendors_with": ["Snipe-IT","Device42","Asset Panda","EZOfficeInventory","ServiceNow"], "classification": "core", "proposed_module": "HAM-ASSET-REGISTRY", "compliance_basis": null },
+    { "entity": "asset_assignments", "category": "junction", "vendors_with": ["Snipe-IT","Asset Panda","EZOfficeInventory","ServiceNow","Lansweeper"], "classification": "core", "proposed_module": "HAM-ASSET-REGISTRY", "compliance_basis": null },
+    { "entity": "asset_checkout_events", "category": "junction", "vendors_with": ["Snipe-IT","Asset Panda","EZOfficeInventory"], "classification": "common", "proposed_module": "HAM-ASSET-REGISTRY", "compliance_basis": null },
+    { "entity": "asset_audits", "category": "audit", "vendors_with": ["Snipe-IT","Asset Panda","EZOfficeInventory","ServiceNow"], "classification": "core", "proposed_module": "HAM-ASSET-REGISTRY", "compliance_basis": "physical inventory verification / SOX asset existence" },
+    { "entity": "asset_lifecycle_states", "category": "config", "vendors_with": ["ServiceNow","Device42","Lansweeper"], "classification": "common", "proposed_module": "HAM-ASSET-REGISTRY", "compliance_basis": null },
+    { "entity": "stockrooms", "category": "master", "vendors_with": ["ServiceNow","EZOfficeInventory","Device42"], "classification": "common", "proposed_module": "HAM-WARRANTY-PARTS", "compliance_basis": null },
+    { "entity": "stock_transfer_orders", "category": "junction", "vendors_with": ["ServiceNow","Device42"], "classification": "specialist", "proposed_module": "HAM-WARRANTY-PARTS", "compliance_basis": null },
+    { "entity": "asset_depreciation_schedules", "category": "config", "vendors_with": ["Snipe-IT","Asset Panda","EZOfficeInventory","Device42"], "classification": "common", "proposed_module": "HAM-ASSET-REGISTRY", "compliance_basis": "SOX / GAAP fixed-asset depreciation" },
+    { "entity": "asset_maintenance_records", "category": "junction", "vendors_with": ["Snipe-IT","Asset Panda","EZOfficeInventory"], "classification": "common", "proposed_module": "HAM-WARRANTY-PARTS", "compliance_basis": null },
+    { "entity": "hardware_warranties", "category": "master", "vendors_with": ["Lansweeper","Snipe-IT","Asset Panda","EZOfficeInventory","ServiceNow"], "classification": "core", "proposed_module": "HAM-WARRANTY-PARTS", "compliance_basis": null },
+    { "entity": "hardware_disposal_records", "category": "compliance", "vendors_with": ["ServiceNow","Asset Panda","Device42"], "classification": "compliance", "proposed_module": "HAM-WARRANTY-PARTS", "compliance_basis": "WEEE / e-waste / R2v3 / ITAD" },
+    { "entity": "spare_parts_inventory", "category": "master", "vendors_with": ["ServiceNow","EZOfficeInventory","Device42"], "classification": "common", "proposed_module": "HAM-WARRANTY-PARTS", "compliance_basis": null },
+    { "entity": "asset_consumables", "category": "master", "vendors_with": ["Snipe-IT","EZOfficeInventory"], "classification": "common", "proposed_module": "HAM-WARRANTY-PARTS", "compliance_basis": null },
+    { "entity": "asset_components", "category": "master", "vendors_with": ["Snipe-IT","Device42"], "classification": "common", "proposed_module": "HAM-WARRANTY-PARTS", "compliance_basis": null },
+    { "entity": "purchase_orders", "category": "junction", "vendors_with": ["Snipe-IT","Asset Panda","EZOfficeInventory","ServiceNow"], "classification": "common", "proposed_module": "HAM-ASSET-REGISTRY", "compliance_basis": null },
+    { "entity": "asset_disposal_certificates", "category": "compliance", "vendors_with": ["ServiceNow","Asset Panda"], "classification": "compliance", "proposed_module": "HAM-WARRANTY-PARTS", "compliance_basis": "Certificate of Destruction / R2v3 / NAID AAA data-sanitization proof" },
+    { "entity": "data_sanitization_records", "category": "compliance", "vendors_with": ["ServiceNow","Device42"], "classification": "compliance", "proposed_module": "HAM-WARRANTY-PARTS", "compliance_basis": "NIST 800-88 media sanitization / GDPR Art.17 / chain-of-custody" },
+    { "entity": "asset_chain_of_custody_events", "category": "compliance", "vendors_with": ["ServiceNow","Asset Panda"], "classification": "compliance", "proposed_module": "HAM-WARRANTY-PARTS", "compliance_basis": "ITAD chain-of-custody / e-waste tracking" }
+  ],
+  "diff": {
+    "missing": [
+      { "entity": "asset_assignments", "proposed_module": "HAM-ASSET-REGISTRY", "reason": "Junction linking hardware_asset to a user/department; the single most-mastered HAM concept after the asset itself. Present in all 6 vendors (Snipe-IT asset->user, Asset Panda assignee, ServiceNow assigned_to). HAM currently has no way to record who holds an asset.", "compliance": false },
+      { "entity": "asset_locations", "proposed_module": "HAM-ASSET-REGISTRY", "reason": "Physical/logical location master. Universal across vendors (Snipe-IT locations, Device42 buildings/rooms/racks, Asset Panda sites). Required to answer 'where is this asset'. Currently absent.", "compliance": false },
+      { "entity": "asset_audits", "proposed_module": "HAM-ASSET-REGISTRY", "reason": "Physical inventory verification event (last-audited, audit due, scan result). Snipe-IT asset_maintenances/audits, Asset Panda audit, ServiceNow stocktake. Underpins SOX asset-existence assertion. Absent.", "compliance": true },
+      { "entity": "data_sanitization_records", "proposed_module": "HAM-WARRANTY-PARTS", "reason": "NIST 800-88 wipe/destruction record tied to a disposed asset. Non-optional compliance entity (GDPR Art.17 erasure proof, data-bearing-device handling). hardware_disposal_records exists but does not capture per-device sanitization method/verification.", "compliance": true },
+      { "entity": "asset_chain_of_custody_events", "proposed_module": "HAM-WARRANTY-PARTS", "reason": "ITAD chain-of-custody log from decommission through certified disposal (collected->transported->received->destroyed). Required for R2v3/NAID-grade disposal assurance. Absent.", "compliance": true },
+      { "entity": "asset_disposal_certificates", "proposed_module": "HAM-WARRANTY-PARTS", "reason": "Certificate of Destruction / recycling certificate issued by the ITAD vendor, attached to disposal record. Distinct from the disposal event itself. Compliance evidence artifact.", "compliance": true },
+      { "entity": "asset_maintenance_records", "proposed_module": "HAM-WARRANTY-PARTS", "reason": "Repair/service event against an asset (consumes spare_parts_inventory, may invoke warranty). Snipe-IT asset_maintenances, EZOffice/AssetPanda maintenance. Closes the loop between warranties + spare parts. Absent.", "compliance": false },
+      { "entity": "asset_depreciation_schedules", "proposed_module": "HAM-ASSET-REGISTRY", "reason": "Book/financial value over useful life per asset or model. Snipe-IT depreciations, Asset Panda/EZOffice depreciation, Device42. SOX/GAAP fixed-asset basis. Absent (note: cross-asset financial depreciation may belong to FIN; per-hardware-asset book value belongs here).", "compliance": true },
+      { "entity": "hardware_manufacturers", "proposed_module": "HAM-ASSET-REGISTRY", "reason": "Manufacturer master normalizing hardware_models (Dell, HP, Cisco). Snipe-IT manufacturers, Device42, ServiceNow. Currently models have no manufacturer master.", "compliance": false },
+      { "entity": "asset_status_labels", "proposed_module": "HAM-ASSET-REGISTRY", "reason": "Deployable/pending/archived/broken status taxonomy (Snipe-IT status_labels, ServiceNow asset state). Drives lifecycle. Currently no status master.", "compliance": false },
+      { "entity": "asset_categories", "proposed_module": "HAM-ASSET-REGISTRY", "reason": "Category/type taxonomy (laptop, monitor, server). Snipe-IT categories, Asset Panda groups. Currently no category master.", "compliance": false },
+      { "entity": "asset_checkout_events", "proposed_module": "HAM-ASSET-REGISTRY", "reason": "Check-out/check-in transition log distinct from durable assignment (Snipe-IT checkout, EZOffice reservations/checkout, Asset Panda). Custody timeline. Absent.", "compliance": false },
+      { "entity": "stockrooms", "proposed_module": "HAM-WARRANTY-PARTS", "reason": "Stockroom/storeroom master holding spare parts + pre-deployment assets (ServiceNow stockroom, EZOffice, Device42). spare_parts_inventory exists but has no stocking-location master. Common.", "compliance": false },
+      { "entity": "asset_components", "proposed_module": "HAM-WARRANTY-PARTS", "reason": "Sub-component master (RAM, disk, GPU) installed into a parent asset (Snipe-IT components, Device42 parts). Common for hardware-depth vendors.", "compliance": false },
+      { "entity": "asset_consumables", "proposed_module": "HAM-WARRANTY-PARTS", "reason": "Consumable stock (toner, cables) drawn down by assets (Snipe-IT consumables, EZOffice). Common, mid-market.", "compliance": false },
+      { "entity": "purchase_orders", "proposed_module": "HAM-ASSET-REGISTRY", "reason": "Procurement record sourcing assets (Snipe-IT, EZOffice, Asset Panda, ServiceNow). NOTE possible WRONG-OWNERSHIP: enterprise procurement may belong to a Procurement/PROC umbrella, not HAM. Flag for user, not an unconditional add.", "compliance": false }
+    ],
+    "wrong_ownership": [],
+    "scope_creep": [
+      { "entity": "spare_parts_inventory", "current_module": "HAM-WARRANTY-PARTS (170) AND HVAC-SVC-MGMT (171)", "reason": "spare_parts_inventory is correctly mastered in HAM-WARRANTY-PARTS but ALSO appears as embedded_master in the HVAC starter (171). The HVAC instance is a field-service spare-parts concept, not IT hardware. This is a symptom of the mis-hosted starter, not HAM scope creep. Resolution is the host-link removal below, not a HAM change.", "recommendation": "user_decides" }
+    ]
+  },
+  "boundary_findings": [
+    {
+      "type": "WRONG-HOST-LINK",
+      "severity": "high",
+      "module": "HVAC-SVC-MGMT (id 171, module_kind=starter)",
+      "finding": "Module 171 is host-linked to HAM (domain_id=51) via domain_module_host_domains. Its 12 embedded_master entities (customers, crm_contacts, customer_sites, installed_equipment, service_pm_schedules, service_work_orders, field_visits, dispatch_records, service_contracts, sales_quotes, customer_invoices, spare_parts_inventory) describe an HVAC field-service business: scheduling technicians, dispatching field visits, servicing customer-owned installed equipment, quoting and invoicing customers. None of this is IT hardware asset management. installed_equipment's own description calls it 'Customer-owned equipment that the service organization installs and maintains ... the asset register that work orders are performed against' = a field-service asset register, NOT an IT hardware register.",
+      "evidence": "Module 171 is host-linked to 6 domains total: FSM (31), CRM (69), CPQ (73), SUB-MGMT (97), HAM (51), FIN (65). Its natural primary home is FSM (Field Service Management). The HAM link is the anomalous one. HVAC-SVC-MGMT is a small-org field-service starter that embeds CRM/CPQ/SUB-MGMT/FIN masters as embedded_master and should consume HAM only if it tracks the service org's OWN IT hardware, which it does not.",
+      "recommendation": "Remove the domain_module_host_domains row linking module 171 to domain 51 (HAM). DESTRUCTIVE (DELETE of a host-link row) -> requires explicit user approval; do NOT execute in this audit. Keep the FSM host link (primary) and the CRM/CPQ/SUB-MGMT/FIN consumer links as appropriate to that starter's design. This finding does NOT fold any HVAC entity into HAM's hardware surface.",
+      "do_not": "Do NOT add customers, installed_equipment, service_work_orders, field_visits, dispatch_records, service_pm_schedules, service_contracts, sales_quotes, customer_invoices, or crm_contacts to HAM. They are field-service / CRM / CPQ / billing concepts."
+    }
+  ],
+  "boundary_exclusions_respected": [
+    { "concept": "cross_asset_contracts", "belongs_to": "ITAM umbrella", "note": "Not reported as HAM MISSING." },
+    { "concept": "software_licenses", "belongs_to": "SAM", "note": "Not reported as HAM MISSING." },
+    { "concept": "configuration_items_cis", "belongs_to": "CMDB", "note": "Not reported as HAM MISSING." }
+  ],
+  "modularization": {
+    "verdict": "partial",
+    "two_module_split_assessment": "The HAM-ASSET-REGISTRY (identity/lifecycle/custody) vs HAM-WARRANTY-PARTS (warranty/disposal/spare-parts/maintenance) split is coherent and self-explaining for a first-time deployer; both modules retain >=1 master and the boundary (register vs post-deployment service/end-of-life) is clean. Rule #14 satisfied: 2 modules, each with masters, for a >=3-capability domain. The split is sound; the gap is depth, not structure. Compliance/disposal entities (data_sanitization_records, asset_chain_of_custody_events, asset_disposal_certificates) all land naturally in HAM-WARRANTY-PARTS; custody/audit/taxonomy entities land in HAM-ASSET-REGISTRY.",
+    "recommendations": [
+      { "type": "leave", "modules": ["HAM-ASSET-REGISTRY","HAM-WARRANTY-PARTS"], "new_name": null, "reason": "Two-module split is coherent. No merge/split/rename needed. Fill depth (custody, audit, sanitization compliance) within the existing two modules." },
+      { "type": "fix_host_link", "modules": ["HVAC-SVC-MGMT"], "new_name": null, "reason": "Remove the HAM host link on module 171 (see boundary_findings). Destructive; user approval required. This is the only modularization-class action for HAM and it lives outside HAM's own two modules." }
+    ]
+  },
+  "diff_counts": { "missing": 16, "missing_compliance": 5, "wrong_ownership": 0, "scope_creep": 1, "boundary_findings": 1 }
+}

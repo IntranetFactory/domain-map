@@ -1,0 +1,28 @@
+
+=== Domains ===
+  inserting 15 new rows into /domains (53 existed)
+
+=== Capabilities ===
+  inserting 81 new rows into /capabilities (0 existed)
+
+=== capability_domains junctions ===
+  inserting 81 capability_domains rows
+
+=== Vendors ===
+  inserting 66 new rows into /vendors (127 existed)
+
+=== Solutions ===
+  inserting 107 new rows into /solutions (187 existed)
+
+=== solution_domains junctions ===
+  inserting 135 new solution_domains rows (0 already present)
+
+=== Final counts ===
+{
+  "domains": 68,
+  "capabilities": 81,
+  "capability_domains": 81,
+  "vendors": 193,
+  "solutions": 294,
+  "solution_domains": 384
+}

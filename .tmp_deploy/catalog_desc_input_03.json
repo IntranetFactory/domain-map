@@ -1,0 +1,786 @@
+[
+  {
+    "id": 739,
+    "data_object_name": "client_invoices",
+    "singular_label": "Client Invoice",
+    "plural_label": "Client Invoices",
+    "entity_type": "operational_workflow",
+    "description": "Matter-scoped invoice generated from time entries + disbursements + retainer drawdowns."
+  },
+  {
+    "id": 618,
+    "data_object_name": "clinical_encounters",
+    "singular_label": "Clinical Encounter",
+    "plural_label": "Clinical Encounters",
+    "entity_type": "operational_workflow",
+    "description": "Documented patient-provider clinical contact: encounter date, type (office visit / telehealth / inpatient / ED), chief complaint, vitals, ICD diagnosis codes, CPT procedure codes, provider, attending. The atomic billable clinical event; precedes patient_charts and clinical_notes."
+  },
+  {
+    "id": 613,
+    "data_object_name": "clinical_engineering_work_orders",
+    "singular_label": "Clinical Engineering Work Order",
+    "plural_label": "Clinical Engineering Work Orders",
+    "entity_type": "operational_workflow",
+    "description": "Request from clinical staff for device repair, configuration, training, or incident investigation; routed via clinical-engineering team. Links to device_maintenance_logs and device_incident_reports for closed-loop traceability."
+  },
+  {
+    "id": 622,
+    "data_object_name": "clinical_notes",
+    "singular_label": "Clinical Note",
+    "plural_label": "Clinical Notes",
+    "entity_type": "operational_workflow",
+    "description": "Provider documentation of patient encounter: SOAP-style (subjective/objective/assessment/plan), nurse notes, progress notes, discharge summaries. Patient-chart artifact; supports billing, continuity, legal record. Distinct from ECM documents (filing-cabinet view) — clinical_notes are structured clinical artifacts."
+  },
+  {
+    "id": 621,
+    "data_object_name": "clinical_orders",
+    "singular_label": "Clinical Order",
+    "plural_label": "Clinical Orders",
+    "entity_type": "operational_workflow",
+    "description": "Provider order for diagnostic test, medication, therapy, or procedure: order type (lab / imaging / prescription / referral / DME), order date, ordering provider, target facility/department, priority, result attachment. CPOE-compliant; distinct from S2P purchase orders."
+  },
+  {
+    "id": 337,
+    "data_object_name": "cloud_databases",
+    "singular_label": "Cloud Database Instance",
+    "plural_label": "Cloud Database Instances",
+    "entity_type": "unclassified",
+    "description": "Managed cloud database, warehouse schema, dataset, workspace, or cluster. Structured-data container at security-posture lens."
+  },
+  {
+    "id": 336,
+    "data_object_name": "cloud_storage_buckets",
+    "singular_label": "Cloud Storage Bucket",
+    "plural_label": "Cloud Storage Buckets",
+    "entity_type": "unclassified",
+    "description": "Cloud object-storage bucket or container holding unstructured data. Lens distinct from CMDB configuration_items (security-posture vs IT-ops topology)."
+  },
+  {
+    "id": 449,
+    "data_object_name": "cluster_node_pools",
+    "singular_label": "Cluster Node Pool",
+    "plural_label": "Cluster Node Pools",
+    "entity_type": "operational_workflow",
+    "description": "Worker-node grouping: instance type/size, scaling config, taints/tolerations, labels, zone distribution."
+  },
+  {
+    "id": 1270,
+    "data_object_name": "cmi5_assignable_units",
+    "singular_label": "cmi5 Assignable Unit",
+    "plural_label": "cmi5 Assignable Units",
+    "entity_type": "catalog",
+    "description": "cmi5 (ADL) assignable unit launched against an LRS; modern course-package standard supplanting SCORM."
+  },
+  {
+    "id": 1015,
+    "data_object_name": "coaching_scorecards",
+    "singular_label": "Coaching Scorecard",
+    "plural_label": "Coaching Scorecards",
+    "entity_type": "operational_record",
+    "description": "A manager evaluation of a call or rep against a talk-track rubric, scoring adherence to the playbook on defined criteria."
+  },
+  {
+    "id": 1014,
+    "data_object_name": "coaching_sessions",
+    "singular_label": "Coaching Session",
+    "plural_label": "Coaching Sessions",
+    "entity_type": "operational_workflow",
+    "description": "A one-on-one coaching review, usually anchored to a recorded call, scheduled and then completed with notes and follow-up actions for the rep."
+  },
+  {
+    "id": 677,
+    "data_object_name": "code_commits",
+    "singular_label": "Code Commit",
+    "plural_label": "Code Commits",
+    "entity_type": "operational_record",
+    "description": "Git commit on a source_repository: SHA, author, timestamp, message, parent SHA(s), diff summary, signed-off-by. The atomic unit for value-stream analytics (lead-time computation, change-volume tracking)."
+  },
+  {
+    "id": 645,
+    "data_object_name": "code_violations",
+    "singular_label": "Code Violation / Citation",
+    "plural_label": "Code Violation / Citations",
+    "entity_type": "operational_workflow",
+    "description": "Cited non-compliance with permit conditions, building code, business regulation, or other government code: subject (property / business / individual), violation code, citation date, issuing inspector, severity, fines assessed, remediation status."
+  },
+  {
+    "id": 381,
+    "data_object_name": "commerce_orders",
+    "singular_label": "Order",
+    "plural_label": "Orders",
+    "entity_type": "operational_workflow",
+    "description": "Customer purchase order created at checkout, tracked through fulfillment and completion. B2C seller-side; distinct from S2P `purchase_orders` (supplier-issued buyer-side)."
+  },
+  {
+    "id": 384,
+    "data_object_name": "commerce_products",
+    "singular_label": "Product",
+    "plural_label": "Products",
+    "entity_type": "operational_workflow",
+    "description": "Sellable product: name, description, SKU, pricing, inventory references. B2C-COMM-mastered v1; future PIM domain will co-master when loaded."
+  },
+  {
+    "id": 389,
+    "data_object_name": "commerce_shipments",
+    "singular_label": "Shipment",
+    "plural_label": "Shipments",
+    "entity_type": "operational_workflow",
+    "description": "Physical or digital shipment associated with a fulfillment; carrier, tracking, delivery status. Includes RMA returns."
+  },
+  {
+    "id": 385,
+    "data_object_name": "commerce_storefronts",
+    "singular_label": "Storefront",
+    "plural_label": "Storefronts",
+    "entity_type": "catalog",
+    "description": "B2C brand / channel storefront (web store, mobile app, marketplace listing) with catalog mapping. One seller may have N storefronts."
+  },
+  {
+    "id": 363,
+    "data_object_name": "commercial_leases",
+    "singular_label": "Commercial Lease",
+    "plural_label": "Commercial Leases",
+    "entity_type": "unclassified",
+    "description": "Commercial real-estate lease (office/retail/industrial) carrying base rent, CAM, escalations, percentage rent, tenant improvements, free-rent abatement, and renewal options. Operationally distinct from residential leases and from tenant-of-corporate-office accounting-only leases."
+  },
+  {
+    "id": 354,
+    "data_object_name": "commission_splits",
+    "singular_label": "Commission Split",
+    "plural_label": "Commission Splits",
+    "entity_type": "operational_workflow",
+    "description": "Per-transaction commission distribution across listing-side and buyer-side brokerages, then internal agent splits per franchise rules; referenced by accounting and 1099 processes."
+  },
+  {
+    "id": 159,
+    "data_object_name": "compensation_benchmarks",
+    "singular_label": "Compensation Benchmark",
+    "plural_label": "Compensation Benchmarks",
+    "entity_type": "catalog",
+    "description": "Imported market salary data for a job-level-geography combination, sourced from an external compensation-survey provider. Drives salary_bands maintenance."
+  },
+  {
+    "id": 153,
+    "data_object_name": "compensation_plans",
+    "singular_label": "Compensation Plan",
+    "plural_label": "Compensation Plans",
+    "entity_type": "operational_workflow",
+    "description": "Total-rewards package definition per role, level, location: base structure, bonus target, equity guideline, allowances. Distinct from sales-incentive plans (those live in Sales Performance Management)."
+  },
+  {
+    "id": 157,
+    "data_object_name": "compensation_statements",
+    "singular_label": "Compensation Statement",
+    "plural_label": "Compensation Statements",
+    "entity_type": "operational_workflow",
+    "description": "Personalized total-rewards letter delivered to a worker showing the value of base, bonus, equity, benefits, and perks. Generated on hire, merit cycle close, and annually."
+  },
+  {
+    "id": 857,
+    "data_object_name": "competency_models",
+    "singular_label": "Competency Model",
+    "plural_label": "Competency Models",
+    "entity_type": "catalog",
+    "description": "Role-anchored bundle of required skills plus target proficiency levels, used for gap analysis and internal matching."
+  },
+  {
+    "id": 1202,
+    "data_object_name": "competitive_intelligence_records",
+    "singular_label": "Competitive Intelligence Record",
+    "plural_label": "Competitive Intelligence Records",
+    "entity_type": "operational_workflow",
+    "description": "A tracked piece of competitor or market intelligence with source, relevance, and disposition."
+  },
+  {
+    "id": 1204,
+    "data_object_name": "competitor_profiles",
+    "singular_label": "Competitor Profile",
+    "plural_label": "Competitor Profiles",
+    "entity_type": "operational_record",
+    "description": "A profile of a tracked competitor: positioning, pricing, strengths, and weaknesses."
+  },
+  {
+    "id": 173,
+    "data_object_name": "compliance_assignments",
+    "singular_label": "Compliance Training Assignment",
+    "plural_label": "Compliance Training Assignments",
+    "entity_type": "operational_workflow",
+    "description": "Mandatory training assignment tied to a regulation, role, location, or hire-event (anti-harassment, AML, GDPR, OSHA, HIPAA). Carries due date, escalation policy, audit log."
+  },
+  {
+    "id": 939,
+    "data_object_name": "compliance_audit_records",
+    "singular_label": "Compliance Audit Record",
+    "plural_label": "Compliance Audit Records",
+    "entity_type": "operational_workflow",
+    "description": "Regulator-facing audit trail row capturing who did what training when, with version and evidence reference. Distinct from learning_records: audit-purpose subset, retention-locked."
+  },
+  {
+    "id": 283,
+    "data_object_name": "compliance_controls",
+    "singular_label": "Control",
+    "plural_label": "Controls",
+    "entity_type": "operational_workflow",
+    "description": "Mitigating action or safeguard designed to reduce risk; control type (preventive / detective / corrective), design scope, owner, test frequency."
+  },
+  {
+    "id": 288,
+    "data_object_name": "compliance_evidence",
+    "singular_label": "Compliance Evidence",
+    "plural_label": "Compliance Evidences",
+    "entity_type": "operational_workflow",
+    "description": "Artifact proving fulfillment of an obligation: audit report, assessment result, signed attestation, log export. Carries obligation_id, type, retention."
+  },
+  {
+    "id": 287,
+    "data_object_name": "compliance_obligations",
+    "singular_label": "Compliance Obligation",
+    "plural_label": "Compliance Obligations",
+    "entity_type": "operational_workflow",
+    "description": "Requirement imposed by a regulation or internal policy that must be fulfilled; distinct from contract_obligations (commercial) and controls (mechanisms)."
+  },
+  {
+    "id": 285,
+    "data_object_name": "compliance_policies",
+    "singular_label": "Policy",
+    "plural_label": "Policies",
+    "entity_type": "operational_workflow",
+    "description": "Formal governance directive (acceptable-use, data-protection, whistleblower, anti-corruption); version, effective date, scope, owner, approval chain."
+  },
+  {
+    "id": 1268,
+    "data_object_name": "compliance_regulations",
+    "singular_label": "Compliance Regulation",
+    "plural_label": "Compliance Regulations",
+    "entity_type": "catalog",
+    "description": "Tenant-scoped reference table of statutes a tenant is subject to (jurisdiction, citation, retention period). Each tenant activates only its applicable subset; the regulation field on training_evidence_records is an FK into this table, and the active rows gate which compliance evidence applies."
+  },
+  {
+    "id": 282,
+    "data_object_name": "compliance_risks",
+    "singular_label": "Risk",
+    "plural_label": "Risks",
+    "entity_type": "operational_workflow",
+    "description": "Identified threat to organizational objectives; likelihood, impact, inherent / residual severity, owner. Links to controls and risk factors."
+  },
+  {
+    "id": 938,
+    "data_object_name": "compliance_training_campaigns",
+    "singular_label": "Compliance Training Campaign",
+    "plural_label": "Compliance Training Campaigns",
+    "entity_type": "operational_workflow",
+    "description": "Campaign container that bundles assignments by audience and due-date: annual code-of-conduct cycle, harassment refresh, security awareness wave."
+  },
+  {
+    "id": 76,
+    "data_object_name": "configuration_items",
+    "singular_label": "Configuration Item",
+    "plural_label": "Configuration Items",
+    "entity_type": "operational_workflow",
+    "description": "Canonical record of an IT thing under management: server, container, application, business service, network device, database, cloud resource. The flagship CMDB entity, referenced by changes, incidents, problems, and topology. Multi-feed: DISCOVERY auto-populates, HAM provides the physical-asset overlay for hardware CIs, SAM/SMP overlay for software/SaaS CIs."
+  },
+  {
+    "id": 393,
+    "data_object_name": "conflict_checks",
+    "singular_label": "Conflict Check",
+    "plural_label": "Conflict Checks",
+    "entity_type": "operational_workflow",
+    "description": "Conflict-of-interest checking record: search inputs (proposed new client, parties), matches across existing matters/clients/adversaries, resolution (cleared, waived, declined), ethics-wall configuration."
+  },
+  {
+    "id": 1042,
+    "data_object_name": "connected_intranets",
+    "singular_label": "Connected Intranet",
+    "plural_label": "Connected Intranets",
+    "entity_type": "catalog",
+    "description": "A source intranet platform under governance (the connector target): platform type, base URL, auth, crawl schedule, and status."
+  },
+  {
+    "id": 1235,
+    "data_object_name": "consent_records",
+    "singular_label": "Consent Record",
+    "plural_label": "Consent Records",
+    "entity_type": "operational_record",
+    "description": "Lawful-basis and opt-in/opt-out state governing whether a contact's signals may be processed and activated (GDPR Art. 6/7, CCPA/CPRA)."
+  },
+  {
+    "id": 257,
+    "data_object_name": "contact_records",
+    "singular_label": "Contact Record",
+    "plural_label": "Contact Records",
+    "entity_type": "operational_record",
+    "description": "A normalized contact-center customer-identity record reconciling phone numbers, email addresses, and known customer_ids across channels. Helps the agent see context regardless of which channel the customer used."
+  },
+  {
+    "id": 455,
+    "data_object_name": "container_registries",
+    "singular_label": "Container Registry",
+    "plural_label": "Container Registries",
+    "entity_type": "operational_workflow",
+    "description": "Image repositories scoped to the cluster: registry policies, pull secrets, image scanning."
+  },
+  {
+    "id": 450,
+    "data_object_name": "container_workloads",
+    "singular_label": "Container Workload",
+    "plural_label": "Container Workloads",
+    "entity_type": "operational_workflow",
+    "description": "Pod / Deployment / StatefulSet / Job / DaemonSet primitives: replica counts, restart policy, QoS class, affinity rules."
+  },
+  {
+    "id": 1142,
+    "data_object_name": "content_acknowledgements",
+    "singular_label": "Content Acknowledgment",
+    "plural_label": "Content Acknowledgments",
+    "entity_type": "operational_record",
+    "description": "A per-worker record that a mandatory broadcast or piece of content was read and acknowledged, used as read-receipt proof under union and policy content rules."
+  },
+  {
+    "id": 684,
+    "data_object_name": "content_audits",
+    "singular_label": "Content Audit",
+    "plural_label": "Content Audits",
+    "entity_type": "unclassified",
+    "description": "Inventory + quality assessment of web content: page count, health score (WCAG accessibility, SEO health, broken links, brand-voice compliance), staleness, orphaned pages. Scheduled or on-demand scan against a website corpus."
+  },
+  {
+    "id": 1216,
+    "data_object_name": "content_collections",
+    "singular_label": "Content Collection",
+    "plural_label": "Content Collections",
+    "entity_type": "catalog",
+    "description": "A curated grouping of enablement content by stage, persona, or play."
+  },
+  {
+    "id": 442,
+    "data_object_name": "content_components",
+    "singular_label": "Content Component",
+    "plural_label": "Content Components",
+    "entity_type": "operational_workflow",
+    "description": "Reusable composable block (hero, CTA, text, image, form). Many components per page."
+  },
+  {
+    "id": 429,
+    "data_object_name": "content_documents",
+    "singular_label": "Document",
+    "plural_label": "Documents",
+    "entity_type": "operational_workflow",
+    "description": "Binary file + metadata container; the ECM flagship entity. Distinct from DCG `data_assets` (metadata catalog) and DAM `digital_assets` (creative/brand)."
+  },
+  {
+    "id": 1218,
+    "data_object_name": "content_engagement_events",
+    "singular_label": "Content Engagement Event",
+    "plural_label": "Content Engagement Events",
+    "entity_type": "operational_record",
+    "description": "An append-only event capturing when content is opened, shared, or tied to a deal; carries buyer contact identity."
+  },
+  {
+    "id": 132,
+    "data_object_name": "content_entries",
+    "singular_label": "Content Entry",
+    "plural_label": "Content Entries",
+    "entity_type": "unclassified",
+    "description": "Individual structured content record conforming to a content_type, served via the CMS delivery API to any channel. The thing a headless CMS exists to manage. Industry synonyms include Entries, Documents, and Stories depending on the headless CMS in use."
+  },
+  {
+    "id": 136,
+    "data_object_name": "content_environments",
+    "singular_label": "Content Environment",
+    "plural_label": "Content Environments",
+    "entity_type": "unclassified",
+    "description": "Isolated working copy of a CMS's content: dev, staging, or production environment; dataset, branch, or space. Used to test content-type changes and content migrations safely before promoting."
+  },
+  {
+    "id": 690,
+    "data_object_name": "content_lifecycle_plans",
+    "singular_label": "Content Lifecycle Plan",
+    "plural_label": "Content Lifecycle Plans",
+    "entity_type": "unclassified",
+    "description": "Editorial calendar + governance rule set for content retirement/refresh: content reference, review-due date, owner, refresh frequency, sunset date, successor content. Ties to editorial workflows and triggers remediation tasks when content misses deadlines."
+  },
+  {
+    "id": 135,
+    "data_object_name": "content_locales",
+    "singular_label": "Content Locale",
+    "plural_label": "Content Locales",
+    "entity_type": "unclassified",
+    "description": "Configured locale available within a CMS account or environment, including fallback chain, default locale flag, and translation status conventions. Drives field-level localization on content entries."
+  },
+  {
+    "id": 133,
+    "data_object_name": "content_releases",
+    "singular_label": "Content Release",
+    "plural_label": "Content Releases",
+    "entity_type": "unclassified",
+    "description": "A scheduled batch of content changes published together, used to coordinate go-lives across many entries (campaign launch, product update). Industry synonyms include Releases, Launch, and Scheduled Releases depending on the headless CMS in use."
+  },
+  {
+    "id": 1240,
+    "data_object_name": "content_syndication_programs",
+    "singular_label": "Content Syndication Program",
+    "plural_label": "Content Syndication Programs",
+    "entity_type": "operational_workflow",
+    "description": "A multichannel content-syndication program delivering gated content to target accounts."
+  },
+  {
+    "id": 131,
+    "data_object_name": "content_types",
+    "singular_label": "Content Type",
+    "plural_label": "Content Types",
+    "entity_type": "unclassified",
+    "description": "Schema definition for a class of content entries: fields, references, validation, and locale settings. CMS-specific configuration; renames or removals couple tightly to downstream frontend code. Industry synonyms include Models, Schemas, and Content Types depending on the headless CMS in use."
+  },
+  {
+    "id": 191,
+    "data_object_name": "contingent_invoices",
+    "singular_label": "Contingent Invoice",
+    "plural_label": "Contingent Invoices",
+    "entity_type": "unclassified",
+    "description": "Supplier-issued invoice for contingent labor, computed from contingent_timesheets × rate_cards. Routed through AP-AUTO for three-way match and payment."
+  },
+  {
+    "id": 190,
+    "data_object_name": "contingent_timesheets",
+    "singular_label": "Contingent Timesheet",
+    "plural_label": "Contingent Timesheets",
+    "entity_type": "unclassified",
+    "description": "Hours-worked timesheet from a contingent_worker against a work_order: approved hours, expenses, project codes. Feeds contingent_invoices for supplier billing."
+  },
+  {
+    "id": 186,
+    "data_object_name": "contingent_workers",
+    "singular_label": "Contingent Worker",
+    "plural_label": "Contingent Workers",
+    "entity_type": "operational_workflow",
+    "description": "Non-employee resource: 1099 contractor, agency staff, statement-of-work consultant, intern. Carries supplier, role, rate, end date, classification basis. Distinct from employees by lifecycle, payment path, and benefits eligibility."
+  },
+  {
+    "id": 935,
+    "data_object_name": "continuing_education_credits",
+    "singular_label": "Continuing Education Credit",
+    "plural_label": "Continuing Education Credits",
+    "entity_type": "catalog",
+    "description": "CEU credit-value master: credit hours, accrediting body, eligible courses."
+  },
+  {
+    "id": 1048,
+    "data_object_name": "contract_amendments",
+    "singular_label": "Contract Amendment",
+    "plural_label": "Contract Amendments",
+    "entity_type": "operational_workflow",
+    "description": "A formal change to the terms of an executed contract, tracked as its own record with an approval and signature trail."
+  },
+  {
+    "id": 68,
+    "data_object_name": "contract_clauses",
+    "singular_label": "Contract Clause",
+    "plural_label": "Contract Clauses",
+    "entity_type": "catalog",
+    "description": "Reusable clause library: preferred and fallback language for indemnification, IP, termination, SLA, payment terms, data-protection, AI-use, audit rights. Drives consistency in authoring and accelerates negotiation."
+  },
+  {
+    "id": 1053,
+    "data_object_name": "contract_counterparties",
+    "singular_label": "Contract Counterparty",
+    "plural_label": "Contract Counterparties",
+    "entity_type": "operational_record",
+    "description": "The external party to a contract, held as its own record because a counterparty is not always a CRM account or supplier and may sign many contracts."
+  },
+  {
+    "id": 423,
+    "data_object_name": "contract_drafts",
+    "singular_label": "CPQ Contract Draft",
+    "plural_label": "CPQ Contract Drafts",
+    "entity_type": "operational_workflow",
+    "description": "Approved-quote handoff artifact; precursor to CLM `contracts`. CPQ owns the draft; CLM owns the signed contract + amendments."
+  },
+  {
+    "id": 1054,
+    "data_object_name": "contract_milestones",
+    "singular_label": "Contract Milestone",
+    "plural_label": "Contract Milestones",
+    "entity_type": "operational_workflow",
+    "description": "A date-driven checkpoint in a contract (for example a delivery date or review date), distinct from a deliverable obligation."
+  },
+  {
+    "id": 1056,
+    "data_object_name": "contract_negotiation_threads",
+    "singular_label": "Negotiation Thread",
+    "plural_label": "Negotiation Threads",
+    "entity_type": "operational_workflow",
+    "description": "A structured thread of negotiation rounds and counterparty exchanges on a contract, separate from the clauses and the contract itself."
+  },
+  {
+    "id": 67,
+    "data_object_name": "contract_obligations",
+    "singular_label": "Contract Obligation",
+    "plural_label": "Contract Obligations",
+    "entity_type": "operational_workflow",
+    "description": "Specific performance, payment, delivery, reporting, or compliance commitment extracted from a contract — each with its own owner, due date, and status. Post-signature obligation tracking is where contracts deliver (or fail to deliver) value."
+  },
+  {
+    "id": 1049,
+    "data_object_name": "contract_renewal_records",
+    "singular_label": "Contract Renewal Record",
+    "plural_label": "Contract Renewal Records",
+    "entity_type": "operational_workflow",
+    "description": "A record of a single renewal of an existing contract, capturing the renewed term, pricing, and outcome distinct from the original agreement."
+  },
+  {
+    "id": 1052,
+    "data_object_name": "contract_risk_assessments",
+    "singular_label": "Contract Risk Assessment",
+    "plural_label": "Contract Risk Assessments",
+    "entity_type": "operational_workflow",
+    "description": "A structured assessment of the legal or commercial risk in a contract or clause, produced during review and dispositioned by a reviewer."
+  },
+  {
+    "id": 69,
+    "data_object_name": "contract_templates",
+    "singular_label": "Contract Template",
+    "plural_label": "Contract Templates",
+    "entity_type": "catalog",
+    "description": "Pre-approved drafts (NDA, MSA, DPA, SOW, order form) assembled from the clause library, used to author new contracts. Carries versioning, approval state, and risk-tier classification."
+  },
+  {
+    "id": 1086,
+    "data_object_name": "contractor_safety_records",
+    "singular_label": "Contractor Safety Record",
+    "plural_label": "Contractor Safety Records",
+    "entity_type": "operational_record",
+    "description": "A contractor or third-party safety prequalification and qualification record, with safety criteria, status, and ties to site access and permit-to-work."
+  },
+  {
+    "id": 284,
+    "data_object_name": "control_assessments",
+    "singular_label": "Control Assessment",
+    "plural_label": "Control Assessments",
+    "entity_type": "operational_workflow",
+    "description": "Test result verifying a control's operating effectiveness; tester, scope, result, evidence reference, remediation status."
+  },
+  {
+    "id": 296,
+    "data_object_name": "control_tests",
+    "singular_label": "Audit Control Test",
+    "plural_label": "Audit Control Tests",
+    "entity_type": "operational_workflow",
+    "description": "Audit's execution view of a control: what was tested, how, sample size, exceptions found, evidence file references. Distinct from GRC control_assessments (continuous)."
+  },
+  {
+    "id": 399,
+    "data_object_name": "controlled_substance_ledger_entries",
+    "singular_label": "Controlled Substance Ledger Entry",
+    "plural_label": "Controlled Substance Ledger Entries",
+    "entity_type": "unclassified",
+    "description": "DEA-required controlled-substance receipt, dispensation, and disposal record: drug, schedule, quantity, dispenser, recipient (patient), reconciliation evidence."
+  },
+  {
+    "id": 1006,
+    "data_object_name": "conversation_action_items",
+    "singular_label": "Conversation Action Item",
+    "plural_label": "Conversation Action Items",
+    "entity_type": "operational_workflow",
+    "description": "Commitments and follow-ups extracted from a conversation, tracked from open to done so reps and managers can confirm post-call execution."
+  },
+  {
+    "id": 701,
+    "data_object_name": "conversation_flows",
+    "singular_label": "Conversation Flow",
+    "plural_label": "Conversation Flows",
+    "entity_type": "operational_workflow",
+    "description": "Dialog state machine / branching graph that orchestrates a conversational journey."
+  },
+  {
+    "id": 124,
+    "data_object_name": "conversation_intelligence_records",
+    "singular_label": "Conversation Intelligence Record",
+    "plural_label": "Conversation Intelligence Records",
+    "entity_type": "operational_record",
+    "description": "AI-extracted insights from calls, emails, and meetings: competitor mentions, pricing discussions, sentiment shifts, commitments made, action items, risk signals. Feeds opportunity stage signals back to CRM and deal-coaching recommendations to managers."
+  },
+  {
+    "id": 1005,
+    "data_object_name": "conversation_topics",
+    "singular_label": "Conversation Topic",
+    "plural_label": "Conversation Topics",
+    "entity_type": "operational_record",
+    "description": "Topic mentions extracted from a recorded conversation: competitor references, pricing discussion, objections, and next-step commitments, each tagged with the transcript span it was found in."
+  },
+  {
+    "id": 259,
+    "data_object_name": "conversation_transcripts",
+    "singular_label": "Conversation Transcript",
+    "plural_label": "Conversation Transcripts",
+    "entity_type": "operational_record",
+    "description": "A turn-by-turn record of a bot or AI-assistant conversation: utterances, intents identified, confidence scores, slot fillings, escalation events. Source-of-truth for AI training, audit, and root-cause analysis."
+  },
+  {
+    "id": 744,
+    "data_object_name": "corporate_card_accounts",
+    "singular_label": "Corporate Card Account",
+    "plural_label": "Corporate Card Accounts",
+    "entity_type": "operational_workflow",
+    "description": "SPEND-MGMT-side card-issuance and control record. Distinct from EXPENSE corporate_cards (reconciliation)."
+  },
+  {
+    "id": 212,
+    "data_object_name": "corporate_cards",
+    "singular_label": "Corporate Card",
+    "plural_label": "Corporate Cards",
+    "entity_type": "operational_workflow",
+    "description": "Issued corporate card record: issuer, last four, cardholder, account, status, controls (per-transaction limits, MCC blocks). Feeds the card_transactions stream."
+  },
+  {
+    "id": 1076,
+    "data_object_name": "corrective_actions",
+    "singular_label": "Corrective Action",
+    "plural_label": "Corrective Actions",
+    "entity_type": "operational_workflow",
+    "description": "A corrective or preventive action arising from an incident, inspection, audit, or finding, with an owner, due date, and verification of effectiveness."
+  },
+  {
+    "id": 196,
+    "data_object_name": "cost_centers",
+    "singular_label": "Cost Center",
+    "plural_label": "Cost Centers",
+    "entity_type": "catalog",
+    "description": "Organizational unit for cost allocation: name, code, manager, hierarchy, currency. Drives variance reporting and project / departmental P&L. A near-universal foreign key in finance and payroll."
+  },
+  {
+    "id": 390,
+    "data_object_name": "coupons",
+    "singular_label": "Coupon / Promotion",
+    "plural_label": "Coupon / Promotions",
+    "entity_type": "operational_workflow",
+    "description": "Promotion code or campaign offer (discount, BOGO, free-shipping) applicable to cart/order. Storefront-scoped or global."
+  },
+  {
+    "id": 913,
+    "data_object_name": "course_assessments",
+    "singular_label": "Course Assessment",
+    "plural_label": "Course Assessments",
+    "entity_type": "operational_workflow",
+    "description": "Quiz or exam definition associated with a course or lesson; carries passing score and attempt policy."
+  },
+  {
+    "id": 919,
+    "data_object_name": "course_catalogs",
+    "singular_label": "Course Catalog",
+    "plural_label": "Course Catalogs",
+    "entity_type": "catalog",
+    "description": "Scoped catalog view: subset of courses surfaced to a specific audience, branch, or domain."
+  },
+  {
+    "id": 917,
+    "data_object_name": "course_categories",
+    "singular_label": "Course Category",
+    "plural_label": "Course Categories",
+    "entity_type": "catalog",
+    "description": "Hierarchical taxonomy for catalog browsing and reporting."
+  },
+  {
+    "id": 912,
+    "data_object_name": "course_completions",
+    "singular_label": "Course Completion",
+    "plural_label": "Course Completions",
+    "entity_type": "operational_record",
+    "description": "Terminal completion record per learner per course version. Distinct from learning_records (event log)."
+  },
+  {
+    "id": 920,
+    "data_object_name": "course_discussions",
+    "singular_label": "Course Discussion",
+    "plural_label": "Course Discussions",
+    "entity_type": "operational_record",
+    "description": "Forum-style discussion thread attached to a course or lesson; collaborative-learning surface."
+  },
+  {
+    "id": 169,
+    "data_object_name": "course_enrollments",
+    "singular_label": "Course Enrollment",
+    "plural_label": "Course Enrollments",
+    "entity_type": "operational_workflow",
+    "description": "Per-learner per-course state record: assigned date, due date, attempts, status (not_started, in_progress, completed, expired), score. The operational unit of learning tracking."
+  },
+  {
+    "id": 907,
+    "data_object_name": "course_modules",
+    "singular_label": "Course Module",
+    "plural_label": "Course Modules",
+    "entity_type": "catalog",
+    "description": "Intra-course composition unit grouping related lessons; supports completion tracking at sub-course granularity."
+  },
+  {
+    "id": 923,
+    "data_object_name": "course_offerings",
+    "singular_label": "Course Offering",
+    "plural_label": "Course Offerings",
+    "entity_type": "operational_workflow",
+    "description": "Scheduled instance of a course: date range, location, capacity, language, delivery mode."
+  },
+  {
+    "id": 922,
+    "data_object_name": "course_ratings",
+    "singular_label": "Course Rating",
+    "plural_label": "Course Ratings",
+    "entity_type": "operational_record",
+    "description": "Numeric rating (typically 1-5) per learner per course; aggregate analytics surface."
+  },
+  {
+    "id": 930,
+    "data_object_name": "course_resources",
+    "singular_label": "Course Resource",
+    "plural_label": "Course Resources",
+    "entity_type": "catalog",
+    "description": "Handout, supplementary material, or pre-read attached to an offering or session."
+  },
+  {
+    "id": 921,
+    "data_object_name": "course_reviews",
+    "singular_label": "Course Review",
+    "plural_label": "Course Reviews",
+    "entity_type": "operational_record",
+    "description": "Learner-authored qualitative review of a course post-completion."
+  },
+  {
+    "id": 924,
+    "data_object_name": "course_sessions",
+    "singular_label": "Course Session",
+    "plural_label": "Course Sessions",
+    "entity_type": "operational_workflow",
+    "description": "Individual session within a multi-day offering; carries per-session attendance and instructor assignment."
+  },
+  {
+    "id": 918,
+    "data_object_name": "course_tags",
+    "singular_label": "Course Tag",
+    "plural_label": "Course Tags",
+    "entity_type": "catalog",
+    "description": "Free-form taxonomy alongside categories; supports faceted search."
+  },
+  {
+    "id": 906,
+    "data_object_name": "course_versions",
+    "singular_label": "Course Version",
+    "plural_label": "Course Versions",
+    "entity_type": "operational_workflow",
+    "description": "Versioned snapshot of a course's content lineage. Required for compliance retention: regulators ask which version of training each learner completed."
+  },
+  {
+    "id": 167,
+    "data_object_name": "courses",
+    "singular_label": "Course",
+    "plural_label": "Courses",
+    "entity_type": "operational_workflow",
+    "description": "Atomic learning unit: e-learning module, video, live session, blended program, external content. Carries content reference, duration, format, language, prerequisites, certification award."
+  },
+  {
+    "id": 504,
+    "data_object_name": "cow_health_events",
+    "singular_label": "Cow Health Event",
+    "plural_label": "Cow Health Events",
+    "entity_type": "operational_workflow",
+    "description": "Health incident: mastitis, lameness, metabolic disorder; treatment, withdrawal period, recovery status."
+  }
+]

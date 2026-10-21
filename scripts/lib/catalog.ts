@@ -248,7 +248,7 @@ export type AllRelationships = {
   processRaci: any[]; // process_raci (responsibility, Plan 3)
   businessFunctions: any[]; // business_functions
   businessFunctionDomains: any[]; // business_function_domains (market RACI)
-  processes: any[]; // processes
+  processes: any[]; // business_processes
   handoffProcesses: any[]; // handoff_processes (process<->handoff junction, APQC tagging) with handoff endpoints embedded
   processTools: any[]; // process_tools (process<->tool coverage; consumed only for the "process used somewhere" set)
 
@@ -428,7 +428,7 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     pg("GET", "/process_raci?select=id,process_id,actor_role_id,actor_skill_id,raci,consultation_blocking&limit=20000"),
     pg("GET", "/business_functions?select=id,business_function_name,description,record_status,parent_business_function_id&limit=10000"),
     pg("GET", "/business_function_domains?select=business_function_id,domain_id,responsibility_type&limit=20000"),
-    pg("GET", "/processes?select=id,process_name,process_key,process_code,description,external_id,hierarchy_level,source_framework&limit=20000"),
+    pg("GET", "/business_processes?select=id,process_name,process_key,process_code,description,external_id,hierarchy_level,source_framework&limit=20000"),
     // handoff_processes is the dominant process-attribution edge: which APQC/custom process implements
     // each cross-domain handoff. Embed the handoff's domain + module endpoints so consumers can attribute
     // the process to a domain/module without a second join. domain endpoints are always set; module

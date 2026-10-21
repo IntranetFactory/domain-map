@@ -1,0 +1,123 @@
+=== Stage 4a: module + scaffold ===
+  ♻ Module exists (id=1001)
+  ♻ Permission domain_map:read (id=10001)
+  ♻ Permission domain_map:manage (id=10002)
+  ♻ Hierarchy 10002→10001
+  ♻ Role domain_map_viewer (id=10001)
+  ♻ Role domain_map_manager (id=10002)
+  ✓ Module FKs updated
+
+=== Preloading catalog state ===
+  ✓ 20 entities, 132 fields already in catalog
+
+=== Stage 4c: entities (bulk POST) ===
+  ♻ industries
+  ♻ business_functions
+  ♻ domains
+  ♻ capabilities
+  ♻ data_objects
+  ♻ vendors
+  ♻ solutions
+  ♻ jurisdictions
+  ♻ regulations
+  ♻ data_object_aliases
+  ♻ data_object_relationships
+  ♻ industry_business_functions
+  ♻ business_function_domains
+  ♻ business_function_capabilities
+  ♻ domain_data_objects
+  ♻ capability_domains
+  ♻ solution_domains
+  ♻ solution_data_objects
+  ♻ solution_capabilities
+  ♻ domain_regulations
+
+=== Stage 4c: label_column title fixups (parallel) ===
+  ✓ industries.industry_name title → "Industry Name" [timeout, assume ok]
+  ✓ business_functions.business_function_name title → "Function Name"
+  ✓ domains.domain_name title → "Domain Name"
+  ✓ capabilities.capability_name title → "Capability Name"
+  ✓ data_objects.data_object_name title → "Data Object Name"
+  ✓ vendors.vendor_name title → "Vendor Name"
+  ✓ solutions.solution_name title → "Solution Name"
+  ✓ jurisdictions.jurisdiction_name title → "Jurisdiction Name"
+  ✓ regulations.regulation_name title → "Regulation Name"
+  ✓ data_object_aliases.alias_name title → "Alias Name"
+  ✓ data_object_relationships.data_object_relationship_label title → "Relationship"
+  ✓ industry_business_functions.industry_business_function_label title → "Mapping"
+  ✓ business_function_domains.business_function_domain_label title → "Mapping"
+  ✓ business_function_capabilities.business_function_capability_label title → "Mapping"
+  ✓ domain_data_objects.domain_data_object_label title → "Mapping"
+  ✓ capability_domains.capability_domain_label title → "Mapping"
+  ✓ solution_domains.solution_domain_label title → "Mapping"
+  ✓ solution_data_objects.solution_data_object_label title → "Mapping"
+  ✓ solution_capabilities.solution_capability_label title → "Mapping"
+  ✓ domain_regulations.domain_regulation_label title → "Mapping"
+
+=== Stage 4d: fields (non-self-ref) (bulk POST) ===
+  ♻ industries.description
+  ♻ industries.naics_code
+  ♻ industries.record_status
+  ♻ business_functions.description
+  ♻ business_functions.record_status
+  ♻ domains.domain_code
+  ♻ domains.description
+  ♻ domains.record_status
+  ♻ capabilities.capability_code
+  ♻ capabilities.description
+  ♻ capabilities.record_status
+  ♻ data_objects.description
+  ♻ data_objects.record_status
+  ♻ vendors.description
+  ♻ vendors.vendor_url
+  ♻ vendors.headquarters_country
+  ♻ vendors.record_status
+  ♻ vendors.notes
+  ♻ solutions.description
+  ♻ solutions.solution_url
+  ♻ solutions.vendor_id
+  ♻ solutions.solution_type
+  ♻ solutions.is_active_in_market
+  ♻ solutions.record_status
+  ♻ solutions.notes
+  ♻ jurisdictions.jurisdiction_code
+  ♻ jurisdictions.jurisdiction_type
+  ♻ jurisdictions.description
+  ♻ jurisdictions.record_status
+  ♻ regulations.regulation_code
+  ♻ regulations.regulation_type
+  ♻ regulations.jurisdiction_id
+  ♻ regulations.issuing_body
+  ♻ regulations.effective_date
+  ♻ regulations.regulation_url
+  ♻ regulations.description
+  ♻ regulations.record_status
+  ♻ data_object_aliases.data_object_id
+  ♻ data_object_aliases.alias_type
+  ♻ data_object_aliases.industry_id
+  ♻ data_object_aliases.solution_id
+  ♻ data_object_aliases.is_preferred
+  ♻ data_object_aliases.record_status
+  ♻ data_object_aliases.notes
+  ♻ data_object_relationships.data_object_id
+  ♻ data_object_relationships.related_data_object_id
+  ♻ data_object_relationships.relationship_type
+  ♻ data_object_relationships.relationship_kind
+  ♻ data_object_relationships.relationship_verb
+  ♻ data_object_relationships.inverse_verb
+  ♻ data_object_relationships.is_required
+  ♻ data_object_relationships.record_status
+  → 45 fields, chunked POST /fields × 10
+27 |   if (code !== 0) {
+28 |     const combined = (stderr || stdout || "");
+29 |     if (opts.tolerateTimeout && combined.includes("Request timed out")) {
+30 |       return { __timedOut: true };
+31 |     }
+32 |     throw new Error(`${tool} (exit ${code}): ${combined}`);
+                   ^
+error: postgrestRequest (exit 4): Error: (PGRST102) Empty or invalid json
+
+      at call (C:\dev\domain-map\.tmp_deploy\deploy_domain_map.ts:32:15)
+      at async bulkCreateFields (C:\dev\domain-map\.tmp_deploy\deploy_domain_map.ts:877:23)
+
+Bun v1.3.12 (Windows arm64)

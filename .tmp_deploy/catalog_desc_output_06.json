@@ -1,0 +1,394 @@
+[
+  {
+    "id": 1254,
+    "catalog_description": "Computed flow measurements for a value stream over a period, covering velocity, time, load, efficiency, and distribution."
+  },
+  {
+    "id": 1253,
+    "catalog_description": "Configured definitions of flow metrics with their thresholds and targets, against which measured flow is evaluated."
+  },
+  {
+    "id": 299,
+    "catalog_description": "Remediation actions from audit findings, tracking owner, target date, evidence, and closure date."
+  },
+  {
+    "id": 510,
+    "catalog_description": "Food safety deviations, complaints, and non-conformance events that trigger investigation and corrective or preventive action."
+  },
+  {
+    "id": 1013,
+    "catalog_description": "Historical comparisons of submitted forecasts against actual results, used to measure and improve forecast accuracy."
+  },
+  {
+    "id": 1012,
+    "catalog_description": "Manager overrides applied to submitted forecasts, capturing the changed number and the reason for the adjustment."
+  },
+  {
+    "id": 1011,
+    "catalog_description": "Forecast submissions for a period, moving from draft to submitted to locked as the forecast cadence closes."
+  },
+  {
+    "id": 1140,
+    "catalog_description": "Targeted announcements sent to frontline audiences, with optional mandatory-read, scheduled delivery, and acknowledgment tracking."
+  },
+  {
+    "id": 1145,
+    "catalog_description": "Reusable templates of ordered task items (opening, closing, audit, compliance) run against a location and shift by frontline workers."
+  },
+  {
+    "id": 1148,
+    "catalog_description": "Per-worker records that a frontline learning module was completed, with score or pass status where assessed."
+  },
+  {
+    "id": 1147,
+    "catalog_description": "Bite-size training units delivered to frontline workers on mobile devices, tracked per worker and role."
+  },
+  {
+    "id": 1141,
+    "catalog_description": "Delivery channels through which broadcasts and conversations reach deskless workers, such as location feeds, team channels, kiosks, and SMS fallback."
+  },
+  {
+    "id": 1143,
+    "catalog_description": "Peer or manager recognitions of frontline workers, shown in the frontline feed and visible to the team."
+  },
+  {
+    "id": 1149,
+    "catalog_description": "Per-worker submissions completing a frontline task or checklist item, carrying the photo, form, or attestation evidence required."
+  },
+  {
+    "id": 1144,
+    "catalog_description": "Units of work pushed to frontline workers or locations, completed on a mobile or shared device with photo or form evidence."
+  },
+  {
+    "id": 1200,
+    "catalog_description": "Reconciliation records for fuel tanks: opening volume, deliveries, pump totals, closing reading, and variance, kept for storage-tank compliance."
+  },
+  {
+    "id": 1198,
+    "catalog_description": "Fuel-dock transactions: product, gallons, pump, price, and the boater or vessel charged."
+  },
+  {
+    "id": 1199,
+    "catalog_description": "Bulk fuel storage tanks at the marina, with product, capacity, and current volume, reconciled against deliveries and sales."
+  },
+  {
+    "id": 372,
+    "catalog_description": "Fuel-card and charging-network transactions for vehicles, capturing driver, fuel type, quantity, cost, location, and time, used for tax reporting and exception detection."
+  },
+  {
+    "id": 388,
+    "catalog_description": "Fulfillment instructions created from order lines, assigned to a warehouse or location and tracked through to shipment."
+  },
+  {
+    "id": 757,
+    "catalog_description": "Accounting close cycles for a fund (monthly, quarterly, annual) that drive statement generation and audit packaging."
+  },
+  {
+    "id": 368,
+    "catalog_description": "Waterfall payouts from a real-estate fund to limited and general partners, calculated on income, sale, or refinancing events."
+  },
+  {
+    "id": 781,
+    "catalog_description": "End-to-end fund-vehicle setup records, covering entity formation filings, tax-ID application, banking onboarding, and partnership agreement."
+  },
+  {
+    "id": 756,
+    "catalog_description": "General-partner accounting entries against a fund vehicle: contributions, expenses, fee accruals, and gain or loss recognitions."
+  },
+  {
+    "id": 768,
+    "catalog_description": "Fund-level performance reporting periods, with vintage-adjusted return metrics and benchmark comparisons."
+  },
+  {
+    "id": 767,
+    "catalog_description": "Per-position return calculations on a fund's holding in a specific portfolio company, over a defined time window."
+  },
+  {
+    "id": 755,
+    "catalog_description": "Private-capital fund vehicles in a partnership structure, with vintage, strategy, target size, and current assets under management."
+  },
+  {
+    "id": 144,
+    "catalog_description": "Court-ordered or agency-issued instructions to withhold from an employee's wages, carrying priority, ceiling, remit-to details, and lifecycle status."
+  },
+  {
+    "id": 950,
+    "catalog_description": "Consent records for learner training data under GDPR, capturing purpose, lawful basis, and grant and withdrawal timestamps."
+  },
+  {
+    "id": 195,
+    "catalog_description": "Accounts in the chart of accounts, with code, name, type, normal balance, and statutory mapping."
+  },
+  {
+    "id": 733,
+    "catalog_description": "Records of vehicles entering or exiting a defined geofence boundary."
+  },
+  {
+    "id": 302,
+    "catalog_description": "Business-language definitions of concepts, with steward, related terms, synonyms, and certification status."
+  },
+  {
+    "id": 74,
+    "catalog_description": "Confirmations that ordered goods or services were received as expected, recording receipt date, quantity, and condition, used in invoice matching before payment."
+  },
+  {
+    "id": 731,
+    "catalog_description": "Continuous vehicle location stream of timestamp, latitude, longitude, speed, and heading, powering maps and geofence checks."
+  },
+  {
+    "id": 1107,
+    "catalog_description": "Grazing paddocks or fields, with area, location, pasture type, carrying capacity, and rest state, that grazing plans rotate livestock across."
+  },
+  {
+    "id": 1109,
+    "catalog_description": "Rotational-grazing plans over a set of paddocks, covering rotation order, rest periods, stocking rate, and carrying-capacity targets for a season."
+  },
+  {
+    "id": 1230,
+    "catalog_description": "Committed go-to-market plans for a period, the parent artifact that locks and pushes work downstream."
+  },
+  {
+    "id": 1228,
+    "catalog_description": "What-if models of a go-to-market plan under alternative segment, territory, capacity, or channel assumptions."
+  },
+  {
+    "id": 1281,
+    "catalog_description": "Witnessed electronic signatures binding learner, course, content version, and timestamp for regulated life-sciences training."
+  },
+  {
+    "id": 507,
+    "catalog_description": "Per-product food-safety plans documenting hazard analysis, critical control points, limits, monitoring, and corrective actions."
+  },
+  {
+    "id": 941,
+    "catalog_description": "Statutory acknowledgments that harassment training was completed, carrying a signed timestamp and IP address."
+  },
+  {
+    "id": 56,
+    "catalog_description": "Physical IT assets such as laptops, servers, network gear, and peripherals, with serial number, asset tag, current user or location, and lifecycle state."
+  },
+  {
+    "id": 697,
+    "catalog_description": "Decommissioning records for retired hardware, covering e-waste tracking, chain of custody, and data-wipe compliance."
+  },
+  {
+    "id": 695,
+    "catalog_description": "Catalog of hardware device types, SKUs, and specifications, used to match assets to refreshable units."
+  },
+  {
+    "id": 696,
+    "catalog_description": "Manufacturer support contracts for hardware assets, with coverage terms and expiration tracking."
+  },
+  {
+    "id": 521,
+    "catalog_description": "Field-level harvest projections translated into available-share and SKU planning, driving reserve lists and dynamic pricing."
+  },
+  {
+    "id": 490,
+    "catalog_description": "Per-field and per-zone yield records from combine telemetry, scale tickets, and grain-handling reconciliation."
+  },
+  {
+    "id": 1195,
+    "catalog_description": "Scheduled lifts of a vessel out of and back into the water using a travel lift or crane, with time spent on the hard."
+  },
+  {
+    "id": 1074,
+    "catalog_description": "Identified workplace hazards, their source and affected tasks, and the controls applied to reduce their risk."
+  },
+  {
+    "id": 32,
+    "catalog_description": "Approved org slots with role definition, cost center, reporting line, location, and FTE allocation. Each can be open, filled, or eliminated."
+  },
+  {
+    "id": 24,
+    "catalog_description": "Period-by-period headcount targets broken down by org unit, location, function, level, and type, with openings, additions, and reductions."
+  },
+  {
+    "id": 451,
+    "catalog_description": "Helm deployment records, tracking chart name and version, value overrides, namespace, and installed status."
+  },
+  {
+    "id": 1227,
+    "catalog_description": "Hiring plans that close a capacity gap, defining roles, timing, and ramp, handed to recruiting and finance."
+  },
+  {
+    "id": 905,
+    "catalog_description": "Assignments of specific users to recruiter, hiring manager, coordinator, interviewer, and reviewer roles on a single requisition."
+  },
+  {
+    "id": 671,
+    "catalog_description": "Bindings between a visitor and an internal employee host, covering access scope, duration, and supervision responsibility."
+  },
+  {
+    "id": 192,
+    "catalog_description": "Employee inquiries and service requests routed to HR operations, such as pay questions, benefits changes, leave requests, and complaints."
+  },
+  {
+    "id": 1136,
+    "catalog_description": "Assignable, claimable units of human work generated by running processes, with candidate users, due date, priority, and form, completed to advance the process."
+  },
+  {
+    "id": 340,
+    "catalog_description": "Infrastructure-level access-control artifacts such as bucket policies, role grants, and database permissions."
+  },
+  {
+    "id": 1220,
+    "catalog_description": "Definitions of the best-fit account, covering firmographics, technographics, and qualifying criteria used to target engagement."
+  },
+  {
+    "id": 112,
+    "catalog_description": "Identity-resolution edges linking email, device, cookie, login, and phone, turning anonymous interactions into resolved customers."
+  },
+  {
+    "id": 732,
+    "catalog_description": "Records of engine-running, vehicle-stationary state changes, distinct from trip aggregation."
+  },
+  {
+    "id": 531,
+    "catalog_description": "Models trained to extract structured fields from documents such as invoices, contracts, and forms, with training lineage, metrics, and version."
+  },
+  {
+    "id": 536,
+    "catalog_description": "Reusable extraction definitions per document type, covering field structure, validation rules, and target-system mapping."
+  },
+  {
+    "id": 534,
+    "catalog_description": "Validation outcomes for extracted fields, carrying the rule applied, pass/fail/review status, exception details, and resolution state."
+  },
+  {
+    "id": 705,
+    "catalog_description": "Access review and certification campaigns with per-user attestation outcomes."
+  },
+  {
+    "id": 704,
+    "catalog_description": "User-initiated access requests and their approval workflow within an identity-governance platform."
+  },
+  {
+    "id": 706,
+    "catalog_description": "Business-role and entitlement templates provisioned into downstream systems."
+  },
+  {
+    "id": 708,
+    "catalog_description": "Per-target outcomes of an orchestrated provisioning action, such as success, failure, or retry."
+  },
+  {
+    "id": 707,
+    "catalog_description": "Segregation-of-duties policy violations and their exception-approval records."
+  },
+  {
+    "id": 964,
+    "catalog_description": "Governance view of a user's access to an application: the entitlement grant, who requested and approved it, when it was last certified, and when revoked."
+  },
+  {
+    "id": 633,
+    "catalog_description": "In-house legal matters such as disputes, transactions, advisory, IP, and regulatory responses, with client department, parties, counsel, budget, and status."
+  },
+  {
+    "id": 724,
+    "catalog_description": "Proactive forecasts of likely service-impacting incidents within a coming time window."
+  },
+  {
+    "id": 475,
+    "catalog_description": "Physical plant, equipment, and infrastructure tracked for maintenance and lifecycle, with asset tag, location, manufacturer, criticality, and current state."
+  },
+  {
+    "id": 1079,
+    "catalog_description": "Industrial-hygiene sampling and exposure-monitoring results for chemical, noise, or other agents, measured against occupational exposure limits."
+  },
+  {
+    "id": 130,
+    "catalog_description": "Creator and influencer profiles, with audience metrics, content history, contracts, payments, and campaign attribution."
+  },
+  {
+    "id": 482,
+    "catalog_description": "Purchase orders from an agency to a specific media outlet, committing budget at negotiated rates, reconciled against the outlet's invoice."
+  },
+  {
+    "id": 1126,
+    "catalog_description": "Prioritized alerts raised when correlated indicators cross a risk threshold for a user, triaged and escalated into a case when warranted."
+  },
+  {
+    "id": 1127,
+    "catalog_description": "Investigation cases on suspected insider threats, covering the lifecycle from triage to disposition, the activity timeline, evidence, and HR or legal handoff."
+  },
+  {
+    "id": 819,
+    "catalog_description": "Customer-owned equipment that the service organization installs and maintains, with identity, placement, and lifecycle state, covered by work orders and contracts."
+  },
+  {
+    "id": 926,
+    "catalog_description": "Assignments of an instructor to a session or offering, with role such as primary, assistant, or observer."
+  },
+  {
+    "id": 925,
+    "catalog_description": "Instructor records covering internal trainers, contracted experts, and external vendor instructors, kept separate from employees."
+  },
+  {
+    "id": 623,
+    "catalog_description": "Insurance claim records from first notice of loss through adjudication and settlement, with claim type, dates, claimant, adjuster, status, and liability."
+  },
+  {
+    "id": 624,
+    "catalog_description": "Underwritten insurance policies defining coverage terms, limits, deductibles, exclusions, and effective dates, against which claims are filed."
+  },
+  {
+    "id": 471,
+    "catalog_description": "Connector definitions for third-party applications, each with its authentication type."
+  },
+  {
+    "id": 474,
+    "catalog_description": "Transformation rules mapping a source field to a target field, with mapping logic and transformation type."
+  },
+  {
+    "id": 440,
+    "catalog_description": "Higher-level orchestrations that compose multiple pipelines and connectors into an integration flow."
+  },
+  {
+    "id": 469,
+    "catalog_description": "Named, versioned templates for recurring event-driven integration flows."
+  },
+  {
+    "id": 470,
+    "catalog_description": "Execution logs per integration run, with timestamp, status, input and output references, error log, and latency."
+  },
+  {
+    "id": 473,
+    "catalog_description": "Event sources that start an integration, such as schedules, webhooks, database changes, or queues, with polling or push configuration."
+  },
+  {
+    "id": 1205,
+    "catalog_description": "Configured sources feeding competitive intelligence, such as news, review sites, web monitors, and field reports."
+  },
+  {
+    "id": 700,
+    "catalog_description": "Intent specifications with training phrases, entities, and resolution rules that drive intent detection at runtime."
+  },
+  {
+    "id": 260,
+    "catalog_description": "Language-understanding outputs, recording the detected intent, confidence, originating utterance, and downstream action taken."
+  },
+  {
+    "id": 1232,
+    "catalog_description": "Captured buying-intent signals for an account or contact, with topic, source, and strength."
+  },
+  {
+    "id": 1026,
+    "catalog_description": "Supervisor quality reviews of a recorded interaction, scored against a form with section and item scores, comments, agent acknowledgment, and coaching flag."
+  },
+  {
+    "id": 203,
+    "catalog_description": "Transactions between two legal entities of the same group, such as intercompany invoices, transfers, and allocations, driving consolidation eliminations."
+  },
+  {
+    "id": 838,
+    "catalog_description": "Patron requests to borrow material from another library, with routing across sharing partners, shipping status, and fulfillment workflow."
+  },
+  {
+    "id": 859,
+    "catalog_description": "Internal opportunity postings covering full-time roles, gigs, projects, stretch assignments, and mentorships."
+  },
+  {
+    "id": 890,
+    "catalog_description": "Reusable interview templates per role and stage, bundling questions, target competencies, recommended scorecard, and expected duration."
+  }
+]

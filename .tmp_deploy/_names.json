@@ -1,0 +1,98 @@
+[
+  {
+    "id": 243,
+    "data_object_name": "work_items"
+  },
+  {
+    "id": 244,
+    "data_object_name": "work_projects"
+  },
+  {
+    "id": 245,
+    "data_object_name": "okr_objectives"
+  },
+  {
+    "id": 353,
+    "data_object_name": "real_estate_transactions"
+  },
+  {
+    "id": 354,
+    "data_object_name": "commission_splits"
+  },
+  {
+    "id": 356,
+    "data_object_name": "disclosure_documents"
+  },
+  {
+    "id": 966,
+    "data_object_name": "okr_key_results"
+  },
+  {
+    "id": 967,
+    "data_object_name": "okr_check_ins"
+  },
+  {
+    "id": 969,
+    "data_object_name": "work_milestones"
+  },
+  {
+    "id": 970,
+    "data_object_name": "work_approval_steps"
+  },
+  {
+    "id": 971,
+    "data_object_name": "work_approval_chains"
+  },
+  {
+    "id": 973,
+    "data_object_name": "work_custom_fields"
+  },
+  {
+    "id": 974,
+    "data_object_name": "work_custom_field_values"
+  },
+  {
+    "id": 975,
+    "data_object_name": "work_sections"
+  },
+  {
+    "id": 978,
+    "data_object_name": "work_tags"
+  },
+  {
+    "id": 979,
+    "data_object_name": "work_item_tags"
+  },
+  {
+    "id": 980,
+    "data_object_name": "work_item_comments"
+  },
+  {
+    "id": 981,
+    "data_object_name": "work_item_attachments"
+  },
+  {
+    "id": 982,
+    "data_object_name": "work_forms"
+  },
+  {
+    "id": 983,
+    "data_object_name": "work_form_submissions"
+  },
+  {
+    "id": 993,
+    "data_object_name": "smp_renewal_engagements"
+  },
+  {
+    "id": 994,
+    "data_object_name": "smp_vendor_negotiations"
+  },
+  {
+    "id": 997,
+    "data_object_name": "smp_automation_workflows"
+  },
+  {
+    "id": 998,
+    "data_object_name": "smp_workflow_runs"
+  }
+]

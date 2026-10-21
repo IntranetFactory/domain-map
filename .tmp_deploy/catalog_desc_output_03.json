@@ -1,0 +1,394 @@
+[
+  {
+    "id": 739,
+    "catalog_description": "Invoices billed to clients for a legal matter, built from time entries, disbursements, and retainer drawdowns."
+  },
+  {
+    "id": 618,
+    "catalog_description": "Documented patient-provider visits with date, type, chief complaint, vitals, diagnosis and procedure codes, and attending clinician."
+  },
+  {
+    "id": 613,
+    "catalog_description": "Requests from clinical staff to repair, configure, train on, or investigate medical devices, routed to the clinical-engineering team."
+  },
+  {
+    "id": 622,
+    "catalog_description": "Provider documentation of patient encounters, including progress notes, nurse notes, and discharge summaries."
+  },
+  {
+    "id": 621,
+    "catalog_description": "Provider orders for tests, medications, therapies, or procedures, with order type, priority, target facility, and results."
+  },
+  {
+    "id": 337,
+    "catalog_description": "Managed cloud databases, warehouses, datasets, or clusters that hold structured data, tracked for security posture."
+  },
+  {
+    "id": 336,
+    "catalog_description": "Cloud object-storage buckets or containers holding unstructured data, tracked for security posture."
+  },
+  {
+    "id": 449,
+    "catalog_description": "Groupings of worker nodes in a cluster, with instance size, scaling config, labels, taints, and zone distribution."
+  },
+  {
+    "id": 1270,
+    "catalog_description": "cmi5 assignable units launched against a learning record store, the modern course-package standard succeeding SCORM."
+  },
+  {
+    "id": 1015,
+    "catalog_description": "Manager evaluations of a call or rep against a talk-track rubric, scoring how well the playbook was followed."
+  },
+  {
+    "id": 1014,
+    "catalog_description": "One-on-one coaching reviews, usually tied to a recorded call, with notes and follow-up actions for the rep."
+  },
+  {
+    "id": 677,
+    "catalog_description": "Git commits on a source repository, with author, timestamp, message, parent commits, and diff summary."
+  },
+  {
+    "id": 645,
+    "catalog_description": "Cited non-compliance with permits, building code, or regulations, with the subject, severity, fines, and remediation status."
+  },
+  {
+    "id": 381,
+    "catalog_description": "Customer purchase orders created at checkout, tracked through fulfillment and completion."
+  },
+  {
+    "id": 384,
+    "catalog_description": "Sellable products with name, description, SKU, pricing, and inventory references."
+  },
+  {
+    "id": 389,
+    "catalog_description": "Physical or digital shipments tied to a fulfillment, with carrier, tracking, and delivery status. Includes returns."
+  },
+  {
+    "id": 385,
+    "catalog_description": "Brand or channel storefronts (web store, mobile app, marketplace listing) with their catalog mapping."
+  },
+  {
+    "id": 363,
+    "catalog_description": "Commercial real-estate leases for office, retail, or industrial space, with base rent, escalations, improvements, and renewal options."
+  },
+  {
+    "id": 354,
+    "catalog_description": "How a transaction's commission is divided across brokerages and then internal agents, used by accounting and tax reporting."
+  },
+  {
+    "id": 159,
+    "catalog_description": "Imported market salary data for a job-level and geography combination, sourced from external compensation surveys."
+  },
+  {
+    "id": 153,
+    "catalog_description": "Total-rewards package definitions per role, level, and location, covering base, bonus target, equity, and allowances."
+  },
+  {
+    "id": 157,
+    "catalog_description": "Personalized total-rewards statements showing a worker the value of their base, bonus, equity, benefits, and perks."
+  },
+  {
+    "id": 857,
+    "catalog_description": "Role-anchored bundles of required skills and target proficiency levels, used for gap analysis and internal matching."
+  },
+  {
+    "id": 1202,
+    "catalog_description": "Tracked pieces of competitor or market intelligence, with their source, relevance, and disposition."
+  },
+  {
+    "id": 1204,
+    "catalog_description": "Profiles of tracked competitors covering positioning, pricing, strengths, and weaknesses."
+  },
+  {
+    "id": 173,
+    "catalog_description": "Mandatory training assignments tied to a regulation, role, location, or hire event, with due dates and escalation policy."
+  },
+  {
+    "id": 939,
+    "catalog_description": "Regulator-facing audit records of who completed which training, when, with version and evidence references."
+  },
+  {
+    "id": 283,
+    "catalog_description": "Safeguards or actions designed to reduce risk, with control type, scope, owner, and test frequency."
+  },
+  {
+    "id": 288,
+    "catalog_description": "Artifacts proving an obligation was met, such as audit reports, assessment results, attestations, or log exports."
+  },
+  {
+    "id": 287,
+    "catalog_description": "Requirements imposed by a regulation or internal policy that must be fulfilled and tracked."
+  },
+  {
+    "id": 285,
+    "catalog_description": "Formal governance directives such as acceptable-use, data-protection, or anti-corruption policies, with version, scope, and owner."
+  },
+  {
+    "id": 1268,
+    "catalog_description": "Reference table of statutes a tenant is subject to, with jurisdiction, citation, and retention period; each tenant activates its applicable subset."
+  },
+  {
+    "id": 282,
+    "catalog_description": "Identified threats to organizational objectives, with likelihood, impact, inherent and residual severity, and owner."
+  },
+  {
+    "id": 938,
+    "catalog_description": "Campaigns that bundle compliance training assignments by audience and due date, such as an annual code-of-conduct cycle."
+  },
+  {
+    "id": 76,
+    "catalog_description": "Canonical records of IT things under management: servers, containers, applications, services, network devices, databases, and cloud resources."
+  },
+  {
+    "id": 393,
+    "catalog_description": "Conflict-of-interest checks for a proposed new client, with matches across existing matters and parties and the resolution."
+  },
+  {
+    "id": 1042,
+    "catalog_description": "Source intranet platforms under governance, with platform type, base URL, authentication, crawl schedule, and status."
+  },
+  {
+    "id": 1235,
+    "catalog_description": "Lawful-basis and opt-in or opt-out state governing whether a contact's data may be processed and activated."
+  },
+  {
+    "id": 257,
+    "catalog_description": "Unified contact-center customer identities reconciling phone numbers, emails, and customer IDs across channels."
+  },
+  {
+    "id": 455,
+    "catalog_description": "Image repositories scoped to a cluster, with registry policies, pull secrets, and image scanning."
+  },
+  {
+    "id": 450,
+    "catalog_description": "Container workload definitions such as deployments and jobs, with replica counts, restart policy, and scheduling rules."
+  },
+  {
+    "id": 1142,
+    "catalog_description": "Per-worker records that a mandatory broadcast or piece of content was read and acknowledged, used as read-receipt proof."
+  },
+  {
+    "id": 684,
+    "catalog_description": "Inventory and quality assessments of web content, with page counts, health scores, staleness, and orphaned pages."
+  },
+  {
+    "id": 1216,
+    "catalog_description": "Curated groupings of enablement content organized by stage, persona, or play."
+  },
+  {
+    "id": 442,
+    "catalog_description": "Reusable composable blocks such as heroes, calls to action, text, images, and forms used to build pages."
+  },
+  {
+    "id": 429,
+    "catalog_description": "Binary files paired with metadata, the core records of an enterprise content management library."
+  },
+  {
+    "id": 1218,
+    "catalog_description": "Append-only events capturing when content is opened, shared, or tied to a deal, with the buyer's contact identity."
+  },
+  {
+    "id": 132,
+    "catalog_description": "Individual structured content records conforming to a content type, served through a delivery API to any channel."
+  },
+  {
+    "id": 136,
+    "catalog_description": "Isolated working copies of content such as dev, staging, or production, used to test content changes safely before promoting."
+  },
+  {
+    "id": 690,
+    "catalog_description": "Editorial calendar and governance rules for retiring or refreshing content, with review dates, owners, and sunset dates."
+  },
+  {
+    "id": 135,
+    "catalog_description": "Locales configured within a content environment, including fallback chain and default flag, driving field-level localization."
+  },
+  {
+    "id": 133,
+    "catalog_description": "Scheduled batches of content changes published together to coordinate go-lives across many entries."
+  },
+  {
+    "id": 1240,
+    "catalog_description": "Multichannel content-syndication programs that deliver gated content to target accounts."
+  },
+  {
+    "id": 131,
+    "catalog_description": "Schema definitions for a class of content entries, specifying fields, references, validation, and locale settings."
+  },
+  {
+    "id": 191,
+    "catalog_description": "Supplier invoices for contingent labor, computed from approved timesheets and rate cards, then routed for matching and payment."
+  },
+  {
+    "id": 190,
+    "catalog_description": "Timesheets from contingent workers against a work order, with approved hours, expenses, and project codes."
+  },
+  {
+    "id": 186,
+    "catalog_description": "Non-employee resources such as contractors, agency staff, consultants, and interns, with supplier, role, rate, and end date."
+  },
+  {
+    "id": 935,
+    "catalog_description": "Continuing education credit definitions, with credit hours, accrediting body, and eligible courses."
+  },
+  {
+    "id": 1048,
+    "catalog_description": "Formal changes to the terms of an executed contract, each tracked with its own approval and signature trail."
+  },
+  {
+    "id": 68,
+    "catalog_description": "Reusable clause library with preferred and fallback language for terms like indemnification, IP, termination, and payment."
+  },
+  {
+    "id": 1053,
+    "catalog_description": "External parties to a contract, held separately because a counterparty may not be a CRM account or supplier and may sign many contracts."
+  },
+  {
+    "id": 423,
+    "catalog_description": "Draft contracts handed off from an approved quote, the precursor to a signed contract."
+  },
+  {
+    "id": 1054,
+    "catalog_description": "Date-driven checkpoints in a contract, such as a delivery or review date, distinct from a deliverable obligation."
+  },
+  {
+    "id": 1056,
+    "catalog_description": "Structured threads of negotiation rounds and counterparty exchanges on a contract."
+  },
+  {
+    "id": 67,
+    "catalog_description": "Specific commitments extracted from a contract, such as performance, payment, delivery, or reporting, each with an owner and due date."
+  },
+  {
+    "id": 1049,
+    "catalog_description": "Records of a single renewal of an existing contract, capturing the renewed term, pricing, and outcome."
+  },
+  {
+    "id": 1052,
+    "catalog_description": "Structured assessments of the legal or commercial risk in a contract or clause, produced during review."
+  },
+  {
+    "id": 69,
+    "catalog_description": "Pre-approved contract templates such as NDAs, MSAs, and SOWs, assembled from the clause library to author new contracts."
+  },
+  {
+    "id": 1086,
+    "catalog_description": "Contractor and third-party safety prequalification records, with criteria, status, and ties to site access and permits."
+  },
+  {
+    "id": 284,
+    "catalog_description": "Test results verifying a control's operating effectiveness, with tester, scope, result, evidence, and remediation status."
+  },
+  {
+    "id": 296,
+    "catalog_description": "An auditor's view of testing a control: what was tested, how, sample size, exceptions found, and evidence references."
+  },
+  {
+    "id": 399,
+    "catalog_description": "Controlled-substance receipt, dispensing, and disposal records required by the DEA, with drug, schedule, quantity, and reconciliation."
+  },
+  {
+    "id": 1006,
+    "catalog_description": "Commitments and follow-ups extracted from a conversation, tracked from open to done to confirm post-call execution."
+  },
+  {
+    "id": 701,
+    "catalog_description": "Branching dialog graphs that orchestrate a conversational journey."
+  },
+  {
+    "id": 124,
+    "catalog_description": "AI-extracted insights from calls, emails, and meetings, including competitor mentions, sentiment shifts, commitments, and risk signals."
+  },
+  {
+    "id": 1005,
+    "catalog_description": "Topic mentions extracted from a recorded conversation, such as competitor references, pricing, and objections, each tagged to a transcript span."
+  },
+  {
+    "id": 259,
+    "catalog_description": "Turn-by-turn records of bot or AI-assistant conversations, with utterances, intents, confidence scores, and escalation events."
+  },
+  {
+    "id": 744,
+    "catalog_description": "Corporate card issuance and control records, governing limits and spending controls."
+  },
+  {
+    "id": 212,
+    "catalog_description": "Issued corporate cards, with issuer, last four, cardholder, status, and spending controls, feeding the card transaction stream."
+  },
+  {
+    "id": 1076,
+    "catalog_description": "Corrective or preventive actions arising from an incident, inspection, or audit, with owner, due date, and effectiveness verification."
+  },
+  {
+    "id": 196,
+    "catalog_description": "Organizational units for cost allocation, with code, manager, hierarchy, and currency, driving variance and departmental reporting."
+  },
+  {
+    "id": 390,
+    "catalog_description": "Promotion codes and campaign offers such as discounts, BOGO, or free shipping, applied to a cart or order."
+  },
+  {
+    "id": 913,
+    "catalog_description": "Quiz or exam definitions tied to a course or lesson, with passing score and attempt policy."
+  },
+  {
+    "id": 919,
+    "catalog_description": "Scoped catalog views surfacing a subset of courses to a specific audience, branch, or domain."
+  },
+  {
+    "id": 917,
+    "catalog_description": "Hierarchical taxonomy for browsing and reporting on the course catalog."
+  },
+  {
+    "id": 912,
+    "catalog_description": "Terminal completion records per learner per course version, marking the course as finished."
+  },
+  {
+    "id": 920,
+    "catalog_description": "Forum-style discussion threads attached to a course or lesson, supporting collaborative learning."
+  },
+  {
+    "id": 169,
+    "catalog_description": "Per-learner per-course records tracking assigned and due dates, attempts, status, and score."
+  },
+  {
+    "id": 907,
+    "catalog_description": "Units within a course that group related lessons, supporting completion tracking below course level."
+  },
+  {
+    "id": 923,
+    "catalog_description": "Scheduled instances of a course, with date range, location, capacity, language, and delivery mode."
+  },
+  {
+    "id": 922,
+    "catalog_description": "Numeric ratings per learner per course, feeding aggregate analytics."
+  },
+  {
+    "id": 930,
+    "catalog_description": "Handouts, supplementary materials, and pre-reads attached to a course offering or session."
+  },
+  {
+    "id": 921,
+    "catalog_description": "Learner-authored qualitative reviews of a course written after completion."
+  },
+  {
+    "id": 924,
+    "catalog_description": "Individual sessions within a multi-day offering, with per-session attendance and instructor assignment."
+  },
+  {
+    "id": 918,
+    "catalog_description": "Free-form tags alongside categories that support faceted search of courses."
+  },
+  {
+    "id": 906,
+    "catalog_description": "Versioned snapshots of a course's content, required to record which version each learner completed for compliance."
+  },
+  {
+    "id": 167,
+    "catalog_description": "Learning units such as e-learning modules, videos, live sessions, or blended programs, with format, duration, and prerequisites."
+  },
+  {
+    "id": 504,
+    "catalog_description": "Cow health incidents such as mastitis or lameness, with treatment, withdrawal period, and recovery status."
+  }
+]

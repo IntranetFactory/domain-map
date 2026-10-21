@@ -1,0 +1,1675 @@
+[
+  {
+    "code": "PMM",
+    "name": "Product Marketing Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "FEATURE-FLAGGING",
+    "name": "Feature Flagging and Experimentation",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "WMS",
+    "name": "Warehouse Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "SCP",
+    "name": "Supply Chain Planning",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "SALES-TAX",
+    "name": "Sales Tax and Indirect Tax Compliance",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "REV-REC",
+    "name": "Revenue Recognition and Accounting (ASC 606/IFRS 15)",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "B2B-COMMERCE",
+    "name": "B2B Commerce",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "FEATURE-STORE",
+    "name": "Feature Store",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "RDM",
+    "name": "Reference Data Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "TRANSACT-EMAIL",
+    "name": "Transactional Email Infrastructure",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "TMS",
+    "name": "Translation Management System",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "MENTORSHIP",
+    "name": "Mentorship Program Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "EQUITY-COMP-PLATFORM",
+    "name": "Equity Compensation Platform",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "PAM",
+    "name": "Privileged Access Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "PORTAL-FRAMEWORK",
+    "name": "Enterprise Portal Framework",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "TAX-PROVISION",
+    "name": "Corporate Tax Provision and Compliance",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "FIN-CONSOL",
+    "name": "Financial Consolidation and Close",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "SSE-SASE",
+    "name": "Security Service Edge / Secure Access Service Edge",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "EDISCOVERY",
+    "name": "eDiscovery Platform",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "ETHICS-HOTLINE",
+    "name": "Ethics, Compliance Hotline and Case Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "LEGAL-HOLD",
+    "name": "Legal Hold and Preservation Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "POLICY-MGMT",
+    "name": "Policy and Procedure Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "IP-MGMT",
+    "name": "Intellectual Property Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "INTERNAL-COMMS",
+    "name": "Internal Communications Platform",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "PCM",
+    "name": "Profitability and Cost Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "ITAD",
+    "name": "IT Asset Disposition",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "EQMS",
+    "name": "Enterprise Quality Management System",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "ELD-COMPLIANCE",
+    "name": "ELD and Hours-of-Service Compliance Platform",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "ACADEMIC-COURSE-RESERVES",
+    "name": "Academic Course Reserves",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "DIGITAL-LENDING",
+    "name": "Digital Lending and E-Book Distribution",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "SPACE-BOOKING",
+    "name": "Space and Room Booking",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "EA",
+    "name": "Enterprise Architecture",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "DEC-MGMT",
+    "name": "Decision Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "ER-INVESTIGATIONS",
+    "name": "Employee Relations Case Investigations",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "AIFMD-DEPOSITARY",
+    "name": "Fund Depositary Services",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "MGMT-CO-ACCT",
+    "name": "Management Company GP Accounting",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "REG-FUND-RPT",
+    "name": "Private Capital Regulatory Reporting",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "K1-TAX-DOCS",
+    "name": "K-1 Partnership Tax Document Generation",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "MAM",
+    "name": "Mobile Application Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "BROWSER-MGMT",
+    "name": "Enterprise Browser Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "CMDB-FEDERATION",
+    "name": "CMDB Federation and Data Fabric",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "HOA-MGMT",
+    "name": "Homeowner Association Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "REFERRAL-MKT",
+    "name": "Referral Marketing",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "PROD-CARBON-FOOTPRINT",
+    "name": "Product Carbon Footprint Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "CLIMATE-RISK",
+    "name": "Climate Risk Analytics",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "SPREADSHEET-PLATFORM",
+    "name": "Online Spreadsheet Platform",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "CRE-VALUATION",
+    "name": "Commercial Real Estate Valuation and Financial Modeling",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "TENANT-EXPERIENCE",
+    "name": "Tenant Experience Platform",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "EMP-JOURNEY-ORCH",
+    "name": "Employee Journey Orchestration Platform",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "INT-DEV-PLAT",
+    "name": "Internal Developer Platform",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "ENTERPRISE-INFO-ARCHIVING",
+    "name": "Enterprise Information Archiving",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "TIRE-MGMT",
+    "name": "Fleet Tire Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "VEHICLE-RECALL-MGMT",
+    "name": "Vehicle Recall Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "IPAM-DDI",
+    "name": "IP Address Management and DDI",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "CORE-BANKING",
+    "name": "Core Banking Platform",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "SALES-PLANNING-PLATFORM",
+    "name": "Sales Planning Platform",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "API-TESTING",
+    "name": "API Testing Platform",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "UTIL-OMS",
+    "name": "Outage Management System",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "UTIL-GIS",
+    "name": "Utility Geographic Information System",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "PS-CONST-ENGAGE",
+    "name": "Public-Sector Constituent Engagement (311)",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "INTERNAL-DEV-PLAT",
+    "name": "Internal Developer Platform",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "APPSEC-ORCH",
+    "name": "Application Security Orchestration (ASOC / ASPM)",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "SAAS-BACKUP",
+    "name": "SaaS Application Backup",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "TENANT-MIGRATION",
+    "name": "Collaboration Tenant Migration",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "M365-MGMT",
+    "name": "Microsoft 365 Tenant Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "STORE-COMMS",
+    "name": "Store Communications and Knowledge Distribution",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "HC-CMMS",
+    "name": "Healthcare CMMS (Clinical Engineering Asset Maintenance)",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "PROCESS-ORCH",
+    "name": "Process Orchestration and Workflow Engine",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "MED-DEVICE-QMS",
+    "name": "Medical Device Quality Management System (Design Controls and Manufacturing Quality)",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "SECRETS-MGMT",
+    "name": "Secrets Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "CITIZEN-AUTO",
+    "name": "Citizen Workflow Automation",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "POLICY-AS-CODE",
+    "name": "Policy as Code",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "IDP-INT-DEV-PLAT",
+    "name": "Internal Developer Platform",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "EHR",
+    "name": "Electronic Health Record",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "HC-PAYER",
+    "name": "Health Plan Payer Operations",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "HC-PHARM-MGMT",
+    "name": "Pharmacy Practice and Medication Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "WORKPLACE-EXP",
+    "name": "Workplace Experience and Workspace Booking",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "ITPA",
+    "name": "IT Process Automation (Runbook Automation)",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "WORKLOAD-AUTO",
+    "name": "Workload Automation and Job Scheduling",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "PTW-LOTO",
+    "name": "Permit to Work and Lockout-Tagout Safety",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "CARBON-FOOTPRINT",
+    "name": "Cloud Carbon Footprint Accounting",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "CLOUD-COMMIT-OPTIM",
+    "name": "Cloud Commitment Optimization",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "FINOPS-UNIT-ECON",
+    "name": "Cloud Unit Economics Platform",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "PTAAS",
+    "name": "Penetration Testing as a Service",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "DFIR",
+    "name": "Digital Forensics and Incident Response",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "SOC-AAS",
+    "name": "SOC as a Service",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "ECOSYSTEM-LED-GROWTH",
+    "name": "Ecosystem-Led Growth and Partner Co-Selling",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "ETHICS-INTAKE",
+    "name": "Ethics & Whistleblower Intake",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "SOP-MGMT",
+    "name": "Process Documentation and SOP Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "DAP",
+    "name": "Digital Adoption Platform",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "PRODUCT-XM",
+    "name": "Product Experience Management",
+    "pct": 96,
+    "scoreText": "~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.",
+    "hasScore": true
+  },
+  {
+    "code": "PS-GRANTS-MGMT",
+    "name": "Public-Sector Grants Management",
+    "pct": 92,
+    "scoreText": "~92% strict (auto-est.): grant CRUD; 'reviewer scoring' is human, not ML.",
+    "hasScore": false
+  },
+  {
+    "code": "CCM",
+    "name": "Continuous Close Management",
+    "pct": 90,
+    "scoreText": "~90% strict (auto-est.): close CRUD; 'intercompany matching' is data matching, not ML.",
+    "hasScore": false
+  },
+  {
+    "code": "CONSTR-DEV-ACCT",
+    "name": "Construction Draw Management and Development Accounting",
+    "pct": 90,
+    "scoreText": "~90% strict (auto-est.): mostly internal CRUD; external drag = e-signature.",
+    "hasScore": false
+  },
+  {
+    "code": "CORP-CARD-PROGRAM",
+    "name": "Corporate Card Program Management",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "USAGE-METERING",
+    "name": "Usage Metering and Rating Platform",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "PAYMENT-PROCESSING",
+    "name": "Payment Processing and Orchestration",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "TRADES-SVC",
+    "name": "Trades and Home-Services Field Operations",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "CREATIVE-PROOFING",
+    "name": "Creative Proofing and Review",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = text generation.",
+    "hasScore": false
+  },
+  {
+    "code": "MSP-BILLING",
+    "name": "MSP Billing and Customer Management",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "DATA-CONTRACTS",
+    "name": "Data Contracts Management",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): schema/contract CRUD; 'detection' is not ML.",
+    "hasScore": false
+  },
+  {
+    "code": "TRM",
+    "name": "Treasury and Risk Management",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "INFLUENCER-MGMT",
+    "name": "Influencer Marketing Management",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "DISCLOSURE-MGMT",
+    "name": "Disclosure Management and Narrative Reporting",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = text generation.",
+    "hasScore": false
+  },
+  {
+    "code": "TRANSFER-AGENCY",
+    "name": "Mutual Fund Transfer Agency",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "PRIV-CREDIT-LOAN-ADMIN",
+    "name": "Private Credit Loan Administration",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "ELM",
+    "name": "Enterprise Legal Management",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "STR-MGMT",
+    "name": "Short-Term Rental Management",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "FORM-BUILDER",
+    "name": "Form Builder and Online Forms",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "PROP-TAX-MGMT",
+    "name": "Property Tax Management and Appeals",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "REINSURANCE-MGMT",
+    "name": "Reinsurance and Ceded Risk Management",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "PAYMENT-OPS",
+    "name": "Payment Operations Platform",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "LOAN-ORIGINATION",
+    "name": "Loan Origination System",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "CIS-UTIL",
+    "name": "Customer Information System for Utilities",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "HC-RCM",
+    "name": "Healthcare Revenue Cycle Management",
+    "pct": 88,
+    "scoreText": "~88% strict (auto-est.): mostly internal CRUD; external drag = payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "SMS-MARKETING",
+    "name": "SMS Marketing Platform",
+    "pct": 84,
+    "scoreText": "~84% strict (auto-est.): mostly internal CRUD; external drag = non-email channel.",
+    "hasScore": false
+  },
+  {
+    "code": "INS-POLICY-ADMIN",
+    "name": "Insurance Policy Administration",
+    "pct": 84,
+    "scoreText": "~84% strict (auto-est.): policy CRUD + premium; 'broker channel' is not infra.",
+    "hasScore": false
+  },
+  {
+    "code": "CCAAS-WEM",
+    "name": "Workforce Engagement Management",
+    "pct": 84,
+    "scoreText": "~84% strict (auto-est.): mostly internal CRUD; external drag = non-email channel.",
+    "hasScore": false
+  },
+  {
+    "code": "CXM",
+    "name": "Customer Experience Management (Voice of Customer)",
+    "pct": 84,
+    "scoreText": "~84% strict (auto-est.): mostly internal CRUD; external drag = non-email channel.",
+    "hasScore": true
+  },
+  {
+    "code": "INS-BILLING",
+    "name": "Insurance Billing and Premium Accounting",
+    "pct": 82,
+    "scoreText": "~82% strict (auto-est.): premium billing CRUD.",
+    "hasScore": false
+  },
+  {
+    "code": "PRICING-OPTIM",
+    "name": "Pricing Optimization",
+    "pct": 80,
+    "scoreText": "~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "AI-GOV",
+    "name": "AI Governance",
+    "pct": 80,
+    "scoreText": "~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "DIGITAL-PERSONALIZATION",
+    "name": "Digital Personalization",
+    "pct": 80,
+    "scoreText": "~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "MEETING-SCHEDULER",
+    "name": "Meeting Scheduling Platform",
+    "pct": 80,
+    "scoreText": "~80% strict (auto-est.): calendar federation (external) + light routing.",
+    "hasScore": false
+  },
+  {
+    "code": "CRQ",
+    "name": "Cyber Risk Quantification",
+    "pct": 80,
+    "scoreText": "~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "CCWFM",
+    "name": "Contact Center Workforce Management",
+    "pct": 80,
+    "scoreText": "~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "UGC-MGMT",
+    "name": "User-Generated Content Management",
+    "pct": 80,
+    "scoreText": "~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "CONFIG-COMPLIANCE",
+    "name": "Configuration Compliance",
+    "pct": 80,
+    "scoreText": "~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "VECTOR-DB",
+    "name": "Vector Database / Similarity Search",
+    "pct": 80,
+    "scoreText": "~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "RAG-PLATFORM",
+    "name": "Retrieval-Augmented Generation Platform",
+    "pct": 80,
+    "scoreText": "~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "TEST-AUTOMATION-PLATFORM",
+    "name": "Test Automation Platform",
+    "pct": 80,
+    "scoreText": "~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "UTIL-WAM",
+    "name": "Utility Work and Asset Management",
+    "pct": 80,
+    "scoreText": "~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "MERCH-EXEC",
+    "name": "Merchandising Execution and Shelf Compliance",
+    "pct": 80,
+    "scoreText": "~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "IPA",
+    "name": "Intelligent Process Automation",
+    "pct": 80,
+    "scoreText": "~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "TASK-MINING",
+    "name": "Task Mining",
+    "pct": 80,
+    "scoreText": "~80% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "MEDIA-BUY-PLATFORM",
+    "name": "Media Buying and Ad Operations Platform",
+    "pct": 76,
+    "scoreText": "~76% strict (auto-est.): mostly internal CRUD; external drag = non-email channel, payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "PEER-RECOGNITION",
+    "name": "Peer Recognition and Rewards Platform",
+    "pct": 76,
+    "scoreText": "~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "REG-CHANGE-MGMT",
+    "name": "Regulatory Change Management",
+    "pct": 76,
+    "scoreText": "~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "PATCH-MGMT",
+    "name": "Patch and Vulnerability Remediation Management",
+    "pct": 76,
+    "scoreText": "~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.",
+    "hasScore": true
+  },
+  {
+    "code": "CLOUD-ASSET-INVENTORY",
+    "name": "Cloud Asset Inventory",
+    "pct": 76,
+    "scoreText": "~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "FOOD-LCA",
+    "name": "Food Lifecycle Carbon and Sustainability Accounting",
+    "pct": 76,
+    "scoreText": "~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "EFSS",
+    "name": "Enterprise File Sync and Share",
+    "pct": 76,
+    "scoreText": "~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "TELEHEALTH",
+    "name": "Telehealth and Virtual Care",
+    "pct": 76,
+    "scoreText": "~76% strict (auto-est.): mostly internal CRUD; external drag = non-email channel, payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "BRAND-PORTAL",
+    "name": "Brand Portal and Brand Management",
+    "pct": 76,
+    "scoreText": "~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "TCMA",
+    "name": "Through-Channel Marketing Automation",
+    "pct": 76,
+    "scoreText": "~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "PROD-ANALYTICS",
+    "name": "Product Analytics",
+    "pct": 76,
+    "scoreText": "~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "MARKET-RESEARCH",
+    "name": "Market Research and Insights Platform",
+    "pct": 76,
+    "scoreText": "~76% strict (auto-est.): mostly internal CRUD; external drag = external data fetch.",
+    "hasScore": true
+  },
+  {
+    "code": "LEGAL-RES",
+    "name": "Legal Research Platform",
+    "pct": 72,
+    "scoreText": "~72% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute, text generation.",
+    "hasScore": false
+  },
+  {
+    "code": "INS-UNDERWRITING",
+    "name": "Insurance Underwriting",
+    "pct": 72,
+    "scoreText": "~72% strict (auto-est.): underwriting CRUD + risk scoring.",
+    "hasScore": false
+  },
+  {
+    "code": "ENTERPRISE-SEARCH",
+    "name": "Enterprise Search and Retrieval-Augmented Generation Platform",
+    "pct": 72,
+    "scoreText": "~72% strict (auto-est.): mostly internal CRUD; external drag = ML/AI compute, text generation.",
+    "hasScore": false
+  },
+  {
+    "code": "POST-PURCHASE",
+    "name": "Post-Purchase Experience and Branded Order Tracking",
+    "pct": 70,
+    "scoreText": "~70% strict (auto-est.): carrier-tracking fetch + ETA prediction.",
+    "hasScore": false
+  },
+  {
+    "code": "TASK-MIN",
+    "name": "Task Mining",
+    "pct": 70,
+    "scoreText": "~70% strict (auto-est.): task-mining capture + analysis (twin of TASK-MINING).",
+    "hasScore": false
+  },
+  {
+    "code": "FREIGHT-AUDIT",
+    "name": "Freight Audit and Payment",
+    "pct": 68,
+    "scoreText": "~68% strict (auto-est.): mostly internal CRUD; external drag = external data fetch, payment/settlement.",
+    "hasScore": false
+  },
+  {
+    "code": "MARKETPLACE-OPS",
+    "name": "Marketplace Operations and Channel Listing Platform",
+    "pct": 66,
+    "scoreText": "~66% strict (auto-est.): external marketplace API sync/listing per channel.",
+    "hasScore": false
+  },
+  {
+    "code": "LOG-MGMT",
+    "name": "Log Management",
+    "pct": 66,
+    "scoreText": "~66% strict (auto-est.): log ingestion at scale (external fetch).",
+    "hasScore": false
+  },
+  {
+    "code": "KUBE-COST",
+    "name": "Kubernetes Cost Allocation Platform",
+    "pct": 66,
+    "scoreText": "~66% strict (auto-est.): cost accounting on k8s, not running infra.",
+    "hasScore": false
+  },
+  {
+    "code": "CARRIER-MGMT",
+    "name": "Multi-Carrier Shipping and Rate-Shop API",
+    "pct": 64,
+    "scoreText": "~64% strict (auto-est.): external multi-carrier rate/label/tracking APIs dominate.",
+    "hasScore": false
+  },
+  {
+    "code": "CONV-DESIGN",
+    "name": "Conversation Design Platform",
+    "pct": 64,
+    "scoreText": "~64% strict (auto-est.): mostly internal CRUD; external drag = external data fetch, non-email channel.",
+    "hasScore": false
+  },
+  {
+    "code": "KYC-AML-PLATFORM",
+    "name": "KYC / AML Compliance Platform",
+    "pct": 62,
+    "scoreText": "~62% strict (auto-est.): external sanctions/PEP list fetch + screening.",
+    "hasScore": false
+  },
+  {
+    "code": "KYC-KYB",
+    "name": "KYC and KYB Identity Verification",
+    "pct": 62,
+    "scoreText": "~62% strict (auto-est.): external sanctions/PEP/business-registry fetch + screening.",
+    "hasScore": false
+  },
+  {
+    "code": "ABM-PLATFORM",
+    "name": "Account-Based Marketing Platform",
+    "pct": 60,
+    "scoreText": "~60% strict (auto-est.): mostly internal CRUD; external drag = external data fetch, ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "DEX-PLATFORM",
+    "name": "Digital Employee Experience Platform",
+    "pct": 60,
+    "scoreText": "~60% strict (auto-est.): mostly internal CRUD; external drag = external data fetch, ML/AI compute.",
+    "hasScore": false
+  },
+  {
+    "code": "CIEM",
+    "name": "Cloud Infrastructure Entitlement Management",
+    "pct": 55,
+    "scoreText": "~55% strict (auto-est.): reads cloud IAM (external) + blast-radius analysis.",
+    "hasScore": false
+  },
+  {
+    "code": "RUM",
+    "name": "Real User Monitoring",
+    "pct": 55,
+    "scoreText": "~55% strict (auto-est.): frontend telemetry + session-replay ingestion.",
+    "hasScore": false
+  },
+  {
+    "code": "APM-MONITORING",
+    "name": "Application Performance Monitoring",
+    "pct": 55,
+    "scoreText": "~55% strict (auto-est.): application transaction telemetry + auto-discovery.",
+    "hasScore": false
+  },
+  {
+    "code": "BAAS-PLATFORM",
+    "name": "Banking-as-a-Service Platform",
+    "pct": 54,
+    "scoreText": "~54% strict (auto-est.): sponsor-bank / external orchestration heavy.",
+    "hasScore": false
+  },
+  {
+    "code": "MLOPS",
+    "name": "ML Operations",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "LLM-OPS",
+    "name": "LLM Operations",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "CSPM",
+    "name": "Cloud Security Posture Management",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": true
+  },
+  {
+    "code": "DDR",
+    "name": "Data Detection and Response",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "AI-SPM",
+    "name": "AI Security Posture Management",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "RECEIPT-CAPTURE-OCR",
+    "name": "Receipt Capture and OCR",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "VULN-MGT",
+    "name": "Vulnerability Management",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "DATA-OBSERVABILITY",
+    "name": "Data Observability",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "PRECISION-AG-AGRONOMY",
+    "name": "Precision Agriculture Agronomy",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (external data fetch); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "TAIL-SPEND-MGMT",
+    "name": "Tail Spend Management",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "RETURNS-MGMT",
+    "name": "Returns Management and Reverse Logistics Orchestration",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "SCRM",
+    "name": "Supply Chain Risk Management",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "PROMO-ENGINE",
+    "name": "Promotion and Coupon Engine",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "SUSTAIN-PROC",
+    "name": "Sustainable Procurement Intelligence",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "AGENT-RUNTIME",
+    "name": "AI Agent Runtime and Orchestration",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "CAASM",
+    "name": "Cyber Asset Attack Surface Management",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "TRANSACTION-MONITORING",
+    "name": "Transaction Monitoring / AML Surveillance",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "OPEN-BANKING",
+    "name": "Open Banking / Account Data Aggregation",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external bank-API account aggregation is the product.",
+    "hasScore": false
+  },
+  {
+    "code": "AI-AGENT-OPS",
+    "name": "AI Agent Operations and Observability",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "TELCO-NMS",
+    "name": "Telecommunications Network Management Systems",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): network fault/alarm telemetry + correlation.",
+    "hasScore": false
+  },
+  {
+    "code": "IOMT-SEC",
+    "name": "Medical Device Cybersecurity (IoMT Security)",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): mostly internal CRUD; external drag = device/IoT telemetry.",
+    "hasScore": false
+  },
+  {
+    "code": "NPM",
+    "name": "Network Performance Monitoring",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (external data fetch); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "NCCM",
+    "name": "Network Configuration and Change Management",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "NETSEC-VIS",
+    "name": "Network Detection and Response / Network Security Visibility",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "API-SEC",
+    "name": "API Security",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "APM-RELIABILITY",
+    "name": "Asset Performance Management and Reliability",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "ENERGY-MGMT",
+    "name": "Energy and Utility Cost Management",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (external data fetch); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "SIEM",
+    "name": "Security Information and Event Management",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (external data fetch); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "CTEM",
+    "name": "Continuous Threat Exposure Management",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (external data fetch); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "NDR",
+    "name": "Network Detection and Response",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "IR-MGMT",
+    "name": "Security Incident Response Management",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (external data fetch); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "DAST",
+    "name": "Dynamic Application Security Testing (Web Application Scanning)",
+    "pct": 50,
+    "scoreText": "~50% strict (auto-est.): external action is the product (ML/AI compute); thin internal store.",
+    "hasScore": true
+  },
+  {
+    "code": "PROVENANCE-PLATFORM",
+    "name": "Multi-Industry Provenance and Blockchain Traceability Platform",
+    "pct": 48,
+    "scoreText": "~48% strict (auto-est.): blockchain anchoring infra.",
+    "hasScore": false
+  },
+  {
+    "code": "SDWAN-ORCH",
+    "name": "SD-WAN Orchestration and Observability",
+    "pct": 46,
+    "scoreText": "~46% strict (auto-est.): device-fleet + tunnel telemetry.",
+    "hasScore": false
+  },
+  {
+    "code": "EDR",
+    "name": "Endpoint Detection and Response",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "LABOR-MARKET-INTEL",
+    "name": "Labor Market Intelligence",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "MTD",
+    "name": "Mobile Threat Defense",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "DEX",
+    "name": "Digital Employee Experience Monitoring",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "DEAL-FLOW-SIGNAL",
+    "name": "Deal Flow Signal Aggregation",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "AGENT-ASSIST",
+    "name": "Agent Assist and Knowledge Surfacing",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (ML/AI compute, text generation); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "BANK-FRAUD-DETECT",
+    "name": "Banking Fraud Detection",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (ML/AI compute, payment/settlement); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "UTIL-DERMS",
+    "name": "Distributed Energy Resource Management",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (external data fetch, payment/settlement); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "SEC-RATINGS",
+    "name": "Security Ratings and Cyber Risk Intelligence",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "EASM",
+    "name": "External Attack Surface Management",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.",
+    "hasScore": true
+  },
+  {
+    "code": "XDR",
+    "name": "Extended Detection and Response",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "DRP",
+    "name": "Digital Risk Protection",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "VULN-INTEL",
+    "name": "Vulnerability Intelligence and Risk Prioritization",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "UEBA",
+    "name": "User and Entity Behavior Analytics",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "MDR",
+    "name": "Managed Detection and Response",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "BAS",
+    "name": "Breach and Attack Simulation",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (external data fetch, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "AFFILIATE-MGMT",
+    "name": "Affiliate Marketing Management",
+    "pct": 43,
+    "scoreText": "~43% strict (auto-est.): external action is the product (ML/AI compute, payment/settlement); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "CASB",
+    "name": "Cloud Access Security Broker",
+    "pct": 42,
+    "scoreText": "~42% strict (auto-est.): external action is the product (external infra/runtime); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "CONT-REG",
+    "name": "Container Image Registry",
+    "pct": 42,
+    "scoreText": "~42% strict (auto-est.): external action is the product (external infra/runtime); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "STREAMING-PLATFORM",
+    "name": "Streaming Data Platform",
+    "pct": 40,
+    "scoreText": "~40% strict (auto-est.): mostly internal CRUD; external drag = external infra/runtime.",
+    "hasScore": false
+  },
+  {
+    "code": "EDGE-RUNTIME",
+    "name": "Edge Runtime and Functions",
+    "pct": 40,
+    "scoreText": "~40% strict (auto-est.): mostly internal CRUD; external drag = external infra/runtime.",
+    "hasScore": false
+  },
+  {
+    "code": "ARTIFACT-REGISTRY",
+    "name": "Artifact Registry and Package Management",
+    "pct": 40,
+    "scoreText": "~40% strict (auto-est.): mostly internal CRUD; external drag = external infra/runtime.",
+    "hasScore": false
+  },
+  {
+    "code": "EVENT-BROKER-PAAS",
+    "name": "Event Broker Platform as a Service",
+    "pct": 40,
+    "scoreText": "~40% strict (auto-est.): mostly internal CRUD; external drag = external infra/runtime.",
+    "hasScore": false
+  },
+  {
+    "code": "SERVICE-MESH",
+    "name": "Service Mesh",
+    "pct": 40,
+    "scoreText": "~40% strict (auto-est.): mostly internal CRUD; external drag = external infra/runtime.",
+    "hasScore": false
+  },
+  {
+    "code": "BMS-BAS",
+    "name": "Building Management and Automation Systems",
+    "pct": 37,
+    "scoreText": "~37% strict (auto-est.): external action is the product (device/IoT telemetry, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "AG-TELEMATICS",
+    "name": "Agricultural Machinery Telematics",
+    "pct": 37,
+    "scoreText": "~37% strict (auto-est.): external action is the product (device/IoT telemetry, external data fetch); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "EV-CHARGING-MGMT",
+    "name": "EV Charging Infrastructure Management",
+    "pct": 37,
+    "scoreText": "~37% strict (auto-est.): external action is the product (device/IoT telemetry, external data fetch); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "UTIL-AMI-MDMS",
+    "name": "Advanced Metering Infrastructure and Meter Data Management",
+    "pct": 37,
+    "scoreText": "~37% strict (auto-est.): external action is the product (device/IoT telemetry, external data fetch); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "IIOT-PLATFORM",
+    "name": "Industrial IoT Platform",
+    "pct": 37,
+    "scoreText": "~37% strict (auto-est.): external action is the product (device/IoT telemetry, external data fetch); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "SOCIAL-LISTENING",
+    "name": "Social Listening and Brand Intelligence",
+    "pct": 36,
+    "scoreText": "~36% strict (auto-est.): external action is the product (external data fetch, ML/AI compute, non-email channel); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "TELCO-RAFM",
+    "name": "Telecommunications Revenue Assurance and Fraud Management",
+    "pct": 36,
+    "scoreText": "~36% strict (auto-est.): external action is the product (external data fetch, ML/AI compute, payment/settlement); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "GITOPS-DELIVERY",
+    "name": "GitOps Continuous Delivery",
+    "pct": 35,
+    "scoreText": "~35% strict (auto-est.): external action is the product (external infra/runtime, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "SUPPLY-CHAIN-SEC",
+    "name": "Software Supply Chain Security",
+    "pct": 35,
+    "scoreText": "~35% strict (auto-est.): external action is the product (external infra/runtime, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "GITOPS-PLAT",
+    "name": "GitOps Platform",
+    "pct": 35,
+    "scoreText": "~35% strict (auto-est.): external action is the product (external infra/runtime, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "INTENT-DATA",
+    "name": "B2B Buyer Intent Data Platform",
+    "pct": 32,
+    "scoreText": "~32% strict (auto-est.): third-party intent aggregation + scoring is the product.",
+    "hasScore": false
+  },
+  {
+    "code": "BMS",
+    "name": "Building Management System",
+    "pct": 30,
+    "scoreText": "~30% strict (auto-est.): external action is the product (device/IoT telemetry, external data fetch, ML/AI compute); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "VIDEO-TELEMATICS",
+    "name": "Video Telematics and AI Dashcam",
+    "pct": 30,
+    "scoreText": "~30% strict (auto-est.): external action is the product (device/IoT telemetry, ML/AI compute, non-email channel); thin internal store.",
+    "hasScore": false
+  },
+  {
+    "code": "PACS",
+    "name": "Physical Access Control Systems",
+    "pct": 30,
+    "scoreText": "~30% strict (auto-est.): mostly internal CRUD; external drag = device/IoT telemetry, external data fetch.",
+    "hasScore": false
+  },
+  {
+    "code": "CONV-INTEL",
+    "name": "Conversation Intelligence",
+    "pct": 28,
+    "scoreText": "~28% strict (auto-est.): external action is the product (external infra/runtime, ML/AI compute, non-email channel); thin internal store.",
+    "hasScore": false
+  }
+]

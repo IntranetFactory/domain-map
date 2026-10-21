@@ -1,0 +1,786 @@
+[
+  {
+    "id": 483,
+    "data_object_name": "creative_briefs",
+    "singular_label": "Creative Brief",
+    "plural_label": "Creative Briefs",
+    "entity_type": "unclassified",
+    "description": "Initiating document for a creative job: client objective, audience, key message, mandatories, deliverable list, deadlines, and budget. Authored by account/strategy, approved by client, drives creative-team scoping."
+  },
+  {
+    "id": 484,
+    "data_object_name": "creative_deliverables",
+    "singular_label": "Creative Deliverable",
+    "plural_label": "Creative Deliverables",
+    "entity_type": "unclassified",
+    "description": "Asset under production within an agency_job: an image, video, layout, copy doc, or campaign element with version history and proofing/approval state. Final approved versions register in DAM."
+  },
+  {
+    "id": 1119,
+    "data_object_name": "creative_variants",
+    "singular_label": "Creative Variant",
+    "plural_label": "Creative Variants",
+    "entity_type": "operational_record",
+    "description": "A named variation of a creative produced for testing or dynamic creative optimization, combining specific asset choices (headline, body, image, CTA) with its own performance trail."
+  },
+  {
+    "id": 933,
+    "data_object_name": "credential_badges",
+    "singular_label": "Credential Badge",
+    "plural_label": "Credential Badges",
+    "entity_type": "catalog",
+    "description": "Open Badges / micro-credential definition: criteria, image, issuer, expiration policy. Distinct from visitor_badges (physical access)."
+  },
+  {
+    "id": 1279,
+    "data_object_name": "credential_verifications",
+    "singular_label": "Credential Verification",
+    "plural_label": "Credential Verifications",
+    "entity_type": "operational_workflow",
+    "description": "Third-party verification handshake for an issued badge or credential (Open Badges 3.0)."
+  },
+  {
+    "id": 508,
+    "data_object_name": "critical_control_points",
+    "singular_label": "Critical Control Point",
+    "plural_label": "Critical Control Points",
+    "entity_type": "operational_workflow",
+    "description": "CCP definition with hazard, critical limit, monitoring frequency, responsible party; child of a HACCP plan."
+  },
+  {
+    "id": 495,
+    "data_object_name": "critical_tracking_events",
+    "singular_label": "Critical Tracking Event",
+    "plural_label": "Critical Tracking Events",
+    "entity_type": "operational_workflow",
+    "description": "FSMA-204-defined CTE: growing / receiving / transformation / creation / shipping event with KDE references."
+  },
+  {
+    "id": 98,
+    "data_object_name": "crm_contacts",
+    "singular_label": "Contact",
+    "plural_label": "Contacts",
+    "entity_type": "operational_record",
+    "description": "Person at a customer account (B2B) or contact-level record (B2C-relevant). Carries title, email, decision-maker flag, preferred channel, opt-in state. MA contributes engagement data; SALES-ENG contributes cadence touchpoints."
+  },
+  {
+    "id": 99,
+    "data_object_name": "crm_leads",
+    "singular_label": "Lead",
+    "plural_label": "Leads",
+    "entity_type": "operational_workflow",
+    "description": "Pre-qualification prospect record — source, score, status (new/working/qualified/disqualified/converted), assigned rep, conversion target (which contact + account it would become). MQL handoff from MA lands here."
+  },
+  {
+    "id": 100,
+    "data_object_name": "crm_opportunities",
+    "singular_label": "Opportunity",
+    "plural_label": "Opportunities",
+    "entity_type": "operational_workflow",
+    "description": "Active sales deal — stage, amount, close date, probability, products/SKUs, competitor, decision criteria. Drives CPQ quote generation and closed-won triggers downstream subscription activation."
+  },
+  {
+    "id": 487,
+    "data_object_name": "crop_plans",
+    "singular_label": "Crop Plan",
+    "plural_label": "Crop Plans",
+    "entity_type": "unclassified",
+    "description": "Per-field seasonal planting plan (crop, variety, target yield, application schedule); includes multi-year rotation history."
+  },
+  {
+    "id": 1249,
+    "data_object_name": "cross_team_dependencies",
+    "singular_label": "Cross-Team Dependency",
+    "plural_label": "Cross-Team Dependencies",
+    "entity_type": "operational_workflow",
+    "description": "A dependency between work owned by different teams or trains that must be coordinated and resolved to keep the program increment on track."
+  },
+  {
+    "id": 514,
+    "data_object_name": "csa_memberships",
+    "singular_label": "CSA Membership",
+    "plural_label": "CSA Memberships",
+    "entity_type": "operational_workflow",
+    "description": "Per-member per-season subscription: share type, customization preferences, payment plan, pickup location."
+  },
+  {
+    "id": 515,
+    "data_object_name": "csa_share_packs",
+    "singular_label": "CSA Share Pack",
+    "plural_label": "CSA Share Packs",
+    "entity_type": "operational_workflow",
+    "description": "Per-week packed share for a specific member: contents, swaps applied, packing-list reference, delivery / pickup status."
+  },
+  {
+    "id": 105,
+    "data_object_name": "csat_responses",
+    "singular_label": "CSAT Response",
+    "plural_label": "CSAT Responses",
+    "entity_type": "operational_record",
+    "description": "Customer satisfaction, NPS, or CES survey response tied to a case, interaction, or relationship-level survey. Drives retention scoring and feeds churn-risk signals back to SUB-MGMT and account-health into CRM."
+  },
+  {
+    "id": 954,
+    "data_object_name": "curricula",
+    "singular_label": "Curriculum",
+    "plural_label": "Curricula",
+    "entity_type": "catalog",
+    "description": "Grouped paths and courses targeting a role, function, or compliance scope. Used by Workday and Cornerstone as the primary noun for role-based learning."
+  },
+  {
+    "id": 114,
+    "data_object_name": "customer_attributes",
+    "singular_label": "Customer Attribute",
+    "plural_label": "Customer Attributes",
+    "entity_type": "computed",
+    "description": "Derived / calculated attributes attached to the resolved profile: LTV, RFM score, propensity-to-buy, churn-likelihood, preferred-channel, lifecycle stage. The materialized scoring layer of the unified profile; downstream segments and personalization rules read from here."
+  },
+  {
+    "id": 103,
+    "data_object_name": "customer_cases",
+    "singular_label": "Customer Case",
+    "plural_label": "Customer Cases",
+    "entity_type": "operational_workflow",
+    "description": "Customer-facing support ticket — the flagship CSM entity. Distinct from ITSM `incidents` (internal IT) and `service_requests` (catalog-driven internal requests). Carries severity, channel, queue, SLA clock, customer + contact references, CSAT linkage. SUB-MGMT-driven dunning failures and CSM-detected churn risk both surface as cases."
+  },
+  {
+    "id": 104,
+    "data_object_name": "customer_entitlements",
+    "singular_label": "Customer Entitlement",
+    "plural_label": "Customer Entitlements",
+    "entity_type": "catalog",
+    "description": "What support a customer can use — service tier (Silver/Gold/Platinum), monthly support hours, supported channels (email/chat/phone), named contacts, included services, SLA response targets. Activated from the SUB-MGMT subscription.activated handoff."
+  },
+  {
+    "id": 111,
+    "data_object_name": "customer_events",
+    "singular_label": "Customer Event",
+    "plural_label": "Customer Events",
+    "entity_type": "operational_record",
+    "description": "Unified event stream — every customer interaction across web, mobile, email, in-product, sales-engagement, support. The firehose CDP is built around: typically millions of events per day per active customer base. Multi-feed from MA (campaign events), B2C-COMM (storefront), CRM (sales activities), CSM (support interactions), product instrumentation. The customer-side counterpart to ITOM's `events`."
+  },
+  {
+    "id": 407,
+    "data_object_name": "customer_feedback_items",
+    "singular_label": "Customer Feedback Item",
+    "plural_label": "Customer Feedback Items",
+    "entity_type": "operational_workflow",
+    "description": "Qualitative or quantitative feedback from customers on product experience, gaps, or opportunities."
+  },
+  {
+    "id": 315,
+    "data_object_name": "customer_golden_records",
+    "singular_label": "Customer Golden Record",
+    "plural_label": "Customer Golden Records",
+    "entity_type": "operational_workflow",
+    "description": "Single resolved customer identity across all source systems (CRM/CSM/SUB-MGMT/CDP), resolved via match/merge/survivorship rules. Distinct from operational `customers`."
+  },
+  {
+    "id": 107,
+    "data_object_name": "customer_invoices",
+    "singular_label": "Customer Invoice",
+    "plural_label": "Customer Invoices",
+    "entity_type": "operational_workflow",
+    "description": "Seller-issued invoice — line items, tax, payment terms, due date, status (draft/sent/paid/overdue/written-off). **AR side**; distinct from S2P `invoices` (AP-side, supplier-issued)."
+  },
+  {
+    "id": 115,
+    "data_object_name": "customer_journeys",
+    "singular_label": "Customer Journey",
+    "plural_label": "Customer Journeys",
+    "entity_type": "operational_workflow",
+    "description": "Observed multi-channel journey progression — the inbound view of how a customer moved through touchpoints over time. Distinct from MA `nurture_journeys` (orchestrated outbound sequences): customer_journeys are descriptive (what happened), nurture_journeys are prescriptive (what we'll do)."
+  },
+  {
+    "id": 821,
+    "data_object_name": "customer_sites",
+    "singular_label": "Customer Site",
+    "plural_label": "Customer Sites",
+    "entity_type": "operational_workflow",
+    "description": "Physical service location belonging to a customer. One customer can have many sites (commercial chains, multi-property landlords, residential customers with multiple properties). Distinct from CRM accounts (the commercial relationship) and from internal locations (the service organization's own facilities)."
+  },
+  {
+    "id": 106,
+    "data_object_name": "customer_subscriptions",
+    "singular_label": "Customer Subscription",
+    "plural_label": "Customer Subscriptions",
+    "entity_type": "operational_workflow",
+    "description": "Customer's recurring revenue contract — plan, term, MRR/ARR, billing cadence, seat count, lifecycle (trial / active / paused / canceled / churned). **Seller-side view**; distinct from `saas_subscriptions` (SMP, buyer-side view of what we consume from vendors)."
+  },
+  {
+    "id": 97,
+    "data_object_name": "customers",
+    "singular_label": "Customer",
+    "plural_label": "Customers",
+    "entity_type": "operational_workflow",
+    "description": "Canonical record of a customer — account (B2B) or end-customer (B2C). Carries identity, segmentation, lifecycle stage, account hierarchy, and pointers to opportunities, cases, subscriptions, and unified profile. The flagship customer-facing entity and the catalog's most multi-mastered row: CRM masters the sales view, CSM the service view, SUB-MGMT the financial view, CDP the unified resolved profile. The structural twin of `employees` on the customer side."
+  },
+  {
+    "id": 499,
+    "data_object_name": "dairy_cows",
+    "singular_label": "Dairy Cow",
+    "plural_label": "Dairy Cows",
+    "entity_type": "operational_workflow",
+    "description": "Individual cow record: ear tag, breed, birth date, sire / dam, parity, current lactation status, location pen."
+  },
+  {
+    "id": 378,
+    "data_object_name": "dashcam_events",
+    "singular_label": "Dashcam Event",
+    "plural_label": "Dashcam Events",
+    "entity_type": "unclassified",
+    "description": "Video-telematics incident record: AI-detected event (collision, near-miss, distracted driving), video clip(s), driver, vehicle, timestamp, severity. Feeds insurance claims and safety coaching."
+  },
+  {
+    "id": 307,
+    "data_object_name": "data_access_policies",
+    "singular_label": "Data Access Policy",
+    "plural_label": "Data Access Policies",
+    "entity_type": "operational_workflow",
+    "description": "Governance rule controlling who can access a data_asset: audience, permission level, conditions, approval chain, audit trail. Distinct from infrastructure-level IAM policies (DSPM `iam_access_policies`)."
+  },
+  {
+    "id": 300,
+    "data_object_name": "data_assets",
+    "singular_label": "Data Asset",
+    "plural_label": "Data Assets",
+    "entity_type": "operational_workflow",
+    "description": "Cataloged data-bearing entity (table, dataset, API, database, file) with metadata, owner, storage location, format, record count, source system reference. DCG's flagship."
+  },
+  {
+    "id": 306,
+    "data_object_name": "data_certifications",
+    "singular_label": "Data Certification",
+    "plural_label": "Data Certifications",
+    "entity_type": "operational_workflow",
+    "description": "Attestation that a data_asset meets quality / compliance thresholds for production use; certifier, date, valid-until, conditions. Distinct from DQ rule pass/fail."
+  },
+  {
+    "id": 303,
+    "data_object_name": "data_classifications",
+    "singular_label": "Data Classification",
+    "plural_label": "Data Classifications",
+    "entity_type": "operational_workflow",
+    "description": "Sensitivity tag applied to data_assets (PII, PCI, PHI, Sensitive, Confidential, Internal). DCG masters the taxonomy; DSPM/DLP apply at rest and at egress respectively."
+  },
+  {
+    "id": 952,
+    "data_object_name": "data_deletion_requests",
+    "singular_label": "Data Deletion Request",
+    "plural_label": "Data Deletion Requests",
+    "entity_type": "operational_workflow",
+    "description": "GDPR Article 17 right-to-erasure request: scope, anonymisation policy, regulator deadline, fulfillment status."
+  },
+  {
+    "id": 304,
+    "data_object_name": "data_domains",
+    "singular_label": "Data Domain",
+    "plural_label": "Data Domains",
+    "entity_type": "catalog",
+    "description": "Logical subject-area / domain grouping (Customer, Order, Inventory) organizing multiple data_assets with ownership and documentation."
+  },
+  {
+    "id": 332,
+    "data_object_name": "data_exfiltration_attempts",
+    "singular_label": "Data Exfiltration Attempt",
+    "plural_label": "Data Exfiltration Attempts",
+    "entity_type": "unclassified",
+    "description": "Raw event of sensitive data being moved/accessed outside authorized boundaries; precursor to dlp_incident (filter: did policy trigger?)."
+  },
+  {
+    "id": 301,
+    "data_object_name": "data_lineage_relationships",
+    "singular_label": "Data Lineage Relationship",
+    "plural_label": "Data Lineage Relationships",
+    "entity_type": "operational_record",
+    "description": "Flow edge from source data_asset to target data_asset with column-level mapping, transformation logic, frequency, SLA. Represents ETL/dbt graphs."
+  },
+  {
+    "id": 227,
+    "data_object_name": "data_pipelines",
+    "singular_label": "Data Pipeline",
+    "plural_label": "Data Pipelines",
+    "entity_type": "unclassified",
+    "description": "Pipeline definition and its run history: ELT/ETL jobs, streaming pipelines, dbt-style transformation models, and managed ingestion connectors. Includes scheduling, dependency graph, lineage edges to source and target tables, and run-level observability (status, duration, rows processed)."
+  },
+  {
+    "id": 232,
+    "data_object_name": "data_products",
+    "singular_label": "Data Product",
+    "plural_label": "Data Products",
+    "entity_type": "operational_workflow",
+    "description": "Published, governed data product with an explicit contract: schema, SLA, owner, access policy, intended consumers, quality expectations, and versioning. Backed by one or more lakehouse_tables, pipeline outputs, or semantic_metrics. The unit of data exchange between producer teams and consumer teams under a data-mesh / governed-marketplace model."
+  },
+  {
+    "id": 1055,
+    "data_object_name": "data_protection_addenda",
+    "singular_label": "Data Protection Addendum",
+    "plural_label": "Data Protection Addenda",
+    "entity_type": "operational_workflow",
+    "description": "A data processing addendum attached to a contract that governs how personal data is handled, with its own approval and renewal cycle."
+  },
+  {
+    "id": 342,
+    "data_object_name": "data_risk_scores",
+    "singular_label": "Data Risk Score",
+    "plural_label": "Data Risk Scores",
+    "entity_type": "unclassified",
+    "description": "Per-asset risk score combining sensitivity + access breadth + exposure vector; prioritizes DSPM remediation queue."
+  },
+  {
+    "id": 305,
+    "data_object_name": "data_stewardship_assignments",
+    "singular_label": "Data Stewardship Assignment",
+    "plural_label": "Data Stewardship Assignments",
+    "entity_type": "operational_workflow",
+    "description": "Assignment of a steward (user) to a data_asset or glossary_term; responsibility type (owner / contributor / reviewer), escalation chain. Used by both DCG and MDM steward workflows."
+  },
+  {
+    "id": 901,
+    "data_object_name": "data_subject_requests",
+    "singular_label": "Data Subject Request",
+    "plural_label": "Data Subject Requests",
+    "entity_type": "operational_workflow",
+    "description": "GDPR Articles 15-22 (and analogous CPRA/PIPEDA) request from a candidate exercising access, rectification, erasure, restriction, portability, or objection rights against personal data the ATS holds. Tracks request type, intake channel, due date, fulfillment, and verification."
+  },
+  {
+    "id": 308,
+    "data_object_name": "data_usage_metrics",
+    "singular_label": "Data Usage Metric",
+    "plural_label": "Data Usage Metrics",
+    "entity_type": "computed",
+    "description": "Aggregated consumption signal per data_asset: accessing_team, query_count, last_access, bytes scanned. Drives popularity and stale-asset detection."
+  },
+  {
+    "id": 338,
+    "data_object_name": "data_warehouses",
+    "singular_label": "Data Warehouse",
+    "plural_label": "Data Warehouses",
+    "entity_type": "unclassified",
+    "description": "Cloud analytics-specialized database or cluster with a distinct access model from transactional DBs."
+  },
+  {
+    "id": 547,
+    "data_object_name": "dc_cabinets",
+    "singular_label": "Data Center Cabinet",
+    "plural_label": "Data Center Cabinets",
+    "entity_type": "operational_record",
+    "description": "Enclosed or open cabinet within a rack: front/rear layout, power distribution, cable management, access control, temperature sensor zones. Holds servers, network gear, UPS, patch panels."
+  },
+  {
+    "id": 555,
+    "data_object_name": "dc_cable_connections",
+    "singular_label": "DC Cable Connection",
+    "plural_label": "DC Cable Connections",
+    "entity_type": "operational_record",
+    "description": "Physical cable plant: from-port → to-port, cable length, type (fiber / copper / power), installation date, test state, failure history. Distinct from dc_port_connections (logical endpoints)."
+  },
+  {
+    "id": 553,
+    "data_object_name": "dc_capacity_plans",
+    "singular_label": "DC Capacity Plan",
+    "plural_label": "DC Capacity Plans",
+    "entity_type": "operational_workflow",
+    "description": "Forward-looking projection of power, cooling, space, bandwidth capacity per site/zone/period: utilization forecast, headroom, planned augmentations. Drives growth planning and colo negotiations."
+  },
+  {
+    "id": 1025,
+    "data_object_name": "dc_change_requests",
+    "singular_label": "DC Change Request",
+    "plural_label": "DC Change Requests",
+    "entity_type": "operational_workflow",
+    "description": "Request to install, decommission, or relocate equipment in the data center (a move, add, or change). Carries the requested action, target rack or cabinet, scheduling, and approval before the physical work is executed and the asset register is updated. Scope-qualified to the physical floor so it does not collide with ITSM change_requests."
+  },
+  {
+    "id": 551,
+    "data_object_name": "dc_cooling_units",
+    "singular_label": "Data Center Cooling Unit",
+    "plural_label": "Data Center Cooling Units",
+    "entity_type": "operational_record",
+    "description": "CRAC, CRAH, or in-row cooler: capacity (kW), zone served, inlet/outlet temperature setpoint, current power draw, refrigerant state. Required for thermal capacity assessment."
+  },
+  {
+    "id": 552,
+    "data_object_name": "dc_environmental_readings",
+    "singular_label": "DC Environmental Reading",
+    "plural_label": "DC Environmental Readings",
+    "entity_type": "operational_record",
+    "description": "Real-time/historical temperature, humidity, airflow, pressure from cabinet/aisle/zone sensors. Time-series telemetry for hot-spot detection."
+  },
+  {
+    "id": 554,
+    "data_object_name": "dc_port_connections",
+    "singular_label": "DC Port Connection",
+    "plural_label": "DC Port Connections",
+    "entity_type": "operational_record",
+    "description": "Network or power port on a device (server NIC, switch port, PDU outlet): interface name, speed/type (10GbE / 40GbE / RJ45 / IEC309), neighbor endpoint, vlan/circuit assignment, usage status. Topology for network and power connectivity."
+  },
+  {
+    "id": 549,
+    "data_object_name": "dc_power_circuits",
+    "singular_label": "DC Power Circuit",
+    "plural_label": "DC Power Circuits",
+    "entity_type": "operational_workflow",
+    "description": "Electrical circuit from site feed to PDU outlet: capacity (amps/watts), utility meter reference, voltage, phase assignment, breaker state, redundancy config."
+  },
+  {
+    "id": 548,
+    "data_object_name": "dc_power_distribution_units",
+    "singular_label": "Power Distribution Unit (PDU)",
+    "plural_label": "Power Distribution Units (PDUs)",
+    "entity_type": "operational_record",
+    "description": "Rack or cabinet PDU: input phases, output outlets/breakers, per-phase/outlet metering, managed (SNMP) vs manual, firmware version. Critical for capacity planning and load balancing."
+  },
+  {
+    "id": 546,
+    "data_object_name": "dc_racks",
+    "singular_label": "Data Center Rack",
+    "plural_label": "Data Center Racks",
+    "entity_type": "operational_workflow",
+    "description": "Physical rack frame: height in RUs, location (room/row/aisle), power budget, cooling zone, asset tag. Parent = data center site. Holds cabinets and equipment."
+  },
+  {
+    "id": 550,
+    "data_object_name": "dc_uninterruptible_power_supplies",
+    "singular_label": "UPS / RPP",
+    "plural_label": "UPS / RPPs",
+    "entity_type": "operational_record",
+    "description": "UPS or rotary power pool unit: input/output capacity, battery health, last test date, load level, bypass state. Site or zone-level unit."
+  },
+  {
+    "id": 1121,
+    "data_object_name": "dco_rules",
+    "singular_label": "DCO Rule",
+    "plural_label": "DCO Rules",
+    "entity_type": "catalog",
+    "description": "A dynamic creative optimization rule set governing how variants are generated from assets and feeds and how delivery is weighted toward performers."
+  },
+  {
+    "id": 1008,
+    "data_object_name": "deal_risk_scores",
+    "singular_label": "Deal Risk Score",
+    "plural_label": "Deal Risk Scores",
+    "entity_type": "computed",
+    "description": "Per-opportunity machine-derived risk grade with the feature contributions that drove it, recomputed as new activity, conversation, and CRM signals arrive."
+  },
+  {
+    "id": 1009,
+    "data_object_name": "deal_warnings",
+    "singular_label": "Deal Warning",
+    "plural_label": "Deal Warnings",
+    "entity_type": "operational_workflow",
+    "description": "Named risk patterns raised against an opportunity, such as no identified decision-maker, no scheduled next step, or single-threaded engagement, tracked from raised to cleared."
+  },
+  {
+    "id": 1139,
+    "data_object_name": "decision_evaluations",
+    "singular_label": "Decision Evaluation",
+    "plural_label": "Decision Evaluations",
+    "entity_type": "operational_record",
+    "description": "A recorded runtime evaluation of a decision table against a set of inputs: the matched rules, the resulting outputs, and the invoking process instance. The audit trail of every decision the engine made."
+  },
+  {
+    "id": 1138,
+    "data_object_name": "decision_tables",
+    "singular_label": "Decision Table",
+    "plural_label": "Decision Tables",
+    "entity_type": "operational_workflow",
+    "description": "A versioned Decision Model and Notation decision table: input and output clauses, rules, and a hit policy, authored once and invoked by running processes to evaluate business rules at runtime."
+  },
+  {
+    "id": 141,
+    "data_object_name": "deduction_codes",
+    "singular_label": "Deduction Code",
+    "plural_label": "Deduction Codes",
+    "entity_type": "catalog",
+    "description": "Configurable definition of a deduction (pre-tax 401k, post-tax Roth, medical premium, HSA, garnishment, union dues) with priority, ceiling, and GL mapping. Drives net-pay arithmetic and benefits-payroll integration."
+  },
+  {
+    "id": 1255,
+    "data_object_name": "delivery_bottlenecks",
+    "singular_label": "Delivery Bottleneck",
+    "plural_label": "Delivery Bottlenecks",
+    "entity_type": "computed",
+    "description": "A detected constraint or slow stage in a value stream surfaced from measured flow, prioritized for remediation."
+  },
+  {
+    "id": 518,
+    "data_object_name": "delivery_routes",
+    "singular_label": "Delivery Route",
+    "plural_label": "Delivery Routes",
+    "entity_type": "operational_workflow",
+    "description": "Optimized multi-stop DTC delivery route per delivery day: vehicle, driver, stops, time windows."
+  },
+  {
+    "id": 1251,
+    "data_object_name": "delivery_value_streams",
+    "singular_label": "Delivery Value Stream",
+    "plural_label": "Delivery Value Streams",
+    "entity_type": "catalog",
+    "description": "A modeled end-to-end path that delivery work flows through across the toolchain, from idea to production, used as the unit of flow measurement."
+  },
+  {
+    "id": 278,
+    "data_object_name": "demand_intake_requests",
+    "singular_label": "Demand Intake Request",
+    "plural_label": "Demand Intake Requests",
+    "entity_type": "operational_workflow",
+    "description": "Business case submission for new initiative or feature: requester, justification, estimated cost, timeline, approval workflow."
+  },
+  {
+    "id": 280,
+    "data_object_name": "dependency_chains",
+    "singular_label": "Dependency Chain",
+    "plural_label": "Dependency Chains",
+    "entity_type": "operational_record",
+    "description": "Sequencing and blocking relationships between initiatives and roadmap items; critical path, lag time, external dependencies."
+  },
+  {
+    "id": 590,
+    "data_object_name": "desk_bookings",
+    "singular_label": "Desk Booking",
+    "plural_label": "Desk Bookings",
+    "entity_type": "operational_workflow",
+    "description": "Self-service workplace hoteling: employee reservation of available desk, date/time, work mode. Core to flexible/hybrid workplace policies."
+  },
+  {
+    "id": 560,
+    "data_object_name": "device_app_assignments",
+    "singular_label": "Device App Assignment",
+    "plural_label": "Device App Assignments",
+    "entity_type": "operational_workflow",
+    "description": "Which mobile_app_packages are pushed to which enrolled_devices: assignment status (pending / installed / failed), install timestamp, removal flag."
+  },
+  {
+    "id": 614,
+    "data_object_name": "device_calibration_records",
+    "singular_label": "Device Calibration Record",
+    "plural_label": "Device Calibration Records",
+    "entity_type": "operational_workflow",
+    "description": "Accuracy verification for clinical equipment (scales, infusion pumps, diagnostic devices). Frequency mandated by FDA/accreditation; tracks calibration date, technician, tolerance acceptance."
+  },
+  {
+    "id": 558,
+    "data_object_name": "device_compliance_policies",
+    "singular_label": "Device Compliance Policy",
+    "plural_label": "Device Compliance Policies",
+    "entity_type": "operational_workflow",
+    "description": "Baseline policy defining required device state: OS version floor, encryption enforcement, app blocklist, jailbreak/root detection, password policy. Evaluated per enrolled_device per scan."
+  },
+  {
+    "id": 563,
+    "data_object_name": "device_compliance_results",
+    "singular_label": "Device Compliance Result",
+    "plural_label": "Device Compliance Results",
+    "entity_type": "operational_workflow",
+    "description": "Periodic scan result per enrolled_device: policies evaluated, pass/fail per policy, non-compliant findings, available remediation actions, scan timestamp."
+  },
+  {
+    "id": 557,
+    "data_object_name": "device_configuration_profiles",
+    "singular_label": "Device Configuration Profile",
+    "plural_label": "Device Configuration Profiles",
+    "entity_type": "operational_workflow",
+    "description": "Device settings template: WiFi credentials, VPN config, certificate pinning, security baselines, disk encryption enforcement, OS hardening. Version-controlled, assigned to device cohorts."
+  },
+  {
+    "id": 562,
+    "data_object_name": "device_deployment_results",
+    "singular_label": "Device Deployment Result",
+    "plural_label": "Device Deployment Results",
+    "entity_type": "operational_workflow",
+    "description": "Outcome log for each policy/profile/app deployment: trigger (compliance-push / scheduled / manual), timestamp, success flag, error_code, device state delta."
+  },
+  {
+    "id": 615,
+    "data_object_name": "device_incident_reports",
+    "singular_label": "Device Incident Report",
+    "plural_label": "Device Incident Reports",
+    "entity_type": "operational_workflow",
+    "description": "FDA MDR-style adverse-event report (patient injury, near-miss, unexpected behavior): root cause (user error vs device defect); links to device_recalls when patterns emerge."
+  },
+  {
+    "id": 611,
+    "data_object_name": "device_maintenance_logs",
+    "singular_label": "Device Maintenance Log",
+    "plural_label": "Device Maintenance Logs",
+    "entity_type": "operational_record",
+    "description": "Preventive and corrective maintenance records per medical_device: PM schedule completion, technician notes, parts replaced. Regulatory audit trail for clinical compliance."
+  },
+  {
+    "id": 612,
+    "data_object_name": "device_recalls",
+    "singular_label": "Device Recall",
+    "plural_label": "Device Recalls",
+    "entity_type": "operational_workflow",
+    "description": "FDA/regulatory recall notices and clinical-facility response: recall scope, risk level (Class I/II/III), affected serial numbers, remediation, patient-safety impact assessment, regulatory reporting."
+  },
+  {
+    "id": 137,
+    "data_object_name": "digital_assets",
+    "singular_label": "Digital Asset",
+    "plural_label": "Digital Assets",
+    "entity_type": "operational_workflow",
+    "description": "Image, video, audio, document, or design file with metadata, rights, taxonomy, and delivery URLs. The DAM master; HCMSs contribute content-bound assets uploaded inline to entries and consume DAM-hosted assets by URL reference. PIM and B2C-COMM also reference product imagery via DAM."
+  },
+  {
+    "id": 443,
+    "data_object_name": "digital_experiences",
+    "singular_label": "Digital Experience",
+    "plural_label": "Digital Experiences",
+    "entity_type": "operational_workflow",
+    "description": "Named digital experience / journey (e.g. 'post-purchase flow', 'lead nurture campaign'). Mapped to segments + A/B variants."
+  },
+  {
+    "id": 588,
+    "data_object_name": "digital_friction_events",
+    "singular_label": "Digital Friction Event",
+    "plural_label": "Digital Friction Events",
+    "entity_type": "operational_record",
+    "description": "Detected degradation affecting SaaS consumption: slow boot, app crash, unresponsive login, network disconnect, proxy/firewall block, VPN drop, USB mount failure. Source agent telemetry, severity, affected user count, business-app association."
+  },
+  {
+    "id": 253,
+    "data_object_name": "dimensional_models",
+    "singular_label": "Dimensional Model",
+    "plural_label": "Dimensional Models",
+    "entity_type": "operational_workflow",
+    "description": "Logical entity/dimension/hierarchy model decoupled from physical tables. Defines conformed dimensions across fact tables, hierarchies, slowly-changing-dimension behavior, and graph-style relationships. The semantic structure metrics resolve against."
+  },
+  {
+    "id": 356,
+    "data_object_name": "disclosure_documents",
+    "singular_label": "Disclosure Document",
+    "plural_label": "Disclosure Documents",
+    "entity_type": "operational_workflow",
+    "description": "State-mandated and brokerage-policy disclosure forms attached to transactions (agency disclosure, property condition, lead paint, HOA documents); required for compliance audit."
+  },
+  {
+    "id": 421,
+    "data_object_name": "discount_approvals",
+    "singular_label": "Discount Approval",
+    "plural_label": "Discount Approvals",
+    "entity_type": "operational_workflow",
+    "description": "Workflow records gating discount authority: approver (manager / finance / sales-ops), accept/reject."
+  },
+  {
+    "id": 82,
+    "data_object_name": "discovered_devices",
+    "singular_label": "Discovered Device",
+    "plural_label": "Discovered Devices",
+    "entity_type": "operational_workflow",
+    "description": "Pre-CMDB candidate emitted by a scan, awaiting normalization and reconciliation into a configuration_item. The buffer between raw scan output and the curated CMDB; some candidates never promote (transient, duplicate, scope-excluded)."
+  },
+  {
+    "id": 580,
+    "data_object_name": "discovered_process_models",
+    "singular_label": "Discovered Process Model",
+    "plural_label": "Discovered Process Models",
+    "entity_type": "computed",
+    "description": "Algorithmic output: inferred process model (DFG, BPMN, Petri net) mined from an event log via discovery (Heuristics Miner, Inductive Miner, Fuzzy Miner). Carries fitted parameters, quality metrics (fitness, precision, generalization)."
+  },
+  {
+    "id": 81,
+    "data_object_name": "discovery_scans",
+    "singular_label": "Discovery Scan",
+    "plural_label": "Discovery Scans",
+    "entity_type": "operational_workflow",
+    "description": "A discovery job execution: scope (subnet, cloud account, k8s cluster, AD forest), credentials used, start/end timestamps, candidates emitted, errors encountered."
+  },
+  {
+    "id": 83,
+    "data_object_name": "discovery_sources",
+    "singular_label": "Discovery Source",
+    "plural_label": "Discovery Sources",
+    "entity_type": "operational_workflow",
+    "description": "Connector / probe / credential definition for a discovery integration: hypervisor, public-cloud account, Kubernetes cluster, directory service, SNMP credential. The configuration that drives scans."
+  },
+  {
+    "id": 262,
+    "data_object_name": "dispatch_records",
+    "singular_label": "Dispatch Record",
+    "plural_label": "Dispatch Records",
+    "entity_type": "operational_workflow",
+    "description": "An assignment of a work_order to a specific technician at a specific time. Captures dispatch decisions, route optimization output, dispatcher overrides. Audit trail for what was assigned to whom and why."
+  },
+  {
+    "id": 737,
+    "data_object_name": "disposition_codes",
+    "singular_label": "Disposition Code",
+    "plural_label": "Disposition Codes",
+    "entity_type": "catalog",
+    "description": "Post-call wrap category / business-reason taxonomy for routing logic + analytics."
+  },
+  {
+    "id": 90,
+    "data_object_name": "distributed_traces",
+    "singular_label": "Distributed Trace",
+    "plural_label": "Distributed Traces",
+    "entity_type": "operational_record",
+    "description": "End-to-end request traces across microservices — parent-child spans, service identification, latency attribution. The fundamental observability artifact for diagnosing latency and dependency issues in service meshes."
+  },
+  {
+    "id": 1023,
+    "data_object_name": "distribution_notices",
+    "singular_label": "Distribution Notice",
+    "plural_label": "Distribution Notices",
+    "entity_type": "operational_workflow",
+    "description": "LP-facing notice document for a fund distribution, in standard reporting format, with publication timestamps; stored separately from the distribution record."
+  },
+  {
+    "id": 334,
+    "data_object_name": "dlp_exceptions",
+    "singular_label": "DLP Policy Exception",
+    "plural_label": "DLP Policy Exceptions",
+    "entity_type": "unclassified",
+    "description": "User or admin-approved exception to a DLP policy; time-limited; tracks requestor, approver, business justification, expiration."
+  },
+  {
+    "id": 330,
+    "data_object_name": "dlp_incidents",
+    "singular_label": "DLP Incident",
+    "plural_label": "DLP Incidents",
+    "entity_type": "unclassified",
+    "description": "DLP policy violation event from an exfiltration attempt; user, timestamp, classification, destination, action taken, remediation status."
+  },
+  {
+    "id": 331,
+    "data_object_name": "dlp_policies",
+    "singular_label": "DLP Policy",
+    "plural_label": "DLP Policies",
+    "entity_type": "unclassified",
+    "description": "Rule set defining data-protection behavior: conditions (user role, destination, classification, network) and actions (block, quarantine, redact, mask, watermark, alert)."
+  },
+  {
+    "id": 333,
+    "data_object_name": "dlp_quarantine_items",
+    "singular_label": "DLP Quarantine Item",
+    "plural_label": "DLP Quarantine Items",
+    "entity_type": "unclassified",
+    "description": "Blocked or flagged artifact (email, file, message) in temporary hold pending admin review or user override request."
+  },
+  {
+    "id": 335,
+    "data_object_name": "dlp_user_activity_logs",
+    "singular_label": "DLP User Activity Log",
+    "plural_label": "DLP User Activity Logs",
+    "entity_type": "unclassified",
+    "description": "Audit trail of user interactions with DLP system: blocks, quarantine reviews, exception requests, policy violations. Supports forensic investigation."
+  },
+  {
+    "id": 1191,
+    "data_object_name": "dockage_invoices",
+    "singular_label": "Dockage Invoice",
+    "plural_label": "Dockage Invoices",
+    "entity_type": "operational_workflow",
+    "description": "An invoice issued to a boater for dockage, storage, utilities, fuel, or service, with payment status."
+  },
+  {
+    "id": 535,
+    "data_object_name": "document_classification_results",
+    "singular_label": "Document Classification Result",
+    "plural_label": "Document Classification Results",
+    "entity_type": "computed",
+    "description": "Output of document-type classification: classified_document_type (invoice / contract / form / receipt / id / other), classification_confidence, model_version, timestamp."
+  }
+]

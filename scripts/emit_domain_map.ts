@@ -18,7 +18,7 @@
 //                      a neighbor domain across the seam.
 //   personas.json    — every catalog persona (domain_roles), with its business function and
 //                      the modules / domains its role_modules reach touches.
-//   processes.json    — only the processes USED somewhere in the catalog (the processes table is
+//   processes.json    — only the processes USED somewhere in the catalog (the business_processes table is
 //                      the full ~2k-row APQC PCF framework; we emit just the in-use subset).
 //   business-functions.json - the function-centric inverse of domain-map.json's business_functions[]:
 //                      every business_functions row with the domains it owns/contributes-to/consumes
@@ -750,7 +750,7 @@ const personasOut: PersonaOut[] = (all.domainRoles as any[])
 // ---------------------------------------------------------------------------
 // processes.json: of the processes USED somewhere (usage = gate ∪ raci ∪ handoff ∪ tool), emit
 // only those attributed (gate ∪ handoff) to a GATED domain (released-only by default, every domain
-// under --all). See the release gate above. The processes table itself is the full ~2k-row APQC PCF
+// under --all). See the release gate above. The business_processes table itself is the full ~2k-row APQC PCF
 // framework; emit just the in-use subset.
 // ---------------------------------------------------------------------------
 const usage = new Map<number, ProcessUsage>();

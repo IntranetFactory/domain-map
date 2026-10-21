@@ -1,0 +1,762 @@
+[
+  {
+    "id": 1123,
+    "data_object_name": "user_risk_scores",
+    "singular_label": "User Risk Score",
+    "plural_label": "User Risk Scores",
+    "entity_type": "computed",
+    "description": "Computed risk score for an individual insider, derived from weighted behavioral indicators over a scoring window. Updates continuously as new activity arrives."
+  },
+  {
+    "id": 748,
+    "data_object_name": "users",
+    "singular_label": "User",
+    "plural_label": "Users",
+    "entity_type": "operational_record",
+    "description": "Semantius platform-owned user table. Referenced from domain `data_objects` via `data_object_relationships` for assignee / author / approver / creator edges. Not surfaced in domain-level analytics (Signal 1/2 ignore `kind='platform_builtin'`)."
+  },
+  {
+    "id": 664,
+    "data_object_name": "utility_assets",
+    "singular_label": "Utility Asset",
+    "plural_label": "Utility Assets",
+    "entity_type": "operational_workflow",
+    "description": "Utility-owned network infrastructure (substations, transformers, poles, distribution lines, pipelines): type, location, capacity, age, operational status. Distinct from EAM `industrial_assets` (corporate plant) and HAM (IT)."
+  },
+  {
+    "id": 667,
+    "data_object_name": "utility_bills",
+    "singular_label": "Utility Bill",
+    "plural_label": "Utility Bills",
+    "entity_type": "operational_workflow",
+    "description": "Customer invoice: aggregates meter_reads, regulatory adjustments (demand charges, time-of-use rates, tariffs), payment terms. Distinct from telco_customer_bills, S2P invoices, and rent_payments."
+  },
+  {
+    "id": 660,
+    "data_object_name": "utility_customer_accounts",
+    "singular_label": "Utility Customer Account",
+    "plural_label": "Utility Customer Accounts",
+    "entity_type": "operational_workflow",
+    "description": "Legal customer-premise record tied to a utility service territory: contract, billing profile, meter assignment, connection status. Residential, commercial, industrial scopes. Distinct from CRM `customers` (sales context)."
+  },
+  {
+    "id": 350,
+    "data_object_name": "utility_meter_readings",
+    "singular_label": "Utility Meter Reading",
+    "plural_label": "Utility Meter Readings",
+    "entity_type": "operational_workflow",
+    "description": "Electricity, water, gas, waste consumption recorded per period. Source of ESG Scope 1+2 activity data (feeds ESG `activity_data_records`)."
+  },
+  {
+    "id": 661,
+    "data_object_name": "utility_meters",
+    "singular_label": "Utility Meter",
+    "plural_label": "Utility Meters",
+    "entity_type": "operational_record",
+    "description": "Physical meter device at a customer premise (electric/gas/water): device type, manufacturer, install date, certified accuracy class, commissioning state. Distinct from REAL-EST `utility_meter_readings` (the read) and from the meter as a corporate-buyer concept."
+  },
+  {
+    "id": 666,
+    "data_object_name": "utility_service_orders",
+    "singular_label": "Utility Service Order",
+    "plural_label": "Utility Service Orders",
+    "entity_type": "operational_workflow",
+    "description": "Work request to establish new connection / disconnect / move / modify service (not maintenance): premise, requested date, work type, fulfillment status. Distinct from EAM `eam_work_orders` and FSM customer work orders."
+  },
+  {
+    "id": 775,
+    "data_object_name": "valuations_409a",
+    "singular_label": "409A Valuation",
+    "plural_label": "409A Valuations",
+    "entity_type": "operational_workflow",
+    "description": "IRS 409A fair-market-value report for an issuer: methodology (income / market / asset / OPM backsolve), per-class FMV, valuation date. Final once approved; superseded by future 409As."
+  },
+  {
+    "id": 1214,
+    "data_object_name": "value_propositions",
+    "singular_label": "Value Proposition",
+    "plural_label": "Value Propositions",
+    "entity_type": "catalog",
+    "description": "A structured value proposition mapping a capability to a persona outcome and competitive differentiation."
+  },
+  {
+    "id": 683,
+    "data_object_name": "value_stream_metrics",
+    "singular_label": "Value Stream Metric",
+    "plural_label": "Value Stream Metrics",
+    "entity_type": "computed",
+    "description": "DORA-style or VSM-style measurement per repository or product: lead time for changes, deployment frequency, MTTR, change failure rate, computed over a window. Derived/computed; distinct from raw ci_pipeline_runs."
+  },
+  {
+    "id": 249,
+    "data_object_name": "value_streams",
+    "singular_label": "Value Stream",
+    "plural_label": "Value Streams",
+    "entity_type": "operational_workflow",
+    "description": "End-to-end value flow from customer demand to customer-realized value, with lead time, process time, value-add ratio, waste categorization, and SIPOC/customer-journey overlays."
+  },
+  {
+    "id": 492,
+    "data_object_name": "variable_rate_prescriptions",
+    "singular_label": "Variable-Rate Prescription",
+    "plural_label": "Variable-Rate Prescriptions",
+    "entity_type": "unclassified",
+    "description": "Site-specific application prescription map (shapefile / ISO-XML) authored from yield zones and soil tests; dispatched to machinery."
+  },
+  {
+    "id": 41,
+    "data_object_name": "variance_analyses",
+    "singular_label": "Variance Analysis",
+    "plural_label": "Variance Analyses",
+    "entity_type": "operational_workflow",
+    "description": "Actual-vs-plan reconciliation records: account, period, planned amount, actual amount, variance, and root-cause commentary. The operational analytic output of EPM; consumed by org leaders, FP&A, and PA (when variance touches people cost)."
+  },
+  {
+    "id": 750,
+    "data_object_name": "vc_deals",
+    "singular_label": "VC Deal",
+    "plural_label": "VC Deals",
+    "entity_type": "operational_workflow",
+    "description": "Investment opportunity flowing through the deal pipeline (sourced → diligence → IC → term sheet → closed / declined). Domain-prefixed to avoid collision with M&A / IB deal records."
+  },
+  {
+    "id": 374,
+    "data_object_name": "vehicle_inspections",
+    "singular_label": "Vehicle Inspection",
+    "plural_label": "Vehicle Inspections",
+    "entity_type": "operational_workflow",
+    "description": "Driver Vehicle Inspection Report (DVIR) record: pre-trip or post-trip, defects identified, photos, driver signature. Defects route to maintenance work orders."
+  },
+  {
+    "id": 702,
+    "data_object_name": "vehicle_parts_inventory",
+    "singular_label": "Vehicle Parts Inventory Item",
+    "plural_label": "Vehicle Parts Inventory Items",
+    "entity_type": "operational_record",
+    "description": "Parts stocked in garages / service bays for immediate vehicle repair use."
+  },
+  {
+    "id": 375,
+    "data_object_name": "vehicle_trips",
+    "singular_label": "Vehicle Trip",
+    "plural_label": "Vehicle Trips",
+    "entity_type": "unclassified",
+    "description": "GPS-segmented trip record: start/end timestamps, route trace, distance, duration, idle time, jurisdictions (for IFTA), driver. Built from raw telemetry by the platform."
+  },
+  {
+    "id": 379,
+    "data_object_name": "vehicle_work_orders",
+    "singular_label": "Vehicle Work Order",
+    "plural_label": "Vehicle Work Orders",
+    "entity_type": "operational_workflow",
+    "description": "Maintenance or repair work order for a fleet vehicle: triggered by PM schedule, telematics fault, or inspection defect; task lines with labor and parts; assigned mechanic and shop; status lifecycle. Distinct from FSM customer-facing work orders."
+  },
+  {
+    "id": 746,
+    "data_object_name": "vendor_payment_authorizations",
+    "singular_label": "Vendor Payment Authorization",
+    "plural_label": "Vendor Payment Authorizations",
+    "entity_type": "operational_workflow",
+    "description": "Pre-payment approval workflow for vendor-direct payments — distinct from employee-initiated spend_requests."
+  },
+  {
+    "id": 1186,
+    "data_object_name": "vessel_insurance_documents",
+    "singular_label": "Vessel Insurance Document",
+    "plural_label": "Vessel Insurance Documents",
+    "entity_type": "operational_record",
+    "description": "A certificate of insurance on file for a vessel: insurer, policy number, liability limits, and expiry, required by most slip and storage contracts."
+  },
+  {
+    "id": 1187,
+    "data_object_name": "vessel_registrations",
+    "singular_label": "Vessel Registration",
+    "plural_label": "Vessel Registrations",
+    "entity_type": "operational_record",
+    "description": "A state, Coast Guard, or documented-vessel registration record verified for a vessel: registration number, jurisdiction, and expiry."
+  },
+  {
+    "id": 1185,
+    "data_object_name": "vessels",
+    "singular_label": "Vessel",
+    "plural_label": "Vessels",
+    "entity_type": "operational_record",
+    "description": "A boat on file at the marina: name, type, length, beam, draft, hull identification, and owning boater."
+  },
+  {
+    "id": 774,
+    "data_object_name": "vesting_schedules",
+    "singular_label": "Vesting Schedule",
+    "plural_label": "Vesting Schedules",
+    "entity_type": "catalog",
+    "description": "Vesting cadence for an equity grant: cliff, vest_frequency, total months, single-trigger / double-trigger acceleration logic."
+  },
+  {
+    "id": 398,
+    "data_object_name": "veterinary_lab_results",
+    "singular_label": "Veterinary Lab Result",
+    "plural_label": "Veterinary Lab Results",
+    "entity_type": "unclassified",
+    "description": "Structured lab result for an animal patient: tests, values, reference ranges, ordering vet, reporting lab (external reference lab or in-house analyzer)."
+  },
+  {
+    "id": 397,
+    "data_object_name": "veterinary_vaccinations",
+    "singular_label": "Veterinary Vaccination",
+    "plural_label": "Veterinary Vaccinations",
+    "entity_type": "unclassified",
+    "description": "Vaccination record for an animal patient: vaccine type, lot, administered date, expiry, next-due-date driving reminder workflow."
+  },
+  {
+    "id": 1266,
+    "data_object_name": "virtual_agent_conversations",
+    "singular_label": "Virtual Agent Conversation",
+    "plural_label": "Virtual Agent Conversations",
+    "entity_type": "operational_record",
+    "description": "A chatbot or virtual-agent conversation transcript: the turn-by-turn exchange, the resolved intent, any deflection or escalation to a human agent, and the ticket it produced. Backs the Virtual Agent capability."
+  },
+  {
+    "id": 929,
+    "data_object_name": "virtual_classroom_meetings",
+    "singular_label": "Virtual Classroom Meeting",
+    "plural_label": "Virtual Classroom Meetings",
+    "entity_type": "operational_workflow",
+    "description": "Linkage to an external video meeting (Zoom / Teams / Webex) for a virtual session; carries join URL and recording reference."
+  },
+  {
+    "id": 675,
+    "data_object_name": "visitor_audit_logs",
+    "singular_label": "Visitor Audit Log",
+    "plural_label": "Visitor Audit Logs",
+    "entity_type": "operational_record",
+    "description": "Timestamped record of all visitor state transitions (registration / check-in / badge / check-out / escalations): compliance audit trail."
+  },
+  {
+    "id": 670,
+    "data_object_name": "visitor_badges",
+    "singular_label": "Visitor Badge",
+    "plural_label": "Visitor Badges",
+    "entity_type": "operational_workflow",
+    "description": "Physical or digital badge credential issued upon check-in: encodes visitor identity, host assignment, access scope, expiration."
+  },
+  {
+    "id": 669,
+    "data_object_name": "visitor_check_ins",
+    "singular_label": "Visitor Check-In",
+    "plural_label": "Visitor Check-Ins",
+    "entity_type": "operational_workflow",
+    "description": "Arrival event: timestamped confirmation at facility entry, credential verification, badge-issuance trigger."
+  },
+  {
+    "id": 672,
+    "data_object_name": "visitor_evacuation_lists",
+    "singular_label": "Visitor Evacuation List",
+    "plural_label": "Visitor Evacuation Lists",
+    "entity_type": "operational_workflow",
+    "description": "Real-time roster of visitors present on-site, correlated with spaces and emergency zones for emergency response and accountability."
+  },
+  {
+    "id": 673,
+    "data_object_name": "visitor_nda_acknowledgements",
+    "singular_label": "Visitor NDA Acknowledgment",
+    "plural_label": "Visitor NDA Acknowledgments",
+    "entity_type": "operational_record",
+    "description": "Signed or electronically acknowledged non-disclosure agreement: legal-hold artifact per visit. Distinct from CLM `contracts` (corporate agreements)."
+  },
+  {
+    "id": 668,
+    "data_object_name": "visitor_registrations",
+    "singular_label": "Visitor Registration",
+    "plural_label": "Visitor Registrations",
+    "entity_type": "operational_workflow",
+    "description": "Pre-visit registration: visitor arrival intent with expected access duration, host assignment, pre-screening completion. Initiates the visitor lifecycle."
+  },
+  {
+    "id": 674,
+    "data_object_name": "visitor_watchlist_screenings",
+    "singular_label": "Visitor Watchlist Screening",
+    "plural_label": "Visitor Watchlist Screenings",
+    "entity_type": "operational_workflow",
+    "description": "Pre-arrival or arrival-time screening result against external watchlists (sanctions, banned-visitor, threat databases): compliance-hold record."
+  },
+  {
+    "id": 903,
+    "data_object_name": "voluntary_self_identifications",
+    "singular_label": "Voluntary Self-Identification",
+    "plural_label": "Voluntary Self-Identifications",
+    "entity_type": "operational_record",
+    "description": "Voluntary candidate disclosure of protected-class membership (race, ethnicity, gender, veteran status, disability status) per EEOC and OFCCP self-id requirements. Distinct from `eeo_responses` which captures the survey response: this row captures the offer/decline-to-answer decision and audit metadata."
+  },
+  {
+    "id": 1028,
+    "data_object_name": "vulnerabilities",
+    "singular_label": "Vulnerability",
+    "plural_label": "Vulnerabilities",
+    "entity_type": "operational_workflow",
+    "description": "A specific weakness detected on a specific asset, deduplicated across scans and tracked through its own lifecycle from open to closed. The headline noun of the domain: a vulnerability links an asset (mastered in ITAM/CMDB) to a vulnerability definition and carries severity, computed risk, ownership, and current state."
+  },
+  {
+    "id": 1033,
+    "data_object_name": "vulnerability_assessments",
+    "singular_label": "Vulnerability Assessment",
+    "plural_label": "Vulnerability Assessments",
+    "entity_type": "operational_workflow",
+    "description": "A scoped, point-in-time assessment or remediation campaign over an asset population, grouping vulnerabilities for a posture snapshot, audit window, or program milestone. Carries scope, time window, and an aggregate posture summary."
+  },
+  {
+    "id": 1030,
+    "data_object_name": "vulnerability_definitions",
+    "singular_label": "Vulnerability Definition",
+    "plural_label": "Vulnerability Definitions",
+    "entity_type": "catalog",
+    "description": "The catalog of known vulnerabilities (CVE identifiers, vendor advisories, plugin or check metadata, affected products, base CVSS severity, references) that incoming scan findings are matched against and enriched from. A reference catalog, not an operational record."
+  },
+  {
+    "id": 1032,
+    "data_object_name": "vulnerability_exceptions",
+    "singular_label": "Vulnerability Exception",
+    "plural_label": "Vulnerability Exceptions",
+    "entity_type": "operational_workflow",
+    "description": "A governed, time-boxed risk acceptance, deferral, or false-positive designation for vulnerabilities the business chooses not to remediate now. Carries justification, requesting and approving parties, scope, and an expiry that drives re-review. Single-approver sign-off gates activation."
+  },
+  {
+    "id": 1031,
+    "data_object_name": "vulnerability_remediations",
+    "singular_label": "Vulnerability Remediation",
+    "plural_label": "Vulnerability Remediations",
+    "entity_type": "operational_workflow",
+    "description": "Operational remediation work that resolves one or more vulnerabilities: the owning team, due date, SLA, patch or configuration guidance, and verification status. The security-side workflow record; where fixes are executed through a service desk it hands off to ITSM change or incident records."
+  },
+  {
+    "id": 1029,
+    "data_object_name": "vulnerability_scans",
+    "singular_label": "Vulnerability Scan",
+    "plural_label": "Vulnerability Scans",
+    "entity_type": "operational_workflow",
+    "description": "A scan job run against an asset population using a scan policy or template, progressing through queued, running, and completed states and emitting the findings that become vulnerabilities. Scope-qualified to avoid collision with discovery_scans (ASM) and other scan entities."
+  },
+  {
+    "id": 928,
+    "data_object_name": "waitlist_entries",
+    "singular_label": "Waitlist Entry",
+    "plural_label": "Waitlist Entries",
+    "entity_type": "operational_workflow",
+    "description": "Capacity overflow queue for a course offering; priority order and notify-on-seat-open policy."
+  },
+  {
+    "id": 1267,
+    "data_object_name": "walkup_visits",
+    "singular_label": "Walk-Up Visit",
+    "plural_label": "Walk-Up Visits",
+    "entity_type": "operational_workflow",
+    "description": "A walk-up or onsite check-in record: the visitor, the reason for the visit, queue position, estimated service time, and outcome. Backs the Walk-Up capability. The kiosk is treated as a location attribute, not a separate entity."
+  },
+  {
+    "id": 762,
+    "data_object_name": "waterfall_calculations",
+    "singular_label": "Waterfall Calculation",
+    "plural_label": "Waterfall Calculations",
+    "entity_type": "operational_workflow",
+    "description": "Per-distribution waterfall computation: hurdle test, catchup, GP carry, LP returns. References the fund's distribution agreement (European / American / hybrid)."
+  },
+  {
+    "id": 685,
+    "data_object_name": "web_content_inventory_records",
+    "singular_label": "Web Content Inventory Record",
+    "plural_label": "Web Content Inventory Records",
+    "entity_type": "unclassified",
+    "description": "Per-page tracking record across web properties: URL/slug, status (published / draft / retired), last-modified, owner, publish date, review cadence, lifecycle stage. CMS-agnostic counterpart to HCMS `content_entries`."
+  },
+  {
+    "id": 1242,
+    "data_object_name": "web_experiences",
+    "singular_label": "Web Experience",
+    "plural_label": "Web Experiences",
+    "entity_type": "operational_workflow",
+    "description": "A personalized web experience or landing page served to named accounts."
+  },
+  {
+    "id": 441,
+    "data_object_name": "web_pages",
+    "singular_label": "Web Page",
+    "plural_label": "Web Pages",
+    "entity_type": "operational_workflow",
+    "description": "Storable, URL-routable page composition assembled from content_components for a DXP-served digital channel."
+  },
+  {
+    "id": 1241,
+    "data_object_name": "web_personalization_rules",
+    "singular_label": "Web Personalization Rule",
+    "plural_label": "Web Personalization Rules",
+    "entity_type": "catalog",
+    "description": "A rule mapping a resolved account/segment to a personalized web experience or variant."
+  },
+  {
+    "id": 1243,
+    "data_object_name": "web_visitor_resolutions",
+    "singular_label": "Web Visitor Resolution",
+    "plural_label": "Web Visitor Resolutions",
+    "entity_type": "operational_record",
+    "description": "A person/account-level de-anonymization of a web visitor; PII-bearing and consent-gated."
+  },
+  {
+    "id": 472,
+    "data_object_name": "webhook_subscriptions",
+    "singular_label": "Webhook Subscription",
+    "plural_label": "Webhook Subscriptions",
+    "entity_type": "operational_workflow",
+    "description": "Event subscription: source_system, event_type, target_recipe, retry_policy, filter_logic."
+  },
+  {
+    "id": 21,
+    "data_object_name": "welcome_communications",
+    "singular_label": "Welcome Communication",
+    "plural_label": "Welcome Communications",
+    "entity_type": "operational_workflow",
+    "description": "Email, video, push notification, or SMS sent to a new hire during the journey — pre-boarding nudges, Day-1 schedule, post-Day-1 check-ins, cohort announcements. Carries channel, template, scheduled send time, delivery state, and engagement metrics."
+  },
+  {
+    "id": 517,
+    "data_object_name": "wholesale_orders",
+    "singular_label": "Wholesale Order",
+    "plural_label": "Wholesale Orders",
+    "entity_type": "operational_workflow",
+    "description": "B2B order from chef / restaurant / co-op / food-hub buyer; per-line pricing tier, packing-list reference, net-30 invoicing."
+  },
+  {
+    "id": 1206,
+    "data_object_name": "win_loss_interviews",
+    "singular_label": "Win/Loss Interview",
+    "plural_label": "Win/Loss Interviews",
+    "entity_type": "operational_workflow",
+    "description": "A structured interview with a won or lost buyer, capturing the decision drivers; carries interviewee identity and quotes."
+  },
+  {
+    "id": 607,
+    "data_object_name": "wire_transfers",
+    "singular_label": "Wire Transfer",
+    "plural_label": "Wire Transfers",
+    "entity_type": "operational_workflow",
+    "description": "Banking-side fund-transfer instruction: originating account, destination (domestic/international), amount, currency, requested delivery, beneficiary, purpose code, compliance flags (sanctions, threshold reporting), execution status, confirmation number. Distinct from S2P supplier payments."
+  },
+  {
+    "id": 971,
+    "data_object_name": "work_approval_chains",
+    "singular_label": "Approval Chain",
+    "plural_label": "Approval Chains",
+    "entity_type": "catalog",
+    "description": "Ordered or parallel set of work_approval_steps gating a work_item or work_project transition. Backs the APPROVAL-WORKFLOW capability (cross-cutting; this is the WORK-MGMT realization)."
+  },
+  {
+    "id": 970,
+    "data_object_name": "work_approval_steps",
+    "singular_label": "Approval Step",
+    "plural_label": "Approval Steps",
+    "entity_type": "operational_workflow",
+    "description": "Single approval gate on a work_item or work_project, performed by a designated approver. Belongs to a work_approval_chain. Per-step states: pending / approved / rejected / expired."
+  },
+  {
+    "id": 246,
+    "data_object_name": "work_automations",
+    "singular_label": "Work Automation",
+    "plural_label": "Work Automations",
+    "entity_type": "catalog",
+    "description": "Trigger-action rule defined per board/project: status change, due date, assignment, form submission as triggers; multi-step actions with conditions, time delays, and external integrations. The user-authored behavior layer on top of the data primitives."
+  },
+  {
+    "id": 974,
+    "data_object_name": "work_custom_field_values",
+    "singular_label": "Custom Field Value",
+    "plural_label": "Custom Field Values",
+    "entity_type": "junction",
+    "description": "Per-work_item value for a work_custom_field. Junction-style master: tuple (work_item, work_custom_field, value). Monday column_values, Asana custom_field_values, Smartsheet cells."
+  },
+  {
+    "id": 973,
+    "data_object_name": "work_custom_fields",
+    "singular_label": "Custom Field",
+    "plural_label": "Custom Fields",
+    "entity_type": "catalog",
+    "description": "User-defined field attached to a work_project or workspace, typed (text, number, date, select, etc.). Applies to all work_items in scope. Monday columns / Asana custom fields / ClickUp custom fields / Workfront / Smartsheet column types."
+  },
+  {
+    "id": 1289,
+    "data_object_name": "work_dashboards",
+    "singular_label": "Work Dashboard",
+    "plural_label": "Work Dashboards",
+    "entity_type": "catalog",
+    "description": "Saved, shareable cross-project dashboard composed of configurable widgets that summarize work progress, workload, and goal status. Backs the cross-project dashboards capability."
+  },
+  {
+    "id": 968,
+    "data_object_name": "work_dependencies",
+    "singular_label": "Work Dependency",
+    "plural_label": "Work Dependencies",
+    "entity_type": "junction",
+    "description": "Typed dependency between two work_items: predecessor/successor with type (FS finish-to-start, SS start-to-start, FF finish-to-finish, SF start-to-finish). Backs the WORK-DEPS-SCHED capability. Modeled by Asana, Monday, ClickUp, Workfront, Smartsheet."
+  },
+  {
+    "id": 1035,
+    "data_object_name": "work_eligibility_documents",
+    "singular_label": "Work Eligibility Document",
+    "plural_label": "Work Eligibility Documents",
+    "entity_type": "operational_workflow",
+    "description": "Right-to-work evidence for a worker: visa, work permit, or equivalent authorization, effective-dated with an expiry the system tracks. Jurisdiction-conditional and access-restricted. Distinct from the US-specific hiring I-9 record."
+  },
+  {
+    "id": 983,
+    "data_object_name": "work_form_submissions",
+    "singular_label": "Form Submission",
+    "plural_label": "Form Submissions",
+    "entity_type": "operational_workflow",
+    "description": "Submitted instance of a work_form. Carries field values, submitter, timestamp. Converts to a work_item via routing rules. May contain personal content from form fields (requester name/email)."
+  },
+  {
+    "id": 982,
+    "data_object_name": "work_forms",
+    "singular_label": "Form",
+    "plural_label": "Forms",
+    "entity_type": "catalog",
+    "description": "Structured intake form definition: schema (fields, validation), target project, routing rules. Asana Forms, Monday Forms, ClickUp Forms, Workfront Request Queues, Smartsheet Forms."
+  },
+  {
+    "id": 1293,
+    "data_object_name": "work_goal_links",
+    "singular_label": "Work-to-Goal Link",
+    "plural_label": "Work-to-Goal Links",
+    "entity_type": "junction",
+    "description": "Contribution link between a work item or project and an okr_objective so that goal progress can roll up from the work that drives it."
+  },
+  {
+    "id": 596,
+    "data_object_name": "work_instructions",
+    "singular_label": "Work Instruction",
+    "plural_label": "Work Instructions",
+    "entity_type": "operational_workflow",
+    "description": "Operator-facing step sequence for building/assembling a product variant: sequence, resource requirements, quality checkpoints, safety notes, attached media. References product + production_order."
+  },
+  {
+    "id": 981,
+    "data_object_name": "work_item_attachments",
+    "singular_label": "Item Attachment",
+    "plural_label": "Item Attachments",
+    "entity_type": "operational_record",
+    "description": "File or external link attached to a work_item. May reference embedded content or platform-managed storage."
+  },
+  {
+    "id": 980,
+    "data_object_name": "work_item_comments",
+    "singular_label": "Item Comment",
+    "plural_label": "Item Comments",
+    "entity_type": "operational_record",
+    "description": "Threaded comment on a work_item. Asana stories / Monday updates / ClickUp comments / Workfront updates / Smartsheet conversations. May include personal or sensitive content."
+  },
+  {
+    "id": 979,
+    "data_object_name": "work_item_tags",
+    "singular_label": "Item Tag Assignment",
+    "plural_label": "Item Tag Assignments",
+    "entity_type": "junction",
+    "description": "Junction master between work_items and work_tags. Carries no qualifier of its own; existence asserts the tag is applied."
+  },
+  {
+    "id": 243,
+    "data_object_name": "work_items",
+    "singular_label": "Work Item",
+    "plural_label": "Work Items",
+    "entity_type": "operational_workflow",
+    "description": "Atomic primitive in a work-management platform: task / item / card with owner, due date, status, priority, dependencies, subtasks, attachments, and comments. Same shape regardless of platform-specific terminology (task, item, row, card)."
+  },
+  {
+    "id": 969,
+    "data_object_name": "work_milestones",
+    "singular_label": "Milestone",
+    "plural_label": "Milestones",
+    "entity_type": "operational_record",
+    "description": "Zero-duration gate within a work_project marking a meaningful transition. Distinct from a regular work_item by gate semantics (passed/missed). Asana, Monday, ClickUp, Workfront, Smartsheet all model."
+  },
+  {
+    "id": 295,
+    "data_object_name": "work_papers",
+    "singular_label": "Work Paper",
+    "plural_label": "Work Papers",
+    "entity_type": "operational_workflow",
+    "description": "Fieldwork documentation: test procedures executed, evidence gathered, conclusions, sign-off. Keyed to audit_programs and control_tests."
+  },
+  {
+    "id": 1292,
+    "data_object_name": "work_portfolios",
+    "singular_label": "Work Portfolio",
+    "plural_label": "Work Portfolios",
+    "entity_type": "catalog",
+    "description": "Team-level grouping of related projects for cross-project status roll-up. Distinct from the top-down strategic portfolio mastered in the strategic-portfolio domain."
+  },
+  {
+    "id": 976,
+    "data_object_name": "work_project_templates",
+    "singular_label": "Project Template",
+    "plural_label": "Project Templates",
+    "entity_type": "catalog",
+    "description": "Reusable work_project blueprint with seeded sections, items, custom fields, and automations. Universal across all 5 flagships; central to enterprise rollout patterns."
+  },
+  {
+    "id": 244,
+    "data_object_name": "work_projects",
+    "singular_label": "Work Project",
+    "plural_label": "Work Projects",
+    "entity_type": "operational_workflow",
+    "description": "Container of work_items, regardless of platform-specific terminology (project, board, sheet, space/list). Has timeline, status, owner, members, dashboards, and embedded views."
+  },
+  {
+    "id": 160,
+    "data_object_name": "work_schedules",
+    "singular_label": "Work Schedule",
+    "plural_label": "Work Schedules",
+    "entity_type": "operational_workflow",
+    "description": "Published shift schedule for a department / location / week, derived from labor-demand forecasts and worker-availability constraints. The product of a scheduling-optimization run."
+  },
+  {
+    "id": 975,
+    "data_object_name": "work_sections",
+    "singular_label": "Section",
+    "plural_label": "Sections",
+    "entity_type": "catalog",
+    "description": "Container within a work_project that groups work_items for board/list views. Asana sections / Monday groups / ClickUp statuses-as-columns / Workfront statuses / Smartsheet parent rows."
+  },
+  {
+    "id": 161,
+    "data_object_name": "work_shifts",
+    "singular_label": "Shift",
+    "plural_label": "Shifts",
+    "entity_type": "operational_record",
+    "description": "A scheduled work block assigned to a worker: start, end, position, location, break plan, premium pay flags. The atomic scheduling unit."
+  },
+  {
+    "id": 1295,
+    "data_object_name": "work_status_updates",
+    "singular_label": "Work Status Update",
+    "plural_label": "Work Status Updates",
+    "entity_type": "operational_record",
+    "description": "Logged status-change event on a work item or project capturing the prior status, the new status, who changed it, and when."
+  },
+  {
+    "id": 1294,
+    "data_object_name": "work_statuses",
+    "singular_label": "Work Status",
+    "plural_label": "Work Statuses",
+    "entity_type": "catalog",
+    "description": "Configurable status value in a project's or team's status taxonomy, with its category (not started, in progress, done) and display order."
+  },
+  {
+    "id": 978,
+    "data_object_name": "work_tags",
+    "singular_label": "Tag",
+    "plural_label": "Tags",
+    "entity_type": "catalog",
+    "description": "Free-form label attached to work_items for cross-cutting categorization (priority, theme, status). Many-to-many to work_items via work_item_tags."
+  },
+  {
+    "id": 977,
+    "data_object_name": "work_task_templates",
+    "singular_label": "Task Template",
+    "plural_label": "Task Templates",
+    "entity_type": "catalog",
+    "description": "Reusable work_item blueprint with seeded assignee role, due-date offset, subtasks, and custom field defaults. Used for recurring or templated work creation."
+  },
+  {
+    "id": 1291,
+    "data_object_name": "work_time_entries",
+    "singular_label": "Work Time Entry",
+    "plural_label": "Work Time Entries",
+    "entity_type": "operational_record",
+    "description": "Non-billable time logged against a work item for effort tracking and capacity reporting. Billable worklog with rate, utilization, and invoice stays mastered in the services-billing domain and is consumed, not re-mastered, here."
+  },
+  {
+    "id": 972,
+    "data_object_name": "work_user_workloads",
+    "singular_label": "Workload",
+    "plural_label": "Workloads",
+    "entity_type": "computed",
+    "description": "Per-user, per-period sum of allocated effort on work_items, with capacity ceiling. Backs the WORK-CAPACITY capability. Continuous-numeric, not state-driven. May expose individual workload."
+  },
+  {
+    "id": 1290,
+    "data_object_name": "work_views",
+    "singular_label": "Work View",
+    "plural_label": "Work Views",
+    "entity_type": "catalog",
+    "description": "Saved, named, shareable board / list / timeline / calendar view of work items with persisted filters, grouping, and sort. A configuration record, not a per-user UI toggle."
+  },
+  {
+    "id": 1037,
+    "data_object_name": "worker_addresses",
+    "singular_label": "Worker Address",
+    "plural_label": "Worker Addresses",
+    "entity_type": "operational_record",
+    "description": "Home, work, and mailing addresses for a worker, effective-dated and typed by purpose, supporting multi-jurisdiction and country-variant formats."
+  },
+  {
+    "id": 1039,
+    "data_object_name": "worker_change_requests",
+    "singular_label": "Worker Change Request",
+    "plural_label": "Worker Change Requests",
+    "entity_type": "operational_workflow",
+    "description": "Self-service request raised by an employee or manager to change worker data (personal details, address, job, or org assignment), routed through an approval workflow before it commits to the worker record. The self-service surface's first-class request object."
+  },
+  {
+    "id": 30,
+    "data_object_name": "workforce_cost_projections",
+    "singular_label": "Workforce Cost Projection",
+    "plural_label": "Workforce Cost Projections",
+    "entity_type": "operational_workflow",
+    "description": "Fully-loaded cost forecast per period, by org unit / role / location / level. Inputs: headcount × comp band × loading factor (benefits, taxes, equity) × jurisdiction. The bridge to EPM — produced inside SWP from the workforce plan, then handed off to EPM where it's rolled into the consolidated budget. Without this object the SWP↔EPM boundary is fuzzy; with it, SWP masters the workforce-driven cost build and EPM masters the consolidated financial plan that consumes it."
+  },
+  {
+    "id": 23,
+    "data_object_name": "workforce_plans",
+    "singular_label": "Workforce Plan",
+    "plural_label": "Workforce Plans",
+    "entity_type": "operational_workflow",
+    "description": "Multi-year strategic plan covering target headcount, skills, location, and cost. The SWP umbrella entity; carries planning horizon (typically 1-5 years), base assumptions (attrition rate, hire ramp, productivity factor), approval state (draft / review / approved / published / reconciled), and pointers to the scenarios and forecasts that compose it."
+  },
+  {
+    "id": 27,
+    "data_object_name": "workforce_scenarios",
+    "singular_label": "Workforce Scenario",
+    "plural_label": "Workforce Scenarios",
+    "entity_type": "operational_workflow",
+    "description": "What-if models layered on top of a base workforce plan. Each scenario carries a type (growth / reduction / restructure / geography_shift / skill_pivot / cost_optimization), the perturbation parameters, and the modeled outcome on headcount, skills, and cost. RIF planning, expansion planning, M&A integration, and reorgs all sit here."
+  },
+  {
+    "id": 44,
+    "data_object_name": "workforce_segments",
+    "singular_label": "Workforce Segment",
+    "plural_label": "Workforce Segments",
+    "entity_type": "computed",
+    "description": "Named cohort definitions used for analysis and intervention: hi-po, flight-risk, top-quartile-performer, early-career, returning-from-leave, regrettable-loss-risk. Drives Talent Mgmt programs (high_potential.identified is the canonical outbound handoff) and HR Service Delivery actions."
+  },
+  {
+    "id": 594,
+    "data_object_name": "workplace_experience_feedback",
+    "singular_label": "Workplace Experience Feedback",
+    "plural_label": "Workplace Experience Feedback",
+    "entity_type": "operational_record",
+    "description": "Employee survey/feedback on office experience: comfort, amenities, satisfaction. Informs workplace strategy and EX improvements."
+  },
+  {
+    "id": 592,
+    "data_object_name": "workplace_service_requests",
+    "singular_label": "Workplace Service Request",
+    "plural_label": "Workplace Service Requests",
+    "entity_type": "operational_workflow",
+    "description": "Employee request for workspace changes: desk relocation, accommodation needs, floor reassignment. Routed to facilities for approval/execution. Workplace-scoped (vs generic ITSM service_requests)."
+  },
+  {
+    "id": 911,
+    "data_object_name": "xapi_statements",
+    "singular_label": "xAPI Statement",
+    "plural_label": "xAPI Statements",
+    "entity_type": "operational_record",
+    "description": "Experience-API event log row capturing actor-verb-object learning activity inside or outside the LMS."
+  }
+]

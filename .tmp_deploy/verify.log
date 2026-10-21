@@ -1,0 +1,102 @@
+=== Verification report ===
+
+Modules:
+  domain_map                   module_type=master  logo_color=#5a3c0e
+    view_permission=domain_map:read
+    manage_permission_id=10002
+    default_viewer_role_id=10001  default_manager_role_id=10002
+
+Permissions:
+  domain_map:read              module_id=1001  "Read every record in the catalog. Typically: every user of the catalog."
+  domain_map:manage            module_id=1001  "Create and edit catalog records across every entity. Typically: catalog curators, research agents."
+
+Hierarchy:
+  domain_map:manage → domain_map:read  origin=model_master
+
+Roles:
+  domain_map_viewer            origin=model_master  module_id=1001
+  domain_map_manager           origin=model_master  module_id=1001
+  ✓ role_permissions wired
+
+Entities (20/20):
+  ✓ capabilities                      ok
+  ✓ regulations                       ok
+  ✓ business_function_capabilities    ok
+  ✓ capability_domains                ok
+  ✓ solution_domains                  ok
+  ✓ industries                        ok
+  ✓ vendors                           ok
+  ✓ domains                           ok
+  ✓ business_functions                ok
+  ✓ solution_capabilities             ok
+  ✓ data_objects                      ok
+  ✓ solutions                         ok
+  ✓ jurisdictions                     ok
+  ✓ solution_data_objects             ok
+  ✓ data_object_aliases               ok
+  ✓ data_object_relationships         ok
+  ✓ industry_business_functions       ok
+  ✓ business_function_domains         ok
+  ✓ domain_data_objects               ok
+  ✓ domain_regulations                ok
+
+Field counts:
+  ✗ industries                        8/9
+  ✗ business_functions                7/8
+  ✗ domains                           8/9
+  ✗ capabilities                      8/9
+  ✗ data_objects                      6/7
+  ✓ vendors                           9/9
+  ✓ solutions                         11/11
+  ✗ jurisdictions                     9/10
+  ✓ regulations                       12/12
+  ✓ data_object_aliases               11/11
+  ✓ data_object_relationships         13/13
+  ✗ industry_business_functions       7/8
+  ✓ business_function_domains         9/9
+  ✓ business_function_capabilities    9/9
+  ✓ domain_data_objects               9/9
+  ✓ capability_domains                8/8
+  ✓ solution_domains                  9/9
+  ✓ solution_data_objects             9/9
+  ✓ solution_capabilities             9/9
+  ✓ domain_regulations                10/10
+
+Label-column titles:
+  ✓ industries.industry_name: "Industry Name"
+  ✓ business_functions.business_function_name: "Function Name"
+  ✓ domains.domain_name: "Domain Name"
+  ✓ capabilities.capability_name: "Capability Name"
+  ✓ data_objects.data_object_name: "Data Object Name"
+  ✓ vendors.vendor_name: "Vendor Name"
+  ✓ solutions.solution_name: "Solution Name"
+  ✓ jurisdictions.jurisdiction_name: "Jurisdiction Name"
+  ✓ regulations.regulation_name: "Regulation Name"
+  ✓ data_object_aliases.alias_name: "Alias Name"
+  ✓ data_object_relationships.data_object_relationship_label: "Relationship"
+  ✓ industry_business_functions.industry_business_function_label: "Mapping"
+  ✓ business_function_domains.business_function_domain_label: "Mapping"
+  ✓ business_function_capabilities.business_function_capability_label: "Mapping"
+  ✓ domain_data_objects.domain_data_object_label: "Mapping"
+  ✓ capability_domains.capability_domain_label: "Mapping"
+  ✓ solution_domains.solution_domain_label: "Mapping"
+  ✓ solution_data_objects.solution_data_object_label: "Mapping"
+  ✓ solution_capabilities.solution_capability_label: "Mapping"
+  ✓ domain_regulations.domain_regulation_label: "Mapping"
+
+FK reference targets:
+  ✓ 30 FKs resolved, 0 unresolved
+
+input_type_rule:
+  ✓ data_object_aliases.industry_id: {"if":[{"==":[{"var":"alias_type"},"industry_term"]},"required","hidden"]}
+  ✓ data_object_aliases.solution_id: {"if":[{"==":[{"var":"alias_type"},"solution_term"]},"required","hidden"]}
+
+========================================
+✗ 7 issues:
+  - field count industries: got 8, expected 9
+  - field count business_functions: got 7, expected 8
+  - field count domains: got 8, expected 9
+  - field count capabilities: got 8, expected 9
+  - field count data_objects: got 6, expected 7
+  - field count jurisdictions: got 9, expected 10
+  - field count industry_business_functions: got 7, expected 8

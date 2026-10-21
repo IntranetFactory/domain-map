@@ -1,0 +1,657 @@
+{
+  "domain": {
+    "id": 98,
+    "domain_name": "Contact Center as a Service",
+    "created_at": "2026-05-18T20:11:52.969853+00:00",
+    "updated_at": "2026-06-07T01:59:16.491068+00:00",
+    "domain_code": "CCAAS",
+    "description": "Cloud telephony, omnichannel routing, IVR, workforce engagement management, and AI agent assist for contact centres. Distinct from CSM (case-management business app).",
+    "record_status": "new",
+    "parent_domain_id": null,
+    "industry_id": null,
+    "certification_required": false,
+    "crud_percentage": 50,
+    "business_logic": "ACD/routing engine, IVR runtime, real-time analytics, and workforce engagement (recording, QM, WFM) — the platform IS the engine.",
+    "min_org_size": "20 s <500",
+    "cost_band": "$$$$",
+    "usa_market_size_usd_m": 8000,
+    "market_size_source_year": 2025,
+    "search_vector": "'a':4A 'as':3A 'ccaas':6C 'center':2A 'contact':1A 'service':5A",
+    "notes": "",
+    "catalog": false,
+    "catalog_tagline": "Run your contact center in the cloud: route every call, chat, and message to the right agent, capture and score interactions, and keep teams staffed and on target.",
+    "catalog_description": "Bring every customer conversation onto one cloud platform. Calls, chats, emails, SMS, and social messages land in unified queues and route to the agent best suited to handle them, with self-service menus and AI assistance deflecting and speeding up the simple requests. Agents see the customer's history across channels as soon as the interaction connects, and wrap up each contact with a clear outcome code that feeds reporting and follow-up.\n\nBehind the scenes you get the tooling to run the operation: live queue dashboards and service-level alerts, agent presence and availability tracking, and full interaction recording for quality and compliance. Supervisors review and score recorded interactions, coach agents on what to improve, and watch real-time metrics so they can shift staffing before service levels slip."
+  },
+  "capabilities": [
+    {
+      "capabilities": {
+        "capability_code": "SLA-MGMT",
+        "capability_name": "SLA and OLA Management",
+        "description": "Service-level, operational-level, and underpinning-contract definitions; attachment to work items by priority/category/customer tier; breach detection; escalation triggers; breach reporting. Applies across internal IT services, external customer services, contact-centre work, and project services."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "CCAAS-OMNI-ROUTE",
+        "capability_name": "Omnichannel Routing and Queueing",
+        "description": "Unified ingestion of voice, chat, email, SMS, and social interactions into skills-based queues, with automatic call distribution (ACD) that matches each contact to the best-fit available agent by skill, priority, and customer tier. Includes queue prioritization, overflow, and routing-profile administration."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "CCAAS-IVR-SELF",
+        "capability_name": "IVR and Self-Service Flows",
+        "description": "Visual flow runtime for interactive voice response menus, callback offers, and digital self-service that authenticate, collect intent, deflect simple requests, and hand off to a live queue when needed. Covers prompt design, DTMF and speech capture, and flow versioning."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "CCAAS-AGENT-DESK",
+        "capability_name": "Agent Desktop and Interaction Handling",
+        "description": "The agent workspace that presents the connected interaction with cross-channel customer context, controls for hold, transfer, conference, and consult, after-call wrap-up, and disposition coding. Tracks agent presence and availability states that feed routing and adherence."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "CCAAS-REC-CAPTURE",
+        "capability_name": "Interaction Recording and Capture",
+        "description": "Capture and retention of voice recordings and transcripts (and screen capture where licensed) across interactions, with consent handling, pause/resume for sensitive data, and retention policy enforcement so recordings are available for quality, dispute, and compliance review."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "CCAAS-QM-COACH",
+        "capability_name": "Quality Management and Coaching",
+        "description": "Supervisor review and scoring of recorded interactions against evaluation forms, calibration across evaluators, and coaching assignment to close performance gaps. Drives agent improvement plans tied to disposition and outcome data."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "CCAAS-RT-ANALYTICS",
+        "capability_name": "Real-Time and Historical Analytics",
+        "description": "Live queue and agent dashboards with service-level, abandon-rate, and occupancy metrics and threshold alerting, plus historical reporting aggregated by queue, agent, skill, and disposition for trend analysis and staffing decisions."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "CCAAS-WEM-ADHERE",
+        "capability_name": "Workforce Engagement and Adherence",
+        "description": "Tracking of agent state changes and time-in-state against expected schedules to measure adherence and auxiliary-time breaches, surfacing intraday staffing signals. Consumes forecasts and schedules mastered in the workforce-management domain rather than owning them."
+      }
+    }
+  ],
+  "solutions": [
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "Genesys Cloud CX",
+        "vendor_id": 367,
+        "vendors": {
+          "vendor_name": "Genesys"
+        }
+      }
+    },
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "NICE CXone",
+        "vendor_id": 368,
+        "vendors": {
+          "vendor_name": "NICE"
+        }
+      }
+    },
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "Five9 Intelligent CX Platform",
+        "vendor_id": 369,
+        "vendors": {
+          "vendor_name": "Five9"
+        }
+      }
+    },
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "Amazon Connect",
+        "vendor_id": 223,
+        "vendors": {
+          "vendor_name": "Amazon Web Services"
+        }
+      }
+    },
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "Talkdesk CX Cloud",
+        "vendor_id": 370,
+        "vendors": {
+          "vendor_name": "Talkdesk"
+        }
+      }
+    },
+    {
+      "coverage_level": "secondary",
+      "solutions": {
+        "solution_name": "Webex Contact Center",
+        "vendor_id": 226,
+        "vendors": {
+          "vendor_name": "Cisco"
+        }
+      }
+    },
+    {
+      "coverage_level": "secondary",
+      "solutions": {
+        "solution_name": "Twilio Flex",
+        "vendor_id": 209,
+        "vendors": {
+          "vendor_name": "Twilio"
+        }
+      }
+    },
+    {
+      "coverage_level": "secondary",
+      "solutions": {
+        "solution_name": "8x8 Contact Center",
+        "vendor_id": 372,
+        "vendors": {
+          "vendor_name": "8x8"
+        }
+      }
+    },
+    {
+      "coverage_level": "partial",
+      "solutions": {
+        "solution_name": "Zoom Contact Center",
+        "vendor_id": 227,
+        "vendors": {
+          "vendor_name": "Zoom"
+        }
+      }
+    }
+  ],
+  "modules": [
+    {
+      "domain_module_code": "CCAAS-DESKTOP",
+      "domain_module_name": "Agent Desktop and Interactions",
+      "module_kind": "full",
+      "description": "The live interaction workspace. Owns the support session as the unit of agent work, the contact record captured for every interaction, and agent_states that track presence and availability. Realizes the agent-desktop and workforce-engagement/adherence capabilities. Consumes WFM schedules to compare actual state against plan rather than mastering scheduling here."
+    },
+    {
+      "domain_module_code": "CCAAS-ROUTING",
+      "domain_module_name": "Routing and Queues",
+      "module_kind": "full",
+      "description": "The ACD and flow engine. Owns omnichannel ingestion, skills-based queueing, and the IVR/self-service flow runtime that places each interaction into the right queue. Realizes routing and IVR capabilities. Masters queue_statistics as the computed view of queue health and disposition_codes as the catalog of outcome codes applied downstream. Consumes CRM customers and KMS knowledge as routing and self-service context."
+    },
+    {
+      "domain_module_code": "CCAAS-QUALITY",
+      "domain_module_name": "Quality and Analytics",
+      "module_kind": "full",
+      "description": "Post-interaction quality and reporting. Owns call recordings as the captured evidence of each interaction, interaction_evaluations as supervisor scoring against forms, and evaluation_forms as the reusable scorecard catalog. Realizes the recording, quality-management/coaching, and analytics capabilities. Consumes contact_records and support_sessions as the interactions under review and SLA definitions for breach reporting."
+    }
+  ],
+  "data_objects": [
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 256,
+        "data_object_name": "support_sessions",
+        "singular_label": "Support Session",
+        "entity_type": "operational_workflow",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 257,
+        "data_object_name": "contact_records",
+        "singular_label": "Contact Record",
+        "entity_type": "operational_record",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 258,
+        "data_object_name": "queue_statistics",
+        "singular_label": "Queue Statistics",
+        "entity_type": "computed",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 735,
+        "data_object_name": "ccaas_call_recordings",
+        "singular_label": "CCaaS Call Recording",
+        "entity_type": "operational_workflow",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 736,
+        "data_object_name": "agent_states",
+        "singular_label": "Agent State",
+        "entity_type": "operational_workflow",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 737,
+        "data_object_name": "disposition_codes",
+        "singular_label": "Disposition Code",
+        "entity_type": "catalog",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    }
+  ],
+  "lifecycle_states": [
+    {
+      "data_object_id": 256,
+      "state_name": "queued",
+      "state_order": 1,
+      "is_initial": true,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 256,
+      "state_name": "offered",
+      "state_order": 2,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 256,
+      "state_name": "active",
+      "state_order": 3,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 256,
+      "state_name": "on_hold",
+      "state_order": 4,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 256,
+      "state_name": "escalated",
+      "state_order": 5,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": true
+    },
+    {
+      "data_object_id": 256,
+      "state_name": "wrap_up",
+      "state_order": 6,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 256,
+      "state_name": "completed",
+      "state_order": 7,
+      "is_initial": false,
+      "is_terminal": true,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 256,
+      "state_name": "abandoned",
+      "state_order": 8,
+      "is_initial": false,
+      "is_terminal": true,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 735,
+      "state_name": "recording",
+      "state_order": 1,
+      "is_initial": true,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 735,
+      "state_name": "paused",
+      "state_order": 2,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 735,
+      "state_name": "stored",
+      "state_order": 3,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 735,
+      "state_name": "transcribed",
+      "state_order": 4,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 735,
+      "state_name": "retained",
+      "state_order": 5,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 735,
+      "state_name": "purged",
+      "state_order": 6,
+      "is_initial": false,
+      "is_terminal": true,
+      "requires_permission": true
+    },
+    {
+      "data_object_id": 736,
+      "state_name": "logged_out",
+      "state_order": 1,
+      "is_initial": true,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 736,
+      "state_name": "available",
+      "state_order": 2,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 736,
+      "state_name": "busy",
+      "state_order": 3,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 736,
+      "state_name": "wrap_up",
+      "state_order": 4,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 736,
+      "state_name": "auxiliary",
+      "state_order": 5,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 736,
+      "state_name": "logged_out_end",
+      "state_order": 6,
+      "is_initial": false,
+      "is_terminal": true,
+      "requires_permission": false
+    }
+  ],
+  "trigger_events": [
+    {
+      "event_name": "call.escalated",
+      "description": "A contact-center call has been escalated to a supervisor or specialist queue. The originating agent's customer-case may need re-assignment.",
+      "from_state": "in_progress",
+      "to_state": "escalated",
+      "event_category": "state_change"
+    },
+    {
+      "event_name": "sentiment.negative",
+      "description": "Real-time or post-call sentiment analysis flagged the customer interaction as negative. CSM should triage for outreach; supervisor intervention may be needed mid-call.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "signal"
+    },
+    {
+      "event_name": "contact_record.captured",
+      "description": "A CCaaS contact (call, chat, email, social) has been recorded. CSM links to the customer case; WFM uses for agent occupancy.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "lifecycle"
+    },
+    {
+      "event_name": "queue_statistics.threshold_breached",
+      "description": "Queue wait time, abandon rate, or service-level threshold breached. WFM triggers staffing adjustment; supervisor receives alert.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "threshold"
+    },
+    {
+      "event_name": "ccaas_call_recording.captured",
+      "description": "A contact-center call recording has been stored. Quality management, sentiment scoring, and CSM coaching can consume.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "lifecycle"
+    },
+    {
+      "event_name": "agent_state.changed",
+      "description": "An agent's state (available / busy / wrap / away / lunch) has changed. WFM adherence and queue routing both react.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "state_change"
+    },
+    {
+      "event_name": "agent_state.aux_threshold_exceeded",
+      "description": "Agent has exceeded the allowed time in an auxiliary (non-productive) state. WFM flags adherence breach; supervisor is notified.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "threshold"
+    },
+    {
+      "event_name": "disposition_code.applied",
+      "description": "Agent applied a disposition code (sale, callback, do-not-call, technical-issue) to a contact. CRM updates lead/opportunity outcome; reporting aggregates by code.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "state_change"
+    }
+  ],
+  "outbound_handoffs": [
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "medium",
+      "trigger_event": {
+        "event_name": "call.escalated"
+      },
+      "target_domain": {
+        "domain_code": "CSM"
+      },
+      "data_object": {
+        "data_object_name": "support_sessions"
+      }
+    },
+    {
+      "integration_pattern": "api_call",
+      "friction_level": "high",
+      "trigger_event": {
+        "event_name": "sentiment.negative"
+      },
+      "target_domain": {
+        "domain_code": "CSM"
+      },
+      "data_object": {
+        "data_object_name": "support_sessions"
+      }
+    },
+    {
+      "integration_pattern": "api_call",
+      "friction_level": "medium",
+      "trigger_event": {
+        "event_name": "contact_record.captured"
+      },
+      "target_domain": {
+        "domain_code": "CRM"
+      },
+      "data_object": {
+        "data_object_name": "contact_records"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "agent_state.changed"
+      },
+      "target_domain": {
+        "domain_code": "WFM"
+      },
+      "data_object": {
+        "data_object_name": "agent_states"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "queue_statistics.threshold_breached"
+      },
+      "target_domain": {
+        "domain_code": "WFM"
+      },
+      "data_object": {
+        "data_object_name": "queue_statistics"
+      }
+    },
+    {
+      "integration_pattern": "api_call",
+      "friction_level": "medium",
+      "trigger_event": {
+        "event_name": "intent.identified"
+      },
+      "target_domain": {
+        "domain_code": "CRM"
+      },
+      "data_object": {
+        "data_object_name": "contact_records"
+      }
+    }
+  ],
+  "inbound_handoffs": [
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "medium",
+      "trigger_event": {
+        "event_name": "conversation.escalated_to_human"
+      },
+      "source_domain": {
+        "domain_code": "CONV-AI"
+      },
+      "data_object": {
+        "data_object_name": "conversation_transcripts"
+      }
+    },
+    {
+      "integration_pattern": "api_call",
+      "friction_level": "medium",
+      "trigger_event": {
+        "event_name": "knowledge_base_article.updated"
+      },
+      "source_domain": {
+        "domain_code": "KMS"
+      },
+      "data_object": {
+        "data_object_name": "knowledge_base_articles"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "high",
+      "trigger_event": {
+        "event_name": "conversation_flow.fallback_triggered"
+      },
+      "source_domain": {
+        "domain_code": "CONV-AI"
+      },
+      "data_object": {
+        "data_object_name": "conversation_flows"
+      }
+    },
+    {
+      "integration_pattern": "api_call",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "bot_definition.published"
+      },
+      "source_domain": {
+        "domain_code": "CONV-AI"
+      },
+      "data_object": {
+        "data_object_name": "bot_definitions"
+      }
+    },
+    {
+      "integration_pattern": "api_call",
+      "friction_level": "medium",
+      "trigger_event": {
+        "event_name": "chat_thread.escalated_to_ticket"
+      },
+      "source_domain": {
+        "domain_code": "WSC"
+      },
+      "data_object": {
+        "data_object_name": "chat_threads"
+      }
+    }
+  ],
+  "skills": [
+    {
+      "skill_name": "ccaas-system",
+      "skill_type": "system",
+      "domain_module_id": null
+    }
+  ],
+  "business_function_domains": [
+    {
+      "responsibility_type": "owner",
+      "business_functions": {
+        "business_function_name": "Contact Center Operations"
+      }
+    }
+  ]
+}

@@ -199,7 +199,7 @@ const nonNullOverrides = Object.entries(PCF_OVERRIDES_LIVE).filter(([, v]) => v 
   { ext: string; name: string; lvl: number }
 ][];
 const exts = nonNullOverrides.map(([, v]) => v.ext);
-const pcfRows = await get(`/processes?external_id=in.(${exts.join(",")})&select=id,external_id,process_name,hierarchy_level`);
+const pcfRows = await get(`/business_processes?external_id=in.(${exts.join(",")})&select=id,external_id,process_name,hierarchy_level`);
 const pcfByExt = new Map<string, any>(pcfRows.map((p: any) => [String(p.external_id), p]));
 
 console.log(`\n${nonNullOverrides.length} non-null overrides; checking name agreement:`);
@@ -207,7 +207,7 @@ let driftCount = 0;
 for (const [prefix, ov] of nonNullOverrides) {
   const live = pcfByExt.get(ov.ext);
   if (!live) {
-    console.log(`  ⚠ ${prefix} (ext ${ov.ext}) — NOT FOUND in processes (broken override)`);
+    console.log(`  ⚠ ${prefix} (ext ${ov.ext}) — NOT FOUND in business_processes (broken override)`);
     driftCount++;
     continue;
   }

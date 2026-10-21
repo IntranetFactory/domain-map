@@ -13,11 +13,29 @@
       "skillPath": "skills/semantic-model-optimizer/SKILL.md",
       "computedHash": "bd95b9f9ed5c5359cd11a8004313ff9358e135f217fd128eda3f08a0543f38a0"
     },
+    "semantius-admin": {
+      "source": "semantius/semantius-cli",
+      "sourceType": "github",
+      "skillPath": "skills/semantius-admin/SKILL.md",
+      "computedHash": "070e26c594da0a98123c0a1e1c814eb7cc24c3e7e710980307a61ab33f2e3eeb"
+    },
     "semantius-agent-maker": {
       "source": "semantius/semantius-cli",
       "sourceType": "github",
       "skillPath": "skills/semantius-agent-maker/SKILL.md",
       "computedHash": "a60d095070be9acb650130ecd8ddc0541ab8414d9caee59b8a54d569519019ea"
+    },
+    "semantius-analyst": {
+      "source": "semantius/semantius-cli",
+      "sourceType": "github",
+      "skillPath": "skills/semantius-analyst/SKILL.md",
+      "computedHash": "fdffa35081a561ce729a947f05e80589ce9e12156c8e85db33a9fc5fa2b8f960"
+    },
+    "semantius-architect": {
+      "source": "semantius/semantius-cli",
+      "sourceType": "github",
+      "skillPath": "skills/semantius-architect/SKILL.md",
+      "computedHash": "cd4e2ff801dbbc57df5e0ca5b2cbdb496c9ceb6b58b987754e8da717ba193298"
     },
     "semantius-deploy-test-maker": {
       "source": "semantius/semantius-cli",
@@ -25,17 +43,41 @@
       "skillPath": "skills/semantius-deploy-test-maker/SKILL.md",
       "computedHash": "120898b89e4bc8afff4722ee25c670e10a4af58388b16fa585c5aec420f453a7"
     },
+    "semantius-importer": {
+      "source": "semantius/semantius-cli",
+      "sourceType": "github",
+      "skillPath": "skills/semantius-importer/SKILL.md",
+      "computedHash": "2114ac26d8abf64adc67396e8fc14aa617c9ed29e41ee5eef777eae063893335"
+    },
+    "semantius-modeler": {
+      "source": "semantius/semantius-cli",
+      "sourceType": "github",
+      "skillPath": "skills/semantius-modeler/SKILL.md",
+      "computedHash": "e6667f952a6b0717bf27e07b516ad7463a9eb75eead19f5604c8f7be3191b682"
+    },
+    "semantius-optimizer": {
+      "source": "semantius/semantius-cli",
+      "sourceType": "github",
+      "skillPath": "skills/semantius-optimizer/SKILL.md",
+      "computedHash": "da358fe147454cebe4bee14c52e92aa6c20af5a237166db3ddd0c635c4c868fa"
+    },
     "semantius-skill-maker": {
       "source": "semantius/semantius-cli",
       "sourceType": "github",
       "skillPath": "skills/semantius-skill-maker/SKILL.md",
       "computedHash": "b8779ca77ed9013822e30084636977aaeec2248069f5f74afd6e0d5a063937cf"
     },
+    "semantius-transfer": {
+      "source": "semantius/semantius-cli",
+      "sourceType": "github",
+      "skillPath": "skills/semantius-transfer/SKILL.md",
+      "computedHash": "cdf544dab7ab9dd5aca0fe9d847393fdfe3d60cb427d794186c6f26cb75a8047"
+    },
     "use-semantius": {
       "source": "semantius/semantius-cli",
       "sourceType": "github",
       "skillPath": "skills/use-semantius/SKILL.md",
-      "computedHash": "06c15329dbf0f79017f61ff4150da1d0c57b6d77e0b46b54c3c28f35b7d3e835"
+      "computedHash": "426beca589403d32fd14ab17227e893d19481cd23316e4842e1a58db88e818fe"
     }
   }
 }

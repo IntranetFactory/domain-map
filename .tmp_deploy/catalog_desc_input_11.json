@@ -1,0 +1,786 @@
+[
+  {
+    "id": 339,
+    "data_object_name": "saas_app_instances",
+    "singular_label": "SaaS App Instance",
+    "plural_label": "SaaS App Instances",
+    "entity_type": "unclassified",
+    "description": "Tenant, workspace, domain, or instance of a SaaS platform. Data residing in SaaS platforms (security-posture lens)."
+  },
+  {
+    "id": 543,
+    "data_object_name": "saas_application_performance",
+    "singular_label": "SaaS Application Performance",
+    "plural_label": "SaaS Application Performances",
+    "entity_type": "operational_record",
+    "description": "Synthetic or real-user monitoring of SaaS app availability and response time from multiple geographies, networks, ISPs. Captures internet/WAN path quality as seen by end users."
+  },
+  {
+    "id": 61,
+    "data_object_name": "saas_applications",
+    "singular_label": "SaaS Application",
+    "plural_label": "SaaS Applications",
+    "entity_type": "operational_workflow",
+    "description": "Canonical SaaS app in the portfolio (collaboration, CRM, productivity, design, work-management tools). Carries vendor, category, criticality tier, sanctioned/shadow flag, and links to the active subscription. Distinct from SAM's software_titles which are typically installed (or hybrid). The flagship SMP entity."
+  },
+  {
+    "id": 62,
+    "data_object_name": "saas_subscriptions",
+    "singular_label": "SaaS Subscription",
+    "plural_label": "SaaS Subscriptions",
+    "entity_type": "operational_workflow",
+    "description": "The contractual instance for a SaaS app: plan / tier, seat count, MRR or ARR, billing cadence, renewal date, primary owner. One app may have multiple subscriptions (BU, region, M&A-inherited free tier). Linked to a contract (CLM) and a PO (S2P)."
+  },
+  {
+    "id": 64,
+    "data_object_name": "saas_usage_metrics",
+    "singular_label": "SaaS Usage Metric",
+    "plural_label": "SaaS Usage Metrics",
+    "entity_type": "computed",
+    "description": "Per-app per-user activity metrics: logins, time-in-app, feature usage, last-active date. The basis for license right-sizing, renewal-tier decisions, and shadow-IT vs sanctioned-app analysis."
+  },
+  {
+    "id": 1073,
+    "data_object_name": "safety_incidents",
+    "singular_label": "Safety Incident",
+    "plural_label": "Safety Incidents",
+    "entity_type": "operational_workflow",
+    "description": "A workplace injury, illness, near-miss, or unsafe condition, with investigation, root-cause analysis, and recordability determination."
+  },
+  {
+    "id": 154,
+    "data_object_name": "salary_bands",
+    "singular_label": "Salary Band",
+    "plural_label": "Salary Bands",
+    "entity_type": "catalog",
+    "description": "Pay-range structure by grade and geographic zone with minimum, midpoint, maximum, and benchmarking source. Drives offer guidance, merit eligibility, and pay-equity gap analysis."
+  },
+  {
+    "id": 102,
+    "data_object_name": "sales_activities",
+    "singular_label": "Sales Activity",
+    "plural_label": "Sales Activities",
+    "entity_type": "operational_workflow",
+    "description": "Logged touchpoint between sales and a contact/opportunity — call, email, meeting, demo, content view. SALES-ENG sub-domain may co-master if its data_objects load expands later (cadence sequences, call recordings)."
+  },
+  {
+    "id": 121,
+    "data_object_name": "sales_cadences",
+    "singular_label": "Cadence",
+    "plural_label": "Cadences",
+    "entity_type": "unclassified",
+    "description": "Multi-step outreach sequence: touchpoint definitions (call, email, social, video, voicemail-drop), timing, branching rules based on engagement. The core entity of sales-engagement platforms; enrollment can be manual (rep choice) or automated (CDP intent signal, CRM opportunity stage)."
+  },
+  {
+    "id": 123,
+    "data_object_name": "sales_emails",
+    "singular_label": "Sales Email",
+    "plural_label": "Sales Emails",
+    "entity_type": "unclassified",
+    "description": "Individual sales emails sent (1-1, not blasts) — open/reply/click tracking, thread context, sentiment. Distinct from MA `marketing_emails` (volume-scale, list-driven, brand-template-bound)."
+  },
+  {
+    "id": 1215,
+    "data_object_name": "sales_enablement_content",
+    "singular_label": "Sales Enablement Content",
+    "plural_label": "Sales Enablement Content",
+    "entity_type": "operational_workflow",
+    "description": "A managed sales-facing content asset (deck, one-pager, demo script) with draft, publish, and retire states."
+  },
+  {
+    "id": 416,
+    "data_object_name": "sales_quotes",
+    "singular_label": "Sales Quote",
+    "plural_label": "Sales Quotes",
+    "entity_type": "operational_workflow",
+    "description": "Versioned, numbered quote document with quote date, validity, currency, terms, status (draft → presented → accepted → lost), total-price rollup. N:1 to CRM `opportunities`."
+  },
+  {
+    "id": 630,
+    "data_object_name": "salvage_recovery_records",
+    "singular_label": "Salvage Recovery",
+    "plural_label": "Salvage Recoveries",
+    "entity_type": "operational_record",
+    "description": "Recovery of salvageable property or proceeds from damaged/totaled assets following settlement: salvage vendor, recovery_amount, disposal record, applied against claim total. P&C-specific."
+  },
+  {
+    "id": 513,
+    "data_object_name": "sanitation_records",
+    "singular_label": "Sanitation Record",
+    "plural_label": "Sanitation Records",
+    "entity_type": "operational_workflow",
+    "description": "Cleaning / sanitation completion record per shift / line / equipment with verification (ATP swab, visual)."
+  },
+  {
+    "id": 279,
+    "data_object_name": "scenario_plans",
+    "singular_label": "Scenario Plan",
+    "plural_label": "Scenario Plans",
+    "entity_type": "operational_workflow",
+    "description": "What-if strategic scenarios (M&A, market disruption, expansion). Branches EPM `financial_scenarios` and SWP `workforce_scenarios`."
+  },
+  {
+    "id": 438,
+    "data_object_name": "schema_registries",
+    "singular_label": "Schema Registry",
+    "plural_label": "Schema Registries",
+    "entity_type": "operational_workflow",
+    "description": "Canonical schemas for data flowing through pipelines: field contracts, versioning, evolution rules. Feeds lineage."
+  },
+  {
+    "id": 910,
+    "data_object_name": "scorm_packages",
+    "singular_label": "SCORM Package",
+    "plural_label": "SCORM Packages",
+    "entity_type": "operational_workflow",
+    "description": "SCORM / AICC / cmi5 content package import; carries content interop manifest and runtime state."
+  },
+  {
+    "id": 1082,
+    "data_object_name": "sds_records",
+    "singular_label": "Safety Data Sheet",
+    "plural_label": "Safety Data Sheets",
+    "entity_type": "catalog",
+    "description": "A safety data sheet for a hazardous substance, carrying hazard classification, exposure limits, and handling guidance for hazard communication under HazCom and REACH or CLP."
+  },
+  {
+    "id": 780,
+    "data_object_name": "secondary_transactions",
+    "singular_label": "Secondary Transaction",
+    "plural_label": "Secondary Transactions",
+    "entity_type": "operational_workflow",
+    "description": "Shareholder-initiated sale of existing equity: tender offer, employee liquidity program, or direct transfer. Board-approval workflow."
+  },
+  {
+    "id": 771,
+    "data_object_name": "security_classes",
+    "singular_label": "Security Class",
+    "plural_label": "Security Classes",
+    "entity_type": "catalog",
+    "description": "Class of security in the cap table: common, preferred series (Seed/A/B/...), SAFEs, warrants. Carries liquidation preference, participation rights, conversion ratio."
+  },
+  {
+    "id": 446,
+    "data_object_name": "segments_dxp",
+    "singular_label": "DXP Segment",
+    "plural_label": "DXP Segments",
+    "entity_type": "operational_workflow",
+    "description": "DXP-local audience cluster for personalization (distinct from CDP `audience_segments` which are behavioral cross-channel)."
+  },
+  {
+    "id": 230,
+    "data_object_name": "semantic_metrics",
+    "singular_label": "Semantic Metric",
+    "plural_label": "Semantic Metrics",
+    "entity_type": "computed",
+    "description": "Metric or dimension definition in the platform's semantic layer: metric views, semantic models, ontology measures, governed metrics. The reusable, governed measure consumed by BI tools and AI agents alike."
+  },
+  {
+    "id": 341,
+    "data_object_name": "sensitive_data_incidents",
+    "singular_label": "Sensitive Data Incident",
+    "plural_label": "Sensitive Data Incidents",
+    "entity_type": "unclassified",
+    "description": "Detected over-privilege, toxic combination (PII + public access), unauthorised access, shadow-data exposure. DSPM remediation trigger."
+  },
+  {
+    "id": 52,
+    "data_object_name": "service_catalog_items",
+    "singular_label": "Service Catalog Item",
+    "plural_label": "Service Catalog Items",
+    "entity_type": "catalog",
+    "description": "Definition of what can be requested: the form schema, fulfillment workflow, approval routing, SLA, and the price/charge-back rules. Each service request instance references a catalog item."
+  },
+  {
+    "id": 50,
+    "data_object_name": "service_changes",
+    "singular_label": "Change",
+    "plural_label": "Changes",
+    "entity_type": "operational_workflow",
+    "description": "Planned modification to a service or configuration item. Carries change type (standard, normal, emergency), risk score, CAB approval state, implementation window, and back-out plan. The boundary object between ITSM and CMDB — CIs are updated as a result of an executed change."
+  },
+  {
+    "id": 663,
+    "data_object_name": "service_connections",
+    "singular_label": "Service Connection",
+    "plural_label": "Service Connections",
+    "entity_type": "operational_workflow",
+    "description": "Meter-to-grid/pipe hookup asset: pole/pedestal/pit location, conductor/pipe size, install date, maintenance history. Parent to outage-impact assessment and work-order routing."
+  },
+  {
+    "id": 741,
+    "data_object_name": "service_contracts",
+    "singular_label": "Service Contract",
+    "plural_label": "Service Contracts",
+    "entity_type": "operational_workflow",
+    "description": "SLA-bearing service contract (response time, parts coverage, call-out fees) — distinct from CLM canonical contracts."
+  },
+  {
+    "id": 1194,
+    "data_object_name": "service_estimates",
+    "singular_label": "Service Estimate",
+    "plural_label": "Service Estimates",
+    "entity_type": "operational_workflow",
+    "description": "A quoted estimate for boatyard work: scope, labor hours, parts, and price, approved by the boater before work begins."
+  },
+  {
+    "id": 47,
+    "data_object_name": "service_incidents",
+    "singular_label": "Incident",
+    "plural_label": "Incidents",
+    "entity_type": "operational_workflow",
+    "description": "Unplanned interruption of, or quality reduction to, a service. Carries severity, priority, category, assignee, affected CI(s), and the MTTR clock. The flagship ITSM work item. ITOM and SECOPS feed in (events become incidents, security alerts become incidents)."
+  },
+  {
+    "id": 91,
+    "data_object_name": "service_level_objectives",
+    "singular_label": "SLO",
+    "plural_label": "SLOs",
+    "entity_type": "operational_workflow",
+    "description": "Service-level objective definitions and breach state: target (e.g. 99.9% requests under 300ms over 28 days), error budget remaining, burn rate, last breach. Drives the slo.breached handoff that creates incidents."
+  },
+  {
+    "id": 79,
+    "data_object_name": "service_maps",
+    "singular_label": "Service Map",
+    "plural_label": "Service Maps",
+    "entity_type": "operational_workflow",
+    "description": "Business-service-to-CI mapping: which CIs underlie a named business service. The bridge between technical topology (CMDB / DISCOVERY) and business impact (used by ITSM, SECOPS, OBS)."
+  },
+  {
+    "id": 452,
+    "data_object_name": "service_meshes",
+    "singular_label": "Service Mesh",
+    "plural_label": "Service Meshes",
+    "entity_type": "operational_workflow",
+    "description": "Service mesh installations: traffic policy, mTLS enforcement, distributed tracing config."
+  },
+  {
+    "id": 1265,
+    "data_object_name": "service_offerings",
+    "singular_label": "Service Offering",
+    "plural_label": "Service Offerings",
+    "entity_type": "catalog",
+    "description": "The back-end service definition (commitments, supported configurations, and fulfillment details) split from its user-facing catalog item presentation. One offering can back several catalog items, and a catalog item can present one offering."
+  },
+  {
+    "id": 1261,
+    "data_object_name": "service_outages",
+    "singular_label": "Service Outage",
+    "plural_label": "Service Outages",
+    "entity_type": "operational_workflow",
+    "description": "A customer-facing outage or status record, separate from the internal incident. Captures the affected service, the public status (investigating, identified, monitoring, resolved), start and end times, and the customer-facing message. Distinct from the internal incident work item."
+  },
+  {
+    "id": 820,
+    "data_object_name": "service_pm_schedules",
+    "singular_label": "Service PM Schedule",
+    "plural_label": "Service PM Schedules",
+    "entity_type": "operational_workflow",
+    "description": "Recurring preventive-maintenance plan attached to an installed_equipment unit. Defines cadence, due date, grace window, and overdue escalation. Drives proactive work-order generation when the next service is due."
+  },
+  {
+    "id": 49,
+    "data_object_name": "service_problems",
+    "singular_label": "Problem",
+    "plural_label": "Problems",
+    "entity_type": "operational_workflow",
+    "description": "Root-cause record for one or more incidents that recur or share a pattern. Carries known-error workaround, permanent fix candidate, and links to the change that will resolve it. Problem management is a discipline mature ITSM tools support but most orgs underuse."
+  },
+  {
+    "id": 216,
+    "data_object_name": "service_projects",
+    "singular_label": "Project",
+    "plural_label": "Projects",
+    "entity_type": "operational_workflow",
+    "description": "Client-facing engagement: scope, contract, start/end, billing type (T&M / fixed_fee / milestone / retainer), revenue recognition method, project manager, billing entity."
+  },
+  {
+    "id": 656,
+    "data_object_name": "service_provisioning_workflows",
+    "singular_label": "Service Provisioning Workflow",
+    "plural_label": "Service Provisioning Workflows",
+    "entity_type": "operational_workflow",
+    "description": "Orchestration state + task list for activation / change / closure: workflow steps, dependencies, automation/manual flags, current state, errors. Operational view of how a telco_service_order is executed."
+  },
+  {
+    "id": 1262,
+    "data_object_name": "service_releases",
+    "singular_label": "Service Release",
+    "plural_label": "Service Releases",
+    "entity_type": "operational_workflow",
+    "description": "A release or deployment record that bundles one or more changes into a single shippable unit. Carries the release window, the included changes, deployment status, and rollback plan. Distinct from a single change ticket."
+  },
+  {
+    "id": 48,
+    "data_object_name": "service_requests",
+    "singular_label": "Service Request",
+    "plural_label": "Service Requests",
+    "entity_type": "operational_workflow",
+    "description": "Planned, catalog-driven request: access, hardware, software, information. Distinct from incidents — incidents are reactive, service requests are proactive. The fulfillment for many requests crosses domains (provisioning ↔ IGA, asset assignment ↔ ITAM, HR exception ↔ HRSD)."
+  },
+  {
+    "id": 53,
+    "data_object_name": "service_slas",
+    "singular_label": "SLA",
+    "plural_label": "SLAs",
+    "entity_type": "catalog",
+    "description": "Service-level agreement record: response-time, resolution-time, and availability targets per priority / category / customer tier. SLAs attach to incidents, service requests, and changes; breach metrics roll up to operational KPIs."
+  },
+  {
+    "id": 659,
+    "data_object_name": "service_trouble_tickets",
+    "singular_label": "Service Trouble Ticket",
+    "plural_label": "Service Trouble Tickets",
+    "entity_type": "operational_workflow",
+    "description": "Subscriber-reported service-degradation/outage ticket: subscriber, service, severity, opened/resolved timestamps, root cause, resolution. Distinct from ITSM `incidents` (internal IT) and FSM customer field-service tickets."
+  },
+  {
+    "id": 740,
+    "data_object_name": "service_work_orders",
+    "singular_label": "Service Work Order",
+    "plural_label": "Service Work Orders",
+    "entity_type": "operational_workflow",
+    "description": "Customer-facing service job request fulfilled by field visits — distinct from VMS preventive-maintenance work orders."
+  },
+  {
+    "id": 927,
+    "data_object_name": "session_attendances",
+    "singular_label": "Session Attendance",
+    "plural_label": "Session Attendances",
+    "entity_type": "operational_record",
+    "description": "Per-session attendance roster row per learner. OSHA-mandated evidence for required workplace training."
+  },
+  {
+    "id": 1276,
+    "data_object_name": "session_cancellations",
+    "singular_label": "Session Cancellation",
+    "plural_label": "Session Cancellations",
+    "entity_type": "operational_record",
+    "description": "Cancellation or no-show record for an ILT session, driving waitlist promotion."
+  },
+  {
+    "id": 239,
+    "data_object_name": "session_recordings",
+    "singular_label": "Session Recording",
+    "plural_label": "Session Recordings",
+    "entity_type": "operational_workflow",
+    "description": "Video and audit-log artifact captured from a remote session: storage location, retention policy, redaction state, and downstream compliance evidence. Distinct artifact lifecycle from the parent remote_sessions record."
+  },
+  {
+    "id": 1275,
+    "data_object_name": "session_rosters",
+    "singular_label": "Session Roster",
+    "plural_label": "Session Rosters",
+    "entity_type": "operational_record",
+    "description": "Pre-session enrollment snapshot for an ILT session; attendance proof basis."
+  },
+  {
+    "id": 343,
+    "data_object_name": "shadow_data_findings",
+    "singular_label": "Shadow Data Finding",
+    "plural_label": "Shadow Data Findings",
+    "entity_type": "unclassified",
+    "description": "Detected data store, file, or SaaS instance not in official inventory; unmanaged or rogue replica."
+  },
+  {
+    "id": 65,
+    "data_object_name": "shadow_it_apps",
+    "singular_label": "Shadow IT App",
+    "plural_label": "Shadow IT Apps",
+    "entity_type": "operational_workflow",
+    "description": "SaaS app discovered in use but not officially sanctioned. Found via expense data (corporate card SaaS charges), SSO logs (unsanctioned login), browser extensions, network traffic, or signup-with-corporate-email detection. The thing finance, security, IT, and SMP all want to see but historically nobody owns end-to-end."
+  },
+  {
+    "id": 772,
+    "data_object_name": "shareholder_records",
+    "singular_label": "Shareholder Record",
+    "plural_label": "Shareholder Records",
+    "entity_type": "operational_record",
+    "description": "Per-shareholder holding record across all security classes for an issuer."
+  },
+  {
+    "id": 1146,
+    "data_object_name": "shift_swap_requests",
+    "singular_label": "Shift Swap Request",
+    "plural_label": "Shift Swap Requests",
+    "entity_type": "operational_workflow",
+    "description": "A worker-initiated request to swap or give up a shift, or to pick up an open shift, conducted as a conversation on the worker's device and routed for manager approval before handoff to the workforce-management schedule."
+  },
+  {
+    "id": 601,
+    "data_object_name": "shop_floor_cases",
+    "singular_label": "Shop Floor Case",
+    "plural_label": "Shop Floor Cases",
+    "entity_type": "operational_workflow",
+    "description": "Operator-initiated issue/escalation: andon pull, quality defect escape, safety concern, equipment anomaly, material shortage. Work item for shop-floor problem-solving team. Distinct from FSM support tickets."
+  },
+  {
+    "id": 70,
+    "data_object_name": "signature_records",
+    "singular_label": "Signature Record",
+    "plural_label": "Signature Records",
+    "entity_type": "operational_workflow",
+    "description": "E-signature envelope: signing audit trail, IP addresses, external e-signature provider envelope and document reference IDs, and the signed PDF artifact. Distinct from contracts, one contract may have many signature events (counterpart, amendment, renewal)."
+  },
+  {
+    "id": 436,
+    "data_object_name": "sink_connectors",
+    "singular_label": "Sink Connector",
+    "plural_label": "Sink Connectors",
+    "entity_type": "operational_workflow",
+    "description": "Connection metadata to downstream targets: auth, batch/stream mode, upsert keys, schema enforcement rules."
+  },
+  {
+    "id": 632,
+    "data_object_name": "siu_cases",
+    "singular_label": "SIU Investigation Case",
+    "plural_label": "SIU Investigation Cases",
+    "entity_type": "operational_workflow",
+    "description": "Special Investigation Unit fraud-investigation case: claim reference, indicators triggered, investigator, status (open / closed-confirmed / closed-unconfirmed), referral to law enforcement. Distinct from generic banking/compliance investigations."
+  },
+  {
+    "id": 855,
+    "data_object_name": "skill_assessments",
+    "singular_label": "Skill Assessment",
+    "plural_label": "Skill Assessments",
+    "entity_type": "operational_workflow",
+    "description": "Discrete proficiency-rating event against a skill, with rater, method (self, manager, peer, test), score, and timestamp."
+  },
+  {
+    "id": 856,
+    "data_object_name": "skill_endorsements",
+    "singular_label": "Skill Endorsement",
+    "plural_label": "Skill Endorsements",
+    "entity_type": "operational_workflow",
+    "description": "Peer or manager validation of a claimed or inferred skill on a profile; one-shot social signal distinct from a formal assessment."
+  },
+  {
+    "id": 858,
+    "data_object_name": "skill_inference_runs",
+    "singular_label": "Skill Inference Run",
+    "plural_label": "Skill Inference Runs",
+    "entity_type": "operational_workflow",
+    "description": "Audit record of a passive skill-inference batch on skill profiles: model version, input signals (learning, performance, work activity), outputs, timestamp."
+  },
+  {
+    "id": 172,
+    "data_object_name": "skill_profiles",
+    "singular_label": "Skill Profile",
+    "plural_label": "Skill Profiles",
+    "entity_type": "operational_workflow",
+    "description": "Per-worker collection of skills with self-assessed and validated proficiency levels, derived from completed courses, certifications, performance signals, and inferred peer-comparison. The central artifact of HCM-side skills-cloud and talent-intelligence offerings."
+  },
+  {
+    "id": 1277,
+    "data_object_name": "skill_targets",
+    "singular_label": "Skill Target",
+    "plural_label": "Skill Targets",
+    "entity_type": "catalog",
+    "description": "A learning-path step bound to a skill plus a target proficiency threshold."
+  },
+  {
+    "id": 852,
+    "data_object_name": "skill_taxonomies",
+    "singular_label": "Skill Taxonomy",
+    "plural_label": "Skill Taxonomies",
+    "entity_type": "catalog",
+    "description": "Versioned ontology of skill nodes, synonyms, parent-child relationships."
+  },
+  {
+    "id": 854,
+    "data_object_name": "skills",
+    "singular_label": "Skill",
+    "plural_label": "Skills",
+    "entity_type": "catalog",
+    "description": "Individual skill node belonging to a taxonomy version; the row referenced by every profile entry, competency-model entry, and inference run."
+  },
+  {
+    "id": 26,
+    "data_object_name": "skills_gap_analyses",
+    "singular_label": "Skills Gap Analysis",
+    "plural_label": "Skills Gap Analyses",
+    "entity_type": "operational_workflow",
+    "description": "Comparison of current-state skills inventory vs future-state demand by role, level, and geography. Drives build/buy/borrow strategy: which gaps to close via training (LMS), external hires (ATS), or contingent workforce. Outputs feed both SWP scenarios and LMS curriculum decisions."
+  },
+  {
+    "id": 1181,
+    "data_object_name": "slip_assignments",
+    "singular_label": "Slip Assignment",
+    "plural_label": "Slip Assignments",
+    "entity_type": "junction",
+    "description": "The placement of a specific vessel in a specific slip, mooring, or rack for a period, linking inventory to a reservation or contract."
+  },
+  {
+    "id": 1188,
+    "data_object_name": "slip_contracts",
+    "singular_label": "Slip Contract",
+    "plural_label": "Slip Contracts",
+    "entity_type": "operational_workflow",
+    "description": "A seasonal or annual agreement licensing a slip, mooring, or rack to a boater: term, rate, included utilities, and renewal terms."
+  },
+  {
+    "id": 1182,
+    "data_object_name": "slip_reservations",
+    "singular_label": "Reservation",
+    "plural_label": "Reservations",
+    "entity_type": "operational_workflow",
+    "description": "A request to dock or store a vessel for a transient or seasonal period: dates, vessel, requested space, rate, and check-in/out status."
+  },
+  {
+    "id": 1180,
+    "data_object_name": "slip_size_classes",
+    "singular_label": "Slip Size Class",
+    "plural_label": "Slip Size Classes",
+    "entity_type": "catalog",
+    "description": "A configured size class for slips and racks (length and beam bands) used for fit rules and rate lookup."
+  },
+  {
+    "id": 1183,
+    "data_object_name": "slip_waitlist_entries",
+    "singular_label": "Slip Waitlist Entry",
+    "plural_label": "Slip Waitlist Entries",
+    "entity_type": "operational_workflow",
+    "description": "A boater's place in line for a slip type or period that is currently full, with offer and expiry tracking."
+  },
+  {
+    "id": 987,
+    "data_object_name": "smp_alerts",
+    "singular_label": "SaaS Alert",
+    "plural_label": "SaaS Alerts",
+    "entity_type": "operational_workflow",
+    "description": "System-raised anomaly on the SaaS portfolio: shadow-IT signup detected, license-overage projected, renewal window opening, integration token expiring, vendor-risk score change. Distinct from monitoring_alerts (OBS/AIOPS infrastructure-grain). BetterCloud Alert Center and Torii Alerts are the flagship surfaces."
+  },
+  {
+    "id": 991,
+    "data_object_name": "smp_app_benchmarks",
+    "singular_label": "SaaS App Benchmark",
+    "plural_label": "SaaS App Benchmarks",
+    "entity_type": "computed",
+    "description": "Per-app utilization and cost-per-seat benchmark vs an industry peer-set. Snapshot record per measurement period; carries headcount cohort, peer-percentile, and outlier flag. Productiv Benchmarks + Zylo Industry Benchmarks are the flagship."
+  },
+  {
+    "id": 986,
+    "data_object_name": "smp_app_catalog_listings",
+    "singular_label": "App Catalog Listing",
+    "plural_label": "App Catalog Listings",
+    "entity_type": "catalog",
+    "description": "Curated, published listing of a sanctioned SaaS application that employees can browse and request access to. Carries description, owner, request route, SSO availability, approval workflow. Distinct from saas_applications (the discovered inventory of what's running); the catalog is the publication of what's offered. LeanIX, Torii, BetterCloud flagship."
+  },
+  {
+    "id": 985,
+    "data_object_name": "smp_app_integrations",
+    "singular_label": "SaaS App Integration",
+    "plural_label": "SaaS App Integrations",
+    "entity_type": "operational_workflow",
+    "description": "Discovered or configured connection between SMP and a SaaS application's APIs (SSO source, SCIM source, finance source, usage source). Per-app per-tenant, with auth state and last-sync time. Distinct from IPAAS integration_connectors (platform-grain vendor-connector definitions); BetterCloud's App Integrations flagship surface."
+  },
+  {
+    "id": 988,
+    "data_object_name": "smp_app_lifecycle_stages",
+    "singular_label": "App Lifecycle Stage",
+    "plural_label": "App Lifecycle Stages",
+    "entity_type": "operational_workflow",
+    "description": "Portfolio-rationalization stage of a SaaS application (Evaluate, Pilot, Sanctioned, Sunset, Retired). Distinct from saas_applications.record_status (discovered, sanctioned, deprecated, deprovisioned), which tracks discovery state. The stage set follows the industry-standard TIME portfolio taxonomy (Tolerate, Invest, Migrate, Eliminate)."
+  },
+  {
+    "id": 984,
+    "data_object_name": "smp_app_owners",
+    "singular_label": "SaaS App Owner",
+    "plural_label": "SaaS App Owners",
+    "entity_type": "junction",
+    "description": "Typed role assignment of a user to a SaaS application (business owner, IT owner, finance owner, security owner). Not a flat FK on saas_applications because one app may have multiple typed owners; modeled by Productiv and LeanIX as a first-class junction."
+  },
+  {
+    "id": 999,
+    "data_object_name": "smp_app_requests",
+    "singular_label": "App Access Request",
+    "plural_label": "App Access Requests",
+    "entity_type": "operational_workflow",
+    "description": "Employee request for access to a SaaS application via the published catalog. Routes through manager + IT approval, then hands off to IGA for entitlement provisioning. App-grain (pre-IGA-handoff); distinct from iga_access_requests (entitlement-grain) and itsm_service_requests (generic catalog). Torii App Catalog requests + BetterCloud Self-Service Requests are the flagship."
+  },
+  {
+    "id": 997,
+    "data_object_name": "smp_automation_workflows",
+    "singular_label": "Automation Workflow",
+    "plural_label": "Automation Workflows",
+    "entity_type": "catalog",
+    "description": "Declarative orchestration: trigger + steps (provision in SaaS app, send notification, file offboarding action, request approval, escalate). BetterCloud Workflows + Torii Workflows are the flagship product surface. Distinct from iga_access_requests (request-side) and integration_recipes (generic iPaaS)."
+  },
+  {
+    "id": 63,
+    "data_object_name": "smp_license_seat_assignments",
+    "singular_label": "SMP License Seat Assignment",
+    "plural_label": "SMP License Seat Assignments",
+    "entity_type": "junction",
+    "description": "SMP's view of a user-to-app license seat: who holds a seat at which tier, cost-per-seat, utilization signal, last active. Drives reclamation and rightsizing. Correlates with an iga_user_entitlement record (the governance view of the same access fact); the two routinely diverge."
+  },
+  {
+    "id": 989,
+    "data_object_name": "smp_optimization_recommendations",
+    "singular_label": "Optimization Recommendation",
+    "plural_label": "Optimization Recommendations",
+    "entity_type": "operational_workflow",
+    "description": "System-generated rightsizing or consolidation proposal against a SaaS subscription or application. Carries savings_estimate, rationale, recommendation type (downgrade tier, reduce seats, consolidate apps), status. Productiv Recommendations + Zylo Savings Opportunities are the flagship."
+  },
+  {
+    "id": 990,
+    "data_object_name": "smp_reclamation_actions",
+    "singular_label": "Reclamation Action",
+    "plural_label": "Reclamation Actions",
+    "entity_type": "operational_workflow",
+    "description": "Executed reclamation against an smp_license_seat_assignment (revoke, downgrade, reassign) with savings_realized linkage. Tracks the operational payoff of the optimization workflow. BetterCloud License Recovery + Torii Reclaim workflows are the flagship."
+  },
+  {
+    "id": 993,
+    "data_object_name": "smp_renewal_engagements",
+    "singular_label": "Renewal Engagement",
+    "plural_label": "Renewal Engagements",
+    "entity_type": "operational_workflow",
+    "description": "Lifecycle envelope per renewal cycle: timeline, owner, vendor proposals received, BATNA notes, decisions taken. Buyer-side analog of CRM opportunities; distinct in that the buyer drives the negotiation. Productiv Renewal Pipeline + Zylo Renewal Workbench are the flagship."
+  },
+  {
+    "id": 992,
+    "data_object_name": "smp_renewal_tasks",
+    "singular_label": "Renewal Task",
+    "plural_label": "Renewal Tasks",
+    "entity_type": "operational_workflow",
+    "description": "Workstream task within a SaaS renewal cycle (renewal window notice, owner assignment, decision: renew/renegotiate/consolidate/cancel). Productiv, Zylo, Flexera Renewal workspace surfaces."
+  },
+  {
+    "id": 995,
+    "data_object_name": "smp_spend_allocations",
+    "singular_label": "SaaS Spend Allocation",
+    "plural_label": "SaaS Spend Allocations",
+    "entity_type": "operational_workflow",
+    "description": "Chargeback split of a SaaS subscription across cost centers, business units, or projects, with allocation method (per-seat, per-headcount, fixed-percentage) and effective window. Zylo Cost Center Allocation + Flexera Chargeback Allocations are the flagship. Distinct from FINOPS cost_allocations (cloud-only)."
+  },
+  {
+    "id": 994,
+    "data_object_name": "smp_vendor_negotiations",
+    "singular_label": "Vendor Negotiation",
+    "plural_label": "Vendor Negotiations",
+    "entity_type": "operational_workflow",
+    "description": "Quote, counter-quote, and discount-applied artifact tied to a renewal engagement. Decision-provenance record for how the final commercial terms were reached; contributor into CLM at execution time. Productiv Negotiation Intelligence + Zylo negotiation insights are the flagship."
+  },
+  {
+    "id": 996,
+    "data_object_name": "smp_vendor_risk_assessments",
+    "singular_label": "Vendor Risk Assessment",
+    "plural_label": "Vendor Risk Assessments",
+    "entity_type": "operational_workflow",
+    "description": "SaaS-specific vendor-risk scorecard: SOC 2 attestation status, ISO 27001, DPA review, subprocessor disclosures, breach history, posture score. Per-SaaS-application (Slack vs Salesforce risk profiles differ from the same vendor). Flexera Vendor Risk Scorecard is the flagship; pure-plays defer most risk surfaces to GRC."
+  },
+  {
+    "id": 998,
+    "data_object_name": "smp_workflow_runs",
+    "singular_label": "Workflow Run",
+    "plural_label": "Workflow Runs",
+    "entity_type": "operational_record",
+    "description": "Execution log per automation workflow invocation. Carries trigger source, input payload, step-by-step status, output, duration, and error if failed."
+  },
+  {
+    "id": 126,
+    "data_object_name": "social_accounts",
+    "singular_label": "Social Account",
+    "plural_label": "Social Accounts",
+    "entity_type": "unclassified",
+    "description": "Brand-owned connected account on a specific social network with credentials, permissions, and channel-specific metadata. Covers major short-form, long-form, video, image-sharing, professional, and discussion-forum networks."
+  },
+  {
+    "id": 1110,
+    "data_object_name": "social_ad_accounts",
+    "singular_label": "Social Ad Account",
+    "plural_label": "Social Ad Accounts",
+    "entity_type": "operational_record",
+    "description": "A connected advertiser account on a social ad platform (Meta Business, TikTok Ads, LinkedIn Campaign Manager, etc.) under which campaigns are run and billed."
+  },
+  {
+    "id": 1111,
+    "data_object_name": "social_ad_campaigns",
+    "singular_label": "Social Ad Campaign",
+    "plural_label": "Social Ad Campaigns",
+    "entity_type": "operational_workflow",
+    "description": "A paid social campaign defining an advertising objective, schedule, and overall budget, parenting one or more ad sets across one or more ad platforms."
+  },
+  {
+    "id": 1118,
+    "data_object_name": "social_ad_creatives",
+    "singular_label": "Social Ad Creative",
+    "plural_label": "Social Ad Creatives",
+    "entity_type": "operational_workflow",
+    "description": "A versioned ad creative: the assembled visual-plus-copy unit (single image, video, carousel, collection) with approval state and platform-specific renditions, used by ads across campaigns."
+  },
+  {
+    "id": 1116,
+    "data_object_name": "social_ad_performance_metrics",
+    "singular_label": "Social Ad Performance Metric",
+    "plural_label": "Social Ad Performance Metrics",
+    "entity_type": "computed",
+    "description": "Time-series delivery and outcome metrics per ad, ad set, or campaign (impressions, clicks, spend, conversions, ROAS, CPA, frequency) pulled from ad-platform insights APIs."
+  },
+  {
+    "id": 1112,
+    "data_object_name": "social_ad_sets",
+    "singular_label": "Social Ad Set",
+    "plural_label": "Social Ad Sets",
+    "entity_type": "operational_workflow",
+    "description": "A targeting and budget unit within a campaign (Meta ad set, TikTok ad group, LinkedIn campaign tier) binding an audience, placements, bid strategy, schedule, and budget to a set of ads."
+  },
+  {
+    "id": 1113,
+    "data_object_name": "social_ads",
+    "singular_label": "Social Ad",
+    "plural_label": "Social Ads",
+    "entity_type": "operational_workflow",
+    "description": "An individual deliverable ad within an ad set, pairing a creative with destination and tracking parameters and carrying its own delivery and review state on the ad platform."
+  },
+  {
+    "id": 129,
+    "data_object_name": "social_listening_topics",
+    "singular_label": "Social Listening Topic",
+    "plural_label": "Social Listening Topics",
+    "entity_type": "unclassified",
+    "description": "Saved monitoring query/topic (keywords, hashtags, competitors, geographies, sentiment filters) that drives the listening pipeline. Configuration data with a long lifecycle."
+  },
+  {
+    "id": 128,
+    "data_object_name": "social_mentions",
+    "singular_label": "Social Mention",
+    "plural_label": "Social Mentions",
+    "entity_type": "unclassified",
+    "description": "Brand or keyword mention detected by social listening across networks, news, blogs, forums, and review sites — typically off-channel and from non-followers. Distinct from social_messages (on-channel inbox)."
+  },
+  {
+    "id": 127,
+    "data_object_name": "social_messages",
+    "singular_label": "Social Message",
+    "plural_label": "Social Messages",
+    "entity_type": "unclassified",
+    "description": "Inbound conversation in the unified inbox: comment, direct message, mention-reply, or review on a brand-owned account. The unit of engagement. Distinct from social_mentions (off-channel listening artifacts)."
+  },
+  {
+    "id": 125,
+    "data_object_name": "social_posts",
+    "singular_label": "Social Post",
+    "plural_label": "Social Posts",
+    "entity_type": "unclassified",
+    "description": "Authored social-channel post (draft, scheduled, or published) with per-channel variants, media assets, copy, lifecycle state, and approval history. The unit of work in publishing tools."
+  },
+  {
+    "id": 682,
+    "data_object_name": "software_deployments",
+    "singular_label": "Software Deployment",
+    "plural_label": "Software Deployments",
+    "entity_type": "operational_workflow",
+    "description": "Release event of a build_artifact to a target environment (dev / staging / prod): deployer, started/finished timestamps, status, rollback flag, target environment, change-ticket reference. Scope-qualified vs `device_deployment_results` (UEM)."
+  },
+  {
+    "id": 59,
+    "data_object_name": "software_installations",
+    "singular_label": "Software Installation",
+    "plural_label": "Software Installations",
+    "entity_type": "unclassified",
+    "description": "Discovered install of a software title on a specific device or for a specific user. The operational fact, distinct from the licensing right. Discovery feeds; VULN-MGMT reads to scope vulnerability scans."
+  }
+]

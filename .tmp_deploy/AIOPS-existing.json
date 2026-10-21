@@ -1,0 +1,737 @@
+{
+  "domain": {
+    "id": 6,
+    "domain_name": "AIOps",
+    "created_at": "2026-05-18T14:31:01.495936+00:00",
+    "updated_at": "2026-06-07T01:50:24.950574+00:00",
+    "domain_code": "AIOPS",
+    "description": "Machine-learning-driven event correlation, anomaly detection, and noise reduction for IT operations.",
+    "record_status": "new",
+    "parent_domain_id": null,
+    "industry_id": null,
+    "certification_required": false,
+    "crud_percentage": 20,
+    "business_logic": "Event correlation, deduplication, anomaly detection, and root-cause analysis: ML and statistical algorithms across high-volume telemetry.",
+    "min_org_size": "30 m <2500",
+    "cost_band": "$$$$",
+    "usa_market_size_usd_m": 1500,
+    "market_size_source_year": 2025,
+    "search_vector": "'aiops':1A,2C",
+    "notes": "",
+    "catalog": false,
+    "catalog_tagline": "Cut through alert noise and turn a flood of IT signals into a short list of correlated, root-caused issues your teams can act on before users feel the impact.",
+    "catalog_description": "An AIOps platform sits across the high-volume telemetry your IT estate produces every second, metrics, logs, traces, events, and alerts, and uses machine learning and statistical analysis to find the few patterns that matter. Instead of paging on every threshold breach, it groups related signals into a single correlated incident, filters out duplicate and flapping alerts, and surfaces the probable root cause so responders start from an answer rather than a blank screen.\n\nOperations and engineering teams use it to detect anomalies against learned baselines, suppress noise during planned changes, and receive early warning of predicted outages and capacity problems while there is still time to act. Correlated incidents and high-confidence predictions flow straight into incident and problem workflows, and suppression decisions flow back to the monitoring layer, so the whole operational loop stays in sync.\n\nBehind the scenes, detection and prediction models are continuously retrained and watched for drift, keeping the signal accurate as the environment changes. The result is fewer pages, faster mean time to resolution, and a clearer picture of service health, so on-call teams spend their time fixing problems instead of triaging alerts."
+  },
+  "capabilities": [
+    {
+      "capabilities": {
+        "capability_code": "AIOPS-EVENT-CORRELATION",
+        "capability_name": "Event Correlation",
+        "description": "Group related events, alerts, and signals from across the monitored estate into a single correlated incident using ML and pattern analysis, so responders see one issue instead of a flood of raw alerts."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "AIOPS-ANOMALY-DETECTION",
+        "capability_name": "Anomaly Detection",
+        "description": "Detect deviations from learned baselines across metrics, logs, and traces, flagging outliers and abnormal behavior that fixed thresholds would miss."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "AIOPS-ALERT-NOISE-REDUCTION",
+        "capability_name": "Alert Noise Reduction",
+        "description": "Deduplicate, suppress, and silence flapping or low-value alerts, including during planned changes, so on-call teams are paged only on signals that matter."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "AIOPS-ROOT-CAUSE-ANALYSIS",
+        "capability_name": "Root Cause Analysis",
+        "description": "Infer the probable root cause of a correlated incident from topology, change, and signal evidence, so responders start from an answer rather than a blank screen."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "AIOPS-PREDICTIVE-INSIGHTS",
+        "capability_name": "Predictive Insights",
+        "description": "Forecast outages, capacity exhaustion, and error storms ahead of impact by elevating predictive signals and high-confidence incident predictions into proactive workflows."
+      }
+    },
+    {
+      "capabilities": {
+        "capability_code": "AIOPS-MODEL-OPERATIONS",
+        "capability_name": "Detection Model Operations",
+        "description": "Train, retrain, and monitor the detection and prediction models behind the platform, watching for drift so the signal stays accurate as the environment changes."
+      }
+    }
+  ],
+  "solutions": [
+    {
+      "coverage_level": "secondary",
+      "solutions": {
+        "solution_name": "ServiceNow IT Operations Management",
+        "vendor_id": 1,
+        "vendors": {
+          "vendor_name": "ServiceNow Inc"
+        }
+      }
+    },
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "ServiceNow AIOps",
+        "vendor_id": 1,
+        "vendors": {
+          "vendor_name": "ServiceNow Inc"
+        }
+      }
+    },
+    {
+      "coverage_level": "secondary",
+      "solutions": {
+        "solution_name": "Datadog Platform",
+        "vendor_id": 7,
+        "vendors": {
+          "vendor_name": "Datadog"
+        }
+      }
+    },
+    {
+      "coverage_level": "secondary",
+      "solutions": {
+        "solution_name": "Dynatrace Platform",
+        "vendor_id": 8,
+        "vendors": {
+          "vendor_name": "Dynatrace"
+        }
+      }
+    },
+    {
+      "coverage_level": "primary",
+      "solutions": {
+        "solution_name": "BigPanda AIOps",
+        "vendor_id": 9,
+        "vendors": {
+          "vendor_name": "BigPanda"
+        }
+      }
+    }
+  ],
+  "modules": [
+    {
+      "domain_module_code": "AIOPS-EVENT-CORRELATION",
+      "domain_module_name": "Event Correlation",
+      "module_kind": "full",
+      "description": "The real-time signal-reduction half of AIOps. Ingests high-volume events, alerts, metrics, and traces from the monitoring estate, detects anomalies against learned baselines, correlates and deduplicates related signals into single incidents, and applies suppression rules (including planned-change windows) to cut alert noise. Masters event_correlations, anomaly_detections, and alert_suppression_rules; consumes monitoring_events, monitoring_alerts, distributed_traces, and configuration_items owned by OBS / RMM / CMDB. Used standalone by ops teams that only need noise reduction, or alongside Predictive Intelligence for the full closed loop."
+    },
+    {
+      "domain_module_code": "AIOPS-PREDICTIVE-INTELLIGENCE",
+      "domain_module_name": "Predictive Intelligence",
+      "module_kind": "full",
+      "description": "The analytical, forward-looking half of AIOps. Forecasts incidents and capacity problems, elevates predictive signals above action thresholds, infers probable root cause for correlated incidents, and runs the ML training lifecycle (including drift detection) that keeps the detection and prediction models trustworthy. Masters predictive_signals, incident_predictions, root_cause_analyses, and ml_model_training_records; consumes data_pipelines and configuration_items owned by DATA-AI-PLAT / CMDB. Typically deployed alongside Event Correlation, which supplies the correlated incidents that root-cause and prediction reason over."
+    }
+  ],
+  "data_objects": [
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 93,
+        "data_object_name": "event_correlations",
+        "singular_label": "Event Correlation",
+        "entity_type": "computed",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 94,
+        "data_object_name": "anomaly_detections",
+        "singular_label": "Anomaly Detection",
+        "entity_type": "computed",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 95,
+        "data_object_name": "root_cause_analyses",
+        "singular_label": "Root Cause Analysis",
+        "entity_type": "operational_workflow",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 96,
+        "data_object_name": "predictive_signals",
+        "singular_label": "Predictive Signal",
+        "entity_type": "computed",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "consumer",
+      "necessity": "required",
+      "data_objects": {
+        "id": 76,
+        "data_object_name": "configuration_items",
+        "singular_label": "Configuration Item",
+        "entity_type": "operational_workflow",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "consumer",
+      "necessity": "required",
+      "data_objects": {
+        "id": 84,
+        "data_object_name": "monitoring_events",
+        "singular_label": "Event",
+        "entity_type": "operational_workflow",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "contributor",
+      "necessity": "required",
+      "data_objects": {
+        "id": 85,
+        "data_object_name": "monitoring_alerts",
+        "singular_label": "Alert",
+        "entity_type": "operational_workflow",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "consumer",
+      "necessity": "required",
+      "data_objects": {
+        "id": 90,
+        "data_object_name": "distributed_traces",
+        "singular_label": "Distributed Trace",
+        "entity_type": "operational_record",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "consumer",
+      "necessity": "required",
+      "data_objects": {
+        "id": 227,
+        "data_object_name": "data_pipelines",
+        "singular_label": "Data Pipeline",
+        "entity_type": "unclassified",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 722,
+        "data_object_name": "alert_suppression_rules",
+        "singular_label": "Alert Suppression Rule",
+        "entity_type": "catalog",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 723,
+        "data_object_name": "ml_model_training_records",
+        "singular_label": "ML Model Training Record",
+        "entity_type": "operational_record",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    },
+    {
+      "role": "master",
+      "necessity": "required",
+      "data_objects": {
+        "id": 724,
+        "data_object_name": "incident_predictions",
+        "singular_label": "Incident Prediction",
+        "entity_type": "computed",
+        "has_personal_content": false,
+        "has_submit_lock": false,
+        "has_single_approver": false
+      }
+    }
+  ],
+  "lifecycle_states": [
+    {
+      "data_object_id": 95,
+      "state_name": "investigating",
+      "state_order": 1,
+      "is_initial": true,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 95,
+      "state_name": "draft",
+      "state_order": 2,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": false
+    },
+    {
+      "data_object_id": 95,
+      "state_name": "reviewed",
+      "state_order": 3,
+      "is_initial": false,
+      "is_terminal": false,
+      "requires_permission": true
+    },
+    {
+      "data_object_id": 95,
+      "state_name": "published",
+      "state_order": 4,
+      "is_initial": false,
+      "is_terminal": true,
+      "requires_permission": true
+    },
+    {
+      "data_object_id": 95,
+      "state_name": "dismissed",
+      "state_order": 5,
+      "is_initial": false,
+      "is_terminal": true,
+      "requires_permission": false
+    }
+  ],
+  "trigger_events": [
+    {
+      "event_name": "anomaly_candidate.detected",
+      "description": "Fired when a Anomaly Detection is detected. Publisher domain owns the state transition; subscribers may react by creating downstream artifacts.",
+      "from_state": "",
+      "to_state": "detected",
+      "event_category": "signal"
+    },
+    {
+      "event_name": "correlation.identified",
+      "description": "Fired when an Event Correlation is identified. Publisher domain owns the state transition; subscribers may react by creating downstream artifacts.",
+      "from_state": "",
+      "to_state": "identified",
+      "event_category": "signal"
+    },
+    {
+      "event_name": "topology.published",
+      "description": "Fired when a Event Correlation is published. Publisher domain owns the state transition; subscribers may react by creating downstream artifacts.",
+      "from_state": "",
+      "to_state": "published",
+      "event_category": "lifecycle"
+    },
+    {
+      "event_name": "root_cause_analysis.published",
+      "description": "AIOPS RCA workflow concluded with a published probable root cause. ITSM updates the incident/problem record.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "state_change"
+    },
+    {
+      "event_name": "predictive_signal.elevated",
+      "description": "AIOPS predictive engine has elevated a signal above the action threshold (predicted outage, capacity exhaustion, error storm). ITSM proactive ticket opened.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "threshold"
+    },
+    {
+      "event_name": "alert_suppression_rule.activated",
+      "description": "AIOPS activated a new alert suppression rule (e.g. during planned change). ITOM and OBS apply the suppression.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "state_change"
+    },
+    {
+      "event_name": "ml_model_training_record.completed",
+      "description": "AIOPS retraining run completed for an anomaly/prediction model. Model registry updates; deployment may roll out.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "lifecycle"
+    },
+    {
+      "event_name": "ml_model_training_record.drift_detected",
+      "description": "AIOPS detected drift in input distribution or prediction quality. Triggers retraining schedule.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "signal"
+    },
+    {
+      "event_name": "incident_prediction.high_confidence",
+      "description": "AIOPS predicted an incident with high confidence ahead of impact. ITSM opens a proactive incident; ITOM may execute remediation.",
+      "from_state": "",
+      "to_state": "",
+      "event_category": "signal"
+    }
+  ],
+  "outbound_handoffs": [
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "high",
+      "trigger_event": {
+        "event_name": "correlation.identified"
+      },
+      "target_domain": {
+        "domain_code": "ITSM"
+      },
+      "data_object": {
+        "data_object_name": "service_incidents"
+      }
+    },
+    {
+      "integration_pattern": "api_call",
+      "friction_level": "medium",
+      "trigger_event": {
+        "event_name": "root_cause.identified"
+      },
+      "target_domain": {
+        "domain_code": "ITSM"
+      },
+      "data_object": {
+        "data_object_name": "service_problems"
+      }
+    },
+    {
+      "integration_pattern": "api_call",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "monitoring_event.suppression_applied"
+      },
+      "target_domain": {
+        "domain_code": "ITOM"
+      },
+      "data_object": {
+        "data_object_name": "monitoring_events"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "root_cause_analysis.published"
+      },
+      "target_domain": {
+        "domain_code": "ITSM"
+      },
+      "data_object": {
+        "data_object_name": "service_incidents"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "predictive_signal.elevated"
+      },
+      "target_domain": {
+        "domain_code": "ITOM"
+      },
+      "data_object": {
+        "data_object_name": "predictive_signals"
+      }
+    },
+    {
+      "integration_pattern": "api_call",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "alert_suppression_rule.activated"
+      },
+      "target_domain": {
+        "domain_code": "OBS"
+      },
+      "data_object": {
+        "data_object_name": "alert_suppression_rules"
+      }
+    },
+    {
+      "integration_pattern": "api_call",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "alert_suppression_rule.activated"
+      },
+      "target_domain": {
+        "domain_code": "ITOM"
+      },
+      "data_object": {
+        "data_object_name": "alert_suppression_rules"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "incident_prediction.high_confidence"
+      },
+      "target_domain": {
+        "domain_code": "ITSM"
+      },
+      "data_object": {
+        "data_object_name": "service_incidents"
+      }
+    }
+  ],
+  "inbound_handoffs": [
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "events.burst_detected"
+      },
+      "source_domain": {
+        "domain_code": "ITOM"
+      },
+      "data_object": {
+        "data_object_name": "event_correlations"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "anomaly_candidate.detected"
+      },
+      "source_domain": {
+        "domain_code": "OBS"
+      },
+      "data_object": {
+        "data_object_name": "anomaly_detections"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "medium",
+      "trigger_event": {
+        "event_name": "monitoring_alert.threshold_breached"
+      },
+      "source_domain": {
+        "domain_code": "RMM"
+      },
+      "data_object": {
+        "data_object_name": "monitoring_alerts"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "medium",
+      "trigger_event": {
+        "event_name": "pipeline_run.failed"
+      },
+      "source_domain": {
+        "domain_code": "DATA-AI-PLAT"
+      },
+      "data_object": {
+        "data_object_name": "data_pipelines"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "metric_series.threshold_breached"
+      },
+      "source_domain": {
+        "domain_code": "OBS"
+      },
+      "data_object": {
+        "data_object_name": "metric_series"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "metric_series.anomaly_detected"
+      },
+      "source_domain": {
+        "domain_code": "OBS"
+      },
+      "data_object": {
+        "data_object_name": "metric_series"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "log_entry.error_pattern_matched"
+      },
+      "source_domain": {
+        "domain_code": "OBS"
+      },
+      "data_object": {
+        "data_object_name": "log_entries"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "capacity_record.threshold_breached"
+      },
+      "source_domain": {
+        "domain_code": "ITOM"
+      },
+      "data_object": {
+        "data_object_name": "capacity_records"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "distributed_trace.slow_path_detected"
+      },
+      "source_domain": {
+        "domain_code": "OBS"
+      },
+      "data_object": {
+        "data_object_name": "distributed_traces"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "distributed_trace.error_spike"
+      },
+      "source_domain": {
+        "domain_code": "OBS"
+      },
+      "data_object": {
+        "data_object_name": "distributed_traces"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "network_path.degraded"
+      },
+      "source_domain": {
+        "domain_code": "NPMD"
+      },
+      "data_object": {
+        "data_object_name": "network_paths"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "network_flow_record.anomalous_pattern"
+      },
+      "source_domain": {
+        "domain_code": "NPMD"
+      },
+      "data_object": {
+        "data_object_name": "network_flow_records"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "endpoint_anomaly_finding.published"
+      },
+      "source_domain": {
+        "domain_code": "DEM"
+      },
+      "data_object": {
+        "data_object_name": "endpoint_anomaly_findings"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "real_user_session.poor_experience"
+      },
+      "source_domain": {
+        "domain_code": "DEM"
+      },
+      "data_object": {
+        "data_object_name": "real_user_sessions"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "dc_power_distribution_unit.failure"
+      },
+      "source_domain": {
+        "domain_code": "DCIM"
+      },
+      "data_object": {
+        "data_object_name": "dc_power_distribution_units"
+      }
+    },
+    {
+      "integration_pattern": "event_stream",
+      "friction_level": "low",
+      "trigger_event": {
+        "event_name": "service_map.updated"
+      },
+      "source_domain": {
+        "domain_code": "CMDB"
+      },
+      "data_object": {
+        "data_object_name": "service_maps"
+      }
+    }
+  ],
+  "skills": [
+    {
+      "skill_name": "aiops-system",
+      "skill_type": "system",
+      "domain_module_id": null
+    }
+  ],
+  "business_function_domains": [
+    {
+      "responsibility_type": "contributor",
+      "business_functions": {
+        "business_function_name": "Software Engineering"
+      }
+    },
+    {
+      "responsibility_type": "owner",
+      "business_functions": {
+        "business_function_name": "IT Infrastructure"
+      }
+    }
+  ]
+}

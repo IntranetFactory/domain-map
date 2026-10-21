@@ -1,0 +1,786 @@
+[
+  {
+    "id": 1254,
+    "data_object_name": "flow_measurements",
+    "singular_label": "Flow Measurement",
+    "plural_label": "Flow Measurements",
+    "entity_type": "computed",
+    "description": "A computed measurement of flow (velocity, time, load, efficiency, or distribution) for a value stream over a period, derived from mirrored work items."
+  },
+  {
+    "id": 1253,
+    "data_object_name": "flow_metric_definitions",
+    "singular_label": "Flow Metric Definition",
+    "plural_label": "Flow Metric Definitions",
+    "entity_type": "catalog",
+    "description": "A configured definition of a flow metric and its thresholds and targets, against which measured flow is evaluated."
+  },
+  {
+    "id": 299,
+    "data_object_name": "follow_up_actions",
+    "singular_label": "Audit Follow-up Action",
+    "plural_label": "Audit Follow-up Actions",
+    "entity_type": "operational_workflow",
+    "description": "Remediation tracking: owner, target date, evidence upload, closure date. Closure → closes corresponding GRC issue."
+  },
+  {
+    "id": 510,
+    "data_object_name": "food_safety_incidents",
+    "singular_label": "Food Safety Incident",
+    "plural_label": "Food Safety Incidents",
+    "entity_type": "operational_workflow",
+    "description": "Deviation, complaint, or non-conformance event triggering investigation and corrective / preventive action (CAPA)."
+  },
+  {
+    "id": 1013,
+    "data_object_name": "forecast_accuracy_records",
+    "singular_label": "Forecast Accuracy Record",
+    "plural_label": "Forecast Accuracy Records",
+    "entity_type": "computed",
+    "description": "Historical comparison of submitted forecasts against actual closed results, used to measure forecast accuracy and train the forecasting models."
+  },
+  {
+    "id": 1012,
+    "data_object_name": "forecast_adjustments",
+    "singular_label": "Forecast Adjustment",
+    "plural_label": "Forecast Adjustments",
+    "entity_type": "operational_record",
+    "description": "A manager override applied to a submitted forecast, capturing the changed number and the rationale for the adjustment."
+  },
+  {
+    "id": 1011,
+    "data_object_name": "forecast_submissions",
+    "singular_label": "Forecast Submission",
+    "plural_label": "Forecast Submissions",
+    "entity_type": "operational_workflow",
+    "description": "A rep or manager submission for a forecast period, moving from draft to submitted to locked as the forecast cadence closes."
+  },
+  {
+    "id": 1140,
+    "data_object_name": "frontline_broadcasts",
+    "singular_label": "Frontline Broadcast",
+    "plural_label": "Frontline Broadcasts",
+    "entity_type": "operational_workflow",
+    "description": "A targeted announcement sent to a frontline audience, with optional mandatory-read requirement, scheduled or supervisor-cascade delivery, and read/acknowledgment tracking."
+  },
+  {
+    "id": 1145,
+    "data_object_name": "frontline_checklists",
+    "singular_label": "Frontline Checklist",
+    "plural_label": "Frontline Checklists",
+    "entity_type": "catalog",
+    "description": "A reusable template of ordered task items (opening, closing, audit, compliance) instantiated against a location and shift for frontline execution."
+  },
+  {
+    "id": 1148,
+    "data_object_name": "frontline_learning_completions",
+    "singular_label": "Frontline Learning Completion",
+    "plural_label": "Frontline Learning Completions",
+    "entity_type": "operational_record",
+    "description": "A per-worker record that a frontline learning module was completed, with score or pass status where the module is assessed."
+  },
+  {
+    "id": 1147,
+    "data_object_name": "frontline_learning_modules",
+    "singular_label": "Frontline Learning Module",
+    "plural_label": "Frontline Learning Modules",
+    "entity_type": "catalog",
+    "description": "A bite-size training unit delivered to frontline workers on a mobile device, with completion tracked per worker and role."
+  },
+  {
+    "id": 1141,
+    "data_object_name": "frontline_message_channels",
+    "singular_label": "Frontline Message Channel",
+    "plural_label": "Frontline Message Channels",
+    "entity_type": "catalog",
+    "description": "A delivery channel or stream (location feed, team channel, kiosk display, SMS fallback) through which broadcasts and conversations reach deskless workers."
+  },
+  {
+    "id": 1143,
+    "data_object_name": "frontline_recognitions",
+    "singular_label": "Frontline Recognition",
+    "plural_label": "Frontline Recognitions",
+    "entity_type": "operational_record",
+    "description": "A peer or manager recognition of a frontline worker, delivered in the frontline feed and visible to the team, tied to the recognized worker."
+  },
+  {
+    "id": 1149,
+    "data_object_name": "frontline_task_submissions",
+    "singular_label": "Frontline Task Submission",
+    "plural_label": "Frontline Task Submissions",
+    "entity_type": "operational_record",
+    "description": "A per-worker submission completing a frontline task or checklist item, carrying the photo, form, or attestation evidence the task required."
+  },
+  {
+    "id": 1144,
+    "data_object_name": "frontline_tasks",
+    "singular_label": "Frontline Task",
+    "plural_label": "Frontline Tasks",
+    "entity_type": "operational_workflow",
+    "description": "A unit of work pushed to a frontline worker or location, completed on a mobile or shared device, with photo or form evidence collected on completion."
+  },
+  {
+    "id": 1200,
+    "data_object_name": "fuel_inventory_logs",
+    "singular_label": "Fuel Inventory Log",
+    "plural_label": "Fuel Inventory Logs",
+    "entity_type": "operational_record",
+    "description": "A reconciliation record for a fuel tank: opening volume, deliveries, pump totals, closing stick reading, and variance, kept for storage-tank compliance."
+  },
+  {
+    "id": 1198,
+    "data_object_name": "fuel_sales",
+    "singular_label": "Fuel Sale",
+    "plural_label": "Fuel Sales",
+    "entity_type": "operational_record",
+    "description": "A fuel-dock transaction: product (gas or diesel), gallons, pump, price, and the boater or vessel charged."
+  },
+  {
+    "id": 1199,
+    "data_object_name": "fuel_tanks",
+    "singular_label": "Fuel Tank",
+    "plural_label": "Fuel Tanks",
+    "entity_type": "operational_record",
+    "description": "A bulk fuel storage tank at the marina: product, capacity, and current volume, reconciled against deliveries and sales."
+  },
+  {
+    "id": 372,
+    "data_object_name": "fuel_transactions",
+    "singular_label": "Fuel Transaction",
+    "plural_label": "Fuel Transactions",
+    "entity_type": "operational_record",
+    "description": "Fuel-card or charging-network transaction: vehicle, driver, fuel type and quantity, cost, location, time. Matched against vehicle assignments for IFTA reporting and exception detection."
+  },
+  {
+    "id": 388,
+    "data_object_name": "fulfillments",
+    "singular_label": "Fulfillment",
+    "plural_label": "Fulfillments",
+    "entity_type": "operational_workflow",
+    "description": "Fulfillment instruction group created from order_lines; assigned to warehouse/location, tracked to shipment."
+  },
+  {
+    "id": 757,
+    "data_object_name": "fund_close_periods",
+    "singular_label": "Fund Close Period",
+    "plural_label": "Fund Close Periods",
+    "entity_type": "operational_workflow",
+    "description": "Accounting close cycles for the fund (monthly, quarterly, annual). Drives PCAP statement generation and audit packaging."
+  },
+  {
+    "id": 368,
+    "data_object_name": "fund_distributions",
+    "singular_label": "Fund Distribution",
+    "plural_label": "Fund Distributions",
+    "entity_type": "operational_workflow",
+    "description": "Waterfall payout from a real-estate fund to LPs and GP (preferred return, return-of-capital, catch-up, carried interest); calculated on income, sale, or refinancing events."
+  },
+  {
+    "id": 781,
+    "data_object_name": "fund_formations",
+    "singular_label": "Fund Formation",
+    "plural_label": "Fund Formations",
+    "entity_type": "operational_workflow",
+    "description": "End-to-end fund-vehicle setup record: entity formation filings, EIN application, banking onboarding, templated LPA. Unique to emerging-manager bundled platforms."
+  },
+  {
+    "id": 756,
+    "data_object_name": "fund_ledger_entries",
+    "singular_label": "Fund Ledger Entry",
+    "plural_label": "Fund Ledger Entries",
+    "entity_type": "operational_record",
+    "description": "GP-side accounting entries against the fund vehicle (contributions, expenses, fee accruals, gain/loss recognitions) with GAAP/IFRS conformance."
+  },
+  {
+    "id": 768,
+    "data_object_name": "fund_performance_periods",
+    "singular_label": "Fund Performance Period",
+    "plural_label": "Fund Performance Periods",
+    "entity_type": "computed",
+    "description": "Fund-level performance reporting period: vintage-adjusted IRR/MOIC/TVPI/DPI with PME benchmarking, J-curve normalization."
+  },
+  {
+    "id": 767,
+    "data_object_name": "fund_position_returns",
+    "singular_label": "Fund Position Return",
+    "plural_label": "Fund Position Returns",
+    "entity_type": "computed",
+    "description": "Per-position return calculation: IRR/MOIC/TVPI/DPI on the fund's holding in a specific portfolio company, time-windowed."
+  },
+  {
+    "id": 755,
+    "data_object_name": "funds",
+    "singular_label": "Fund",
+    "plural_label": "Funds",
+    "entity_type": "operational_workflow",
+    "description": "Private-capital fund vehicle (LP/GP partnership structure) with vintage, strategy, target size, and current AUM. The structural backbone every other fund-admin module references."
+  },
+  {
+    "id": 144,
+    "data_object_name": "garnishment_orders",
+    "singular_label": "Garnishment Order",
+    "plural_label": "Garnishment Orders",
+    "entity_type": "operational_workflow",
+    "description": "Court-ordered or agency-issued instruction to withhold from an employee's wages (child support, tax levy, bankruptcy, student loan, creditor). Carries priority, ceiling, remit-to instructions, and lifecycle (active, released, exhausted)."
+  },
+  {
+    "id": 950,
+    "data_object_name": "gdpr_consent_records",
+    "singular_label": "GDPR Consent Record",
+    "plural_label": "GDPR Consent Records",
+    "entity_type": "operational_workflow",
+    "description": "GDPR Article 6 / 7 consent capture for learner training data: purpose, lawful basis, granted timestamp, withdrawal timestamp."
+  },
+  {
+    "id": 195,
+    "data_object_name": "general_ledger_accounts",
+    "singular_label": "GL Account",
+    "plural_label": "GL Accounts",
+    "entity_type": "unclassified",
+    "description": "Account in the chart of accounts: code, name, type (asset/liability/equity/revenue/expense), normal balance, statutory mapping. The schema of the books."
+  },
+  {
+    "id": 733,
+    "data_object_name": "geofence_events",
+    "singular_label": "Geofence Event",
+    "plural_label": "Geofence Events",
+    "entity_type": "unclassified",
+    "description": "Vehicle entry / exit across a defined geofence boundary."
+  },
+  {
+    "id": 302,
+    "data_object_name": "glossary_terms",
+    "singular_label": "Business Glossary Term",
+    "plural_label": "Business Glossary Terms",
+    "entity_type": "operational_workflow",
+    "description": "Business-language definition of a concept: term name, definition, steward, domains, related terms, synonyms, certification status. Distinct from ontologies (formal RDF/OWL models)."
+  },
+  {
+    "id": 74,
+    "data_object_name": "goods_receipts",
+    "singular_label": "Goods Receipt",
+    "plural_label": "Goods Receipts",
+    "entity_type": "operational_workflow",
+    "description": "Confirmation that ordered goods or services were received as expected: receipt date, quantity received, condition. The basis for 3-way matching against PO + invoice that AP runs before payment."
+  },
+  {
+    "id": 731,
+    "data_object_name": "gps_waypoints",
+    "singular_label": "GPS Waypoint",
+    "plural_label": "GPS Waypoints",
+    "entity_type": "unclassified",
+    "description": "Continuous vehicle location stream (timestamp, lat, lon, speed, heading) — powers heat maps + geofence checks."
+  },
+  {
+    "id": 1107,
+    "data_object_name": "grazing_paddocks",
+    "singular_label": "Paddock",
+    "plural_label": "Paddocks",
+    "entity_type": "catalog",
+    "description": "A grazing paddock or field: area, location, pasture type, carrying capacity, and rest state. The land unit grazing plans rotate mobs across."
+  },
+  {
+    "id": 1109,
+    "data_object_name": "grazing_plans",
+    "singular_label": "Grazing Plan",
+    "plural_label": "Grazing Plans",
+    "entity_type": "operational_workflow",
+    "description": "A rotational-grazing plan over a set of paddocks and mobs: planned rotation order, rest periods, stocking rate, and carrying-capacity targets for a season or cycle."
+  },
+  {
+    "id": 1230,
+    "data_object_name": "gtm_plans",
+    "singular_label": "GTM Plan",
+    "plural_label": "GTM Plans",
+    "entity_type": "operational_workflow",
+    "description": "The committed go-to-market plan for a period: the parent artifact that locks and pushes downstream. Mastered by every pure-play planning vendor."
+  },
+  {
+    "id": 1228,
+    "data_object_name": "gtm_scenarios",
+    "singular_label": "GTM Scenario",
+    "plural_label": "GTM Scenarios",
+    "entity_type": "operational_workflow",
+    "description": "A what-if model of the plan under alternative segment, territory, capacity, or channel assumptions."
+  },
+  {
+    "id": 1281,
+    "data_object_name": "gxp_training_signoffs",
+    "singular_label": "GxP Training Signoff",
+    "plural_label": "GxP Training Signoffs",
+    "entity_type": "operational_workflow",
+    "description": "Witnessed e-signature binding learner, course, content version and timestamp for FDA 21 CFR Part 11 life-sciences training."
+  },
+  {
+    "id": 507,
+    "data_object_name": "haccp_plans",
+    "singular_label": "HACCP Plan",
+    "plural_label": "HACCP Plans",
+    "entity_type": "operational_workflow",
+    "description": "Per-product Hazard Analysis Critical Control Point document: hazard analysis, CCPs, critical limits, monitoring procedures, corrective actions."
+  },
+  {
+    "id": 941,
+    "data_object_name": "harassment_training_acknowledgements",
+    "singular_label": "Harassment Training Acknowledgment",
+    "plural_label": "Harassment Training Acknowledgments",
+    "entity_type": "operational_workflow",
+    "description": "Statutory acknowledgment of harassment training completion per CA SB-1343, NY 201-g, IL 2-109; carries signed timestamp and IP."
+  },
+  {
+    "id": 56,
+    "data_object_name": "hardware_assets",
+    "singular_label": "Hardware Asset",
+    "plural_label": "Hardware Assets",
+    "entity_type": "operational_workflow",
+    "description": "Physical IT asset: laptop, desktop, server, mobile, network gear, peripheral. Carries serial number, MAC/asset tag, current user / location / room, lifecycle state, depreciation schedule, and procurement reference. The HAM master; CMDB models the same physical thing as a CI for the operational/topology view."
+  },
+  {
+    "id": 697,
+    "data_object_name": "hardware_disposal_records",
+    "singular_label": "Hardware Disposal Record",
+    "plural_label": "Hardware Disposal Records",
+    "entity_type": "operational_workflow",
+    "description": "Decommissioning, e-waste tracking, ITAD chain-of-custody and data-wipe compliance for retired hardware."
+  },
+  {
+    "id": 695,
+    "data_object_name": "hardware_models",
+    "singular_label": "Hardware Model",
+    "plural_label": "Hardware Models",
+    "entity_type": "catalog",
+    "description": "Canonical catalog of hardware device types, SKUs and specifications; matches assets to refreshable units."
+  },
+  {
+    "id": 696,
+    "data_object_name": "hardware_warranties",
+    "singular_label": "Hardware Warranty",
+    "plural_label": "Hardware Warranties",
+    "entity_type": "operational_record",
+    "description": "Manufacturer support contract / coverage terms / expiration tracking for a hardware asset."
+  },
+  {
+    "id": 521,
+    "data_object_name": "harvest_forecasts",
+    "singular_label": "Harvest Forecast",
+    "plural_label": "Harvest Forecasts",
+    "entity_type": "operational_workflow",
+    "description": "Field-level harvest projection translated to available-share / SKU planning; drives reserve-list and dynamic pricing."
+  },
+  {
+    "id": 490,
+    "data_object_name": "harvest_records",
+    "singular_label": "Harvest Record",
+    "plural_label": "Harvest Records",
+    "entity_type": "unclassified",
+    "description": "Per-field and per-zone yield record from combine telemetry, scale tickets, and grain-handling reconciliation."
+  },
+  {
+    "id": 1195,
+    "data_object_name": "haul_out_jobs",
+    "singular_label": "Haul-Out Job",
+    "plural_label": "Haul-Out Jobs",
+    "entity_type": "operational_workflow",
+    "description": "A scheduled lift of a vessel out of and back into the water using a travel lift or crane, with stands time on the hard."
+  },
+  {
+    "id": 1074,
+    "data_object_name": "hazards",
+    "singular_label": "Hazard",
+    "plural_label": "Hazards",
+    "entity_type": "operational_workflow",
+    "description": "An identified workplace hazard, its source and affected tasks, and the controls applied to reduce its risk."
+  },
+  {
+    "id": 32,
+    "data_object_name": "hcm_positions",
+    "singular_label": "Position",
+    "plural_label": "Positions",
+    "entity_type": "operational_workflow",
+    "description": "Approved slot in the org — a 'chair' with role definition, cost center, reporting line, location, and FTE allocation. Distinct from job_profiles (the catalog definition) and from employees (the person filling the slot). A position can be open, filled, or eliminated. SWP designs future positions via org_designs; HCM operationalizes them once approved."
+  },
+  {
+    "id": 24,
+    "data_object_name": "headcount_plans",
+    "singular_label": "Headcount Plan",
+    "plural_label": "Headcount Plans",
+    "entity_type": "operational_workflow",
+    "description": "Period-by-period headcount targets (typically monthly or quarterly) broken down by org unit, location, function, level, and employment type. Includes opening balance, additions (hires, transfers in), reductions (attrition, RIF, transfers out), and target end-of-period count. The basis for plan-vs-actual reconciliation against HCM."
+  },
+  {
+    "id": 451,
+    "data_object_name": "helm_releases",
+    "singular_label": "Helm Release",
+    "plural_label": "Helm Releases",
+    "entity_type": "operational_workflow",
+    "description": "Helm deployment tracking: chart name/version, values overrides, release namespace, installed status."
+  },
+  {
+    "id": 1227,
+    "data_object_name": "hiring_plans",
+    "singular_label": "Hiring Plan",
+    "plural_label": "Hiring Plans",
+    "entity_type": "operational_workflow",
+    "description": "The headcount plan that closes the capacity gap: roles, timing, and ramp, handed to Recruiting and Finance."
+  },
+  {
+    "id": 905,
+    "data_object_name": "hiring_team_assignments",
+    "singular_label": "Hiring Team Assignment",
+    "plural_label": "Hiring Team Assignments",
+    "entity_type": "junction",
+    "description": "Per-requisition role-scoped staffing junction: assigns specific users to recruiter, hiring manager, coordinator, interviewer, and reviewer roles on a single requisition. Captures team composition without requiring global RBAC for transient interview-panel membership."
+  },
+  {
+    "id": 671,
+    "data_object_name": "host_assignments",
+    "singular_label": "Visitor Host Assignment",
+    "plural_label": "Visitor Host Assignments",
+    "entity_type": "operational_workflow",
+    "description": "Binding between visitor and internal employee host: access scope, duration window, responsible party for visitor supervision."
+  },
+  {
+    "id": 192,
+    "data_object_name": "hr_cases",
+    "singular_label": "HR Case",
+    "plural_label": "HR Cases",
+    "entity_type": "operational_workflow",
+    "description": "Employee inquiry or service request routed to HR Operations (pay question, benefits change, policy clarification, leave request, complaint). The HRSD analog of ITSM service_requests, scoped to HR-owned workflows."
+  },
+  {
+    "id": 1136,
+    "data_object_name": "human_tasks",
+    "singular_label": "Human Task",
+    "plural_label": "Human Tasks",
+    "entity_type": "operational_workflow",
+    "description": "A work item generated by a user task in a running process: an assignable, claimable unit of human work with candidate users and groups, due date, priority, and form, completed by a person to advance the instance."
+  },
+  {
+    "id": 340,
+    "data_object_name": "iam_access_policies",
+    "singular_label": "IAM Access Policy",
+    "plural_label": "IAM Access Policies",
+    "entity_type": "unclassified",
+    "description": "Bucket policy, RBAC assignment, RBAC rule, SaaS role grant, database permission. Infrastructure-level IAM artifact. Distinct from DCG `data_access_policies` (governance policy)."
+  },
+  {
+    "id": 1220,
+    "data_object_name": "ideal_customer_profiles",
+    "singular_label": "Ideal Customer Profile",
+    "plural_label": "Ideal Customer Profiles",
+    "entity_type": "catalog",
+    "description": "A definition of the best-fit account: firmographics, technographics, and qualifying criteria. Authored here and consumed by the ABM platform for engagement."
+  },
+  {
+    "id": 112,
+    "data_object_name": "identity_graphs",
+    "singular_label": "Identity Graph",
+    "plural_label": "Identity Graphs",
+    "entity_type": "computed",
+    "description": "Identity-resolution edges: email ↔ device ↔ cookie ↔ login ↔ phone. The graph that turns anonymous interactions into resolved customers. Built up over time from event signals; quality drives every downstream activation. IGA contributes employee-as-customer overlap for B2C-employer scenarios."
+  },
+  {
+    "id": 732,
+    "data_object_name": "idle_events",
+    "singular_label": "Idle Event",
+    "plural_label": "Idle Events",
+    "entity_type": "unclassified",
+    "description": "Engine-running, vehicle-stationary state change — distinct from trip aggregation."
+  },
+  {
+    "id": 531,
+    "data_object_name": "idp_extraction_models",
+    "singular_label": "IDP Extraction Model",
+    "plural_label": "IDP Extraction Models",
+    "entity_type": "operational_workflow",
+    "description": "ML or rule-based model trained to extract structured fields from documents (invoices, contracts, forms, receipts). Carries model_type, training lineage, performance metrics, version, deployment_status. Distinct from MLM `ml_models` (generic ML registry)."
+  },
+  {
+    "id": 536,
+    "data_object_name": "idp_extraction_templates",
+    "singular_label": "IDP Extraction Template",
+    "plural_label": "IDP Extraction Templates",
+    "entity_type": "catalog",
+    "description": "Reusable definition per document type: field structure, validation rules, target_system mapping. Distinct from ECM `document_classifications` (taxonomy) and CLM `contract_templates` (assembly)."
+  },
+  {
+    "id": 534,
+    "data_object_name": "idp_validation_results",
+    "singular_label": "IDP Validation Result",
+    "plural_label": "IDP Validation Results",
+    "entity_type": "operational_workflow",
+    "description": "Validation outcome for an extracted record/field set. Carries validation_rule_id, status (pass / fail / review), exception_details, validator_id (automated / human), resolution_state."
+  },
+  {
+    "id": 705,
+    "data_object_name": "iga_access_certifications",
+    "singular_label": "IGA Access Certification",
+    "plural_label": "IGA Access Certifications",
+    "entity_type": "operational_workflow",
+    "description": "Access review / certification campaign and per-user attestation outcome."
+  },
+  {
+    "id": 704,
+    "data_object_name": "iga_access_requests",
+    "singular_label": "IGA Access Request",
+    "plural_label": "IGA Access Requests",
+    "entity_type": "operational_workflow",
+    "description": "User-initiated access request + approval workflow within an IGA platform."
+  },
+  {
+    "id": 706,
+    "data_object_name": "iga_entitlement_definitions",
+    "singular_label": "IGA Entitlement Definition",
+    "plural_label": "IGA Entitlement Definitions",
+    "entity_type": "catalog",
+    "description": "Business-role / entitlement template provisioned into downstream systems — distinct from Semantius platform roles."
+  },
+  {
+    "id": 708,
+    "data_object_name": "iga_provisioning_events",
+    "singular_label": "IGA Provisioning Event",
+    "plural_label": "IGA Provisioning Events",
+    "entity_type": "operational_record",
+    "description": "Per-target outcome of an IGA-orchestrated provisioning action (success, failure, retry)."
+  },
+  {
+    "id": 707,
+    "data_object_name": "iga_sod_violations",
+    "singular_label": "IGA SoD Violation",
+    "plural_label": "IGA SoD Violations",
+    "entity_type": "operational_workflow",
+    "description": "Segregation-of-duties policy violation and exception-approval record."
+  },
+  {
+    "id": 964,
+    "data_object_name": "iga_user_entitlements",
+    "singular_label": "User Entitlement",
+    "plural_label": "User Entitlements",
+    "entity_type": "operational_workflow",
+    "description": "IGA's governance view of a user's access to an application: the entitlement grant, who requested it, who approved it, when it was last certified, and when it was revoked. Driven by birthright policy plus access-request workflow. Correlates with an smp_license_seat_assignment (the seat/cost view of the same access fact); the two routinely diverge."
+  },
+  {
+    "id": 633,
+    "data_object_name": "in_house_legal_matters",
+    "singular_label": "In-House Legal Matter",
+    "plural_label": "In-House Legal Matters",
+    "entity_type": "operational_workflow",
+    "description": "In-house legal matter (dispute / transaction / advisory / IP case / regulatory response): client department, opposing parties, matter type, key dates, assigned in-house counsel + outside counsel, budget, status. Scope-qualified to distinguish from law-firm `legal_matters` (id 391, LEGAL-PRACT-MGMT-mastered)."
+  },
+  {
+    "id": 724,
+    "data_object_name": "incident_predictions",
+    "singular_label": "Incident Prediction",
+    "plural_label": "Incident Predictions",
+    "entity_type": "computed",
+    "description": "Proactive incident forecast (likely unplanned change → service impact in N hours) — higher-level than per-signal anomaly."
+  },
+  {
+    "id": 475,
+    "data_object_name": "industrial_assets",
+    "singular_label": "Industrial Asset",
+    "plural_label": "Industrial Assets",
+    "entity_type": "operational_workflow",
+    "description": "Physical plant, equipment, or infrastructure tracked for maintenance and lifecycle: HVAC units, generators, pumps, conveyors, production-line machines, building systems. Carries asset_tag, location, manufacturer, install_date, criticality, current_state. The EAM master; distinct from HAM `hardware_assets` (IT gear: laptops, servers, network), `fixed_assets` (ERP-FIN capitalization view of the same physical thing), and CMDB `configuration_items` (logical/topological IT view)."
+  },
+  {
+    "id": 1079,
+    "data_object_name": "industrial_hygiene_samples",
+    "singular_label": "Industrial Hygiene Sample",
+    "plural_label": "Industrial Hygiene Samples",
+    "entity_type": "operational_record",
+    "description": "An industrial-hygiene sampling or exposure-monitoring result for a chemical, noise, or other agent, measured against occupational exposure limits and linked to the exposed workers and tasks."
+  },
+  {
+    "id": 130,
+    "data_object_name": "influencers",
+    "singular_label": "Influencer",
+    "plural_label": "Influencers",
+    "entity_type": "unclassified",
+    "description": "Creator/influencer profile managed in influencer-marketing tools: audience metrics, content history, contracts, payments, and campaign attribution. Distinct from contacts (which represent customer/prospect individuals)."
+  },
+  {
+    "id": 482,
+    "data_object_name": "insertion_orders",
+    "singular_label": "Insertion Order",
+    "plural_label": "Insertion Orders",
+    "entity_type": "unclassified",
+    "description": "Purchase order from the agency to a specific media outlet (publisher, broadcaster, platform) committing budget at negotiated rates with commission terms and make-good provisions. Reconciled against the media outlet's invoice."
+  },
+  {
+    "id": 1126,
+    "data_object_name": "insider_risk_alerts",
+    "singular_label": "Insider Risk Alert",
+    "plural_label": "Insider Risk Alerts",
+    "entity_type": "operational_workflow",
+    "description": "A prioritized alert raised when correlated indicators cross a risk threshold for a user. Triaged and dispositioned, and escalated into an insider-risk case when warranted."
+  },
+  {
+    "id": 1127,
+    "data_object_name": "insider_risk_cases",
+    "singular_label": "Insider Risk Case",
+    "plural_label": "Insider Risk Cases",
+    "entity_type": "operational_workflow",
+    "description": "An investigation case opened on a suspected insider threat. Carries the full lifecycle from triage through investigation to disposition, the activity timeline, linked evidence, and the HR/Legal handoff."
+  },
+  {
+    "id": 819,
+    "data_object_name": "installed_equipment",
+    "singular_label": "Installed Equipment Unit",
+    "plural_label": "Installed Equipment",
+    "entity_type": "operational_workflow",
+    "description": "Customer-owned equipment that the service organization installs and maintains. Carries identity (manufacturer, model, serial), placement (customer_site), and lifecycle state (active, out_of_service, decommissioned). The asset register that work orders are performed against and service contracts cover."
+  },
+  {
+    "id": 926,
+    "data_object_name": "instructor_assignments",
+    "singular_label": "Instructor Assignment",
+    "plural_label": "Instructor Assignments",
+    "entity_type": "operational_workflow",
+    "description": "Junction assigning an instructor to a session or offering, with role (primary / assistant / observer)."
+  },
+  {
+    "id": 925,
+    "data_object_name": "instructors",
+    "singular_label": "Instructor",
+    "plural_label": "Instructors",
+    "entity_type": "operational_workflow",
+    "description": "Instructor master separate from employees; covers internal trainers, contracted SMEs, and external vendor instructors."
+  },
+  {
+    "id": 623,
+    "data_object_name": "insurance_claims",
+    "singular_label": "Insurance Claim",
+    "plural_label": "Insurance Claims",
+    "entity_type": "operational_workflow",
+    "description": "Master record from first notice of loss through adjudication and settlement; P&C and life insurance scope. Carries claim type, loss date, reported date, claimant, adjuster, status (open / in-investigation / settled / closed / litigated), gross/net liability. Scope-qualified to avoid collision with HR claims, warranty claims, healthcare claims."
+  },
+  {
+    "id": 624,
+    "data_object_name": "insurance_policies",
+    "singular_label": "Insurance Policy",
+    "plural_label": "Insurance Policies",
+    "entity_type": "operational_workflow",
+    "description": "Underwritten contract defining coverage terms, limits, deductibles, exclusions, effective/expiration dates; the contractual artifact a claim is filed against. Distinct from GRC `policies` (control documents) and tenant lease policies."
+  },
+  {
+    "id": 471,
+    "data_object_name": "integration_connectors",
+    "singular_label": "IPAAS Connector",
+    "plural_label": "IPAAS Connectors",
+    "entity_type": "operational_workflow",
+    "description": "Vendor connector definition (per third-party application) with auth_type (OAuth / API key / basic / mTLS)."
+  },
+  {
+    "id": 474,
+    "data_object_name": "integration_data_mappings",
+    "singular_label": "Integration Data Mapping",
+    "plural_label": "Integration Data Mappings",
+    "entity_type": "operational_workflow",
+    "description": "Transformation rule: source_field → target_field, mapping_logic, transformation_type (direct / computed / lookup)."
+  },
+  {
+    "id": 440,
+    "data_object_name": "integration_flows",
+    "singular_label": "Data Integration Flow",
+    "plural_label": "Data Integration Flows",
+    "entity_type": "operational_workflow",
+    "description": "Higher-level orchestration composing multiple pipelines and connectors. Note potential overlap with DATA-AI-PLAT `data_pipelines` — DI lens is integration-tool, DATA-AI-PLAT lens is platform-engine."
+  },
+  {
+    "id": 469,
+    "data_object_name": "integration_recipes",
+    "singular_label": "Integration Recipe",
+    "plural_label": "Integration Recipes",
+    "entity_type": "operational_workflow",
+    "description": "Named, versioned template for recurring event-driven flows (recipes, processes, workflows)."
+  },
+  {
+    "id": 470,
+    "data_object_name": "integration_runs",
+    "singular_label": "Integration Run",
+    "plural_label": "Integration Runs",
+    "entity_type": "operational_workflow",
+    "description": "Execution log per recipe invocation: timestamp, status, input_id, output_id, error_log, latency_ms."
+  },
+  {
+    "id": 473,
+    "data_object_name": "integration_triggers",
+    "singular_label": "Integration Trigger",
+    "plural_label": "Integration Triggers",
+    "entity_type": "catalog",
+    "description": "Event source (scheduled / webhook / database-change / queue) with polling or push config."
+  },
+  {
+    "id": 1205,
+    "data_object_name": "intel_sources",
+    "singular_label": "Intel Source",
+    "plural_label": "Intel Sources",
+    "entity_type": "catalog",
+    "description": "A configured source feeding competitive intelligence (news, review sites, web monitors, field reports)."
+  },
+  {
+    "id": 700,
+    "data_object_name": "intent_definitions",
+    "singular_label": "Intent Definition",
+    "plural_label": "Intent Definitions",
+    "entity_type": "operational_workflow",
+    "description": "Intent specification — training phrases, entities, resolution rules — drives detection at runtime."
+  },
+  {
+    "id": 260,
+    "data_object_name": "intent_detections",
+    "singular_label": "Intent Detection",
+    "plural_label": "Intent Detections",
+    "entity_type": "operational_record",
+    "description": "An NLU output record: detected intent classification, confidence, originating utterance, downstream action taken. Decoupled from conversation_transcripts so intent analytics can roll up independently of transcript retention policy."
+  },
+  {
+    "id": 1232,
+    "data_object_name": "intent_signals",
+    "singular_label": "Intent Signal",
+    "plural_label": "Intent Signals",
+    "entity_type": "operational_record",
+    "description": "A captured buying-intent signal for an account or contact, with topic, source, and strength."
+  },
+  {
+    "id": 1026,
+    "data_object_name": "interaction_evaluations",
+    "singular_label": "Interaction Evaluation",
+    "plural_label": "Interaction Evaluations",
+    "entity_type": "operational_workflow",
+    "description": "A supervisor's quality review of a recorded interaction, scored against an evaluation form, with section and item scores, comments, agent acknowledgment, and a coaching follow-up flag. Moves through draft, scoring, completed, disputed, and calibrated states."
+  },
+  {
+    "id": 203,
+    "data_object_name": "intercompany_transactions",
+    "singular_label": "Intercompany Transaction",
+    "plural_label": "Intercompany Transactions",
+    "entity_type": "unclassified",
+    "description": "Transaction between two legal_entities of the same group: intercompany invoice, transfer, allocation. Drives elimination entries at consolidation."
+  },
+  {
+    "id": 838,
+    "data_object_name": "interlibrary_loan_requests",
+    "singular_label": "Interlibrary Loan Request",
+    "plural_label": "Interlibrary Loan Requests",
+    "entity_type": "operational_workflow",
+    "description": "Patron-initiated request to borrow material from another library, including routing across sharing partners, shipping status, and fulfillment workflow."
+  },
+  {
+    "id": 859,
+    "data_object_name": "internal_opportunities",
+    "singular_label": "Opportunity",
+    "plural_label": "Opportunities",
+    "entity_type": "operational_workflow",
+    "description": "Internal postings covering full-time roles, gigs, projects, stretch assignments, and mentorships."
+  },
+  {
+    "id": 890,
+    "data_object_name": "interview_kits",
+    "singular_label": "Interview Kit",
+    "plural_label": "Interview Kits",
+    "entity_type": "catalog",
+    "description": "Reusable interview template per role / stage. Bundles assigned questions, target competencies, recommended scorecard, expected duration. Greenhouse's core authoring unit."
+  }
+]

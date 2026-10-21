@@ -1,0 +1,4843 @@
+[
+  {
+    "domain_code": "ACCT-PLAN",
+    "domain_id": 105,
+    "module_count": 0,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "AP-AUTO",
+    "domain_id": 29,
+    "module_count": 0,
+    "capability_count": 1,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "APIM",
+    "domain_id": 79,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "APP-PAAS",
+    "domain_id": 76,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "AUDIT",
+    "domain_id": 16,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "BANK-OPS",
+    "domain_id": 43,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "BCM",
+    "domain_id": 17,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "BI",
+    "domain_id": 74,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "CAFM",
+    "domain_id": 142,
+    "module_count": 0,
+    "capability_count": 3,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "CLIN-DEV",
+    "domain_id": 50,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "COLLAB-GOV",
+    "domain_id": 127,
+    "module_count": 0,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "CONV-AI",
+    "domain_id": 34,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "DAM",
+    "domain_id": 92,
+    "module_count": 0,
+    "capability_count": 1,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "DEM",
+    "domain_id": 83,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "DI",
+    "domain_id": 89,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "DISCOVERY",
+    "domain_id": 5,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "DQ",
+    "domain_id": 90,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "EAM",
+    "domain_id": 53,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "ESG",
+    "domain_id": 21,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "ESIGN",
+    "domain_id": 94,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "FINOPS",
+    "domain_id": 41,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "GRC",
+    "domain_id": 15,
+    "module_count": 0,
+    "capability_count": 1,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "HC-PATIENT",
+    "domain_id": 45,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "IDP",
+    "domain_id": 39,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "INS-CLAIMS",
+    "domain_id": 44,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "INTRANET",
+    "domain_id": 126,
+    "module_count": 0,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "IPAAS",
+    "domain_id": 36,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "KMS",
+    "domain_id": 33,
+    "module_count": 0,
+    "capability_count": 1,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "KUBE-PLAT",
+    "domain_id": 81,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "MDM",
+    "domain_id": 87,
+    "module_count": 0,
+    "capability_count": 2,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "MFG-OPS",
+    "domain_id": 47,
+    "module_count": 0,
+    "capability_count": 1,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "NPMD",
+    "domain_id": 82,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "OBS",
+    "domain_id": 7,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "OMS",
+    "domain_id": 32,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "OP-RES",
+    "domain_id": 18,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "PRIV-MGMT",
+    "domain_id": 20,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "PRM",
+    "domain_id": 96,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "PROC-MIN",
+    "domain_id": 40,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "PS-LIC",
+    "domain_id": 46,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "RET-STORE",
+    "domain_id": 48,
+    "module_count": 0,
+    "capability_count": 1,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "RPA",
+    "domain_id": 38,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "S2P",
+    "domain_id": 27,
+    "module_count": 0,
+    "capability_count": 1,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "SALES-PERF",
+    "domain_id": 102,
+    "module_count": 0,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "SECOPS",
+    "domain_id": 11,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "SOAR",
+    "domain_id": 12,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "SUP-LIFE",
+    "domain_id": 28,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "TELCO-BSS",
+    "domain_id": 42,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "TEST-MGMT",
+    "domain_id": 8,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "THREAT-INTEL",
+    "domain_id": 14,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "TPRM",
+    "domain_id": 19,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "UTIL-OPS",
+    "domain_id": 49,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "VIS-MGMT",
+    "domain_id": 24,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "VSDP",
+    "domain_id": 80,
+    "module_count": 0,
+    "capability_count": 0,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "BUILD",
+    "b1a_codes": [
+      "B1A-BUILD"
+    ]
+  },
+  {
+    "domain_code": "ABM-PLATFORM",
+    "domain_id": 185,
+    "module_count": 4,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 2,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "ideal_customer_profiles",
+        "module": "ABM-ENGAGEMENT-ORCHESTRATION",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "GTM-PLAN"
+        ]
+      },
+      {
+        "entity": "target_account_lists",
+        "module": "ABM-ENGAGEMENT-ORCHESTRATION",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "GTM-PLAN"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "ACCT-PRACT-MGMT",
+    "domain_id": 152,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 2,
+    "unclassified_master_names": [
+      "client_engagements",
+      "tax_returns"
+    ],
+    "m9_shapes": 3,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "crm_contacts",
+        "module": "ACCT-PRACT-MGMT-ENGAGEMENT-WORKFLOW",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "engagement_letters",
+        "module": "ACCT-PRACT-MGMT-ENGAGEMENT-WORKFLOW",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "LEGAL-PRACT-MGMT"
+        ]
+      },
+      {
+        "entity": "time_entries",
+        "module": "ACCT-PRACT-MGMT-CLIENT-PORTAL-BILLING",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "WFM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "AGENCY-MGMT",
+    "domain_id": 153,
+    "module_count": 3,
+    "capability_count": 11,
+    "persona_count": 0,
+    "unclassified_masters": 8,
+    "unclassified_master_names": [
+      "agency_estimates",
+      "agency_jobs",
+      "agency_retainers",
+      "agency_time_entries",
+      "creative_briefs",
+      "creative_deliverables",
+      "insertion_orders",
+      "media_plans"
+    ],
+    "m9_shapes": 6,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "crm_opportunities",
+        "module": "AGENCY-MGMT-JOB-TRAFFIC",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "customers",
+        "module": "AGENCY-MGMT-CREATIVE-OPS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "customers",
+        "module": "AGENCY-MGMT-JOB-TRAFFIC",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "customers",
+        "module": "AGENCY-MGMT-MEDIA-BUY",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "employees",
+        "module": "AGENCY-MGMT-JOB-TRAFFIC",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "legal_contracts",
+        "module": "AGENCY-MGMT-JOB-TRAFFIC",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CLM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "APM",
+    "domain_id": 10,
+    "module_count": 2,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "BEN-ADMIN",
+    "domain_id": 61,
+    "module_count": 4,
+    "capability_count": 5,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 5,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "deduction_codes",
+        "module": "BEN-PLAN-DESIGN",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "PAYROLL"
+        ]
+      },
+      {
+        "entity": "employment_events",
+        "module": "BEN-ENROLLMENT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "hr_cases",
+        "module": "BEN-ENROLLMENT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HRSD"
+        ]
+      },
+      {
+        "entity": "legal_entities",
+        "module": "BEN-ACA-COMPLIANCE",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "FIN"
+        ]
+      },
+      {
+        "entity": "legal_entities",
+        "module": "BEN-PLAN-DESIGN",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "FIN"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "CAP-TABLE",
+    "domain_id": 162,
+    "module_count": 6,
+    "capability_count": 9,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "CDP",
+    "domain_id": 72,
+    "module_count": 4,
+    "capability_count": 9,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 4,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "crm_contacts",
+        "module": "CDP-INGEST-IDENTITY",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "lead_scores",
+        "module": "CDP-UNIFIED-PROFILE",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "MA"
+        ]
+      },
+      {
+        "entity": "marketing_campaigns",
+        "module": "CDP-SEGMENTATION-ACTIVATION",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "MA"
+        ]
+      },
+      {
+        "entity": "sales_emails",
+        "module": "CDP-SEGMENTATION-ACTIVATION",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SALES-ENG"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "CMDB",
+    "domain_id": 4,
+    "module_count": 3,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 2,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "hardware_assets",
+        "module": "CMDB-CORE",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "HAM"
+        ]
+      },
+      {
+        "entity": "service_changes",
+        "module": "CMDB-CORE",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "ITSM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "COMP-MGMT",
+    "domain_id": 60,
+    "module_count": 4,
+    "capability_count": 5,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 4,
+    "m9_shared_excluded": 1,
+    "m9_details": [
+      {
+        "entity": "earning_codes",
+        "module": "COMP-PLANNING",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "PAYROLL"
+        ]
+      },
+      {
+        "entity": "employment_contracts",
+        "module": "COMP-PLANNING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "job_offers",
+        "module": "COMP-STATEMENTS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ATS"
+        ]
+      },
+      {
+        "entity": "performance_reviews",
+        "module": "COMP-PLANNING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "TALENT-MGMT"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "CPQ",
+    "domain_id": 73,
+    "module_count": 3,
+    "capability_count": 9,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "CRM",
+    "domain_id": 69,
+    "module_count": 5,
+    "capability_count": 9,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 9,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "audience_segments",
+        "module": "CRM-ACCT-MGT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      },
+      {
+        "entity": "conversation_intelligence_records",
+        "module": "CRM-PIPELINE-MGT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "REV-INTEL"
+        ]
+      },
+      {
+        "entity": "customer_attributes",
+        "module": "CRM-ACCT-MGT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      },
+      {
+        "entity": "customer_cases",
+        "module": "CRM-ACCT-MGT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CSM"
+        ]
+      },
+      {
+        "entity": "customer_events",
+        "module": "CRM-ACCT-MGT",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      },
+      {
+        "entity": "customer_invoices",
+        "module": "CRM-ACCT-MGT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SUB-MGMT"
+        ]
+      },
+      {
+        "entity": "customer_subscriptions",
+        "module": "CRM-ACCT-MGT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SUB-MGMT"
+        ]
+      },
+      {
+        "entity": "lead_scores",
+        "module": "CRM-LEAD-MGT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "MA"
+        ]
+      },
+      {
+        "entity": "sales_emails",
+        "module": "CRM-ACTIVITY",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "SALES-ENG"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "CSM",
+    "domain_id": 30,
+    "module_count": 3,
+    "capability_count": 4,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 7,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "customer_events",
+        "module": "CSM-CASE-MGMT",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      },
+      {
+        "entity": "customer_subscriptions",
+        "module": "CSM-ENTITLEMENTS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SUB-MGMT"
+        ]
+      },
+      {
+        "entity": "customers",
+        "module": "CSM-CASE-MGMT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "customers",
+        "module": "CSM-ENTITLEMENTS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "knowledge_articles",
+        "module": "CSM-CASE-MGMT",
+        "role": "contributor",
+        "necessity": "optional",
+        "master_domains": [
+          "ITSM"
+        ]
+      },
+      {
+        "entity": "knowledge_articles",
+        "module": "CSM-KNOWLEDGE",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "ITSM"
+        ]
+      },
+      {
+        "entity": "legal_contracts",
+        "module": "CSM-ENTITLEMENTS",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CLM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "DAIRY-MGMT",
+    "domain_id": 156,
+    "module_count": 4,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "DATA-AI-PLAT",
+    "domain_id": 129,
+    "module_count": 4,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 6,
+    "unclassified_master_names": [
+      "ai_agents",
+      "data_pipelines",
+      "feature_sets",
+      "knowledge_graph_entities",
+      "lakehouse_tables",
+      "ml_models"
+    ],
+    "m9_shapes": 1,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "metric_definitions",
+        "module": "DATA-AI-PLAT-SEMANTIC-CATALOG",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "METRICS-LAYER"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "DLP",
+    "domain_id": 139,
+    "module_count": 2,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 6,
+    "unclassified_master_names": [
+      "data_exfiltration_attempts",
+      "dlp_exceptions",
+      "dlp_incidents",
+      "dlp_policies",
+      "dlp_quarantine_items",
+      "dlp_user_activity_logs"
+    ],
+    "m9_shapes": 2,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "data_classifications",
+        "module": "DLP-POLICY-CONTROL",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "DCG"
+        ]
+      },
+      {
+        "entity": "employees",
+        "module": "DLP-ENFORCEMENT-RUNTIME",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "DSPM",
+    "domain_id": 140,
+    "module_count": 3,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 8,
+    "unclassified_master_names": [
+      "cloud_databases",
+      "cloud_storage_buckets",
+      "data_risk_scores",
+      "data_warehouses",
+      "iam_access_policies",
+      "saas_app_instances",
+      "sensitive_data_incidents",
+      "shadow_data_findings"
+    ],
+    "m9_shapes": 3,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "data_assets",
+        "module": "DSPM-DISCOVERY-CLASSIFICATION",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "DCG"
+        ]
+      },
+      {
+        "entity": "data_classifications",
+        "module": "DSPM-DISCOVERY-CLASSIFICATION",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "DCG"
+        ]
+      },
+      {
+        "entity": "data_lineage_relationships",
+        "module": "DSPM-DISCOVERY-CLASSIFICATION",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "DCG"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "DXP",
+    "domain_id": 77,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "EAP",
+    "domain_id": 186,
+    "module_count": 2,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "ECM",
+    "domain_id": 91,
+    "module_count": 3,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "EM-FUND-PLATFORM",
+    "domain_id": 163,
+    "module_count": 4,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "EMP-EXP",
+    "domain_id": 62,
+    "module_count": 2,
+    "capability_count": 5,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 1,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "onboarding_journeys",
+        "module": "EMP-EXP-CONTINUOUS-LISTEN",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ONBOARDING"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "EPM",
+    "domain_id": 66,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 5,
+    "unclassified_master_names": [
+      "financial_budgets",
+      "financial_forecasts",
+      "financial_plans",
+      "financial_scenarios",
+      "variance_analyses"
+    ],
+    "m9_shapes": 5,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "cost_centers",
+        "module": "EPM-PLAN-BUDGET",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "FIN"
+        ]
+      },
+      {
+        "entity": "cost_centers",
+        "module": "EPM-VARIANCE-REPORT",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "FIN"
+        ]
+      },
+      {
+        "entity": "journal_entries",
+        "module": "EPM-FORECAST-SCENARIO",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "FIN"
+        ]
+      },
+      {
+        "entity": "journal_entries",
+        "module": "EPM-VARIANCE-REPORT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "FIN"
+        ]
+      },
+      {
+        "entity": "org_units",
+        "module": "EPM-PLAN-BUDGET",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "EXPENSE",
+    "domain_id": 67,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 1,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "saas_subscriptions",
+        "module": "EXPENSE-CAPTURE-AND-REPORTING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SMP"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "FARMER-DIRECT-SALES",
+    "domain_id": 158,
+    "module_count": 8,
+    "capability_count": 13,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 1,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "harvest_records",
+        "module": "FDS-HARVEST-PLANNING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "FMIS"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "FIN",
+    "domain_id": 65,
+    "module_count": 4,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 9,
+    "unclassified_master_names": [
+      "accounting_periods",
+      "asset_depreciation_schedules",
+      "bank_accounts",
+      "cash_transactions",
+      "fixed_assets",
+      "general_ledger_accounts",
+      "intercompany_transactions",
+      "journal_entries",
+      "legal_entities"
+    ],
+    "m9_shapes": 4,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "benefit_enrollments",
+        "module": "FIN-GL-CLOSE",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "BEN-ADMIN"
+        ]
+      },
+      {
+        "entity": "expense_reports",
+        "module": "FIN-GL-CLOSE",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "EXPENSE"
+        ]
+      },
+      {
+        "entity": "payroll_journal_entries",
+        "module": "FIN-GL-CLOSE",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "PAYROLL"
+        ]
+      },
+      {
+        "entity": "service_projects",
+        "module": "FIN-REVENUE-RECOGNITION",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "PSA"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "FLEET-MAINT",
+    "domain_id": 149,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 3,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "fleet_vehicles",
+        "module": "FLEET-MAINT-PM",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "FLEET-MGMT"
+        ]
+      },
+      {
+        "entity": "fleet_vehicles",
+        "module": "FLEET-MAINT-WORK-ORDER",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "FLEET-MGMT"
+        ]
+      },
+      {
+        "entity": "vehicle_inspections",
+        "module": "FLEET-MAINT-WORK-ORDER",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "FLEET-MGMT"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "FLEET-MGMT",
+    "domain_id": 147,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 1,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "employees",
+        "module": "FLEET-MGMT-DRIVER-OPS",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "FMIS",
+    "domain_id": 154,
+    "module_count": 4,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 8,
+    "unclassified_master_names": [
+      "ag_input_inventory",
+      "crop_plans",
+      "farm_fields",
+      "field_applications",
+      "harvest_records",
+      "machinery_telemetry_records",
+      "planting_records",
+      "variable_rate_prescriptions"
+    ],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE"
+    ]
+  },
+  {
+    "domain_code": "FOOD-TRACE",
+    "domain_id": 155,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 2,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "bulk_milk_shipments",
+        "module": "FOOD-TRACE-TRACEABILITY-EVENTS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "DAIRY-MGMT"
+        ]
+      },
+      {
+        "entity": "harvest_records",
+        "module": "FOOD-TRACE-TRACEABILITY-EVENTS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "FMIS"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "FSM",
+    "domain_id": 31,
+    "module_count": 4,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "FSQM",
+    "domain_id": 157,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 2,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "recall_events",
+        "module": "FSQM-AUDIT-SUPPLIER",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "FOOD-TRACE"
+        ]
+      },
+      {
+        "entity": "supplier_certifications",
+        "module": "FSQM-AUDIT-SUPPLIER",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "FOOD-TRACE"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "FUND-ADMIN",
+    "domain_id": 160,
+    "module_count": 4,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "GTM-PLAN",
+    "domain_id": 104,
+    "module_count": 5,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "HAM",
+    "domain_id": 51,
+    "module_count": 2,
+    "capability_count": 5,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "HCMS",
+    "domain_id": 93,
+    "module_count": 3,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 6,
+    "unclassified_master_names": [
+      "content_entries",
+      "content_environments",
+      "content_locales",
+      "content_releases",
+      "content_types",
+      "editorial_workflows"
+    ],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE"
+    ]
+  },
+  {
+    "domain_code": "IGA",
+    "domain_id": 35,
+    "module_count": 5,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 5,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "employees",
+        "module": "IGA-ACCESS-CERTIFICATION",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "employees",
+        "module": "IGA-ACCESS-REQUEST",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "employees",
+        "module": "IGA-AUTO-PROVISIONING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "employees",
+        "module": "IGA-SOD-MGMT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "identity_graphs",
+        "module": "IGA-ENTITLEMENT-CATALOG",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "INV-CRM",
+    "domain_id": 159,
+    "module_count": 3,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "INV-MGMT",
+    "domain_id": 164,
+    "module_count": 3,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 2,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "commerce_orders",
+        "module": "INV-KITTING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "B2C-COMM"
+        ]
+      },
+      {
+        "entity": "commerce_orders",
+        "module": "INV-REPLENISHMENT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "B2C-COMM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "ITAM",
+    "domain_id": 3,
+    "module_count": 4,
+    "capability_count": 5,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 1,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "saas_applications",
+        "module": "ITAM-PORTFOLIO-REPORTING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SMP"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "ITOM",
+    "domain_id": 2,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 1,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "service_incidents",
+        "module": "ITOM-INFRA-MON",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "ITSM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "ITSM",
+    "domain_id": 1,
+    "module_count": 9,
+    "capability_count": 20,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 2,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "asset_lifecycle_events",
+        "module": "ITSM-INCIDENT-MGMT",
+        "role": "contributor",
+        "necessity": "optional",
+        "master_domains": [
+          "ITAM"
+        ]
+      },
+      {
+        "entity": "onboarding_tasks",
+        "module": "ITSM-SERVICE-REQUEST",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ONBOARDING"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "IWMS",
+    "domain_id": 23,
+    "module_count": 5,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "KGP",
+    "domain_id": 138,
+    "module_count": 2,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 2,
+    "unclassified_master_names": [
+      "kgp_knowledge_graph_entities",
+      "kgp_ontologies"
+    ],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE"
+    ]
+  },
+  {
+    "domain_code": "LCAP",
+    "domain_id": 37,
+    "module_count": 2,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "LEGAL-PRACT-MGMT",
+    "domain_id": 150,
+    "module_count": 5,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 4,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "crm_contacts",
+        "module": "LEGAL-INTAKE-CONFLICT",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "crm_contacts",
+        "module": "LEGAL-MATTER-MGMT",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "time_entries",
+        "module": "LEGAL-MATTER-MGMT",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "WFM"
+        ]
+      },
+      {
+        "entity": "time_entries",
+        "module": "LEGAL-TIME-BILLING",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "WFM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "LIB-MGMT",
+    "domain_id": 168,
+    "module_count": 6,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 1,
+    "unclassified_master_names": [
+      "library_holdings"
+    ],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE"
+    ]
+  },
+  {
+    "domain_code": "LOYALTY",
+    "domain_id": 78,
+    "module_count": 3,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 5,
+    "unclassified_master_names": [
+      "loyalty_members",
+      "loyalty_tiers",
+      "loyalty_transactions",
+      "redemption_rewards",
+      "redemption_transactions"
+    ],
+    "m9_shapes": 1,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "customers",
+        "module": "LOYALTY-PROGRAM-CORE",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "LSD",
+    "domain_id": 25,
+    "module_count": 5,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 1,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "content_documents",
+        "module": "LSD-LEGAL-HOLD",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ECM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "METRICS-LAYER",
+    "domain_id": 137,
+    "module_count": 3,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "MSP-PSA",
+    "domain_id": 131,
+    "module_count": 4,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 4,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "hardware_assets",
+        "module": "MSP-PSA-SVC-DESK",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HAM"
+        ]
+      },
+      {
+        "entity": "monitoring_alerts",
+        "module": "MSP-PSA-SVC-DESK",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ITOM"
+        ]
+      },
+      {
+        "entity": "rmm_agents",
+        "module": "MSP-PSA-SVC-DESK",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "RMM"
+        ]
+      },
+      {
+        "entity": "service_incidents",
+        "module": "MSP-PSA-SVC-DESK",
+        "role": "contributor",
+        "necessity": "optional",
+        "master_domains": [
+          "ITSM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "NCDB",
+    "domain_id": 134,
+    "module_count": 3,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 5,
+    "unclassified_master_names": [
+      "nocode_automations",
+      "nocode_bases",
+      "nocode_forms",
+      "nocode_record_definitions",
+      "nocode_views"
+    ],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE"
+    ]
+  },
+  {
+    "domain_code": "ONBOARDING",
+    "domain_id": 99,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 4,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "asset_lifecycle_events",
+        "module": "ONB-JOURNEY-MGMT",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "ITAM"
+        ]
+      },
+      {
+        "entity": "candidates",
+        "module": "ONB-JOURNEY-MGMT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ATS"
+        ]
+      },
+      {
+        "entity": "hardware_assets",
+        "module": "ONB-JOURNEY-MGMT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HAM"
+        ]
+      },
+      {
+        "entity": "service_requests",
+        "module": "ONB-JOURNEY-MGMT",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "ITSM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "PA",
+    "domain_id": 63,
+    "module_count": 4,
+    "capability_count": 4,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 5,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "hcm_positions",
+        "module": "PA-DEI-ANALYTICS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "hcm_positions",
+        "module": "PA-PREDICTIVE-MODELS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "hcm_positions",
+        "module": "PA-WORKFORCE-METRICS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "recruitment_sources",
+        "module": "PA-WORKFORCE-METRICS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ATS"
+        ]
+      },
+      {
+        "entity": "survey_responses",
+        "module": "PA-ENGAGEMENT-SURVEYS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "EMP-EXP"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "PAYROLL",
+    "domain_id": 55,
+    "module_count": 4,
+    "capability_count": 5,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 12,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "absence_requests",
+        "module": "PAYROLL-RUN",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "WFM"
+        ]
+      },
+      {
+        "entity": "background_checks",
+        "module": "PAYROLL-RUN",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ATS"
+        ]
+      },
+      {
+        "entity": "benefit_enrollments",
+        "module": "PAYROLL-EARNINGS-DEDUCTIONS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "BEN-ADMIN"
+        ]
+      },
+      {
+        "entity": "benefit_enrollments",
+        "module": "PAYROLL-RUN",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "BEN-ADMIN"
+        ]
+      },
+      {
+        "entity": "candidate_referrals",
+        "module": "PAYROLL-EARNINGS-DEDUCTIONS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ATS"
+        ]
+      },
+      {
+        "entity": "employment_contracts",
+        "module": "PAYROLL-EARNINGS-DEDUCTIONS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "employment_events",
+        "module": "PAYROLL-RUN",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "legal_entities",
+        "module": "PAYROLL-RUN",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "FIN"
+        ]
+      },
+      {
+        "entity": "legal_entities",
+        "module": "PAYROLL-TAX-COMPLIANCE",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "FIN"
+        ]
+      },
+      {
+        "entity": "onboarding_document_collections",
+        "module": "PAYROLL-RUN",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ONBOARDING"
+        ]
+      },
+      {
+        "entity": "onboarding_journeys",
+        "module": "PAYROLL-RUN",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ONBOARDING"
+        ]
+      },
+      {
+        "entity": "time_entries",
+        "module": "PAYROLL-RUN",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "WFM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "PIM",
+    "domain_id": 167,
+    "module_count": 3,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "PLM",
+    "domain_id": 165,
+    "module_count": 5,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 3,
+    "unclassified_master_names": [
+      "cad_drawings",
+      "cad_models",
+      "manufacturing_routings"
+    ],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE"
+    ]
+  },
+  {
+    "domain_code": "PMM",
+    "domain_id": 184,
+    "module_count": 4,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "PORT-MONIT",
+    "domain_id": 161,
+    "module_count": 4,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "RE-BROKERAGE",
+    "domain_id": 143,
+    "module_count": 2,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 2,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "crm_contacts",
+        "module": "RE-BROK-AGENT-OPS",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "crm_leads",
+        "module": "RE-BROK-AGENT-OPS",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "RE-CRE",
+    "domain_id": 145,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 6,
+    "unclassified_master_names": [
+      "building_certifications",
+      "cam_charges",
+      "commercial_leases",
+      "stacking_plans",
+      "sublease_transactions",
+      "tenant_credit_records"
+    ],
+    "m9_shapes": 1,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "investment_properties",
+        "module": "RE-CRE-LEASING",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "RE-INVEST"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "RE-INVEST",
+    "domain_id": 146,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 5,
+    "unclassified_master_names": [
+      "asset_management_fees",
+      "investment_funds",
+      "investment_properties",
+      "limited_partners",
+      "property_valuations"
+    ],
+    "m9_shapes": 2,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "commercial_leases",
+        "module": "RE-INVEST-INVESTOR-REPORTING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "RE-CRE"
+        ]
+      },
+      {
+        "entity": "rental_leases",
+        "module": "RE-INVEST-INVESTOR-REPORTING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "RE-PROP-MGMT"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "RE-PROP-MGMT",
+    "domain_id": 144,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 6,
+    "unclassified_master_names": [
+      "property_tenants",
+      "rent_payments",
+      "rental_applications",
+      "rental_leases",
+      "rental_units",
+      "tenant_maintenance_requests"
+    ],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE"
+    ]
+  },
+  {
+    "domain_code": "REAL-EST",
+    "domain_id": 141,
+    "module_count": 4,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 1,
+    "unclassified_master_names": [
+      "occupancy_records"
+    ],
+    "m9_shapes": 3,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "configuration_items",
+        "module": "REAL-EST-PORTFOLIO",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CMDB"
+        ]
+      },
+      {
+        "entity": "employees",
+        "module": "REAL-EST-SPACE-OPS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "locations",
+        "module": "REAL-EST-PORTFOLIO",
+        "role": "contributor",
+        "necessity": "optional",
+        "master_domains": [
+          "IWMS"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "REMOTE-ACCESS",
+    "domain_id": 132,
+    "module_count": 2,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 2,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "rmm_agents",
+        "module": "REMOTE-ACCESS-SESSION",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "RMM"
+        ]
+      },
+      {
+        "entity": "service_incidents",
+        "module": "REMOTE-ACCESS-SESSION",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ITSM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "RMM",
+    "domain_id": 130,
+    "module_count": 4,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 6,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "configuration_items",
+        "module": "RMM-AGENT-MGMT",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CMDB"
+        ]
+      },
+      {
+        "entity": "hardware_assets",
+        "module": "RMM-AGENT-MGMT",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "HAM"
+        ]
+      },
+      {
+        "entity": "service_changes",
+        "module": "RMM-PATCH-MGMT",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "ITSM"
+        ]
+      },
+      {
+        "entity": "service_incidents",
+        "module": "RMM-MONITORING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ITSM"
+        ]
+      },
+      {
+        "entity": "service_requests",
+        "module": "RMM-MONITORING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ITSM"
+        ]
+      },
+      {
+        "entity": "software_installations",
+        "module": "RMM-AGENT-MGMT",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "SAM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "SALES-ENG",
+    "domain_id": 95,
+    "module_count": 3,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 3,
+    "unclassified_master_names": [
+      "call_recordings",
+      "sales_cadences",
+      "sales_emails"
+    ],
+    "m9_shapes": 2,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "crm_contacts",
+        "module": "SALES-ENG-CADENCE-OUTREACH",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "crm_contacts",
+        "module": "SALES-ENG-EMAIL-SCHEDULING",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "SAM",
+    "domain_id": 52,
+    "module_count": 3,
+    "capability_count": 5,
+    "persona_count": 0,
+    "unclassified_masters": 3,
+    "unclassified_master_names": [
+      "license_audits",
+      "software_installations",
+      "software_titles"
+    ],
+    "m9_shapes": 1,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "configuration_items",
+        "module": "SAM-CATALOG-DISCOVERY",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CMDB"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "SEM",
+    "domain_id": 166,
+    "module_count": 3,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "SKILLS-MGMT",
+    "domain_id": 169,
+    "module_count": 2,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 4,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "course_enrollments",
+        "module": "SKILLS-MGMT-PROFILE",
+        "role": "contributor",
+        "necessity": "optional",
+        "master_domains": [
+          "LMS"
+        ]
+      },
+      {
+        "entity": "learner_certifications",
+        "module": "SKILLS-MGMT-PROFILE",
+        "role": "contributor",
+        "necessity": "optional",
+        "master_domains": [
+          "LMS"
+        ]
+      },
+      {
+        "entity": "performance_goals",
+        "module": "SKILLS-MGMT-PROFILE",
+        "role": "contributor",
+        "necessity": "optional",
+        "master_domains": [
+          "TALENT-MGMT"
+        ]
+      },
+      {
+        "entity": "skills_gap_analyses",
+        "module": "SKILLS-MGMT-PROFILE",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "SWP"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "SMM",
+    "domain_id": 106,
+    "module_count": 4,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 6,
+    "unclassified_master_names": [
+      "influencers",
+      "social_accounts",
+      "social_listening_topics",
+      "social_mentions",
+      "social_messages",
+      "social_posts"
+    ],
+    "m9_shapes": 6,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "audience_segments",
+        "module": "SMM-PUBLISHING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      },
+      {
+        "entity": "crm_contacts",
+        "module": "SMM-ENGAGEMENT",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "crm_leads",
+        "module": "SMM-ENGAGEMENT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "customers",
+        "module": "SMM-ENGAGEMENT",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "marketing_campaigns",
+        "module": "SMM-INFLUENCER",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "MA"
+        ]
+      },
+      {
+        "entity": "marketing_campaigns",
+        "module": "SMM-PUBLISHING",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "MA"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "SPEND-MGMT",
+    "domain_id": 133,
+    "module_count": 3,
+    "capability_count": 11,
+    "persona_count": 0,
+    "unclassified_masters": 1,
+    "unclassified_master_names": [
+      "spend_policies"
+    ],
+    "m9_shapes": 2,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "expense_policies",
+        "module": "SPEND-MGMT-POLICY-APPROVAL",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "EXPENSE"
+        ]
+      },
+      {
+        "entity": "expense_reports",
+        "module": "SPEND-MGMT-POLICY-APPROVAL",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "EXPENSE"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "SPM",
+    "domain_id": 9,
+    "module_count": 3,
+    "capability_count": 9,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 1,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "position_demand_forecasts",
+        "module": "SPM-RESOURCE-CAPACITY",
+        "role": "contributor",
+        "necessity": "optional",
+        "master_domains": [
+          "SWP"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "SUB-MGMT",
+    "domain_id": 97,
+    "module_count": 2,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "SWP",
+    "domain_id": 100,
+    "module_count": 4,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 13,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "attrition_forecasts",
+        "module": "SWP-DEMAND-FORECAST",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "PA"
+        ]
+      },
+      {
+        "entity": "attrition_forecasts",
+        "module": "SWP-SUPPLY-PLANNING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "PA"
+        ]
+      },
+      {
+        "entity": "employees",
+        "module": "SWP-COST-PROJECTIONS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "employees",
+        "module": "SWP-DEMAND-FORECAST",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "employees",
+        "module": "SWP-SUPPLY-PLANNING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "financial_plans",
+        "module": "SWP-COST-PROJECTIONS",
+        "role": "contributor",
+        "necessity": "optional",
+        "master_domains": [
+          "EPM"
+        ]
+      },
+      {
+        "entity": "hcm_positions",
+        "module": "SWP-COST-PROJECTIONS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "hcm_positions",
+        "module": "SWP-DEMAND-FORECAST",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "hcm_positions",
+        "module": "SWP-SUPPLY-PLANNING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "job_profiles",
+        "module": "SWP-DEMAND-FORECAST",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "job_profiles",
+        "module": "SWP-SCENARIO-MODELING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "job_profiles",
+        "module": "SWP-SUPPLY-PLANNING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "job_requisitions",
+        "module": "SWP-DEMAND-FORECAST",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "ATS"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "TALENT-MGMT",
+    "domain_id": 58,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 2,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "job_profiles",
+        "module": "TALENT-SUCCESSION-CAREER",
+        "role": "contributor",
+        "necessity": "optional",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "skill_profiles",
+        "module": "TALENT-PERFORMANCE-MGMT",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "SKILLS-MGMT"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "TELEMATICS",
+    "domain_id": 148,
+    "module_count": 2,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 8,
+    "unclassified_master_names": [
+      "dashcam_events",
+      "driver_behavior_events",
+      "driver_safety_scorecards",
+      "eld_logs",
+      "geofence_events",
+      "gps_waypoints",
+      "idle_events",
+      "vehicle_trips"
+    ],
+    "m9_shapes": 3,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "fleet_drivers",
+        "module": "TELEMATICS-COMPLIANCE-SAFETY",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "FLEET-MGMT"
+        ]
+      },
+      {
+        "entity": "fleet_drivers",
+        "module": "TELEMATICS-FLEET-TRACKING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "FLEET-MGMT"
+        ]
+      },
+      {
+        "entity": "fleet_vehicles",
+        "module": "TELEMATICS-FLEET-TRACKING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "FLEET-MGMT"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "TLNT-INTEL",
+    "domain_id": 170,
+    "module_count": 3,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 11,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "career_aspirations",
+        "module": "TLNT-INTEL-MOBILITY",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "TALENT-MGMT"
+        ]
+      },
+      {
+        "entity": "competency_models",
+        "module": "TLNT-INTEL-INSIGHTS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SKILLS-MGMT"
+        ]
+      },
+      {
+        "entity": "competency_models",
+        "module": "TLNT-INTEL-MOBILITY",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SKILLS-MGMT"
+        ]
+      },
+      {
+        "entity": "job_postings",
+        "module": "TLNT-INTEL-MOBILITY",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ATS"
+        ]
+      },
+      {
+        "entity": "job_profiles",
+        "module": "TLNT-INTEL-MOBILITY",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "job_requisitions",
+        "module": "TLNT-INTEL-MOBILITY",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ATS"
+        ]
+      },
+      {
+        "entity": "skill_profiles",
+        "module": "TLNT-INTEL-INSIGHTS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SKILLS-MGMT"
+        ]
+      },
+      {
+        "entity": "skill_profiles",
+        "module": "TLNT-INTEL-MARKETPLACE",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SKILLS-MGMT"
+        ]
+      },
+      {
+        "entity": "skill_profiles",
+        "module": "TLNT-INTEL-MOBILITY",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SKILLS-MGMT"
+        ]
+      },
+      {
+        "entity": "skill_taxonomies",
+        "module": "TLNT-INTEL-MOBILITY",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SKILLS-MGMT"
+        ]
+      },
+      {
+        "entity": "skills_gap_analyses",
+        "module": "TLNT-INTEL-INSIGHTS",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SWP"
+        ]
+      }
+    ],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "UEM",
+    "domain_id": 86,
+    "module_count": 3,
+    "capability_count": 5,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "VET-PRACT-MGMT",
+    "domain_id": 151,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 5,
+    "unclassified_master_names": [
+      "animal_patients",
+      "controlled_substance_ledger_entries",
+      "pet_owners",
+      "veterinary_lab_results",
+      "veterinary_vaccinations"
+    ],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE"
+    ]
+  },
+  {
+    "domain_code": "VSM",
+    "domain_id": 187,
+    "module_count": 2,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "WEB-CONTOPS",
+    "domain_id": 128,
+    "module_count": 4,
+    "capability_count": 8,
+    "persona_count": 0,
+    "unclassified_masters": 7,
+    "unclassified_master_names": [
+      "accessibility_scan_findings",
+      "brand_voice_violations",
+      "broken_link_findings",
+      "content_audits",
+      "content_lifecycle_plans",
+      "technical_seo_findings",
+      "web_content_inventory_records"
+    ],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE"
+    ]
+  },
+  {
+    "domain_code": "WFM",
+    "domain_id": 59,
+    "module_count": 3,
+    "capability_count": 6,
+    "persona_count": 0,
+    "unclassified_masters": 7,
+    "unclassified_master_names": [
+      "absence_balances",
+      "absence_requests",
+      "meal_break_records",
+      "time_entries",
+      "time_off_policies",
+      "work_schedules",
+      "work_shifts"
+    ],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P",
+      "B1A-ENTITY-TYPE"
+    ]
+  },
+  {
+    "domain_code": "WSC",
+    "domain_id": 75,
+    "module_count": 3,
+    "capability_count": 7,
+    "persona_count": 0,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "PHASE-P",
+    "b1a_codes": [
+      "B1A-PHASE-P"
+    ]
+  },
+  {
+    "domain_code": "AIOPS",
+    "domain_id": 6,
+    "module_count": 2,
+    "capability_count": 6,
+    "persona_count": 4,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 2,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "monitoring_alerts",
+        "module": "AIOPS-EVENT-CORRELATION",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "ITOM"
+        ]
+      },
+      {
+        "entity": "monitoring_events",
+        "module": "AIOPS-EVENT-CORRELATION",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "ITOM"
+        ]
+      }
+    ],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": [
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "ATS",
+    "domain_id": 56,
+    "module_count": 9,
+    "capability_count": 7,
+    "persona_count": 6,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "B2C-COMM",
+    "domain_id": 71,
+    "module_count": 3,
+    "capability_count": 8,
+    "persona_count": 3,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 7,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "audience_segments",
+        "module": "B2C-COMM-CATALOG-MERCH",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      },
+      {
+        "entity": "crm_leads",
+        "module": "B2C-COMM-ORDER-CAPTURE",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "customer_events",
+        "module": "B2C-COMM-ORDER-CAPTURE",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      },
+      {
+        "entity": "customer_invoices",
+        "module": "B2C-COMM-ORDER-CAPTURE",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SUB-MGMT"
+        ]
+      },
+      {
+        "entity": "customer_subscriptions",
+        "module": "B2C-COMM-ORDER-CAPTURE",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SUB-MGMT"
+        ]
+      },
+      {
+        "entity": "customers",
+        "module": "B2C-COMM-ORDER-CAPTURE",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "marketing_campaigns",
+        "module": "B2C-COMM-CATALOG-MERCH",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "MA"
+        ]
+      }
+    ],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": [
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "BPA",
+    "domain_id": 136,
+    "module_count": 3,
+    "capability_count": 7,
+    "persona_count": 3,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "CCAAS",
+    "domain_id": 98,
+    "module_count": 3,
+    "capability_count": 8,
+    "persona_count": 5,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "CLM",
+    "domain_id": 26,
+    "module_count": 5,
+    "capability_count": 8,
+    "persona_count": 4,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "DCG",
+    "domain_id": 88,
+    "module_count": 6,
+    "capability_count": 10,
+    "persona_count": 5,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "DCIM",
+    "domain_id": 84,
+    "module_count": 3,
+    "capability_count": 7,
+    "persona_count": 4,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "EHS",
+    "domain_id": 174,
+    "module_count": 4,
+    "capability_count": 11,
+    "persona_count": 4,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "EMP-ADVOCACY",
+    "domain_id": 181,
+    "module_count": 2,
+    "capability_count": 7,
+    "persona_count": 3,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 1,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "employees",
+        "module": "EMP-ADVOCACY-CONTENT-DISTRIBUTION",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      }
+    ],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": [
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "FRONTLINE-COMMS",
+    "domain_id": 180,
+    "module_count": 2,
+    "capability_count": 5,
+    "persona_count": 3,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 3,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "employees",
+        "module": "FRONTLINE-COMMS-BROADCAST-ENGAGEMENT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "employees",
+        "module": "FRONTLINE-COMMS-TASK-EXECUTION",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "work_shifts",
+        "module": "FRONTLINE-COMMS-TASK-EXECUTION",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "WFM"
+        ]
+      }
+    ],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": [
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "HCM",
+    "domain_id": 54,
+    "module_count": 3,
+    "capability_count": 8,
+    "persona_count": 6,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 3,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "asset_lifecycle_events",
+        "module": "HCM-LIFECYCLE-WORKFLOWS",
+        "role": "contributor",
+        "necessity": "optional",
+        "master_domains": [
+          "ITAM"
+        ]
+      },
+      {
+        "entity": "cost_centers",
+        "module": "HCM-CORE-WORKER",
+        "role": "contributor",
+        "necessity": "optional",
+        "master_domains": [
+          "FIN"
+        ]
+      },
+      {
+        "entity": "cost_centers",
+        "module": "HCM-ORG-POSITIONS",
+        "role": "contributor",
+        "necessity": "optional",
+        "master_domains": [
+          "FIN"
+        ]
+      }
+    ],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": [
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "HRSD",
+    "domain_id": 22,
+    "module_count": 3,
+    "capability_count": 4,
+    "persona_count": 3,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "INSIDER-RISK",
+    "domain_id": 178,
+    "module_count": 2,
+    "capability_count": 7,
+    "persona_count": 3,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "INTRANET-GOV",
+    "domain_id": 171,
+    "module_count": 2,
+    "capability_count": 8,
+    "persona_count": 3,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "LEASE-ACCT",
+    "domain_id": 175,
+    "module_count": 2,
+    "capability_count": 7,
+    "persona_count": 3,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "LIVESTOCK-MGMT",
+    "domain_id": 176,
+    "module_count": 2,
+    "capability_count": 8,
+    "persona_count": 3,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "LMS",
+    "domain_id": 57,
+    "module_count": 8,
+    "capability_count": 10,
+    "persona_count": 6,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "MA",
+    "domain_id": 70,
+    "module_count": 4,
+    "capability_count": 9,
+    "persona_count": 2,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 13,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "audience_segments",
+        "module": "MA-CAMPAIGN-AUTHORING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      },
+      {
+        "entity": "audience_segments",
+        "module": "MA-JOURNEY-ORCH",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      },
+      {
+        "entity": "crm_contacts",
+        "module": "MA-CAMPAIGN-AUTHORING",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "crm_contacts",
+        "module": "MA-LANDING-FORMS",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "crm_contacts",
+        "module": "MA-LEAD-SCORING",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "customer_attributes",
+        "module": "MA-CAMPAIGN-AUTHORING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      },
+      {
+        "entity": "customer_attributes",
+        "module": "MA-JOURNEY-ORCH",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      },
+      {
+        "entity": "customer_attributes",
+        "module": "MA-LEAD-SCORING",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      },
+      {
+        "entity": "customer_events",
+        "module": "MA-CAMPAIGN-AUTHORING",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      },
+      {
+        "entity": "customer_events",
+        "module": "MA-JOURNEY-ORCH",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      },
+      {
+        "entity": "customer_events",
+        "module": "MA-LEAD-SCORING",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CDP"
+        ]
+      },
+      {
+        "entity": "customers",
+        "module": "MA-JOURNEY-ORCH",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "customers",
+        "module": "MA-LANDING-FORMS",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      }
+    ],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": [
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "MARINA-MGMT",
+    "domain_id": 183,
+    "module_count": 6,
+    "capability_count": 8,
+    "persona_count": 5,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "MRM",
+    "domain_id": 173,
+    "module_count": 2,
+    "capability_count": 5,
+    "persona_count": 3,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "PROCESS-ORCHESTRATION",
+    "domain_id": 179,
+    "module_count": 2,
+    "capability_count": 6,
+    "persona_count": 3,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "PROD-MGMT",
+    "domain_id": 101,
+    "module_count": 2,
+    "capability_count": 7,
+    "persona_count": 4,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 1,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "value_streams",
+        "module": "PM-ROADMAP-DELIVERY",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "BPA"
+        ]
+      }
+    ],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": [
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "PSA",
+    "domain_id": 68,
+    "module_count": 4,
+    "capability_count": 10,
+    "persona_count": 4,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 9,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "crm_opportunities",
+        "module": "PSA-PROJECT-DELIVERY",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CRM"
+        ]
+      },
+      {
+        "entity": "employees",
+        "module": "PSA-PROJECT-DELIVERY",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "employees",
+        "module": "PSA-RESOURCE-MGMT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "expense_reports",
+        "module": "PSA-TIME-EXPENSE",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "EXPENSE"
+        ]
+      },
+      {
+        "entity": "job_profiles",
+        "module": "PSA-PROJECT-DELIVERY",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "job_profiles",
+        "module": "PSA-RESOURCE-MGMT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "HCM"
+        ]
+      },
+      {
+        "entity": "legal_contracts",
+        "module": "PSA-PROJECT-DELIVERY",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "CLM"
+        ]
+      },
+      {
+        "entity": "revenue_recognition_records",
+        "module": "PSA-PROJECT-FINANCIALS",
+        "role": "contributor",
+        "necessity": "required",
+        "master_domains": [
+          "SUB-MGMT"
+        ]
+      },
+      {
+        "entity": "time_entries",
+        "module": "PSA-TIME-EXPENSE",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "WFM"
+        ]
+      }
+    ],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": [
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "REV-INTEL",
+    "domain_id": 103,
+    "module_count": 5,
+    "capability_count": 7,
+    "persona_count": 4,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "SMP",
+    "domain_id": 85,
+    "module_count": 4,
+    "capability_count": 7,
+    "persona_count": 3,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "SOCIAL-ADS",
+    "domain_id": 177,
+    "module_count": 2,
+    "capability_count": 6,
+    "persona_count": 3,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "STR-MGMT",
+    "domain_id": 182,
+    "module_count": 4,
+    "capability_count": 9,
+    "persona_count": 5,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "TRAVEL-MGMT",
+    "domain_id": 172,
+    "module_count": 4,
+    "capability_count": 8,
+    "persona_count": 3,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  },
+  {
+    "domain_code": "VMS",
+    "domain_id": 64,
+    "module_count": 2,
+    "capability_count": 5,
+    "persona_count": 4,
+    "unclassified_masters": 6,
+    "unclassified_master_names": [
+      "contingent_invoices",
+      "contingent_timesheets",
+      "contingent_workers",
+      "pm_work_orders",
+      "rate_cards",
+      "staffing_suppliers"
+    ],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": [
+      "B1A-ENTITY-TYPE"
+    ]
+  },
+  {
+    "domain_code": "VULN-MGMT",
+    "domain_id": 13,
+    "module_count": 3,
+    "capability_count": 8,
+    "persona_count": 5,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 1,
+    "m9_shared_excluded": 0,
+    "m9_details": [
+      {
+        "entity": "software_installations",
+        "module": "VULN-MGMT-DETECT",
+        "role": "consumer",
+        "necessity": "required",
+        "master_domains": [
+          "SAM"
+        ]
+      }
+    ],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": [
+      "B1A-SELF-CONTAIN"
+    ]
+  },
+  {
+    "domain_code": "WORK-MGMT",
+    "domain_id": 135,
+    "module_count": 3,
+    "capability_count": 10,
+    "persona_count": 4,
+    "unclassified_masters": 0,
+    "unclassified_master_names": [],
+    "m9_shapes": 0,
+    "m9_shared_excluded": 0,
+    "m9_details": [],
+    "verdict": "OK-PERSONAS",
+    "b1a_codes": []
+  }
+]

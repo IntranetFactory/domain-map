@@ -1,0 +1,471 @@
+{
+  "domain_code": "VULN-MGMT",
+  "phase0_vendors": [
+    {
+      "vendor": "Tenable",
+      "flagship": "Tenable One / Tenable Vulnerability Management (Nessus)",
+      "surface": [
+        "vulnerabilities",
+        "vulnerability_findings",
+        "assets",
+        "scans",
+        "scan_policies",
+        "plugins",
+        "cve_definitions",
+        "vpr_scores",
+        "exploit_intel",
+        "remediation_recommendations",
+        "exceptions",
+        "exposure_cards",
+        "tags",
+        "compliance_checks"
+      ]
+    },
+    {
+      "vendor": "Qualys",
+      "flagship": "Qualys VMDR",
+      "surface": [
+        "vulnerabilities",
+        "detections",
+        "host_assets",
+        "scans",
+        "scan_schedules",
+        "option_profiles",
+        "qids_knowledgebase",
+        "cve_records",
+        "tru_risk_scores",
+        "patches",
+        "remediation_tickets",
+        "exceptions",
+        "asset_tags",
+        "policy_compliance_controls"
+      ]
+    },
+    {
+      "vendor": "Rapid7",
+      "flagship": "Rapid7 InsightVM",
+      "surface": [
+        "vulnerabilities",
+        "vulnerability_instances",
+        "assets",
+        "scans",
+        "scan_templates",
+        "scan_engines",
+        "vulnerability_checks",
+        "cve_references",
+        "real_risk_scores",
+        "remediation_projects",
+        "remediation_tickets",
+        "exceptions",
+        "asset_groups",
+        "goals_and_slas"
+      ]
+    },
+    {
+      "vendor": "Microsoft",
+      "flagship": "Microsoft Defender Vulnerability Management",
+      "surface": [
+        "vulnerabilities",
+        "weaknesses",
+        "devices",
+        "software_inventory",
+        "security_recommendations",
+        "remediation_activities",
+        "exceptions",
+        "exposure_score",
+        "cve_knowledgebase",
+        "threat_analytics",
+        "missing_kbs",
+        "security_baselines"
+      ]
+    },
+    {
+      "vendor": "Wiz",
+      "flagship": "Wiz Cloud Security Platform",
+      "surface": [
+        "vulnerability_findings",
+        "cloud_resources",
+        "scans",
+        "cve_catalog",
+        "issues",
+        "remediation_steps",
+        "risk_scores",
+        "exceptions",
+        "security_graph_nodes",
+        "container_images",
+        "host_packages",
+        "control_results"
+      ]
+    },
+    {
+      "vendor": "ServiceNow",
+      "flagship": "ServiceNow Vulnerability Response",
+      "surface": [
+        "vulnerable_items",
+        "vulnerabilities",
+        "vulnerability_groups",
+        "third_party_entries",
+        "remediation_tasks",
+        "change_requests",
+        "exceptions_deferrals",
+        "cmdb_ci",
+        "nvd_entries",
+        "risk_scores",
+        "calculators"
+      ]
+    }
+  ],
+  "capabilities": [
+    {
+      "capability_code": "VULN-MGMT-SCAN-DETECT",
+      "capability_name": "Scanning and Detection",
+      "description": "Authenticated and unauthenticated assessment of endpoints, servers, network gear, cloud workloads, containers, and web apps to detect security weaknesses, producing per-asset findings matched to a vulnerability definition.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "VULN-MGMT-CVE-CATALOG",
+      "capability_name": "Vulnerability Knowledge Base",
+      "description": "A maintained catalog of known vulnerability definitions (CVE, vendor advisories, plugin/check metadata, affected products, base severity) that incoming findings are matched against and enriched from.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "VULN-MGMT-RISK-PRIORITIZE",
+      "capability_name": "Risk-Based Prioritization",
+      "description": "Layering exploit-prediction signals, known-exploited and active-attack intelligence, asset criticality, and exposure on top of base severity to produce a ranked queue answering what to fix first.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "VULN-MGMT-REMEDIATE-ORCH",
+      "capability_name": "Remediation Orchestration",
+      "description": "Routing prioritized findings to the owning team as remediation work with due dates, ownership, SLAs, and patch or configuration guidance, tracked to completion.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "VULN-MGMT-EXCEPTION-GOV",
+      "capability_name": "Exception and Risk Acceptance",
+      "description": "A governed, time-boxed path to formally accept, defer, or mark as false-positive vulnerabilities the business chooses not to fix, with approver sign-off and expiry-driven re-review.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "VULN-MGMT-VERIFY-CLOSE",
+      "capability_name": "Verification and Closure",
+      "description": "Re-scanning to confirm fixes landed, reopening regressions, and closing findings only on verified evidence so the loop is auditable end to end.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "VULN-MGMT-COMPLIANCE-EVIDENCE",
+      "capability_name": "Compliance Evidence and Reporting",
+      "description": "Defensible reporting on scanning cadence, mean-time-to-remediate, and exception approvals against framework obligations such as PCI-DSS, FedRAMP, and NIS2.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "VULN-MGMT-ASSESS-CAMPAIGN",
+      "capability_name": "Assessment Scoping and Campaigns",
+      "description": "Scoping a vulnerability assessment or remediation campaign over an asset population for a point-in-time posture snapshot, audit window, or program milestone.",
+      "cross_cutting": false
+    }
+  ],
+  "vendors_new": [],
+  "solutions_new": [],
+  "modules": [
+    {
+      "domain_module_code": "VULN-MGMT-DETECT",
+      "domain_module_name": "Scanning and Detection",
+      "module_kind": "full",
+      "description": "Owns the discovery-to-finding pipeline: scan jobs run against an asset population, results are matched to the vulnerability knowledge base, and per-asset findings are created and deduplicated into the vulnerability lifecycle. Consumes asset masters from ITAM/CMDB and software inventory from SAM rather than mastering them.",
+      "catalog_tagline": "Scan everything you own continuously and turn raw scan output into deduplicated, tracked findings.",
+      "catalog_description": "Discover what you own, then scan it on a continuous cadence so new exposures surface within hours instead of at the next quarterly review. Network, host, web, container, and cloud scans run against your asset population and produce findings tied to a specific asset and a specific vulnerability definition.\n\nEach finding is matched against a maintained knowledge base of known vulnerabilities, deduplicated, and tracked through its own lifecycle so a weakness opened today is the same record you confirm, remediate, and verify weeks later. The knowledge base keeps CVE metadata, advisories, and check definitions current so detection stays accurate as the threat surface moves.",
+      "capability_codes": ["VULN-MGMT-SCAN-DETECT", "VULN-MGMT-CVE-CATALOG"],
+      "data_objects": [
+        { "data_object_name": "vulnerability_scans", "role": "master", "necessity": "required", "existing": false },
+        { "data_object_name": "vulnerabilities", "role": "master", "necessity": "required", "existing": false },
+        { "data_object_name": "vulnerability_definitions", "role": "master", "necessity": "required", "existing": false },
+        { "data_object_name": "software_installations", "role": "consumer", "necessity": "required", "existing": true },
+        { "data_object_name": "org_units", "role": "embedded_master", "necessity": "optional", "existing": true }
+      ]
+    },
+    {
+      "domain_module_code": "VULN-MGMT-RISK",
+      "domain_module_name": "Prioritization and Risk",
+      "module_kind": "full",
+      "description": "Owns the ranking layer and the point-in-time assessment lens. Computes risk-based priority over open vulnerabilities using exploit intel, asset criticality, and exposure, and groups vulnerabilities into scoped assessments or campaigns for posture snapshots and audit windows. Consumes exploit and known-exploited intelligence from THREAT-INTEL.",
+      "catalog_tagline": "Fix the weaknesses an attacker would actually use first, and prove your posture over time.",
+      "catalog_description": "Not every finding deserves the same urgency. Layer exploit-prediction signals, known-exploited and actively-attacked intelligence, asset criticality, and exposure on top of base severity to produce a ranked queue that answers the only question that matters at scale: what do we fix this week.\n\nScope assessments and remediation campaigns over an asset population to capture a point-in-time posture snapshot for an audit window or program milestone, and watch the ranked queue shrink as the right fixes land. Exploit and active-attack signals are consumed from a dedicated threat-intelligence source so prioritization always reflects the current threat landscape.",
+      "capability_codes": ["VULN-MGMT-RISK-PRIORITIZE", "VULN-MGMT-ASSESS-CAMPAIGN"],
+      "data_objects": [
+        { "data_object_name": "vulnerability_assessments", "role": "master", "necessity": "required", "existing": false },
+        { "data_object_name": "vulnerabilities", "role": "consumer", "necessity": "required", "existing": false },
+        { "data_object_name": "vulnerability_definitions", "role": "consumer", "necessity": "required", "existing": false },
+        { "data_object_name": "org_units", "role": "embedded_master", "necessity": "optional", "existing": true }
+      ]
+    },
+    {
+      "domain_module_code": "VULN-MGMT-REMEDIATE",
+      "domain_module_name": "Remediation and Governance",
+      "module_kind": "full",
+      "description": "Owns the closed loop after prioritization: remediation work with ownership and due dates, governed exceptions and risk acceptances, verification re-scans, and compliance evidence. Remediation records are mastered here as the security-side workflow; where an org routes fixes through a service desk, these hand off to ITSM change/incident records rather than duplicating them.",
+      "catalog_tagline": "Route fixes to the right owner, govern the exceptions, verify the close, and hand auditors the evidence.",
+      "catalog_description": "Route prioritized findings to the team that owns the fix as remediation work with due dates, ownership, SLAs, and patch or configuration guidance. Give the business a governed path to formally accept and time-box the risks it chooses not to fix yet, with approver sign-off and expiry-driven re-review.\n\nClose the loop and keep it auditable. Re-scan to confirm fixes actually landed, reopen anything that regresses, and watch mean-time-to-remediate trend down by asset group, business unit, and severity. Hand auditors defensible evidence that scanning cadence, remediation timelines, and exception approvals meet the obligations that frameworks such as PCI-DSS, FedRAMP, and NIS2 expect.",
+      "capability_codes": ["VULN-MGMT-REMEDIATE-ORCH", "VULN-MGMT-EXCEPTION-GOV", "VULN-MGMT-VERIFY-CLOSE", "VULN-MGMT-COMPLIANCE-EVIDENCE"],
+      "data_objects": [
+        { "data_object_name": "vulnerability_remediations", "role": "master", "necessity": "required", "existing": false },
+        { "data_object_name": "vulnerability_exceptions", "role": "master", "necessity": "required", "existing": false },
+        { "data_object_name": "vulnerabilities", "role": "consumer", "necessity": "required", "existing": false },
+        { "data_object_name": "vulnerability_scans", "role": "consumer", "necessity": "required", "existing": false },
+        { "data_object_name": "org_units", "role": "embedded_master", "necessity": "optional", "existing": true }
+      ]
+    }
+  ],
+  "new_data_objects": [
+    {
+      "data_object_name": "vulnerabilities",
+      "singular_label": "Vulnerability",
+      "plural_label": "Vulnerabilities",
+      "entity_type": "operational_workflow",
+      "description": "A specific weakness detected on a specific asset, deduplicated across scans and tracked through its own lifecycle from open to closed. The headline noun of the domain: a vulnerability links an asset (mastered in ITAM/CMDB) to a vulnerability definition and carries severity, computed risk, ownership, and current state.",
+      "has_personal_content": false,
+      "has_submit_lock": false,
+      "has_single_approver": false
+    },
+    {
+      "data_object_name": "vulnerability_scans",
+      "singular_label": "Vulnerability Scan",
+      "plural_label": "Vulnerability Scans",
+      "entity_type": "operational_workflow",
+      "description": "A scan job run against an asset population using a scan policy or template, progressing through queued, running, and completed states and emitting the findings that become vulnerabilities. Scope-qualified to avoid collision with discovery_scans (ASM) and other scan entities.",
+      "has_personal_content": false,
+      "has_submit_lock": false,
+      "has_single_approver": false
+    },
+    {
+      "data_object_name": "vulnerability_definitions",
+      "singular_label": "Vulnerability Definition",
+      "plural_label": "Vulnerability Definitions",
+      "entity_type": "catalog",
+      "description": "The catalog of known vulnerabilities (CVE identifiers, vendor advisories, plugin or check metadata, affected products, base CVSS severity, references) that incoming scan findings are matched against and enriched from. A reference catalog, not an operational record.",
+      "has_personal_content": false,
+      "has_submit_lock": false,
+      "has_single_approver": false
+    },
+    {
+      "data_object_name": "vulnerability_remediations",
+      "singular_label": "Vulnerability Remediation",
+      "plural_label": "Vulnerability Remediations",
+      "entity_type": "operational_workflow",
+      "description": "Operational remediation work that resolves one or more vulnerabilities: the owning team, due date, SLA, patch or configuration guidance, and verification status. The security-side workflow record; where fixes are executed through a service desk it hands off to ITSM change or incident records.",
+      "has_personal_content": false,
+      "has_submit_lock": false,
+      "has_single_approver": false
+    },
+    {
+      "data_object_name": "vulnerability_exceptions",
+      "singular_label": "Vulnerability Exception",
+      "plural_label": "Vulnerability Exceptions",
+      "entity_type": "operational_workflow",
+      "description": "A governed, time-boxed risk acceptance, deferral, or false-positive designation for vulnerabilities the business chooses not to remediate now. Carries justification, requesting and approving parties, scope, and an expiry that drives re-review. Single-approver sign-off gates activation.",
+      "has_personal_content": false,
+      "has_submit_lock": true,
+      "has_single_approver": true
+    },
+    {
+      "data_object_name": "vulnerability_assessments",
+      "singular_label": "Vulnerability Assessment",
+      "plural_label": "Vulnerability Assessments",
+      "entity_type": "operational_workflow",
+      "description": "A scoped, point-in-time assessment or remediation campaign over an asset population, grouping vulnerabilities for a posture snapshot, audit window, or program milestone. Carries scope, time window, and an aggregate posture summary.",
+      "has_personal_content": false,
+      "has_submit_lock": false,
+      "has_single_approver": false
+    }
+  ],
+  "lifecycle_states": [
+    {
+      "data_object_name": "vulnerabilities",
+      "states": [
+        { "state_name": "open", "state_order": 1, "is_initial": true, "is_terminal": false, "requires_permission": false },
+        { "state_name": "triaged", "state_order": 2, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "remediating", "state_order": 3, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "resolved", "state_order": 4, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "accepted", "state_order": 5, "is_initial": false, "is_terminal": false, "requires_permission": true },
+        { "state_name": "verified", "state_order": 6, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "closed", "state_order": 7, "is_initial": false, "is_terminal": true, "requires_permission": false },
+        { "state_name": "reopened", "state_order": 8, "is_initial": false, "is_terminal": false, "requires_permission": false }
+      ]
+    },
+    {
+      "data_object_name": "vulnerability_scans",
+      "states": [
+        { "state_name": "scheduled", "state_order": 1, "is_initial": true, "is_terminal": false, "requires_permission": false },
+        { "state_name": "queued", "state_order": 2, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "running", "state_order": 3, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "completed", "state_order": 4, "is_initial": false, "is_terminal": true, "requires_permission": false },
+        { "state_name": "failed", "state_order": 5, "is_initial": false, "is_terminal": true, "requires_permission": false },
+        { "state_name": "canceled", "state_order": 6, "is_initial": false, "is_terminal": true, "requires_permission": false }
+      ]
+    },
+    {
+      "data_object_name": "vulnerability_remediations",
+      "states": [
+        { "state_name": "assigned", "state_order": 1, "is_initial": true, "is_terminal": false, "requires_permission": false },
+        { "state_name": "in_progress", "state_order": 2, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "applied", "state_order": 3, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "verified", "state_order": 4, "is_initial": false, "is_terminal": false, "requires_permission": true },
+        { "state_name": "completed", "state_order": 5, "is_initial": false, "is_terminal": true, "requires_permission": false },
+        { "state_name": "failed_verification", "state_order": 6, "is_initial": false, "is_terminal": false, "requires_permission": false }
+      ]
+    },
+    {
+      "data_object_name": "vulnerability_exceptions",
+      "states": [
+        { "state_name": "requested", "state_order": 1, "is_initial": true, "is_terminal": false, "requires_permission": false },
+        { "state_name": "under_review", "state_order": 2, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "approved", "state_order": 3, "is_initial": false, "is_terminal": false, "requires_permission": true },
+        { "state_name": "rejected", "state_order": 4, "is_initial": false, "is_terminal": true, "requires_permission": true },
+        { "state_name": "active", "state_order": 5, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "expired", "state_order": 6, "is_initial": false, "is_terminal": true, "requires_permission": false },
+        { "state_name": "revoked", "state_order": 7, "is_initial": false, "is_terminal": true, "requires_permission": true }
+      ]
+    },
+    {
+      "data_object_name": "vulnerability_assessments",
+      "states": [
+        { "state_name": "scoping", "state_order": 1, "is_initial": true, "is_terminal": false, "requires_permission": false },
+        { "state_name": "in_progress", "state_order": 2, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "review", "state_order": 3, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "completed", "state_order": 4, "is_initial": false, "is_terminal": true, "requires_permission": false },
+        { "state_name": "archived", "state_order": 5, "is_initial": false, "is_terminal": true, "requires_permission": false }
+      ]
+    }
+  ],
+  "tools": [
+    { "tool_name": "query_vulnerabilities", "operation_kind": "query", "data_object_name": "vulnerabilities" },
+    { "tool_name": "update_vulnerability_state", "operation_kind": "mutate", "data_object_name": "vulnerabilities", "notes": "Advances a vulnerability through its lifecycle (triage, remediating, resolved, verified, closed, reopened). Gated transitions enforce requires_permission." },
+    { "tool_name": "query_vulnerability_scans", "operation_kind": "query", "data_object_name": "vulnerability_scans" },
+    { "tool_name": "launch_vulnerability_scan", "operation_kind": "mutate", "data_object_name": "vulnerability_scans", "notes": "Creates and starts a scan job against a scoped asset population." },
+    { "tool_name": "query_vulnerability_definitions", "operation_kind": "query", "data_object_name": "vulnerability_definitions" },
+    { "tool_name": "query_vulnerability_remediations", "operation_kind": "query", "data_object_name": "vulnerability_remediations" },
+    { "tool_name": "assign_vulnerability_remediation", "operation_kind": "mutate", "data_object_name": "vulnerability_remediations", "notes": "Creates remediation work with owner, due date, and SLA, and advances its state." },
+    { "tool_name": "query_vulnerability_exceptions", "operation_kind": "query", "data_object_name": "vulnerability_exceptions" },
+    { "tool_name": "request_vulnerability_exception", "operation_kind": "mutate", "data_object_name": "vulnerability_exceptions", "notes": "Requests a time-boxed risk acceptance or deferral; approval is a single-approver gated transition." },
+    { "tool_name": "query_vulnerability_assessments", "operation_kind": "query", "data_object_name": "vulnerability_assessments" },
+    { "tool_name": "scope_vulnerability_assessment", "operation_kind": "mutate", "data_object_name": "vulnerability_assessments", "notes": "Creates and scopes a point-in-time assessment or campaign over an asset population." },
+    { "tool_name": "compute_vulnerability_priority", "operation_kind": "compute", "data_object_name": null, "notes": "Computes risk-based priority over open vulnerabilities from exploit intel, asset criticality, and exposure." },
+    { "tool_name": "fetch_exploit_intel", "operation_kind": "fetch", "data_object_name": null, "notes": "Reads exploit-prediction and known-exploited signals from the THREAT-INTEL domain to enrich prioritization." },
+    { "tool_name": "generate_compliance_evidence", "operation_kind": "compute", "data_object_name": null, "notes": "Produces scanning-cadence, MTTR, and exception-approval evidence for framework reporting (PCI-DSS, FedRAMP, NIS2)." },
+    { "tool_name": "notify_team", "operation_kind": "side_effect", "data_object_name": null, "notes": "Notifies the owning team of newly assigned or overdue remediation work using the team-notification abstraction." }
+  ],
+  "module_tools": [
+    { "domain_module_code": "VULN-MGMT-DETECT", "tool_name": "query_vulnerabilities", "requirement_level": "required" },
+    { "domain_module_code": "VULN-MGMT-DETECT", "tool_name": "query_vulnerability_scans", "requirement_level": "required" },
+    { "domain_module_code": "VULN-MGMT-DETECT", "tool_name": "launch_vulnerability_scan", "requirement_level": "required" },
+    { "domain_module_code": "VULN-MGMT-DETECT", "tool_name": "query_vulnerability_definitions", "requirement_level": "required" },
+    { "domain_module_code": "VULN-MGMT-DETECT", "tool_name": "update_vulnerability_state", "requirement_level": "optional" },
+    { "domain_module_code": "VULN-MGMT-RISK", "tool_name": "query_vulnerabilities", "requirement_level": "required" },
+    { "domain_module_code": "VULN-MGMT-RISK", "tool_name": "compute_vulnerability_priority", "requirement_level": "required" },
+    { "domain_module_code": "VULN-MGMT-RISK", "tool_name": "fetch_exploit_intel", "requirement_level": "required" },
+    { "domain_module_code": "VULN-MGMT-RISK", "tool_name": "query_vulnerability_definitions", "requirement_level": "optional" },
+    { "domain_module_code": "VULN-MGMT-RISK", "tool_name": "query_vulnerability_assessments", "requirement_level": "required" },
+    { "domain_module_code": "VULN-MGMT-RISK", "tool_name": "scope_vulnerability_assessment", "requirement_level": "required" },
+    { "domain_module_code": "VULN-MGMT-REMEDIATE", "tool_name": "query_vulnerability_remediations", "requirement_level": "required" },
+    { "domain_module_code": "VULN-MGMT-REMEDIATE", "tool_name": "assign_vulnerability_remediation", "requirement_level": "required" },
+    { "domain_module_code": "VULN-MGMT-REMEDIATE", "tool_name": "query_vulnerability_exceptions", "requirement_level": "required" },
+    { "domain_module_code": "VULN-MGMT-REMEDIATE", "tool_name": "request_vulnerability_exception", "requirement_level": "required" },
+    { "domain_module_code": "VULN-MGMT-REMEDIATE", "tool_name": "update_vulnerability_state", "requirement_level": "required" },
+    { "domain_module_code": "VULN-MGMT-REMEDIATE", "tool_name": "generate_compliance_evidence", "requirement_level": "required" },
+    { "domain_module_code": "VULN-MGMT-REMEDIATE", "tool_name": "notify_team", "requirement_level": "optional" }
+  ],
+  "personas": [
+    {
+      "role_code": "SOC-VULN-ANALYST",
+      "role_name": "Vulnerability Analyst",
+      "business_function": "Security Operations Center",
+      "modules": [
+        { "domain_module_code": "VULN-MGMT-DETECT", "interaction_level": "primary" },
+        { "domain_module_code": "VULN-MGMT-RISK", "interaction_level": "primary" }
+      ]
+    },
+    {
+      "role_code": "SOC-VULN-MANAGER",
+      "role_name": "Vulnerability Management Program Manager",
+      "business_function": "Security Operations Center",
+      "modules": [
+        { "domain_module_code": "VULN-MGMT-RISK", "interaction_level": "primary" },
+        { "domain_module_code": "VULN-MGMT-REMEDIATE", "interaction_level": "primary" },
+        { "domain_module_code": "VULN-MGMT-DETECT", "interaction_level": "secondary" }
+      ]
+    },
+    {
+      "role_code": "ITOPS-REMEDIATION-OWNER",
+      "role_name": "Remediation Owner",
+      "business_function": "IT Operations",
+      "modules": [
+        { "domain_module_code": "VULN-MGMT-REMEDIATE", "interaction_level": "primary" },
+        { "domain_module_code": "VULN-MGMT-DETECT", "interaction_level": "secondary" }
+      ]
+    },
+    {
+      "role_code": "ENG-APP-REMEDIATION-OWNER",
+      "role_name": "Application Remediation Engineer",
+      "business_function": "Software Engineering",
+      "modules": [
+        { "domain_module_code": "VULN-MGMT-REMEDIATE", "interaction_level": "primary" },
+        { "domain_module_code": "VULN-MGMT-RISK", "interaction_level": "secondary" }
+      ]
+    },
+    {
+      "role_code": "GRC-RISK-APPROVER",
+      "role_name": "Risk and Compliance Approver",
+      "business_function": null,
+      "modules": [
+        { "domain_module_code": "VULN-MGMT-REMEDIATE", "interaction_level": "primary" },
+        { "domain_module_code": "VULN-MGMT-RISK", "interaction_level": "secondary" }
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "MODULE-SPLIT",
+      "gating": true,
+      "question": "How should VULN-MGMT decompose into modules?",
+      "options": [
+        "a) Three modules: Scanning and Detection (scans, vulnerabilities, definitions) + Prioritization and Risk (assessments, ranking, threat-intel consumption) + Remediation and Governance (remediations, exceptions, verification, compliance).",
+        "b) Two modules: Detection and Prioritization combined into one Find-and-Rank module + Remediation and Governance.",
+        "c) Four modules: split Compliance Evidence out of Remediation into its own module."
+      ],
+      "recommended": "a. Three modules cleanly separate the algorithmic detection surface, the risk-ranking lens, and the operational close-out loop, and each holds at least one master; compliance is reporting over remediation data, not a standalone master, so it stays inside Remediation."
+    },
+    {
+      "id": "REMEDIATION-OWNERSHIP",
+      "gating": false,
+      "question": "Are remediation records mastered in VULN-MGMT or handed to ITSM?",
+      "options": [
+        "a) Master vulnerability_remediations here as the security-side workflow, and hand off to ITSM change/incident records when fixes are executed through a service desk.",
+        "b) Do not master remediation here at all; create only ITSM tickets and consume their status back.",
+        "c) Master here and never integrate with ITSM."
+      ],
+      "recommended": "a. Flagship VM vendors (Tenable, Qualys, Rapid7) master their own remediation/ticket entity even when integrating with ServiceNow, so VULN-MGMT owns the security view and hands off execution. An outbound handoff vulnerability_remediation.assigned -> ITSM should be added."
+    },
+    {
+      "id": "CVE-INTEL-SOURCE",
+      "gating": false,
+      "question": "Is CVE and exploit enrichment mastered in VULN-MGMT or consumed from THREAT-INTEL?",
+      "options": [
+        "a) Master the static vulnerability_definitions catalog (CVE metadata, base severity) here, but consume volatile exploit-prediction and known-exploited signals from THREAT-INTEL via fetch_exploit_intel.",
+        "b) Master everything including exploit intel here.",
+        "c) Consume the entire definitions catalog from THREAT-INTEL and master nothing."
+      ],
+      "recommended": "a. The definitions catalog is intrinsic to matching findings and belongs here; live exploit intel is a distinct, fast-moving market that THREAT-INTEL (domain 14) owns. Add an inbound handoff from THREAT-INTEL for the exploit signal."
+    },
+    {
+      "id": "EXCEPTION-PATTERN-FREEZE",
+      "gating": false,
+      "question": "Confirm the pattern flags on vulnerability_exceptions (has_submit_lock=true, has_single_approver=true).",
+      "options": [
+        "a) Freeze submit_lock + single_approver: an exception locks on submit and a single risk owner approves.",
+        "b) Multi-approver instead (committee sign-off).",
+        "c) No submit lock (editable after approval)."
+      ],
+      "recommended": "a. Risk acceptances are individually accountable decisions with an audit trail; submit_lock plus single_approver matches how Qualys, Rapid7, and ServiceNow gate exception approval."
+    }
+  ]
+}

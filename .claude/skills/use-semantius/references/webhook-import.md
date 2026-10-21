@@ -1,6 +1,9 @@
 # Semantius Webhook Import Reference
 
-When importing many records from a CSV, Excel, or TXT file, use the webhook-based import rather than calling `create_*` tools one record at a time.
+When importing many records from a CSV, Excel, or TXT file, never insert them one record at a time. Two batched paths exist:
+
+- **Agent-driven load (the CLI is at hand):** `postgrestRequest` with an **array `body`** — one POST per batch of ~100–250 rows, every row carrying the same keys (see crud-tools.md § "Bulk insert via `postgrestRequest`"). For a local CSV, prefer the `semantius-importer` skill: it introspects the file's schema (`utils/get_csvschema`), creates or reuses the entity, and bulk-loads exactly this way, with retries and count verification built in.
+- **Signed webhook (this reference):** an external system pushes rows to a receiver endpoint, one HTTP request per row, and the rows flow through webhook receiver logs. Use it when the producer is not the agent (a SaaS integration, a nightly export job) or when the audit trail of receiver logs is wanted.
 
 ---
 
@@ -8,6 +11,7 @@ When importing many records from a CSV, Excel, or TXT file, use the webhook-base
 
 | Approach | Best for | Requires |
 |----------|----------|---------|
+| **`postgrestRequest` array body** (not a webhook) | The agent has the file and the CLI; fastest, batched, no receiver to set up — or just use `semantius-importer` | `semantius` CLI |
 | **Bun script** | Any file, clean code, fast | `bun` installed |
 | **Pure shell** (curl + openssl) | Simple CSVs, no extra deps | `curl`, `openssl`, `awk` or `node` |
 | **Python script** | Already have Python, complex transforms | `python3`, `requests` |
@@ -21,7 +25,9 @@ semantius call crud read_entity '{"filters": "table_name=eq.<table_name>"}'
 semantius call crud read_field '{"filters": "table_name=eq.<table_name>"}'
 ```
 
-Note which fields have `input_type: "readonly"` or `input_type: "disabled"`, **never import into those**. `disabled` is the mode the deployer assigns to computed fields (the platform overwrites caller values on every write); `readonly` is the legacy mode for the same intent. Either is a signal: the field is not caller-writable in any meaningful sense.
+Note which fields have `input_type: "readonly"` or `input_type: "disabled"`, **never import into those**. `disabled` is the mode the deployer assigns to computed fields (the platform overwrites caller values on every write); `readonly` marks the same intent (manual lock). Either is a signal: the field is not caller-writable in any meaningful sense.
+
+The composed-label columns — the entity's own `_label` and any FK companion `<fk>_label` (e.g. `customer_id_label`) — are likewise **never import targets**. They are platform-owned, read-time projections, not real columns, and don't appear in `read_field` at all.
 
 ---
 
@@ -64,7 +70,19 @@ semantius call crud getCurrentUser '{}'
 | Reasonable (`Email Address` → `email`) | Auto-map, mention in summary |
 | Ambiguous | Ask user before proceeding |
 
-Never map to `input_type: "readonly"` or `input_type: "disabled"` fields — both indicate a non-caller-writable column (computed fields land in `disabled`; legacy / manual locks land in `readonly`).
+Never map to `input_type: "readonly"` or `input_type: "disabled"` fields — both indicate a non-caller-writable column (computed fields land in `disabled`; manual locks land in `readonly`). Never map to `_label` or a `<fk>_label` companion (e.g. `_label`, `customer_id_label`) either — they are read-only composed labels the platform derives, not writable columns.
+
+**Enum columns.** An enum field accepts only the values of its `enum_values`. When the source sends labels instead (e.g. "On hold" for `on_hold`), translate each to the `value` of the matching `{"value", "label"}` entry (an entry may also carry a `description`, `color` and `icon`; ignore them).
+
+**The key column depends on the entity's `id_type`:**
+
+| `id_type` | Map a source column to `id`? |
+|---|---|
+| `bigint`, `text` | Yes: the caller supplies the key on every row |
+| `auto_increment`, `uuid`, `typeid`, `is_a` | No: the database generates it |
+| `has_a` | Only when the source holds the ids of existing base records to attach to; without it, each row creates a base record too |
+
+**Inherited fields.** For an `is_a` / `has_a` entity the fields include the ones it inherits from its base (`get_schema` marks them `inherited_from`), and a source column may map to them like to the entity's own fields. See `entity-families.md`.
 
 ---
 
@@ -232,6 +250,7 @@ build_json() {
 
 ok=0; failed=0; row=0
 failed_file="failed_rows.txt"
+resp_file="wh_response.tmp"   # response-body scratch beside the script, never /tmp
 > "$failed_file"
 
 while IFS=',' read -r code title category price stock active; do
@@ -243,7 +262,7 @@ while IFS=',' read -r code title category price stock active; do
   TIMESTAMP=$(date +%s)
   SIG=$(sign "$MSG_ID" "$TIMESTAMP" "$BODY")
 
-  HTTP_STATUS=$(curl -s -o /tmp/wh_response -w "%{http_code}" -X POST "$WEBHOOK_URL" \
+  HTTP_STATUS=$(curl -s -o "$resp_file" -w "%{http_code}" -X POST "$WEBHOOK_URL" \
     -H "Content-Type: application/json" \
     -H "webhook-id: $MSG_ID" \
     -H "webhook-timestamp: $TIMESTAMP" \
@@ -251,7 +270,7 @@ while IFS=',' read -r code title category price stock active; do
     -d "$BODY")
 
   if [ "$HTTP_STATUS" -ge 300 ]; then
-    echo "Row $row FAILED ($HTTP_STATUS): $(cat /tmp/wh_response)" | tee -a "$failed_file"
+    echo "Row $row FAILED ($HTTP_STATUS): $(cat "$resp_file")" | tee -a "$failed_file"
     ((failed++)) || true
   else
     ((ok++)) || true
@@ -261,6 +280,7 @@ while IFS=',' read -r code title category price stock active; do
   sleep 0.05
 done < "$CSV_FILE"
 
+rm -f "$resp_file"
 echo "Done: $ok ok, $failed failed"
 [ "$failed" -gt 0 ] && echo "Failed rows in $failed_file"
 ```

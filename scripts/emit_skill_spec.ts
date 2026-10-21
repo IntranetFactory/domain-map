@@ -307,7 +307,7 @@ async function loadBulk(): Promise<Bulk> {
     get(`/capability_domains?select=capability_id,domain_id&limit=${L}`),
     get(`/domain_module_capabilities?select=domain_module_id,capability_id&limit=${L}`),
     get(`/domain_module_data_objects?select=domain_module_id,data_object_id,role,necessity&order=domain_module_id.asc,data_object_id.asc&limit=${L}`),
-    get(`/handoffs?select=id,source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,integration_pattern,friction_level,data_objects(data_object_name),trigger_events(event_name,event_category),handoff_processes(processes(external_id,process_name))&order=id.asc&limit=${L}`),
+    get(`/handoffs?select=id,source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,integration_pattern,friction_level,data_objects(data_object_name),trigger_events(event_name,event_category),handoff_processes(processes:business_processes(external_id,process_name))&order=id.asc&limit=${L}`),
     get(`/skills?skill_type=eq.domain&select=id,skill_name,description,trigger_keywords,domain_id&order=id.asc&limit=${L}`),
     get(`/domain_module_tools?select=domain_module_id,tool_id,requirement_level&limit=${L}`),
     get(`/role_modules?select=role_id,domain_module_id,interaction_level&limit=${L}`),

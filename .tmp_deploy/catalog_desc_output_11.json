@@ -1,0 +1,394 @@
+[
+  {
+    "id": 339,
+    "catalog_description": "Tenants, workspaces, or domains of a SaaS platform, tracked as the places where company data resides for security-posture analysis."
+  },
+  {
+    "id": 543,
+    "catalog_description": "Availability and response-time readings for SaaS apps, monitored from multiple locations and networks to capture the experience real users get."
+  },
+  {
+    "id": 61,
+    "catalog_description": "SaaS applications in the company portfolio, with vendor, category, criticality, owner, and whether each is sanctioned or shadow IT."
+  },
+  {
+    "id": 62,
+    "catalog_description": "Contractual subscriptions for SaaS apps: plan tier, seat count, recurring cost, billing cadence, renewal date, and owner."
+  },
+  {
+    "id": 64,
+    "catalog_description": "Per-user activity for each SaaS app: logins, time in app, feature usage, and last-active date, used to right-size licenses."
+  },
+  {
+    "id": 1073,
+    "catalog_description": "Workplace injuries, illnesses, near-misses, and unsafe conditions, with investigation, root-cause analysis, and recordability determination."
+  },
+  {
+    "id": 154,
+    "catalog_description": "Pay ranges by grade and geographic zone, with minimum, midpoint, maximum, and benchmark source, guiding offers and pay-equity analysis."
+  },
+  {
+    "id": 102,
+    "catalog_description": "Logged touchpoints between sales and a contact or opportunity: calls, emails, meetings, demos, and content views."
+  },
+  {
+    "id": 121,
+    "catalog_description": "Multi-step outreach sequences defining touchpoints, timing, and branching rules, used to enroll and engage prospects systematically."
+  },
+  {
+    "id": 123,
+    "catalog_description": "Individual one-to-one sales emails sent to prospects, with open, reply, and click tracking and thread context."
+  },
+  {
+    "id": 1215,
+    "catalog_description": "Sales-facing content assets such as decks, one-pagers, and demo scripts, managed through draft, publish, and retire states."
+  },
+  {
+    "id": 416,
+    "catalog_description": "Versioned, numbered quote documents with dates, validity, currency, terms, pricing, and status from draft to accepted or lost."
+  },
+  {
+    "id": 630,
+    "catalog_description": "Recoveries of salvageable property or proceeds from damaged or totaled assets after a claim settles, with vendor and recovery amount."
+  },
+  {
+    "id": 513,
+    "catalog_description": "Cleaning and sanitation completion records per shift, line, or piece of equipment, with verification results."
+  },
+  {
+    "id": 279,
+    "catalog_description": "What-if strategic scenarios such as mergers, market disruption, or expansion, used to compare possible futures."
+  },
+  {
+    "id": 438,
+    "catalog_description": "Canonical schemas for data flowing through pipelines, defining field contracts, versions, and evolution rules."
+  },
+  {
+    "id": 910,
+    "catalog_description": "Imported e-learning content packages in standard formats, carrying the content manifest and runtime tracking state."
+  },
+  {
+    "id": 1082,
+    "catalog_description": "Safety data sheets for hazardous substances, with hazard classification, exposure limits, and handling guidance for hazard communication."
+  },
+  {
+    "id": 780,
+    "catalog_description": "Shareholder-initiated sales of existing equity: tender offers, employee liquidity programs, or direct transfers, with board approval."
+  },
+  {
+    "id": 771,
+    "catalog_description": "Classes of security in the cap table such as common, preferred series, SAFEs, and warrants, with their rights and preferences."
+  },
+  {
+    "id": 446,
+    "catalog_description": "Audience clusters defined within a digital experience platform for on-site personalization."
+  },
+  {
+    "id": 230,
+    "catalog_description": "Reusable metric and dimension definitions in the semantic layer, governed for consistent use across BI tools and AI agents."
+  },
+  {
+    "id": 341,
+    "catalog_description": "Detected data-security incidents such as over-privilege, exposed sensitive data, or unauthorized access, triggering remediation."
+  },
+  {
+    "id": 52,
+    "catalog_description": "Definitions of what can be requested: the request form, fulfillment workflow, approvals, service level, and charge-back rules."
+  },
+  {
+    "id": 50,
+    "catalog_description": "Planned modifications to a service or configuration item, with change type, risk score, approval state, schedule, and back-out plan."
+  },
+  {
+    "id": 663,
+    "catalog_description": "Meter-to-grid or meter-to-pipe hookup assets, with location, conductor or pipe size, install date, and maintenance history."
+  },
+  {
+    "id": 741,
+    "catalog_description": "Service contracts that carry service-level commitments such as response times, parts coverage, and call-out fees."
+  },
+  {
+    "id": 1194,
+    "catalog_description": "Quoted estimates for boatyard work, covering scope, labor hours, parts, and price, approved by the boater before work begins."
+  },
+  {
+    "id": 47,
+    "catalog_description": "Unplanned service interruptions or quality reductions, with severity, priority, category, assignee, and affected components."
+  },
+  {
+    "id": 91,
+    "catalog_description": "Service-level objective definitions and their breach state, with targets, remaining error budget, burn rate, and last breach."
+  },
+  {
+    "id": 79,
+    "catalog_description": "Mappings of named business services to the configuration items that underlie them, linking technical topology to business impact."
+  },
+  {
+    "id": 452,
+    "catalog_description": "Service mesh installations, with traffic policy, mutual-TLS enforcement, and distributed-tracing configuration."
+  },
+  {
+    "id": 1265,
+    "catalog_description": "Back-end service definitions covering commitments, supported configurations, and fulfillment, separate from their user-facing catalog items."
+  },
+  {
+    "id": 1261,
+    "catalog_description": "Customer-facing outage records, with the affected service, public status, start and end times, and the customer message."
+  },
+  {
+    "id": 820,
+    "catalog_description": "Recurring preventive-maintenance plans for installed equipment, defining cadence, due date, grace window, and overdue escalation."
+  },
+  {
+    "id": 49,
+    "catalog_description": "Root-cause records for recurring or related incidents, with known-error workarounds and links to the fix that will resolve them."
+  },
+  {
+    "id": 216,
+    "catalog_description": "Client-facing engagements with scope, contract, dates, billing type, revenue-recognition method, and assigned project manager."
+  },
+  {
+    "id": 656,
+    "catalog_description": "Orchestration state and task list for activating, changing, or closing a service, showing how a service order is executed."
+  },
+  {
+    "id": 1262,
+    "catalog_description": "Release records that bundle one or more changes into a single shippable unit, with the release window, status, and rollback plan."
+  },
+  {
+    "id": 48,
+    "catalog_description": "Planned, catalog-driven requests for access, hardware, software, or information, distinct from reactive incidents."
+  },
+  {
+    "id": 53,
+    "catalog_description": "Service-level agreements setting response, resolution, and availability targets by priority, category, or customer tier."
+  },
+  {
+    "id": 659,
+    "catalog_description": "Subscriber-reported service degradation or outage tickets, with service, severity, timestamps, root cause, and resolution."
+  },
+  {
+    "id": 740,
+    "catalog_description": "Customer-facing service jobs fulfilled by field visits, distinct from preventive-maintenance work orders."
+  },
+  {
+    "id": 927,
+    "catalog_description": "Per-session attendance roster rows for each learner, serving as evidence of completed required workplace training."
+  },
+  {
+    "id": 1276,
+    "catalog_description": "Cancellation or no-show records for an instructor-led session, used to drive waitlist promotion."
+  },
+  {
+    "id": 239,
+    "catalog_description": "Video and audit-log artifacts captured from a remote session, with storage location, retention, redaction state, and compliance use."
+  },
+  {
+    "id": 1275,
+    "catalog_description": "Pre-session enrollment snapshots for an instructor-led session, used as the basis for attendance proof."
+  },
+  {
+    "id": 343,
+    "catalog_description": "Data stores, files, or SaaS instances found in use but missing from the official inventory: unmanaged or rogue copies."
+  },
+  {
+    "id": 65,
+    "catalog_description": "SaaS apps found in use but not officially sanctioned, discovered through expense data, sign-on logs, browser, or network signals."
+  },
+  {
+    "id": 772,
+    "catalog_description": "Per-shareholder records of holdings across all security classes for an issuer."
+  },
+  {
+    "id": 1146,
+    "catalog_description": "Worker requests to swap, give up, or pick up a shift, started on the worker's device and routed for manager approval."
+  },
+  {
+    "id": 601,
+    "catalog_description": "Operator-raised shop-floor issues such as defects, safety concerns, equipment anomalies, or material shortages, for the problem-solving team."
+  },
+  {
+    "id": 70,
+    "catalog_description": "E-signature envelopes with signing audit trail, IP addresses, provider references, and the signed document, one contract may have many."
+  },
+  {
+    "id": 436,
+    "catalog_description": "Connection metadata for downstream data targets: authentication, batch or stream mode, upsert keys, and schema enforcement rules."
+  },
+  {
+    "id": 632,
+    "catalog_description": "Special Investigation Unit fraud cases on insurance claims, with indicators triggered, investigator, status, and any law-enforcement referral."
+  },
+  {
+    "id": 855,
+    "catalog_description": "Proficiency-rating events against a skill, recording the rater, method (self, manager, peer, or test), score, and date."
+  },
+  {
+    "id": 856,
+    "catalog_description": "Peer or manager validations of a claimed skill on a profile: a quick social signal, distinct from a formal assessment."
+  },
+  {
+    "id": 858,
+    "catalog_description": "Audit records of automated skill-inference batches, capturing model version, input signals, outputs, and timestamp."
+  },
+  {
+    "id": 172,
+    "catalog_description": "Per-worker collections of skills with self-assessed and validated proficiency, derived from courses, certifications, and performance signals."
+  },
+  {
+    "id": 1277,
+    "catalog_description": "Learning-path steps, each binding a skill to a target proficiency threshold to reach."
+  },
+  {
+    "id": 852,
+    "catalog_description": "Versioned ontologies of skill nodes, with synonyms and parent-child relationships."
+  },
+  {
+    "id": 854,
+    "catalog_description": "Individual skill nodes within a taxonomy version, referenced by every profile entry, competency model, and inference run."
+  },
+  {
+    "id": 26,
+    "catalog_description": "Comparisons of current skills inventory against future demand by role, level, and location, guiding build, buy, or borrow decisions."
+  },
+  {
+    "id": 1181,
+    "catalog_description": "Placements of a specific vessel in a specific slip, mooring, or rack for a period, linking inventory to a reservation or contract."
+  },
+  {
+    "id": 1188,
+    "catalog_description": "Seasonal or annual agreements licensing a slip, mooring, or rack to a boater, with term, rate, included utilities, and renewal terms."
+  },
+  {
+    "id": 1182,
+    "catalog_description": "Requests to dock or store a vessel for a transient or seasonal period, with dates, vessel, requested space, rate, and check-in status."
+  },
+  {
+    "id": 1180,
+    "catalog_description": "Configured size classes for slips and racks, defined by length and beam bands, used for fit rules and rate lookup."
+  },
+  {
+    "id": 1183,
+    "catalog_description": "Boaters' places in line for a slip type or period that is currently full, with offer and expiry tracking."
+  },
+  {
+    "id": 987,
+    "catalog_description": "System-raised alerts on the SaaS portfolio: shadow-IT signups, projected license overages, opening renewals, or vendor-risk changes."
+  },
+  {
+    "id": 991,
+    "catalog_description": "Per-app utilization and cost-per-seat benchmarks against an industry peer set, snapshotted each measurement period with an outlier flag."
+  },
+  {
+    "id": 986,
+    "catalog_description": "Published listings of sanctioned SaaS apps that employees can browse and request, with description, owner, request route, and approval flow."
+  },
+  {
+    "id": 985,
+    "catalog_description": "Configured connections between the SaaS management platform and an app's APIs for sign-on, provisioning, finance, and usage data."
+  },
+  {
+    "id": 988,
+    "catalog_description": "Portfolio-rationalization stages of a SaaS app such as evaluate, pilot, sanctioned, sunset, and retired."
+  },
+  {
+    "id": 984,
+    "catalog_description": "Typed owner assignments linking a user to a SaaS app as its business, IT, finance, or security owner."
+  },
+  {
+    "id": 999,
+    "catalog_description": "Employee requests for access to a SaaS app via the published catalog, routed for manager and IT approval before provisioning."
+  },
+  {
+    "id": 997,
+    "catalog_description": "Declarative automation workflows with a trigger and steps such as provisioning, notifying, offboarding, or requesting approval."
+  },
+  {
+    "id": 63,
+    "catalog_description": "User-to-app license seat assignments, showing who holds a seat at which tier, its cost, utilization, and last activity, to drive reclamation."
+  },
+  {
+    "id": 989,
+    "catalog_description": "System-generated proposals to right-size or consolidate SaaS spend, with estimated savings, rationale, type, and status."
+  },
+  {
+    "id": 990,
+    "catalog_description": "Executed reclamation actions against a license seat (revoke, downgrade, or reassign), with the savings realized."
+  },
+  {
+    "id": 993,
+    "catalog_description": "Per-renewal-cycle envelopes covering timeline, owner, vendor proposals received, fallback notes, and decisions taken."
+  },
+  {
+    "id": 992,
+    "catalog_description": "Tasks within a SaaS renewal cycle, such as the renewal-window notice, owner assignment, and the renew-or-cancel decision."
+  },
+  {
+    "id": 995,
+    "catalog_description": "Chargeback splits of a SaaS subscription across cost centers, business units, or projects, with the allocation method and effective window."
+  },
+  {
+    "id": 994,
+    "catalog_description": "Quote, counter-quote, and discount records tied to a renewal, documenting how the final commercial terms were reached."
+  },
+  {
+    "id": 996,
+    "catalog_description": "SaaS vendor risk scorecards covering attestation status, data-processing review, subprocessors, breach history, and posture score."
+  },
+  {
+    "id": 998,
+    "catalog_description": "Execution logs for each automation workflow run, with trigger source, input, step-by-step status, output, duration, and any error."
+  },
+  {
+    "id": 126,
+    "catalog_description": "Brand-owned connected accounts on specific social networks, with credentials, permissions, and channel-specific metadata."
+  },
+  {
+    "id": 1110,
+    "catalog_description": "Connected advertiser accounts on social ad platforms, under which campaigns are run and billed."
+  },
+  {
+    "id": 1111,
+    "catalog_description": "Paid social campaigns defining an advertising objective, schedule, and overall budget, parenting one or more ad sets."
+  },
+  {
+    "id": 1118,
+    "catalog_description": "Versioned ad creatives pairing visuals and copy (image, video, carousel), with approval state and platform-specific renditions."
+  },
+  {
+    "id": 1116,
+    "catalog_description": "Time-series delivery and outcome metrics per ad, ad set, or campaign, such as impressions, clicks, spend, conversions, and return on ad spend."
+  },
+  {
+    "id": 1112,
+    "catalog_description": "Targeting and budget units within a campaign, binding an audience, placements, bid strategy, schedule, and budget to a set of ads."
+  },
+  {
+    "id": 1113,
+    "catalog_description": "Individual deliverable ads within an ad set, pairing a creative with destination and tracking and carrying their own delivery state."
+  },
+  {
+    "id": 129,
+    "catalog_description": "Saved monitoring queries defined by keywords, hashtags, competitors, geographies, and sentiment filters that drive social listening."
+  },
+  {
+    "id": 128,
+    "catalog_description": "Brand or keyword mentions detected across networks, news, blogs, forums, and review sites, typically from non-followers off-channel."
+  },
+  {
+    "id": 127,
+    "catalog_description": "Inbound conversations in the unified inbox: comments, direct messages, mention-replies, and reviews on brand-owned accounts."
+  },
+  {
+    "id": 125,
+    "catalog_description": "Authored social posts (draft, scheduled, or published) with per-channel variants, media, copy, lifecycle state, and approval history."
+  },
+  {
+    "id": 682,
+    "catalog_description": "Release events deploying a build to a target environment, with deployer, timestamps, status, rollback flag, and change-ticket reference."
+  },
+  {
+    "id": 59,
+    "catalog_description": "Discovered installs of a software title on a specific device or for a specific user, the operational fact distinct from the licensing right."
+  }
+]

@@ -1,0 +1,333 @@
+{
+  "domain_code": "CCAAS",
+  "phase0_vendors": [
+    {
+      "vendor": "Genesys",
+      "flagship": "Genesys Cloud CX",
+      "surface": ["interactions", "conversations", "queues", "routing_flows", "ivr_flows", "agents", "agent_presence", "agent_states", "wrap_up_codes", "recordings", "evaluations", "evaluation_forms", "quality_calibrations", "workforce_schedules", "adherence_records", "analytics_views", "real_time_dashboards", "outbound_campaigns", "knowledge_bases", "bot_flows", "skills"]
+    },
+    {
+      "vendor": "NICE",
+      "flagship": "NICE CXone",
+      "surface": ["contacts", "interactions", "skills", "queues", "acd_routing_profiles", "ivr_studio_scripts", "agents", "agent_states", "dispositions", "call_recordings", "screen_recordings", "qm_evaluations", "evaluation_forms", "wfm_forecasts", "wfm_schedules", "adherence", "real_time_dashboards", "historical_reports", "outbound_lists", "interaction_analytics"]
+    },
+    {
+      "vendor": "Five9",
+      "flagship": "Five9 Intelligent CX Platform",
+      "surface": ["calls", "interactions", "campaigns", "skills", "queues", "ivr_scripts", "agents", "agent_states", "disposition_codes", "call_recordings", "qm_evaluations", "wfm_schedules", "adherence", "supervisor_dashboards", "reports", "contact_lists", "speech_analytics"]
+    },
+    {
+      "vendor": "Amazon Web Services",
+      "flagship": "Amazon Connect",
+      "surface": ["contacts", "contact_flows", "queues", "routing_profiles", "quick_connects", "agents", "agent_statuses", "contact_attributes", "recordings", "contact_lens_analyses", "evaluation_forms", "real_time_metrics", "historical_metrics", "outbound_campaigns", "hours_of_operation", "phone_numbers"]
+    },
+    {
+      "vendor": "Talkdesk",
+      "flagship": "Talkdesk CX Cloud",
+      "surface": ["interactions", "contacts", "ring_groups", "queues", "studio_flows", "ivr", "agents", "agent_statuses", "dispositions", "recordings", "quality_evaluations", "wfm_schedules", "adherence", "live_dashboards", "reports", "outbound_dialer_lists", "speech_analytics"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capability_code": "CCAAS-OMNI-ROUTE",
+      "capability_name": "Omnichannel Routing and Queueing",
+      "description": "Unified ingestion of voice, chat, email, SMS, and social interactions into skills-based queues, with automatic call distribution (ACD) that matches each contact to the best-fit available agent by skill, priority, and customer tier. Includes queue prioritization, overflow, and routing-profile administration.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "CCAAS-IVR-SELF",
+      "capability_name": "IVR and Self-Service Flows",
+      "description": "Visual flow runtime for interactive voice response menus, callback offers, and digital self-service that authenticate, collect intent, deflect simple requests, and hand off to a live queue when needed. Covers prompt design, DTMF and speech capture, and flow versioning.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "CCAAS-AGENT-DESK",
+      "capability_name": "Agent Desktop and Interaction Handling",
+      "description": "The agent workspace that presents the connected interaction with cross-channel customer context, controls for hold, transfer, conference, and consult, after-call wrap-up, and disposition coding. Tracks agent presence and availability states that feed routing and adherence.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "CCAAS-REC-CAPTURE",
+      "capability_name": "Interaction Recording and Capture",
+      "description": "Capture and retention of voice recordings and transcripts (and screen capture where licensed) across interactions, with consent handling, pause/resume for sensitive data, and retention policy enforcement so recordings are available for quality, dispute, and compliance review.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "CCAAS-QM-COACH",
+      "capability_name": "Quality Management and Coaching",
+      "description": "Supervisor review and scoring of recorded interactions against evaluation forms, calibration across evaluators, and coaching assignment to close performance gaps. Drives agent improvement plans tied to disposition and outcome data.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "CCAAS-RT-ANALYTICS",
+      "capability_name": "Real-Time and Historical Analytics",
+      "description": "Live queue and agent dashboards with service-level, abandon-rate, and occupancy metrics and threshold alerting, plus historical reporting aggregated by queue, agent, skill, and disposition for trend analysis and staffing decisions.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "CCAAS-WEM-ADHERE",
+      "capability_name": "Workforce Engagement and Adherence",
+      "description": "Tracking of agent state changes and time-in-state against expected schedules to measure adherence and auxiliary-time breaches, surfacing intraday staffing signals. Consumes forecasts and schedules mastered in the workforce-management domain rather than owning them.",
+      "cross_cutting": false
+    }
+  ],
+  "vendors_new": [],
+  "solutions_new": [
+    { "solution_name": "Genesys Cloud CX", "vendor_name": "Genesys", "coverage_level": "primary" },
+    { "solution_name": "NICE CXone", "vendor_name": "NICE", "coverage_level": "primary" },
+    { "solution_name": "Five9 Intelligent CX Platform", "vendor_name": "Five9", "coverage_level": "primary" },
+    { "solution_name": "Amazon Connect", "vendor_name": "Amazon Web Services", "coverage_level": "primary" },
+    { "solution_name": "Talkdesk CX Cloud", "vendor_name": "Talkdesk", "coverage_level": "primary" },
+    { "solution_name": "Webex Contact Center", "vendor_name": "Cisco", "coverage_level": "secondary" },
+    { "solution_name": "Twilio Flex", "vendor_name": "Twilio", "coverage_level": "secondary" },
+    { "solution_name": "8x8 Contact Center", "vendor_name": "8x8", "coverage_level": "secondary" },
+    { "solution_name": "Zoom Contact Center", "vendor_name": "Zoom", "coverage_level": "partial" }
+  ],
+  "modules": [
+    {
+      "domain_module_code": "CCAAS-ROUTING",
+      "domain_module_name": "Routing and Queues",
+      "module_kind": "full",
+      "description": "The ACD and flow engine. Owns omnichannel ingestion, skills-based queueing, and the IVR/self-service flow runtime that places each interaction into the right queue. Realizes routing and IVR capabilities. Masters queue_statistics as the computed view of queue health and disposition_codes as the catalog of outcome codes applied downstream. Consumes CRM customers and KMS knowledge as routing and self-service context.",
+      "catalog_tagline": "Route every call, chat, and message to the right agent, and let self-service handle the rest.",
+      "catalog_description": "Bring voice and every digital channel into one set of queues and route each interaction to the agent best suited to handle it, by skill, priority, and customer tier. Self-service menus and callback offers deflect and speed up the simple requests before they ever reach a queue.\n\nWatch queue health in one place: wait times, abandon rates, and service levels update live, and threshold alerts fire before service slips. Outcome codes captured at the desk roll up here so you can see why customers are calling and tune routing accordingly.",
+      "capability_codes": ["CCAAS-OMNI-ROUTE", "CCAAS-IVR-SELF"],
+      "data_objects": [
+        { "data_object_name": "queue_statistics", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "disposition_codes", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "contact_records", "role": "contributor", "necessity": "required", "existing": true },
+        { "data_object_name": "customers", "role": "consumer", "necessity": "optional", "existing": true },
+        { "data_object_name": "knowledge_base_articles", "role": "consumer", "necessity": "optional", "existing": true }
+      ]
+    },
+    {
+      "domain_module_code": "CCAAS-DESKTOP",
+      "domain_module_name": "Agent Desktop and Interactions",
+      "module_kind": "full",
+      "description": "The live interaction workspace. Owns the support session as the unit of agent work, the contact record captured for every interaction, and agent_states that track presence and availability. Realizes the agent-desktop and workforce-engagement/adherence capabilities. Consumes WFM schedules to compare actual state against plan rather than mastering scheduling here.",
+      "catalog_tagline": "Give agents one screen to handle every interaction, with full context and clean wrap-up.",
+      "catalog_description": "Agents see the customer's cross-channel history the moment an interaction connects, and handle it with hold, transfer, conference, and consult from a single workspace. Each contact ends with a clear disposition code that feeds reporting and follow-up.\n\nPresence and availability are tracked continuously, so routing always knows who can take the next interaction and supervisors can see who is on, off, or in wrap. Time spent in each state is compared against the plan to flag adherence and auxiliary-time issues as they happen.",
+      "capability_codes": ["CCAAS-AGENT-DESK", "CCAAS-WEM-ADHERE"],
+      "data_objects": [
+        { "data_object_name": "support_sessions", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "contact_records", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "agent_states", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "disposition_codes", "role": "consumer", "necessity": "required", "existing": true },
+        { "data_object_name": "customers", "role": "consumer", "necessity": "optional", "existing": true },
+        { "data_object_name": "agent_schedules", "role": "consumer", "necessity": "optional", "existing": false }
+      ]
+    },
+    {
+      "domain_module_code": "CCAAS-QUALITY",
+      "domain_module_name": "Quality and Analytics",
+      "module_kind": "full",
+      "description": "Post-interaction quality and reporting. Owns call recordings as the captured evidence of each interaction, interaction_evaluations as supervisor scoring against forms, and evaluation_forms as the reusable scorecard catalog. Realizes the recording, quality-management/coaching, and analytics capabilities. Consumes contact_records and support_sessions as the interactions under review and SLA definitions for breach reporting.",
+      "catalog_tagline": "Record, score, and report on every interaction to keep quality and service levels on target.",
+      "catalog_description": "Capture voice and transcript for every interaction, with consent handling and pause/resume so sensitive data stays out of the recording. Recordings are available for quality review, dispute resolution, and compliance retention.\n\nSupervisors score interactions against evaluation forms, calibrate across reviewers, and assign coaching to close the gaps. Real-time dashboards and historical reports break performance down by queue, agent, skill, and disposition so you can act before service levels slip.",
+      "capability_codes": ["CCAAS-REC-CAPTURE", "CCAAS-QM-COACH", "CCAAS-RT-ANALYTICS"],
+      "data_objects": [
+        { "data_object_name": "ccaas_call_recordings", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "interaction_evaluations", "role": "master", "necessity": "required", "existing": false },
+        { "data_object_name": "evaluation_forms", "role": "master", "necessity": "optional", "existing": false },
+        { "data_object_name": "contact_records", "role": "consumer", "necessity": "required", "existing": true },
+        { "data_object_name": "support_sessions", "role": "consumer", "necessity": "optional", "existing": true },
+        { "data_object_name": "queue_statistics", "role": "consumer", "necessity": "optional", "existing": true }
+      ]
+    }
+  ],
+  "new_data_objects": [
+    {
+      "data_object_name": "interaction_evaluations",
+      "singular_label": "Interaction Evaluation",
+      "plural_label": "Interaction Evaluations",
+      "entity_type": "operational_workflow",
+      "description": "A supervisor's quality review of a recorded interaction, scored against an evaluation form, with section and item scores, comments, agent acknowledgment, and a coaching follow-up flag. Moves through draft, scoring, completed, disputed, and calibrated states.",
+      "has_personal_content": false,
+      "has_submit_lock": true,
+      "has_single_approver": true
+    },
+    {
+      "data_object_name": "evaluation_forms",
+      "singular_label": "Evaluation Form",
+      "plural_label": "Evaluation Forms",
+      "entity_type": "catalog",
+      "description": "A reusable quality scorecard definition: sections, weighted items, scoring scale, auto-fail criteria, and the queues or skills it applies to. Versioned so historical scores remain interpretable against the form in force when scored.",
+      "has_personal_content": false,
+      "has_submit_lock": false,
+      "has_single_approver": false
+    }
+  ],
+  "lifecycle_states": [
+    {
+      "data_object_name": "support_sessions",
+      "states": [
+        { "state_name": "queued", "state_order": 1, "is_initial": true, "is_terminal": false, "requires_permission": false },
+        { "state_name": "offered", "state_order": 2, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "active", "state_order": 3, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "on_hold", "state_order": 4, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "escalated", "state_order": 5, "is_initial": false, "is_terminal": false, "requires_permission": true },
+        { "state_name": "wrap_up", "state_order": 6, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "completed", "state_order": 7, "is_initial": false, "is_terminal": true, "requires_permission": false },
+        { "state_name": "abandoned", "state_order": 8, "is_initial": false, "is_terminal": true, "requires_permission": false }
+      ]
+    },
+    {
+      "data_object_name": "ccaas_call_recordings",
+      "states": [
+        { "state_name": "recording", "state_order": 1, "is_initial": true, "is_terminal": false, "requires_permission": false },
+        { "state_name": "paused", "state_order": 2, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "stored", "state_order": 3, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "transcribed", "state_order": 4, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "retained", "state_order": 5, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "purged", "state_order": 6, "is_initial": false, "is_terminal": true, "requires_permission": true }
+      ]
+    },
+    {
+      "data_object_name": "agent_states",
+      "states": [
+        { "state_name": "logged_out", "state_order": 1, "is_initial": true, "is_terminal": false, "requires_permission": false },
+        { "state_name": "available", "state_order": 2, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "busy", "state_order": 3, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "wrap_up", "state_order": 4, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "auxiliary", "state_order": 5, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "logged_out_end", "state_order": 6, "is_initial": false, "is_terminal": true, "requires_permission": false }
+      ]
+    },
+    {
+      "data_object_name": "interaction_evaluations",
+      "states": [
+        { "state_name": "draft", "state_order": 1, "is_initial": true, "is_terminal": false, "requires_permission": false },
+        { "state_name": "scoring", "state_order": 2, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "completed", "state_order": 3, "is_initial": false, "is_terminal": false, "requires_permission": true },
+        { "state_name": "disputed", "state_order": 4, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "calibrated", "state_order": 5, "is_initial": false, "is_terminal": true, "requires_permission": true }
+      ]
+    }
+  ],
+  "tools": [
+    { "tool_name": "query_support_sessions", "operation_kind": "query", "data_object_name": "support_sessions", "notes": "Read agent interaction sessions by queue, agent, channel, or state." },
+    { "tool_name": "transfer_support_session", "operation_kind": "mutate", "data_object_name": "support_sessions", "notes": "Transfer or escalate an active interaction to another queue, agent, or supervisor; gated transition." },
+    { "tool_name": "query_contact_records", "operation_kind": "query", "data_object_name": "contact_records", "notes": "Read captured interaction records across channels." },
+    { "tool_name": "query_queue_statistics", "operation_kind": "query", "data_object_name": "queue_statistics", "notes": "Read live and historical queue health metrics." },
+    { "tool_name": "set_agent_state", "operation_kind": "mutate", "data_object_name": "agent_states", "notes": "Change an agent's presence/availability state (available, busy, wrap, aux); drives routing and adherence." },
+    { "tool_name": "query_agent_states", "operation_kind": "query", "data_object_name": "agent_states", "notes": "Read current and historical agent state changes for adherence." },
+    { "tool_name": "apply_disposition_code", "operation_kind": "mutate", "data_object_name": "contact_records", "notes": "Apply an outcome/disposition code to a contact at wrap-up; writes to the contact record, reads disposition_codes catalog." },
+    { "tool_name": "query_disposition_codes", "operation_kind": "query", "data_object_name": "disposition_codes", "notes": "Read the catalog of available outcome codes." },
+    { "tool_name": "query_ccaas_call_recordings", "operation_kind": "query", "data_object_name": "ccaas_call_recordings", "notes": "Read interaction recordings and their retention state." },
+    { "tool_name": "score_interaction_evaluation", "operation_kind": "mutate", "data_object_name": "interaction_evaluations", "notes": "Create or complete a quality evaluation against an evaluation form; gated submit." },
+    { "tool_name": "query_interaction_evaluations", "operation_kind": "query", "data_object_name": "interaction_evaluations", "notes": "Read quality scores by agent, evaluator, queue, or form." },
+    { "tool_name": "make_phone_call", "operation_kind": "side_effect", "data_object_name": null, "notes": "Voice is intrinsic to CCaaS, not a generic notification. Used to place outbound interactions and previews/callbacks within the routing workflow. Justified as workflow-specific per Rule #17, not the notify_person abstraction." },
+    { "tool_name": "transcribe_audio", "operation_kind": "compute", "data_object_name": null, "notes": "Transcription of recorded voice interactions is a core CCaaS step feeding quality scoring, analytics, and sentiment. Workflow-specific compute, not a generic notification channel." }
+  ],
+  "module_tools": [
+    { "domain_module_code": "CCAAS-ROUTING", "tool_name": "query_queue_statistics", "requirement_level": "required" },
+    { "domain_module_code": "CCAAS-ROUTING", "tool_name": "query_disposition_codes", "requirement_level": "required" },
+    { "domain_module_code": "CCAAS-ROUTING", "tool_name": "query_contact_records", "requirement_level": "required" },
+    { "domain_module_code": "CCAAS-ROUTING", "tool_name": "make_phone_call", "requirement_level": "optional" },
+    { "domain_module_code": "CCAAS-DESKTOP", "tool_name": "query_support_sessions", "requirement_level": "required" },
+    { "domain_module_code": "CCAAS-DESKTOP", "tool_name": "transfer_support_session", "requirement_level": "required" },
+    { "domain_module_code": "CCAAS-DESKTOP", "tool_name": "set_agent_state", "requirement_level": "required" },
+    { "domain_module_code": "CCAAS-DESKTOP", "tool_name": "query_agent_states", "requirement_level": "required" },
+    { "domain_module_code": "CCAAS-DESKTOP", "tool_name": "apply_disposition_code", "requirement_level": "required" },
+    { "domain_module_code": "CCAAS-DESKTOP", "tool_name": "query_contact_records", "requirement_level": "required" },
+    { "domain_module_code": "CCAAS-DESKTOP", "tool_name": "make_phone_call", "requirement_level": "optional" },
+    { "domain_module_code": "CCAAS-QUALITY", "tool_name": "query_ccaas_call_recordings", "requirement_level": "required" },
+    { "domain_module_code": "CCAAS-QUALITY", "tool_name": "score_interaction_evaluation", "requirement_level": "required" },
+    { "domain_module_code": "CCAAS-QUALITY", "tool_name": "query_interaction_evaluations", "requirement_level": "required" },
+    { "domain_module_code": "CCAAS-QUALITY", "tool_name": "transcribe_audio", "requirement_level": "optional" },
+    { "domain_module_code": "CCAAS-QUALITY", "tool_name": "query_queue_statistics", "requirement_level": "optional" }
+  ],
+  "personas": [
+    {
+      "role_code": "CCO-AGENT",
+      "role_name": "Contact Center Agent",
+      "business_function": "Contact Center Operations",
+      "modules": [
+        { "domain_module_code": "CCAAS-DESKTOP", "interaction_level": "primary" },
+        { "domain_module_code": "CCAAS-ROUTING", "interaction_level": "secondary" }
+      ]
+    },
+    {
+      "role_code": "CCO-SUPERVISOR",
+      "role_name": "Contact Center Supervisor",
+      "business_function": "Contact Center Operations",
+      "modules": [
+        { "domain_module_code": "CCAAS-DESKTOP", "interaction_level": "primary" },
+        { "domain_module_code": "CCAAS-QUALITY", "interaction_level": "primary" },
+        { "domain_module_code": "CCAAS-ROUTING", "interaction_level": "secondary" }
+      ]
+    },
+    {
+      "role_code": "CCO-QA-ANALYST",
+      "role_name": "Quality Analyst",
+      "business_function": "Contact Center Operations",
+      "modules": [
+        { "domain_module_code": "CCAAS-QUALITY", "interaction_level": "primary" },
+        { "domain_module_code": "CCAAS-DESKTOP", "interaction_level": "secondary" }
+      ]
+    },
+    {
+      "role_code": "CCO-OPS-MANAGER",
+      "role_name": "Contact Center Operations Manager",
+      "business_function": "Contact Center Operations",
+      "modules": [
+        { "domain_module_code": "CCAAS-ROUTING", "interaction_level": "primary" },
+        { "domain_module_code": "CCAAS-QUALITY", "interaction_level": "primary" },
+        { "domain_module_code": "CCAAS-DESKTOP", "interaction_level": "secondary" }
+      ]
+    },
+    {
+      "role_code": "CCO-FLOW-ADMIN",
+      "role_name": "Routing and IVR Flow Administrator",
+      "business_function": "Contact Center Operations",
+      "modules": [
+        { "domain_module_code": "CCAAS-ROUTING", "interaction_level": "primary" },
+        { "domain_module_code": "CCAAS-DESKTOP", "interaction_level": "secondary" }
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "MODULE-SPLIT",
+      "gating": true,
+      "question": "How should CCaaS be split into modules?",
+      "options": [
+        "a) Three modules: Routing and Queues (CCAAS-ROUTING), Agent Desktop and Interactions (CCAAS-DESKTOP), Quality and Analytics (CCAAS-QUALITY).",
+        "b) Two modules: fold Routing/IVR into the Agent Desktop module, keep Quality and Analytics separate.",
+        "c) Four modules: split IVR/Self-Service out of Routing into its own module."
+      ],
+      "recommended": "a. Three modules cleanly separate the always-on engine (routing), the live work surface (desktop), and the after-the-fact review (quality), and each holds at least one master without splitting too thin."
+    },
+    {
+      "id": "WFM-OWNERSHIP",
+      "gating": false,
+      "question": "Do workforce-management objects (forecasts, schedules) belong in CCaaS or stay in a WFM domain?",
+      "options": [
+        "a) Keep WFM scheduling/forecasting in the WFM domain; CCaaS only masters agent_states and consumes schedules as a consumer link for adherence.",
+        "b) Master a ccaas_agent_schedules object inside CCaaS so adherence is self-contained.",
+        "c) Master full WFM (forecasts + schedules + adherence) inside CCaaS."
+      ],
+      "recommended": "a. The footprint already hands agent_states and queue_statistics to WFM via event_stream; CCaaS should consume schedules, not re-master them, to avoid duplicating the WFM domain."
+    },
+    {
+      "id": "EVAL-FORMS-MASTER",
+      "gating": false,
+      "question": "Should evaluation_forms be a CCaaS-owned catalog master or treated as configuration only?",
+      "options": [
+        "a) Master evaluation_forms (catalog) in CCAAS-QUALITY as a versioned scorecard library.",
+        "b) Treat scorecards as inline configuration on interaction_evaluations with no separate master."
+      ],
+      "recommended": "a. Flagship vendors (Genesys, NICE, Amazon Connect) model evaluation forms as a reusable, versioned object, so a thin catalog master is warranted; necessity is optional since simple deployments inline them."
+    },
+    {
+      "id": "DISPOSITION-OWNER-MODULE",
+      "gating": false,
+      "question": "Which module should master disposition_codes, given both Routing and Desktop touch it?",
+      "options": [
+        "a) Master disposition_codes in CCAAS-ROUTING (admin-configured catalog), Desktop consumes it at wrap-up.",
+        "b) Master disposition_codes in CCAAS-DESKTOP where agents apply them."
+      ],
+      "recommended": "a. Disposition codes are an administratively governed catalog tuned for routing and reporting; agents only apply them, so Routing owns the catalog and Desktop consumes it."
+    }
+  ]
+}

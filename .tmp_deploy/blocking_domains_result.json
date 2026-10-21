@@ -1,0 +1,1090 @@
+[
+  {
+    "domain_code": "MDM",
+    "domain_name": "Master Data Management",
+    "record_status": "new",
+    "blocked_combined": 43,
+    "blocked_via_handoffs": 8,
+    "blocked_via_master_dep": 35
+  },
+  {
+    "domain_code": "HCM",
+    "domain_name": "Human Capital Management",
+    "record_status": "new",
+    "blocked_combined": 40,
+    "blocked_via_handoffs": 19,
+    "blocked_via_master_dep": 37
+  },
+  {
+    "domain_code": "PAYROLL",
+    "domain_name": "Payroll Management",
+    "record_status": "new",
+    "blocked_combined": 24,
+    "blocked_via_handoffs": 7,
+    "blocked_via_master_dep": 22
+  },
+  {
+    "domain_code": "IGA",
+    "domain_name": "Identity Governance and Administration",
+    "record_status": "new",
+    "blocked_combined": 23,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 21
+  },
+  {
+    "domain_code": "CRM",
+    "domain_name": "Customer Relationship Management",
+    "record_status": "new",
+    "blocked_combined": 21,
+    "blocked_via_handoffs": 14,
+    "blocked_via_master_dep": 16
+  },
+  {
+    "domain_code": "S2P",
+    "domain_name": "Source-to-Pay",
+    "record_status": "new",
+    "blocked_combined": 14,
+    "blocked_via_handoffs": 7,
+    "blocked_via_master_dep": 11
+  },
+  {
+    "domain_code": "ERP-FIN",
+    "domain_name": "Core ERP Financial Management",
+    "record_status": "new",
+    "blocked_combined": 14,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 12
+  },
+  {
+    "domain_code": "CLM",
+    "domain_name": "Contract Lifecycle Management",
+    "record_status": "new",
+    "blocked_combined": 13,
+    "blocked_via_handoffs": 11,
+    "blocked_via_master_dep": 9
+  },
+  {
+    "domain_code": "SUP-LIFE",
+    "domain_name": "Supplier Lifecycle Management",
+    "record_status": "new",
+    "blocked_combined": 13,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 10
+  },
+  {
+    "domain_code": "ITSM",
+    "domain_name": "IT Service Management",
+    "record_status": "new",
+    "blocked_combined": 13,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 10
+  },
+  {
+    "domain_code": "IWMS",
+    "domain_name": "Workplace and Space Management",
+    "record_status": "new",
+    "blocked_combined": 13,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 12
+  },
+  {
+    "domain_code": "CDP",
+    "domain_name": "Customer Data Platform",
+    "record_status": "new",
+    "blocked_combined": 12,
+    "blocked_via_handoffs": 7,
+    "blocked_via_master_dep": 10
+  },
+  {
+    "domain_code": "PSA",
+    "domain_name": "Professional Services Automation",
+    "record_status": "new",
+    "blocked_combined": 11,
+    "blocked_via_handoffs": 10,
+    "blocked_via_master_dep": 2
+  },
+  {
+    "domain_code": "DCG",
+    "domain_name": "Data Catalog and Governance",
+    "record_status": "new",
+    "blocked_combined": 11,
+    "blocked_via_handoffs": 9,
+    "blocked_via_master_dep": 6
+  },
+  {
+    "domain_code": "SUB-MGMT",
+    "domain_name": "Subscription and Revenue Lifecycle Management",
+    "record_status": "new",
+    "blocked_combined": 11,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 10
+  },
+  {
+    "domain_code": "ATS",
+    "domain_name": "Applicant Tracking and Recruiting",
+    "record_status": "new",
+    "blocked_combined": 10,
+    "blocked_via_handoffs": 9,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "CMDB",
+    "domain_name": "Configuration Management Database",
+    "record_status": "new",
+    "blocked_combined": 10,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 10
+  },
+  {
+    "domain_code": "CSM",
+    "domain_name": "Customer Service Management",
+    "record_status": "new",
+    "blocked_combined": 10,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 9
+  },
+  {
+    "domain_code": "COMP-MGMT",
+    "domain_name": "Compensation Management",
+    "record_status": "new",
+    "blocked_combined": 9,
+    "blocked_via_handoffs": 9,
+    "blocked_via_master_dep": 3
+  },
+  {
+    "domain_code": "PA",
+    "domain_name": "People Analytics",
+    "record_status": "new",
+    "blocked_combined": 9,
+    "blocked_via_handoffs": 9,
+    "blocked_via_master_dep": 2
+  },
+  {
+    "domain_code": "VSDP",
+    "domain_name": "Value Stream Delivery Platform",
+    "record_status": "new",
+    "blocked_combined": 9,
+    "blocked_via_handoffs": 9,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "B2C-COMM",
+    "domain_name": "Digital Commerce",
+    "record_status": "new",
+    "blocked_combined": 9,
+    "blocked_via_handoffs": 8,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "RMM",
+    "domain_name": "Remote Monitoring and Management",
+    "record_status": "new",
+    "blocked_combined": 9,
+    "blocked_via_handoffs": 8,
+    "blocked_via_master_dep": 5
+  },
+  {
+    "domain_code": "DATA-AI-PLAT",
+    "domain_name": "Data and AI Platform",
+    "record_status": "new",
+    "blocked_combined": 9,
+    "blocked_via_handoffs": 7,
+    "blocked_via_master_dep": 7
+  },
+  {
+    "domain_code": "GRC",
+    "domain_name": "Governance, Risk and Compliance",
+    "record_status": "new",
+    "blocked_combined": 9,
+    "blocked_via_handoffs": 7,
+    "blocked_via_master_dep": 4
+  },
+  {
+    "domain_code": "HAM",
+    "domain_name": "Hardware Asset Management",
+    "record_status": "new",
+    "blocked_combined": 9,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 5
+  },
+  {
+    "domain_code": "SAM",
+    "domain_name": "Software Asset Management",
+    "record_status": "new",
+    "blocked_combined": 9,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 5
+  },
+  {
+    "domain_code": "SMP",
+    "domain_name": "SaaS Management Platforms",
+    "record_status": "new",
+    "blocked_combined": 9,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 6
+  },
+  {
+    "domain_code": "APM",
+    "domain_name": "Application Portfolio Management",
+    "record_status": "new",
+    "blocked_combined": 8,
+    "blocked_via_handoffs": 8,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "ONBOARDING",
+    "domain_name": "Employee Onboarding",
+    "record_status": "new",
+    "blocked_combined": 8,
+    "blocked_via_handoffs": 8,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "SPEND-MGMT",
+    "domain_name": "Corporate Spend Management",
+    "record_status": "new",
+    "blocked_combined": 8,
+    "blocked_via_handoffs": 8,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "SWP",
+    "domain_name": "Strategic Workforce Planning",
+    "record_status": "new",
+    "blocked_combined": 8,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 4
+  },
+  {
+    "domain_code": "WFM",
+    "domain_name": "Workforce Management",
+    "record_status": "new",
+    "blocked_combined": 8,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 6
+  },
+  {
+    "domain_code": "APIM",
+    "domain_name": "API Management",
+    "record_status": "new",
+    "blocked_combined": 7,
+    "blocked_via_handoffs": 7,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "DSPM",
+    "domain_name": "Data Security Posture Management",
+    "record_status": "new",
+    "blocked_combined": 7,
+    "blocked_via_handoffs": 7,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "EXPENSE",
+    "domain_name": "Expense Management",
+    "record_status": "new",
+    "blocked_combined": 7,
+    "blocked_via_handoffs": 7,
+    "blocked_via_master_dep": 4
+  },
+  {
+    "domain_code": "HRSD",
+    "domain_name": "HR Service Delivery",
+    "record_status": "new",
+    "blocked_combined": 7,
+    "blocked_via_handoffs": 7,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "KUBE-PLAT",
+    "domain_name": "Kubernetes and Container Platforms",
+    "record_status": "new",
+    "blocked_combined": 7,
+    "blocked_via_handoffs": 7,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "RE-PROP-MGMT",
+    "domain_name": "Residential Property Management",
+    "record_status": "new",
+    "blocked_combined": 7,
+    "blocked_via_handoffs": 7,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "REAL-EST",
+    "domain_name": "Real Estate and Workplace Management",
+    "record_status": "new",
+    "blocked_combined": 7,
+    "blocked_via_handoffs": 7,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "VMS",
+    "domain_name": "Vendor Management System",
+    "record_status": "new",
+    "blocked_combined": 7,
+    "blocked_via_handoffs": 7,
+    "blocked_via_master_dep": 2
+  },
+  {
+    "domain_code": "DISCOVERY",
+    "domain_name": "Discovery and Service Mapping",
+    "record_status": "new",
+    "blocked_combined": 7,
+    "blocked_via_handoffs": 6,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "LEGAL-PRACT-MGMT",
+    "domain_name": "Legal Practice Management",
+    "record_status": "new",
+    "blocked_combined": 7,
+    "blocked_via_handoffs": 6,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "LMS",
+    "domain_name": "Learning Management",
+    "record_status": "new",
+    "blocked_combined": 7,
+    "blocked_via_handoffs": 6,
+    "blocked_via_master_dep": 2
+  },
+  {
+    "domain_code": "WORK-MGMT",
+    "domain_name": "Work Management",
+    "record_status": "new",
+    "blocked_combined": 7,
+    "blocked_via_handoffs": 6,
+    "blocked_via_master_dep": 4
+  },
+  {
+    "domain_code": "EPM",
+    "domain_name": "Enterprise Performance Management",
+    "record_status": "new",
+    "blocked_combined": 7,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 5
+  },
+  {
+    "domain_code": "ITOM",
+    "domain_name": "IT Operations Management",
+    "record_status": "new",
+    "blocked_combined": 7,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 6
+  },
+  {
+    "domain_code": "TALENT-MGMT",
+    "domain_name": "Talent Management",
+    "record_status": "new",
+    "blocked_combined": 7,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 6
+  },
+  {
+    "domain_code": "AP-AUTO",
+    "domain_name": "Accounts Payable Automation",
+    "record_status": "new",
+    "blocked_combined": 6,
+    "blocked_via_handoffs": 6,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "APP-PAAS",
+    "domain_name": "Application Platform-as-a-Service",
+    "record_status": "new",
+    "blocked_combined": 6,
+    "blocked_via_handoffs": 6,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "DI",
+    "domain_name": "Data Integration",
+    "record_status": "new",
+    "blocked_combined": 6,
+    "blocked_via_handoffs": 6,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "ECM",
+    "domain_name": "Enterprise Content Management",
+    "record_status": "new",
+    "blocked_combined": 6,
+    "blocked_via_handoffs": 6,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "FSM",
+    "domain_name": "Field Service Management",
+    "record_status": "new",
+    "blocked_combined": 6,
+    "blocked_via_handoffs": 6,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "HCMS",
+    "domain_name": "Headless Content Management",
+    "record_status": "new",
+    "blocked_combined": 6,
+    "blocked_via_handoffs": 6,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "INV-MGMT",
+    "domain_name": "Inventory Management",
+    "record_status": "new",
+    "blocked_combined": 6,
+    "blocked_via_handoffs": 6,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "IPAAS",
+    "domain_name": "Integration Platform as a Service",
+    "record_status": "new",
+    "blocked_combined": 6,
+    "blocked_via_handoffs": 6,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "PROD-MGMT",
+    "domain_name": "Product Management",
+    "record_status": "new",
+    "blocked_combined": 6,
+    "blocked_via_handoffs": 6,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "SPM",
+    "domain_name": "Strategic Portfolio Management",
+    "record_status": "new",
+    "blocked_combined": 6,
+    "blocked_via_handoffs": 6,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "WSC",
+    "domain_name": "Workstream Collaboration",
+    "record_status": "new",
+    "blocked_combined": 6,
+    "blocked_via_handoffs": 6,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "AUDIT",
+    "domain_name": "Audit Management",
+    "record_status": "new",
+    "blocked_combined": 6,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "MFG-OPS",
+    "domain_name": "Manufacturing Connected Operations",
+    "record_status": "new",
+    "blocked_combined": 6,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "ITAM",
+    "domain_name": "IT Asset Management",
+    "record_status": "new",
+    "blocked_combined": 6,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 3
+  },
+  {
+    "domain_code": "AGENCY-MGMT",
+    "domain_name": "Agency Management Software",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "BI",
+    "domain_name": "Business Intelligence and Analytics",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "BPA",
+    "domain_name": "Business Process Architecture",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 3
+  },
+  {
+    "domain_code": "DCIM",
+    "domain_name": "Data Center Infrastructure Management",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "DLP",
+    "domain_name": "Data Loss Prevention",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "DXP",
+    "domain_name": "Digital Experience Platform",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "ESG",
+    "domain_name": "ESG Management",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "FLEET-MAINT",
+    "domain_name": "Fleet Maintenance Management",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "FMIS",
+    "domain_name": "Farm Management Information System",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 2
+  },
+  {
+    "domain_code": "FOOD-TRACE",
+    "domain_name": "Food Traceability and Provenance",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "NPMD",
+    "domain_name": "Network Performance Monitoring and Diagnostics",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "PLM",
+    "domain_name": "Product Lifecycle Management",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "RE-BROKERAGE",
+    "domain_name": "Real Estate Brokerage and Agent Operations",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "RE-CRE",
+    "domain_name": "Commercial Real Estate Operations",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "TEST-MGMT",
+    "domain_name": "Test Management",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 5,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "BEN-ADMIN",
+    "domain_name": "Benefits Administration",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 3
+  },
+  {
+    "domain_code": "OMS",
+    "domain_name": "Order Management",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "MA",
+    "domain_name": "Marketing Automation",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 4
+  },
+  {
+    "domain_code": "SKILLS-MGMT",
+    "domain_name": "Skills Management",
+    "record_status": "new",
+    "blocked_combined": 5,
+    "blocked_via_handoffs": 1,
+    "blocked_via_master_dep": 5
+  },
+  {
+    "domain_code": "CONV-AI",
+    "domain_name": "Conversational AI",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "CPQ",
+    "domain_name": "Configure-Price-Quote",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "DAIRY-MGMT",
+    "domain_name": "Dairy Herd Management",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "EMP-EXP",
+    "domain_name": "Employee Experience and Engagement",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 2
+  },
+  {
+    "domain_code": "FSQM",
+    "domain_name": "Food Safety and Quality Management",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "KMS",
+    "domain_name": "Knowledge Management",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "LCAP",
+    "domain_name": "Low-Code Application Platform",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "LOYALTY",
+    "domain_name": "Customer Loyalty Management",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "LSD",
+    "domain_name": "Legal Service Delivery",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "MSP-PSA",
+    "domain_name": "MSP Professional Services Automation",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "NCDB",
+    "domain_name": "No-Code Database",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "OBS",
+    "domain_name": "Observability",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 2
+  },
+  {
+    "domain_code": "SMM",
+    "domain_name": "Social Media Management",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "TELEMATICS",
+    "domain_name": "Vehicle Telematics",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "UEM",
+    "domain_name": "Unified Endpoint Management",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "UTIL-OPS",
+    "domain_name": "Utilities Operations",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "VET-PRACT-MGMT",
+    "domain_name": "Veterinary Practice Management",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 4,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "RE-INVEST",
+    "domain_name": "Real Estate Investment Management",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 2,
+    "blocked_via_master_dep": 2
+  },
+  {
+    "domain_code": "SALES-ENG",
+    "domain_name": "Sales Engagement",
+    "record_status": "new",
+    "blocked_combined": 4,
+    "blocked_via_handoffs": 2,
+    "blocked_via_master_dep": 4
+  },
+  {
+    "domain_code": "ACCT-PRACT-MGMT",
+    "domain_name": "Accounting Practice Management",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "AIOPS",
+    "domain_name": "AIOps",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "BANK-OPS",
+    "domain_name": "Banking Operations",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "CCAAS",
+    "domain_name": "Contact Center as a Service",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "CLIN-DEV",
+    "domain_name": "Clinical Device Management",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "DEM",
+    "domain_name": "Digital Experience Monitoring",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "DQ",
+    "domain_name": "Data Quality",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "EAM",
+    "domain_name": "Enterprise Asset Management",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "FARMER-DIRECT-SALES",
+    "domain_name": "Farmer-Direct Sales Platform",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "FLEET-MGMT",
+    "domain_name": "Fleet Management",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 2
+  },
+  {
+    "domain_code": "HC-PATIENT",
+    "domain_name": "Healthcare Patient Operations",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "INS-CLAIMS",
+    "domain_name": "Insurance Claims Management",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "METRICS-LAYER",
+    "domain_name": "Metrics Layer / Headless BI",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 2
+  },
+  {
+    "domain_code": "PIM",
+    "domain_name": "Product Information Management",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "PS-LIC",
+    "domain_name": "Public-Sector Licensing and Permitting",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "REMOTE-ACCESS",
+    "domain_name": "Remote Access and Support",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "RET-STORE",
+    "domain_name": "Retail Store Operations",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "TELCO-BSS",
+    "domain_name": "Telecommunications OSS/BSS",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "VIS-MGMT",
+    "domain_name": "Visitor Management",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "WEB-CONTOPS",
+    "domain_name": "Web Content Operations & Governance",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 3,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "CAP-TABLE",
+    "domain_name": "Cap Table Management and Equity Administration",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 2,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "FUND-ADMIN",
+    "domain_name": "Private Capital Fund Administration",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 2,
+    "blocked_via_master_dep": 2
+  },
+  {
+    "domain_code": "REV-INTEL",
+    "domain_name": "Revenue Intelligence",
+    "record_status": "new",
+    "blocked_combined": 3,
+    "blocked_via_handoffs": 2,
+    "blocked_via_master_dep": 2
+  },
+  {
+    "domain_code": "ACCT-PLAN",
+    "domain_name": "Strategic Account Planning",
+    "record_status": "new",
+    "blocked_combined": 2,
+    "blocked_via_handoffs": 2,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "IDP",
+    "domain_name": "Intelligent Document Processing",
+    "record_status": "new",
+    "blocked_combined": 2,
+    "blocked_via_handoffs": 2,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "INV-CRM",
+    "domain_name": "Investor Relationship and Deal Flow Management",
+    "record_status": "new",
+    "blocked_combined": 2,
+    "blocked_via_handoffs": 2,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "KGP",
+    "domain_name": "Knowledge Graph Platform",
+    "record_status": "new",
+    "blocked_combined": 2,
+    "blocked_via_handoffs": 2,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "PROC-MIN",
+    "domain_name": "Process Mining",
+    "record_status": "new",
+    "blocked_combined": 2,
+    "blocked_via_handoffs": 2,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "RPA",
+    "domain_name": "Robotic Process Automation",
+    "record_status": "new",
+    "blocked_combined": 2,
+    "blocked_via_handoffs": 2,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "SEM",
+    "domain_name": "Strategy Execution Management",
+    "record_status": "new",
+    "blocked_combined": 2,
+    "blocked_via_handoffs": 2,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "PORT-MONIT",
+    "domain_name": "Portfolio Monitoring for Private Capital",
+    "record_status": "new",
+    "blocked_combined": 2,
+    "blocked_via_handoffs": 1,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "DAM",
+    "domain_name": "Digital Asset Management",
+    "record_status": "new",
+    "blocked_combined": 1,
+    "blocked_via_handoffs": 1,
+    "blocked_via_master_dep": 1
+  },
+  {
+    "domain_code": "EM-FUND-PLATFORM",
+    "domain_name": "Emerging Manager Fund Platform",
+    "record_status": "new",
+    "blocked_combined": 1,
+    "blocked_via_handoffs": 1,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "ESIGN",
+    "domain_name": "Electronic Signature",
+    "record_status": "new",
+    "blocked_combined": 1,
+    "blocked_via_handoffs": 1,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "FINOPS",
+    "domain_name": "Cloud Financial Operations",
+    "record_status": "new",
+    "blocked_combined": 1,
+    "blocked_via_handoffs": 1,
+    "blocked_via_master_dep": 0
+  },
+  {
+    "domain_code": "PRM",
+    "domain_name": "Partner Relationship Management",
+    "record_status": "new",
+    "blocked_combined": 1,
+    "blocked_via_handoffs": 1,
+    "blocked_via_master_dep": 0
+  }
+]

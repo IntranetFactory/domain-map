@@ -1,0 +1,326 @@
+{
+  "domain_code": "DCIM",
+  "phase0_vendors": [
+    {
+      "vendor": "Sunbird Software",
+      "flagship": "Sunbird dcTrack + Power IQ",
+      "surface": ["sites", "floors", "rooms", "rows", "cabinets", "racks", "items_assets", "rack_pdus", "floor_pdus", "ups", "power_panels", "circuits", "ports", "cables", "network_connections", "power_connections", "data_connections", "sensors", "environmental_readings", "power_readings", "capacity_dashboards", "change_requests", "work_orders", "models_library"]
+    },
+    {
+      "vendor": "Schneider Electric",
+      "flagship": "EcoStruxure IT (DCIM, formerly StruxureWare)",
+      "surface": ["sites", "rooms", "racks", "rack_units", "it_devices", "rack_pdus", "ups_systems", "cooling_units", "crac_crah", "power_paths", "branch_circuits", "sensors", "alarms", "environmental_readings", "energy_consumption", "capacity_models", "what_if_scenarios", "asset_lifecycle"]
+    },
+    {
+      "vendor": "Vertiv",
+      "flagship": "Vertiv Environet Alert / Trellis",
+      "surface": ["sites", "floor_plans", "racks", "devices", "rack_pdus", "ups", "rectifiers", "cooling_units", "thermal_zones", "power_circuits", "branch_circuits", "sensors", "environmental_readings", "alarms", "trends", "capacity_planning", "moves_adds_changes"]
+    },
+    {
+      "vendor": "Nlyte Software",
+      "flagship": "Nlyte DCIM Suite",
+      "surface": ["locations", "rows", "cabinets", "assets", "rack_pdus", "ups", "cooling", "power_chain", "circuits", "ports", "connections", "sensors", "environmental_data", "capacity_plans", "what_if_modeling", "work_items_projects", "asset_lifecycle", "audit_trails", "energy_metering"]
+    },
+    {
+      "vendor": "Device42",
+      "flagship": "Device42 (DCIM + Discovery)",
+      "surface": ["buildings", "rooms", "racks", "devices_assets", "power_units_pdus", "power_circuits", "patch_panels", "ports", "cables", "switch_ports", "ip_addresses", "subnets", "racked_pdus", "remote_collectors", "impact_charts", "capacity_views"]
+    },
+    {
+      "vendor": "FNT Software",
+      "flagship": "FNT Command",
+      "surface": ["locations", "rooms", "racks", "devices", "power_supply_chain", "pdus", "ups", "cooling", "ports", "cables", "trunk_cables", "splices", "circuits", "capacity", "signal_paths"]
+    }
+  ],
+  "capabilities": [
+    {
+      "capability_code": "DCIM-ASSET-REG",
+      "capability_name": "Physical Asset and Space Register",
+      "description": "Authoritative model of the physical estate: sites, rooms, rows, cabinets, racks, and rack-unit occupancy, recording what is installed, where it sits, and how much space remains.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "DCIM-POWER-CHAIN",
+      "capability_name": "Power Chain Modeling",
+      "description": "End-to-end power path from incoming circuit through distribution units and uninterruptible supplies down to the outlet, with phase balance, redundancy, and draw against rated capacity tracked at each link.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "DCIM-THERMAL",
+      "capability_name": "Cooling and Thermal Management",
+      "description": "Modeling of cooling units, thermal zones, and airflow alongside cabinet-level temperature and humidity, keeping equipment inside its operating envelope.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "DCIM-ENV-MON",
+      "capability_name": "Environmental Monitoring",
+      "description": "Continuous capture of sensor telemetry (temperature, humidity, smoke, water leak, airflow) with threshold alarming routed to the teams and systems that must act.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "DCIM-CAP-PLAN",
+      "capability_name": "Capacity Planning",
+      "description": "Forward-looking projection of power, cooling, space, and bandwidth headroom per site and zone, with what-if modeling to schedule growth and justify build-outs.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "DCIM-CONN-MAP",
+      "capability_name": "Physical Connectivity Mapping",
+      "description": "Port-by-port and cable-by-cable map of physical connectivity, including patch panels and trunk runs, feeding the configuration database and network operations.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "DCIM-MAC",
+      "capability_name": "Moves, Adds, and Changes Workflow",
+      "description": "Structured request, approval, and execution of equipment installs, decommissions, and relocations across the floor, keeping the live model in step with physical reality.",
+      "cross_cutting": false
+    }
+  ],
+  "vendors_new": [
+    { "vendor_name": "Sunbird Software" },
+    { "vendor_name": "FNT Software" }
+  ],
+  "vendors_reused": [
+    { "vendor_name": "Schneider Electric" },
+    { "vendor_name": "Vertiv" },
+    { "vendor_name": "Nlyte Software" },
+    { "vendor_name": "Device42" }
+  ],
+  "solutions_new": [
+    { "solution_name": "Sunbird dcTrack", "vendor_name": "Sunbird Software", "coverage_level": "primary" },
+    { "solution_name": "Schneider Electric EcoStruxure IT", "vendor_name": "Schneider Electric", "coverage_level": "primary" },
+    { "solution_name": "Vertiv Environet Alert", "vendor_name": "Vertiv", "coverage_level": "primary" },
+    { "solution_name": "Nlyte DCIM Suite", "vendor_name": "Nlyte Software", "coverage_level": "primary" },
+    { "solution_name": "FNT Command", "vendor_name": "FNT Software", "coverage_level": "secondary" },
+    { "solution_name": "Device42 DCIM", "vendor_name": "Device42", "coverage_level": "partial" }
+  ],
+  "modules": [
+    {
+      "domain_module_code": "DCIM-ASSET-SPACE",
+      "domain_module_name": "Asset and Space Management",
+      "module_kind": "full",
+      "description": "Owns the physical-asset register and the space hierarchy: sites, rooms, rows, cabinets, racks, and rack-unit occupancy, plus the moves/adds/changes workflow that keeps the live model aligned with what is physically installed. This module is the system of record for where every piece of equipment sits and how much rack and floor space remains.",
+      "catalog_tagline": "Know exactly what is installed in every rack and how much space is left, with a live floor plan instead of a stale spreadsheet.",
+      "catalog_description": "Asset and Space Management gives facilities and IT infrastructure teams an authoritative model of the physical estate. Map every site, room, row, cabinet, and rack, then place equipment unit by unit so you always know what is installed and where.\n\nRack-unit occupancy, weight, and depth are tracked against each cabinet, so planners can see headroom at a glance and avoid the surprise of a full rack. Every install, decommission, and relocation flows through a moves-adds-changes workflow, keeping the register accurate and producing a clean audit trail for the configuration database and downstream operations.",
+      "capability_codes": ["DCIM-ASSET-REG", "DCIM-MAC"],
+      "data_objects": [
+        { "data_object_name": "dc_racks", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "dc_cabinets", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "dc_change_requests", "role": "master", "necessity": "optional", "existing": false }
+      ]
+    },
+    {
+      "domain_module_code": "DCIM-POWER-ENV",
+      "domain_module_name": "Power and Environmental Monitoring",
+      "module_kind": "full",
+      "description": "Models the full power chain from incoming circuit through PDUs and uninterruptible supplies to the outlet, the cooling estate that keeps equipment in range, and the environmental sensor telemetry that triggers alarms. This module realizes the power, thermal, and environmental capabilities and emits the failure, overload, failover, and threshold-breach events the catalog already hands off to ITSM, ITOM, and AIOPS.",
+      "catalog_tagline": "Trace power from the circuit to the outlet, keep every cabinet in its thermal envelope, and catch environmental problems before they cause an outage.",
+      "catalog_description": "Power and Environmental Monitoring tracks the chain that keeps a data center alive. Follow power from the incoming circuit through distribution units and uninterruptible supplies down to the individual outlet, with phase balance, redundancy, and draw measured against rated capacity at each link.\n\nCooling units and thermal zones are modeled alongside cabinet-level temperature and humidity, so equipment stays inside its operating range. Sensors stream temperature, humidity, smoke, water-leak, and airflow readings, and when a circuit overloads, a UPS fails over, a cooling unit fails, or a threshold is breached, the event is captured and routed to the teams and systems that need to act.",
+      "capability_codes": ["DCIM-POWER-CHAIN", "DCIM-THERMAL", "DCIM-ENV-MON"],
+      "data_objects": [
+        { "data_object_name": "dc_power_distribution_units", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "dc_power_circuits", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "dc_uninterruptible_power_supplies", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "dc_cooling_units", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "dc_environmental_readings", "role": "master", "necessity": "required", "existing": true }
+      ]
+    },
+    {
+      "domain_module_code": "DCIM-CAP-CONN",
+      "domain_module_name": "Capacity and Connectivity Planning",
+      "module_kind": "full",
+      "description": "Combines forward-looking capacity planning for power, cooling, space, and bandwidth with the physical connectivity map of ports and cables. Capacity plans roll up utilization and growth forecasts per site and zone (handed off to SPM for build-out decisions), while the port and cable register feeds the configuration database and is cross-validated by NPMD.",
+      "catalog_tagline": "Plan power, cooling, space, and bandwidth headroom with confidence, and map every port and cable so nothing is a mystery.",
+      "catalog_description": "Capacity and Connectivity Planning turns the live asset and telemetry layer into a forward-looking plan. Project power, cooling, space, and bandwidth headroom per site and zone, run what-if scenarios for new equipment, and use the headroom view to schedule growth, justify build-outs, and negotiate colocation.\n\nUnderneath sits the physical connectivity map: every port and every cable, including patch panels and trunk runs, documented end to end. When a connection is added or changed, the configuration database picks up the new physical topology and network operations can cross-validate logical paths against the wiring that actually exists.",
+      "capability_codes": ["DCIM-CAP-PLAN", "DCIM-CONN-MAP"],
+      "data_objects": [
+        { "data_object_name": "dc_capacity_plans", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "dc_port_connections", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "dc_cable_connections", "role": "master", "necessity": "required", "existing": true }
+      ]
+    }
+  ],
+  "new_data_objects": [
+    {
+      "data_object_name": "dc_change_requests",
+      "singular_label": "DC Change Request",
+      "plural_label": "DC Change Requests",
+      "entity_type": "operational_workflow",
+      "description": "Request to install, decommission, or relocate equipment in the data center (a move, add, or change). Carries the requested action, target rack or cabinet, scheduling, and approval before the physical work is executed and the asset register is updated. Scope-qualified to the physical floor so it does not collide with ITSM change_requests.",
+      "has_personal_content": false,
+      "has_submit_lock": true,
+      "has_single_approver": true
+    }
+  ],
+  "lifecycle_states": [
+    {
+      "data_object_name": "dc_racks",
+      "states": [
+        { "state_name": "planned", "state_order": 10, "is_initial": true, "is_terminal": false, "requires_permission": false },
+        { "state_name": "installed", "state_order": 20, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "active", "state_order": 30, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "at_capacity", "state_order": 40, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "decommissioning", "state_order": 50, "is_initial": false, "is_terminal": false, "requires_permission": true },
+        { "state_name": "retired", "state_order": 60, "is_initial": false, "is_terminal": true, "requires_permission": true }
+      ]
+    },
+    {
+      "data_object_name": "dc_power_circuits",
+      "states": [
+        { "state_name": "planned", "state_order": 10, "is_initial": true, "is_terminal": false, "requires_permission": false },
+        { "state_name": "provisioned", "state_order": 20, "is_initial": false, "is_terminal": false, "requires_permission": true },
+        { "state_name": "energized", "state_order": 30, "is_initial": false, "is_terminal": false, "requires_permission": true },
+        { "state_name": "overloaded", "state_order": 40, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "de_energized", "state_order": 50, "is_initial": false, "is_terminal": false, "requires_permission": true },
+        { "state_name": "decommissioned", "state_order": 60, "is_initial": false, "is_terminal": true, "requires_permission": true }
+      ]
+    },
+    {
+      "data_object_name": "dc_capacity_plans",
+      "states": [
+        { "state_name": "draft", "state_order": 10, "is_initial": true, "is_terminal": false, "requires_permission": false },
+        { "state_name": "in_review", "state_order": 20, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "approved", "state_order": 30, "is_initial": false, "is_terminal": false, "requires_permission": true },
+        { "state_name": "published", "state_order": 40, "is_initial": false, "is_terminal": false, "requires_permission": true },
+        { "state_name": "superseded", "state_order": 50, "is_initial": false, "is_terminal": true, "requires_permission": false }
+      ]
+    },
+    {
+      "data_object_name": "dc_change_requests",
+      "states": [
+        { "state_name": "draft", "state_order": 10, "is_initial": true, "is_terminal": false, "requires_permission": false },
+        { "state_name": "submitted", "state_order": 20, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "approved", "state_order": 30, "is_initial": false, "is_terminal": false, "requires_permission": true },
+        { "state_name": "scheduled", "state_order": 40, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "in_progress", "state_order": 50, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "completed", "state_order": 60, "is_initial": false, "is_terminal": true, "requires_permission": false },
+        { "state_name": "rejected", "state_order": 70, "is_initial": false, "is_terminal": true, "requires_permission": true }
+      ]
+    }
+  ],
+  "tools": [
+    { "tool_name": "query_dc_racks", "operation_kind": "query", "data_object_name": "dc_racks" },
+    { "tool_name": "update_dc_rack_state", "operation_kind": "mutate", "data_object_name": "dc_racks" },
+    { "tool_name": "query_dc_cabinets", "operation_kind": "query", "data_object_name": "dc_cabinets" },
+    { "tool_name": "query_dc_power_distribution_units", "operation_kind": "query", "data_object_name": "dc_power_distribution_units" },
+    { "tool_name": "query_dc_power_circuits", "operation_kind": "query", "data_object_name": "dc_power_circuits" },
+    { "tool_name": "update_dc_power_circuit_state", "operation_kind": "mutate", "data_object_name": "dc_power_circuits" },
+    { "tool_name": "query_dc_uninterruptible_power_supplies", "operation_kind": "query", "data_object_name": "dc_uninterruptible_power_supplies" },
+    { "tool_name": "query_dc_cooling_units", "operation_kind": "query", "data_object_name": "dc_cooling_units" },
+    { "tool_name": "query_dc_environmental_readings", "operation_kind": "query", "data_object_name": "dc_environmental_readings" },
+    { "tool_name": "query_dc_capacity_plans", "operation_kind": "query", "data_object_name": "dc_capacity_plans" },
+    { "tool_name": "refresh_dc_capacity_plan", "operation_kind": "mutate", "data_object_name": "dc_capacity_plans" },
+    { "tool_name": "compute_dc_power_headroom", "operation_kind": "compute", "data_object_name": null },
+    { "tool_name": "query_dc_port_connections", "operation_kind": "query", "data_object_name": "dc_port_connections" },
+    { "tool_name": "query_dc_cable_connections", "operation_kind": "query", "data_object_name": "dc_cable_connections" },
+    { "tool_name": "query_dc_change_requests", "operation_kind": "query", "data_object_name": "dc_change_requests" },
+    { "tool_name": "submit_dc_change_request", "operation_kind": "mutate", "data_object_name": "dc_change_requests" },
+    { "tool_name": "notify_team", "operation_kind": "side_effect", "data_object_name": null, "notes": "Generic alarm/notification abstraction for environmental and power-event fan-out to on-call facilities and IT teams; not a channel primitive." }
+  ],
+  "module_tools": [
+    { "domain_module_code": "DCIM-ASSET-SPACE", "tool_name": "query_dc_racks", "requirement_level": "required" },
+    { "domain_module_code": "DCIM-ASSET-SPACE", "tool_name": "update_dc_rack_state", "requirement_level": "required" },
+    { "domain_module_code": "DCIM-ASSET-SPACE", "tool_name": "query_dc_cabinets", "requirement_level": "required" },
+    { "domain_module_code": "DCIM-ASSET-SPACE", "tool_name": "query_dc_change_requests", "requirement_level": "optional" },
+    { "domain_module_code": "DCIM-ASSET-SPACE", "tool_name": "submit_dc_change_request", "requirement_level": "optional" },
+    { "domain_module_code": "DCIM-ASSET-SPACE", "tool_name": "notify_team", "requirement_level": "optional" },
+    { "domain_module_code": "DCIM-POWER-ENV", "tool_name": "query_dc_power_distribution_units", "requirement_level": "required" },
+    { "domain_module_code": "DCIM-POWER-ENV", "tool_name": "query_dc_power_circuits", "requirement_level": "required" },
+    { "domain_module_code": "DCIM-POWER-ENV", "tool_name": "update_dc_power_circuit_state", "requirement_level": "required" },
+    { "domain_module_code": "DCIM-POWER-ENV", "tool_name": "query_dc_uninterruptible_power_supplies", "requirement_level": "required" },
+    { "domain_module_code": "DCIM-POWER-ENV", "tool_name": "query_dc_cooling_units", "requirement_level": "required" },
+    { "domain_module_code": "DCIM-POWER-ENV", "tool_name": "query_dc_environmental_readings", "requirement_level": "required" },
+    { "domain_module_code": "DCIM-POWER-ENV", "tool_name": "compute_dc_power_headroom", "requirement_level": "optional" },
+    { "domain_module_code": "DCIM-POWER-ENV", "tool_name": "notify_team", "requirement_level": "required" },
+    { "domain_module_code": "DCIM-CAP-CONN", "tool_name": "query_dc_capacity_plans", "requirement_level": "required" },
+    { "domain_module_code": "DCIM-CAP-CONN", "tool_name": "refresh_dc_capacity_plan", "requirement_level": "required" },
+    { "domain_module_code": "DCIM-CAP-CONN", "tool_name": "compute_dc_power_headroom", "requirement_level": "required" },
+    { "domain_module_code": "DCIM-CAP-CONN", "tool_name": "query_dc_port_connections", "requirement_level": "required" },
+    { "domain_module_code": "DCIM-CAP-CONN", "tool_name": "query_dc_cable_connections", "requirement_level": "required" }
+  ],
+  "personas": [
+    {
+      "role_code": "ITINFRA-DCM",
+      "role_name": "Data Center Manager",
+      "business_function": "IT Infrastructure",
+      "modules": [
+        { "domain_module_code": "DCIM-ASSET-SPACE", "interaction_level": "primary" },
+        { "domain_module_code": "DCIM-CAP-CONN", "interaction_level": "primary" },
+        { "domain_module_code": "DCIM-POWER-ENV", "interaction_level": "secondary" }
+      ]
+    },
+    {
+      "role_code": "FAC-CRITENG",
+      "role_name": "Critical Facilities Engineer",
+      "business_function": "Facilities and Real Estate",
+      "modules": [
+        { "domain_module_code": "DCIM-POWER-ENV", "interaction_level": "primary" },
+        { "domain_module_code": "DCIM-ASSET-SPACE", "interaction_level": "secondary" }
+      ]
+    },
+    {
+      "role_code": "ITINFRA-CAPPLAN",
+      "role_name": "Capacity Planner",
+      "business_function": "IT Infrastructure",
+      "modules": [
+        { "domain_module_code": "DCIM-CAP-CONN", "interaction_level": "primary" },
+        { "domain_module_code": "DCIM-POWER-ENV", "interaction_level": "secondary" }
+      ]
+    },
+    {
+      "role_code": "ITINFRA-DCTECH",
+      "role_name": "Data Center Technician",
+      "business_function": "IT Infrastructure",
+      "modules": [
+        { "domain_module_code": "DCIM-ASSET-SPACE", "interaction_level": "primary" },
+        { "domain_module_code": "DCIM-CAP-CONN", "interaction_level": "secondary" }
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "MODULE-SPLIT",
+      "gating": true,
+      "question": "How should DCIM's 10 existing masters plus the new MAC entity be split into modules?",
+      "options": [
+        "a) Three modules: Asset and Space Management (racks, cabinets, change requests), Power and Environmental Monitoring (PDUs, circuits, UPS, cooling, environmental readings), Capacity and Connectivity Planning (capacity plans, ports, cables).",
+        "b) Two modules: Asset, Space and Connectivity (racks, cabinets, ports, cables, change requests) and Power, Cooling and Capacity (PDUs, circuits, UPS, cooling, environmental readings, capacity plans).",
+        "c) Four modules: split Connectivity (ports, cables) out of Capacity into its own module."
+      ],
+      "recommended": "a. Three modules cleanly separates the asset register, the live power/thermal/environmental telemetry surface (which owns all nine outbound event handoffs), and the forward-looking planning plus connectivity surface, and each module has a strong master set. Option c over-fragments connectivity, which is small."
+    },
+    {
+      "id": "EAM-CMDB-OVERLAP",
+      "gating": false,
+      "question": "Do any DCIM masters overlap EAM (enterprise asset management) or CMDB and belong there instead?",
+      "options": [
+        "a) Keep all 10 masters in DCIM; the dc_* prefix and physical-floor scope keep them distinct from EAM equipment_assets and CMDB configuration_items. DCIM stays the system of record for physical placement, power, and cooling and hands topology changes to CMDB via the existing dc_port_connection.changed and dc_cable_connection.added events.",
+        "b) Move dc_port_connections and dc_cable_connections to a future Network Cabling or CMDB-owned domain, leaving DCIM to consume them.",
+        "c) Promote dc_racks/dc_cabinets to an EAM-owned physical-asset master that DCIM consumes."
+      ],
+      "recommended": "a. The footprint already models the DCIM->CMDB handoff as an event stream, so DCIM rightly owns the physical truth and CMDB owns the logical CI graph. No move needed; revisit only if EAM is later built and double-registers physical hardware."
+    },
+    {
+      "id": "DEVICE42-COVERAGE",
+      "gating": false,
+      "question": "What coverage_level should the Device42 DCIM solution carry, given Device42's existing CMDB-scoped solution row?",
+      "options": [
+        "a) partial: Device42 covers DCIM rack/power/floor features but leads with discovery and CMDB; its DCIM module is a secondary surface.",
+        "b) secondary: treat its DCIM coverage on par with pure-plays.",
+        "c) Do not add a DCIM solution for Device42; only its CMDB solution stays."
+      ],
+      "recommended": "a. partial reflects that Device42 models racks, power units, and connectivity but markets primarily as discovery/CMDB, while Sunbird, Schneider, Vertiv, and Nlyte are the DCIM primaries."
+    },
+    {
+      "id": "CHANGE-REQUEST-FLAGS",
+      "gating": false,
+      "question": "Freeze the pattern flags on the new dc_change_requests master.",
+      "options": [
+        "a) has_submit_lock=true, has_single_approver=true, has_personal_content=false (a MAC request locks on submit and is gated by one facilities approver).",
+        "b) has_single_approver=false to allow a multi-approver change-advisory flow.",
+        "c) has_submit_lock=false for a lighter, always-editable request."
+      ],
+      "recommended": "a. A physical move/add/change should lock at submit and route to a single critical-facilities approver before energizing or de-energizing equipment; multi-approver CAB flow belongs to ITSM, which already receives the major-incident handoffs."
+    }
+  ]
+}

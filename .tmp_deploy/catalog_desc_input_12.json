@@ -1,0 +1,786 @@
+[
+  {
+    "id": 58,
+    "data_object_name": "software_licenses",
+    "singular_label": "Software License",
+    "plural_label": "Software Licenses",
+    "entity_type": "operational_workflow",
+    "description": "License entitlement: vendor, title, purchased count, license model (per-user, per-device, concurrent, site, subscription), term, renewal date, governing contract. The legal right-to-use, distinct from actual installations."
+  },
+  {
+    "id": 57,
+    "data_object_name": "software_titles",
+    "singular_label": "Software Title",
+    "plural_label": "Software Titles",
+    "entity_type": "unclassified",
+    "description": "Canonical software product in the catalog (e.g. a creative suite, productivity suite, CAD application, IDE). Carries vendor, edition, family, version range. Distinct from installations (which reference a title) and from licenses (which entitle a count of users to a title)."
+  },
+  {
+    "id": 435,
+    "data_object_name": "source_connectors",
+    "singular_label": "Source Connector",
+    "plural_label": "Source Connectors",
+    "entity_type": "operational_workflow",
+    "description": "Connection metadata to upstream systems: auth mechanism, sync schedule, incremental-capture state, connector plugin type."
+  },
+  {
+    "id": 320,
+    "data_object_name": "source_records",
+    "singular_label": "MDM Source Record",
+    "plural_label": "MDM Source Records",
+    "entity_type": "operational_workflow",
+    "description": "Raw record from a source system before match/merge processing; preserves provenance and source identifier for lineage."
+  },
+  {
+    "id": 676,
+    "data_object_name": "source_repositories",
+    "singular_label": "Source Repository",
+    "plural_label": "Source Repositories",
+    "entity_type": "operational_record",
+    "description": "Git repository hosted on the VSDP platform: name, default branch, visibility (public / internal / private), language, owner, last-activity. Distinct from KMS knowledge artifacts and DAM digital_assets."
+  },
+  {
+    "id": 426,
+    "data_object_name": "sourcing_decisions",
+    "singular_label": "Sourcing Decision",
+    "plural_label": "Sourcing Decisions",
+    "entity_type": "operational_workflow",
+    "description": "OMS routing logic output: which warehouse will fulfill which line, with rationale (lowest_cost / fastest_ship / fulfills_split / 3pl_preference / exception_override) and confidence_score."
+  },
+  {
+    "id": 71,
+    "data_object_name": "sourcing_events",
+    "singular_label": "Sourcing Event",
+    "plural_label": "Sourcing Events",
+    "entity_type": "operational_workflow",
+    "description": "RFx process record: RFI, RFQ, RFP, or reverse auction. Carries scope, supplier list, scorecard / weighting, responses, and the awarded supplier. The pre-contract stage that produces a sourcing decision feeding CLM."
+  },
+  {
+    "id": 593,
+    "data_object_name": "space_utilization_reports",
+    "singular_label": "Space Utilization Report",
+    "plural_label": "Space Utilization Reports",
+    "entity_type": "computed",
+    "description": "Analytics on actual office occupancy/usage: peak-hour patterns, underutilization zones, utilization rates. Drives real-estate optimization. Distinct from REAL-EST `occupancy_records` (operational)."
+  },
+  {
+    "id": 698,
+    "data_object_name": "spare_parts_inventory",
+    "singular_label": "Spare Part Inventory Item",
+    "plural_label": "Spare Part Inventory Items",
+    "entity_type": "operational_record",
+    "description": "Stockroom counts and procurement of replacement hardware components (not yet deployed assets)."
+  },
+  {
+    "id": 747,
+    "data_object_name": "spend_policies",
+    "singular_label": "Spend Policy",
+    "plural_label": "Spend Policies",
+    "entity_type": "unclassified",
+    "description": "Pre-spend authorization rules (card limits, vendor restrictions, approval matrices) — distinct from EXPENSE post-hoc policies."
+  },
+  {
+    "id": 240,
+    "data_object_name": "spend_requests",
+    "singular_label": "Spend Request",
+    "plural_label": "Spend Requests",
+    "entity_type": "operational_workflow",
+    "description": "Pre-spend approval request raised by an employee before a purchase, for a virtual card, raised card limit, vendor bill, or reimbursement budget. Modern spend-management platforms anchor on this proactive request workflow as the entry point before any transaction occurs. Lifecycle: draft -> submitted -> approved/declined -> spent (linked to one or more card_transactions / payment_runs)."
+  },
+  {
+    "id": 783,
+    "data_object_name": "spv_subscriptions",
+    "singular_label": "SPV Subscription",
+    "plural_label": "SPV Subscriptions",
+    "entity_type": "operational_workflow",
+    "description": "Investor commitment to an SPV: simpler than fund-level lp_subscriptions; typically smaller LP base, single capital call at close."
+  },
+  {
+    "id": 782,
+    "data_object_name": "spvs",
+    "singular_label": "SPV",
+    "plural_label": "SPVs",
+    "entity_type": "operational_workflow",
+    "description": "Special Purpose Vehicle — single-deal investment vehicle (LLC-typed) with limited LP base. Dominant vehicle below ~$25M deal size."
+  },
+  {
+    "id": 364,
+    "data_object_name": "stacking_plans",
+    "singular_label": "Stacking Plan",
+    "plural_label": "Stacking Plans",
+    "entity_type": "unclassified",
+    "description": "Visual representation of building floors and suites showing current occupants, lease-expiration dates, vacant suites, and combinability options; the working tool of CRE leasing."
+  },
+  {
+    "id": 188,
+    "data_object_name": "staffing_suppliers",
+    "singular_label": "Staffing Supplier",
+    "plural_label": "Staffing Suppliers",
+    "entity_type": "unclassified",
+    "description": "Agency or managed-service provider relationship with tiered preference, performance scorecard, master service agreement, and certified-recruiter roster."
+  },
+  {
+    "id": 616,
+    "data_object_name": "sterilization_cycles",
+    "singular_label": "Sterilization Cycle",
+    "plural_label": "Sterilization Cycles",
+    "entity_type": "operational_workflow",
+    "description": "Autoclave/steam-sterilization records for reusable surgical instruments: cycle parameters (time, temp, pressure), batch ID, QA certification. Validates sterile-field integrity pre-procedure."
+  },
+  {
+    "id": 1179,
+    "data_object_name": "storage_units",
+    "singular_label": "Storage Unit",
+    "plural_label": "Storage Units",
+    "entity_type": "operational_record",
+    "description": "A land or trailer storage space for a vessel kept ashore: location, size, and assigned vessel."
+  },
+  {
+    "id": 652,
+    "data_object_name": "store_associate_checklists",
+    "singular_label": "Store Associate Checklist",
+    "plural_label": "Store Associate Checklists",
+    "entity_type": "operational_workflow",
+    "description": "Daily/shift store operational checklist (open / close / safety / cleanliness / loss-prevention). Template-driven execution and sign-off records."
+  },
+  {
+    "id": 649,
+    "data_object_name": "store_audits",
+    "singular_label": "Store Audit",
+    "plural_label": "Store Audits",
+    "entity_type": "operational_workflow",
+    "description": "In-store compliance/operational audit (health/safety, merchandising, inventory accuracy, point-of-sale). Distinct from enterprise AUDIT (`audit_plans` / `audit_findings`)."
+  },
+  {
+    "id": 428,
+    "data_object_name": "store_pickup_orders",
+    "singular_label": "Store Pickup Order",
+    "plural_label": "Store Pickup Orders",
+    "entity_type": "operational_workflow",
+    "description": "B2C-COMM order subcase where fulfillment = store pickup. OMS masters store-assignment and hold-time orchestration: allocated_store_id, hold_window_start/end, pickup_status."
+  },
+  {
+    "id": 647,
+    "data_object_name": "store_tasks",
+    "singular_label": "Store Task",
+    "plural_label": "Store Tasks",
+    "entity_type": "operational_workflow",
+    "description": "Task assigned to retail associates (shelf stocking, planogram execution, zone cleaning, till reconciliation, safety checks). Core unit of store-level workforce execution and accountability. Scope-qualified vs onboarding_tasks, project_tasks."
+  },
+  {
+    "id": 1167,
+    "data_object_name": "str_channel_connections",
+    "singular_label": "Channel Connection",
+    "plural_label": "Channel Connections",
+    "entity_type": "operational_workflow",
+    "description": "The mapping between a listing and an external booking channel or OTA, with sync status for rates and availability."
+  },
+  {
+    "id": 1169,
+    "data_object_name": "str_guest_messages",
+    "singular_label": "Guest Message",
+    "plural_label": "Guest Messages",
+    "entity_type": "operational_record",
+    "description": "A message in the unified guest inbox tied to a reservation, inbound or outbound across any channel."
+  },
+  {
+    "id": 1166,
+    "data_object_name": "str_guests",
+    "singular_label": "Guest",
+    "plural_label": "Guests",
+    "entity_type": "operational_record",
+    "description": "A guest profile: contact details, identity/verification status, and stay history across reservations."
+  },
+  {
+    "id": 1170,
+    "data_object_name": "str_housekeeping_tasks",
+    "singular_label": "Housekeeping Task",
+    "plural_label": "Housekeeping Tasks",
+    "entity_type": "operational_workflow",
+    "description": "A cleaning or turnover task scheduled against a listing, typically fired by a checkout, assigned to a cleaner or team."
+  },
+  {
+    "id": 1164,
+    "data_object_name": "str_listings",
+    "singular_label": "Short-Term Rental Listing",
+    "plural_label": "Short-Term Rental Listings",
+    "entity_type": "operational_workflow",
+    "description": "A rental unit as marketed and published to booking channels: address, amenities, capacity, house rules, photos, and availability."
+  },
+  {
+    "id": 1175,
+    "data_object_name": "str_lodging_tax_records",
+    "singular_label": "Lodging Tax Record",
+    "plural_label": "Lodging Tax Records",
+    "entity_type": "operational_workflow",
+    "description": "A record of occupancy/lodging tax collected on a reservation and its filing and remittance to the taxing jurisdiction."
+  },
+  {
+    "id": 1171,
+    "data_object_name": "str_owner_statements",
+    "singular_label": "Owner Statement",
+    "plural_label": "Owner Statements",
+    "entity_type": "operational_workflow",
+    "description": "A periodic trust-accounting statement for a property owner: booking revenue, commissions, pass-through expenses, and the net payout."
+  },
+  {
+    "id": 1174,
+    "data_object_name": "str_permits",
+    "singular_label": "Short-Term Rental Permit",
+    "plural_label": "Short-Term Rental Permits",
+    "entity_type": "operational_record",
+    "description": "A local short-term-rental registration or permit for a listing: permit number, jurisdiction, issue and expiry dates, and status."
+  },
+  {
+    "id": 1172,
+    "data_object_name": "str_property_owners",
+    "singular_label": "Property Owner",
+    "plural_label": "Property Owners",
+    "entity_type": "operational_record",
+    "description": "An owner whose properties a manager operates: contact details, management agreement, commission terms, and payout details."
+  },
+  {
+    "id": 1168,
+    "data_object_name": "str_rate_plans",
+    "singular_label": "Rate Plan",
+    "plural_label": "Rate Plans",
+    "entity_type": "catalog",
+    "description": "Pricing configuration for a listing: base and seasonal rates, dynamic-pricing rules, fees, and min/max-stay constraints."
+  },
+  {
+    "id": 1165,
+    "data_object_name": "str_reservations",
+    "singular_label": "Reservation",
+    "plural_label": "Reservations",
+    "entity_type": "operational_workflow",
+    "description": "A guest stay booked against a listing: dates, channel of origin, party size, pricing, and payment and check-in/out status."
+  },
+  {
+    "id": 1173,
+    "data_object_name": "str_reviews",
+    "singular_label": "Guest Review",
+    "plural_label": "Guest Reviews",
+    "entity_type": "operational_record",
+    "description": "A review left after a stay, by a guest about a listing or by a host about a guest, synced across channels."
+  },
+  {
+    "id": 274,
+    "data_object_name": "strategic_initiatives",
+    "singular_label": "Strategic Initiative",
+    "plural_label": "Strategic Initiatives",
+    "entity_type": "operational_workflow",
+    "description": "Multi-quarter / annual program aligned to corporate strategy; bundles related projects, has executive sponsor and benefits realization plan."
+  },
+  {
+    "id": 273,
+    "data_object_name": "strategic_portfolios",
+    "singular_label": "Portfolio",
+    "plural_label": "Portfolios",
+    "entity_type": "operational_workflow",
+    "description": "Container for strategic initiatives grouped by business unit, product line, or cost center; aggregate KPIs and investment rules."
+  },
+  {
+    "id": 810,
+    "data_object_name": "strategy_decisions",
+    "singular_label": "Strategy Decision",
+    "plural_label": "Strategy Decisions",
+    "entity_type": "operational_workflow",
+    "description": "Decisions captured during operating reviews or strategy off-sites: changes to objective priorities, resource reallocation, initiative go/no-go, scope adjustments. Single decision-maker per record; once decided, the record is locked except by explicit revert."
+  },
+  {
+    "id": 808,
+    "data_object_name": "strategy_maps",
+    "singular_label": "Strategy Map",
+    "plural_label": "Strategy Maps",
+    "entity_type": "catalog",
+    "description": "Balanced-scorecard and strategy-house visualizations linking strategic pillars to objectives, initiatives, and measures across financial, customer, process, and learning perspectives. Configured once per planning horizon; rarely changes structure."
+  },
+  {
+    "id": 951,
+    "data_object_name": "subject_access_requests",
+    "singular_label": "Subject Access Request",
+    "plural_label": "Subject Access Requests",
+    "entity_type": "operational_workflow",
+    "description": "GDPR Article 15 subject-access-request ticket: requester, scope, fulfillment status, regulator deadline."
+  },
+  {
+    "id": 720,
+    "data_object_name": "sublease_transactions",
+    "singular_label": "Sublease Transaction",
+    "plural_label": "Sublease Transactions",
+    "entity_type": "unclassified",
+    "description": "Sublease grant / consent / commencement / termination with its own financial lifecycle vs the head lease."
+  },
+  {
+    "id": 631,
+    "data_object_name": "subrogation_cases",
+    "singular_label": "Subrogation Case",
+    "plural_label": "Subrogation Cases",
+    "entity_type": "operational_workflow",
+    "description": "Insurer pursuit of recovery from a liable third party: claim reference, third party, coverage class, demand amount, status, recovery amount, date range. Reduces net loss after a claim is paid."
+  },
+  {
+    "id": 1021,
+    "data_object_name": "subscription_documents",
+    "singular_label": "Subscription Document",
+    "plural_label": "Subscription Documents",
+    "entity_type": "operational_workflow",
+    "description": "Executed legal subscription package for an LP subscription: the signed agreement, side documents, and version history that persists across amended subscriptions."
+  },
+  {
+    "id": 176,
+    "data_object_name": "succession_plans",
+    "singular_label": "Succession Plan",
+    "plural_label": "Succession Plans",
+    "entity_type": "operational_workflow",
+    "description": "Bench plan for a critical position: identified successors, readiness ratings (ready_now, 1-2_years, 3+_years), development plans, risk-of-loss assessment."
+  },
+  {
+    "id": 498,
+    "data_object_name": "supplier_certifications",
+    "singular_label": "Supplier Certification",
+    "plural_label": "Supplier Certifications",
+    "entity_type": "operational_workflow",
+    "description": "Supplier-issued certification document (GFSI, organic, kosher, halal, allergen statement, insurance COI) with expiry tracking."
+  },
+  {
+    "id": 327,
+    "data_object_name": "supplier_esg_assessments",
+    "singular_label": "Supplier ESG Assessment",
+    "plural_label": "Supplier ESG Assessments",
+    "entity_type": "operational_workflow",
+    "description": "Vendor ESG performance profile: questionnaire responses, audit results, certifications (ISO 14001, B-Corp), Scope 3 estimate. Annual refresh."
+  },
+  {
+    "id": 316,
+    "data_object_name": "supplier_golden_records",
+    "singular_label": "Supplier Golden Record",
+    "plural_label": "Supplier Golden Records",
+    "entity_type": "operational_workflow",
+    "description": "Single resolved supplier identity across all source systems (S2P/SUP-LIFE), resolved via match/merge/survivorship."
+  },
+  {
+    "id": 75,
+    "data_object_name": "supplier_invoices",
+    "singular_label": "Invoice",
+    "plural_label": "Invoices",
+    "entity_type": "operational_workflow",
+    "description": "Supplier-issued invoice for goods or services delivered. AP runs 3-way match (PO + receipt + invoice) before approving for payment. Multi-domain consumption: EXPENSE consumes when a corporate card path overlaps, FINOPS consumes the cloud-invoice slice for cost allocation."
+  },
+  {
+    "id": 207,
+    "data_object_name": "supplier_onboardings",
+    "singular_label": "Supplier Onboarding",
+    "plural_label": "Supplier Onboardings",
+    "entity_type": "operational_workflow",
+    "description": "Onboarding workflow instance for a new supplier: invitation, registration form, document collection (W-9, banking, insurance, compliance attestations), approval chain."
+  },
+  {
+    "id": 208,
+    "data_object_name": "supplier_qualifications",
+    "singular_label": "Supplier Qualification",
+    "plural_label": "Supplier Qualifications",
+    "entity_type": "operational_workflow",
+    "description": "Risk and compliance profile for an active supplier: sanctions screening, financial-health rating, ESG scoring, ISO/SOC certifications, cyber-risk assessment. Periodically reassessed."
+  },
+  {
+    "id": 730,
+    "data_object_name": "supplier_risk_assessments",
+    "singular_label": "Supplier Risk Assessment",
+    "plural_label": "Supplier Risk Assessments",
+    "entity_type": "operational_workflow",
+    "description": "Operational / financial / cyber risk-scoring record per supplier; feeds GRC consumption."
+  },
+  {
+    "id": 209,
+    "data_object_name": "supplier_scorecards",
+    "singular_label": "Supplier Scorecard",
+    "plural_label": "Supplier Scorecards",
+    "entity_type": "operational_workflow",
+    "description": "KPI-weighted performance rating of a supplier over a period: on-time delivery, quality, responsiveness, savings delivered. Drives tier preference in sourcing decisions."
+  },
+  {
+    "id": 206,
+    "data_object_name": "suppliers",
+    "singular_label": "Supplier",
+    "plural_label": "Suppliers",
+    "entity_type": "operational_workflow",
+    "description": "Vendor master record: legal name, tax id, addresses, payment terms, contacts, currency, statuses, risk profile. The supplier-side analog to the customer master."
+  },
+  {
+    "id": 256,
+    "data_object_name": "support_sessions",
+    "singular_label": "Support Session",
+    "plural_label": "Support Sessions",
+    "entity_type": "operational_workflow",
+    "description": "A contact-center interaction record (voice call, chat session, video session, callback). Captures session metadata: duration, channel, agent, customer, resolution status. Distinct from CSM's customer_cases (the support case is the business artifact; the support_session is the engagement event that may or may not result in a case)."
+  },
+  {
+    "id": 181,
+    "data_object_name": "survey_campaigns",
+    "singular_label": "Survey Campaign",
+    "plural_label": "Survey Campaigns",
+    "entity_type": "operational_workflow",
+    "description": "Listening cadence definition: annual engagement, pulse, lifecycle (onboarding, 30/60/90-day, exit), 360-feedback. Carries audience, question set, frequency, anonymity floor."
+  },
+  {
+    "id": 182,
+    "data_object_name": "survey_responses",
+    "singular_label": "Survey Response",
+    "plural_label": "Survey Responses",
+    "entity_type": "operational_record",
+    "description": "Individual employee response to a survey_campaign instance. Aggregated under anonymity thresholds to engagement_drivers; never exposed at individual level to managers below floor."
+  },
+  {
+    "id": 586,
+    "data_object_name": "synthetic_monitoring_results",
+    "singular_label": "Synthetic Monitoring Result",
+    "plural_label": "Synthetic Monitoring Results",
+    "entity_type": "operational_record",
+    "description": "Proactive end-to-end test against a SaaS app from a geo/network location: request/response payload, HTTP status, latency, SSL validity, geo tag, schedule reference. Network-outside-in probes (vs OBS instrumented internals)."
+  },
+  {
+    "id": 177,
+    "data_object_name": "talent_calibrations",
+    "singular_label": "Talent Calibration",
+    "plural_label": "Talent Calibrations",
+    "entity_type": "operational_workflow",
+    "description": "Group session where managers normalize ratings across populations to remove rater bias and fit forced-distribution constraints. Produces calibrated performance_reviews outcomes."
+  },
+  {
+    "id": 871,
+    "data_object_name": "talent_pool_memberships",
+    "singular_label": "Talent Pool Membership",
+    "plural_label": "Talent Pool Memberships",
+    "entity_type": "junction",
+    "description": "Junction between candidates and talent_pools. Carries added timestamp, source, status_in_pool (cold/warm/hot), match score, and last_engagement timestamp."
+  },
+  {
+    "id": 7,
+    "data_object_name": "talent_pools",
+    "singular_label": "Talent Pool",
+    "plural_label": "Talent Pools",
+    "entity_type": "operational_workflow",
+    "description": "Curated segment or pipeline of candidates kept warm for future roles (e.g. silver medallists, alumni, target-school grads, hard-to-fill skill clusters)."
+  },
+  {
+    "id": 872,
+    "data_object_name": "talent_segments",
+    "singular_label": "Talent Segment",
+    "plural_label": "Talent Segments",
+    "entity_type": "catalog",
+    "description": "Rule-based pool definition (boolean filter over candidates) that materializes membership automatically. Examples: 'Senior PMs in NYC with FinTech experience', 'Engineering alumni who left in the last 2 years'."
+  },
+  {
+    "id": 1221,
+    "data_object_name": "target_account_lists",
+    "singular_label": "Target Account List",
+    "plural_label": "Target Account Lists",
+    "entity_type": "operational_workflow",
+    "description": "A named, approved list of accounts to pursue in the plan period; the handoff artifact to CRM and the ABM platform."
+  },
+  {
+    "id": 142,
+    "data_object_name": "tax_authorities",
+    "singular_label": "Tax Authority",
+    "plural_label": "Tax Authorities",
+    "entity_type": "catalog",
+    "description": "Federal, state, provincial, or local taxing jurisdiction with rate tables, deposit schedules, and reporting forms. Includes US IRS/state/locals, UK HMRC, German Finanzamt, French URSSAF, Australian ATO."
+  },
+  {
+    "id": 143,
+    "data_object_name": "tax_filings",
+    "singular_label": "Tax Filing",
+    "plural_label": "Tax Filings",
+    "entity_type": "operational_workflow",
+    "description": "Periodic statutory submission to a tax authority (US 941/W-2, UK FPS/EPS, German DEUEV/Lohnsteueranmeldung, French DSN, Australian STP). Includes payment and reporting; failure carries penalties."
+  },
+  {
+    "id": 400,
+    "data_object_name": "tax_returns",
+    "singular_label": "Tax Return",
+    "plural_label": "Tax Returns",
+    "entity_type": "unclassified",
+    "description": "Tax-return record managed by a preparer: tax year, return type (1040, 1120, 1065, etc.), client, status (in-prep, review, ready-for-signature, filed, accepted, rejected), filing method, refund/balance-due."
+  },
+  {
+    "id": 688,
+    "data_object_name": "technical_seo_findings",
+    "singular_label": "Technical SEO Finding",
+    "plural_label": "Technical SEO Findings",
+    "entity_type": "unclassified",
+    "description": "Crawl-based SEO issue: meta robots block, missing canonical, duplicate content, page-speed bottleneck, sitemap misconfiguration, structured-data error. Distinct from keyword/topical SEO (MA-owned)."
+  },
+  {
+    "id": 270,
+    "data_object_name": "technology_fit_assessments",
+    "singular_label": "Technology Fit Assessment",
+    "plural_label": "Technology Fit Assessments",
+    "entity_type": "operational_workflow",
+    "description": "Evaluation of an application's tech-stack alignment with enterprise standards and vendor roadmap; score + gap analysis + remediation roadmap."
+  },
+  {
+    "id": 269,
+    "data_object_name": "technology_platforms",
+    "singular_label": "Technology Platform",
+    "plural_label": "Technology Platforms",
+    "entity_type": "operational_workflow",
+    "description": "Vendor platform / tech stack with version, EOL, upgrade status, org-wide instance count. Distinct from `vendors` (legal entity) and `solutions` (product)."
+  },
+  {
+    "id": 658,
+    "data_object_name": "telco_customer_bills",
+    "singular_label": "Telco Customer Bill",
+    "plural_label": "Telco Customer Bills",
+    "entity_type": "operational_workflow",
+    "description": "Subscriber bill — multi-rated usage + subscription + tax lines, billing-period summary, payment status. Distinct from S2P invoices, SUB-MGMT `customer_invoices`, and rent_payments."
+  },
+  {
+    "id": 653,
+    "data_object_name": "telco_service_catalog",
+    "singular_label": "Telco Service Catalog",
+    "plural_label": "Telco Service Catalogs",
+    "entity_type": "catalog",
+    "description": "Commercial service offerings with technical specifications, rate plans, and SLA terms; TM Forum eTOM catalog master. Distinct from internal IT service catalogs and SaaS pricing catalogs."
+  },
+  {
+    "id": 654,
+    "data_object_name": "telco_service_orders",
+    "singular_label": "Telco Service Order",
+    "plural_label": "Telco Service Orders",
+    "entity_type": "operational_workflow",
+    "description": "Service provisioning order (activate / modify / suspend / deactivate). Carries customer, service catalog reference, requested date, status, fulfillment workflow reference. Distinct from B2C-COMM `orders` (commerce) and SUB-MGMT customer-subscription change orders."
+  },
+  {
+    "id": 655,
+    "data_object_name": "telco_subscriptions",
+    "singular_label": "Telco Subscription",
+    "plural_label": "Telco Subscriptions",
+    "entity_type": "operational_workflow",
+    "description": "Active service instance per subscriber (mobile line, fiber connection, leased circuit): carrier-customer relationship with the operational service. Distinct from SUB-MGMT `customer_subscriptions` (SaaS seller-side)."
+  },
+  {
+    "id": 719,
+    "data_object_name": "tenant_credit_records",
+    "singular_label": "Tenant Credit Record",
+    "plural_label": "Tenant Credit Records",
+    "entity_type": "unclassified",
+    "description": "Commercial-tenant financial health, payment history, default risk; underwrites CRE leasing decisions."
+  },
+  {
+    "id": 361,
+    "data_object_name": "tenant_maintenance_requests",
+    "singular_label": "Tenant Maintenance Request",
+    "plural_label": "Tenant Maintenance Requests",
+    "entity_type": "unclassified",
+    "description": "Tenant-submitted issue tracked from intake through vendor dispatch to resolution; carries photos, urgency, communication thread. Distinct from FM/EAM work orders in that the requester is a paying tenant, not an internal employee."
+  },
+  {
+    "id": 1224,
+    "data_object_name": "territories",
+    "singular_label": "Territory",
+    "plural_label": "Territories",
+    "entity_type": "operational_workflow",
+    "description": "A carved sales territory: the accounts and geography assigned to a rep or team."
+  },
+  {
+    "id": 572,
+    "data_object_name": "test_cases",
+    "singular_label": "Test Case",
+    "plural_label": "Test Cases",
+    "entity_type": "operational_record",
+    "description": "Reusable test definition (manual or automated reference): preconditions, steps, expected results, tags, traceability to requirements and test suites."
+  },
+  {
+    "id": 576,
+    "data_object_name": "test_defects",
+    "singular_label": "Test Defect",
+    "plural_label": "Test Defects",
+    "entity_type": "operational_workflow",
+    "description": "Defect discovered during testing; distinct from ITSM incidents. Carries reproduction steps, environment context, severity, priority, assigned developer, status, root cause."
+  },
+  {
+    "id": 577,
+    "data_object_name": "test_environments",
+    "singular_label": "Test Environment",
+    "plural_label": "Test Environments",
+    "entity_type": "catalog",
+    "description": "Configured environment (OS variant, browser, device, SaaS tenant version, DB state) where test execution occurs. Enables matrix testing and environment-specific failure traceability."
+  },
+  {
+    "id": 574,
+    "data_object_name": "test_plans",
+    "singular_label": "Test Plan",
+    "plural_label": "Test Plans",
+    "entity_type": "operational_workflow",
+    "description": "Master planning document scoping test coverage, timeline, resources, environment assignments, entry/exit criteria for a release or phase."
+  },
+  {
+    "id": 575,
+    "data_object_name": "test_runs",
+    "singular_label": "Test Run",
+    "plural_label": "Test Runs",
+    "entity_type": "operational_workflow",
+    "description": "Single execution instance of a test_case or suite against a target environment: outcome (pass / fail / blocked / skipped), duration, environment context, tester, failure logs."
+  },
+  {
+    "id": 573,
+    "data_object_name": "test_suites",
+    "singular_label": "Test Suite",
+    "plural_label": "Test Suites",
+    "entity_type": "operational_record",
+    "description": "Grouping of test_cases by feature/release/type. Enables batch execution, cross-browser/environment matrix, organized reporting."
+  },
+  {
+    "id": 162,
+    "data_object_name": "time_entries",
+    "singular_label": "Time Entry",
+    "plural_label": "Time Entries",
+    "entity_type": "operational_workflow",
+    "description": "Recorded clock-in / clock-out / break event from a time-collection device, mobile app, or manual entry. Approved time entries are the WFM↔PAYROLL handoff payload."
+  },
+  {
+    "id": 165,
+    "data_object_name": "time_off_policies",
+    "singular_label": "Time-Off Policy",
+    "plural_label": "Time-Off Policies",
+    "entity_type": "catalog",
+    "description": "Accrual / entitlement rule definition for a leave type: by country, role, tenure tier, with caps, carry-over, and conversion rules. Country-specific by statute (US PTO, UK statutory leave, German Urlaub, French Congés Payés)."
+  },
+  {
+    "id": 1252,
+    "data_object_name": "tool_connections",
+    "singular_label": "Tool Connection",
+    "plural_label": "Tool Connections",
+    "entity_type": "catalog",
+    "description": "A configured integration to an external delivery tool from which work items and events are mirrored into the value-stream model."
+  },
+  {
+    "id": 355,
+    "data_object_name": "tour_appointments",
+    "singular_label": "Tour Appointment",
+    "plural_label": "Tour Appointments",
+    "entity_type": "operational_workflow",
+    "description": "Scheduled property showings with lock-box codes, access windows, agent attendance, and follow-up tracking."
+  },
+  {
+    "id": 494,
+    "data_object_name": "traceability_lots",
+    "singular_label": "Traceability Lot",
+    "plural_label": "Traceability Lots",
+    "entity_type": "operational_workflow",
+    "description": "Lot / batch identifier per FSMA-204 Traceability Lot Code (TLC); links upstream sources to downstream consignees."
+  },
+  {
+    "id": 537,
+    "data_object_name": "training_datasets",
+    "singular_label": "Training Dataset",
+    "plural_label": "Training Datasets",
+    "entity_type": "operational_workflow",
+    "description": "Labeled document samples used to train or fine-tune IDP extraction models. Carries document_type, sample_count, labeling completion, training window, lineage to trained models."
+  },
+  {
+    "id": 940,
+    "data_object_name": "training_evidence_records",
+    "singular_label": "Training Evidence Record",
+    "plural_label": "Training Evidence Records",
+    "entity_type": "operational_workflow",
+    "description": "Inspection-ready evidence package: signed roster, certificate hash, content version, signature record reference. Generated for regulator submission."
+  },
+  {
+    "id": 1274,
+    "data_object_name": "training_room_bookings",
+    "singular_label": "Training Room Booking",
+    "plural_label": "Training Room Bookings",
+    "entity_type": "operational_workflow",
+    "description": "Reservation of a physical or virtual room and resources for an instructor-led session."
+  },
+  {
+    "id": 437,
+    "data_object_name": "transformation_jobs",
+    "singular_label": "Transformation Job",
+    "plural_label": "Transformation Jobs",
+    "entity_type": "operational_workflow",
+    "description": "In-flight data transformation logic: mappings, UDFs, validation rules, masking policies. May delegate to external compute or SQL engines."
+  },
+  {
+    "id": 215,
+    "data_object_name": "travel_bookings",
+    "singular_label": "Travel Booking",
+    "plural_label": "Travel Bookings",
+    "entity_type": "operational_workflow",
+    "description": "Imported itinerary from a travel-booking partner: air, hotel, ground. Pre-trip approval and post-trip expense reconciliation."
+  },
+  {
+    "id": 1063,
+    "data_object_name": "travel_policies",
+    "singular_label": "Travel Policy",
+    "plural_label": "Travel Policies",
+    "entity_type": "catalog",
+    "description": "The configured set of rules that govern what travelers may book: fare classes, advance-purchase windows, preferred suppliers, spend caps, and out-of-policy handling. Drives policy-aware shopping and approval routing."
+  },
+  {
+    "id": 1062,
+    "data_object_name": "traveler_profiles",
+    "singular_label": "Traveler Profile",
+    "plural_label": "Traveler Profiles",
+    "entity_type": "operational_record",
+    "description": "The per-traveler record holding seat and meal preferences, loyalty and frequent-traveler memberships, travel documents (passport, visa, known-traveler numbers), and emergency contacts that personalize shopping and satisfy identity and duty-of-care requirements."
+  },
+  {
+    "id": 1064,
+    "data_object_name": "trip_approvals",
+    "singular_label": "Trip Approval",
+    "plural_label": "Trip Approvals",
+    "entity_type": "operational_workflow",
+    "description": "A pre-trip authorization request and its decision, routed when a trip is out of policy, over a cost threshold, or bound for a high-risk destination, capturing the approver, the decision, and any exception justification."
+  },
+  {
+    "id": 1059,
+    "data_object_name": "trip_bookings",
+    "singular_label": "Trip Booking",
+    "plural_label": "Trip Bookings",
+    "entity_type": "operational_workflow",
+    "description": "A single reservation at the reservation-record level: a flight, hotel stay, rail journey, or car rental with its confirmation, fare or rate, ancillaries, and ticketing status. The bookable unit a segment is created from."
+  },
+  {
+    "id": 1058,
+    "data_object_name": "trip_itineraries",
+    "singular_label": "Trip Itinerary",
+    "plural_label": "Trip Itineraries",
+    "entity_type": "operational_workflow",
+    "description": "The ordered set of travel segments (air, hotel, rail, car, ground) for a trip, assembled from individual reservations and kept synchronized as segments are added, changed, or disrupted."
+  },
+  {
+    "id": 1060,
+    "data_object_name": "trip_search_results",
+    "singular_label": "Trip Search Result",
+    "plural_label": "Trip Search Results",
+    "entity_type": "computed",
+    "description": "A returned set of bookable options for a shopping request, aggregated from GDS, NDC, and direct-supplier content and ranked against travel policy. Derived from a search query against live inventory; the basis from which a booking is made."
+  },
+  {
+    "id": 392,
+    "data_object_name": "trust_accounts",
+    "singular_label": "Trust Account",
+    "plural_label": "Trust Accounts",
+    "entity_type": "operational_workflow",
+    "description": "IOLTA-style trust-account ledger: per-client and per-matter balances, three-way-reconciliation evidence, state-specific retention. Distinct from operating accounts; commingling is an ethics violation."
+  },
+  {
+    "id": 1061,
+    "data_object_name": "unused_ticket_credits",
+    "singular_label": "Unused-Ticket Credit",
+    "plural_label": "Unused-Ticket Credits",
+    "entity_type": "operational_workflow",
+    "description": "Residual value from an unused or partially used ticket that can be reapplied to a future booking, tracked through its available, reapplied, and expired states so prepaid value is recovered."
+  },
+  {
+    "id": 108,
+    "data_object_name": "usage_records",
+    "singular_label": "Usage Record",
+    "plural_label": "Usage Records",
+    "entity_type": "operational_record",
+    "description": "Metered-billing inputs — events / consumption units / overage credits feeding usage-based pricing tiers. Stream from product instrumentation (or B2C-COMM events) into SUB-MGMT for cycle aggregation."
+  }
+]

@@ -106,13 +106,13 @@ Label column: `jurisdiction_name`.
 
 Label column: `business_function_name`.
 
-### `processes`
+### `business_processes`
 
 | Field | Format | Required | Notes |
 |---|---|---|---|
 | `process_code` | string | yes | Natural key. PCF rows: literal PCF ID (`6.1.1`, `8.4.2.1`). Custom rows: `CUSTOM-<CLUSTER>-<SHORT-NAME>` (e.g. `CUSTOM-ONBOARD-DAY-1`). Per SKILL.md "Custom-process naming convention" |
 | `description` | multiline | yes | PCF rows: verbatim from PCF Excel. Custom rows: authored description |
-| `parent_process_id` | reference → `processes` | no | Self-ref; `reference_delete_mode: clear`. Null for level-1 categories |
+| `parent_process_id` | reference → `business_processes` | no | Self-ref; `reference_delete_mode: clear`. Null for level-1 categories |
 | `source_framework` | enum | yes | **Discriminator.** `apqc_pcf_cross_industry` / `apqc_pcf_banking` / `apqc_pcf_consumer_products` / `apqc_pcf_electric_utilities` / `apqc_pcf_pharmaceutical` / `apqc_pcf_telecom` / `custom`. **No default — set explicitly so accidents are loud.** Only `apqc_pcf_cross_industry` is loaded today; industry-specific PCFs are placeholder enum values for future loads |
 | `external_id` | string | yes | Framework's own identifier. PCF ID for any `apqc_pcf_*` row. Empty string for `custom` |
 | `external_url` | url | yes | Optional pointer to source documentation. Empty string acceptable |
@@ -277,14 +277,14 @@ Label column (auto-computed): `handoff_label` = `<source_domain> → <target_dom
 
 **Trigger-event ownership.** When a single trigger fires from one domain to multiple targets (e.g. `employee.created` → Onboarding + Payroll + IGA + Talent-Mgmt), **all four subscriber rows reference the SAME `trigger_events.id`** via `trigger_event_id`. Don't duplicate events per subscriber, it breaks the trigger-event-prefix clustering signal Phase D depends on.
 
-### `handoff_processes` (junction: `handoffs` ↔ `processes`)
+### `handoff_processes` (junction: `handoffs` ↔ `business_processes`)
 
 Links a directional handoff to the APQC PCF activity (or custom process) it realizes. Schema authored in `create_handoff_processes.ts`; `proposal_source` added by `add_handoff_processes_proposal_source_2026_05_29.ts`.
 
 | Field | Format | Required | Notes |
 |---|---|---|---|
 | `handoff_id` | parent → `handoffs` | yes | Cascade on delete. The handoff edge being linked. |
-| `process_id` | parent → `processes` | yes | Cascade on delete. The process activity the handoff realizes. |
+| `process_id` | parent → `business_processes` | yes | Cascade on delete. The process activity the handoff realizes. |
 | `role` | enum | yes | `implements` (this handoff IS the activity). Default `implements`. Add values only when discovery proposes rows that clearly do not fit. |
 | `proposal_source` | enum | yes | `human_curated` / `agent_curated` / `discovery_override` / `discovery_substring`. Default `discovery_substring`. Provenance and confidence: agent-authored rows use `agent_curated` (Rule #1); `human_curated` only when the user explicitly typed the tag. Live enum is authoritative (Rule #13 enum-drift check). |
 | `notes` | multiline | yes | Empty by default (Rule #15). |
@@ -380,7 +380,7 @@ Label column: `tool_name` (lowercase snake_case verb form — `send_email`, `que
 | `skill_type` | enum | yes | Default `system`. Values: `system` (the agent surface for a deployable unit: one per domain, plus one per starter module), `process` (orchestrates a cross-domain value stream), `role` (wraps a specific user-role workflow) |
 | `domain_id` | reference → `domains` | no | **The domain-grain anchor for a `system` skill** (`domain_module_id` NULL). Exactly one such skill per domain (Rule #17); it derives its toolset from the domain's modules' `domain_module_tools`. The `domain_required_when_skill_type_is_system` rule keys on this column. |
 | `domain_module_id` | reference → `domain_modules` | no | Set ONLY for a `system` skill on a `module_kind='starter'` module (the starter is itself a deployable unit and derives from its own `domain_module_tools`). A domain `system` skill leaves this NULL. FULL modules carry no skill. |
-| `process_id` | reference → `processes` | no | Set for a `process` skill (the cross-domain value stream it wraps); the skill derives its toolset from that process's `process_tools`. |
+| `process_id` | reference → `business_processes` | no | Set for a `process` skill (the cross-domain value stream it wraps); the skill derives its toolset from that process's `process_tools`. |
 | `record_status` | enum | yes | Default `new` |
 
 Label column: `skill_name` (lowercase snake_case or kebab-case — `domain-map-analyst`, `onboarding-process`, `lead-to-cash`).
@@ -411,11 +411,11 @@ Label column: `tool_solution_label` (computed: `<tool_name> via <solution_name>`
 
 Label column: computed `key` (`<domain_module_id>.<tool_id>`; readonly). **Unique** on `(domain_module_id, tool_id)`, enforced at the database layer. The domain's `system` skill derives its toolset by rolling these up over the domain's primary + host modules.
 
-### `process_tools` (junction: `processes` ↔ `tools`)
+### `process_tools` (junction: `business_processes` ↔ `tools`)
 
 | Field | Format | Required | Notes |
 |---|---|---|---|
-| `process_id` | parent → `processes` | yes | Cascade on delete |
+| `process_id` | parent → `business_processes` | yes | Cascade on delete |
 | `tool_id` | parent → `tools` | yes | Cascade on delete |
 | `requirement_level` | enum | yes | Default `required`. Same semantics as above. |
 | `notes` | multiline | yes | Empty by default - see SKILL.md Rule #15. |
@@ -518,7 +518,7 @@ This junction is gone (dropped 2026-06-28; see [deprecations.md](deprecations.md
 | `requires_permission` | boolean | yes | Default `false`. TRUE = transitioning *into* this state needs an explicit permission; produces a `<module>:<verb>_<entity>` workflow gate during permission materialization. |
 | `permission_verb_override` | text | yes | Empty string unless auto-derivation produces a clumsy verb. Replaces `state_name` in the derived verb. Examples: `hired → hire_candidate`, `approved → approve_change`. |
 | `domain_module_id` | reference → `domain_modules` | no | Nullable. NULL = state always reachable when the master is installed. Non-NULL = state realized only when that specific module is deployed (the deployer prunes unreachable states). The permission prefix at materialization time is the realizing module's `domain_module_code`. |
-| `process_id` | reference → `processes` | no | Nullable (Plan 3). The process whose gated transition this state realizes: the process-to-permission edge. Distinct from `domain_module_id` (which module realizes the gate) and from `process_raci.process_id` (which RACI row is about the process). Authored per-domain in Phase E; lets a `process_raci` Responsible/Accountable assignment resolve to the concrete gate(s) of its process. `clear` on delete. |
+| `process_id` | reference → `business_processes` | no | Nullable (Plan 3). The process whose gated transition this state realizes: the process-to-permission edge. Distinct from `domain_module_id` (which module realizes the gate) and from `process_raci.process_id` (which RACI row is about the process). Authored per-domain in Phase E; lets a `process_raci` Responsible/Accountable assignment resolve to the concrete gate(s) of its process. `clear` on delete. |
 | `record_status` | enum | yes | Default `new` |
 
 Permission materialization rule (per Rule #14 + Rule #12): for each row with `requires_permission=true`, the deployer creates `permissions.permission_name = <domain_module_code>:<verb>_<entity_singular>` where `<verb>` = `permission_verb_override` if set, else `state_name`. Override collisions (e.g. `candidates.hired` and `job_applications.hired` both overriding to `hire_candidate`) legitimately collapse to one permission fired by two transitions.
@@ -556,13 +556,13 @@ The authored REACH layer: which modules a persona touches.
 
 2-module floor: every `domain_roles` persona MUST have ≥2 `role_modules` entries. A single-module persona is a permission tier on that module, not a persona. The auto `role_module_label` composes `<role_code> on <domain_module_code>` from `domain_roles` (computed_field, recomputed on write).
 
-### `process_raci` (junction: `processes` ↔ polymorphic actor, catalog-owned, Plan 3)
+### `process_raci` (junction: `business_processes` ↔ polymorphic actor, catalog-owned, Plan 3)
 
 The authored RESPONSIBILITY layer: who is Responsible / Accountable / Consulted / Informed for each process. The actor is **polymorphic**: a persona OR an agent skill (the AI-native twist: R can be an agent while A is a human).
 
 | Field | Format | Required | Notes |
 |---|---|---|---|
-| `process_id` | parent → `processes` | yes | The process the assignment is about; cascade. |
+| `process_id` | parent → `business_processes` | yes | The process the assignment is about; cascade. |
 | `actor_role_id` | reference → `domain_roles` | no | Persona actor. Nullable; cascade. |
 | `actor_skill_id` | reference → `skills` | no | Agent-skill actor. Nullable; cascade. Populated when the process-skills layer lands (deferred); the polymorphic shape is baked in now to avoid a later migration. |
 | `raci` | enum | yes | `responsible` / `accountable` / `consulted` / `informed`. |

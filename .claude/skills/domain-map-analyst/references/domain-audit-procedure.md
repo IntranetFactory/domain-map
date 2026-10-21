@@ -44,7 +44,7 @@ For the target domain `<CODE>`:
    - All cross-domain handoffs the domain receives:
      `/handoffs?target_domain_id=eq.<id>&source_domain_id=neq.<id>&select=id,source_domain_id,trigger_event_id,data_object_id,trigger_event:trigger_events(event_name),payload:data_objects!handoffs_data_object_id_fkey(data_object_name)`
    - Existing APQC tags on those handoffs (combine into one query if you have the handoff id set):
-     `/handoff_processes?handoff_id=in.(<handoff_ids>)&select=handoff_id,process_id,proposal_source,record_status,process:processes(process_name,external_id,hierarchy_level)`
+     `/handoff_processes?handoff_id=in.(<handoff_ids>)&select=handoff_id,process_id,proposal_source,record_status,process:business_processes(process_name,external_id,hierarchy_level)`
 
 Cache as the **current footprint** + the **APQC coverage map** (handoff_id → list of tagged processes, or "untagged").
 
@@ -113,7 +113,7 @@ While reviewing each cross-domain handoff for B-band findings, the agent **also*
 **The procedure per handoff:**
 
 1. Look at the trigger event name + payload data_object + source/target domain context. (You already have all of this open from the structural pass — no extra round trip.)
-2. Lookup candidate PCF activities: `/processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry&select=id,process_name,external_id,hierarchy_level`. The trigger event's noun is usually a strong search term.
+2. Lookup candidate PCF activities: `/business_processes?process_name=ilike.*<term>*&source_framework=eq.apqc_pcf_cross_industry&select=id,process_name,external_id,hierarchy_level`. The trigger event's noun is usually a strong search term.
 3. Pick the best match:
    - **Confident L2/L3 match** → propose `(handoff_id, process_id, proposal_source='agent_curated', record_status='new')`.
    - **No clean PCF match** (modern digital concept like `data_asset.*`, `dlp_incident.*`, or an industry-specific workflow not in cross-industry PCF) → **defer to Discover Pass 3's custom-process authoring path**. Note in the audit which handoffs were deferred and why.

@@ -16,6 +16,7 @@ that's where the skill earns its value.
 | 6 | `m2m-junction-table-full-setup-and-seed` | M:N junction table + seeding 6 records with captured IDs |
 | 7 | `diagnose-and-fix-permission-denied` | RBAC diagnosis chain: user → roles → permissions → hierarchy → fix |
 | 8 | `cube-total-vs-trend-correct-pattern` | Totals (inDateRange in filters) vs trends (timeDimensions + granularity) |
+| 9 | `composed-labels-and-nary-junction-correctness` | Composed `_label`/`<fk>_label` are read-only & platform-derived (never create_field/write them; select by name; drive display with `label_parent`); plus an N-ary (3-leg) junction shape |
 
 ---
 
@@ -145,7 +146,7 @@ the best-scoring version to replace the frontmatter `description:` with.
 Good candidates:
 - Import from Excel (Bun + xlsx package)
 - `sqlToRest` conversion for a complex SQL query
-- `refresh_schema_cache` after adding a field
+- `refresh_schema_cache` only when a just-added field is missing from PostgREST responses (not routinely)
 - `compareDateRange` period-over-period comparison in cube
 - Funnel or retention analysis
 - Safe entity evolution (adding new fields, warning on risky changes)

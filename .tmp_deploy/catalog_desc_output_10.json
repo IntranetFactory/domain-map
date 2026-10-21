@@ -1,0 +1,394 @@
+[
+  {
+    "id": 1133,
+    "catalog_description": "Typed key-value data tied to a running process instance, carrying the business payload that steps read and write as work advances."
+  },
+  {
+    "id": 582,
+    "catalog_description": "Distinct execution patterns found in a process event log, grouping cases that follow significantly different paths, with their frequency and cycle time."
+  },
+  {
+    "id": 598,
+    "catalog_description": "As-built records of manufactured items, with serial number, lot or batch, the order that produced them, and quality status, forming the traceability backbone."
+  },
+  {
+    "id": 422,
+    "catalog_description": "Reusable package definitions that group products together with selection rules and bundled-discount pricing."
+  },
+  {
+    "id": 805,
+    "catalog_description": "Declarations stating whether a controlled substance is present in a part, at what concentration, and whether a regulatory exemption applies."
+  },
+  {
+    "id": 418,
+    "catalog_description": "Captured user selections when configuring a quote line, mapping chosen options on a base product to a specific variant."
+  },
+  {
+    "id": 403,
+    "catalog_description": "Capabilities, stories, or epics on a product roadmap, the atomic unit for prioritization and mapping customers to releases."
+  },
+  {
+    "id": 1208,
+    "catalog_description": "Launch records for a product or feature, tracking tier, key dates, status, and the post-launch retrospective."
+  },
+  {
+    "id": 402,
+    "catalog_description": "Software product lines in development and go-to-market, bundling features and releases across their lifecycle."
+  },
+  {
+    "id": 408,
+    "catalog_description": "Product key performance indicators tracked over time, such as adoption, retention, usage, and churn risk."
+  },
+  {
+    "id": 404,
+    "catalog_description": "Versioned software releases that bundle a set of features and define the delivery date and scope."
+  },
+  {
+    "id": 405,
+    "catalog_description": "Timeline views of planned features grouped by release, product, or theme."
+  },
+  {
+    "id": 599,
+    "catalog_description": "Shop-floor equipment or line stoppages, with start time, duration, reason code, throughput impact, and resolution, feeding equipment effectiveness metrics."
+  },
+  {
+    "id": 595,
+    "catalog_description": "Units of work released to the factory floor, specifying product, quantity, schedule window, build instructions, and material requirements."
+  },
+  {
+    "id": 600,
+    "catalog_description": "Inspection results for a produced unit or batch, recording checklist completion, pass or fail, defect classification, and inspector."
+  },
+  {
+    "id": 597,
+    "catalog_description": "Published build plans for a line, cell, or workcenter, with time-based slots, assigned orders, sequencing, and changeover windows."
+  },
+  {
+    "id": 311,
+    "catalog_description": "Summary statistics computed on a data asset during a scan, such as cardinality, null percentage, distinct count, and value distributions."
+  },
+  {
+    "id": 1246,
+    "catalog_description": "Fixed timeboxes during which a release train delivers incremental value, planned in a big-room event and closed with an inspect-and-adapt review."
+  },
+  {
+    "id": 218,
+    "catalog_description": "Allocations of a worker to a project, with role, bill rate, cost rate, planned hours, and period, driving utilization and availability reporting."
+  },
+  {
+    "id": 219,
+    "catalog_description": "Discrete billing triggers within a project, with amount, trigger condition, and status, driving revenue recognition and invoicing on fixed-fee work."
+  },
+  {
+    "id": 726,
+    "catalog_description": "Forward-looking plans committing resources to projects, with skill, planned utilization, and effective period, distinct from executed assignments."
+  },
+  {
+    "id": 217,
+    "catalog_description": "Decomposed units of work within a project, with scope, dependencies, estimated hours, and status, used for time tracking and earned-value calculation."
+  },
+  {
+    "id": 1288,
+    "catalog_description": "Markup comments placed on a region of a proof during review, with the reviewer, location, and resolution state."
+  },
+  {
+    "id": 1287,
+    "catalog_description": "Review-and-approval cycles on a creative asset or document, where reviewers mark up the proof and decide to approve or request changes."
+  },
+  {
+    "id": 345,
+    "catalog_description": "Buyer-side lease contracts for real estate, covering terms, dates, financials, and renewals, with lease accounting under ASC 842 and IFRS 16."
+  },
+  {
+    "id": 347,
+    "catalog_description": "Allocable units within a property such as desks, meeting rooms, parking spaces, or lockers."
+  },
+  {
+    "id": 358,
+    "catalog_description": "People or households occupying a rental unit under a lease, with contact details, lease history, payment history, and screening results."
+  },
+  {
+    "id": 369,
+    "catalog_description": "Periodic valuations of a property or portfolio by cap rate, discounted cash flow, or comparison, with valuation date, method, and assumptions."
+  },
+  {
+    "id": 678,
+    "catalog_description": "Proposed code changes targeting a branch in a source repository, with author, branches, status, reviewers, approvals, and continuous-integration results."
+  },
+  {
+    "id": 185,
+    "catalog_description": "A library of survey items rotated through pulse-survey cadences, with driver mapping, anti-fatigue rotation, and benchmarking."
+  },
+  {
+    "id": 1197,
+    "catalog_description": "Records of sewage pump-outs for a vessel, kept for Clean Vessel Act grant reporting and state mandates."
+  },
+  {
+    "id": 73,
+    "catalog_description": "Orders issued to a supplier authorizing delivery, with line items, agreed prices, delivery terms, payment terms, and ship-to and bill-to details."
+  },
+  {
+    "id": 72,
+    "catalog_description": "Internal requests to buy something, capturing what is needed, the requester, justification, budget reference, and approval state."
+  },
+  {
+    "id": 310,
+    "catalog_description": "Work items raised when a data quality rule is breached, with root-cause detail, remediation status, linked data assets, and SLA."
+  },
+  {
+    "id": 309,
+    "catalog_description": "Rules defining acceptable data state, such as cardinality bounds, regex patterns, referential integrity, and statistical thresholds."
+  },
+  {
+    "id": 710,
+    "catalog_description": "Audit trail of executed queries, linking metric reads back to source tables, transformations, and the requesting identity."
+  },
+  {
+    "id": 1269,
+    "catalog_description": "Reusable pools of assessment questions independent of any single test, drawn from for randomized quizzes and recertification exams."
+  },
+  {
+    "id": 258,
+    "catalog_description": "Real-time and historical metrics per contact queue, such as wait time, abandonment rate, service level, and average handle time."
+  },
+  {
+    "id": 916,
+    "catalog_description": "Item-level learner responses to quiz questions, captured for per-question review and psychometric analysis."
+  },
+  {
+    "id": 1225,
+    "catalog_description": "Revenue targets allocated to a territory, rep, or team for a plan period."
+  },
+  {
+    "id": 420,
+    "catalog_description": "Line- and quote-level discounts, recording the source, amount, and approval status."
+  },
+  {
+    "id": 417,
+    "catalog_description": "Individual lines on a quote for a configured product, with unit price, quantity, line total, bundle nesting, and discounts."
+  },
+  {
+    "id": 189,
+    "catalog_description": "Pre-agreed bill rates by role, geography, and supplier tier, driving consistent work-order pricing and accounts-payable matching."
+  },
+  {
+    "id": 1210,
+    "catalog_description": "Templates of cross-functional readiness items a launch must clear before going live."
+  },
+  {
+    "id": 352,
+    "catalog_description": "Properties offered for sale or rent, with pricing, photos, descriptions, agent representation, and status from active to sold."
+  },
+  {
+    "id": 344,
+    "catalog_description": "Buildings, facilities, or managed spaces, owned or leased, tracked across their lifecycle from acquisition to sale or expiry."
+  },
+  {
+    "id": 353,
+    "catalog_description": "Real estate deals from accepted offer through close, with parties, terms, contingencies, escrow timeline, and document compliance."
+  },
+  {
+    "id": 587,
+    "catalog_description": "Aggregated session telemetry for an end-user device over a window, covering page loads, app launches, network quality, and connectivity transitions."
+  },
+  {
+    "id": 497,
+    "catalog_description": "Records of a product recall execution, with affected lots, notification log, hold-and-segregate status, and regulatory filing."
+  },
+  {
+    "id": 942,
+    "catalog_description": "Recurrence configurations that drive periodic compliance-refresh assignment cycles for regulations like FINRA, HIPAA, and OSHA."
+  },
+  {
+    "id": 433,
+    "catalog_description": "Legal hold and disposition rules per document class, with regulatory retention periods and scheduled destruction dates."
+  },
+  {
+    "id": 869,
+    "catalog_description": "Free-text recruiter notes attached to a candidate, application, or talent pool, time-stamped and authored by a user."
+  },
+  {
+    "id": 873,
+    "catalog_description": "Saved recruiter searches over the candidate database, with the filter expression, last-run time, and alert preferences."
+  },
+  {
+    "id": 868,
+    "catalog_description": "Links between candidates and recruiting events, recording registration, check-in, attendance, and conversion outcome."
+  },
+  {
+    "id": 13,
+    "catalog_description": "Third-party recruiters and staffing firms supplying candidates, with contract terms, contacts, performance, and submitted candidates."
+  },
+  {
+    "id": 14,
+    "catalog_description": "Career fairs, campus events, hackathons, and meetups used as sourcing channels, tracking attendees, captured leads, and event return."
+  },
+  {
+    "id": 5,
+    "catalog_description": "Channels a candidate came from, such as job board, referral, agency, campaign, or inbound, used for source-of-hire and channel analytics."
+  },
+  {
+    "id": 1189,
+    "catalog_description": "Scheduled charges generated from a contract, such as dockage, storage, or service fees billed on a periodic cadence."
+  },
+  {
+    "id": 717,
+    "catalog_description": "Catalog entries for loyalty rewards, with point values, redemption eligibility rules, and partner-offer linkage."
+  },
+  {
+    "id": 718,
+    "catalog_description": "Fulfillments of a loyalty reward redemption, covering point deduction, reward shipment, and partner settlement."
+  },
+  {
+    "id": 876,
+    "catalog_description": "Time-bounded promotions offering bonus referral rewards, scoping an override to the standard referral payout rules."
+  },
+  {
+    "id": 875,
+    "catalog_description": "Individual referral payouts triggered when a referred candidate is hired and meets tenure conditions, moving from pending to approved to paid."
+  },
+  {
+    "id": 874,
+    "catalog_description": "Bounty rules defining the payout amount and conditions for a successful referral, such as a fixed sum paid after the new hire's start."
+  },
+  {
+    "id": 806,
+    "catalog_description": "Reference catalog of substances controlled by product regulations, with CAS number, regulation pointers, threshold concentrations, and exemptions."
+  },
+  {
+    "id": 943,
+    "catalog_description": "Export artifacts prepared for regulator submissions, such as OSHA 300 logs, FINRA filings, and state rollups."
+  },
+  {
+    "id": 646,
+    "catalog_description": "Government-assessed fees for permits, licenses, inspections, and citations, with fee type, amount, due date, payer, and payment status."
+  },
+  {
+    "id": 639,
+    "catalog_description": "Notifications received from a regulator, with jurisdiction, inquiry type, subject, deadline, assigned counsel, and response status."
+  },
+  {
+    "id": 752,
+    "catalog_description": "Graph edges capturing relationships between people, organizations, and the firm, such as introductions, co-investor ties, and advisor links."
+  },
+  {
+    "id": 290,
+    "catalog_description": "Action plans to close an issue or failed control test, with responsible party, target date, steps, evidence requirements, and status."
+  },
+  {
+    "id": 1286,
+    "catalog_description": "Configured nudge cadences that drive automated reminders to learners and managers."
+  },
+  {
+    "id": 238,
+    "catalog_description": "Remote-control sessions, with technician, target endpoint, attended or unattended type, timestamps, transferred files, and recording link."
+  },
+  {
+    "id": 360,
+    "catalog_description": "Tenant payments of rent or other lease charges, with amount, allocation across charges, late fees, and reconciliation status."
+  },
+  {
+    "id": 359,
+    "catalog_description": "Prospective-tenant applications with personal and financial details, employer info, references, and screening results, preceding lease signing."
+  },
+  {
+    "id": 362,
+    "catalog_description": "Residential lease agreements between landlord and tenant for a rental unit, covering term, rent schedule, security deposit, and addenda."
+  },
+  {
+    "id": 357,
+    "catalog_description": "Lettable units within a residential property, such as apartments or condos, with amenities, size, current rent, and lease status."
+  },
+  {
+    "id": 578,
+    "catalog_description": "Many-to-many links between product requirements and the test cases that verify them, supporting coverage metrics and impact analysis."
+  },
+  {
+    "id": 885,
+    "catalog_description": "Approval steps that gate opening a job requisition, each recording the approver, decision, timestamp, and rationale."
+  },
+  {
+    "id": 277,
+    "catalog_description": "Assignments of a person, team, or asset to an initiative or roadmap item for a period, with utilization and cost rate."
+  },
+  {
+    "id": 725,
+    "catalog_description": "An inventory of skills and competencies across the resource base, with proficiency levels, used to forecast utilization."
+  },
+  {
+    "id": 648,
+    "catalog_description": "Retail store labor schedules covering shift assignments, associate availability, and coverage, with retail-specific staffing logic."
+  },
+  {
+    "id": 427,
+    "catalog_description": "Return merchandise authorizations created for a customer return, with refund status, return location, and tracking."
+  },
+  {
+    "id": 1010,
+    "catalog_description": "Period revenue forecast snapshots by segment and roll-up, recording the committed, best-case, and pipeline calls for a forecast period."
+  },
+  {
+    "id": 109,
+    "catalog_description": "Deferred-revenue schedules under ASC 606 and IFRS 15, with performance obligations, allocations, recognition timeline, and recognized versus deferred amounts."
+  },
+  {
+    "id": 1257,
+    "catalog_description": "Pre-hire right-to-work verification events, such as the I-9 or E-Verify check, recording method, status, verifier, and outcome under employment-eligibility law."
+  },
+  {
+    "id": 291,
+    "catalog_description": "Periodic or event-driven exercises to identify, analyze, and evaluate risks, with type, scope, date, register version, and findings."
+  },
+  {
+    "id": 1125,
+    "catalog_description": "Configured behavioral indicators or detection rules that add weight to user risk scores and fire alerts, such as large downloads before resignation."
+  },
+  {
+    "id": 223,
+    "catalog_description": "Installed monitoring-and-management agents on endpoints and servers, with version, last check-in, health, configuration state, and telemetry status."
+  },
+  {
+    "id": 275,
+    "catalog_description": "Planned product or capability deliveries slated for a future release cycle, with dependencies and contingency planning."
+  },
+  {
+    "id": 591,
+    "catalog_description": "Reservations of meeting rooms, event spaces, or collaborative areas by an employee or team, with time slot, capacity, and requested amenities."
+  },
+  {
+    "id": 95,
+    "catalog_description": "Root cause analysis records, suggested or human-confirmed, linking candidate causes to the correlated event cluster and resulting incident."
+  },
+  {
+    "id": 1089,
+    "catalog_description": "Right-of-use assets recognized for a lease, with initial measurement, accumulated amortization, impairment, and carrying value under ASC 842 or IFRS 16."
+  },
+  {
+    "id": 526,
+    "catalog_description": "Discrete UI-level actions within a bot, such as click, type, extract, wait, or branch, sequenced to form the bot logic."
+  },
+  {
+    "id": 527,
+    "catalog_description": "Per-execution traces of individual bot activities, with sequence, status, optional screenshot, captured data, timestamp, and error details."
+  },
+  {
+    "id": 528,
+    "catalog_description": "Stored secrets used by bots, with credential type, target system, encrypted value, and rotation policy."
+  },
+  {
+    "id": 523,
+    "catalog_description": "Automation bot definitions that drive UI-level interactions, with process logic, trigger conditions, error handling, and version history."
+  },
+  {
+    "id": 529,
+    "catalog_description": "Versioned, distributable bot packages, with release notes, checksum, target environment, and deployment details."
+  },
+  {
+    "id": 524,
+    "catalog_description": "Single runs of a bot, with start and end time, status, execution log, input variables, and output results."
+  },
+  {
+    "id": 525,
+    "catalog_description": "Recurring bot execution configurations, with cron frequency, timezone, enabled state, next run time, and log retention policy."
+  }
+]

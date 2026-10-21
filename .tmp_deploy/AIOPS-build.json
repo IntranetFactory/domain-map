@@ -1,0 +1,257 @@
+{
+  "domain_code": "AIOPS",
+  "notes": "Footprint already carries 5 solutions across 4 vendors (>=3), a domain-grain system skill (aiops-system), business-function ownership, 7 mastered data_objects, 9 trigger_events, and 24 cross-domain handoffs. Gaps filled here: capabilities (0 -> 6), modules (0 -> 2), module->capability and module->data_object assignment for every existing master plus the existing consumer/contributor objects, lifecycle states for the one operational_workflow master with none (root_cause_analyses), and tools + module_tools so the existing system skill derives a per-module toolset. The 7 query_* tools already exist and are reused; only mutate tools are new. notify_person / notify_team already exist and are reused for the channel-swap.",
+  "phase0_vendors": [
+    {
+      "vendor": "BigPanda",
+      "flagship": "BigPanda AIOps",
+      "surface": ["alerts", "incidents", "correlation_patterns", "enrichment_rules", "topology", "maintenance_windows", "feedback_labels", "integrations", "environments", "auto_share_rules"]
+    },
+    {
+      "vendor": "Moogsoft (Dell)",
+      "flagship": "Moogsoft AIOps",
+      "surface": ["events", "alerts", "situations", "correlation_recipes", "dedup_keys", "maintenance_windows", "thresholds", "anomaly_detectors", "workflow_engines", "enrichment_lookups"]
+    },
+    {
+      "vendor": "ServiceNow",
+      "flagship": "ServiceNow ITOM / AIOps (Event Management, Health Log Analytics, Predictive AIOps)",
+      "surface": ["events", "alerts", "alert_rules", "ci_bindings", "service_maps", "anomaly_models", "metrics", "predictive_insights", "remediation_subflows", "change_collision_records"]
+    },
+    {
+      "vendor": "Datadog",
+      "flagship": "Datadog Watchdog / Event Management",
+      "surface": ["events", "monitors", "anomaly_detections", "forecasts", "outlier_detections", "correlations", "root_cause_suggestions", "downtime_schedules", "service_health"]
+    },
+    {
+      "vendor": "Dynatrace",
+      "flagship": "Dynatrace Davis AI",
+      "surface": ["problems", "events", "anomaly_detections", "baselines", "root_cause_findings", "topology_entities", "maintenance_windows", "metric_predictions", "service_health"]
+    },
+    {
+      "vendor": "PagerDuty",
+      "flagship": "PagerDuty AIOps",
+      "surface": ["alerts", "incidents", "alert_grouping_records", "noise_reduction_rules", "change_events", "event_orchestration_rules", "outlier_incidents", "past_incidents", "probable_origin_findings"]
+    }
+  ],
+  "phase0_subtraction_notes": "Every Core/Common surface entity beyond the 7 existing masters (correlation_rules, enrichment_pipelines, service_health_scores, alert_storms, feedback_labels, change_correlations, model_drift_alerts, escalation_policies, golden_signal_definitions) is deferred to a follow-up additive pass (decision MARKET-SURFACE, non-gating). configuration_items / monitoring_events / monitoring_alerts / distributed_traces / data_pipelines are mastered by CMDB / OBS / DATA-AI-PLAT and stay consumer/contributor here.",
+  "capabilities": [
+    {
+      "capability_code": "AIOPS-EVENT-CORRELATION",
+      "capability_name": "Event Correlation",
+      "description": "Group related events, alerts, and signals from across the monitored estate into a single correlated incident using ML and pattern analysis, so responders see one issue instead of a flood of raw alerts.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "AIOPS-ANOMALY-DETECTION",
+      "capability_name": "Anomaly Detection",
+      "description": "Detect deviations from learned baselines across metrics, logs, and traces, flagging outliers and abnormal behavior that fixed thresholds would miss.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "AIOPS-ALERT-NOISE-REDUCTION",
+      "capability_name": "Alert Noise Reduction",
+      "description": "Deduplicate, suppress, and silence flapping or low-value alerts, including during planned changes, so on-call teams are paged only on signals that matter.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "AIOPS-ROOT-CAUSE-ANALYSIS",
+      "capability_name": "Root Cause Analysis",
+      "description": "Infer the probable root cause of a correlated incident from topology, change, and signal evidence, so responders start from an answer rather than a blank screen.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "AIOPS-PREDICTIVE-INSIGHTS",
+      "capability_name": "Predictive Insights",
+      "description": "Forecast outages, capacity exhaustion, and error storms ahead of impact by elevating predictive signals and high-confidence incident predictions into proactive workflows.",
+      "cross_cutting": false
+    },
+    {
+      "capability_code": "AIOPS-MODEL-OPERATIONS",
+      "capability_name": "Detection Model Operations",
+      "description": "Train, retrain, and monitor the detection and prediction models behind the platform, watching for drift so the signal stays accurate as the environment changes.",
+      "cross_cutting": false
+    }
+  ],
+  "vendors_new": [],
+  "solutions_new": [],
+  "modules": [
+    {
+      "domain_module_code": "AIOPS-EVENT-CORRELATION",
+      "domain_module_name": "Event Correlation",
+      "module_kind": "full",
+      "description": "The real-time signal-reduction half of AIOps. Ingests high-volume events, alerts, metrics, and traces from the monitoring estate, detects anomalies against learned baselines, correlates and deduplicates related signals into single incidents, and applies suppression rules (including planned-change windows) to cut alert noise. Masters event_correlations, anomaly_detections, and alert_suppression_rules; consumes monitoring_events, monitoring_alerts, distributed_traces, and configuration_items owned by OBS / RMM / CMDB. Used standalone by ops teams that only need noise reduction, or alongside Predictive Intelligence for the full closed loop.",
+      "catalog_tagline": "Turn a flood of raw events and alerts into a short, correlated, low-noise list of incidents your on-call teams can actually act on.",
+      "catalog_description": "Event Correlation sits across the events, alerts, metrics, and traces your IT estate produces every second and uses machine learning to find the few patterns that matter. It detects anomalies against learned baselines, groups related signals into a single correlated incident, and deduplicates the rest so a storm of alerts becomes one clear issue.\n\nNoise reduction is built in: suppression rules silence flapping alerts and mute the estate during planned changes, and those suppression decisions flow straight back to the monitoring layer so the whole operational loop stays in sync. The result is fewer pages, less triage, and an on-call experience focused on real problems instead of alert fatigue.",
+      "capability_codes": ["AIOPS-EVENT-CORRELATION", "AIOPS-ANOMALY-DETECTION", "AIOPS-ALERT-NOISE-REDUCTION"],
+      "data_objects": [
+        { "data_object_name": "event_correlations", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "anomaly_detections", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "alert_suppression_rules", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "monitoring_events", "role": "consumer", "necessity": "required", "existing": true },
+        { "data_object_name": "monitoring_alerts", "role": "contributor", "necessity": "required", "existing": true },
+        { "data_object_name": "distributed_traces", "role": "consumer", "necessity": "optional", "existing": true },
+        { "data_object_name": "configuration_items", "role": "consumer", "necessity": "optional", "existing": true }
+      ]
+    },
+    {
+      "domain_module_code": "AIOPS-PREDICTIVE-INTELLIGENCE",
+      "domain_module_name": "Predictive Intelligence",
+      "module_kind": "full",
+      "description": "The analytical, forward-looking half of AIOps. Forecasts incidents and capacity problems, elevates predictive signals above action thresholds, infers probable root cause for correlated incidents, and runs the ML training lifecycle (including drift detection) that keeps the detection and prediction models trustworthy. Masters predictive_signals, incident_predictions, root_cause_analyses, and ml_model_training_records; consumes data_pipelines and configuration_items owned by DATA-AI-PLAT / CMDB. Typically deployed alongside Event Correlation, which supplies the correlated incidents that root-cause and prediction reason over.",
+      "catalog_tagline": "Forecast outages before they hit, surface the probable root cause, and keep the models behind it all trained and trustworthy.",
+      "catalog_description": "Predictive Intelligence is the part of AIOps that looks ahead. It detects leading indicators of trouble, elevates high-confidence predictive signals, and forecasts incidents and capacity exhaustion while there is still time to act, opening proactive tickets before users feel the impact.\n\nWhen an incident does land, it infers the probable root cause from topology, change, and signal evidence so responders start from an answer. Behind the scenes, detection and prediction models are continuously retrained and watched for drift, and completed root-cause findings flow into incident and problem workflows. The result is faster mean time to resolution and a forward-looking view of service health rather than a purely reactive one."
+      ,
+      "capability_codes": ["AIOPS-PREDICTIVE-INSIGHTS", "AIOPS-ROOT-CAUSE-ANALYSIS", "AIOPS-MODEL-OPERATIONS"],
+      "data_objects": [
+        { "data_object_name": "predictive_signals", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "incident_predictions", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "root_cause_analyses", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "ml_model_training_records", "role": "master", "necessity": "required", "existing": true },
+        { "data_object_name": "event_correlations", "role": "consumer", "necessity": "required", "existing": true },
+        { "data_object_name": "anomaly_detections", "role": "consumer", "necessity": "required", "existing": true },
+        { "data_object_name": "data_pipelines", "role": "consumer", "necessity": "optional", "existing": true },
+        { "data_object_name": "configuration_items", "role": "consumer", "necessity": "optional", "existing": true }
+      ]
+    }
+  ],
+  "new_data_objects": [],
+  "lifecycle_states": [
+    {
+      "data_object_name": "root_cause_analyses",
+      "note": "Only operational_workflow master in the footprint with zero lifecycle states. Other masters are computed (event_correlations, anomaly_detections, predictive_signals, incident_predictions) or catalog (alert_suppression_rules) or operational_record (ml_model_training_records); no lifecycle proposed for them per Rule #12.",
+      "states": [
+        { "state_name": "investigating", "state_order": 1, "is_initial": true, "is_terminal": false, "requires_permission": false },
+        { "state_name": "draft", "state_order": 2, "is_initial": false, "is_terminal": false, "requires_permission": false },
+        { "state_name": "reviewed", "state_order": 3, "is_initial": false, "is_terminal": false, "requires_permission": true },
+        { "state_name": "published", "state_order": 4, "is_initial": false, "is_terminal": true, "requires_permission": true },
+        { "state_name": "dismissed", "state_order": 5, "is_initial": false, "is_terminal": true, "requires_permission": false }
+      ]
+    }
+  ],
+  "tools": [
+    { "tool_name": "query_event_correlations", "operation_kind": "query", "data_object_name": "event_correlations", "existing": true, "existing_id": 297 },
+    { "tool_name": "query_anomaly_detections", "operation_kind": "query", "data_object_name": "anomaly_detections", "existing": true, "existing_id": 298 },
+    { "tool_name": "query_root_cause_analyses", "operation_kind": "query", "data_object_name": "root_cause_analyses", "existing": true, "existing_id": 299 },
+    { "tool_name": "query_predictive_signals", "operation_kind": "query", "data_object_name": "predictive_signals", "existing": true, "existing_id": 300 },
+    { "tool_name": "query_alert_suppression_rules", "operation_kind": "query", "data_object_name": "alert_suppression_rules", "existing": true, "existing_id": 797 },
+    { "tool_name": "query_ml_model_training_records", "operation_kind": "query", "data_object_name": "ml_model_training_records", "existing": true, "existing_id": 798 },
+    { "tool_name": "query_incident_predictions", "operation_kind": "query", "data_object_name": "incident_predictions", "existing": true, "existing_id": 799 },
+
+    { "tool_name": "activate_alert_suppression_rule", "operation_kind": "mutate", "data_object_name": "alert_suppression_rules", "existing": false, "notes": "Representative mutate for the catalog suppression-rule master: activate a rule (e.g. for a planned change). Pairs with the alert_suppression_rule.activated event already in the footprint." },
+    { "tool_name": "publish_root_cause_analysis", "operation_kind": "mutate", "data_object_name": "root_cause_analyses", "existing": false, "notes": "Representative mutate / gated transition for the RCA operational_workflow master: publish a probable root cause. Realizes the published lifecycle state (requires_permission) and the root_cause_analysis.published event already in the footprint." },
+    { "tool_name": "record_ml_model_training_run", "operation_kind": "mutate", "data_object_name": "ml_model_training_records", "existing": false, "notes": "Representative mutate for the operational_record training master: record a completed retraining run. Pairs with the ml_model_training_record.completed event." },
+    { "tool_name": "acknowledge_incident_prediction", "operation_kind": "mutate", "data_object_name": "incident_predictions", "existing": false, "notes": "Representative mutate for the computed prediction master: acknowledge a high-confidence prediction so it can drive a proactive ticket. Pairs with incident_prediction.high_confidence." },
+    { "tool_name": "notify_person", "operation_kind": "side_effect", "data_object_name": null, "existing": true, "existing_id": 913, "notes": "Reused abstraction tool. Replaces channel-specific send_email on the system skill (see decision CHANNEL-SWAP)." },
+    { "tool_name": "notify_team", "operation_kind": "side_effect", "data_object_name": null, "existing": true, "existing_id": 914, "notes": "Reused abstraction tool. Replaces channel-specific post_chat_message on the system skill (see decision CHANNEL-SWAP)." }
+  ],
+  "module_tools": [
+    { "domain_module_code": "AIOPS-EVENT-CORRELATION", "tool_name": "query_event_correlations", "requirement_level": "required" },
+    { "domain_module_code": "AIOPS-EVENT-CORRELATION", "tool_name": "query_anomaly_detections", "requirement_level": "required" },
+    { "domain_module_code": "AIOPS-EVENT-CORRELATION", "tool_name": "query_alert_suppression_rules", "requirement_level": "required" },
+    { "domain_module_code": "AIOPS-EVENT-CORRELATION", "tool_name": "activate_alert_suppression_rule", "requirement_level": "required" },
+    { "domain_module_code": "AIOPS-EVENT-CORRELATION", "tool_name": "notify_team", "requirement_level": "optional" },
+
+    { "domain_module_code": "AIOPS-PREDICTIVE-INTELLIGENCE", "tool_name": "query_predictive_signals", "requirement_level": "required" },
+    { "domain_module_code": "AIOPS-PREDICTIVE-INTELLIGENCE", "tool_name": "query_incident_predictions", "requirement_level": "required" },
+    { "domain_module_code": "AIOPS-PREDICTIVE-INTELLIGENCE", "tool_name": "query_root_cause_analyses", "requirement_level": "required" },
+    { "domain_module_code": "AIOPS-PREDICTIVE-INTELLIGENCE", "tool_name": "query_ml_model_training_records", "requirement_level": "required" },
+    { "domain_module_code": "AIOPS-PREDICTIVE-INTELLIGENCE", "tool_name": "publish_root_cause_analysis", "requirement_level": "required" },
+    { "domain_module_code": "AIOPS-PREDICTIVE-INTELLIGENCE", "tool_name": "record_ml_model_training_run", "requirement_level": "required" },
+    { "domain_module_code": "AIOPS-PREDICTIVE-INTELLIGENCE", "tool_name": "acknowledge_incident_prediction", "requirement_level": "required" },
+    { "domain_module_code": "AIOPS-PREDICTIVE-INTELLIGENCE", "tool_name": "notify_person", "requirement_level": "optional" }
+  ],
+  "skills_note": "Do NOT create a new skill. The footprint already has the domain-grain system skill aiops-system (skills.id=27, domain_id=6, domain_module_id=null). Per Rule #17 it derives its toolset by rolling up domain_module_tools across both modules above. Retire its legacy channel-primitive links (send_email id 37, post_chat_message id 40) in favor of notify_person / notify_team via the module_tools above (decision CHANNEL-SWAP).",
+  "personas": [
+    {
+      "role_code": "IT-INFRA-SRE",
+      "role_name": "Site Reliability Engineer",
+      "business_function": "IT Infrastructure",
+      "modules": [
+        { "domain_module_code": "AIOPS-EVENT-CORRELATION", "interaction_level": "primary" },
+        { "domain_module_code": "AIOPS-PREDICTIVE-INTELLIGENCE", "interaction_level": "primary" }
+      ]
+    },
+    {
+      "role_code": "IT-INFRA-NOC-ANALYST",
+      "role_name": "NOC / Incident Analyst",
+      "business_function": "IT Infrastructure",
+      "modules": [
+        { "domain_module_code": "AIOPS-EVENT-CORRELATION", "interaction_level": "primary" },
+        { "domain_module_code": "AIOPS-PREDICTIVE-INTELLIGENCE", "interaction_level": "secondary" }
+      ]
+    },
+    {
+      "role_code": "IT-INFRA-OPS-MANAGER",
+      "role_name": "IT Operations Manager",
+      "business_function": "IT Infrastructure",
+      "modules": [
+        { "domain_module_code": "AIOPS-EVENT-CORRELATION", "interaction_level": "secondary" },
+        { "domain_module_code": "AIOPS-PREDICTIVE-INTELLIGENCE", "interaction_level": "secondary" }
+      ]
+    },
+    {
+      "role_code": "SW-ENG-AIOPS-ML-ENGINEER",
+      "role_name": "AIOps ML Engineer",
+      "business_function": "Software Engineering",
+      "modules": [
+        { "domain_module_code": "AIOPS-PREDICTIVE-INTELLIGENCE", "interaction_level": "primary" },
+        { "domain_module_code": "AIOPS-EVENT-CORRELATION", "interaction_level": "secondary" }
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "MODULE-SPLIT",
+      "gating": true,
+      "question": "How should AIOps be split into modules? The draft adopts a 2-module split: Event Correlation (event_correlations, anomaly_detections, alert_suppression_rules) and Predictive Intelligence (predictive_signals, incident_predictions, root_cause_analyses, ml_model_training_records). This drives every module->capability, module->data_object, lifecycle owner, persona, and per-module tool link below it.",
+      "options": [
+        "a) Two modules: Event Correlation + Predictive Intelligence (DRAFTED).",
+        "b) Three modules: add a Service Health module (service_health_scores, golden_signal_definitions, escalation_policies) once those objects are confirmed to exist.",
+        "c) Four modules: also split ML Model Ops (ml_model_training_records, model_drift_alerts, feedback_labels) out of Predictive Intelligence into its own module."
+      ],
+      "recommended": "a. Two modules is the minimal shape that unblocks the build today; (b) and (c) only pay off once the speculative service-health and ML-ops objects actually exist, and (c) overlaps the queued MLOPS candidate (see MLOPS-OWNERSHIP)."
+    },
+    {
+      "id": "TRIGGER-TOPOLOGY-PUBLISHED",
+      "gating": false,
+      "question": "trigger_event topology.published (id 143) is attached to event_correlations but its name/description point at service topology, a CMDB concept (service_maps). No handoff uses it. This is a destructive change, so it needs sign-off.",
+      "options": [
+        "a) Delete it (no handoff depends on it).",
+        "b) Re-attribute it to the CMDB service_maps object (move ownership to CMDB).",
+        "c) Keep it on event_correlations and rewrite the description, if AIOps really publishes its own topology view."
+      ],
+      "recommended": "b. The name and description point at service topology, which CMDB owns, so re-attributing to service_maps is the cleanest fix. (a) is acceptable since nothing depends on it. Either way it is destructive and needs your approval."
+    },
+    {
+      "id": "MLOPS-OWNERSHIP",
+      "gating": false,
+      "question": "Should ml_model_training_records stay AIOPS-owned, or move to a future MLOPS domain (mention_count 2 in _missing-domains.md)?",
+      "options": [
+        "a) Keep AIOPS as canonical owner; let MLOPS embed it later when MLOPS lands.",
+        "b) Move the canonical master to MLOPS and have AIOPS consume / embed it instead."
+      ],
+      "recommended": "a. Keeping it in AIOPS avoids a premature move to a domain that does not exist yet; MLOPS can embedded_master it when it lands. This also keeps the 2-module split coherent (it is what would justify split option c)."
+    },
+    {
+      "id": "PATTERN-FLAG-FREEZES",
+      "gating": false,
+      "question": "Three masters plausibly want immutability freezes (has_submit_lock=true). Setting these overwrites current false values, so each needs confirmation.",
+      "options": [
+        "a) ml_model_training_records: freeze a training run once it commits (immutable artifact). Recommended: yes.",
+        "b) root_cause_analyses: freeze once published so findings cannot be quietly edited (referenced by incident/problem teams). Recommended: yes.",
+        "c) alert_suppression_rules: freeze once activated so any change requires a new rule (auditability of what got silenced). Recommended: yes."
+      ],
+      "recommended": "yes to all three. Each is a stable artifact whose post-commit edits would corrupt an audit trail. Each is a value overwrite and needs your confirmation before the flip."
+    },
+    {
+      "id": "CHANNEL-SWAP",
+      "gating": false,
+      "question": "The legacy aiops-system skill links channel primitives send_email (tool 37) and post_chat_message (tool 40). Are these backing a specific named workflow, or are they generic notifications?",
+      "options": [
+        "a) They back a specific workflow (name it): keep the channel-specific tools.",
+        "b) They are generic notifications: swap them for notify_person / notify_team (both already exist as side_effect tools, ids 913/914), wired via the module_tools above."
+      ],
+      "recommended": "b. Generic operational notifications should use the abstraction tools so the channel can change without rewiring. The draft module_tools already use notify_team / notify_person; on approval, drop the two channel-primitive links from the derived toolset."
+    }
+  ]
+}

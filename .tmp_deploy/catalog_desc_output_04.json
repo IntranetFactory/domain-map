@@ -1,0 +1,394 @@
+[
+  {
+    "id": 483,
+    "catalog_description": "Initiating documents for a creative job, setting the client objective, audience, key message, deliverables, deadlines, and budget."
+  },
+  {
+    "id": 484,
+    "catalog_description": "Assets under production within an agency job, such as images, videos, layouts, or copy, with version history and proofing and approval state."
+  },
+  {
+    "id": 1119,
+    "catalog_description": "Named variations of a creative made for testing, combining specific headline, body, image, and call-to-action choices with their own performance trail."
+  },
+  {
+    "id": 933,
+    "catalog_description": "Definitions of digital badges and micro-credentials, covering criteria, image, issuer, and expiration policy."
+  },
+  {
+    "id": 1279,
+    "catalog_description": "Third-party verification handshakes confirming that an issued badge or credential is genuine."
+  },
+  {
+    "id": 508,
+    "catalog_description": "Critical control points in a food-safety plan, each with its hazard, critical limit, monitoring frequency, and responsible party."
+  },
+  {
+    "id": 495,
+    "catalog_description": "Food-traceability events along the supply chain, such as growing, receiving, transformation, and shipping, with their key data references."
+  },
+  {
+    "id": 98,
+    "catalog_description": "People at customer or prospect organizations, carrying title, contact details, decision-maker flag, preferred channel, and opt-in state."
+  },
+  {
+    "id": 99,
+    "catalog_description": "Prospects captured before qualification, tracking source, score, status, assigned rep, and the contact and account they would convert into."
+  },
+  {
+    "id": 100,
+    "catalog_description": "Active sales deals, tracking stage, amount, close date, probability, products, competitor, and decision criteria."
+  },
+  {
+    "id": 487,
+    "catalog_description": "Per-field seasonal planting plans covering crop, variety, target yield, and application schedule, including multi-year rotation history."
+  },
+  {
+    "id": 1249,
+    "catalog_description": "Dependencies between work owned by different teams that must be coordinated and resolved to keep the program on track."
+  },
+  {
+    "id": 514,
+    "catalog_description": "Per-member, per-season farm-share subscriptions, covering share type, customization preferences, payment plan, and pickup location."
+  },
+  {
+    "id": 515,
+    "catalog_description": "Weekly packed farm shares for a specific member, listing contents, swaps applied, packing reference, and delivery or pickup status."
+  },
+  {
+    "id": 105,
+    "catalog_description": "Customer satisfaction, NPS, and effort survey responses tied to a case, interaction, or relationship-level survey."
+  },
+  {
+    "id": 954,
+    "catalog_description": "Grouped learning paths and courses targeting a role, function, or compliance scope."
+  },
+  {
+    "id": 114,
+    "catalog_description": "Derived attributes attached to a resolved customer profile, such as lifetime value, RFM score, propensity to buy, churn likelihood, and lifecycle stage."
+  },
+  {
+    "id": 103,
+    "catalog_description": "Customer-facing support tickets, carrying severity, channel, queue, SLA clock, and references to the customer, contact, and satisfaction survey."
+  },
+  {
+    "id": 104,
+    "catalog_description": "Records of what support a customer can use, covering service tier, monthly hours, supported channels, named contacts, and SLA response targets."
+  },
+  {
+    "id": 111,
+    "catalog_description": "Unified stream of every customer interaction across web, mobile, email, in-product, sales, and support channels."
+  },
+  {
+    "id": 407,
+    "catalog_description": "Qualitative or quantitative feedback from customers on product experience, gaps, or opportunities."
+  },
+  {
+    "id": 315,
+    "catalog_description": "Single resolved customer identities consolidated across all source systems using match, merge, and survivorship rules."
+  },
+  {
+    "id": 107,
+    "catalog_description": "Seller-issued invoices billed to customers, with line items, tax, payment terms, due date, and status from draft to paid or written off."
+  },
+  {
+    "id": 115,
+    "catalog_description": "Observed multi-channel journeys showing how a customer moved through touchpoints over time."
+  },
+  {
+    "id": 821,
+    "catalog_description": "Physical service locations belonging to a customer, where one customer can have many sites across properties or chains."
+  },
+  {
+    "id": 106,
+    "catalog_description": "Customers' recurring revenue contracts, covering plan, term, MRR or ARR, billing cadence, seat count, and lifecycle from trial to churned."
+  },
+  {
+    "id": 97,
+    "catalog_description": "Canonical records of customers, whether business accounts or end consumers, carrying identity, segmentation, lifecycle stage, and account hierarchy."
+  },
+  {
+    "id": 499,
+    "catalog_description": "Individual cow records, covering ear tag, breed, birth date, sire and dam, parity, lactation status, and pen location."
+  },
+  {
+    "id": 378,
+    "catalog_description": "Video-telematics incident records of AI-detected driving events such as collisions, near-misses, and distracted driving, with clips, driver, and severity."
+  },
+  {
+    "id": 307,
+    "catalog_description": "Governance rules controlling who can access a data asset, covering audience, permission level, conditions, approval chain, and audit trail."
+  },
+  {
+    "id": 300,
+    "catalog_description": "Cataloged data-bearing assets such as tables, datasets, APIs, databases, and files, with metadata, owner, storage location, and source system."
+  },
+  {
+    "id": 306,
+    "catalog_description": "Attestations that a data asset meets quality and compliance thresholds for production use, with certifier, date, and valid-until."
+  },
+  {
+    "id": 303,
+    "catalog_description": "Sensitivity tags applied to data assets, such as PII, PCI, PHI, confidential, or internal."
+  },
+  {
+    "id": 952,
+    "catalog_description": "Right-to-erasure requests under GDPR Article 17, covering scope, anonymization policy, regulator deadline, and fulfillment status."
+  },
+  {
+    "id": 304,
+    "catalog_description": "Logical subject-area groupings such as Customer, Order, or Inventory that organize multiple data assets with ownership and documentation."
+  },
+  {
+    "id": 332,
+    "catalog_description": "Raw events of sensitive data being moved or accessed outside authorized boundaries, before any data-loss policy is triggered."
+  },
+  {
+    "id": 301,
+    "catalog_description": "Flow edges linking a source data asset to a target, with column-level mapping, transformation logic, frequency, and SLA."
+  },
+  {
+    "id": 227,
+    "catalog_description": "Data pipeline definitions and their run history, covering ingestion and transformation jobs, scheduling, dependencies, and run-level observability."
+  },
+  {
+    "id": 232,
+    "catalog_description": "Published, governed data products with an explicit contract: schema, SLA, owner, access policy, intended consumers, and quality expectations."
+  },
+  {
+    "id": 1055,
+    "catalog_description": "Data processing addenda attached to contracts that govern how personal data is handled, each with its own approval and renewal cycle."
+  },
+  {
+    "id": 342,
+    "catalog_description": "Per-asset risk scores combining sensitivity, access breadth, and exposure, used to prioritize the remediation queue."
+  },
+  {
+    "id": 305,
+    "catalog_description": "Assignments of a steward to a data asset or glossary term, with responsibility type and escalation chain."
+  },
+  {
+    "id": 901,
+    "catalog_description": "Privacy rights requests from candidates exercising access, rectification, erasure, restriction, portability, or objection, with intake, due date, and fulfillment."
+  },
+  {
+    "id": 308,
+    "catalog_description": "Aggregated consumption signals per data asset, such as accessing team, query count, last access, and bytes scanned."
+  },
+  {
+    "id": 338,
+    "catalog_description": "Cloud analytics databases or clusters specialized for analytics, with an access model distinct from transactional databases."
+  },
+  {
+    "id": 547,
+    "catalog_description": "Cabinets within data center racks, covering layout, power distribution, cable management, access control, and temperature zones."
+  },
+  {
+    "id": 555,
+    "catalog_description": "Physical cable connections between ports, covering length, type, installation date, test state, and failure history."
+  },
+  {
+    "id": 553,
+    "catalog_description": "Forward-looking projections of data center power, cooling, space, and bandwidth capacity, with utilization forecast, headroom, and planned augmentations."
+  },
+  {
+    "id": 1025,
+    "catalog_description": "Requests to install, decommission, or relocate data center equipment, carrying the action, target rack, scheduling, and approval before physical work."
+  },
+  {
+    "id": 551,
+    "catalog_description": "Data center cooling units such as CRAC, CRAH, or in-row coolers, with capacity, zone served, temperature setpoints, and power draw."
+  },
+  {
+    "id": 552,
+    "catalog_description": "Time-series temperature, humidity, airflow, and pressure readings from cabinet, aisle, and zone sensors for hot-spot detection."
+  },
+  {
+    "id": 554,
+    "catalog_description": "Network or power ports on a device, covering interface name, speed and type, neighbor endpoint, assignment, and usage status."
+  },
+  {
+    "id": 549,
+    "catalog_description": "Electrical circuits from the site feed to a power outlet, covering capacity, voltage, phase, breaker state, and redundancy."
+  },
+  {
+    "id": 548,
+    "catalog_description": "Rack or cabinet power distribution units, covering input phases, output outlets, per-outlet metering, management mode, and firmware version."
+  },
+  {
+    "id": 546,
+    "catalog_description": "Physical rack frames in a data center, covering height in rack units, location, power budget, cooling zone, and asset tag."
+  },
+  {
+    "id": 550,
+    "catalog_description": "Uninterruptible power supply units, covering input and output capacity, battery health, last test date, load level, and bypass state."
+  },
+  {
+    "id": 1121,
+    "catalog_description": "Dynamic creative optimization rule sets governing how variants are generated from assets and feeds and how delivery is weighted toward top performers."
+  },
+  {
+    "id": 1008,
+    "catalog_description": "Per-opportunity machine-derived risk grades with the contributing factors, recomputed as new activity and signals arrive."
+  },
+  {
+    "id": 1009,
+    "catalog_description": "Named risk patterns raised against an opportunity, such as no decision-maker or no scheduled next step, tracked from raised to cleared."
+  },
+  {
+    "id": 1139,
+    "catalog_description": "Recorded runtime evaluations of a decision table against a set of inputs, capturing matched rules, resulting outputs, and the invoking process."
+  },
+  {
+    "id": 1138,
+    "catalog_description": "Versioned decision tables with input and output clauses, rules, and a hit policy, invoked by running processes to evaluate business rules."
+  },
+  {
+    "id": 141,
+    "catalog_description": "Configurable definitions of pay deductions such as retirement, medical premiums, garnishments, and union dues, with priority, ceiling, and ledger mapping."
+  },
+  {
+    "id": 1255,
+    "catalog_description": "Detected constraints or slow stages in a value stream surfaced from measured flow and prioritized for remediation."
+  },
+  {
+    "id": 518,
+    "catalog_description": "Optimized multi-stop delivery routes per delivery day, covering vehicle, driver, stops, and time windows."
+  },
+  {
+    "id": 1251,
+    "catalog_description": "Modeled end-to-end paths that delivery work flows through, from idea to production, used as the unit of flow measurement."
+  },
+  {
+    "id": 278,
+    "catalog_description": "Business cases submitted for new initiatives or features, covering requester, justification, estimated cost, timeline, and approval workflow."
+  },
+  {
+    "id": 280,
+    "catalog_description": "Sequencing and blocking relationships between initiatives and roadmap items, covering critical path, lag time, and external dependencies."
+  },
+  {
+    "id": 590,
+    "catalog_description": "Self-service desk reservations for hybrid and hot-desking workplaces, covering the desk, date and time, and work mode."
+  },
+  {
+    "id": 560,
+    "catalog_description": "Records of which mobile app packages are pushed to which enrolled devices, with install status, timestamp, and removal flag."
+  },
+  {
+    "id": 614,
+    "catalog_description": "Accuracy verification records for clinical equipment such as scales and infusion pumps, tracking calibration date, technician, and tolerance acceptance."
+  },
+  {
+    "id": 558,
+    "catalog_description": "Baseline policies defining required device state, such as OS version floor, encryption, app blocklist, root detection, and password rules."
+  },
+  {
+    "id": 563,
+    "catalog_description": "Periodic compliance scan results per enrolled device, listing policies evaluated, pass or fail per policy, findings, and remediation actions."
+  },
+  {
+    "id": 557,
+    "catalog_description": "Device settings templates covering WiFi, VPN, certificates, security baselines, and disk encryption, version-controlled and assigned to device cohorts."
+  },
+  {
+    "id": 562,
+    "catalog_description": "Outcome logs for each policy, profile, or app deployment, covering trigger, timestamp, success flag, error code, and device state change."
+  },
+  {
+    "id": 615,
+    "catalog_description": "Adverse-event reports for medical devices, such as patient injury or unexpected behavior, with root cause and links to recalls when patterns emerge."
+  },
+  {
+    "id": 611,
+    "catalog_description": "Preventive and corrective maintenance records per medical device, covering schedule completion, technician notes, and parts replaced."
+  },
+  {
+    "id": 612,
+    "catalog_description": "Regulatory recall notices and facility responses for medical devices, covering recall scope, risk class, affected serials, and patient-safety impact."
+  },
+  {
+    "id": 137,
+    "catalog_description": "Images, videos, audio, documents, and design files with metadata, rights, taxonomy, and delivery URLs."
+  },
+  {
+    "id": 443,
+    "catalog_description": "Named digital experiences or journeys, such as a post-purchase flow, mapped to segments and A/B variants."
+  },
+  {
+    "id": 588,
+    "catalog_description": "Detected degradations affecting app usage, such as slow boot, crashes, login failures, network drops, or VPN issues, with severity and affected users."
+  },
+  {
+    "id": 253,
+    "catalog_description": "Logical entity, dimension, and hierarchy models decoupled from physical tables, defining conformed dimensions, hierarchies, and slowly-changing behavior."
+  },
+  {
+    "id": 356,
+    "catalog_description": "State-mandated and brokerage-policy disclosure forms attached to transactions, such as agency, property condition, lead paint, and HOA documents."
+  },
+  {
+    "id": 421,
+    "catalog_description": "Workflow records gating discount authority, capturing the approver and the accept or reject decision."
+  },
+  {
+    "id": 82,
+    "catalog_description": "Candidate devices emitted by a scan, awaiting normalization and reconciliation into a configuration item before joining the CMDB."
+  },
+  {
+    "id": 580,
+    "catalog_description": "Process models mined from an event log via process discovery, carrying fitted parameters and quality metrics such as fitness and precision."
+  },
+  {
+    "id": 81,
+    "catalog_description": "Records of a discovery job run, covering scope, credentials used, start and end times, candidates emitted, and errors encountered."
+  },
+  {
+    "id": 83,
+    "catalog_description": "Connector, probe, and credential definitions for discovery integrations such as hypervisors, cloud accounts, clusters, and directory services."
+  },
+  {
+    "id": 262,
+    "catalog_description": "Assignments of a work order to a specific technician at a specific time, capturing dispatch decisions, route output, and dispatcher overrides."
+  },
+  {
+    "id": 737,
+    "catalog_description": "Post-call wrap-up categories that classify the business reason for a contact, used for routing logic and analytics."
+  },
+  {
+    "id": 90,
+    "catalog_description": "End-to-end request traces across microservices, with parent-child spans, service identification, and latency attribution for diagnosing issues."
+  },
+  {
+    "id": 1023,
+    "catalog_description": "Investor-facing notice documents for a fund distribution, in standard reporting format, with publication timestamps."
+  },
+  {
+    "id": 334,
+    "catalog_description": "Approved, time-limited exceptions to a data-loss policy, tracking requestor, approver, business justification, and expiration."
+  },
+  {
+    "id": 330,
+    "catalog_description": "Data-loss policy violation events, capturing user, timestamp, classification, destination, action taken, and remediation status."
+  },
+  {
+    "id": 331,
+    "catalog_description": "Data-loss prevention rule sets defining conditions and actions such as block, quarantine, redact, mask, watermark, or alert."
+  },
+  {
+    "id": 333,
+    "catalog_description": "Blocked or flagged artifacts such as emails, files, or messages held pending admin review or a user override request."
+  },
+  {
+    "id": 335,
+    "catalog_description": "Audit trail of user interactions with the data-loss system, covering blocks, quarantine reviews, exception requests, and policy violations."
+  },
+  {
+    "id": 1191,
+    "catalog_description": "Invoices issued to boaters for dockage, storage, utilities, fuel, or service, with payment status."
+  },
+  {
+    "id": 535,
+    "catalog_description": "Outputs of document-type classification, capturing the classified type, confidence, model version, and timestamp."
+  }
+]

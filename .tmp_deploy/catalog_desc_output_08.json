@@ -1,0 +1,394 @@
+[
+  {
+    "id": 60,
+    "catalog_description": "License audit and true-up records comparing entitled to installed counts, with the resulting gap, true-up cost, and supporting evidence."
+  },
+  {
+    "id": 642,
+    "catalog_description": "Active issued licenses or permits, with holder, type, issue and expiration dates, conditions, jurisdiction, and current status."
+  },
+  {
+    "id": 644,
+    "catalog_description": "Renewal applications for existing licenses, tracking submission, updated requirements, fees, condition changes, and outcome."
+  },
+  {
+    "id": 149,
+    "catalog_description": "Qualifying life events such as marriage, birth, adoption, or coverage loss that open a mid-year benefits enrollment window."
+  },
+  {
+    "id": 728,
+    "catalog_description": "Limited partners in a fund, with their commitment, contributions to date, and governance rights for compliance tracking."
+  },
+  {
+    "id": 1099,
+    "catalog_description": "Individual head of livestock, with identity, breed, sex, birth or acquisition date, status, parentage, and the mob it belongs to."
+  },
+  {
+    "id": 1106,
+    "catalog_description": "Identifiers attached to an animal, such as RFID ear tags or scheme device numbers, and the traceability registration they carry."
+  },
+  {
+    "id": 1100,
+    "catalog_description": "Managed groups of animals handled collectively for movements, treatments, and pasture allocation."
+  },
+  {
+    "id": 602,
+    "catalog_description": "Borrower requests to originate a loan, with amount, purpose, loan type, term, collateral, and lifecycle from draft to funded."
+  },
+  {
+    "id": 608,
+    "catalog_description": "Releases of approved loan funds, with date, amount, tranching, destination account, and conditions satisfied."
+  },
+  {
+    "id": 795,
+    "catalog_description": "Physical or organizational locations referenced across the system, used to place and group other records."
+  },
+  {
+    "id": 89,
+    "catalog_description": "Application log stream entries, structured and unstructured, indexed for search and correlated with metrics and traces for root-cause analysis."
+  },
+  {
+    "id": 626,
+    "catalog_description": "First-notice-of-loss events giving rise to a claim, with occurrence date, location, cause, loss type, and description."
+  },
+  {
+    "id": 263,
+    "catalog_description": "Customers enrolled in the loyalty program, with tier, accrued points balance, enrollment date, and opt-in status."
+  },
+  {
+    "id": 265,
+    "catalog_description": "Tier definitions in the loyalty program, with qualifying thresholds, benefits, and retention rules that members are assigned to."
+  },
+  {
+    "id": 264,
+    "catalog_description": "Point-earning and point-spending events for loyalty members: purchases, bonuses, redemptions, expiries, and adjustments."
+  },
+  {
+    "id": 759,
+    "catalog_description": "Active capital commitments from a limited partner to a fund, tracking committed, called, and distributed amounts plus current value."
+  },
+  {
+    "id": 1022,
+    "catalog_description": "Know-your-customer and anti-money-laundering results for a limited partner, including sanction screening, captured at subscription and re-screened periodically."
+  },
+  {
+    "id": 754,
+    "catalog_description": "Prospective limited partners being fundraised, tracking the relationship before any capital commitment is closed."
+  },
+  {
+    "id": 769,
+    "catalog_description": "Quarterly performance reports for limited partners per fund, with position marks, fund metrics, and general-partner commentary."
+  },
+  {
+    "id": 758,
+    "catalog_description": "Subscription documents collected during limited-partner onboarding: the legal commitment, KYC and AML results, and accreditation attestation."
+  },
+  {
+    "id": 1271,
+    "catalog_description": "External Learning Record Store endpoints that xAPI learning statements are routed to."
+  },
+  {
+    "id": 493,
+    "catalog_description": "Per-job equipment telemetry logged from machinery, covering operating parameters, application rates, GPS track, and alarms."
+  },
+  {
+    "id": 703,
+    "catalog_description": "Defect and non-conformance records captured from inspections or driver reports before a work order is raised."
+  },
+  {
+    "id": 962,
+    "catalog_description": "Reminders sent to a manager when one of their direct reports has overdue or upcoming training."
+  },
+  {
+    "id": 802,
+    "catalog_description": "Manufacturing bills of materials restructured for assembly order, with phantom-part rollups, kitting, and process-specific decompositions."
+  },
+  {
+    "id": 803,
+    "catalog_description": "Routings defining the ordered sequence of operations to produce a part, with work center, setup time, run time, and resource allocations."
+  },
+  {
+    "id": 1177,
+    "catalog_description": "Mooring balls in a mooring field, with position, tackle, weight rating, and the assigned vessel."
+  },
+  {
+    "id": 1176,
+    "catalog_description": "Wet berths at a dock, with number, length, beam and draft limits, utilities, and service status."
+  },
+  {
+    "id": 1219,
+    "catalog_description": "Defined slices of the market by industry, size, geography, or motion that a plan targets."
+  },
+  {
+    "id": 1007,
+    "catalog_description": "Competitive, pricing, and churn-risk signals aggregated across many conversations, summarizing what the market is saying overall."
+  },
+  {
+    "id": 1070,
+    "catalog_description": "Top-down assignments of budget from a marketing budget to a plan line, campaign, or channel, routed through approval and reconciled against spend."
+  },
+  {
+    "id": 1069,
+    "catalog_description": "Pools of marketing funds for a period, unit, or region that are approved and then allocated top-down across plans, campaigns, and channels."
+  },
+  {
+    "id": 1068,
+    "catalog_description": "Shared campaign and content calendars laying marketing activity out across time, teams, and channels for visibility and coordination."
+  },
+  {
+    "id": 116,
+    "catalog_description": "Marketing campaign definitions across email, multi-channel, and account-based plays, with target audience, schedule, content variants, and KPIs."
+  },
+  {
+    "id": 117,
+    "catalog_description": "Email templates and sent instances at marketing scale, with open, click, bounce, and unsubscribe metrics and deliverability state."
+  },
+  {
+    "id": 120,
+    "catalog_description": "Lead-capture form definitions, with fields, mapping to leads and contacts, conditional logic, and post-submit routing."
+  },
+  {
+    "id": 1072,
+    "catalog_description": "Plan-level performance and marketing-ROI measures such as results, pipeline contribution, and return, computed against the plans and budgets that funded the activity."
+  },
+  {
+    "id": 1067,
+    "catalog_description": "Lines within a marketing plan, each a planned activity or program with objective, owner, time window, and allocated budget."
+  },
+  {
+    "id": 1066,
+    "catalog_description": "Annual or quarterly marketing plans, the top-level container organizing objectives, plan lines, and budget, approved before execution."
+  },
+  {
+    "id": 1071,
+    "catalog_description": "Committed or actual marketing expenditures attributed to a budget allocation and plan line, reconciled to compute remaining budget and variance."
+  },
+  {
+    "id": 865,
+    "catalog_description": "Audit records of a matching or scoring batch, capturing model version, inputs, outputs such as fit scores and recommendations, and timestamp."
+  },
+  {
+    "id": 318,
+    "catalog_description": "Decision logic identifying candidate duplicate records within or across sources, with field weights and threshold scores."
+  },
+  {
+    "id": 166,
+    "catalog_description": "Recorded meal and rest-break events evidencing compliance with labor-law break requirements, with waiver attestation where applicable."
+  },
+  {
+    "id": 481,
+    "catalog_description": "Per-campaign media-buying plans broken down by outlet, channel, daypart, audience, flight dates, and budget allocation."
+  },
+  {
+    "id": 610,
+    "catalog_description": "Medical equipment in clinical use such as infusion pumps, ventilators, and imaging systems, as a specialized regulated asset class."
+  },
+  {
+    "id": 864,
+    "catalog_description": "Matched mentor and mentee relationships, with goals, meeting cadence, and status."
+  },
+  {
+    "id": 319,
+    "catalog_description": "Survivorship rules defining which source system's value wins per field when two records merge."
+  },
+  {
+    "id": 155,
+    "catalog_description": "Periodic compensation review cycles, with budget pool, eligibility, calibration step, approval chain, and effective date."
+  },
+  {
+    "id": 156,
+    "catalog_description": "Per-employee proposed merit increases, bonuses, and equity refreshes for a cycle, with calibration adjustments and final approval."
+  },
+  {
+    "id": 1212,
+    "catalog_description": "Positioning and messaging frameworks for a product or segment, with pillars, proof points, and approved copy."
+  },
+  {
+    "id": 1190,
+    "catalog_description": "Periodic reads of a utility meter, manual or wireless, that become a billable utility line."
+  },
+  {
+    "id": 662,
+    "catalog_description": "Operator-collected or automated consumption readings, with read date, consumption value, unit, read method, and anomaly flags."
+  },
+  {
+    "id": 711,
+    "catalog_description": "Row-level and metric-level access policies at the semantic-definition tier, governing which business unit sees which metric."
+  },
+  {
+    "id": 252,
+    "catalog_description": "Canonical, certified definitions of a business metric: numerator, denominator, filters, dimensions, time grain, ownership, and lineage to sources."
+  },
+  {
+    "id": 709,
+    "catalog_description": "Cached or pre-aggregated metric rollups served from columnar storage by the semantic layer."
+  },
+  {
+    "id": 88,
+    "catalog_description": "Time-series metric streams from instrumented applications: counters, gauges, histograms, and summaries tied to release versions."
+  },
+  {
+    "id": 502,
+    "catalog_description": "Bulk-tank or per-cow milk-quality results, covering cell count, bacterial count, butterfat, protein, and antibiotic-residue screening."
+  },
+  {
+    "id": 501,
+    "catalog_description": "Per-cow milking events from parlor or robotic systems, with milk yield, conductivity, and duration."
+  },
+  {
+    "id": 723,
+    "catalog_description": "Training metadata for machine-learning models, covering feature set, training window, version, accuracy, and retraining schedule."
+  },
+  {
+    "id": 228,
+    "catalog_description": "Registered machine-learning models with versions, training-data lineage, evaluation metrics, deployment endpoints, and approval state."
+  },
+  {
+    "id": 1101,
+    "catalog_description": "Recorded movements of a mob between paddocks, properties, or external destinations, with date, head count, origin, destination, and reason."
+  },
+  {
+    "id": 559,
+    "catalog_description": "App distribution units for mobile deployment, with app identifier, version, manifest, store link, and silent-install flag."
+  },
+  {
+    "id": 861,
+    "catalog_description": "AI-generated next-move suggestions for an employee, with rationale and freshness."
+  },
+  {
+    "id": 1124,
+    "catalog_description": "Observed insider activity events captured from endpoint, email, file, cloud, identity, or removable-media telemetry, evaluated by detection rules."
+  },
+  {
+    "id": 85,
+    "catalog_description": "Filtered, human-relevant events that crossed a threshold or matched a pattern, enriched with priority and routing, ready to be paged or ticketed."
+  },
+  {
+    "id": 84,
+    "catalog_description": "Raw events from monitored systems: state changes, threshold crossings, status updates, and log signals consumed for correlation."
+  },
+  {
+    "id": 86,
+    "catalog_description": "Monitoring policies defining what to monitor, at what frequency and thresholds, for which configuration items, often auto-bound by class."
+  },
+  {
+    "id": 237,
+    "catalog_description": "A managed service provider's end-customer organizations, with site hierarchy, contacts, contract portfolio, and asset estate."
+  },
+  {
+    "id": 234,
+    "catalog_description": "Service contracts between a managed service provider and an end-customer, covering block-hour, retainer, per-device, or managed-service models, consumption, renewal, and SLA terms."
+  },
+  {
+    "id": 236,
+    "catalog_description": "Invoices issued by a managed service provider to its end-customer, combining recurring subscription lines, out-of-contract billable work, and tax."
+  },
+  {
+    "id": 233,
+    "catalog_description": "Billable service tickets against a managed service provider's contract, with time-tracked work, billable category, SLA timer, and dispatch state."
+  },
+  {
+    "id": 235,
+    "catalog_description": "Technician time entries per ticket, contract, or customer, with category tagging, billable classification, approval, and feeds to payroll and billing."
+  },
+  {
+    "id": 650,
+    "catalog_description": "Third-party store quality assessments covering customer experience, compliance, and staff courtesy, distinct from internal store audits."
+  },
+  {
+    "id": 1036,
+    "catalog_description": "Government-issued identity numbers for a worker, such as social security or national insurance numbers, held with restricted access and validity dates."
+  },
+  {
+    "id": 1051,
+    "catalog_description": "Negotiation rules and fallback positions guiding how clauses may be redlined and which concessions are pre-approved."
+  },
+  {
+    "id": 545,
+    "catalog_description": "Historical baseline performance profiles per path, flow, or link, covering median and p95 latency, loss, and jitter, used for anomaly detection."
+  },
+  {
+    "id": 538,
+    "catalog_description": "Captured packet and session flows, with source and destination addresses, ports, protocols, bytes transferred, and duration."
+  },
+  {
+    "id": 542,
+    "catalog_description": "Physical or virtual network interfaces on monitored devices, serving as the collection point for traffic flow capture."
+  },
+  {
+    "id": 657,
+    "catalog_description": "Telco network inventory of ports, circuits, IP address blocks, fiber routes, and access-node ports, with allocated or free status."
+  },
+  {
+    "id": 539,
+    "catalog_description": "Path traces from source to destination, with the ordered hop sequence, per-hop latency, cumulative loss, and round-trip time."
+  },
+  {
+    "id": 541,
+    "catalog_description": "Threshold breaches or anomalies on network performance metrics, with severity, affected path or flow, and baseline correlation."
+  },
+  {
+    "id": 540,
+    "catalog_description": "Time-series of latency, jitter, packet loss, and throughput sampled across flows, links, and application paths for network SLO reporting."
+  },
+  {
+    "id": 544,
+    "catalog_description": "Periodic captures of network connectivity: device adjacency, link status, and interface roles, used for visualization and root-cause correlation."
+  },
+  {
+    "id": 178,
+    "catalog_description": "Placements of a worker on a performance-by-potential nine-box grid per cycle, feeding succession planning and high-potential identification."
+  },
+  {
+    "id": 714,
+    "catalog_description": "Record-triggered workflows, scheduled jobs, or external API calls defined in a no-code platform."
+  },
+  {
+    "id": 241,
+    "catalog_description": "User-defined containers for a no-code deployment: a self-contained namespace for tables, views, automations, and access."
+  },
+  {
+    "id": 712,
+    "catalog_description": "Public or authenticated intake forms authored in a no-code database."
+  },
+  {
+    "id": 242,
+    "catalog_description": "User-defined schema inside a no-code base: tables, fields with types, linked-record relationships, formulas, and views."
+  },
+  {
+    "id": 713,
+    "catalog_description": "Switchable presentation layers such as grid, gallery, kanban, calendar, or timeline over a no-code base."
+  },
+  {
+    "id": 961,
+    "catalog_description": "Reusable email, in-app, and chat templates with merge fields, used by automation rules and manager reminders."
+  },
+  {
+    "id": 119,
+    "catalog_description": "Multi-touch outbound nurture flows, with branching paths, wait conditions, exit criteria, and content trees."
+  },
+  {
+    "id": 1273,
+    "catalog_description": "A learner's scored result against an observation checklist, with observer signoff."
+  },
+  {
+    "id": 1272,
+    "catalog_description": "On-the-job competency checklists that an observer scores against for field-skill assessment."
+  },
+  {
+    "id": 348,
+    "catalog_description": "Real-time or snapshot occupancy state for a space: desk booked, room reserved, or actual check-in via badge or mobile."
+  },
+  {
+    "id": 1080,
+    "catalog_description": "Medical surveillance and exposure records such as respirator fit tests, audiometric tests, or fitness-for-duty evaluations, retained per occupational-health rules."
+  },
+  {
+    "id": 904,
+    "catalog_description": "Immutable, append-only audit logs of every applicant-flow event for federal contractors, carrying the actor, timestamp, and compliance-relevant fields."
+  },
+  {
+    "id": 896,
+    "catalog_description": "Approval steps in the offer-approval chain, triggered when an offer exceeds band, includes non-standard equity, or matches other escalation rules."
+  }
+]

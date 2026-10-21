@@ -1,0 +1,141 @@
+{
+  "domain_code": "ITSM",
+  "domain_id": 1,
+  "audit_date": "2026-06-16",
+  "audit_type": "market-surface (Phase 0 regression test, read-only, zero inserts)",
+  "current_footprint": {
+    "modules": [
+      {"code": "ITSM-INCIDENT-MGMT", "id": 38, "name": "Incident Management", "kind": "full"},
+      {"code": "ITSM-SERVICE-REQUEST", "id": 39, "name": "Service Request Fulfillment", "kind": "full"},
+      {"code": "ITSM-PROBLEM-MGMT", "id": 40, "name": "Problem Management", "kind": "full"},
+      {"code": "ITSM-CHANGE-MGMT", "id": 41, "name": "Change and Release Management", "kind": "full"},
+      {"code": "ITSM-EVENT-MGMT", "id": 42, "name": "Event and Alert Handling", "kind": "full"},
+      {"code": "ITSM-KNOWLEDGE", "id": 43, "name": "Knowledge Management", "kind": "full"},
+      {"code": "ITSM-AGENT-WORKSPACE", "id": 44, "name": "Agent Workspace and Reporting", "kind": "full"},
+      {"code": "ITSM-SLA-MGMT", "id": 45, "name": "SLA and Chargeback Management", "kind": "full"}
+    ],
+    "domain_owned_masters": [
+      "service_incidents", "service_requests", "service_catalog_items", "service_problems",
+      "service_changes", "knowledge_articles", "service_slas"
+    ],
+    "embedded_or_consumed": [
+      "monitoring_alerts (embedded_master EVENT-MGMT; consumer INCIDENT-MGMT)",
+      "service_level_objectives (consumer INCIDENT-MGMT)",
+      "configuration_items (embedded_master, mastered by CMDB domain 4)",
+      "error_groups (consumer, mastered by OBS)",
+      "asset_lifecycle_events (contributor, mastered by HAM)",
+      "onboarding_tasks (consumer)",
+      "locations / org_units / cost_centers (embedded reference masters)"
+    ],
+    "total_distinct_domain_owned_entities": 8
+  },
+  "vendors": [
+    {"name": "ServiceNow ITSM", "url": "https://docs.servicenow.com/bundle/xanadu-it-service-management/", "specialist_in": "Enterprise ITSM platform (Now Platform): incident, problem, change, request, knowledge, SLA, virtual agent, predictive intelligence", "included_because": "Market leader; defines the canonical superset surface (task-based table model, CAB, walk-up, major incident, on-call)"},
+    {"name": "Jira Service Management", "url": "https://support.atlassian.com/jira-service-management-cloud/", "specialist_in": "Agile-aligned ITSM/ESM built on Jira: requests, incidents, problems, changes, on-call/alerts (Opsgenie), assets", "included_because": "Dominant in dev-centric and mid-market shops; strongest on incident/on-call and request portal; merged Opsgenie alerting"},
+    {"name": "Freshservice (Freshworks)", "url": "https://api.freshservice.com/", "specialist_in": "Mid-market cloud ITSM/ESM: tickets, service catalog, change, problem, release, project, orchestration, workspaces", "included_because": "Mid-market specialist (50-250 user sweet spot); clean documented REST API; strong service catalog + workflow automator"},
+    {"name": "ManageEngine ServiceDesk Plus", "url": "https://www.manageengine.com/products/service-desk/sdpop/help/", "specialist_in": "Mid-market on-prem/cloud ITSM: request, incident, problem, change, release, projects, contracts, purchase", "included_because": "Mid-market specialist with strong procurement/contract/purchase-order modules other suites lack; ITIL-aligned"},
+    {"name": "Halo ITSM", "url": "https://halo.haloitsm.com/apidoc/", "specialist_in": "Mid-market unified service desk: tickets, requests, changes, problems, SLAs, contracts, billing, knowledge", "included_because": "Mid-market ITIL-verified specialist; surfaces contract/billing/recurring-invoice and approval-process entities explicitly in its API"}
+  ],
+  "surface_matrix": [
+    {"entity": "service_incidents", "category": "master", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "core", "proposed_module": "ITSM-INCIDENT-MGMT", "compliance_basis": null, "in_footprint": true},
+    {"entity": "major_incidents", "category": "master", "vendors_with": ["ServiceNow","Jira","Freshservice","Halo"], "classification": "common", "proposed_module": "ITSM-INCIDENT-MGMT", "compliance_basis": null, "in_footprint": false},
+    {"entity": "service_requests", "category": "master", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "core", "proposed_module": "ITSM-SERVICE-REQUEST", "compliance_basis": null, "in_footprint": true},
+    {"entity": "service_catalog_items", "category": "master", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "core", "proposed_module": "ITSM-SERVICE-REQUEST", "compliance_basis": null, "in_footprint": true},
+    {"entity": "service_problems", "category": "master", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "core", "proposed_module": "ITSM-PROBLEM-MGMT", "compliance_basis": null, "in_footprint": true},
+    {"entity": "known_errors", "category": "master", "vendors_with": ["ServiceNow","Freshservice","ManageEngine","Halo"], "classification": "common", "proposed_module": "ITSM-PROBLEM-MGMT", "compliance_basis": null, "in_footprint": false},
+    {"entity": "service_changes", "category": "master", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "core", "proposed_module": "ITSM-CHANGE-MGMT", "compliance_basis": null, "in_footprint": true},
+    {"entity": "service_releases", "category": "master", "vendors_with": ["ServiceNow","Freshservice","ManageEngine","Halo"], "classification": "common", "proposed_module": "ITSM-CHANGE-MGMT", "compliance_basis": null, "in_footprint": false},
+    {"entity": "knowledge_articles", "category": "master", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "core", "proposed_module": "ITSM-KNOWLEDGE", "compliance_basis": null, "in_footprint": true},
+    {"entity": "service_slas", "category": "master", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "core", "proposed_module": "ITSM-SLA-MGMT", "compliance_basis": null, "in_footprint": true},
+    {"entity": "operational_level_agreements", "category": "master", "vendors_with": ["ServiceNow","ManageEngine","Halo"], "classification": "common", "proposed_module": "ITSM-SLA-MGMT", "compliance_basis": null, "in_footprint": false},
+    {"entity": "monitoring_alerts", "category": "master", "vendors_with": ["ServiceNow","Jira","Freshservice"], "classification": "common", "proposed_module": "ITSM-EVENT-MGMT", "compliance_basis": null, "in_footprint": true},
+
+    {"entity": "incident_tasks", "category": "junction", "vendors_with": ["ServiceNow","Freshservice","ManageEngine","Halo"], "classification": "common", "proposed_module": "ITSM-INCIDENT-MGMT", "compliance_basis": null, "in_footprint": false},
+    {"entity": "change_tasks", "category": "junction", "vendors_with": ["ServiceNow","Freshservice","ManageEngine","Halo"], "classification": "common", "proposed_module": "ITSM-CHANGE-MGMT", "compliance_basis": null, "in_footprint": false},
+    {"entity": "ticket_approvals", "category": "junction", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "core", "proposed_module": "ITSM-CHANGE-MGMT", "compliance_basis": "change/request approval audit trail", "in_footprint": false},
+    {"entity": "ticket_assignments", "category": "junction", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "common", "proposed_module": "ITSM-AGENT-WORKSPACE", "compliance_basis": null, "in_footprint": false},
+    {"entity": "incident_problem_links", "category": "junction", "vendors_with": ["ServiceNow","Freshservice","Halo"], "classification": "common", "proposed_module": "ITSM-PROBLEM-MGMT", "compliance_basis": null, "in_footprint": false},
+    {"entity": "change_collision_windows", "category": "junction", "vendors_with": ["ServiceNow"], "classification": "specialist", "proposed_module": "ITSM-CHANGE-MGMT", "compliance_basis": null, "in_footprint": false},
+    {"entity": "maintenance_windows", "category": "junction", "vendors_with": ["ServiceNow","Freshservice","ManageEngine"], "classification": "common", "proposed_module": "ITSM-CHANGE-MGMT", "compliance_basis": null, "in_footprint": false},
+    {"entity": "ticket_state_transitions", "category": "junction", "vendors_with": ["ServiceNow","Jira","Freshservice","Halo"], "classification": "core", "proposed_module": "ITSM-AGENT-WORKSPACE", "compliance_basis": "ticket history / audit log", "in_footprint": false},
+
+    {"entity": "change_approval_records", "category": "compliance", "vendors_with": ["ServiceNow","Freshservice","ManageEngine","Halo"], "classification": "compliance", "proposed_module": "ITSM-CHANGE-MGMT", "compliance_basis": "SOX/ISO20000/ISO27001 change-approval audit trail", "in_footprint": false},
+    {"entity": "ticket_audit_logs", "category": "compliance", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "compliance", "proposed_module": "ITSM-AGENT-WORKSPACE", "compliance_basis": "ISO20000/SOX immutable activity history", "in_footprint": false},
+    {"entity": "sla_breach_events", "category": "compliance", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "common", "proposed_module": "ITSM-SLA-MGMT", "compliance_basis": "SLA reporting / contractual evidence", "in_footprint": false},
+    {"entity": "approval_policies", "category": "config", "vendors_with": ["ServiceNow","Freshservice","ManageEngine","Halo"], "classification": "common", "proposed_module": "ITSM-CHANGE-MGMT", "compliance_basis": "segregation-of-duties config", "in_footprint": false},
+
+    {"entity": "change_advisory_boards", "category": "master", "vendors_with": ["ServiceNow","ManageEngine","Halo"], "classification": "common", "proposed_module": "ITSM-CHANGE-MGMT", "compliance_basis": null, "in_footprint": false},
+
+    {"entity": "service_request_items", "category": "junction", "vendors_with": ["ServiceNow","ManageEngine"], "classification": "common", "proposed_module": "ITSM-SERVICE-REQUEST", "compliance_basis": null, "in_footprint": false},
+    {"entity": "fulfillment_tasks", "category": "junction", "vendors_with": ["ServiceNow","Freshservice","ManageEngine"], "classification": "common", "proposed_module": "ITSM-SERVICE-REQUEST", "compliance_basis": null, "in_footprint": false},
+
+    {"entity": "knowledge_categories", "category": "config", "vendors_with": ["ServiceNow","Freshservice","ManageEngine","Halo"], "classification": "common", "proposed_module": "ITSM-KNOWLEDGE", "compliance_basis": null, "in_footprint": false},
+    {"entity": "knowledge_feedback", "category": "engagement", "vendors_with": ["ServiceNow","Freshservice","Halo"], "classification": "common", "proposed_module": "ITSM-KNOWLEDGE", "compliance_basis": null, "in_footprint": false},
+
+    {"entity": "agent_groups", "category": "config", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "core", "proposed_module": "ITSM-AGENT-WORKSPACE", "compliance_basis": null, "in_footprint": false},
+    {"entity": "agent_shifts", "category": "config", "vendors_with": ["ServiceNow","Jira","Halo"], "classification": "common", "proposed_module": "ITSM-AGENT-WORKSPACE", "compliance_basis": null, "in_footprint": false},
+    {"entity": "on_call_schedules", "category": "config", "vendors_with": ["ServiceNow","Jira","Freshservice"], "classification": "common", "proposed_module": "ITSM-EVENT-MGMT", "compliance_basis": null, "in_footprint": false},
+    {"entity": "escalation_rules", "category": "config", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "common", "proposed_module": "ITSM-SLA-MGMT", "compliance_basis": null, "in_footprint": false},
+    {"entity": "ticket_priorities", "category": "config", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "common", "proposed_module": "ITSM-AGENT-WORKSPACE", "compliance_basis": null, "in_footprint": false},
+    {"entity": "workflow_templates", "category": "config", "vendors_with": ["ServiceNow","Freshservice","ManageEngine","Halo"], "classification": "common", "proposed_module": "ITSM-AGENT-WORKSPACE", "compliance_basis": null, "in_footprint": false},
+    {"entity": "alert_correlation_rules", "category": "config", "vendors_with": ["ServiceNow","Jira","Freshservice"], "classification": "specialist", "proposed_module": "ITSM-EVENT-MGMT", "compliance_basis": null, "in_footprint": false},
+
+    {"entity": "customer_satisfaction_surveys", "category": "engagement", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "common", "proposed_module": "ITSM-AGENT-WORKSPACE", "compliance_basis": null, "in_footprint": false},
+    {"entity": "ticket_comments", "category": "engagement", "vendors_with": ["ServiceNow","Jira","Freshservice","ManageEngine","Halo"], "classification": "common", "proposed_module": "ITSM-AGENT-WORKSPACE", "compliance_basis": null, "in_footprint": false},
+    {"entity": "announcements", "category": "engagement", "vendors_with": ["ServiceNow","Freshservice","Halo"], "classification": "specialist", "proposed_module": "ITSM-KNOWLEDGE", "compliance_basis": null, "in_footprint": false}
+  ],
+  "diff": {
+    "missing": [
+      {"entity": "ticket_approvals", "proposed_module": "ITSM-CHANGE-MGMT", "reason": "All 5 vendors model an approval record on changes and high-value requests (ServiceNow sysapproval_approver, Freshservice approvals, Halo approval processes). This is the spine of change governance and the audit object for SOX/ISO20000 change control. ITSM owns service_changes but has no approval object.", "compliance": true},
+      {"entity": "ticket_state_transitions", "proposed_module": "ITSM-AGENT-WORKSPACE", "reason": "Every vendor records an immutable per-ticket state/field history (ServiceNow sys_audit/activity stream, Jira changelog, Freshservice ticket activities, Halo action log). Required as the ITIL/ISO20000 evidence trail and as the source of cycle-time/MTTR analytics. No transition/history object exists today.", "compliance": true},
+      {"entity": "incident_tasks", "proposed_module": "ITSM-INCIDENT-MGMT", "reason": "Task/sub-task decomposition under a parent ticket is universal (ServiceNow task table, Freshservice/ManageEngine tasks, Halo subtickets). The current footprint has flat masters with no child-work object, so multi-team incident/request work cannot be tracked.", "compliance": false},
+      {"entity": "change_tasks", "proposed_module": "ITSM-CHANGE-MGMT", "reason": "Implementation/back-out tasks under a change are core to change execution across all suites. Distinct from incident_tasks by lifecycle (planned vs reactive). Absent today.", "compliance": false},
+      {"entity": "change_approval_records", "proposed_module": "ITSM-CHANGE-MGMT", "reason": "The persisted CAB/approver decision history (who approved, when, comments) that auditors sample for SOX change control. If ticket_approvals is modeled generically this may collapse into it; flagged so the change-approval audit trail is explicitly owned.", "compliance": true},
+      {"entity": "known_errors", "proposed_module": "ITSM-PROBLEM-MGMT", "reason": "The Known Error Database is a first-class ITIL object distinct from problems (ServiceNow known_error, Freshservice/ManageEngine/Halo KEDB). It links a root cause to a workaround and is consumed by incident triage. ITSM owns service_problems but not the known-error record.", "compliance": false},
+      {"entity": "major_incidents", "proposed_module": "ITSM-INCIDENT-MGMT", "reason": "Major Incident Management is a packaged module in ServiceNow, Freshservice and Halo with its own record (war-room, timeline, post-incident review). Distinct lifecycle and stakeholder comms from a normal incident. Not present.", "compliance": false},
+      {"entity": "service_releases", "proposed_module": "ITSM-CHANGE-MGMT", "reason": "Release management is a named ITIL practice and a separate record/module in ServiceNow, Freshservice, ManageEngine and Halo, grouping multiple changes for coordinated deployment. The module is named Change and Release Management but masters only service_changes.", "compliance": false},
+      {"entity": "change_advisory_boards", "proposed_module": "ITSM-CHANGE-MGMT", "reason": "CAB as a standing/recurring body with membership and meeting agenda is modeled by ServiceNow, ManageEngine and Halo. Underpins the approval workflow. Absent.", "compliance": false},
+      {"entity": "agent_groups", "proposed_module": "ITSM-AGENT-WORKSPACE", "reason": "Assignment/support groups (queues) are the routing primitive in every ITSM tool (ServiceNow sys_user_group as assignment_group, Freshservice/Jira teams, Halo teams). Tickets are assigned to a group before an individual. No group/queue object exists; org_units (HR) is not the support-group concept.", "compliance": false},
+      {"entity": "escalation_rules", "proposed_module": "ITSM-SLA-MGMT", "reason": "SLA escalation/notification policies are configured records in all five vendors and drive the SLA breach workflow. The SLA module masters service_slas but has no escalation config.", "compliance": false},
+      {"entity": "sla_breach_events", "proposed_module": "ITSM-SLA-MGMT", "reason": "The recorded breach/at-risk event (task_sla in ServiceNow, SLA timers in others) is the measurable that feeds SLA reporting and chargeback. Distinct from the SLA definition. Not modeled.", "compliance": false},
+      {"entity": "ticket_comments", "proposed_module": "ITSM-AGENT-WORKSPACE", "reason": "Public/private work-notes and conversation threads on every ticket are universal (ServiceNow journal fields, Jira/Freshservice/Halo comments). The primary engagement object; absent.", "compliance": false},
+      {"entity": "customer_satisfaction_surveys", "proposed_module": "ITSM-AGENT-WORKSPACE", "reason": "CSAT/feedback on resolved tickets is a standard reporting object across all five vendors. Drives the agent-reporting module's KPI surface. Not modeled.", "compliance": false},
+      {"entity": "knowledge_categories", "proposed_module": "ITSM-KNOWLEDGE", "reason": "Knowledge taxonomy/category hierarchy is a config master in all KB implementations; articles are filed under it. The knowledge module masters articles but not their categorization.", "compliance": false},
+      {"entity": "service_request_items", "proposed_module": "ITSM-SERVICE-REQUEST", "reason": "The ordered-item line under a request (ServiceNow REQ/RITM split, ManageEngine request resources) lets one request fulfill multiple catalog items. The footprint has service_requests + service_catalog_items but no line/order-item junction connecting them at fulfillment time.", "compliance": false},
+      {"entity": "fulfillment_tasks", "proposed_module": "ITSM-SERVICE-REQUEST", "reason": "Catalog-task workflow under a request item (ServiceNow catalog tasks/SCTASK, Freshservice/ManageEngine fulfillment stages). The execution substrate of request fulfillment; absent.", "compliance": false},
+      {"entity": "on_call_schedules", "proposed_module": "ITSM-EVENT-MGMT", "reason": "On-call rotations are central to Jira Service Management (Opsgenie), ServiceNow on-call, and Freshservice. They route alerts/major incidents to the right responder. Present in the event/alert domain in every modern suite; absent here.", "compliance": false},
+      {"entity": "operational_level_agreements", "proposed_module": "ITSM-SLA-MGMT", "reason": "OLAs (internal team commitments) sit alongside SLAs in ServiceNow, ManageEngine and Halo and are tracked separately for breach attribution. The module masters service_slas only.", "compliance": false},
+      {"entity": "ticket_priorities", "proposed_module": "ITSM-AGENT-WORKSPACE", "reason": "The impact/urgency-to-priority matrix is a configurable master in all five vendors and gates SLA timers. Could be enum-only, but ServiceNow/Freshservice/ManageEngine model it as a table. Flagged as candidate config master.", "compliance": false},
+      {"entity": "approval_policies", "proposed_module": "ITSM-CHANGE-MGMT", "reason": "Approval-routing rules (who must approve which change/request) are configured records driving ticket_approvals; underpin segregation-of-duties. Modeled by ServiceNow, Freshservice, ManageEngine, Halo.", "compliance": false},
+      {"entity": "maintenance_windows", "proposed_module": "ITSM-CHANGE-MGMT", "reason": "Scheduled maintenance/blackout windows constrain when changes may execute (ServiceNow maintenance schedules, Freshservice/ManageEngine). Tied to change scheduling and collision detection.", "compliance": false},
+      {"entity": "knowledge_feedback", "proposed_module": "ITSM-KNOWLEDGE", "reason": "Article helpful/not-helpful ratings and flagged-for-review feedback (ServiceNow, Freshservice, Halo) drive KB quality. Engagement object on the knowledge master; absent.", "compliance": false},
+      {"entity": "agent_shifts", "proposed_module": "ITSM-AGENT-WORKSPACE", "reason": "Shift/roster definitions for support staff (ServiceNow, Jira, Halo) drive coverage and routing; weaker than agent_groups but commonly modeled. Candidate.", "compliance": false}
+    ],
+    "wrong_ownership": [],
+    "scope_creep": [
+      {"entity": "configuration_items", "current_module": "INCIDENT/PROBLEM/CHANGE/SERVICE-REQUEST (embedded_master)", "reason": "Mastered by CMDB (domain 4). Held as embedded_master here, which is the correct autonomous-deployable shape (Rule #19), not creep. Listed for completeness; recommend KEEP.", "recommendation": "keep"},
+      {"entity": "monitoring_alerts", "current_module": "EVENT-MGMT (embedded_master), INCIDENT-MGMT (consumer)", "reason": "Boundary object with ITOM/OBS. ITSM legitimately masters the alert as it enters the service-management workflow (event-to-incident). Within scope. KEEP.", "recommendation": "keep"},
+      {"entity": "error_groups", "current_module": "INCIDENT-MGMT (consumer)", "reason": "Mastered by OBS/observability. Consumed here for incident enrichment, correct consumer role. KEEP.", "recommendation": "keep"},
+      {"entity": "asset_lifecycle_events", "current_module": "INCIDENT-MGMT (contributor)", "reason": "Mastered by HAM. ITSM contributes lifecycle events (e.g., incident-triggered RMA). Correct contributor role. KEEP.", "recommendation": "keep"},
+      {"entity": "onboarding_tasks", "current_module": "SERVICE-REQUEST (consumer)", "reason": "Likely mastered by an HR/onboarding domain; consumed here when a service request triggers onboarding fulfillment. Correct consumer. KEEP, but verify the master domain exists.", "recommendation": "user_decides"},
+      {"entity": "cost_centers", "current_module": "SLA-MGMT (embedded_master)", "reason": "Reference master for chargeback. Embedded for autonomy. KEEP.", "recommendation": "keep"}
+    ]
+  },
+  "modularization": {
+    "verdict": "coherent",
+    "assessment": "The 8-module split maps cleanly onto the canonical ITIL/ITSM practice areas and onto how flagship vendors package the domain (ServiceNow's Incident/Problem/Change/Request/Knowledge product split, Freshservice's modules, Halo's areas). Every module has >=1 domain-owned master (Rule #14 satisfied): INCIDENT->service_incidents, SERVICE-REQUEST->service_requests+service_catalog_items, PROBLEM->service_problems, CHANGE->service_changes, EVENT->monitoring_alerts, KNOWLEDGE->knowledge_articles, SLA->service_slas, AGENT-WORKSPACE is the cross-cutting reporting/queue surface. A first-time deployer would self-explain all eight names. The gaps are entity-level (workflow substrate: approvals, tasks, history, groups, escalations) NOT module-level. No merges/splits/renames required; two cosmetic notes below.",
+    "recommendations": [
+      {"type": "leave", "modules": ["ITSM-INCIDENT-MGMT","ITSM-SERVICE-REQUEST","ITSM-PROBLEM-MGMT","ITSM-CHANGE-MGMT","ITSM-EVENT-MGMT","ITSM-KNOWLEDGE","ITSM-AGENT-WORKSPACE","ITSM-SLA-MGMT"], "new_name": null, "reason": "Module boundaries are correct and vendor-aligned. The fix is filling each module's workflow substrate, not restructuring."},
+      {"type": "leave", "modules": ["ITSM-AGENT-WORKSPACE"], "new_name": null, "reason": "AGENT-WORKSPACE currently has zero domain-owned masters of its own (only embedded org_units/locations). Per Rule #14 a module needs >=1 master. The MISSING entities agent_groups, ticket_state_transitions, ticket_comments, ticket_priorities, customer_satisfaction_surveys are its natural masters; once any are added the module becomes Rule-#14-compliant. Until then it is a soft-fail (reporting/overlay module with only consumed/embedded rows). Flagged, not a rename."},
+      {"type": "leave", "modules": ["ITSM-CHANGE-MGMT"], "new_name": null, "reason": "Named Change and Release Management but masters only service_changes. service_releases (MISSING) is the second master that makes the name honest. Add the entity rather than rename the module."}
+    ]
+  },
+  "summary_counts": {
+    "missing": 24,
+    "wrong_ownership": 0,
+    "scope_creep": 0,
+    "scope_creep_flagged_keep": 6,
+    "modularization_issues": 0,
+    "top5_impactful_missing": ["ticket_approvals","ticket_state_transitions","agent_groups","incident_tasks","known_errors"]
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "captured": "2026-06-16",
+  "note": "pre-promotion recovery values for plan domain-kind-taxonomy §2/§3/§5",
+  "intranet_gov": {
+    "id": 171,
+    "domain_code": "INTRANET-GOV",
+    "domain_kind": "established_market"
+  },
+  "skills": [
+    {
+      "id": 220,
+      "skill_name": "real_estate_agent",
+      "domain_id": 143,
+      "domain_module_id": 153
+    },
+    {
+      "id": 236,
+      "skill_name": "hvac_svc_mgmt_agent",
+      "domain_id": 31,
+      "domain_module_id": 171
+    },
+    {
+      "id": 474,
+      "skill_name": "it_ops_starter_system",
+      "domain_id": 3,
+      "domain_module_id": 403
+    }
+  ],
+  "modules": [
+    {
+      "id": 153,
+      "domain_module_code": "REAL-ESTATE-AGENT",
+      "domain_id": null,
+      "catalog_tagline": "A working surface for the real-estate agent.",
+      "catalog_description": "Bring contacts, listings, and the documents behind each deal into one agent-facing workspace. Move leads forward, keep listing and transaction paperwork organized, and stay on top of every active deal from a single view that travels with the agent across the systems they already use."
+    },
+    {
+      "id": 171,
+      "domain_module_code": "HVAC-SVC-MGMT",
+      "domain_id": null,
+      "catalog_tagline": "A ready-to-run home-services starter that takes an HVAC job from customer call to scheduled visit and invoice.",
+      "catalog_description": "This starter packages the field-service essentials a heating and cooling service business needs on day one. It bundles the customer and contact record, the installed equipment at each site, work orders and field visits, service contracts, and the quote-to-invoice path so a small team can book a call, schedule a technician, complete the job, and bill it without stitching tools together. It is a fast on-ramp to field service for trades operators who want the core workflow working immediately and can grow into the full modules later."
+    },
+    {
+      "id": 403,
+      "domain_module_code": "IT-OPS-STARTER",
+      "domain_id": null,
+      "catalog_tagline": "Run your whole IT shop from one place: tickets, devices, SaaS renewals, and contracts, without the spreadsheets.",
+      "catalog_description": "One place to manage IT for a small team. Track the hardware you own and who has it, every SaaS app and when its subscription renews, and the contracts behind them, so nothing slips through a spreadsheet and no renewal catches you off guard. Add a lightweight helpdesk for tickets and requests if you do not already run one, or keep the one you have. Start with the renewal and contract essentials and turn on the device, SaaS, and helpdesk pieces as you need them. Built for IT teams that have outgrown spreadsheets but do not need a full enterprise IT suite."
+    }
+  ]
+}

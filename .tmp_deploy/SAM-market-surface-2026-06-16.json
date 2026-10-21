@@ -1,0 +1,134 @@
+{
+  "domain_code": "SAM",
+  "audit_date": "2026-06-16",
+  "domain_id": 52,
+  "scope_note": "SAM owns on-prem / installed-software licensing: software catalog & normalization, installation discovery, entitlements & license reconciliation (Effective License Position), publisher audit defense. Out of scope (sibling/umbrella domains, NOT reported as SAM MISSING): SaaS-subscription discovery/renewal -> SMP; hardware assets -> HAM; cross-asset master contracts -> ITAM umbrella; cloud cost/consumption -> FINOPS.",
+  "current_footprint": {
+    "modules": [
+      {"id": 201, "code": "SAM-CATALOG-DISCOVERY", "name": "Software Catalog and Installation Discovery", "kind": "full"},
+      {"id": 202, "code": "SAM-ENTITLEMENT-MGMT", "name": "Entitlement Reconciliation and Renewal", "kind": "full"},
+      {"id": 203, "code": "SAM-AUDIT-DEFENSE", "name": "Audit Defense and Compliance Reporting", "kind": "full"}
+    ],
+    "dmdo_rows": [
+      {"module": "SAM-CATALOG-DISCOVERY", "entity": "software_titles", "role": "master"},
+      {"module": "SAM-CATALOG-DISCOVERY", "entity": "software_installations", "role": "master"},
+      {"module": "SAM-CATALOG-DISCOVERY", "entity": "configuration_items", "role": "contributor"},
+      {"module": "SAM-CATALOG-DISCOVERY", "entity": "org_units", "role": "embedded_master"},
+      {"module": "SAM-ENTITLEMENT-MGMT", "entity": "software_licenses", "role": "master"},
+      {"module": "SAM-ENTITLEMENT-MGMT", "entity": "legal_contracts", "role": "embedded_master"},
+      {"module": "SAM-AUDIT-DEFENSE", "entity": "license_audits", "role": "master"}
+    ],
+    "domain_owned_masters_count": 5,
+    "embedded_masters_count": 2,
+    "contributors_count": 1
+  },
+  "vendors": [
+    {"name": "Flexera", "url": "https://docs.flexera.com/", "specialist_in": "Flexera One / FlexNet Manager Suite: software normalization, ELP, on-prem + cloud license optimization, audit defense", "included_because": "Market-leading pure-play ITAM/SAM platform; richest entitlement/ELP data model and the canonical 'Technopedia' normalization catalog."},
+    {"name": "Snow Software (Insight)", "url": "https://www.snowsoftware.com/resources/", "specialist_in": "Snow License Manager / Snow Atlas: discovery, software recognition (DRS), license compliance, Oracle/SAP optimization", "included_because": "Long-standing pure-play SAM specialist (acquired by Insight 2024); strong installed-software recognition and metering model."},
+    {"name": "USU", "url": "https://www.usu.com/en-us/software-asset-management/", "specialist_in": "USU Software Asset Management (formerly Aspera): SAP/Oracle/IBM publisher-specific license optimization, ELP, audit", "included_because": "Deep enterprise-publisher (SAP indirect access, Oracle options, IBM sub-capacity) specialization; the publisher-exotica reference."},
+    {"name": "ServiceNow SAM Pro", "url": "https://docs.servicenow.com/bundle/xanadu-it-asset-management/", "specialist_in": "Software Asset Management Professional on the Now Platform CMDB: entitlements, reconciliation, normalization (Content Library), publisher packs", "included_because": "Dominant CMDB-native SAM; defines the discovery-model/installation/normalized-product/entitlement data shape most enterprises adopt."},
+    {"name": "Anglepoint", "url": "https://www.anglepoint.com/", "specialist_in": "Managed SAM services + audit defense; ISO/IEC 19770 + ITAM governance; publisher audit response", "included_because": "Compliance/audit-defense specialist; the clearest source for the audit-engagement, evidence-package, and true-up data shape."},
+    {"name": "Certero", "url": "https://www.certero.com/", "specialist_in": "Certero for Enterprise SAM: unified discovery + inventory + ELP across on-prem and cloud", "included_because": "Pure-play SAM with a single-source discovery-to-ELP model; corroborates the core entity set independently of the big three."}
+  ],
+  "surface_matrix": [
+    {"entity": "software_titles", "category": "master", "vendors_with": ["Flexera","Snow Software (Insight)","USU","ServiceNow SAM Pro","Anglepoint","Certero"], "classification": "core", "proposed_module": "SAM-CATALOG-DISCOVERY", "compliance_basis": null, "in_current": true},
+    {"entity": "software_editions", "category": "master", "vendors_with": ["Flexera","Snow Software (Insight)","ServiceNow SAM Pro","Certero"], "classification": "core", "proposed_module": "SAM-CATALOG-DISCOVERY", "compliance_basis": null, "in_current": false},
+    {"entity": "software_versions", "category": "master", "vendors_with": ["Flexera","Snow Software (Insight)","ServiceNow SAM Pro","Certero"], "classification": "core", "proposed_module": "SAM-CATALOG-DISCOVERY", "compliance_basis": null, "in_current": false},
+    {"entity": "publishers", "category": "master", "vendors_with": ["Flexera","Snow Software (Insight)","USU","ServiceNow SAM Pro","Certero"], "classification": "core", "proposed_module": "SAM-CATALOG-DISCOVERY", "compliance_basis": null, "in_current": false},
+    {"entity": "software_categories", "category": "config", "vendors_with": ["Flexera","Snow Software (Insight)","ServiceNow SAM Pro"], "classification": "common", "proposed_module": "SAM-CATALOG-DISCOVERY", "compliance_basis": null, "in_current": false},
+    {"entity": "software_normalization_rules", "category": "config", "vendors_with": ["Flexera","Snow Software (Insight)","ServiceNow SAM Pro","Certero"], "classification": "core", "proposed_module": "SAM-CATALOG-DISCOVERY", "compliance_basis": null, "in_current": false},
+    {"entity": "eol_eosl_calendars", "category": "config", "vendors_with": ["Flexera","Snow Software (Insight)","ServiceNow SAM Pro"], "classification": "common", "proposed_module": "SAM-CATALOG-DISCOVERY", "compliance_basis": null, "in_current": false},
+    {"entity": "software_installations", "category": "master", "vendors_with": ["Flexera","Snow Software (Insight)","USU","ServiceNow SAM Pro","Anglepoint","Certero"], "classification": "core", "proposed_module": "SAM-CATALOG-DISCOVERY", "compliance_basis": null, "in_current": true},
+    {"entity": "discovery_runs", "category": "junction", "vendors_with": ["Flexera","Snow Software (Insight)","ServiceNow SAM Pro","Certero"], "classification": "core", "proposed_module": "SAM-CATALOG-DISCOVERY", "compliance_basis": null, "in_current": false},
+    {"entity": "discovery_sources", "category": "config", "vendors_with": ["Flexera","Snow Software (Insight)","ServiceNow SAM Pro","Certero"], "classification": "common", "proposed_module": "SAM-CATALOG-DISCOVERY", "compliance_basis": null, "in_current": false},
+    {"entity": "software_identification_tags", "category": "master", "vendors_with": ["Flexera","Snow Software (Insight)","Certero"], "classification": "specialist", "proposed_module": "SAM-CATALOG-DISCOVERY", "compliance_basis": "ISO/IEC 19770-2 SWID tags", "in_current": false},
+    {"entity": "software_licenses", "category": "master", "vendors_with": ["Flexera","Snow Software (Insight)","USU","ServiceNow SAM Pro","Anglepoint","Certero"], "classification": "core", "proposed_module": "SAM-ENTITLEMENT-MGMT", "compliance_basis": null, "in_current": true},
+    {"entity": "license_models", "category": "config", "vendors_with": ["Flexera","Snow Software (Insight)","USU","ServiceNow SAM Pro"], "classification": "core", "proposed_module": "SAM-ENTITLEMENT-MGMT", "compliance_basis": null, "in_current": false},
+    {"entity": "license_metrics", "category": "config", "vendors_with": ["Flexera","Snow Software (Insight)","USU","ServiceNow SAM Pro"], "classification": "core", "proposed_module": "SAM-ENTITLEMENT-MGMT", "compliance_basis": null, "in_current": false},
+    {"entity": "license_keys", "category": "master", "vendors_with": ["Snow Software (Insight)","ServiceNow SAM Pro","Certero"], "classification": "common", "proposed_module": "SAM-ENTITLEMENT-MGMT", "compliance_basis": null, "in_current": false},
+    {"entity": "entitlement_pools", "category": "master", "vendors_with": ["Flexera","Snow Software (Insight)","USU","ServiceNow SAM Pro"], "classification": "core", "proposed_module": "SAM-ENTITLEMENT-MGMT", "compliance_basis": null, "in_current": false},
+    {"entity": "license_allocations", "category": "junction", "vendors_with": ["Flexera","Snow Software (Insight)","ServiceNow SAM Pro"], "classification": "core", "proposed_module": "SAM-ENTITLEMENT-MGMT", "compliance_basis": null, "in_current": false},
+    {"entity": "named_user_assignments", "category": "junction", "vendors_with": ["Flexera","Snow Software (Insight)","USU","ServiceNow SAM Pro"], "classification": "core", "proposed_module": "SAM-ENTITLEMENT-MGMT", "compliance_basis": null, "in_current": false},
+    {"entity": "product_use_rights", "category": "config", "vendors_with": ["Flexera","USU","ServiceNow SAM Pro"], "classification": "specialist", "proposed_module": "SAM-ENTITLEMENT-MGMT", "compliance_basis": null, "in_current": false},
+    {"entity": "license_position_calculations", "category": "audit", "vendors_with": ["Flexera","Snow Software (Insight)","USU","ServiceNow SAM Pro","Anglepoint","Certero"], "classification": "core", "proposed_module": "SAM-ENTITLEMENT-MGMT", "compliance_basis": "Effective License Position (ELP) - publisher contract obligation", "in_current": false},
+    {"entity": "compliance_positions", "category": "audit", "vendors_with": ["Flexera","Snow Software (Insight)","USU","ServiceNow SAM Pro","Anglepoint"], "classification": "core", "proposed_module": "SAM-ENTITLEMENT-MGMT", "compliance_basis": "License compliance posture - contract obligation", "in_current": false},
+    {"entity": "usage_meterings", "category": "master", "vendors_with": ["Flexera","Snow Software (Insight)","USU","ServiceNow SAM Pro","Certero"], "classification": "core", "proposed_module": "SAM-ENTITLEMENT-MGMT", "compliance_basis": null, "in_current": false},
+    {"entity": "license_reclamations", "category": "junction", "vendors_with": ["Flexera","Snow Software (Insight)","ServiceNow SAM Pro"], "classification": "common", "proposed_module": "SAM-ENTITLEMENT-MGMT", "compliance_basis": null, "in_current": false},
+    {"entity": "license_renewals", "category": "master", "vendors_with": ["Flexera","Snow Software (Insight)","ServiceNow SAM Pro"], "classification": "common", "proposed_module": "SAM-ENTITLEMENT-MGMT", "compliance_basis": null, "in_current": false},
+    {"entity": "true_up_events", "category": "audit", "vendors_with": ["Flexera","USU","ServiceNow SAM Pro","Anglepoint"], "classification": "compliance", "proposed_module": "SAM-ENTITLEMENT-MGMT", "compliance_basis": "Microsoft EA / publisher annual true-up - contractual", "in_current": false},
+    {"entity": "publisher_options_packs", "category": "config", "vendors_with": ["USU","Flexera","ServiceNow SAM Pro"], "classification": "specialist", "proposed_module": "SAM-ENTITLEMENT-MGMT", "compliance_basis": "Oracle Database options / SAP indirect access / IBM sub-capacity", "in_current": false},
+    {"entity": "license_audits", "category": "master", "vendors_with": ["Flexera","USU","ServiceNow SAM Pro","Anglepoint"], "classification": "core", "proposed_module": "SAM-AUDIT-DEFENSE", "compliance_basis": "publisher audit clause - contractual right to audit", "in_current": true},
+    {"entity": "audit_evidence_packages", "category": "audit", "vendors_with": ["Flexera","USU","ServiceNow SAM Pro","Anglepoint"], "classification": "compliance", "proposed_module": "SAM-AUDIT-DEFENSE", "compliance_basis": "publisher audit defense - evidence of entitlement", "in_current": false},
+    {"entity": "license_audit_findings", "category": "audit", "vendors_with": ["Flexera","USU","Anglepoint"], "classification": "compliance", "proposed_module": "SAM-AUDIT-DEFENSE", "compliance_basis": "publisher audit defense - documented gap/exposure", "in_current": false},
+    {"entity": "audit_responses", "category": "audit", "vendors_with": ["USU","Anglepoint","ServiceNow SAM Pro"], "classification": "compliance", "proposed_module": "SAM-AUDIT-DEFENSE", "compliance_basis": "publisher audit defense - formal response/letter", "in_current": false},
+    {"entity": "license_settlements", "category": "audit", "vendors_with": ["USU","Anglepoint"], "classification": "compliance", "proposed_module": "SAM-AUDIT-DEFENSE", "compliance_basis": "audit settlement / true-up purchase obligation", "in_current": false}
+  ],
+  "compliance_entities": [
+    {"entity": "license_position_calculations", "basis": "Effective License Position (ELP) is the contractually-defined reconciliation publishers demand at audit. Non-optional in any SAM that defends an audit."},
+    {"entity": "audit_evidence_packages", "basis": "The bundle of deployment + entitlement proof submitted in a publisher audit. Required artifact of an audit response."},
+    {"entity": "license_audit_findings", "basis": "Documented over/under-deployment gaps from a reconciliation; the exposure record. Named license_audit_findings (NOT audit_findings) to avoid catalog collision with FSQM audit_findings (id 294)."},
+    {"entity": "true_up_events", "basis": "Annual contractual true-up (Microsoft EA, Adobe ETLA, etc.) reconciling actual vs entitled consumption; a financial+compliance record."},
+    {"entity": "audit_responses", "basis": "Formal response letter and negotiation record returned to the publisher; the defensible audit-engagement artifact."},
+    {"entity": "license_settlements", "basis": "The settlement / remediation purchase resulting from an audit; closes the exposure with a contractual obligation."},
+    {"entity": "software_identification_tags", "basis": "ISO/IEC 19770-2 SWID tags are the standardized, publisher-issued identification artifact underpinning trustworthy entitlement recognition."}
+  ],
+  "diff": {
+    "missing": [
+      {"entity": "publishers", "proposed_module": "SAM-CATALOG-DISCOVERY", "reason": "The software publisher (Microsoft, Oracle, IBM, Adobe, SAP) is a first-class master in every flagship; titles, licenses, audits and use-rights all hang off it. Currently absent.", "compliance": false},
+      {"entity": "license_position_calculations", "proposed_module": "SAM-ENTITLEMENT-MGMT", "reason": "Effective License Position is the central computed output of SAM (entitled vs consumed per metric). The whole entitlement module exists to produce it; today there is no entity to hold it.", "compliance": true},
+      {"entity": "license_metrics", "proposed_module": "SAM-ENTITLEMENT-MGMT", "reason": "License metric (per-core, per-user, PVU, named-user, concurrent) is the unit of measure for reconciliation. Without it software_licenses cannot be reconciled against installations. Core in Flexera/Snow/USU/ServiceNow.", "compliance": false},
+      {"entity": "entitlement_pools", "proposed_module": "SAM-ENTITLEMENT-MGMT", "reason": "The aggregated pool of purchased rights that installations draw down against. The reconciliation join surface; modeled in all four big platforms.", "compliance": false},
+      {"entity": "usage_meterings", "proposed_module": "SAM-ENTITLEMENT-MGMT", "reason": "Metered actual usage of installed software (last-used, peak concurrent) drives reclamation and metric-based true-ups. SAM-METER capability has no backing entity today.", "compliance": false},
+      {"entity": "true_up_events", "proposed_module": "SAM-ENTITLEMENT-MGMT", "reason": "Annual contractual true-up reconciliation (EA/ETLA). A compliance + financial record with no home today.", "compliance": true},
+      {"entity": "audit_evidence_packages", "proposed_module": "SAM-AUDIT-DEFENSE", "reason": "The evidence bundle submitted in a publisher audit. license_audits has no child evidence/finding/response structure; audit defense is a single bare master today.", "compliance": true},
+      {"entity": "license_audit_findings", "proposed_module": "SAM-AUDIT-DEFENSE", "reason": "The per-product gap/exposure record produced by an audit. Compliance core; use SAM-specific name to avoid collision with FSQM audit_findings (294).", "compliance": true},
+      {"entity": "audit_responses", "proposed_module": "SAM-AUDIT-DEFENSE", "reason": "The formal publisher response/letter and negotiation record. The audit-engagement transaction; absent today.", "compliance": true},
+      {"entity": "software_editions", "proposed_module": "SAM-CATALOG-DISCOVERY", "reason": "Edition (Standard/Enterprise/Datacenter) drives licensing rules independently of title; normalization is edition-aware in every catalog. Missing.", "compliance": false},
+      {"entity": "software_versions", "proposed_module": "SAM-CATALOG-DISCOVERY", "reason": "Version is the EOL/EOSL and downgrade-rights pivot. Missing.", "compliance": false},
+      {"entity": "software_normalization_rules", "proposed_module": "SAM-CATALOG-DISCOVERY", "reason": "The rules that map raw discovered inventory to normalized titles/editions/versions. The core IP of a SAM catalog (Flexera Technopedia, ServiceNow Content Library). Missing.", "compliance": false},
+      {"entity": "discovery_runs", "proposed_module": "SAM-CATALOG-DISCOVERY", "reason": "A discrete inventory/discovery execution producing installation records. The SAM-DISCOVERY capability has no transaction entity. Missing.", "compliance": false},
+      {"entity": "discovery_sources", "proposed_module": "SAM-CATALOG-DISCOVERY", "reason": "Configured inventory connectors (agents, SCCM/Intune, scanners) feeding discovery. Missing.", "compliance": false},
+      {"entity": "license_models", "proposed_module": "SAM-ENTITLEMENT-MGMT", "reason": "The license model/type taxonomy (perpetual, subscription, OEM, CAL, capacity). Common config master.", "compliance": false},
+      {"entity": "license_keys", "proposed_module": "SAM-ENTITLEMENT-MGMT", "reason": "Activation/product keys and entitlement certificates. Common in Snow/ServiceNow/Certero.", "compliance": false},
+      {"entity": "license_allocations", "proposed_module": "SAM-ENTITLEMENT-MGMT", "reason": "Junction allocating entitlement to org_units/devices/installations. The reconciliation linkage. Missing.", "compliance": false},
+      {"entity": "named_user_assignments", "proposed_module": "SAM-ENTITLEMENT-MGMT", "reason": "User-to-license assignment for named-user/subscription metrics. Drives compliance for per-user licensing. Missing.", "compliance": false},
+      {"entity": "license_reclamations", "proposed_module": "SAM-ENTITLEMENT-MGMT", "reason": "Harvesting of unused installs back to the pool (driven by usage_meterings). Optimization core; missing.", "compliance": false},
+      {"entity": "license_renewals", "proposed_module": "SAM-ENTITLEMENT-MGMT", "reason": "On-prem maintenance/support renewal of a software_license (distinct from SMP saas_subscription renewals). SAM-RENEWAL capability has no entity.", "compliance": false},
+      {"entity": "compliance_positions", "proposed_module": "SAM-ENTITLEMENT-MGMT", "reason": "Point-in-time compliant/non-compliant posture per publisher, distilled from ELP. The board-level reporting artifact. Missing.", "compliance": true},
+      {"entity": "product_use_rights", "proposed_module": "SAM-ENTITLEMENT-MGMT", "reason": "Downgrade/second-use/BYOL/virtualization use rights that change effective entitlement. Specialist (Flexera/USU/ServiceNow). Missing.", "compliance": false},
+      {"entity": "software_identification_tags", "proposed_module": "SAM-CATALOG-DISCOVERY", "reason": "ISO/IEC 19770-2 SWID tags - the standardized identification artifact for trustworthy recognition. Specialist/compliance.", "compliance": true},
+      {"entity": "software_categories", "proposed_module": "SAM-CATALOG-DISCOVERY", "reason": "Functional categorization of titles (used for spend grouping and policy). Common config.", "compliance": false},
+      {"entity": "eol_eosl_calendars", "proposed_module": "SAM-CATALOG-DISCOVERY", "reason": "End-of-life / end-of-support dates per version that drive risk and renewal. Common config.", "compliance": false},
+      {"entity": "publisher_options_packs", "proposed_module": "SAM-ENTITLEMENT-MGMT", "reason": "Publisher-specific add-on entitlement structures (Oracle DB options/packs, SAP indirect-access, IBM sub-capacity). Specialist (USU/Flexera). One generic master rather than vendor-named entities (Rule #18).", "compliance": false},
+      {"entity": "license_settlements", "proposed_module": "SAM-AUDIT-DEFENSE", "reason": "The remediation/settlement purchase that closes an audit exposure. Compliance; absent.", "compliance": true}
+    ],
+    "wrong_ownership": [],
+    "scope_creep": [
+      {"entity": "configuration_items", "current_module": "SAM-CATALOG-DISCOVERY", "reason": "Contributor role; CMDB-mastered in ITSM. Legitimate cross-domain contributor, NOT scope creep. Listed for completeness.", "recommendation": "keep"},
+      {"entity": "org_units", "current_module": "SAM-CATALOG-DISCOVERY", "reason": "embedded_master; HCM-mastered. Correct autonomous-deployable shape (Rule #19). NOT scope creep.", "recommendation": "keep"},
+      {"entity": "legal_contracts", "current_module": "SAM-ENTITLEMENT-MGMT", "reason": "embedded_master; CLM-mastered, also embedded in SMP-RENEWAL-VENDOR. Correct embedded shape for contract-backed licenses. NOT scope creep.", "recommendation": "keep"}
+    ]
+  },
+  "sam_smp_boundary": {
+    "verdict": "clean_by_design_with_two_watch_items",
+    "observation": "On-prem licensing ends and SaaS management begins at the asset type, and the catalog already enforces the split cleanly. SAM masters software_titles/software_installations/software_licenses (installed, perpetual/subscription on-prem, metric-based reconciliation, publisher audit). SMP masters saas_applications/saas_subscriptions/saas_usage_metrics (cloud-hosted, seat-based, renewal & optimization). NO entity is currently duplicated as a domain_owned master across both: SMP's seat/usage/renewal entities are all smp_*-prefixed and saas_*-named, distinct from SAM's software_*/license_* names.",
+    "shared_embedded_masters": [
+      {"entity": "legal_contracts", "sam_role": "embedded_master (SAM-ENTITLEMENT-MGMT)", "smp_role": "embedded_master (SMP-RENEWAL-VENDOR)", "canonical_owner": "CLM", "verdict": "PASS - both embed the CLM master; correct shape, not duplication"},
+      {"entity": "org_units", "sam_role": "embedded_master (SAM-CATALOG-DISCOVERY)", "smp_role": "embedded_master (SMP-RENEWAL-VENDOR)", "canonical_owner": "HCM", "verdict": "PASS - both embed the HCM master; correct shape, not duplication"}
+    ],
+    "watch_items": [
+      {"item": "license_renewals (SAM) vs saas_subscriptions/smp_renewal_engagements (SMP)", "guidance": "SAM-proposed license_renewals must scope to on-prem maintenance/support renewal of a software_license. SaaS subscription renewal stays in SMP (smp_renewal_engagements/smp_renewal_tasks). Keep names distinct (license_renewals vs smp_renewal_*) and do NOT add a saas_subscription-shaped renewal to SAM. Already respected by naming."},
+      {"item": "usage_meterings (SAM) vs saas_usage_metrics (SMP)", "guidance": "SAM usage_meterings = installed-software metering (last-used, concurrent, metric counters for reconciliation). SMP saas_usage_metrics = SaaS login/seat-activity telemetry. Distinct concepts, distinct names. No collision, but flag so a future load does not collapse them into one shared master."}
+    ]
+  },
+  "modularization": {
+    "verdict": "coherent",
+    "current_shape": "3 full modules (SAM-CATALOG-DISCOVERY, SAM-ENTITLEMENT-MGMT, SAM-AUDIT-DEFENSE)",
+    "commentary": "The 3-module split is coherent and self-explaining for a first-time deployer: catalog+discovery (what software exists and where it is installed), entitlement (what we are licensed for and reconciliation), audit defense (proving it to a publisher). Each module has >=1 domain_owned master (Rule #14 satisfied). The split mirrors how Flexera/Snow/ServiceNow segment their own UIs (Inventory/Discovery vs Licenses/Entitlements vs Compliance/Audit). The 25 MISSING masters all fit one of the three existing modules WITHOUT requiring new modules - the previously-proposed 6-module re-split (SAM-METERING, SAM-RENEWAL as standalone modules) is NOT required by the surface: metering/renewal are sub-capabilities of entitlement management, and every flagship packages them inside the license/entitlement product, not as separate products. Recommendation: KEEP 3 modules; load the missing masters into the existing three. The only judgment call worth surfacing is whether ELP/metering/renewal grow large enough later to warrant splitting SAM-ENTITLEMENT-MGMT into entitlement vs optimization (mirrors SMP-OPTIMIZATION being separate from SMP-RENEWAL-VENDOR), but that is a later scaling decision, not a present defect.",
+    "recommendations": [
+      {"type": "leave", "modules": ["SAM-CATALOG-DISCOVERY","SAM-ENTITLEMENT-MGMT","SAM-AUDIT-DEFENSE"], "new_name": null, "reason": "3 modules coherently cover the full vendor surface; all 25 missing masters slot into an existing module; no empty modules; Rule #14 satisfied. Supersedes the 2026-05-30 6-module proposal (B2-S1)."},
+      {"type": "split", "modules": ["SAM-ENTITLEMENT-MGMT"], "new_name": "SAM-ENTITLEMENT-MGMT + SAM-OPTIMIZATION (optional, future)", "reason": "If usage_meterings + license_reclamations + license_position_calculations grow into a distinct optimization workflow (as SMP split SMP-OPTIMIZATION from SMP-RENEWAL-VENDOR), consider splitting later. NOT required now; entitlement module currently holds only 1 master and would carry ~13 after the load, which is still a coherent single module. Surface as a future scaling note, not a present fix."}
+    ]
+  },
+  "diff_counts": {"missing": 27, "wrong_ownership": 0, "scope_creep": 0}
+}

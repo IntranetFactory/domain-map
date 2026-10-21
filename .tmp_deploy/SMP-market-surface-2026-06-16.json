@@ -1,0 +1,167 @@
+{
+  "domain_code": "SMP",
+  "domain_id": 85,
+  "audit_date": "2026-06-16",
+  "audit_type": "market-surface (read-only, no inserts)",
+  "current_footprint": {
+    "module_count": 4,
+    "entity_count_domain_owned": 21,
+    "modules": {
+      "SMP-DISCOVERY": ["saas_applications", "shadow_it_apps", "smp_app_owners", "smp_app_integrations", "smp_app_catalog_listings", "smp_alerts", "smp_app_lifecycle_stages"],
+      "SMP-RENEWAL-VENDOR": ["saas_subscriptions", "saas_applications (consumer)", "legal_contracts (embedded_master)", "org_units (embedded_master)", "smp_renewal_tasks", "smp_renewal_engagements", "smp_vendor_negotiations", "smp_spend_allocations", "smp_vendor_risk_assessments"],
+      "SMP-OPTIMIZATION": ["smp_license_seat_assignments", "saas_usage_metrics", "smp_optimization_recommendations", "smp_reclamation_actions", "smp_app_benchmarks"],
+      "SMP-AUTOMATION": ["smp_automation_workflows", "smp_workflow_runs", "smp_app_requests"]
+    }
+  },
+  "vendors": [
+    {
+      "name": "Zluri",
+      "url": "https://www.zluri.com/product / https://help.zluri.com",
+      "specialist_in": "SaaS management + access lifecycle / access reviews; mid-market to enterprise. Discovery via 9 methods (SSO, finance, browser agent, direct integrations, HRIS, desktop agent, etc.), license optimization, automated on/offboarding playbooks, access certification campaigns.",
+      "included_because": "Pure-play SMP leader; deepest access-review/compliance surface among SMP vendors (UAR campaigns), strong app-discovery and offboarding automation. Anchors the compliance column."
+    },
+    {
+      "name": "Torii",
+      "url": "https://www.toriihq.com / https://docs.toriihq.com",
+      "specialist_in": "SaaS management for mid-market; discovery, spend/renewal tracking, no-code workflow automation for on/offboarding, shadow-IT detection, contract repository.",
+      "included_because": "Flagship pure-play; strong workflow-automation surface and renewal/contract tracking. Mid-market relevant."
+    },
+    {
+      "name": "Josys",
+      "url": "https://www.josys.com / https://help.josys.com",
+      "specialist_in": "SaaS + DEVICE management converged for SMB/mid-market (50-250 users sweet spot). App discovery, license management, on/offboarding, AND hardware/device inventory + assignment. Explicit IT-suite convergence.",
+      "included_because": "Directly central to the user's 'ERP for IT, 50-250 users' question: ships SaaS + device + lifecycle in one. Evidence of downward convergence into ITAM/hardware."
+    },
+    {
+      "name": "Setyl",
+      "url": "https://www.setyl.com / https://help.setyl.com",
+      "specialist_in": "IT asset + SaaS + spend management for SMB/mid-market. App & license register, hardware asset register, vendor/contract management, spend tracking, on/offboarding workflows, GL/accounting integration.",
+      "included_because": "50-250-user specialist that fuses SaaS, hardware, contracts, and spend; strongest evidence of the SaaS-to-IT-suite convergence the audit asks about. Anchors contract/spend column."
+    },
+    {
+      "name": "BetterCloud",
+      "url": "https://www.bettercloud.com / https://docs.bettercloud.com",
+      "specialist_in": "SaaS operations + security: automated user lifecycle (on/mid/offboarding), least-privilege/access automation, file/data security policies, SaaS configuration drift, deprovisioning evidence.",
+      "included_because": "Defines the automation + data-deprovisioning/offboarding-evidence surface; strongest least-privilege and DLP-adjacent compliance entities."
+    },
+    {
+      "name": "Productiv",
+      "url": "https://productiv.com / https://help.productiv.com",
+      "specialist_in": "SaaS intelligence: deep feature-level engagement analytics, app rationalization, license right-sizing benchmarks, renewal intelligence, app portfolio.",
+      "included_because": "Best-in-class usage/engagement-analytics and benchmarking surface; informs optimization entities."
+    },
+    {
+      "name": "Zylo",
+      "url": "https://zylo.com / https://docs.zylo.com",
+      "specialist_in": "Enterprise SaaS management + SaaS spend/renewal intelligence; system of record for SaaS contracts, renewals, spend, benchmarks. Finance-led.",
+      "included_because": "Defines the spend/contract/renewal-as-system-of-record surface and benchmark data; anchors spend + renewal column."
+    }
+  ],
+  "surface_matrix": [
+    {"entity": "saas_applications", "category": "master", "vendors_with": ["Zluri","Torii","Josys","Setyl","BetterCloud","Productiv","Zylo"], "classification": "core", "proposed_module": "SMP-DISCOVERY", "compliance_basis": null, "in_current": true},
+    {"entity": "shadow_it_apps", "category": "master", "vendors_with": ["Zluri","Torii","Josys","BetterCloud"], "classification": "core", "proposed_module": "SMP-DISCOVERY", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_app_owners", "category": "junction", "vendors_with": ["Zluri","Torii","Setyl","Zylo"], "classification": "common", "proposed_module": "SMP-DISCOVERY", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_app_integrations", "category": "config", "vendors_with": ["Zluri","Torii","Josys","Setyl","BetterCloud"], "classification": "core", "proposed_module": "SMP-DISCOVERY", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_app_catalog_listings", "category": "master", "vendors_with": ["Zluri","Torii","Josys"], "classification": "common", "proposed_module": "SMP-DISCOVERY", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_alerts", "category": "engagement", "vendors_with": ["Zluri","Torii","BetterCloud","Zylo"], "classification": "common", "proposed_module": "SMP-DISCOVERY", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_app_lifecycle_stages", "category": "config", "vendors_with": ["Zluri","Torii","Productiv"], "classification": "common", "proposed_module": "SMP-DISCOVERY", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_discovery_sources", "category": "config", "vendors_with": ["Zluri","Torii","Josys","Setyl","Zylo"], "classification": "core", "proposed_module": "SMP-DISCOVERY", "compliance_basis": null, "in_current": false},
+    {"entity": "smp_app_accounts", "category": "master", "vendors_with": ["Zluri","Torii","BetterCloud","Josys"], "classification": "core", "proposed_module": "SMP-DISCOVERY", "compliance_basis": null, "in_current": false},
+    {"entity": "smp_app_categories", "category": "config", "vendors_with": ["Zluri","Torii","Productiv","Zylo"], "classification": "common", "proposed_module": "SMP-DISCOVERY", "compliance_basis": null, "in_current": false},
+    {"entity": "saas_subscriptions", "category": "master", "vendors_with": ["Zluri","Torii","Setyl","Zylo","Josys"], "classification": "core", "proposed_module": "SMP-RENEWAL-VENDOR", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_renewal_tasks", "category": "junction", "vendors_with": ["Zluri","Torii","Setyl","Zylo"], "classification": "core", "proposed_module": "SMP-RENEWAL-VENDOR", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_renewal_engagements", "category": "engagement", "vendors_with": ["Zluri","Zylo","Setyl"], "classification": "common", "proposed_module": "SMP-RENEWAL-VENDOR", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_vendor_negotiations", "category": "engagement", "vendors_with": ["Zylo","Setyl"], "classification": "specialist", "proposed_module": "SMP-RENEWAL-VENDOR", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_spend_allocations", "category": "master", "vendors_with": ["Zylo","Setyl","Productiv","Torii"], "classification": "core", "proposed_module": "SMP-RENEWAL-VENDOR", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_vendor_risk_assessments", "category": "compliance", "vendors_with": ["Zluri","Zylo","Setyl"], "classification": "compliance", "proposed_module": "SMP-RENEWAL-VENDOR", "compliance_basis": "SOC2/GDPR vendor due diligence; DPA tracking", "in_current": true},
+    {"entity": "legal_contracts", "category": "master", "vendors_with": ["Zluri","Torii","Setyl","Zylo","Josys"], "classification": "core", "proposed_module": "SMP-RENEWAL-VENDOR", "compliance_basis": null, "in_current": true, "note": "embedded_master; canonical master in ITAM/legal umbrella"},
+    {"entity": "org_units", "category": "master", "vendors_with": ["Zluri","Torii","Setyl","Productiv"], "classification": "common", "proposed_module": "SMP-RENEWAL-VENDOR", "compliance_basis": null, "in_current": true, "note": "embedded_master; canonical master is HR/org master"},
+    {"entity": "smp_vendor_invoices", "category": "master", "vendors_with": ["Zylo","Setyl","Torii"], "classification": "common", "proposed_module": "SMP-RENEWAL-VENDOR", "compliance_basis": null, "in_current": false},
+    {"entity": "smp_payment_schedules", "category": "junction", "vendors_with": ["Zylo","Setyl"], "classification": "specialist", "proposed_module": "SMP-RENEWAL-VENDOR", "compliance_basis": null, "in_current": false},
+    {"entity": "smp_license_seat_assignments", "category": "junction", "vendors_with": ["Zluri","Torii","Josys","BetterCloud","Productiv"], "classification": "core", "proposed_module": "SMP-OPTIMIZATION", "compliance_basis": null, "in_current": true},
+    {"entity": "saas_usage_metrics", "category": "audit", "vendors_with": ["Zluri","Torii","Productiv","BetterCloud","Zylo"], "classification": "core", "proposed_module": "SMP-OPTIMIZATION", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_optimization_recommendations", "category": "engagement", "vendors_with": ["Zluri","Productiv","Zylo","Torii"], "classification": "core", "proposed_module": "SMP-OPTIMIZATION", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_reclamation_actions", "category": "junction", "vendors_with": ["Zluri","Torii","BetterCloud"], "classification": "core", "proposed_module": "SMP-OPTIMIZATION", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_app_benchmarks", "category": "config", "vendors_with": ["Productiv","Zylo"], "classification": "specialist", "proposed_module": "SMP-OPTIMIZATION", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_license_tiers", "category": "config", "vendors_with": ["Zluri","Productiv","Torii","Zylo"], "classification": "common", "proposed_module": "SMP-OPTIMIZATION", "compliance_basis": null, "in_current": false},
+    {"entity": "smp_feature_usage_events", "category": "audit", "vendors_with": ["Productiv","Zluri"], "classification": "specialist", "proposed_module": "SMP-OPTIMIZATION", "compliance_basis": null, "in_current": false},
+    {"entity": "smp_automation_workflows", "category": "config", "vendors_with": ["Zluri","Torii","BetterCloud","Josys"], "classification": "core", "proposed_module": "SMP-AUTOMATION", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_workflow_runs", "category": "audit", "vendors_with": ["Zluri","Torii","BetterCloud"], "classification": "core", "proposed_module": "SMP-AUTOMATION", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_app_requests", "category": "engagement", "vendors_with": ["Zluri","Torii","BetterCloud","Josys"], "classification": "core", "proposed_module": "SMP-AUTOMATION", "compliance_basis": null, "in_current": true},
+    {"entity": "smp_access_grants", "category": "junction", "vendors_with": ["Zluri","BetterCloud","Torii"], "classification": "core", "proposed_module": "SMP-AUTOMATION", "compliance_basis": "SOX/least-privilege; provisioning record of who-has-access-to-what", "in_current": false},
+    {"entity": "smp_offboarding_runs", "category": "audit", "vendors_with": ["Zluri","Torii","BetterCloud","Josys"], "classification": "compliance", "proposed_module": "SMP-AUTOMATION", "compliance_basis": "SOX/SOC2 offboarding evidence; ISO 27001 A.9", "in_current": false},
+    {"entity": "smp_deprovisioning_logs", "category": "compliance", "vendors_with": ["Zluri","BetterCloud","Torii"], "classification": "compliance", "proposed_module": "SMP-AUTOMATION", "compliance_basis": "GDPR data-deletion evidence; SOX deprovisioning audit trail; SOC2 CC6.x", "in_current": false},
+    {"entity": "smp_access_reviews", "category": "compliance", "vendors_with": ["Zluri","BetterCloud"], "classification": "compliance", "proposed_module": "SMP-AUTOMATION", "compliance_basis": "SOX user access review (UAR) campaigns; SOC2 CC6.2/CC6.3; ISO 27001 A.9.2.5", "in_current": false},
+    {"entity": "smp_access_review_items", "category": "compliance", "vendors_with": ["Zluri","BetterCloud"], "classification": "compliance", "proposed_module": "SMP-AUTOMATION", "compliance_basis": "Line-item certification decisions (approve/revoke) for SOX UAR evidence", "in_current": false},
+    {"entity": "smp_app_permission_profiles", "category": "config", "vendors_with": ["Zluri","BetterCloud"], "classification": "specialist", "proposed_module": "SMP-AUTOMATION", "compliance_basis": "Least-privilege role definitions for access governance", "in_current": false}
+  ],
+  "compliance_entities": [
+    {"entity": "smp_access_reviews", "basis": "SOX user access review campaigns; SOC2 CC6.2/CC6.3; ISO 27001 A.9.2.5", "status": "MISSING"},
+    {"entity": "smp_access_review_items", "basis": "Per-line certification decisions backing SOX UAR evidence", "status": "MISSING"},
+    {"entity": "smp_offboarding_runs", "basis": "SOX/SOC2 offboarding evidence; ISO 27001 A.9 access-removal proof", "status": "MISSING"},
+    {"entity": "smp_deprovisioning_logs", "basis": "GDPR data-deletion / right-to-erasure evidence; SOX deprovisioning audit trail; SOC2 CC6.x", "status": "MISSING"},
+    {"entity": "smp_access_grants", "basis": "SOX least-privilege; provisioning record of who-has-access-to-what (entitlement state)", "status": "MISSING"},
+    {"entity": "smp_vendor_risk_assessments", "basis": "SOC2/GDPR vendor due diligence; DPA tracking", "status": "PRESENT"}
+  ],
+  "diff": {
+    "missing": [
+      {"entity": "smp_access_reviews", "proposed_module": "SMP-AUTOMATION", "reason": "User-access-review (certification) campaigns are a first-class object in Zluri and BetterCloud and the primary SOX/SOC2 access-governance artifact in SMP. No current entity captures a campaign header.", "compliance": true},
+      {"entity": "smp_access_review_items", "proposed_module": "SMP-AUTOMATION", "reason": "Per-grant approve/revoke certification decisions; the line-item evidence backing each access-review campaign. Absent.", "compliance": true},
+      {"entity": "smp_offboarding_runs", "proposed_module": "SMP-AUTOMATION", "reason": "All flagship vendors model an offboarding execution record (per-departing-user run with per-app revocation steps and outcome). smp_workflow_runs is generic; a dedicated offboarding/joiner-mover-leaver run with evidence is the compliance artifact. Could be modeled as a typed view of smp_workflow_runs, but vendors treat it as its own object.", "compliance": true},
+      {"entity": "smp_deprovisioning_logs", "proposed_module": "SMP-AUTOMATION", "reason": "Immutable per-app data-deprovisioning / data-deletion evidence record (account deactivated, data exported/deleted, license reclaimed, timestamp, actor). Required for GDPR erasure proof and SOX. No current entity.", "compliance": true},
+      {"entity": "smp_access_grants", "proposed_module": "SMP-AUTOMATION", "reason": "The entitlement-state object: user x app x role/permission currently provisioned. Distinct from smp_license_seat_assignments (commercial seat) - this is the access-governance fact and the subject of every access review. Present in Zluri/BetterCloud/Torii. Missing.", "compliance": true},
+      {"entity": "smp_discovery_sources", "proposed_module": "SMP-DISCOVERY", "reason": "Discovery-method/connector registry (SSO, finance feed, browser/desktop agent, HRIS, direct API). Zluri markets 9 discovery methods; the source is a tracked, configured object with coverage/confidence. smp_app_integrations covers app-to-app integrations, not the discovery channels feeding the inventory.", "compliance": false},
+      {"entity": "smp_app_accounts", "proposed_module": "SMP-DISCOVERY", "reason": "An organization's account/tenant within a SaaS app (org may hold multiple tenants/workspaces of one app). Vendors distinguish the app (product) from the discovered account/instance carrying users, spend, contracts. Missing - users and spend currently attach directly to saas_applications.", "compliance": false},
+      {"entity": "smp_license_tiers", "proposed_module": "SMP-OPTIMIZATION", "reason": "Plan/edition/seat-type catalog per app (e.g. Free/Pro/Enterprise, full vs light seat). Right-sizing recommendations compare assigned tier vs usage. Present in Zluri/Productiv/Zylo. No current entity holds the tier definition.", "compliance": false},
+      {"entity": "smp_vendor_invoices", "proposed_module": "SMP-RENEWAL-VENDOR", "reason": "Finance-sourced invoice/transaction lines reconciled to subscriptions; the raw spend artifact behind smp_spend_allocations. Zylo/Setyl/Torii ingest invoices as a discrete object. Missing.", "compliance": false},
+      {"entity": "smp_app_categories", "proposed_module": "SMP-DISCOVERY", "reason": "Functional-category taxonomy used for rationalization/redundancy analysis (e.g. two project-management apps). Lightweight config; present across vendors. Missing as an explicit entity.", "compliance": false},
+      {"entity": "smp_feature_usage_events", "proposed_module": "SMP-OPTIMIZATION", "reason": "Feature-level engagement events powering Productiv-style deep usage analytics; finer grain than saas_usage_metrics aggregates. Specialist; lower priority.", "compliance": false},
+      {"entity": "smp_payment_schedules", "proposed_module": "SMP-RENEWAL-VENDOR", "reason": "Installment/billing-schedule rows for multi-year or quarterly contracts; used in spend forecasting. Specialist (Zylo/Setyl). Lower priority.", "compliance": false},
+      {"entity": "smp_app_permission_profiles", "proposed_module": "SMP-AUTOMATION", "reason": "Least-privilege role/permission profiles per app used by access policies and reviews. Specialist (Zluri/BetterCloud). Lower priority; may be deferred.", "compliance": false}
+    ],
+    "wrong_ownership": [],
+    "scope_creep": [
+      {"entity": "smp_vendor_negotiations", "current_module": "SMP-RENEWAL-VENDOR", "reason": "Legitimate but specialist (Zylo/Setyl negotiation desks). Borderline overlap with smp_renewal_engagements; keep, but watch for redundancy with the engagements entity. Not foreign-domain.", "recommendation": "keep"},
+      {"entity": "smp_app_benchmarks", "current_module": "SMP-OPTIMIZATION", "reason": "Specialist (Productiv/Zylo benchmark data). In-surface and valid; flagged only as specialist-tier, not creep.", "recommendation": "keep"}
+    ]
+  },
+  "boundary_checks": {
+    "note": "Per audit brief, the following are sibling/umbrella domains, NOT SMP gaps. No SMP MISSING was raised for them.",
+    "out_of_scope_correctly_excluded": [
+      {"concept": "on_prem_software_licenses / installed-software entitlement", "owner": "SAM (sibling)"},
+      {"concept": "cross_asset_contracts (master) / hardware+software unified contract register", "owner": "ITAM umbrella - legal_contracts is correctly an embedded_master here, canonical master lives upstream"},
+      {"concept": "hardware_assets / device_inventory", "owner": "ITAM/SAM - NOTE: convergence observation, see commentary; Josys/Setyl ship this but it is not SMP-owned in this catalog"},
+      {"concept": "cloud_infrastructure_cost / committed-use / tagging", "owner": "FINOPS"},
+      {"concept": "identity_providers / sso_governance / directory_sync as a governed object", "owner": "IGA - SMP consumes identity for discovery+access but does not master the IdP"}
+    ]
+  },
+  "modularization": {
+    "verdict": "coherent",
+    "module_floor_check": "PASS - 4 full modules, each with >=1 required master; domain has >=3 capabilities so >=2 modules satisfied (Rule #14).",
+    "assessment": "The 4-module split (Discovery, Renewal/Vendor, Optimization, Automation) maps cleanly to the four jobs-to-be-done a first-time deployer would recognize: find the apps, manage the money/contracts, right-size the licenses, and run the access/request workflows. Each module self-explains. The principal coverage gap is not the SPLIT but the DEPTH of SMP-AUTOMATION: it currently carries only workflow plumbing (workflows, runs, requests) and lacks the access-governance/compliance evidence layer (reviews, grants, offboarding runs, deprovisioning logs) that every flagship now treats as core. That is a MISSING-entity gap inside an otherwise correctly-scoped module, not a modularization defect.",
+    "recommendations": [
+      {"type": "leave", "modules": ["SMP-DISCOVERY","SMP-RENEWAL-VENDOR","SMP-OPTIMIZATION","SMP-AUTOMATION"], "new_name": null, "reason": "Split is coherent and onboarding-legible. Keep as-is."},
+      {"type": "rename", "modules": ["SMP-AUTOMATION"], "new_name": "SMP-AUTOMATION-ACCESS (Automation, Self-Service and Access Governance)", "reason": "OPTIONAL/commentary only. If the 5 access-governance compliance entities (access_reviews, access_review_items, access_grants, offboarding_runs, deprovisioning_logs) are added, the module's scope broadens from 'automation' to 'access governance + automation'. A rename would keep the name honest. Not required; do not act without user sign-off."}
+    ]
+  },
+  "convergence_observation": {
+    "headline": "Modern SMP vendors are extending DOWN into hardware, contracts, and unified spend - converging toward an integrated 'ERP for IT' suite, especially at the 50-250-user tier.",
+    "evidence": [
+      "Josys ships SaaS management AND hardware/device inventory + assignment in one product, explicitly targeting SMB/mid-market.",
+      "Setyl fuses SaaS + hardware asset register + vendor/contract management + spend (with GL/accounting integration) for the same segment.",
+      "Zluri, Torii, Zylo have all added contract repositories and finance-fed spend tracking, pulling renewal/contract/invoice data SMP historically did not own.",
+      "The 50-250-user buyer wants ONE tool for apps + devices + contracts + spend + on/offboarding, not four point tools - this is the 'ERP for IT' shape."
+    ],
+    "implication_for_catalog": "SMP's current surface DOES capture the renewal/contract and spend-tracking entities (saas_subscriptions, legal_contracts embedded_master, smp_spend_allocations, smp_renewal_*, smp_vendor_*), so the contract/spend convergence is already reflected. The entities SMP does NOT and should NOT own (per the boundary rules) are hardware_assets/device_inventory (ITAM/SAM) and the cross-asset unified contract master (ITAM umbrella). The convergence is therefore a CROSS-DOMAIN composition story (SMP + ITAM + SAM + FINOPS surfaced as one suite), not a reason to expand SMP's footprint into hardware. Recommend treating 'ERP for IT' as a suite/bundle composition over these sibling domains rather than a scope expansion of SMP. This is commentary, not a gap.",
+    "in_scope_convergence_gaps": "Within SMP's correct boundary, the convergence does justify deepening spend granularity (smp_vendor_invoices, smp_payment_schedules) and discovery breadth (smp_discovery_sources, smp_app_accounts) - these are listed as MISSING above and ARE SMP-owned."
+  },
+  "diff_counts": {
+    "missing_total": 13,
+    "missing_compliance": 5,
+    "missing_non_compliance": 8,
+    "wrong_ownership": 0,
+    "scope_creep": 0,
+    "scope_creep_keep_flagged": 2,
+    "modularization_issues": 0
+  }
+}

@@ -1,0 +1,786 @@
+[
+  {
+    "id": 1133,
+    "data_object_name": "process_variables",
+    "singular_label": "Process Variable",
+    "plural_label": "Process Variables",
+    "entity_type": "operational_record",
+    "description": "A typed key-value datum scoped to a process instance or one of its activity scopes, carrying the business payload that activities and gateways read and write as the instance advances."
+  },
+  {
+    "id": 582,
+    "data_object_name": "process_variants",
+    "singular_label": "Process Variant",
+    "plural_label": "Process Variants",
+    "entity_type": "computed",
+    "description": "Distinct execution patterns within an event log: cohorts of traces that follow significantly different paths. Carries variant frequency, average cycle time, actor/resource patterns, business drivers."
+  },
+  {
+    "id": 598,
+    "data_object_name": "produced_units",
+    "singular_label": "Produced Unit",
+    "plural_label": "Produced Units",
+    "entity_type": "operational_record",
+    "description": "As-built record of a manufactured item: serial number, lot/batch, production_order reference, produced_timestamp, quality_status, embedded costs. Traceability spine for batch/genealogy queries."
+  },
+  {
+    "id": 422,
+    "data_object_name": "product_bundles",
+    "singular_label": "Product Bundle",
+    "plural_label": "Product Bundles",
+    "entity_type": "catalog",
+    "description": "Reusable package definitions: groups SKUs + mandatory/optional selection rules + bundled-discount rules."
+  },
+  {
+    "id": 805,
+    "data_object_name": "product_compliance_declarations",
+    "singular_label": "Product Compliance Declaration",
+    "plural_label": "Product Compliance Declarations",
+    "entity_type": "operational_workflow",
+    "description": "Per part × substance × regulation declaration that asserts whether a controlled substance is present in the part, at what concentration, and whether it falls under a regulatory exemption. Aggregates from supplier declarations and propagates up the BOM via roll-up."
+  },
+  {
+    "id": 418,
+    "data_object_name": "product_configurations",
+    "singular_label": "Product Configuration",
+    "plural_label": "Product Configurations",
+    "entity_type": "operational_workflow",
+    "description": "Captures user selections when building a quote line (options on a base SKU mapping to a variant)."
+  },
+  {
+    "id": 403,
+    "data_object_name": "product_features",
+    "singular_label": "Product Feature",
+    "plural_label": "Product Features",
+    "entity_type": "operational_workflow",
+    "description": "Capability / story / epic within a product roadmap. Atomic unit of feature prioritization and customer-to-release mapping."
+  },
+  {
+    "id": 1208,
+    "data_object_name": "product_launches",
+    "singular_label": "Product Launch",
+    "plural_label": "Product Launches",
+    "entity_type": "operational_workflow",
+    "description": "The long-lived launch record for a product or feature: tier, dates, status, and retro."
+  },
+  {
+    "id": 402,
+    "data_object_name": "product_lines",
+    "singular_label": "Product Line",
+    "plural_label": "Product Lines",
+    "entity_type": "operational_workflow",
+    "description": "Software product line under development and go-to-market. Higher-level than B2C-COMM `products` (SKUs); a product_line bundles features and product_releases over its lifecycle. PROD-MGMT flagship."
+  },
+  {
+    "id": 408,
+    "data_object_name": "product_metrics",
+    "singular_label": "Product Metric",
+    "plural_label": "Product Metrics",
+    "entity_type": "computed",
+    "description": "KPI tracked over time per product (adoption %, NPS, DAU, feature usage, churn risk)."
+  },
+  {
+    "id": 404,
+    "data_object_name": "product_releases",
+    "singular_label": "Product Release",
+    "plural_label": "Product Releases",
+    "entity_type": "operational_workflow",
+    "description": "Versioned software release; bundles features and defines delivery date and scope."
+  },
+  {
+    "id": 405,
+    "data_object_name": "product_roadmaps",
+    "singular_label": "Product Roadmap",
+    "plural_label": "Product Roadmaps",
+    "entity_type": "operational_workflow",
+    "description": "Timeline view of features grouped by release, product, or theme. Marquee PROD-MGMT capability."
+  },
+  {
+    "id": 599,
+    "data_object_name": "production_downtime_events",
+    "singular_label": "Production Downtime Event",
+    "plural_label": "Production Downtime Events",
+    "entity_type": "operational_record",
+    "description": "Shop-floor equipment/line stoppage: start_time, duration, reason code, impact (throughput loss), resolution. OEE input. Distinct from EAM `eam_work_orders` (maintenance-triggered)."
+  },
+  {
+    "id": 595,
+    "data_object_name": "production_orders",
+    "singular_label": "Production Order",
+    "plural_label": "Production Orders",
+    "entity_type": "operational_workflow",
+    "description": "Release-to-floor unit of work: product SKU, quantity, schedule window, build instructions reference, material requirements. Distinct from ERP demand planning; MFG-OPS owns floor execution."
+  },
+  {
+    "id": 600,
+    "data_object_name": "production_quality_inspections",
+    "singular_label": "Production Quality Inspection",
+    "plural_label": "Production Quality Inspections",
+    "entity_type": "operational_workflow",
+    "description": "Per-unit/per-batch inspection result: checklist completion, pass/fail, defect classification, produced_unit reference, inspector, timestamp. Feeds quality dashboards and hold/release decisions."
+  },
+  {
+    "id": 597,
+    "data_object_name": "production_schedules",
+    "singular_label": "Production Schedule",
+    "plural_label": "Production Schedules",
+    "entity_type": "operational_workflow",
+    "description": "Published build plan for a line, manufacturing cell, or workcenter: time-based slots, assigned orders, sequencing, changeover windows. Product of capacity-planning optimization. Distinct from WFM `work_schedules` (labor-centric)."
+  },
+  {
+    "id": 311,
+    "data_object_name": "profile_results",
+    "singular_label": "Data Profile Result",
+    "plural_label": "Data Profile Results",
+    "entity_type": "computed",
+    "description": "Summary statistics computed on a data_asset: cardinality, null %, distinct count, value distributions, pattern samples. One per asset per scan."
+  },
+  {
+    "id": 1246,
+    "data_object_name": "program_increments",
+    "singular_label": "Program Increment",
+    "plural_label": "Program Increments",
+    "entity_type": "operational_workflow",
+    "description": "A fixed timebox during which a release train delivers incremental value, planned in a big-room planning event and closed with an inspect-and-adapt review."
+  },
+  {
+    "id": 218,
+    "data_object_name": "project_assignments",
+    "singular_label": "Project Assignment",
+    "plural_label": "Project Assignments",
+    "entity_type": "operational_workflow",
+    "description": "Worker-to-project allocation with role, bill rate, cost rate, planned hours, period. Drives utilization and resource-availability reporting."
+  },
+  {
+    "id": 219,
+    "data_object_name": "project_billing_milestones",
+    "singular_label": "Project Billing Milestone",
+    "plural_label": "Project Billing Milestones",
+    "entity_type": "operational_workflow",
+    "description": "Discrete billing trigger inside a project: milestone definition, amount, trigger condition, status. Drives revenue recognition and customer invoicing on fixed-fee engagements."
+  },
+  {
+    "id": 726,
+    "data_object_name": "project_resource_allocations",
+    "singular_label": "Project Resource Allocation",
+    "plural_label": "Project Resource Allocations",
+    "entity_type": "operational_workflow",
+    "description": "Forward-looking resource commitment plan (skill, planned utilization %, effective period) — distinct from executed assignments."
+  },
+  {
+    "id": 217,
+    "data_object_name": "project_tasks",
+    "singular_label": "Project Task",
+    "plural_label": "Project Tasks",
+    "entity_type": "operational_workflow",
+    "description": "Decomposed unit of work inside a project: scope, dependencies, estimated hours, status. Drives time entry tagging and Earned Value calculation."
+  },
+  {
+    "id": 1288,
+    "data_object_name": "proofing_annotations",
+    "singular_label": "Proofing Annotation",
+    "plural_label": "Proofing Annotations",
+    "entity_type": "operational_record",
+    "description": "Markup comment placed on a region of a proof during a proofing session, with the reviewer, location, and resolution state."
+  },
+  {
+    "id": 1287,
+    "data_object_name": "proofing_sessions",
+    "singular_label": "Proofing Session",
+    "plural_label": "Proofing Sessions",
+    "entity_type": "operational_workflow",
+    "description": "Review-and-approval cycle on a creative asset or document attached to a work item. Reviewers mark up the proof and decide approve or request-changes; backs the creative-review capability."
+  },
+  {
+    "id": 345,
+    "data_object_name": "property_leases",
+    "singular_label": "Lease Agreement",
+    "plural_label": "Lease Agreements",
+    "entity_type": "operational_workflow",
+    "description": "Buyer-side lease contract; terms, dates, financials, renewals. Distinct from `contracts` (CLM) — real-estate specific with ASC 842/IFRS 16 accounting."
+  },
+  {
+    "id": 347,
+    "data_object_name": "property_spaces",
+    "singular_label": "Space",
+    "plural_label": "Spaces",
+    "entity_type": "operational_workflow",
+    "description": "Desk, meeting room, parking space, locker, or other allocable unit. Parent = real_estate_property or floor_plan."
+  },
+  {
+    "id": 358,
+    "data_object_name": "property_tenants",
+    "singular_label": "Tenant",
+    "plural_label": "Tenants",
+    "entity_type": "unclassified",
+    "description": "Person or household occupying a rental unit under a lease; carries contact info, lease history, payment history, screening result."
+  },
+  {
+    "id": 369,
+    "data_object_name": "property_valuations",
+    "singular_label": "Property Valuation",
+    "plural_label": "Property Valuations",
+    "entity_type": "unclassified",
+    "description": "Periodic property or portfolio valuation via cap rate, DCF, or direct-comparison method; carries valuation date, method, assumptions, sensitivity outputs. Drives NAV for fund-level reporting."
+  },
+  {
+    "id": 678,
+    "data_object_name": "pull_requests",
+    "singular_label": "Pull / Merge Request",
+    "plural_label": "Pull / Merge Requests",
+    "entity_type": "operational_workflow",
+    "description": "Code-change proposal targeting a branch in a source_repository: author, base/head branches, title, description, status (open / merged / closed), reviewers, approval count, CI status, merged-at timestamp. The review-cycle artifact."
+  },
+  {
+    "id": 185,
+    "data_object_name": "pulse_questions",
+    "singular_label": "Pulse Question Library",
+    "plural_label": "Pulse Question Libraries",
+    "entity_type": "catalog",
+    "description": "Bank of survey items rotated through pulse cadence with research-backed driver mapping, anti-fatigue rotation, and benchmarking."
+  },
+  {
+    "id": 1197,
+    "data_object_name": "pump_out_logs",
+    "singular_label": "Pump-Out Log",
+    "plural_label": "Pump-Out Logs",
+    "entity_type": "operational_record",
+    "description": "A record of a sewage pump-out for a vessel, kept for Clean Vessel Act grant reporting and state mandates."
+  },
+  {
+    "id": 73,
+    "data_object_name": "purchase_orders",
+    "singular_label": "Purchase Order",
+    "plural_label": "Purchase Orders",
+    "entity_type": "operational_workflow",
+    "description": "Issued PO to a supplier: line items, agreed prices, delivery terms, payment terms, ship-to / bill-to. Authorizes the supplier to deliver. PO creation is a primary trigger for downstream system updates — ITAM gets the asset reference, SMP gets the SaaS subscription anchor."
+  },
+  {
+    "id": 72,
+    "data_object_name": "purchase_requisitions",
+    "singular_label": "Purchase Requisition",
+    "plural_label": "Purchase Requisitions",
+    "entity_type": "operational_workflow",
+    "description": "Internal demand for a purchase: what's needed, who's requesting, justification, budget reference, approval state. The origination point of a procurement workflow; SMP-triggered shadow-IT sanctioning lands here."
+  },
+  {
+    "id": 310,
+    "data_object_name": "quality_incidents",
+    "singular_label": "Data Quality Incident",
+    "plural_label": "Data Quality Incidents",
+    "entity_type": "operational_workflow",
+    "description": "Work item raised when a profiling or monitoring rule breaches: root-cause detail, remediation status, linked data assets, SLA."
+  },
+  {
+    "id": 309,
+    "data_object_name": "quality_rules",
+    "singular_label": "Data Quality Rule",
+    "plural_label": "Data Quality Rules",
+    "entity_type": "catalog",
+    "description": "Business logic defining acceptable data state: cardinality bounds, regex patterns, referential integrity constraints, statistical thresholds. References DCG `data_assets`."
+  },
+  {
+    "id": 710,
+    "data_object_name": "query_lineage_records",
+    "singular_label": "Query Lineage Record",
+    "plural_label": "Query Lineage Records",
+    "entity_type": "operational_workflow",
+    "description": "Executed-query audit trail linking metric reads back to source tables, transformations and requestor identity."
+  },
+  {
+    "id": 1269,
+    "data_object_name": "question_banks",
+    "singular_label": "Question Bank",
+    "plural_label": "Question Banks",
+    "entity_type": "catalog",
+    "description": "Reusable pools of assessment questions independent of any single assessment, drawn from for randomized quizzes and recertification exams."
+  },
+  {
+    "id": 258,
+    "data_object_name": "queue_statistics",
+    "singular_label": "Queue Statistics",
+    "plural_label": "Queue Statistics",
+    "entity_type": "computed",
+    "description": "Real-time and historical metrics per queue: wait time, abandonment rate, service level, average handle time. Drives staffing decisions and SLA monitoring."
+  },
+  {
+    "id": 916,
+    "data_object_name": "quiz_responses",
+    "singular_label": "Quiz Response",
+    "plural_label": "Quiz Responses",
+    "entity_type": "operational_record",
+    "description": "Item-level learner response capture for psychometric analysis and per-question review."
+  },
+  {
+    "id": 1225,
+    "data_object_name": "quotas",
+    "singular_label": "Quota",
+    "plural_label": "Quotas",
+    "entity_type": "operational_workflow",
+    "description": "An allocated revenue target for a territory, rep, or team for the plan period."
+  },
+  {
+    "id": 420,
+    "data_object_name": "quote_discounts",
+    "singular_label": "Quote Discount",
+    "plural_label": "Quote Discounts",
+    "entity_type": "operational_workflow",
+    "description": "Line- and quote-level discounts: source (rule / manual / competitive), amount, approval status."
+  },
+  {
+    "id": 417,
+    "data_object_name": "quote_lines",
+    "singular_label": "Quote Line",
+    "plural_label": "Quote Lines",
+    "entity_type": "operational_workflow",
+    "description": "Atomic configured-SKU line: unit price, quantity, line total; bundle nesting; line-level discounts and approval gates."
+  },
+  {
+    "id": 189,
+    "data_object_name": "rate_cards",
+    "singular_label": "Rate Card",
+    "plural_label": "Rate Cards",
+    "entity_type": "unclassified",
+    "description": "Pre-agreed bill rate by role, geography, and supplier tier. Drives consistent work_order pricing and AP-side three-way match."
+  },
+  {
+    "id": 1210,
+    "data_object_name": "readiness_checklists",
+    "singular_label": "Readiness Checklist",
+    "plural_label": "Readiness Checklists",
+    "entity_type": "catalog",
+    "description": "A template of cross-functional readiness items a launch must clear before go-live."
+  },
+  {
+    "id": 352,
+    "data_object_name": "real_estate_listings",
+    "singular_label": "Real Estate Listing",
+    "plural_label": "Real Estate Listings",
+    "entity_type": "operational_workflow",
+    "description": "Property offered for sale or rent on an MLS or brokerage marketplace; carries pricing, photos, descriptive text, agent representation, and listing-status lifecycle (active/contingent/pending/sold/withdrawn)."
+  },
+  {
+    "id": 344,
+    "data_object_name": "real_estate_properties",
+    "singular_label": "Real Estate Property",
+    "plural_label": "Real Estate Properties",
+    "entity_type": "operational_workflow",
+    "description": "Building, facility, or managed space (owned/leased); lifecycle from acquisition/lease-start to sale/expiry."
+  },
+  {
+    "id": 353,
+    "data_object_name": "real_estate_transactions",
+    "singular_label": "Real Estate Transaction",
+    "plural_label": "Real Estate Transactions",
+    "entity_type": "operational_workflow",
+    "description": "Deal pipeline from offer through close: parties, terms, contingencies, escrow timeline, and document compliance. One transaction per accepted offer; survives the listing once the offer is bound."
+  },
+  {
+    "id": 587,
+    "data_object_name": "real_user_sessions",
+    "singular_label": "Real User Session",
+    "plural_label": "Real User Sessions",
+    "entity_type": "operational_record",
+    "description": "Aggregate session telemetry for an end-user's device over a window: page loads, app launches, network quality samples, DNS query times, VPN toggle state, WiFi/cellular transitions. Distinct from OBS distributed_traces (app-internal) and NPMD (network-internal)."
+  },
+  {
+    "id": 497,
+    "data_object_name": "recall_events",
+    "singular_label": "Recall Event",
+    "plural_label": "Recall Events",
+    "entity_type": "operational_workflow",
+    "description": "Product recall execution record: affected lots, notification log, hold-and-segregate status, FDA Reportable Food Registry filing."
+  },
+  {
+    "id": 942,
+    "data_object_name": "recertification_schedules",
+    "singular_label": "Recertification Schedule",
+    "plural_label": "Recertification Schedules",
+    "entity_type": "catalog",
+    "description": "Periodic recurrence configuration that drives FINRA / BSA-AML / HIPAA / OSHA refresh assignment cycles."
+  },
+  {
+    "id": 433,
+    "data_object_name": "records_retention_policies",
+    "singular_label": "Records Retention Policy",
+    "plural_label": "Records Retention Policies",
+    "entity_type": "operational_workflow",
+    "description": "Legal hold + disposition rules per document class (regulatory retention periods, destruction dates)."
+  },
+  {
+    "id": 869,
+    "data_object_name": "recruiter_interactions",
+    "singular_label": "Recruiter Interaction",
+    "plural_label": "Recruiter Interactions",
+    "entity_type": "operational_record",
+    "description": "Free-text recruiter note attached to a candidate, application, or pool, time-stamped and authored by a user."
+  },
+  {
+    "id": 873,
+    "data_object_name": "recruiter_saved_searches",
+    "singular_label": "Recruiter Saved Search",
+    "plural_label": "Recruiter Saved Searches",
+    "entity_type": "catalog",
+    "description": "Persisted recruiter boolean query over the candidate database. Carries filter expression, last_run timestamp, alert preferences."
+  },
+  {
+    "id": 868,
+    "data_object_name": "recruiting_event_attendances",
+    "singular_label": "Recruiting Event Attendance",
+    "plural_label": "Recruiting Event Attendances",
+    "entity_type": "junction",
+    "description": "Junction between candidates and recruitment_events recording registration, check-in, attendance, and conversion outcome."
+  },
+  {
+    "id": 13,
+    "data_object_name": "recruitment_agencies",
+    "singular_label": "Recruitment Agency",
+    "plural_label": "Recruitment Agencies",
+    "entity_type": "operational_workflow",
+    "description": "Third-party recruiter or staffing firm supplying candidates. Tracks contract terms, contact, performance, and the candidates they have submitted."
+  },
+  {
+    "id": 14,
+    "data_object_name": "recruitment_events",
+    "singular_label": "Recruitment Event",
+    "plural_label": "Recruitment Events",
+    "entity_type": "operational_workflow",
+    "description": "Career fair, on-campus event, hackathon, or meetup used as a sourcing channel. Tracks attendees, captured leads, and event ROI."
+  },
+  {
+    "id": 5,
+    "data_object_name": "recruitment_sources",
+    "singular_label": "Recruitment Source",
+    "plural_label": "Recruitment Sources",
+    "entity_type": "catalog",
+    "description": "Channel a candidate came from: job board, referral, agency, sourcing campaign, career event, or inbound. Used for source-of-hire analytics and channel ROI."
+  },
+  {
+    "id": 1189,
+    "data_object_name": "recurring_charges",
+    "singular_label": "Recurring Charge",
+    "plural_label": "Recurring Charges",
+    "entity_type": "operational_record",
+    "description": "A scheduled charge generated from a contract: dockage, storage, or service fees billed on a periodic cadence."
+  },
+  {
+    "id": 717,
+    "data_object_name": "redemption_rewards",
+    "singular_label": "Redemption Reward",
+    "plural_label": "Redemption Rewards",
+    "entity_type": "unclassified",
+    "description": "Reward catalog entry — point values, redemption eligibility rules, partner-offer linkage."
+  },
+  {
+    "id": 718,
+    "data_object_name": "redemption_transactions",
+    "singular_label": "Redemption Transaction",
+    "plural_label": "Redemption Transactions",
+    "entity_type": "unclassified",
+    "description": "Fulfillment of a loyalty reward redemption (point deduction, reward shipment, partner settlement)."
+  },
+  {
+    "id": 876,
+    "data_object_name": "referral_campaigns",
+    "singular_label": "Referral Campaign",
+    "plural_label": "Referral Campaigns",
+    "entity_type": "operational_workflow",
+    "description": "Time-bounded promotion offering bonus referral rewards (e.g. 'double bonus for engineering Q3 2026', 'spot-bonus for hard-to-fill roles'). Scopes a referral_rewards override."
+  },
+  {
+    "id": 875,
+    "data_object_name": "referral_payouts",
+    "singular_label": "Referral Payout",
+    "plural_label": "Referral Payouts",
+    "entity_type": "operational_workflow",
+    "description": "Individual payout instance triggered when a referred candidate is hired and meets tenure conditions. Lifecycle: pending -> approved -> paid (-> clawed_back)."
+  },
+  {
+    "id": 874,
+    "data_object_name": "referral_rewards",
+    "singular_label": "Referral Reward",
+    "plural_label": "Referral Rewards",
+    "entity_type": "catalog",
+    "description": "Bounty rule defining the payout amount and conditions for a successful referral (e.g. $5000 paid 90 days after hire start, scaled by role level)."
+  },
+  {
+    "id": 806,
+    "data_object_name": "regulated_substances",
+    "singular_label": "Regulated Substance",
+    "plural_label": "Regulated Substances",
+    "entity_type": "catalog",
+    "description": "Reference catalog of substances controlled by product-substance regulations (RoHS Restricted Substances list, REACH SVHC list, REACH Annex XVII, conflict minerals 3TG, PFAS lists by jurisdiction). Each substance row carries CAS number, regulation pointers, threshold concentrations, and exemption references."
+  },
+  {
+    "id": 943,
+    "data_object_name": "regulator_filing_exports",
+    "singular_label": "Regulator Filing Export",
+    "plural_label": "Regulator Filing Exports",
+    "entity_type": "operational_workflow",
+    "description": "Export artifact for regulator submissions: OSHA 300, FINRA CE filings, state-CE rollups."
+  },
+  {
+    "id": 646,
+    "data_object_name": "regulatory_fees",
+    "singular_label": "Regulatory Fee",
+    "plural_label": "Regulatory Fees",
+    "entity_type": "operational_workflow",
+    "description": "Government-side fee assessment for permits, licenses, inspections, citations: fee type, amount, due date, payer, payment status, allocation to fund. Distinct from S2P / billing."
+  },
+  {
+    "id": 639,
+    "data_object_name": "regulatory_inquiries",
+    "singular_label": "Regulatory Inquiry",
+    "plural_label": "Regulatory Inquiries",
+    "entity_type": "operational_workflow",
+    "description": "Notification from regulator (SEC, FTC, GDPR authority, state AG): jurisdiction, inquiry type, subject, deadline, assigned counsel, response status. Distinct from PS-LIC inspections (regulator-as-issuer vs regulator-as-investigator)."
+  },
+  {
+    "id": 752,
+    "data_object_name": "relationship_records",
+    "singular_label": "Relationship Record",
+    "plural_label": "Relationship Records",
+    "entity_type": "computed",
+    "description": "Graph edges between people, organizations, and the firm: founder ↔ partner introductions, co-investor relationships, board observer assignments, advisor links."
+  },
+  {
+    "id": 290,
+    "data_object_name": "remediation_plans",
+    "singular_label": "Remediation Plan",
+    "plural_label": "Remediation Plans",
+    "entity_type": "operational_workflow",
+    "description": "Action plan to close an issue or failed control test; responsible party, target date, steps, evidence requirements, status."
+  },
+  {
+    "id": 1286,
+    "data_object_name": "reminder_schedules",
+    "singular_label": "Reminder Schedule",
+    "plural_label": "Reminder Schedules",
+    "entity_type": "catalog",
+    "description": "Configured nudge cadence driving automated learner and manager reminders."
+  },
+  {
+    "id": 238,
+    "data_object_name": "remote_sessions",
+    "singular_label": "Remote Session",
+    "plural_label": "Remote Sessions",
+    "entity_type": "operational_workflow",
+    "description": "Established remote-control session: technician identity, target endpoint, session type (attended/unattended), start/end timestamps, transferred files, elevation events, and link to recording artifact. The unit of work in remote-access tools."
+  },
+  {
+    "id": 360,
+    "data_object_name": "rent_payments",
+    "singular_label": "Rent Payment",
+    "plural_label": "Rent Payments",
+    "entity_type": "unclassified",
+    "description": "Tenant payment of rent (or other lease charges) via ACH, card, or cash; carries amount, allocation across charges, late fees, and reconciliation status."
+  },
+  {
+    "id": 359,
+    "data_object_name": "rental_applications",
+    "singular_label": "Rental Application",
+    "plural_label": "Rental Applications",
+    "entity_type": "unclassified",
+    "description": "Prospective-tenant application with personal/financial details, employer info, references, and screening results; precedes lease execution."
+  },
+  {
+    "id": 362,
+    "data_object_name": "rental_leases",
+    "singular_label": "Rental Lease",
+    "plural_label": "Rental Leases",
+    "entity_type": "unclassified",
+    "description": "Residential lease agreement between landlord and tenant covering a specific rental unit; carries term, rent schedule, security deposit, addenda. Distinct from REAL-EST tenant-of-corporate-office leases (ASC 842 angle) and from commercial leases (different document structure, shorter term)."
+  },
+  {
+    "id": 357,
+    "data_object_name": "rental_units",
+    "singular_label": "Rental Unit",
+    "plural_label": "Rental Units",
+    "entity_type": "unclassified",
+    "description": "Lettable unit within a residential property (apartment, single-family rental, condo); carries amenities, sq-ft, current rent, lease status."
+  },
+  {
+    "id": 578,
+    "data_object_name": "requirements_to_test_traceability",
+    "singular_label": "Requirements-to-Test Traceability",
+    "plural_label": "Requirements-to-Test Traceabilities",
+    "entity_type": "junction",
+    "description": "M:N links between product requirements (sourced from PROD-MGMT or internal specs) and test_cases that verify them. Supports coverage metrics and impact analysis."
+  },
+  {
+    "id": 885,
+    "data_object_name": "requisition_approvals",
+    "singular_label": "Requisition Approval",
+    "plural_label": "Requisition Approvals",
+    "entity_type": "operational_workflow",
+    "description": "Approval step in the chain that gates opening a job_requisition (hiring manager -> finance -> exec). Each step carries approver, decision, timestamp, rationale."
+  },
+  {
+    "id": 277,
+    "data_object_name": "resource_allocations",
+    "singular_label": "Resource Allocation",
+    "plural_label": "Resource Allocations",
+    "entity_type": "operational_workflow",
+    "description": "Assignment of person / team / asset to an initiative or roadmap item for a time period; utilization % and cost rate. Capacity-checks against SWP."
+  },
+  {
+    "id": 725,
+    "data_object_name": "resource_skill_inventories",
+    "singular_label": "Resource Skill Inventory",
+    "plural_label": "Resource Skill Inventories",
+    "entity_type": "catalog",
+    "description": "Pool of skills / competencies across the resource base with proficiency levels — anchors PSA utilization forecasting."
+  },
+  {
+    "id": 648,
+    "data_object_name": "retail_labour_schedules",
+    "singular_label": "Retail Labor Schedule",
+    "plural_label": "Retail Labor Schedules",
+    "entity_type": "operational_workflow",
+    "description": "Shift assignments, associate availability, store labor roster. RET-STORE-mastered scheduling execution; WFM masters canonical `work_schedules` for workforce-planning. Retail-specific scheduling logic (coverage bands, register staffing) lives here."
+  },
+  {
+    "id": 427,
+    "data_object_name": "return_authorizations",
+    "singular_label": "Return Authorization (RMA)",
+    "plural_label": "Return Authorization (RMA)s",
+    "entity_type": "operational_workflow",
+    "description": "RMA header created by OMS in response to a customer-initiated return or shipment.returned event. Refund_status (pending / authorized / refunded), return_location, tracking."
+  },
+  {
+    "id": 1010,
+    "data_object_name": "revenue_forecasts",
+    "singular_label": "Revenue Forecast",
+    "plural_label": "Revenue Forecasts",
+    "entity_type": "operational_record",
+    "description": "Period revenue forecast snapshot by segment and roll-up, recording the committed, best-case, and pipeline category calls for a given forecast period."
+  },
+  {
+    "id": 109,
+    "data_object_name": "revenue_recognition_records",
+    "singular_label": "Revenue Recognition Record",
+    "plural_label": "Revenue Recognition Records",
+    "entity_type": "operational_workflow",
+    "description": "ASC 606 / IFRS 15 deferred-revenue schedules: performance obligations, allocation across obligations, recognition timeline, recognized vs deferred amounts. The bridge between SUB-MGMT and Finance/GL."
+  },
+  {
+    "id": 1257,
+    "data_object_name": "right_to_work_verifications",
+    "singular_label": "Right to Work Verification",
+    "plural_label": "Right to Work Verifications",
+    "entity_type": "operational_workflow",
+    "description": "Pre-hire right-to-work verification event (the I-9 employment eligibility check or E-Verify confirmation itself), distinct from the supporting documents the candidate provides. Tracks the verification method, status, verifier, completion date, and any tentative or final non-confirmation, and handles data subject to federal employment-eligibility law."
+  },
+  {
+    "id": 291,
+    "data_object_name": "risk_assessments",
+    "singular_label": "Risk Assessment",
+    "plural_label": "Risk Assessments",
+    "entity_type": "operational_workflow",
+    "description": "Periodic or event-driven exercise to identify, analyze, and evaluate risks; type (enterprise / process / threat), scope, date, register version, findings."
+  },
+  {
+    "id": 1125,
+    "data_object_name": "risk_indicators",
+    "singular_label": "Risk Indicator",
+    "plural_label": "Risk Indicators",
+    "entity_type": "catalog",
+    "description": "A configured behavioral indicator or detection rule (for example, large download before resignation, upload to personal cloud, access to data outside role) that contributes weight to user risk scores and fires alerts."
+  },
+  {
+    "id": 223,
+    "data_object_name": "rmm_agents",
+    "singular_label": "RMM Agent",
+    "plural_label": "RMM Agents",
+    "entity_type": "operational_workflow",
+    "description": "The installed RMM agent on an endpoint or server: its version, last check-in time, health, configuration state, and telemetry-channel status. Distinct from configuration_items (CMDB's relationship/abstraction model) and hardware_assets (HAM's financial/lifecycle model) — rmm_agents is the operational liveness view used by RMM tools."
+  },
+  {
+    "id": 275,
+    "data_object_name": "roadmap_items",
+    "singular_label": "Roadmap Item",
+    "plural_label": "Roadmap Items",
+    "entity_type": "operational_workflow",
+    "description": "Planned product/capability delivery slated for a future release cycle; carries dependencies and contingency planning. Drives PROD-MGMT consumption."
+  },
+  {
+    "id": 591,
+    "data_object_name": "room_reservations",
+    "singular_label": "Room Reservation",
+    "plural_label": "Room Reservations",
+    "entity_type": "operational_workflow",
+    "description": "Meeting room, event space, or collaborative area reservation by employee or team: time slot, capacity, amenities requested."
+  },
+  {
+    "id": 95,
+    "data_object_name": "root_cause_analyses",
+    "singular_label": "Root Cause Analysis",
+    "plural_label": "Root Cause Analyses",
+    "entity_type": "operational_workflow",
+    "description": "RCA record — ML-suggested or human-confirmed. Links candidate root-cause CIs to the correlated event cluster and the resulting incident. Seeds ITSM problem records via the root_cause.identified handoff."
+  },
+  {
+    "id": 1089,
+    "data_object_name": "rou_assets",
+    "singular_label": "Right-of-Use Asset",
+    "plural_label": "Right-of-Use Assets",
+    "entity_type": "operational_workflow",
+    "description": "The right-of-use asset recognized for a lease: initial measurement, accumulated amortization, impairment, and carrying value over the lease term under ASC 842 or IFRS 16."
+  },
+  {
+    "id": 526,
+    "data_object_name": "rpa_activities",
+    "singular_label": "RPA Activity",
+    "plural_label": "RPA Activities",
+    "entity_type": "operational_record",
+    "description": "Discrete UI-level action within an rpa_bot (click, type, extract_text, wait, conditional_branch). Sequenced to form the bot logic."
+  },
+  {
+    "id": 527,
+    "data_object_name": "rpa_activity_logs",
+    "singular_label": "RPA Activity Log",
+    "plural_label": "RPA Activity Logs",
+    "entity_type": "operational_record",
+    "description": "Per-execution trace of individual activity: activity_id, sequence, status, screenshot (optional), data_captured, timestamp, error_details."
+  },
+  {
+    "id": 528,
+    "data_object_name": "rpa_bot_credentials",
+    "singular_label": "RPA Bot Credential",
+    "plural_label": "RPA Bot Credentials",
+    "entity_type": "operational_workflow",
+    "description": "Stored secrets used by bots: credential_type (username/password / API key / OAuth token), target_system, encrypted_value, rotation_policy."
+  },
+  {
+    "id": 523,
+    "data_object_name": "rpa_bots",
+    "singular_label": "RPA Bot",
+    "plural_label": "RPA Bots",
+    "entity_type": "operational_workflow",
+    "description": "Automated agent definition: name, description, process flow/logic, trigger conditions, error handling rules, version history. The RPA master entity. Distinct from IPAAS `integration_recipes` (server-to-server orchestration); RPA bots drive UI-level interactions across legacy applications."
+  },
+  {
+    "id": 529,
+    "data_object_name": "rpa_deployment_packages",
+    "singular_label": "RPA Deployment Package",
+    "plural_label": "RPA Deployment Packages",
+    "entity_type": "operational_workflow",
+    "description": "Versioned, distributable bot package: version, release_notes, package_checksum, deployment_timestamp, target_environment (dev / staging / prod), deployed_by."
+  },
+  {
+    "id": 524,
+    "data_object_name": "rpa_executions",
+    "singular_label": "RPA Execution",
+    "plural_label": "RPA Executions",
+    "entity_type": "operational_workflow",
+    "description": "Single run of an rpa_bot: start_time, end_time, status (success / failure / paused), execution_log, input_variables, output_results."
+  },
+  {
+    "id": 525,
+    "data_object_name": "rpa_schedules",
+    "singular_label": "RPA Schedule",
+    "plural_label": "RPA Schedules",
+    "entity_type": "operational_workflow",
+    "description": "Recurring bot execution configuration: frequency (cron), timezone, enabled/disabled state, next_run_timestamp, retention_policy for execution logs."
+  }
+]

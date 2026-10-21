@@ -1,0 +1,38 @@
+# HCM Phase-0 Vendor-Surface Research: Nine Candidate Entities + Four Statutes
+
+Date: 2026-06-09. Scope: which of nine candidate entities deserve their own catalog object, where they live in flagship HCM systems-of-record, and which domain carries four governing statutes. Research only; nothing written to the catalog.
+
+## Key findings (decision-driving)
+
+- **Person-adjacent data is overwhelmingly first-class in the systems-of-record.** SAP SuccessFactors models dependents, addresses, national IDs, emergency contacts as distinct infotypes/portlets (0002/0006/0021/0185); Oracle Fusion HCM has dedicated tables (`PER_VISAS_PERMITS_F`, external bank account records, national-identifier records); Workday exposes Dependents, Emergency Contacts, Government IDs, and "Visa ID Types" as managed sub-objects of the worker. These are not inlined fields, they are effective-dated child records. That argues for real catalog entities on HCM, not field-stuffing.
+- **Bank accounts are the one genuine split.** SAP and Oracle place bank/payment-method records in the payroll layer (EC Payroll, Oracle PPM/external bank accounts); Workday calls them Payment Elections (a payroll/pay function); BambooHR/Paylocity/ADP surface direct deposit in self-service but it feeds payroll. The data is collected in HR self-service but its system-of-record and security boundary is payroll. Majority placement: PAYROLL.
+- **Compliance items split by jurisdiction, not by vendor.** Work-eligibility/visa is core-worker data in every global suite (and the whole product for Deel/Remote), so it belongs on HCM. The US I-9 is universally a hiring/onboarding artifact (Workday I-9 lives in Onboarding, gated to E-Verify). FMLA medical certification is an absence/leave artifact, not a safety-incident artifact.
+- **Pay equity is reporting/analytics, not a stored master entity.** SAP delivers "EU Pay Transparency Insights" as analytics in SAP Business Data Cloud (1H 2026); Workday delivers it via VIBE/Pay Equity Hub and Kainos-powered Pay Transparency Analyzer. No flagship stores a durable `pay_equity_assessment` record as a worker child object; it is a computed/disclosure deliverable. Skip as an HCM entity; if it must be cataloged, it is a thin compliance/reporting module, not HCM core.
+- **National IDs and work-eligibility carry stricter access than the rest of the worker profile**, but every suite still keeps them inside the worker record (SAP infotype, Oracle child table, Workday Government IDs). Stricter RBAC is a field-security concern, not a reason to relocate the entity off HCM.
+
+## Task 1: Nine candidate entities
+
+| entity | vendors modeling it as first-class (named) | typical home | verdict | recommended catalog placement |
+|---|---|---|---|---|
+| employee_dependents (spouse/children/beneficiaries) | SAP SF EC Dependents portlet (mirrors Infotype 0021); Workday Dependents (convertible to benefit beneficiaries); Oracle Fusion contacts/dependents; BambooHR profile | Core worker profile, consumed by benefits | LOAD-ON-HCM | HCM, module HCM-CORE-WORKER (54). Benefit-beneficiary use is a BEN-ADMIN read, not a relocation. |
+| emergency_contacts | Workday Emergency Contacts (1 primary + ordered alternates); SAP SF Emergency Contact; BambooHR Emergency tab; Oracle | Core worker profile | LOAD-ON-HCM | HCM, HCM-CORE-WORKER (54). |
+| work_eligibility_documents (visa / work permit / Right-to-Work) | Workday "Visa ID Types" / work authorizations (expiration tracking); SAP SF Work Permit Info; Oracle Person Visa (`PER_VISAS_PERMITS_F`); Deel/Remote (core product, expiry alerts) | Core worker profile (global), compliance-sensitive | LOAD-ON-HCM | HCM, HCM-CORE-WORKER (54). Effective-dated, expiry-driven; distinct from the US I-9. |
+| national_ids (SSN / NINO / AHV) | SAP SF National ID Card (Infotype 0185/0002, multi-ID with validity); Oracle national identifiers; Workday Government IDs | Core worker profile, strict field-level RBAC | LOAD-ON-HCM | HCM, HCM-CORE-WORKER (54), with restricted-access field security. |
+| worker_addresses (home/work/mailing, effective-dated) | SAP SF Address (Infotype 0006, multiple types, country-variant); Workday addresses; Oracle; BambooHR | Core worker profile, effective-dated | LOAD-ON-HCM | HCM, HCM-CORE-WORKER (54). Effective-dated, multi-type. |
+| worker_bank_accounts (direct deposit) | SAP EC Payroll bank record; Oracle external bank accounts + personal payment methods; Workday Payment Elections; ADP/Paylocity Direct Deposit (self-service to payroll) | Payroll layer (data captured in HR self-service) | LOAD-ON-NEIGHBOR (PAYROLL) | PAYROLL. Genuine split; majority of suites bind the system-of-record and security to payroll. |
+| medical_certifications (FMLA cert, accommodation, return-to-work) | Workday Absence / Leave of Absence (15-day cert, Return-to-Work process, ADA accommodation); SAP SF Time Off / leave; Oracle Absence | Absence/leave management (time), not safety | LOAD-ON-NEIGHBOR (WFM) | WFM (workforce/time/absence). Tied to leave entitlement and accommodation, not HEALTH-SAFETY incidents. |
+| i9_records (US I-9 form, retention rules) | Workday I-9 (Onboarding, internal + external, E-Verify gating, retention); Experian/Tracker integrations | Onboarding / hiring compliance | LOAD-ON-NEIGHBOR (ONBOARDING) | ONBOARDING. US-specific hiring artifact with statutory retention; distinct from global work_eligibility_documents. |
+| pay_equity_assessments (EU Pay Transparency, US state laws) | SAP EU Pay Transparency Insights (analytics, SAP Business Data Cloud, 1H 2026); Workday VIBE / Pay Equity Hub / Pay Transparency Analyzer (Kainos); Syndio/Trusaic/PayAnalytics (specialists) | Compensation analytics / disclosure, not a stored worker child | SKIP/INLINE (as HCM entity) | Not an HCM core entity. If required, a thin compliance/reporting module (e.g. PAY-EQUITY or under compensation analytics); it is a computed disclosure, not master data. |
+
+## Task 2: Four statutes
+
+| statute | recommended domain | basis |
+|---|---|---|
+| FMLA / FFCRA (US family/medical leave) | WFM | Governs leave entitlement, accrual, and absence tracking; medical cert and return-to-work attach to the absence/leave record, not a safety or onboarding object. |
+| I-9 / E-Verify (US work eligibility) | ONBOARDING | Statutory completion is a point-of-hire event with fixed retention; every suite (Workday) runs I-9/E-Verify inside Onboarding, separate from ongoing global visa tracking on HCM. |
+| HIPAA Business-Associate-Agreement (employer health data) | BEN-ADMIN | The BAA exists because the employer handles PHI through group health plan administration; the obligation sits with the benefits/health-plan relationship and its vendors, not core worker data. |
+| US state pay-transparency laws (CA/CO/NY/WA/IL) | HCM | Drives pay-range disclosure on the job/requisition and pay-data reporting off worker + compensation records; lands on HCM (compensation/job data) as the system-of-record feeding any pay-equity reporting layer. |
+
+## Net recommendation
+
+Load five new first-class entities on **HCM / HCM-CORE-WORKER (54)**: `employee_dependents`, `emergency_contacts`, `work_eligibility_documents`, `national_ids`, `worker_addresses` (national_ids and work_eligibility_documents flagged for restricted field-level access). Route `worker_bank_accounts` to **PAYROLL**, `medical_certifications` to **WFM**, `i9_records` to **ONBOARDING**. Treat `pay_equity_assessments` as a reporting/disclosure deliverable, not an HCM master entity. Statute homes: FMLA -> WFM, I-9/E-Verify -> ONBOARDING, HIPAA BAA -> BEN-ADMIN, US pay-transparency -> HCM.

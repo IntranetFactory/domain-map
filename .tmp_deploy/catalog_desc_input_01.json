@@ -1,0 +1,786 @@
+[
+  {
+    "id": 445,
+    "data_object_name": "ab_tests",
+    "singular_label": "A/B Test",
+    "plural_label": "A/B Tests",
+    "entity_type": "operational_workflow",
+    "description": "Experimentation configuration: control vs variant, success metric, duration."
+  },
+  {
+    "id": 1236,
+    "data_object_name": "abm_campaigns",
+    "singular_label": "ABM Campaign",
+    "plural_label": "ABM Campaigns",
+    "entity_type": "operational_workflow",
+    "description": "An account-based engagement campaign spanning channels and target accounts."
+  },
+  {
+    "id": 164,
+    "data_object_name": "absence_balances",
+    "singular_label": "Absence Balance",
+    "plural_label": "Absence Balances",
+    "entity_type": "computed",
+    "description": "Per-worker per-leave-type running balance: accrued, taken, scheduled, available. Calculated against time_off_policies and reset per accrual cycle."
+  },
+  {
+    "id": 163,
+    "data_object_name": "absence_requests",
+    "singular_label": "Absence Request",
+    "plural_label": "Absence Requests",
+    "entity_type": "operational_workflow",
+    "description": "Worker-initiated request for time away: PTO, sick, parental, bereavement, jury duty, FMLA. Carries policy, eligibility check, approval chain, and accrual deduction. Called Leave Request (UK), Vacation Request (US), PTO Request."
+  },
+  {
+    "id": 686,
+    "data_object_name": "accessibility_scan_findings",
+    "singular_label": "Accessibility Scan Finding",
+    "plural_label": "Accessibility Scan Findings",
+    "entity_type": "unclassified",
+    "description": "WCAG violation detected by automated scanning (color contrast, alt text, heading hierarchy, interactive-element labels): severity, guideline reference, affected element selector, remediation steps, pages affected."
+  },
+  {
+    "id": 603,
+    "data_object_name": "account_applications",
+    "singular_label": "Account Application",
+    "plural_label": "Account Applications",
+    "entity_type": "operational_workflow",
+    "description": "Retail/commercial customer request to open a deposit or payment account: account type (checking, savings, money market, business), initial funding, linked services (card, online banking, mobile), identity-verification flag. Distinct from ATS recruiting applications."
+  },
+  {
+    "id": 1234,
+    "data_object_name": "account_engagement_scores",
+    "singular_label": "Account Engagement Score",
+    "plural_label": "Account Engagement Scores",
+    "entity_type": "computed",
+    "description": "An account- or contact-level marketing engagement / in-market propensity score derived from intent and activity. Distinct from REV-INTEL sales-activity engagement scores and from GTM-PLAN planning-grade account scores."
+  },
+  {
+    "id": 1233,
+    "data_object_name": "account_identifications",
+    "singular_label": "Account Identification",
+    "plural_label": "Account Identifications",
+    "entity_type": "operational_record",
+    "description": "A resolution of anonymous web/signal traffic to a known account or contact."
+  },
+  {
+    "id": 1237,
+    "data_object_name": "account_journeys",
+    "singular_label": "Account Journey",
+    "plural_label": "Account Journeys",
+    "entity_type": "operational_workflow",
+    "description": "An account's progression through orchestration stages from awareness to opportunity."
+  },
+  {
+    "id": 604,
+    "data_object_name": "account_openings",
+    "singular_label": "Bank Account Opening",
+    "plural_label": "Bank Account Openings",
+    "entity_type": "operational_workflow",
+    "description": "Completion record for a new deposit/payment account: institution, account number, IBAN/routing, account type, customer, funding method, activation date, initial balance. Derived from account_applications; drives downstream provisioning."
+  },
+  {
+    "id": 1222,
+    "data_object_name": "account_scores",
+    "singular_label": "Account Score",
+    "plural_label": "Account Scores",
+    "entity_type": "computed",
+    "description": "A planning-grade fit/priority score per account, derived from the ICP and segment model."
+  },
+  {
+    "id": 198,
+    "data_object_name": "accounting_periods",
+    "singular_label": "Accounting Period",
+    "plural_label": "Accounting Periods",
+    "entity_type": "unclassified",
+    "description": "Time bucket within a fiscal year: status (open / soft_close / closed / locked), period dates, calendar/fiscal alignment. Drives period-end close orchestration."
+  },
+  {
+    "id": 184,
+    "data_object_name": "action_plans",
+    "singular_label": "Engagement Action Plan",
+    "plural_label": "Engagement Action Plans",
+    "entity_type": "operational_workflow",
+    "description": "Team or manager action commitment in response to engagement_drivers result. Tracked to closure; recurring failure to act is itself an engagement signal."
+  },
+  {
+    "id": 1018,
+    "data_object_name": "activity_attribution_rules",
+    "singular_label": "Activity Attribution Rule",
+    "plural_label": "Activity Attribution Rules",
+    "entity_type": "catalog",
+    "description": "Configurable rules that decide which captured activities count toward which opportunity or account for engagement and attribution reporting."
+  },
+  {
+    "id": 323,
+    "data_object_name": "activity_data_records",
+    "singular_label": "Activity Data Record",
+    "plural_label": "Activity Data Records",
+    "entity_type": "operational_record",
+    "description": "Raw operational metric feeding emissions calc: kWh, fuel liters, waste tonnage, commute miles. Mapped to emission_factor → emissions_record. Broader than REAL-EST `utility_meter_readings`."
+  },
+  {
+    "id": 1114,
+    "data_object_name": "ad_audiences",
+    "singular_label": "Ad Audience",
+    "plural_label": "Ad Audiences",
+    "entity_type": "operational_record",
+    "description": "A targetable audience definition: custom (uploaded or pixel-built), lookalike / similar, saved interest-and-demographic, or suppression list, synced to one or more ad platforms."
+  },
+  {
+    "id": 1115,
+    "data_object_name": "ad_budget_allocations",
+    "singular_label": "Ad Budget Allocation",
+    "plural_label": "Ad Budget Allocations",
+    "entity_type": "operational_record",
+    "description": "A budget assignment and pacing record for a campaign or ad set, including caps, the reallocation decisions made by the optimization loop, and the resulting spend split over time."
+  },
+  {
+    "id": 1239,
+    "data_object_name": "ad_campaign_targets",
+    "singular_label": "Ad Campaign Target",
+    "plural_label": "Ad Campaign Targets",
+    "entity_type": "operational_record",
+    "description": "An account or audience targeted by an account-based ad campaign, with channel and tier."
+  },
+  {
+    "id": 1117,
+    "data_object_name": "ad_conversion_events",
+    "singular_label": "Ad Conversion Event",
+    "plural_label": "Ad Conversion Events",
+    "entity_type": "operational_record",
+    "description": "A conversion or signal event sent server-side to an ad platform (Meta Conversions API, TikTok Events API) and matched back to paid social delivery for optimization and attribution."
+  },
+  {
+    "id": 1120,
+    "data_object_name": "ad_creative_assets",
+    "singular_label": "Ad Creative Asset",
+    "plural_label": "Ad Creative Assets",
+    "entity_type": "catalog",
+    "description": "A reusable creative building block (image, video, headline, body copy, logo, CTA) stored for assembly into creatives and variants."
+  },
+  {
+    "id": 1122,
+    "data_object_name": "ad_product_feeds",
+    "singular_label": "Ad Product Feed",
+    "plural_label": "Ad Product Feeds",
+    "entity_type": "catalog",
+    "description": "A product catalog feed used to drive dynamic product ads and feed-based creative, mapping catalog fields to creative templates per platform."
+  },
+  {
+    "id": 881,
+    "data_object_name": "adverse_action_notices",
+    "singular_label": "Adverse Action Notice",
+    "plural_label": "Adverse Action Notices",
+    "entity_type": "operational_workflow",
+    "description": "FCRA-mandated notice issued when a background_check result is used to decline a candidate. Two-step process: pre-adverse notice + waiting period + post-adverse final notice. Carries notice type, sent timestamp, copy_of_report enclosure, dispute window expiry."
+  },
+  {
+    "id": 1163,
+    "data_object_name": "advocacy_attribution_records",
+    "singular_label": "Advocacy Attribution Record",
+    "plural_label": "Advocacy Attribution Records",
+    "entity_type": "computed",
+    "description": "A record linking advocacy-share-driven traffic to a lead, opportunity, or pipeline value for social-selling attribution and program ROI."
+  },
+  {
+    "id": 1156,
+    "data_object_name": "advocacy_campaigns",
+    "singular_label": "Advocacy Campaign",
+    "plural_label": "Advocacy Campaigns",
+    "entity_type": "operational_workflow",
+    "description": "A time-boxed push that groups advocacy content around a launch, event, or theme and sets participation targets for advocates over a defined period."
+  },
+  {
+    "id": 1151,
+    "data_object_name": "advocacy_content",
+    "singular_label": "Advocacy Content Item",
+    "plural_label": "Advocacy Content Items",
+    "entity_type": "operational_workflow",
+    "description": "A curated, approved content item (article, post, image, video, or link) made available to advocates to reshare, with suggested share copy and a sharing window."
+  },
+  {
+    "id": 1152,
+    "data_object_name": "advocacy_content_streams",
+    "singular_label": "Advocacy Content Stream",
+    "plural_label": "Advocacy Content Streams",
+    "entity_type": "catalog",
+    "description": "A topic channel or feed that groups advocacy content by theme so advocates can follow and filter the subjects relevant to them."
+  },
+  {
+    "id": 1157,
+    "data_object_name": "advocacy_internal_newsletters",
+    "singular_label": "Advocacy Newsletter",
+    "plural_label": "Advocacy Newsletters",
+    "entity_type": "operational_record",
+    "description": "An automated, personalized digest of shareable content sent to advocates to prompt participation, generated per advocate from their opted-in topics."
+  },
+  {
+    "id": 1158,
+    "data_object_name": "advocacy_leaderboards",
+    "singular_label": "Advocacy Leaderboard",
+    "plural_label": "Advocacy Leaderboards",
+    "entity_type": "operational_workflow",
+    "description": "A ranking board of advocates by points, shares, reach, or earned media value over a period, used to recognize and motivate participation."
+  },
+  {
+    "id": 1160,
+    "data_object_name": "advocacy_points_ledger",
+    "singular_label": "Advocacy Points Entry",
+    "plural_label": "Advocacy Points Entries",
+    "entity_type": "operational_record",
+    "description": "An append-only ledger entry recording points awarded to or redeemed by an advocate for a specific action (share, content creation, challenge completion)."
+  },
+  {
+    "id": 1150,
+    "data_object_name": "advocacy_programs",
+    "singular_label": "Advocacy Program",
+    "plural_label": "Advocacy Programs",
+    "entity_type": "operational_workflow",
+    "description": "A configured employee advocacy program: its enrolled audience, content topics, sharing rules, branding, and goals. The container an organization runs advocacy within."
+  },
+  {
+    "id": 1159,
+    "data_object_name": "advocacy_rewards",
+    "singular_label": "Advocacy Reward",
+    "plural_label": "Advocacy Rewards",
+    "entity_type": "operational_workflow",
+    "description": "A reward in the advocacy catalog that advocates can redeem with earned points (gift cards, swag, recognition), including its cost and redemption lifecycle."
+  },
+  {
+    "id": 1162,
+    "data_object_name": "advocacy_share_metrics",
+    "singular_label": "Advocacy Share Metric",
+    "plural_label": "Advocacy Share Metrics",
+    "entity_type": "computed",
+    "description": "Per-share engagement measurements: clicks, impressions, reactions, comments, reach, and earned media value attributed to an employee share."
+  },
+  {
+    "id": 1153,
+    "data_object_name": "advocacy_shares",
+    "singular_label": "Advocacy Share",
+    "plural_label": "Advocacy Shares",
+    "entity_type": "operational_workflow",
+    "description": "A single act of an employee resharing an advocacy content item to one of their linked personal social accounts, including the channel, timestamp, and any personalized copy."
+  },
+  {
+    "id": 1155,
+    "data_object_name": "advocacy_social_accounts",
+    "singular_label": "Advocate Social Account",
+    "plural_label": "Advocate Social Accounts",
+    "entity_type": "operational_record",
+    "description": "A personal social network account (LinkedIn, X, Facebook, Instagram) an advocate has connected and authorized for one-click resharing."
+  },
+  {
+    "id": 1154,
+    "data_object_name": "advocate_profiles",
+    "singular_label": "Advocate Profile",
+    "plural_label": "Advocate Profiles",
+    "entity_type": "operational_workflow",
+    "description": "An employee enrolled as an advocate: their participation status, opted-in topics, gamification standing, and the personal social accounts they have linked for sharing."
+  },
+  {
+    "id": 1161,
+    "data_object_name": "advocate_scores",
+    "singular_label": "Advocate Score",
+    "plural_label": "Advocate Scores",
+    "entity_type": "computed",
+    "description": "A computed influence score for an advocate derived from network size, engagement rate, reach, and share performance over a window."
+  },
+  {
+    "id": 491,
+    "data_object_name": "ag_input_inventory",
+    "singular_label": "Ag Input Inventory",
+    "plural_label": "Ag Input Inventories",
+    "entity_type": "unclassified",
+    "description": "Seed / fertilizer / chemical / fuel stock across farm bins and sheds; reconciled against applications and purchases."
+  },
+  {
+    "id": 485,
+    "data_object_name": "agency_estimates",
+    "singular_label": "Agency Estimate",
+    "plural_label": "Agency Estimates",
+    "entity_type": "unclassified",
+    "description": "Pre-engagement client estimate priced from rate cards, expected effort, and media/production cost lines with markup. Approval converts the estimate into an agency_job with locked billing terms."
+  },
+  {
+    "id": 478,
+    "data_object_name": "agency_jobs",
+    "singular_label": "Agency Job",
+    "plural_label": "Agency Jobs",
+    "entity_type": "unclassified",
+    "description": "Central engagement record for an agency client, the unit of billable work. Carries client, brief, deliverables, traffic state, retainer link (if any), assigned team, and rolled-up financials. Distinct from PSA `projects` by retainer linkage, creative-brief origination, and media-plan attachment."
+  },
+  {
+    "id": 480,
+    "data_object_name": "agency_retainers",
+    "singular_label": "Retainer",
+    "plural_label": "Retainers",
+    "entity_type": "unclassified",
+    "description": "Recurring fee agreement with a client: monthly amount, included scope (hours or deliverables), period, and live burn-down against logged time + costs. Surfaces over-burn alerts, replenishment triggers, and period roll-forward."
+  },
+  {
+    "id": 1258,
+    "data_object_name": "agency_submissions",
+    "singular_label": "Agency Submission",
+    "plural_label": "Agency Submissions",
+    "entity_type": "operational_record",
+    "description": "Record of a staffing or search agency submitting a candidate against a requisition. Carries the submission date, the ownership and dedup window that determines which agency owns a placement when more than one submits the same person, and the fee terms that apply if the submission converts to a hire."
+  },
+  {
+    "id": 479,
+    "data_object_name": "agency_time_entries",
+    "singular_label": "Agency Time Entry",
+    "plural_label": "Agency Time Entries",
+    "entity_type": "unclassified",
+    "description": "Time logged against an agency_job + task + deliverable by an employee or freelancer, with client-rate-card application, billable/non-billable/agency-overhead coding, and discipline tagging (strategy, design, account, production). Follows the `msp_time_entries` precedent for vertical-specific time data."
+  },
+  {
+    "id": 736,
+    "data_object_name": "agent_states",
+    "singular_label": "Agent State",
+    "plural_label": "Agent States",
+    "entity_type": "operational_workflow",
+    "description": "Contact-center agent presence + availability + pause-code state transitions (ACD foundation)."
+  },
+  {
+    "id": 1245,
+    "data_object_name": "agile_features",
+    "singular_label": "Agile Feature",
+    "plural_label": "Agile Features",
+    "entity_type": "operational_workflow",
+    "description": "A deliverable unit of work below an epic, sized to be completed within a program increment by one or more teams on a release train."
+  },
+  {
+    "id": 1247,
+    "data_object_name": "agile_release_trains",
+    "singular_label": "Agile Release Train",
+    "plural_label": "Agile Release Trains",
+    "entity_type": "catalog",
+    "description": "A long-lived team-of-teams structure that plans and delivers a continuous flow of value on a common cadence."
+  },
+  {
+    "id": 1250,
+    "data_object_name": "agile_roadmaps",
+    "singular_label": "Agile Roadmap",
+    "plural_label": "Agile Roadmaps",
+    "entity_type": "operational_record",
+    "description": "A time-phased view of planned epics and features across upcoming program increments, used for release planning and stakeholder communication."
+  },
+  {
+    "id": 231,
+    "data_object_name": "ai_agents",
+    "singular_label": "AI Agent",
+    "plural_label": "AI Agents",
+    "entity_type": "unclassified",
+    "description": "Registered LLM agent or generative-AI workflow: prompt templates, tool bindings, retrieval indexes (RAG), evaluation harness, deployed endpoints, audit log, and cost/safety policy. Lives in the platform's AI tier."
+  },
+  {
+    "id": 722,
+    "data_object_name": "alert_suppression_rules",
+    "singular_label": "Alert Suppression Rule",
+    "plural_label": "Alert Suppression Rules",
+    "entity_type": "catalog",
+    "description": "AIOps noise-reduction rule — patterns to filter / suppress (known-noise signatures, maintenance exclusions)."
+  },
+  {
+    "id": 511,
+    "data_object_name": "allergen_programs",
+    "singular_label": "Allergen Program",
+    "plural_label": "Allergen Programs",
+    "entity_type": "operational_workflow",
+    "description": "Per-product-line allergen map, changeover validation procedure, labeling controls, supplier-attestation references."
+  },
+  {
+    "id": 395,
+    "data_object_name": "animal_patients",
+    "singular_label": "Animal Patient",
+    "plural_label": "Animal Patients",
+    "entity_type": "unclassified",
+    "description": "Veterinary patient (companion animal, livestock, equine): species, breed, sex, date of birth, weight, microchip, color, identifying marks, ownership history. Distinct from human-patient records (no PHI scope)."
+  },
+  {
+    "id": 1105,
+    "data_object_name": "animal_sale_records",
+    "singular_label": "Sale Record",
+    "plural_label": "Sale Records",
+    "entity_type": "operational_workflow",
+    "description": "A sale or purchase transaction for animals or mobs, with counterparty, head count, weights, price, and destination. The commercial close-out of an animal's on-farm lifecycle."
+  },
+  {
+    "id": 1104,
+    "data_object_name": "animal_treatment_records",
+    "singular_label": "Treatment Record",
+    "plural_label": "Treatment Records",
+    "entity_type": "operational_workflow",
+    "description": "A vaccination, treatment, or medicine administration for an animal or mob, with product, batch number, dose, date, and the withholding period that gates sale and slaughter eligibility."
+  },
+  {
+    "id": 1102,
+    "data_object_name": "animal_weight_records",
+    "singular_label": "Weight Record",
+    "plural_label": "Weight Records",
+    "entity_type": "operational_record",
+    "description": "A weigh observation for an animal or mob session, with weight, date, and source (manual or scale-head capture). The series drives average-daily-gain and growth-curve computation."
+  },
+  {
+    "id": 94,
+    "data_object_name": "anomaly_detections",
+    "singular_label": "Anomaly Detection",
+    "plural_label": "Anomaly Detections",
+    "entity_type": "computed",
+    "description": "Detected deviation from learned normal behavior: KPI excursion outside seasonality bands, novel error pattern, traffic shape change. Feeds correlation and predictive_signals."
+  },
+  {
+    "id": 462,
+    "data_object_name": "api_consumers",
+    "singular_label": "API Consumer Registration",
+    "plural_label": "API Consumer Registrations",
+    "entity_type": "operational_workflow",
+    "description": "Runtime registration of an API consumer: API key provisioning, scopes assigned, quota allocation, on/off toggle. SUB-MGMT co-master decision for `api_subscriptions` (business slice) deferred."
+  },
+  {
+    "id": 458,
+    "data_object_name": "api_deployments",
+    "singular_label": "API Deployment",
+    "plural_label": "API Deployments",
+    "entity_type": "operational_workflow",
+    "description": "Runtime instance: which API version runs where (prod, staging, regional). Tracks rollout, canary, regional distribution."
+  },
+  {
+    "id": 461,
+    "data_object_name": "api_gateways",
+    "singular_label": "API Gateway",
+    "plural_label": "API Gateways",
+    "entity_type": "catalog",
+    "description": "Gateway infrastructure: deployment targets, throughput config."
+  },
+  {
+    "id": 459,
+    "data_object_name": "api_policies",
+    "singular_label": "API Policy",
+    "plural_label": "API Policies",
+    "entity_type": "operational_workflow",
+    "description": "Rules governing access, transformation, rate limits, authentication."
+  },
+  {
+    "id": 457,
+    "data_object_name": "api_specifications",
+    "singular_label": "API Specification",
+    "plural_label": "API Specifications",
+    "entity_type": "operational_workflow",
+    "description": "OpenAPI / AsyncAPI / GraphQL schema defining the interface contract. APIM publishes; APM `application_interfaces` reference via FK."
+  },
+  {
+    "id": 460,
+    "data_object_name": "api_usage_metrics",
+    "singular_label": "API Usage Metric",
+    "plural_label": "API Usage Metrics",
+    "entity_type": "computed",
+    "description": "Aggregate call counts, latency percentiles, error rates per version/consumer. APIM observability layer."
+  },
+  {
+    "id": 456,
+    "data_object_name": "api_versions",
+    "singular_label": "API Version",
+    "plural_label": "API Versions",
+    "entity_type": "operational_workflow",
+    "description": "Versioning lineage (v1.0, v2.0, sunset dates); each version has distinct policies, deployments, audience."
+  },
+  {
+    "id": 899,
+    "data_object_name": "applicant_flow_records",
+    "singular_label": "Applicant Flow Record",
+    "plural_label": "Applicant Flow Records",
+    "entity_type": "operational_workflow",
+    "description": "OFCCP-mandated log of every Internet Applicant against a requisition, capturing demographic data, expressed interest, basic qualifications, and disposition. Federal contractors must retain for OFCCP audit; the record is independent of EEO voluntary self-id."
+  },
+  {
+    "id": 268,
+    "data_object_name": "application_costs",
+    "singular_label": "Application Total Cost of Ownership",
+    "plural_label": "Application Total Costs of Ownership",
+    "entity_type": "operational_record",
+    "description": "Aggregated cost per enterprise application: license fees, infrastructure, support, personnel, cloud usage. Refresh monthly/quarterly; feeds FINOPS."
+  },
+  {
+    "id": 900,
+    "data_object_name": "application_dispositions",
+    "singular_label": "Application Disposition",
+    "plural_label": "Application Dispositions",
+    "entity_type": "operational_record",
+    "description": "Typed reason-for-non-selection on a job application. Drives OFCCP applicant-flow reporting and internal hiring analytics; distinct from `application_stage_transitions` which logs the stage change but not the categorized business reason."
+  },
+  {
+    "id": 271,
+    "data_object_name": "application_interfaces",
+    "singular_label": "Application Interface",
+    "plural_label": "Application Interfaces",
+    "entity_type": "operational_workflow",
+    "description": "Named integration point between two applications (API, ETL, message queue, file-drop, manual); carries payload type, data owner, frequency, SLA."
+  },
+  {
+    "id": 888,
+    "data_object_name": "application_screening_answers",
+    "singular_label": "Application Screening Answer",
+    "plural_label": "Application Screening Answers",
+    "entity_type": "operational_record",
+    "description": "Candidate-supplied answer to an application_screening_question on a specific job_application. Drives auto-disqualify on knockout rules."
+  },
+  {
+    "id": 887,
+    "data_object_name": "application_screening_questions",
+    "singular_label": "Application Screening Question",
+    "plural_label": "Application Screening Questions",
+    "entity_type": "catalog",
+    "description": "Custom screening question attached to a job_posting or template (knockout questions, qualifying questions). Carries question text, type (boolean/single-select/free-text), required, knockout rule."
+  },
+  {
+    "id": 884,
+    "data_object_name": "application_stage_transitions",
+    "singular_label": "Application Stage Transition",
+    "plural_label": "Application Stage Transitions",
+    "entity_type": "operational_record",
+    "description": "Audit-trail record of an application moving between stages. Carries from_stage, to_stage, actor, timestamp, reason. Source of cycle-time, time-in-stage, and conversion-rate analytics."
+  },
+  {
+    "id": 883,
+    "data_object_name": "application_stages",
+    "singular_label": "Application Stage",
+    "plural_label": "Application Stages",
+    "entity_type": "catalog",
+    "description": "Configured stage in the recruiting pipeline (sourced, applied, screened, phone_screen, onsite, offer, hired). Per-requisition or per-template ordered list; defines the lifecycle of a job_application."
+  },
+  {
+    "id": 272,
+    "data_object_name": "application_value_scores",
+    "singular_label": "Application Value Score",
+    "plural_label": "Application Value Scores",
+    "entity_type": "operational_record",
+    "description": "Multi-dimensional time-series score per application: criticality, revenue attribution, adoption, strategic alignment, technical health. Quarterly refresh."
+  },
+  {
+    "id": 413,
+    "data_object_name": "article_feedback",
+    "singular_label": "Article Feedback",
+    "plural_label": "Article Feedback",
+    "entity_type": "operational_workflow",
+    "description": "User satisfaction signals: rating, helpful/not-helpful votes, comments."
+  },
+  {
+    "id": 412,
+    "data_object_name": "article_revisions",
+    "singular_label": "Article Revision",
+    "plural_label": "Article Revisions",
+    "entity_type": "operational_record",
+    "description": "Audit trail of article edits: prior_version_id, author, timestamp, change_summary, revert capability."
+  },
+  {
+    "id": 776,
+    "data_object_name": "asc718_expense_periods",
+    "singular_label": "ASC 718 Expense Period",
+    "plural_label": "ASC 718 Expense Periods",
+    "entity_type": "operational_workflow",
+    "description": "Stock-based compensation expense recognition per period per cohort of grants. Uses Black-Scholes or lattice models with forfeiture / modification accounting."
+  },
+  {
+    "id": 1095,
+    "data_object_name": "asc842_journal_entries",
+    "singular_label": "ASC 842 Journal Entry",
+    "plural_label": "ASC 842 Journal Entries",
+    "entity_type": "operational_workflow",
+    "description": "The lease-accounting journal entries generated for posting to the general ledger under ASC 842 or IFRS 16: initial recognition, periodic amortization and interest, modification, and termination entries, with preparer and approver controls."
+  },
+  {
+    "id": 915,
+    "data_object_name": "assessment_attempts",
+    "singular_label": "Assessment Attempt",
+    "plural_label": "Assessment Attempts",
+    "entity_type": "operational_workflow",
+    "description": "Per-learner per-attempt audit row: start time, score, pass/fail, time-on-task. FINRA / Part 11 evidence substrate."
+  },
+  {
+    "id": 914,
+    "data_object_name": "assessment_questions",
+    "singular_label": "Assessment Question",
+    "plural_label": "Assessment Questions",
+    "entity_type": "catalog",
+    "description": "Item-bank entry: question stem, choices, scoring, and metadata for randomization."
+  },
+  {
+    "id": 54,
+    "data_object_name": "asset_contracts",
+    "singular_label": "Asset Contract",
+    "plural_label": "Asset Contracts",
+    "entity_type": "operational_workflow",
+    "description": "Lease, maintenance, support, or warranty contract governing an asset or pool of assets. Distinct from contract templates / signature artifacts (CLM-mastered): this is the ITAM-side index of contracts attached to physical or software assets. ITAM contributes the asset-pool linkage; CLM masters the contract document itself."
+  },
+  {
+    "id": 202,
+    "data_object_name": "asset_depreciation_schedules",
+    "singular_label": "Depreciation Schedule",
+    "plural_label": "Depreciation Schedules",
+    "entity_type": "unclassified",
+    "description": "Per-fixed_asset per-book depreciation calculation timeline: period-by-period depreciation expense and accumulated depreciation. Drives the monthly depreciation journal_entries."
+  },
+  {
+    "id": 55,
+    "data_object_name": "asset_lifecycle_events",
+    "singular_label": "Asset Lifecycle Event",
+    "plural_label": "Asset Lifecycle Events",
+    "entity_type": "operational_record",
+    "description": "Cross-cutting lifecycle audit log applicable to hardware, software, and SaaS assets: procurement, deployment, transfer, retirement, disposal. ITSM (incident-driven failure events), HCM (employee termination → recall), and Onboarding (provisioning) all contribute events."
+  },
+  {
+    "id": 729,
+    "data_object_name": "asset_management_fees",
+    "singular_label": "Asset Management Fee",
+    "plural_label": "Asset Management Fees",
+    "entity_type": "unclassified",
+    "description": "GP carry / management-fee schedule / performance-fee waterfall — required for true LP-return calculation."
+  },
+  {
+    "id": 42,
+    "data_object_name": "attrition_forecasts",
+    "singular_label": "Attrition Forecast",
+    "plural_label": "Attrition Forecasts",
+    "entity_type": "computed",
+    "description": "Forecast of voluntary and involuntary attrition over a planning horizon, typically broken down by org unit × tenure × performance band × geography. Derived from historical patterns and predictive models; consumed by SWP to update plan assumptions (the canonical attrition.forecast_updated handoff)."
+  },
+  {
+    "id": 113,
+    "data_object_name": "audience_segments",
+    "singular_label": "Audience Segment",
+    "plural_label": "Audience Segments",
+    "entity_type": "operational_workflow",
+    "description": "Defined segments / cohorts (high-value-active, 90-day-churn-risk, holiday-shoppers, post-purchase-anchor). Computed from events + attributes; activated outbound to MA for campaign targeting, to B2C-COMM for personalized storefront, to SALES-ENG for outreach prioritization."
+  },
+  {
+    "id": 958,
+    "data_object_name": "audiences",
+    "singular_label": "Audience",
+    "plural_label": "Audiences",
+    "entity_type": "catalog",
+    "description": "Dynamic learner segment defined by attributes (department, location, role) and used by auto-enrollment and notification rules."
+  },
+  {
+    "id": 293,
+    "data_object_name": "audit_engagements",
+    "singular_label": "Audit Engagement",
+    "plural_label": "Audit Engagements",
+    "entity_type": "operational_workflow",
+    "description": "Scoped fieldwork initiative; scope statement, budget, team, timeline, procedures. Lifecycle: planned → in_progress → draft_report → completed."
+  },
+  {
+    "id": 294,
+    "data_object_name": "audit_findings",
+    "singular_label": "Audit Finding",
+    "plural_label": "Audit Findings",
+    "entity_type": "operational_workflow",
+    "description": "Observed control deviation, process gap, or non-compliance discovered during fieldwork; condition, criteria, cause, impact, remediation owner, target date. Triggers GRC issues via handoff."
+  },
+  {
+    "id": 289,
+    "data_object_name": "audit_issues",
+    "singular_label": "Issue",
+    "plural_label": "Issues",
+    "entity_type": "operational_workflow",
+    "description": "Identified gap, risk exposure, or non-conformance from assessment, audit, or policy exception. Carries priority, due date, owner, status."
+  },
+  {
+    "id": 292,
+    "data_object_name": "audit_plans",
+    "singular_label": "Audit Plan",
+    "plural_label": "Audit Plans",
+    "entity_type": "operational_workflow",
+    "description": "Multi-year audit strategy and annual planning calendar defining audit-universe coverage, risk-based scoping, and timing."
+  },
+  {
+    "id": 297,
+    "data_object_name": "audit_recommendations",
+    "singular_label": "Audit Recommendation",
+    "plural_label": "Audit Recommendations",
+    "entity_type": "operational_workflow",
+    "description": "Forward-looking corrective-action proposal from fieldwork; risk rating, proposed owner, target date, expected cost/benefit."
+  },
+  {
+    "id": 298,
+    "data_object_name": "audit_reports",
+    "singular_label": "Audit Report",
+    "plural_label": "Audit Reports",
+    "entity_type": "operational_workflow",
+    "description": "Formal deliverable: executive summary, scope, findings + recommendations ranked by severity, management response, sign-off."
+  },
+  {
+    "id": 959,
+    "data_object_name": "automated_enrollment_rules",
+    "singular_label": "Automated Enrollment Rule",
+    "plural_label": "Automated Enrollment Rules",
+    "entity_type": "catalog",
+    "description": "Rule engine entry that auto-enrolls learners into courses or paths based on audience membership and lifecycle events."
+  },
+  {
+    "id": 225,
+    "data_object_name": "automation_scripts",
+    "singular_label": "Automation Script",
+    "plural_label": "Automation Scripts",
+    "entity_type": "operational_workflow",
+    "description": "A reusable script (PowerShell, Bash, batch, Python) in the RMM tool's script library for remote execution against managed endpoints, with version history, parameter schema, scheduled runs, and per-target execution outcome."
+  },
+  {
+    "id": 880,
+    "data_object_name": "background_check_adjudications",
+    "singular_label": "Background Check Adjudication",
+    "plural_label": "Background Check Adjudications",
+    "entity_type": "operational_workflow",
+    "description": "Human review decision on a completed background_check (Clear / Engaged / Decisional / Declined). Carries adjudicator, decision rationale, individualized assessment notes per EEOC guidance."
+  },
+  {
+    "id": 878,
+    "data_object_name": "background_check_components",
+    "singular_label": "Background Check Component",
+    "plural_label": "Background Check Components",
+    "entity_type": "operational_workflow",
+    "description": "Individual sub-check result inside a background_checks order (e.g. county_criminal, ssn_trace, employment_verification, drug_screen). Each component has its own status, result, and provider source."
+  },
+  {
+    "id": 882,
+    "data_object_name": "background_check_disputes",
+    "singular_label": "Background Check Dispute",
+    "plural_label": "Background Check Disputes",
+    "entity_type": "operational_workflow",
+    "description": "Candidate-initiated dispute of a background_check component result under FCRA rights. Carries disputed component, candidate statement, provider re-investigation result, resolution."
+  },
+  {
+    "id": 877,
+    "data_object_name": "background_check_packages",
+    "singular_label": "Background Check Package",
+    "plural_label": "Background Check Packages",
+    "entity_type": "catalog",
+    "description": "Configured bundle of check types (county criminal + national + MVR + drug screen + employment verification + education verification) that can be ordered as one unit. Catalog-shaped: defines what a 'standard package' looks like for a role tier."
+  },
+  {
+    "id": 12,
+    "data_object_name": "background_checks",
+    "singular_label": "Background Check",
+    "plural_label": "Background Checks",
+    "entity_type": "operational_workflow",
+    "description": "External verification result for a candidate (criminal, employment history, education, credit, identity). Status and findings typically returned by an external screening provider."
+  },
+  {
+    "id": 199,
+    "data_object_name": "bank_accounts",
+    "singular_label": "Bank Account",
+    "plural_label": "Bank Accounts",
+    "entity_type": "unclassified",
+    "description": "Owned cash or operating account at a bank: institution, account number, IBAN/routing, currency, intended use (operating, payroll, AP, trust). Drives cash management and payment runs."
+  },
+  {
+    "id": 606,
+    "data_object_name": "banking_cases",
+    "singular_label": "Banking Case",
+    "plural_label": "Banking Cases",
+    "entity_type": "operational_workflow",
+    "description": "Customer-banking issue / dispute / escalation: dispute type (unauthorized transaction, fraud claim, account error, complaint, regulatory concern), account involved, opened date, assigned agent, SLA, resolution status, root cause. Distinct from CSM customer_cases and ITSM incidents."
+  }
+]

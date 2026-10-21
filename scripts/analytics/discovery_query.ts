@@ -38,7 +38,7 @@ const [handoffs, triggers, domains, dos, bfd, functions, pcf] = await Promise.al
   get(`/data_objects?select=id,data_object_name&limit=10000`),
   get(`/business_function_domains?select=business_function_id,domain_id&limit=10000`),
   get(`/business_functions?select=id,business_function_name&limit=200`),
-  get(`/processes?source_framework=eq.apqc_pcf_cross_industry&select=id,process_name,external_id,hierarchy_level&limit=10000`),
+  get(`/business_processes?source_framework=eq.apqc_pcf_cross_industry&select=id,process_name,external_id,hierarchy_level&limit=10000`),
 ]);
 
 const triggerById = new Map<number, { event_name: string; data_object_id: number }>(
@@ -133,7 +133,7 @@ type Row = {
 };
 
 // Manually curated PCF overrides for top discovery buckets (subagent semantic review 2026-05-22).
-// Keys are trigger-event prefixes. Values are { external_id, name, level } from /processes.
+// Keys are trigger-event prefixes. Values are { external_id, name, level } from /business_processes.
 // Set value to null to force "no PCF match — promote to CUSTOM-*".
 const PCF_OVERRIDES: Record<string, { ext: string; name: string; lvl: number } | null> = {
   employee:               { ext: "20599", name: "Manage employee onboarding, training, and development", lvl: 2 },

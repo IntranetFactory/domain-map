@@ -64,7 +64,7 @@ const [
   get("/domains?select=id,domain_code,domain_name,domain_kind&limit=10000"),
   get("/domain_modules?select=id,domain_id,domain_module_code&limit=20000"),
   get("/data_objects?select=id,data_object_name,singular_label,entity_type&limit=20000"),
-  get("/processes?select=id,process_code,process_name,hierarchy_level&limit=20000"),
+  get("/business_processes?select=id,process_code,process_name,hierarchy_level&limit=20000"),
   get("/domain_module_data_objects?role=in.(master,embedded_master)&select=data_object_id,role,domain_module_id&limit=20000"),
   // gated states only: a process is realizable on an entity when it has a permission-gated state.
   get("/data_object_lifecycle_states?requires_permission=eq.true&process_id=not.is.null&select=process_id,data_object_id,state_name&limit=20000"),
