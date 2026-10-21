@@ -20,7 +20,7 @@ last_audit: "2026-06-13"
 # masters ZERO data_objects of its own. The build is SURFACED (not scaffolded)
 # per the UNBUILT rule; the M/B/F/H cascade is LEFT. Build is now gated on the
 # user go/no-go decision B2-S3 (Phase 0 vendor research DONE 2026-06-13:
-# .tmp_deploy/SOAR-phase0-2026-06-13.md; researched 3-module shape recommended).
+# audits/SOAR/SOAR-phase0-2026-06-13.md; researched 3-module shape recommended).
 #
 # Executed 2026-06-07: B1-S2 catalog UX (catalog_tagline + catalog_description);
 # B1-S3 domain_aliases (8 synonym rows). Executed 2026-06-13: B1A-B9D-VERIFY
@@ -87,7 +87,7 @@ b1b:
       /capability_domains?domain_id=eq.12 both return 0 rows.
       Rule #14 requires >=1 module_kind='full' domain_modules row; A2 requires
       >=3 capabilities (typical 5-8). Phase A shape REFINED by Phase 0
-      (.tmp_deploy/SOAR-phase0-2026-06-13.md): connectors fold into authoring,
+      (audits/SOAR/SOAR-phase0-2026-06-13.md): connectors fold into authoring,
       security_cases folds into security_incidents (one master), authoring master
       named generically to cover Splunk Playbook / XSOAR Playbook / Tines Story /
       Torq Workflow / Swimlane Playbook:
@@ -233,7 +233,7 @@ b2:
     summary: "Keystone build gate: approve the researched 3-module shape (Phase 0 DONE 2026-06-13), or change it?"
     question: |
       Phase 0 vendor-surface research has been RUN this pass (report:
-      .tmp_deploy/SOAR-phase0-2026-06-13.md). The remaining decision is the
+      audits/SOAR/SOAR-phase0-2026-06-13.md). The remaining decision is the
       build go/no-go on the researched shape, not whether to research. The
       market is genuinely three-shaped (Splunk SOAR alert/Container-centric;
       Cortex XSOAR + ServiceNow SIR incident-centric; Tines Stories / Torq
@@ -258,7 +258,7 @@ b2:
       - "(b) Keep researching / defer the build"
       - "(c) Build a different shape (user specifies)"
     why: "Vendor schema divergence shaped the modularization; the research (named-vendor evidence inline in q-SOAR.md q1) settles connectors-placement and case-vs-incident. Now a go/no-go on the shape."
-    extra_phase0_report: ".tmp_deploy/SOAR-phase0-2026-06-13.md"
+    extra_phase0_report: "audits/SOAR/SOAR-phase0-2026-06-13.md"
     extra_corrected_modules: [SOAR-PLAYBOOK-AUTHORING, SOAR-AUTOMATION-RUNTIME, SOAR-CASE-MGMT]
     extra_corrected_masters: [security_playbooks, playbook_steps, playbook_versions, integration_connectors, automation_runs, automation_run_steps, automation_artifacts, automation_run_logs, security_incidents, case_tasks, case_evidence, case_timelines, case_notes, indicator_of_compromise_records]
 

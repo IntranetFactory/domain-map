@@ -37,7 +37,7 @@ last_audit: "2026-06-13"
 # leaned on generic "matches how the major API platforms present their product" reasoning with
 # no named-vendor specifics). Fresh study of 7 flagships (Apigee, Kong Konnect, MuleSoft Anypoint,
 # Azure API Management, AWS API Gateway, IBM API Connect, Postman API Platform) ->
-# .tmp_deploy/APIM-phase0-2026-06-08.md. q-APIM.md regenerated with inline named-vendor evidence
+# audits/APIM/APIM-phase0-2026-06-08.md. q-APIM.md regenerated with inline named-vendor evidence
 # on every recommendation.
 #   REVERSALS: none. The fresh evidence CONFIRMED all four pattern flags (B2-S2) and the 4-module
 #   shape (B2-S1). One nuance ADDED on B2-S3 regulations: PCI-DSS is genuinely conditional (applies

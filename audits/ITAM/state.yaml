@@ -212,6 +212,6 @@ b3:
       commitments) hanging off ITAM-CONTRACTS, beyond the B3-CONTRACT-RENEWALS event. asset_cost_records: per-asset
       cost lines feeding the TCO rollup in ITAM-PORTFOLIO-REPORTING (the data behind B2-MOD60's portfolio_snapshots,
       related to B3-COST-ALLOC). Both additive; non-blocking. The re-audit confirms the umbrella's contract and TCO
-      surfaces are thin (B2-MOD57 empty, B2-MOD60 masters nothing). Full surface: .tmp_deploy/ITAM-market-surface-2026-06-16.json.
+      surfaces are thin (B2-MOD57 empty, B2-MOD60 masters nothing). Full surface: audits/ITAM/ITAM-market-surface-2026-06-16.json.
     vendor_evidence: [Flexera One, Ivanti Neurons for ITAM, ServiceNow ITAM, USU, Lansweeper]
     proposed_module: "contract_obligations->ITAM-CONTRACTS (58); asset_cost_records->ITAM-PORTFOLIO-REPORTING (60)"

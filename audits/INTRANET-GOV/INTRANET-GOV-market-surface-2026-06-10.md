@@ -1,6 +1,6 @@
 # INTRANET-GOV — Market surface (Validate semantic pass, 2026-06-10)
 
-Complements the build-time white-space study `.tmp_deploy/INTRANET-GOV-phase0-2026-06-10.md`. That study established there is NO pure-play vendor in this agnostic-overlay market; the flagship substrate below is drawn from ADJACENT M365-governance tools (Orchestry, SAM, ShareGate) and accessibility specialists (Siteimprove, Acquia), and the question this pass raises is how much of that substrate the agnostic overlay should adopt. The build shipped a deliberately-thin MVP (4 masters + computed health score + embedded work_items); this diff is the "deepen vs keep-MVP" decision.
+Complements the build-time white-space study `audits/INTRANET-GOV/INTRANET-GOV-phase0-2026-06-10.md`. That study established there is NO pure-play vendor in this agnostic-overlay market; the flagship substrate below is drawn from ADJACENT M365-governance tools (Orchestry, SAM, ShareGate) and accessibility specialists (Siteimprove, Acquia), and the question this pass raises is how much of that substrate the agnostic overlay should adopt. The build shipped a deliberately-thin MVP (4 masters + computed health score + embedded work_items); this diff is the "deepen vs keep-MVP" decision.
 
 ## Flagship substrate (adjacent vendors)
 

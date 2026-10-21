@@ -13,7 +13,7 @@ last_audit: "2026-06-22"
 #                                     9 trigger_events, 9 handoffs, 28 relationships)
 #   load_activity_booking_phaseCS.ts (4 business_function_domains, 1 domain skill, 24 tools / 26 links)
 #   load_activity_booking_phaseE.ts  (4 personas + 10 role_modules reach)
-# Phase 0 vendor surface: .tmp_deploy/ACTIVITY-BOOKING-phase0-2026-06-22.md.
+# Phase 0 vendor surface: audits/ACTIVITY-BOOKING/ACTIVITY-BOOKING-phase0-2026-06-22.md.
 # Build summary + decision record in history.md (2026-06-22). All rows record_status='new'.
 
 b1b:

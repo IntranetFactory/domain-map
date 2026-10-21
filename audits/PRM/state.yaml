@@ -16,7 +16,7 @@ last_audit: "2026-06-13"
 #
 # 2026-06-08 PHASE 0 ran (the step the prior passes skipped before surfacing market-shape
 # b2 calls; see skill-changelog 2026-06-08 + SKILL.md Rule #22 forcing step). Fresh vendor
-# study of 18 flagships -> .tmp_deploy/PRM-phase0-2026-06-08.md. Two recommendations REVERSED
+# study of 18 flagships -> audits/PRM/PRM-phase0-2026-06-08.md. Two recommendations REVERSED
 # by named-vendor evidence: B2-T1 training a->b (PRM masters training/certs natively: Impartner,
 # Channeltivity, Allbound, Magentrix all ship native partner LMS; Impartner added SCORM ingest
 # 2025-04), B2-T2 commission b->a (PRM masters channel incentives: ZINFI INCENTIVIZE is the

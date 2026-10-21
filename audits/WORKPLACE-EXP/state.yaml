@@ -7,7 +7,7 @@ last_audit: "2026-06-19"
 # 2026-06-19 NEW DOMAIN, promoted from audits/_missing-domains.md (VIS-MGMT audit candidate; triaged
 # 2026-06-19). User confirmed: promote as a THIRD sub-domain of REAL-EST (141), alongside IWMS (23) and
 # CAFM (142). UNBUILT: nothing loaded to the catalog yet. Phase 0 vendor-surface research done
-# (.tmp_deploy/WORKPLACE-EXP-phase0-2026-06-19.md): pure-plays Robin/Kadence/Tactic (+Envoy/Eptura
+# (audits/WORKPLACE-EXP/WORKPLACE-EXP-phase0-2026-06-19.md): pure-plays Robin/Kadence/Tactic (+Envoy/Eptura
 # suite context); ~26 entities; ~19 net-new WEX masters, ~4 embedded from IWMS/REAL-EST, visitors/people
 # consumed. The build (Phase A-S) is gated on the market-shape decisions below per Rule #21/#22.
 #

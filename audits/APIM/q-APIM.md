@@ -5,7 +5,7 @@ Design, secure, publish, and monetize your APIs from one place.
 
 Run the full life of every API: author the contract, version it cleanly, and push it through gateways with the access, authentication, and rate-limit rules you need. Onboard the developers and partners who consume your APIs, give them a self-service portal and keys, and watch real usage with per-consumer call volumes, latency, and error rates. Catch breaking changes before they reach subscribers, hold deprecated versions to a sunset plan, and turn API traffic into a billable, governed product instead of an unmanaged back door.
 
-> Grounding: these recommendations are backed by a fresh vendor-surface study (7 flagship vendors, 2025-2026 product docs) saved at `.tmp_deploy/APIM-phase0-2026-06-08.md`. Framing signal: unlike adjacent channel markets, API Management is converged, not splintering. The 2025 Gartner Magic Quadrant for API Management runs as ONE full-lifecycle market (Leaders: Kong, Google/Apigee, MuleSoft, IBM, Axway, Boomi), so the natural split is INTO modules within one domain, not OUT into sibling domains. No prior recommendation was reversed by the fresh evidence; all four pattern flags and the 4-module shape are confirmed, with one nuance added on PCI-DSS (see q6).
+> Grounding: these recommendations are backed by a fresh vendor-surface study (7 flagship vendors, 2025-2026 product docs) saved at `audits/APIM/APIM-phase0-2026-06-08.md`. Framing signal: unlike adjacent channel markets, API Management is converged, not splintering. The 2025 Gartner Magic Quadrant for API Management runs as ONE full-lifecycle market (Leaders: Kong, Google/Apigee, MuleSoft, IBM, Axway, Boomi), so the natural split is INTO modules within one domain, not OUT into sibling domains. No prior recommendation was reversed by the fresh evidence; all four pattern flags and the 4-module shape are confirmed, with one nuance added on PCI-DSS (see q6).
 
 ---
 
@@ -78,4 +78,4 @@ a7:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2.speclock q3=B2-S2.specapprover q4=B2-S2.policyapprover q5=B2-S2.consumerpii q6=B2-S3 q7=B3-S1 | domain_id=79 | phase0=.tmp_deploy/APIM-phase0-2026-06-08.md | reversed: none -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2.speclock q3=B2-S2.specapprover q4=B2-S2.policyapprover q5=B2-S2.consumerpii q6=B2-S3 q7=B3-S1 | domain_id=79 | phase0=audits/APIM/APIM-phase0-2026-06-08.md | reversed: none -->

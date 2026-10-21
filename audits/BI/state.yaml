@@ -14,7 +14,7 @@
 # forcing step). Fresh vendor study of 5 BI flagships (Microsoft Power BI/Fabric, Tableau,
 # Google Looker, Qlik Sense, ThoughtSpot) plus the embedded-analytics market (Sisense, Power
 # BI Embedded, Tableau Next) and the headless-semantic-layer market (dbt Semantic Layer, Cube)
-# -> .tmp_deploy/BI-phase0-2026-06-08.md. NO recommendations REVERSED: the fresh evidence
+# -> audits/BI/BI-phase0-2026-06-08.md. NO recommendations REVERSED: the fresh evidence
 # CONFIRMS the prior calls. (1) B2-S1 module cut: the 3-module recommendation is now grounded
 # in named-vendor packaging, the Looker LookML model-vs-Look/Dashboard split and the ThoughtSpot
 # Model-vs-Liveboard split map to Semantic-Modeling / Visualization / Distribution, while the

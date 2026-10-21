@@ -1197,7 +1197,7 @@ the bottom are the resolved history.
 - **Candidate capabilities:** EA repository and metamodel, ArchiMate/TOGAF modeling, application landscape modeling and rationalization, business architecture / business capability modeling, capability heatmaps, technology standards governance, technology radar, architecture roadmapping and transformation planning, IT cost transparency
 - **Estimated Semantius score:** ~96% strict (auto-est.): internal record/CRUD core; query/mutate + email/notify/webhook are platform-tier, no material external compute/fetch.
 - **Point-solution-market test:** PASS. Dedicated software market (Gartner "Enterprise Architecture Tools" Magic Quadrant) with 7+ independent pure-play vendors whose flagship product IS an EA suite (LeanIX, Ardoq, Software AG Alfabet, MEGA HOPEX, BiZZdesign, Avolution ABACUS, Sparx EA). Clears the three-independent-vendor bar decisively.
-- **Status:** pending-review (scoped 2026-06-15; Phase 0 at `.tmp_deploy/EA-phase0-2026-06-15.md`; promote q-file with 4 b2 calls at `audits/EA/q-EA.md` awaiting answers)
+- **Status:** pending-review (scoped 2026-06-15; Phase 0 at `audits/EA/EA-phase0-2026-06-15.md`; promote q-file with 4 b2 calls at `audits/EA/q-EA.md` awaiting answers)
 - **Decision:** _(recommended: promote-as-domain as the cross-layer umbrella, bounded so it consumes APM and BPA rather than re-mastering them. Final call plus the APM/BPA boundary await user sign-off; this is a market-shape b2.)_
 - **Scoping note (2026-06-15):** Consolidated from two duplicate codes (`ENT-ARCH` + `EA`), both surfaced by the same 2026-05-30 BPA audit; mention_count held at 1 (one surfacing event, not two). **Classification:** EA is a genuine domain by the point-solution-market test, but it is an *umbrella* discipline that overlaps three things already in or near the catalog: APM (id 10, application layer), BPA (id 136, process layer), and the business-capability-mapping concept (referenced as BUSINESS-CAPABILITY-MAP). This is the umbrella-vs-sub-domain case (cf. ITAM over HAM/SAM/FinOps): EA and its sub-disciplines coexist via `parent_domain_id`. **Bounding to avoid re-absorbing existing markets:** EA should *master* only the cross-layer artifacts no neighbor owns (the architecture repository / metamodel, ArchiMate model artifacts, technology standards and reference models, technology-radar entries, architecture roadmaps / transformation initiatives, and, if not folded into business-capability-mapping, business capability models) and *consume* the application layer from APM and the process layer from BPA. **Cross-decision dependency:** APM q8 proposes an APM tech-layer module (products/services/platforms split plus a tech-risk surface). If EA is promoted to own the technology-standards layer, part of APM q8's scope belongs to EA instead, so decide EA's scope and APM q8 together, not separately.
 
@@ -3652,7 +3652,7 @@ the bottom are the resolved history.
 - **Vendor evidence:** Sievo, SpendHQ, Simfoni, SAP Ariba Spend Analysis
 - **Adjacency:** S2P, SPEND-MGMT, SRM, FIN, AP-AUTO
 - **Candidate capabilities:** spend classification, supplier normalization, spend cube snapshots, savings opportunity and initiative tracking, addressable and tail-spend segmentation, diverse-spend and scope-3 reporting
-- **Estimated Semantius score:** ~85% strict (est.): classification, normalization, and savings-funnel records are internal CRUD over consumed PO, invoice, and GL data; external drag is supplier-enrichment fetch (D&B) plus optional ML auto-classification. Phase 0 (2026-06-19) concluded it QUALIFIES as a derive-heavy domain; report in .tmp_deploy/SPEND-ANALYTICS-phase0-2026-06-19.md
+- **Estimated Semantius score:** ~85% strict (est.): classification, normalization, and savings-funnel records are internal CRUD over consumed PO, invoice, and GL data; external drag is supplier-enrichment fetch (D&B) plus optional ML auto-classification. Phase 0 (2026-06-19) concluded it QUALIFIES as a derive-heavy domain; report in research/SPEND-ANALYTICS-phase0-2026-06-19.md
 - **Point-solution-market test:** _(pending human triage)_
 - **Status:** pending-review
 - **Decision:** _(empty until reviewed)_
@@ -3676,7 +3676,7 @@ the bottom are the resolved history.
 - **Rationale:** Corporate travel has a core entity surface (trips, itineraries, bookings, fare/hotel inventory, traveler profiles, travel policies, duty-of-care alerts) that exists in no current catalog domain and is not reducible to EXPENSE (consumes the resulting charges only) or SPEND-MGMT (card authorization). T&E bundling at Navan / SAP Concur is go-to-market packaging, not market identity, exactly as the catalog already separates EXPENSE from SPEND-MGMT. Duty-of-care, GDPR traveler data, and IATA NDC form a market-defining compliance surface with no home elsewhere.
 - **Proposed domains metadata:** full Phase 0 estimates in the report. Caveat: usa_market_size_usd_m (~3500) is an unsourced order-of-magnitude placeholder and needs a dedicated market-sizing pass before any value is loaded.
 - **Non-blocking follow-ups (b3, not executed):** standalone duty-of-care / travel-risk capability node (spans travel plus broader employee safety, e.g. International SOS); embedded-travel / travel-API capability pattern (Spotnana model); reconcile EXPENSE's existing "travel-booking integration" phrasing against the new domain at the spend seam.
-- **Phase 0 report:** .tmp_deploy/TRAVEL-MGMT-phase0-2026-06-14.md
+- **Phase 0 report:** audits/TRAVEL-MGMT/TRAVEL-MGMT-phase0-2026-06-14.md
 - **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 172 (4 full modules). Audit artifacts at audits/TRAVEL-MGMT/ (state.yaml, history.md, q-TRAVEL-MGMT.md). Open q-file forks: duty-of-care module split, PCI-DSS, TAM sourcing, custom travel APQC processes for RACI.
 
 ### MRM: Marketing Resource Management
@@ -3691,7 +3691,7 @@ the bottom are the resolved history.
 - **Rationale:** A defensible kernel (marketing plan + budget allocation + spend-to-plan reconciliation) is owned by no current domain: WORK-MGMT covers only the marketing-work half, DAM only the asset half, MA the execution half. At least one independent flagship (Uptempo) sells exactly the budget-orchestration kernel. Gartner-observed convergence is pulling the work and asset halves into WORK-MGMT and DAM-led suites, so MRM should be promoted scoped tightly to the planning/budget core, referencing DAM for assets and MA for execution rather than re-implementing generic work management.
 - **Proposed domains metadata:** see the Phase 0 report for the seven-field estimate.
 - **Non-blocking follow-ups (b3, not executed):** (1) PMM (Product Marketing Management) is a separate uncatalogued candidate that warrants its own Phase 0. (2) Data-hygiene flag: ADV-AD-TECH is listed as an adjacency but is absent from the catalog. (3) On load, encode MRM to DAM (asset) and MRM to MA (execution) cross-references to mark the convergence boundary.
-- **Phase 0 report:** .tmp_deploy/MRM-phase0-2026-06-14.md
+- **Phase 0 report:** audits/MRM/MRM-phase0-2026-06-14.md
 - **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 173 (modules MRM-PLANNING, MRM-BUDGET). Audit artifacts at audits/MRM/. GATE decision still open in q-MRM.md: keep narrow-kernel MRM vs fold into WORK-MGMT.
 
 ### EHS: Environmental, Health and Safety Management
@@ -3705,7 +3705,7 @@ the bottom are the resolved history.
 - **Decision:** promote-as-domain (2026-06-14). Built with domain_code EHS.
 - **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 174. 11 capabilities, 4 full modules (SAFETY-INCIDENT, INDUSTRIAL-HYGIENE, ENV-COMPLIANCE, AUDIT-INSPECTION), 15 masters, 5 regulations (OSHA, ISO 45001, ISO 14001, REACH, EPA-EPCRA), system skill ehs-system, 4 personas with RACI wired to real PCF nodes. Audit artifacts at audits/EHS/. Open b2 forks (module split, owner function, EHS to ESG edge) in q-EHS.md.
 - **Rationale:** EHS is a long-standing, separately benchmarked enterprise market upstream of ESG (supplies incident / environmental data to disclosure), not a subset of it; distinct buyer and regulated-entity set; does not fold into ESG / GRC / FSQM.
-- **Phase 0 report:** .tmp_deploy/EHS-MGMT-phase0-2026-06-14.md
+- **Phase 0 report:** research/EHS-MGMT-phase0-2026-06-14.md
 
 ### LEASE-ACCT: Lease Accounting and Administration
 
@@ -3718,7 +3718,7 @@ the bottom are the resolved history.
 - **Decision:** promote-as-domain (2026-06-14).
 - **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 175 (modules LEASE-ACCT-ACCOUNTING, LEASE-ACCT-ADMINISTRATION). 7 capabilities, 10 masters, regulations ASC-842 / IFRS-16 / SOX, system skill lease-acct-system, 3 personas with RACI on real PCF finance nodes (9.3.x). Audit artifacts at audits/LEASE-ACCT/. Open q-file forks: lease-administration mastering vs thinning to consume REAL-EST / RE-CRE; whether to add consumer DMDO links to REAL-EST / RE-CRE leases.
 - **Rationale:** The ASC 842 / IFRS 16 accounting kernel (ROU assets, lease liabilities, classification, disclosures) is owned by no existing domain: REAL-EST holds leases as workplace records, RE-CRE is landlord-side commercial leases, FINOPS is cloud spend, ACCT-PLAN is a name collision (sales account planning). Distinct compliance-driven market.
-- **Phase 0 report:** .tmp_deploy/LEASE-ACCT-phase0-2026-06-14.md
+- **Phase 0 report:** audits/LEASE-ACCT/LEASE-ACCT-phase0-2026-06-14.md
 
 ### LIVESTOCK-MGMT: Livestock Management
 
@@ -3730,7 +3730,7 @@ the bottom are the resolved history.
 - **Point-solution-market test:** PASSES. General livestock / grazing management (beef, sheep, cattle, mixed grazing) is a distinct SMB-farm software market, not a fold into FMIS (crop / whole-farm) or DAIRY-MGMT (dairy vertical).
 - **Decision:** promote-as-domain (2026-06-14).
 - **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 176 (modules LIVESTOCK-MGMT-HERD, LIVESTOCK-MGMT-GRAZING). 8 capabilities, 11 masters, system skill livestock-mgmt-system, 3 personas. process_raci deferred (no cross-industry PCF node fits a farm / livestock gated process). Audit artifacts at audits/LIVESTOCK-MGMT/. Open q-file forks: distinct-domain vs fold-into-FMIS (gate); whether FOOD-TRACE vs FSQM owns the treatment / withholding gate.
-- **Phase 0 report:** .tmp_deploy/LIVESTOCK-MGMT-phase0-2026-06-14.md
+- **Phase 0 report:** audits/LIVESTOCK-MGMT/LIVESTOCK-MGMT-phase0-2026-06-14.md
 
 ### SOCIAL-ADS: Paid Social Advertising
 
@@ -3742,7 +3742,7 @@ the bottom are the resolved history.
 - **Point-solution-market test:** PASSES. Four independent flagship pure-plays (Smartly.io, Madgicx, Strike Social, Adsmurai). SMM is organic publishing, MA is lifecycle, and no ad-tech domain exists, so paid social had no home.
 - **Decision:** promote-as-domain (2026-06-14).
 - **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 177 (modules SOCIAL-ADS-CAMPAIGN-ORCHESTRATION, SOCIAL-ADS-CREATIVE-OPTIMIZATION). 6 capabilities, 13 masters, system skill social-ads-system, 3 personas with RACI. Audit artifacts at audits/SOCIAL-ADS/. Open q-file gate: keep distinct vs fold into SMM.
-- **Phase 0 report:** .tmp_deploy/SOCIAL-ADS-phase0-2026-06-14.md
+- **Phase 0 report:** audits/SOCIAL-ADS/SOCIAL-ADS-phase0-2026-06-14.md
 
 ### INSIDER-RISK: Insider Risk Management (queued as IRM)
 
@@ -3754,7 +3754,7 @@ the bottom are the resolved history.
 - **Point-solution-market test:** PASSES. Three-plus independent flagships (DTEX, Teramind, Proofpoint ITM); Gartner publishes a dedicated Market Guide for Insider Risk Management Solutions (Mar 2025).
 - **Decision:** promote-as-domain (2026-06-14). CODE CHANGED: built as domain_code INSIDER-RISK, not IRM. "IRM" is overloaded (GRC id 15 already carries the Integrated Risk Management meaning), so the insider-risk market uses INSIDER-RISK to avoid the collision.
 - **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 178 (modules INSIDER-RISK-MONITORING-DETECTION, INSIDER-RISK-INVESTIGATION-CASE-MGMT). 7 capabilities, 7 masters (consumes DLP / DSPM / HCM signals), system skill insider-risk-system, 3 personas with RACI. Audit artifacts at audits/INSIDER-RISK/. Open q-file forks: distinct vs fold into DLP / DSPM; PCF anchor choice. Known gap: 3 of 4 outbound handoffs have NULL target_domain_module_id because SECOPS / HCM / IGA are not modularized at the consuming grain (backfill later).
-- **Phase 0 report:** .tmp_deploy/IRM-phase0-2026-06-14.md
+- **Phase 0 report:** research/IRM-phase0-2026-06-14.md
 
 ### PROCESS-ORCHESTRATION: Process Orchestration / Durable Execution (queued as IBPMS)
 
@@ -3766,7 +3766,7 @@ the bottom are the resolved history.
 - **Point-solution-market test:** PASSES, but only after splitting the candidate. The iBPMS SUITE name folds (its low-code leaders Pega / Appian are already mapped to LCAP, and LCAP-WORKFLOW-AUTO is annotated "Where LCAP overlaps with BPM/iBPMS"). The distinct, unowned kernel is the durable execution RUNTIME, with three-plus independent pure-play flagships that are NOT low-code suites: Camunda, Temporal, Orkes, Flowable.
 - **Decision:** promote-as-domain (2026-06-14). CODE CHANGED: built as domain_code PROCESS-ORCHESTRATION, not IBPMS (an IBPMS code would duplicate LCAP). Note: catalog BPA = "Business Process Architecture" (modeling / governance), not Automation, and LCAP masters design-time workflows only, so the execution runtime had no home.
 - **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 179 (modules PROCESS-ORCHESTRATION-EXECUTION, PROCESS-ORCHESTRATION-CASE-DECISION). 6 capabilities, 10 masters (process_instances state machine, human_tasks, runtime DMN, case_records, process_events), system skill process-orchestration-system, 3 personas with RACI. Audit artifacts at audits/PROCESS-ORCHESTRATION/. Open q-file forks: distinct vs fold into LCAP / BPA; module split.
-- **Phase 0 report:** .tmp_deploy/IBPMS-phase0-2026-06-14.md
+- **Phase 0 report:** research/IBPMS-phase0-2026-06-14.md
 
 ### FRONTLINE-COMMS: Frontline / Deskless Worker Communication Platform
 
@@ -3779,7 +3779,7 @@ the bottom are the resolved history.
 - **Decision:** promote-as-domain (2026-06-14).
 - **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 180 (modules FRONTLINE-COMMS-BROADCAST-ENGAGEMENT, FRONTLINE-COMMS-TASK-EXECUTION). 5 capabilities, 10 masters, system skill frontline-comms-system, 3 personas with RACI. Audit artifacts at audits/FRONTLINE-COMMS/. Strong signal: WorkJam (solution 256) was already in the catalog mis-shelved on WFM + RET-STORE. Open q-file forks: distinct vs fold into INTRANET (gate); re-shelving WorkJam to FRONTLINE-COMMS primary (additive done, destructive downgrade surfaced).
 - **Rationale:** INTRANET is the office-comms publishing platform (buyer Internal Comms / HR), WFM owns the shift record + swap approval, RET-STORE owns retail-only task, EMP-EXP owns survey listening. None fuses the five deskless capabilities for the non-desk worker. Distinct buyer (store / plant ops) and a mobile-first, no-corporate-email substrate.
-- **Phase 0 report:** .tmp_deploy/FRONTLINE-COMMS-phase0-2026-06-14.md
+- **Phase 0 report:** audits/FRONTLINE-COMMS/FRONTLINE-COMMS-phase0-2026-06-14.md
 
 ### EMP-ADVOCACY: Employee Advocacy Platform
 
@@ -3792,7 +3792,7 @@ the bottom are the resolved history.
 - **Decision:** promote-as-domain (2026-06-14).
 - **Build status:** BUILT and loaded at record_status='new' on 2026-06-14 as domain id 181 (modules EMP-ADVOCACY-CONTENT-DISTRIBUTION, EMP-ADVOCACY-GAMIFICATION-ANALYTICS). 7 capabilities, 14 masters, system skill emp-advocacy-system, 3 personas with RACI. Audit artifacts at audits/EMP-ADVOCACY/. Open q-file forks: distinct vs fold into SMM (gate); pattern-flag flips; regulation set.
 - **Rationale:** SMM names "influencer / advocacy programs" in one clause, but that is influencer scope (SMM already has the SMM-INFLUENCER module 302 for external creators) and SMM models none of the advocacy entity surface. INTRANET / EMP-EXP / HCM are internal-audience or HRIS, not external-reach. Distinct buyer (Marketing / MarComms with an HR contributor seam): employees resharing curated brand content to their personal social networks.
-- **Phase 0 report:** .tmp_deploy/EMP-ADVOCACY-phase0-2026-06-14.md
+- **Phase 0 report:** audits/EMP-ADVOCACY/EMP-ADVOCACY-phase0-2026-06-14.md
 
 ### SCRM: Supply Chain Risk Management
 
@@ -3802,9 +3802,9 @@ the bottom are the resolved history.
 - **Adjacency:** SRM (28), TPRM (19), GRC (15), S2P (27)
 - **Candidate capabilities:** N-tier / sub-tier supplier mapping, continuous external-disruption monitoring (weather, geopolitics, financial, cyber, forced-labor/ESG), disruption alerting, supplier risk intelligence scoring, geopolitical risk scoring
 - **Point-solution-market test:** PASSES. A recognized standalone market with a pure-play vendor set (Resilinc, Interos, Everstream Analytics, Prewave, Sphera SCRM, Sayari) whose defining capability, N-tier mapping plus continuous monitoring of EXTERNAL disruption signals across suppliers the buyer has no direct relationship with, is owned by neither SRM (operational risk on the buyer's own supplier master, gating qualification) nor TPRM (engagement/contract-gated diligence on direct third parties). Sphera draws the SCRM-vs-TPRM line explicitly.
-- **Decision:** promote-as-domain (2026-06-19). Proposed domain_code SCRM. Resolves SRM b2 item B2-S4 (user chose option a). NOT yet loaded; the build needs its own dedicated Phase 0 (the existing .tmp_deploy/SRM-phase0-2026-06-19.md covered the SRM/TPRM seam, not the SCRM pure-play surface) followed by Phase A-S, and awaits explicit user approval.
+- **Decision:** promote-as-domain (2026-06-19). Proposed domain_code SCRM. Resolves SRM b2 item B2-S4 (user chose option a). NOT yet loaded; the build needs its own dedicated Phase 0 (the existing audits/SRM/SRM-phase0-2026-06-19.md covered the SRM/TPRM seam, not the SCRM pure-play surface) followed by Phase A-S, and awaits explicit user approval.
 - **Rationale:** SCRM is the supply-chain-disruption-intelligence overlay (N-tier/sub-tier mapping plus continuous monitoring of external disruption signals across indirect suppliers). It is a different market from both SRM (operational supplier risk attached to the buyer's own supplier master) and TPRM (deep, tier-cadence diligence on direct third parties). A fold into either understates a distinct pure-play market; the next-best fold (into TPRM) would dilute it.
-- **Phase 0 report:** .tmp_deploy/SCRM-phase0-2026-06-19.md (done 2026-06-19; flagship pure-plays Resilinc, Interos, Everstream, Prewave, Sphera SCRM, Sayari; 3-module hypothesis NETWORK-MAPPING / RISK-INTELLIGENCE / DISRUPTION-RESPONSE).
+- **Phase 0 report:** audits/SCRM/SCRM-phase0-2026-06-19.md (done 2026-06-19; flagship pure-plays Resilinc, Interos, Everstream, Prewave, Sphera SCRM, Sayari; 3-module hypothesis NETWORK-MAPPING / RISK-INTELLIGENCE / DISRUPTION-RESPONSE).
 - **Build status:** NOT built; audit STARTED. Audit dir created at audits/SCRM/ (state.yaml, history.md, q-SCRM.md). `status: feedback_needed` on 4 market-shape b2 decisions (node identity [gate], module split, forced-labor scope, owner function). Phase A-S build runs once a-SCRM.md answers the shape.
 
 ### PMM: Product Marketing Management
@@ -3830,7 +3830,7 @@ the bottom are the resolved history.
 - **Decision:** promote-as-domain (2026-06-19). Proposed domain_code HOA-MGMT, standalone (sibling to RE-PROP-MGMT, NOT a child — each masters entities the other lacks).
 - **Rationale:** RE-PROP-MGMT is the landlord-to-tenant view (leases, rent, screening, vacancy, per-property GL). HOA-MGMT is the owners-self-governance view: an association of owners governs a community via board, elections, CC&Rs/covenants, an architectural-review committee, assessments and violation fines on member-owners (not rent from tenants), and statutory reserve studies for capital planning. A distinct governance/fiduciary entity spine (`associations`, `board_members`, `board_elections`, `governing_documents`, `architectural_review_requests`, `covenant_violations`/`violation_fines`, `assessments`, `reserve_studies`, `meeting_minutes`) exists in no current catalog domain. RE-PROP-MGMT names "condo/HOA management" as a buyer but models none of this surface.
 - **Suggested metadata:** domain_kind=established_market; standalone domain. Full seven-field Phase-0 estimates due in the build's Phase 0 report.
-- **Phase 0 report:** .tmp_deploy/HOA-MGMT-phase0-2026-06-19.md (done 2026-06-19; 5 pure-play CAM vendors Vantaca/CINC/PayHOA/FRONTSTEPS/Condo Control; 46 entities [35 Core / 8 Common / 13 statute-driven compliance]; 3-module hypothesis GOVERNANCE / ASSESSMENTS / COMMUNITY-OPERATIONS).
+- **Phase 0 report:** audits/HOA-MGMT/HOA-MGMT-phase0-2026-06-19.md (done 2026-06-19; 5 pure-play CAM vendors Vantaca/CINC/PayHOA/FRONTSTEPS/Condo Control; 46 entities [35 Core / 8 Common / 13 statute-driven compliance]; 3-module hypothesis GOVERNANCE / ASSESSMENTS / COMMUNITY-OPERATIONS).
 - **Build status:** NOT built; audit STARTED 2026-06-19 (selected as the first PROMOTE to build). Audit dir created at audits/HOA-MGMT/ (state.yaml, history.md, q-HOA-MGMT.md). `status: feedback_needed` on 4 market-shape b2 decisions (module split [gate], common-area maintenance master-vs-consume, community-contractor master-vs-consume, owner function). Phase A-S build runs once a-HOA-MGMT.md answers the shape.
 
 ### SOP-MGMT: Process Documentation and SOP Management
@@ -3844,7 +3844,7 @@ the bottom are the resolved history.
 - **Decision:** promote-as-domain (2026-06-19). Proposed domain_code SOP-MGMT.
 - **Rationale:** Distinct masters (`sops`, `work_instructions`, `procedure_steps`, `read_acknowledgments`, `sop_review_cycles`, `comprehension_quizzes`, `sop_role_assignments`) that adjacent domains do not own: KMS lacks the assign-acknowledge-review-cycle obligation (a knowledge article carries no attestation duty; an SOP does); LMS's unit is a course/curriculum, not a procedure; BPA is architect-altitude BPMN modeling, not operational SOP text. Real adjacency with the not-yet-cataloged POLICY-MGMT (rule-attestation vs procedure-execution) and EQMS (regulated quality); vendor sets are disjoint, so promote SOP-MGMT and POLICY-MGMT as distinct siblings rather than merging.
 - **Suggested metadata:** domain_kind=established_market.
-- **Phase 0 report:** .tmp_deploy/SOP-MGMT-phase0-2026-06-15.md (pre-existing, from the 2026-06-15 scoping).
+- **Phase 0 report:** audits/SOP-MGMT/SOP-MGMT-phase0-2026-06-15.md (pre-existing, from the 2026-06-15 scoping).
 - **Build status:** NOT built (no live domain row). ALREADY SCOPED 2026-06-15 — audit dir exists at audits/SOP-MGMT/ (state.yaml, history.md, q-SOP-MGMT.md), `status: feedback_needed`. Open b2 includes the controlled-document slice vs EQMS split (B2-SOP-EQMS-SPLIT). 2026-06-19 triage confirms promote-as-domain. Phase A-S build runs once a-SOP-MGMT.md answers the shape.
 
 ### WORKPLACE-EXP: Workplace Experience and Workspace Booking
@@ -3884,7 +3884,7 @@ the bottom are the resolved history.
 - **Decision:** fold-into-existing:SPM (2026-06-14)
 - **Rationale:** PPM and SPM are the same enterprise market under two names. The live catalog already carries SPM ("Top-down planning of investments, demand, resources, and agile delivery across portfolios", crud 85, l <10000, $$$$, USA TAM 2500 / 2025), whose entity surface (demand, project, resource, outcome records plus capacity / scenario / roadmap engines) is exactly what a PPM domain would claim. A separate PPM domain would duplicate SPM, not extend coverage. PORT-MONIT (private-capital portfolio monitoring) and APM (application portfolio management) are name collisions, not the same market.
 - **Non-blocking follow-ups (b3, not executed):** (1) Add "PPM" and "Project and Portfolio Management" as aliases of SPM so future intake auto-resolves. (2) Verify SPM's solution coverage includes Planview, Broadcom Clarity, ServiceNow SPM, Planisware, and Microsoft.
-- **Phase 0 report:** .tmp_deploy/PPM-phase0-2026-06-14.md
+- **Phase 0 report:** research/PPM-phase0-2026-06-14.md
 
 ### CMP: Content Marketing Platform
 
@@ -3897,7 +3897,7 @@ the bottom are the resolved history.
 - **Rationale:** The editorial-content-ops kernel (editorial workflow, content briefs, production calendar, editorial task management) is already owned by WEB-CONTOPS. Decisively, the two flagship CMP vendors already in the catalog (Optimizely CMP id 483, GatherContent id 479) both map solution_domains.coverage_level=primary to WEB-CONTOPS today. The production-calendar slice overlaps the just-built MRM; multi-channel publishing overlaps MA / DXP. Promoting CMP would duplicate WEB-CONTOPS and split its solution set.
 - **Ambiguity flagged (separate candidate):** "CMP" in the PRIV-MGMT surfacing most likely meant Consent Management Platform (OneTrust, Didomi, Usercentrics, Sourcepoint, TrustArc, Cookiebot), a distinct privacy market. NOT researched or built here; should be re-triaged on its own near a privacy / consent / GRC cluster.
 - **Non-blocking follow-ups (b3):** optionally add Skyword / Contently / DivvyHQ as solutions under WEB-CONTOPS (flag the two as services + platform hybrids).
-- **Phase 0 report:** .tmp_deploy/CMP-phase0-2026-06-14.md
+- **Phase 0 report:** research/CMP-phase0-2026-06-14.md
 
 ### EMP-LISTENING: Employee Listening Platform
 
@@ -3909,7 +3909,7 @@ the bottom are the resolved history.
 - **Decision:** fold-into-existing:EMP-EXP (2026-06-14)
 - **Rationale:** EMP-EXP (id 62, "Employee Experience and Engagement") already carries all five listening capabilities (engagement surveys, pulse surveys, 360 feedback, lifecycle listening, survey action planning) and the exact flagship vendors cited as EMP-LISTENING evidence. The candidate's capabilities (pulse-survey design, engagement-driver modeling, manager-action planning, eNPS) map 1:1 onto EMP-EXP. Gartner ("Voice of the Employee Solutions") and Forrester ("Employee Listening Solutions Landscape") scope listening as a component of employee experience, same buyer. PA consumes listening output as an analytics input but does not run surveys; INTRANET's own description disclaims engagement listening to EMP-EXP.
 - **Non-blocking follow-ups (b3):** optionally add Perceptyx, Medallia EX, WorkTango, Quantum Workplace as EMP-EXP solution rows; optionally surface eNPS / engagement-driver analytics as finer EMP-EXP sub-capabilities; optionally add "employee listening / Voice of the Employee" as a synonym in EMP-EXP's description (a non-empty-field overwrite, needs sign-off).
-- **Phase 0 report:** .tmp_deploy/EMP-LISTENING-phase0-2026-06-14.md
+- **Phase 0 report:** research/EMP-LISTENING-phase0-2026-06-14.md
 
 ### EMP-JOURNEY-ORCH: Employee Journey Orchestration
 
@@ -3938,4 +3938,4 @@ the bottom are the resolved history.
 - **Decision:** reject (duplicate of TLNT-INTEL) (2026-06-14)
 - **Rationale:** Near-verbatim restatement of the existing live domain TLNT-INTEL ("Talent Intelligence", crud 50, m <2500, $$$$$), which already owns the AI matching / recommendation layer, the talent marketplace, and the model-inference audit trail while deferring person and skill mastership upstream. All four candidate capabilities (talent rediscovery, internal-mobility matching, skills-graph inference, career-pathway recommendation) fall inside TLNT-INTEL's existing scope. A new domain would duplicate TLNT-INTEL and split the same vendor set across two codes. The action is enrichment of TLNT-INTEL, not a new domain.
 - **Non-blocking follow-ups (b3, not executed):** enrich TLNT-INTEL with rediscovery-candidate and internal-mobility-opportunity entities if missing; add responsible-AI compliance entities (NYC LL144 / state AEDT bias-audit artifact, EU AI Act oversight log, GDPR Art. 22 explanation); capture the 2026 autonomous talent-agent surface; confirm the SKILLS-MGMT vs TLNT-INTEL ownership boundary for skills-graph inference.
-- **Phase 0 report:** .tmp_deploy/TALENT-INTEL-PLATFORM-phase0-2026-06-14.md
+- **Phase 0 report:** research/TALENT-INTEL-PLATFORM-phase0-2026-06-14.md

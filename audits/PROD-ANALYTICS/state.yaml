@@ -6,7 +6,7 @@ last_audit: "2026-06-16"
 
 # PROD-ANALYTICS is NOT in the live catalog. This is a domain CANDIDATE, scoped 2026-06-16
 # (the gap was flagged by DAP scoping, DAP q3 / B2-DAP-ANALYTICS-SPLIT).
-# Phase 0 vendor surface: .tmp_deploy/PROD-ANALYTICS-phase0-2026-06-16.md
+# Phase 0 vendor surface: audits/PROD-ANALYTICS/PROD-ANALYTICS-phase0-2026-06-16.md
 # Backlog entry: audits/_missing-domains.md (## Pending review, "PROD-ANALYTICS — Product Analytics").
 # Coupled: B2-PA-DAP-MASTER reconciles single-mastery with the DAP candidate
 # (DAP B2-DAP-ANALYTICS-SPLIT + B2-DAP-SCOPE). B2-PA-EXPERIMENTATION and
@@ -34,7 +34,7 @@ b2:
       event/user/session data model and purpose-built funnel/retention/path/cohort analysis, and exist
       independently of BI vendors (Tableau, Power BI, Looker). BI (id 74) masters generic governed
       dashboards over MODELED warehouse data, a different artifact; product analytics is a recognized
-      standalone Gartner/G2 category. Phase 0: .tmp_deploy/PROD-ANALYTICS-phase0-2026-06-16.md.
+      standalone Gartner/G2 category. Phase 0: audits/PROD-ANALYTICS/PROD-ANALYTICS-phase0-2026-06-16.md.
     why: |
       New domain = a market-shape b2 (not b3). Creating PROD-ANALYTICS is structural; surfaced for the
       user's go/no-go. Gates every other PROD-ANALYTICS item and resolves DAP B2-DAP-ANALYTICS-SPLIT.

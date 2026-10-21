@@ -5,7 +5,7 @@ Reach, task, and recognize your frontline workforce from one mobile app, no corp
 
 Connect every deskless worker on the floor through a branded mobile app, kiosk, or shared device. Broadcast targeted announcements and confirm who has read them, push tasks and checklists that workers complete and submit from their phones, and let teams swap shifts, finish bite-size training, and recognize each other in the same place. Built for store, plant, warehouse, and field staff who never had a work email, with handoff back to scheduling and store operations.
 
-> Grounding: these recommendations are backed by a fresh vendor-surface study (5 independent flagship pure-plays + suite-absorption M&A, 2025-2026) saved at `.tmp_deploy/FRONTLINE-COMMS-phase0-2026-06-14.md`. The domain was built live at `record_status='new'`; the two questions below are the market-shape confirmation and one destructive re-shelving step that need your sign-off.
+> Grounding: these recommendations are backed by a fresh vendor-surface study (5 independent flagship pure-plays + suite-absorption M&A, 2025-2026) saved at `audits/FRONTLINE-COMMS/FRONTLINE-COMMS-phase0-2026-06-14.md`. The domain was built live at `record_status='new'`; the two questions below are the market-shape confirmation and one destructive re-shelving step that need your sign-off.
 
 ---
 
@@ -44,4 +44,4 @@ a3:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B3-S1 | domain_id=180 | phase0=.tmp_deploy/FRONTLINE-COMMS-phase0-2026-06-14.md | reversed: none -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B3-S1 | domain_id=180 | phase0=audits/FRONTLINE-COMMS/FRONTLINE-COMMS-phase0-2026-06-14.md | reversed: none -->

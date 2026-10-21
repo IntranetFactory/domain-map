@@ -5,7 +5,7 @@ next_action_by: user
 last_audit: "2026-06-14"
 
 # 2026-06-14 BUILD. Promoted from triage candidate (mention count 2, SMM audit). Phase 0
-# (.tmp_deploy/SOCIAL-ADS-phase0-2026-06-14.md) confirmed: no existing home (SMM=organic,
+# (audits/SOCIAL-ADS/SOCIAL-ADS-phase0-2026-06-14.md) confirmed: no existing home (SMM=organic,
 # MA=lifecycle, ADV-AD-TECH does NOT exist in catalog), point-solution test PASSES with 4
 # independent flagship pure-plays (Smartly.io, Madgicx, Strike Social, Adsmurai) plus an
 # enterprise omnichannel reference (Skai). Verdict promote-as-domain. Built live at

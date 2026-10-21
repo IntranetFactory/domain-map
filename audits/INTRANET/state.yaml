@@ -82,7 +82,7 @@ b2:
     summary: Is INTRANET a leadership-tier aggregator or a real point-solution market? Gates the entire build.
     question: |
       Decide the build route. Phase 0 vendor research run 2026-06-13
-      (.tmp_deploy/INTRANET-phase0-2026-06-13.md) verdict: master-bearing real market, but
+      (audits/INTRANET/INTRANET-phase0-2026-06-13.md) verdict: master-bearing real market, but
       PARTIAL. INTRANET genuinely masters a spine no other catalog domain owns: spaces /
       pages, news / announcements + targeting audiences + mandatory-acknowledgement receipts
       (Simpplr Must Reads, Firstup must-read campaigns, Viva mandatory news persist these as
@@ -105,7 +105,7 @@ b2:
       route is chosen. Phase 0 (2026-06-13) recommends route (c): the publish / news / newsletter
       spine is genuinely master-bearing while journey / frontline / advocacy are overlays on
       dedicated vendor markets, so 5 co-equal master modules over-states what INTRANET owns.
-    extra_phase0_report: ".tmp_deploy/INTRANET-phase0-2026-06-13.md"
+    extra_phase0_report: "audits/INTRANET/INTRANET-phase0-2026-06-13.md"
 
   - id: B2-CATALOG-UX-REVIEW
     summary: Review the catalog_tagline + catalog_description written 2026-06-07 (record_status='new', awaiting approval).

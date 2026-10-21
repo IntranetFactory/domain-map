@@ -10,7 +10,7 @@ a tailored newsletter of what is worth sharing, and measure the clicks, reach, a
 value every share drives, then tie that activity to the pipeline it influences.
 
 > Grounding: this domain was promoted and fully built on 2026-06-14, backed by a vendor-surface
-> study saved at `.tmp_deploy/EMP-ADVOCACY-phase0-2026-06-14.md`. It is live at draft status
+> study saved at `audits/EMP-ADVOCACY/EMP-ADVOCACY-phase0-2026-06-14.md`. It is live at draft status
 > (record_status=new) awaiting your review in the catalog UI. The questions below are review
 > sign-offs, not blockers to anything already built.
 
@@ -97,4 +97,4 @@ a5:
 
 ---
 
-<!-- agent map, ignore: q1=B2-GATE q2=B2-PATTERN-FLAGS q3=B2-REGULATIONS q4=B3-CUSTOMER-ADVOCACY q5=B3-SMM-DESCRIPTION-NARROW | domain_id=181 | modules=368,369 | phase0=.tmp_deploy/EMP-ADVOCACY-phase0-2026-06-14.md | verdict=promote-as-domain -->
+<!-- agent map, ignore: q1=B2-GATE q2=B2-PATTERN-FLAGS q3=B2-REGULATIONS q4=B3-CUSTOMER-ADVOCACY q5=B3-SMM-DESCRIPTION-NARROW | domain_id=181 | modules=368,369 | phase0=audits/EMP-ADVOCACY/EMP-ADVOCACY-phase0-2026-06-14.md | verdict=promote-as-domain -->

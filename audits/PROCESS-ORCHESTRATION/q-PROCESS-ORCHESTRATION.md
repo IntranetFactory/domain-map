@@ -5,7 +5,7 @@ Run your long-running business processes as durable, auditable workflows that ne
 
 Turn a process model into a running engine. Deploy each process definition, then launch instances that survive restarts, retry failed steps automatically, wait on timers and external events, and pick up exactly where they left off. Route the human steps to the right people's inboxes, manage flexible cases that do not follow a fixed path, and evaluate your decision tables in real time so the rules live in one place. Every step is recorded, so you always know which instances are running, stuck, or done, and you can prove what happened and when.
 
-> Grounding: this domain came from the IBPMS triage candidate. The honest call is that the "iBPMS suite" name folds (its low-code suite leaders Pega, Appian, and Bizagi are already in the catalog under LCAP), but the process-EXECUTION RUNTIME is a distinct, previously-unowned market. Full vendor-surface report: `.tmp_deploy/IBPMS-phase0-2026-06-14.md`. The build assumes it is distinct and is already loaded at record_status='new' for your review.
+> Grounding: this domain came from the IBPMS triage candidate. The honest call is that the "iBPMS suite" name folds (its low-code suite leaders Pega, Appian, and Bizagi are already in the catalog under LCAP), but the process-EXECUTION RUNTIME is a distinct, previously-unowned market. Full vendor-surface report: `research/IBPMS-phase0-2026-06-14.md`. The build assumes it is distinct and is already loaded at record_status='new' for your review.
 
 ---
 
@@ -55,4 +55,4 @@ a4:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B3-S1 q4=B3-S2 | domain_id=179 | phase0=.tmp_deploy/IBPMS-phase0-2026-06-14.md | reversed: none -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B3-S1 q4=B3-S2 | domain_id=179 | phase0=research/IBPMS-phase0-2026-06-14.md | reversed: none -->

@@ -11,7 +11,7 @@ promotes the winners. Ingest server-side conversion events, watch performance in
 spend back to conversions with attribution and incrementality so you know what actually drove revenue.
 
 > Grounding: these recommendations are backed by a fresh vendor-surface study (5 flagship vendors,
-> 2025-2026 product docs and M&A) saved at `.tmp_deploy/SOCIAL-ADS-phase0-2026-06-14.md`. The domain
+> 2025-2026 product docs and M&A) saved at `audits/SOCIAL-ADS/SOCIAL-ADS-phase0-2026-06-14.md`. The domain
 > was built live at `record_status='new'` (domain 177, modules 360 / 361). The build assumes the
 > recommended answers below; if you change q1, the domain placement changes.
 
@@ -81,4 +81,4 @@ a4:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B3-S1 q4=B3-S2 | domain_id=177 | modules=360,361 | phase0=.tmp_deploy/SOCIAL-ADS-phase0-2026-06-14.md | reversed: none -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B3-S1 q4=B3-S2 | domain_id=177 | modules=360,361 | phase0=audits/SOCIAL-ADS/SOCIAL-ADS-phase0-2026-06-14.md | reversed: none -->

@@ -11,7 +11,7 @@
 #
 # 2026-06-08 PHASE 0 ran (Rule #22 forcing step: the prior passes surfaced market-shape b2
 # calls WITHOUT a current vendor-surface report; see skill-changelog 2026-06-08 + SKILL.md
-# Rule #22). Fresh study of 5 flagship BCM vendors -> .tmp_deploy/BCM-phase0-2026-06-08.md:
+# Rule #22). Fresh study of 5 flagship BCM vendors -> audits/BCM/BCM-phase0-2026-06-08.md:
 # Fusion Framework System and Castellan (pure-play specialists), ServiceNow BCM, Archer
 # Resilience Management, MetricStream BCM, plus Everbridge for the mass-notification boundary.
 # All 5 master the same object set (BIA, BCP, recovery strategies, dependency maps, exercises,
@@ -204,7 +204,7 @@ b2:
       matrix shows 2 pure-plays (Fusion Framework System, Castellan) + 3 suites (ServiceNow BCM,
       Archer, MetricStream) each mastering first-class BCM records (BIA, BCP, recovery strategies,
       dependency maps, exercises, crisis events), which is the Rule #2 point-solution-market test.
-      Not reversed; confirmed with named-vendor evidence. See .tmp_deploy/BCM-phase0-2026-06-08.md.
+      Not reversed; confirmed with named-vendor evidence. See audits/BCM/BCM-phase0-2026-06-08.md.
 
   - id: B2-2
     summary: DRP, separate domain or BCM sub-module?
@@ -221,7 +221,7 @@ b2:
       (Castellan's owner), and ServiceNow all fold IT disaster recovery into the resilience platform
       as an integrated component; Archer keeps distinct BC-plan and DR-plan types but under one
       "Business Continuity & IT Disaster Recovery Planning" use case. No flagship sells DRP as a
-      domain independent of BCM. Not reversed; confirmed. See .tmp_deploy/BCM-phase0-2026-06-08.md.
+      domain independent of BCM. Not reversed; confirmed. See audits/BCM/BCM-phase0-2026-06-08.md.
 
   - id: B2-3
     summary: DORA and NIS2 ICT third-party register ownership.
@@ -240,7 +240,7 @@ b2:
       Fusion routes the DORA Register of Information through its TPRM offering, not its BCM module;
       the register is a record of contractual arrangements with ICT third-party providers (a
       third-party-risk artifact by construction). No flagship BCM product masters it as a BCM record.
-      Not reversed; confirmed with named-vendor evidence. See .tmp_deploy/BCM-phase0-2026-06-08.md.
+      Not reversed; confirmed with named-vendor evidence. See audits/BCM/BCM-phase0-2026-06-08.md.
 
 b3:
   - id: B3-BCP

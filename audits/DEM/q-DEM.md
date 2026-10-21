@@ -5,7 +5,7 @@ See the digital experience your people and customers actually get, before they f
 
 Digital Experience Monitoring tells you whether the apps, devices, and SaaS your workforce and customers rely on are fast, available, and frustration-free. It runs synthetic checks from the locations that matter, captures real session telemetry, scores endpoint and application responsiveness, and flags friction and anomalies the moment they degrade the experience. Use it to catch slowdowns proactively, route the right signal to incident and operations teams, and prove that reachability and responsiveness meet the bar your business expects.
 
-> Grounding: these recommendations are backed by a fresh vendor-surface study (8 flagship vendors across the DEM and DEX cohorts, 2025-2026 product docs) saved at `.tmp_deploy/DEM-phase0-2026-06-08.md`. One framing signal drives the scope calls: Gartner runs TWO separate 2025 Magic Quadrants here, "Digital Experience Monitoring" (Dynatrace, New Relic, Catchpoint, ManageEngine, SolarWinds) and "Digital Employee Experience Management Tools" (Nexthink, ControlUp, Riverbed Aternity Employee Experience). They are different markets with largely different vendors. DEM is app/service/API-centric across employees and customers; DEX is employee-centric with device health plus sentiment plus self-healing.
+> Grounding: these recommendations are backed by a fresh vendor-surface study (8 flagship vendors across the DEM and DEX cohorts, 2025-2026 product docs) saved at `audits/DEM/DEM-phase0-2026-06-08.md`. One framing signal drives the scope calls: Gartner runs TWO separate 2025 Magic Quadrants here, "Digital Experience Monitoring" (Dynatrace, New Relic, Catchpoint, ManageEngine, SolarWinds) and "Digital Employee Experience Management Tools" (Nexthink, ControlUp, Riverbed Aternity Employee Experience). They are different markets with largely different vendors. DEM is app/service/API-centric across employees and customers; DEX is employee-centric with device health plus sentiment plus self-healing.
 
 ---
 
@@ -91,4 +91,4 @@ a8:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MODULE-SPLIT q2=B2-DEX-BOUNDARY q3=B2-PATTERN-FLAGS.rum q4=B2-PATTERN-FLAGS.friction q5=B2-PATTERN-FLAGS.scores q6=B1A-B9-ORPHAN q7=B3-MARKET-ENTITIES q8=B3-APM-MONITORING | domain_id=83 | phase0=.tmp_deploy/DEM-phase0-2026-06-08.md | reversed: B2-DEX-BOUNDARY c->b -->
+<!-- agent map, ignore: q1=B2-MODULE-SPLIT q2=B2-DEX-BOUNDARY q3=B2-PATTERN-FLAGS.rum q4=B2-PATTERN-FLAGS.friction q5=B2-PATTERN-FLAGS.scores q6=B1A-B9-ORPHAN q7=B3-MARKET-ENTITIES q8=B3-APM-MONITORING | domain_id=83 | phase0=audits/DEM/DEM-phase0-2026-06-08.md | reversed: B2-DEX-BOUNDARY c->b -->

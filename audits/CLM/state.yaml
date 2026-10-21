@@ -183,7 +183,7 @@ b2:
       than either omitting it or forcing it on everyone. Requires a Phase 0 report before any module is stood up.
 
 b3: []  # ALL b3 candidates LOADED 2026-06-11 and KEPT by the user 2026-06-16 (a-CLM.md q1=a keep, q2=a, q6=yes).
-  # Phase 0 report: .tmp_deploy/CLM-phase0-2026-06-11.md. Loaders: load_clm_b3_entities_2026_06_11.ts +
+  # Phase 0 report: audits/CLM/CLM-phase0-2026-06-11.md. Loaders: load_clm_b3_entities_2026_06_11.ts +
   # load_clm_b3_regulations_2026_06_11.ts. 9 masters (1048-1056) + 5 domain_regulations links (GDPR/SOX/HIPAA/FAR/DFARS,
   # all conditional) + 2 new regulation rows (FAR 99, DFARS 100). All record_status='new'. Naming-arbitrated (Rule #9):
   # risk_assessments->contract_risk_assessments, counterparties->contract_counterparties, playbooks->negotiation_playbooks.

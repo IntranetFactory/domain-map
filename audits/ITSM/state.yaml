@@ -114,6 +114,6 @@ b3:
       MTTR/cycle-time source, AGENT-WORKSPACE); agent_groups (the
       assignment/queue primitive distinct from org_units, AGENT-WORKSPACE); incident_tasks (child-work decomposition,
       INCIDENT-MGMT); known_errors (the Known Error Database, PROBLEM-MGMT). Additive masters fitting existing
-      modules; non-blocking. Full surface: .tmp_deploy/ITSM-market-surface-2026-06-16.json.
+      modules; non-blocking. Full surface: audits/ITSM/ITSM-market-surface-2026-06-16.json.
     vendor_evidence: [ServiceNow, Jira Service Management, Freshservice, ManageEngine ServiceDesk Plus, Halo ITSM]
     proposed_module: "ticket_approvals->ITSM-CHANGE-MGMT; ticket_state_transitions+agent_groups->ITSM-AGENT-WORKSPACE; incident_tasks->ITSM-INCIDENT-MGMT; known_errors->ITSM-PROBLEM-MGMT"

@@ -5,7 +5,7 @@ next_action_by: user
 last_audit: "2026-06-14"
 
 # 2026-06-14 PHASE 0 + BUILD. Verdict promote-as-domain (Phase 0 report:
-# .tmp_deploy/FRONTLINE-COMMS-phase0-2026-06-14.md). Point-solution test PASS (5 independent
+# audits/FRONTLINE-COMMS/FRONTLINE-COMMS-phase0-2026-06-14.md). Point-solution test PASS (5 independent
 # pure-plays: WorkJam, YOOBIC, Speakap, Flip, Blink). Built domain 180 live at record_status='new':
 # 5 capabilities, 2 full modules (BROADCAST-ENGAGEMENT 366, TASK-EXECUTION 367), 5 vendors + 5
 # solutions, 10 masters, 13 DMDO, 14 lifecycle states, 6 trigger_events, 4 outbound handoffs,

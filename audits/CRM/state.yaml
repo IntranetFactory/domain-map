@@ -31,18 +31,18 @@ b1b:
     finding: "Per-module `system` skill grain and `skill_tools` are RETIRED. Channel-primitive tool requirements now live on `domain_module_tools`; the F7 justification surface moves with them and is tracked in audits/_modularization-backlog.md. No action on CRM's state.yaml."
 
 # Module-split decisions (reclassified from b3 per Rule #21: a split is always b2).
-# Phase 0 (2026-06-08, .tmp_deploy/CRM-phase0-2026-06-08.md) recommends REJECT on both.
+# Phase 0 (2026-06-08, audits/CRM/CRM-phase0-2026-06-08.md) recommends REJECT on both.
 b2:
   - id: B2-CRM-FORECAST-SPLIT
     decision: "Split a dedicated CRM-FORECAST module out of CRM-PIPELINE-MGT?"
     recommendation: reject
-    phase0_basis: ".tmp_deploy/CRM-phase0-2026-06-08.md"
+    phase0_basis: "audits/CRM/CRM-phase0-2026-06-08.md"
     evidence: "REV-INTEL (103, module REV-INTEL-FORECAST) already masters the forecast cluster: revenue_forecasts (1010), forecast_submissions (1011), forecast_adjustments (1012), forecast_accuracy_records (1013). A CRM forecasting module would master no records of its own. CRM's CRM-FORECAST capability (249) is the in-pipeline projection view, correctly realized inside CRM-PIPELINE-MGT (48). No flagship ships a CRM forecasting module distinct from the revenue-intelligence layer."
     q_ref: q2
   - id: B2-CRM-MKTLIST-SPLIT
     decision: "Add a dedicated CRM marketing-list / segment module?"
     recommendation: reject
-    phase0_basis: ".tmp_deploy/CRM-phase0-2026-06-08.md"
+    phase0_basis: "audits/CRM/CRM-phase0-2026-06-08.md"
     evidence: "audience_segments is mastered by CDP (72) and CRM-ACCT-MGT (46) already consumes it. HubSpot / Zoho / Freshsales lists are a contact-management feature, not a separate deployable. A dedicated module would overlap CDP and MA without flagship-distinct surface."
     q_ref: q2
 

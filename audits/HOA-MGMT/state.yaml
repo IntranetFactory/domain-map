@@ -7,7 +7,7 @@ last_audit: "2026-06-19"
 # 2026-06-19 NEW DOMAIN, promoted from audits/_missing-domains.md (RE-PROP-MGMT audit candidate;
 # triaged 2026-06-19, user chose "Record + start loading a domain", HOA-MGMT selected as the first
 # PROMOTE to build). UNBUILT: nothing loaded to the catalog yet. Phase 0 vendor-surface research done
-# (.tmp_deploy/HOA-MGMT-phase0-2026-06-19.md): 5 pure-play CAM vendors (Vantaca, CINC Systems, PayHOA,
+# (audits/HOA-MGMT/HOA-MGMT-phase0-2026-06-19.md): 5 pure-play CAM vendors (Vantaca, CINC Systems, PayHOA,
 # FRONTSTEPS, Condo Control), 46 entities (35 Core / 8 Common / 13 compliance). The build (Phase A-S)
 # is gated on the market-shape decisions below per Rule #21/#22 (a NEW domain is an expansive addition:
 # surface in a q-file FIRST, load only after a-HOA-MGMT.md approves the shape). q-HOA-MGMT.md surfaces

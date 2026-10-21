@@ -66,4 +66,4 @@ a6:
 
 ---
 
-<!-- agent map, ignore: q1=B2-TRIGGER-FIX q2=B2-S3 q3=B2-S6 q4=B1A-B9D-VERIFY q5=B3-ENTITIES q6=B3-CANDIDATE-DOMAINS | domain_id=88 | built=2026-06-11 | phase0=.tmp_deploy/DCG-phase0-2026-06-08.md -->
+<!-- agent map, ignore: q1=B2-TRIGGER-FIX q2=B2-S3 q3=B2-S6 q4=B1A-B9D-VERIFY q5=B3-ENTITIES q6=B3-CANDIDATE-DOMAINS | domain_id=88 | built=2026-06-11 | phase0=audits/DCG/DCG-phase0-2026-06-08.md -->

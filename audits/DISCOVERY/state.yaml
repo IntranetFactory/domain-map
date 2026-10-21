@@ -25,7 +25,7 @@ last_audit: "2026-06-13"
 # calls without a current Phase 0 vendor-surface report; see skill-changelog 2026-06-08).
 # Fresh vendor study of 6 flagships (ServiceNow Discovery + Service Mapping, Device42,
 # Lansweeper Discovery, BMC Helix Discovery / ADDM, runZero; plus Axonius as the CAASM
-# boundary reference) -> .tmp_deploy/DISCOVERY-phase0-2026-06-08.md. Confirmed market =
+# boundary reference) -> audits/DISCOVERY/DISCOVERY-phase0-2026-06-08.md. Confirmed market =
 # IT-infrastructure discovery (scans, discovered devices, discovery sources feeding the CMDB),
 # matching the live masters. No compliance gate on this market itself (discovered data inherits
 # downstream applicability). ONE recommendation REVERSED by named-vendor evidence:

@@ -5,7 +5,7 @@ Book travel within policy, keep every traveler safe, and stay on top of the whol
 
 Shop and book flights, hotels, rail, and cars within your travel policy, route out-of-policy trips for approval, and give travelers self-service booking with their own profiles, loyalty numbers, and saved preferences. Every trip lives in one itinerary you can change, track, and reconcile, and unused tickets are tracked so credits never go to waste. When something goes wrong on the road, see where your travelers are, send alerts, and meet your duty-of-care obligations. Trip charges and records flow straight to expense and spend so finance never has to chase them.
 
-> Grounding: these recommendations are backed by the Phase 0 vendor-surface study (5 flagship vendors: Navan, SAP Concur Travel, Spotnana, Amex GBT, BCD Travel) saved at `.tmp_deploy/TRAVEL-MGMT-phase0-2026-06-14.md`. The build is loaded at `record_status='new'` (Phases A, B, C, S, E complete); the questions below are the genuine forks that need your call before the records are reviewed.
+> Grounding: these recommendations are backed by the Phase 0 vendor-surface study (5 flagship vendors: Navan, SAP Concur Travel, Spotnana, Amex GBT, BCD Travel) saved at `audits/TRAVEL-MGMT/TRAVEL-MGMT-phase0-2026-06-14.md`. The build is loaded at `record_status='new'` (Phases A, B, C, S, E complete); the questions below are the genuine forks that need your call before the records are reviewed.
 
 ---
 
@@ -62,4 +62,4 @@ a5:
 
 ---
 
-<!-- agent map, ignore: q1=B2-DOC-MODULE q2=B2-PCIDSS q3=B2-MARKET-SIZE q4=B2-RACI-PROCESS q5=B3-EXPANDED-SUBSTRATE | domain_id=172 | phase0=.tmp_deploy/TRAVEL-MGMT-phase0-2026-06-14.md | reversed: none -->
+<!-- agent map, ignore: q1=B2-DOC-MODULE q2=B2-PCIDSS q3=B2-MARKET-SIZE q4=B2-RACI-PROCESS q5=B3-EXPANDED-SUBSTRATE | domain_id=172 | phase0=audits/TRAVEL-MGMT/TRAVEL-MGMT-phase0-2026-06-14.md | reversed: none -->

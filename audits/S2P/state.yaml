@@ -162,7 +162,7 @@ b2:
       - "any of the above plus an optional Spend-Analytics module mastering spend_categories"
       - "defer module decision; keep S2P pre-modular for now"
     evidence: >-
-      Phase 0 (.tmp_deploy/S2P-phase0-2026-06-19.md), 7 flagship vendors. Sourcing is a discrete,
+      Phase 0 (audits/S2P/S2P-phase0-2026-06-19.md), 7 flagship vendors. Sourcing is a discrete,
       separately-packaged module in every full-suite vendor: Coupa (Sourcing + Coupa Sourcing
       Optimization), SAP Ariba (Strategic Sourcing Suite, separate SKU), Ivalua (Sourcing), GEP SMART
       (Sourcing Management), JAGGAER (Sourcing under the Source-to-Contract pillar), Zip (Sourcing);

@@ -65,4 +65,4 @@ a4:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B3-S1 | domain_id=171 | phase0=.tmp_deploy/INTRANET-GOV-phase0-2026-06-10.md | market-surface=.tmp_deploy/INTRANET-GOV-market-surface-2026-06-10.md | a-file processed 2026-06-16: a1/a3/a4 were user questions (kept open, answers folded in); a2 empty=recommended(a) but blocked on B2-S1 (preference parked) | reversed: A3-mark-solutions-primary (build phase0 white-space verdict overrode it) -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B3-S1 | domain_id=171 | phase0=audits/INTRANET-GOV/INTRANET-GOV-phase0-2026-06-10.md | market-surface=audits/INTRANET-GOV/INTRANET-GOV-market-surface-2026-06-10.md | a-file processed 2026-06-16: a1/a3/a4 were user questions (kept open, answers folded in); a2 empty=recommended(a) but blocked on B2-S1 (preference parked) | reversed: A3-mark-solutions-primary (build phase0 white-space verdict overrode it) -->

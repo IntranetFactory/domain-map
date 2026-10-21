@@ -38,4 +38,4 @@ a3:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B3-S1 | domain_id=176 | phase0=.tmp_deploy/LIVESTOCK-MGMT-phase0-2026-06-14.md | reversed: none -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B3-S1 | domain_id=176 | phase0=audits/LIVESTOCK-MGMT/LIVESTOCK-MGMT-phase0-2026-06-14.md | reversed: none -->

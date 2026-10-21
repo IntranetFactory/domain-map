@@ -27,7 +27,7 @@ last_audit: "2026-06-13"
 # 2 RE-TAG (destructive re-points, surfaced for sign-off, NOT applied), 21 ORPHAN (additive b2 +
 # q items written into the OWNER domains' audit files, the cross-domain carve-out), 20 UNOWNED
 # (carried entity has no master anywhere; surfaced on the sender, not written). Phase 0 vendor
-# research produced at .tmp_deploy/GRC-phase0-2026-06-13.md to ground the two market-shape gate
+# research produced at audits/GRC/GRC-phase0-2026-06-13.md to ground the two market-shape gate
 # questions (B3-2 split, B2-5 capability); q-GRC.md refreshed with the named-vendor evidence.
 # NO agent-executable work remains: every open item is a user decision (b2) or a destructive step
 # needing sign-off, so next_action_by=user.

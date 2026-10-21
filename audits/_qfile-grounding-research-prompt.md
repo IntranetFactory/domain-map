@@ -60,7 +60,7 @@ Question to ground: <QID> in audits/<CODE>/q-<CODE>.md. Evidence target (b2 id):
    decision (which entity/module/market each treats as first-class). Include a compliance
    specialist for a regulated axis. (This is a deliberate scoped subset of the full Phase 0
    protocol, sufficient to ground one axis, not the complete union-surface matrix.)
-3. Write findings to .tmp_deploy/<CODE>-phase0-<DATE>.md: named vendors, a per-vendor note
+3. Write findings to audits/<CODE>/<CODE>-phase0-<DATE>.md: named vendors, a per-vendor note
    on how each packages this axis, and a one-paragraph verdict with the evidence.
 4. Edit audits/<CODE>/q-<CODE>.md: rewrite ONLY the reason of <QID>'s Recommended line to
    LEAD WITH the named-vendor evidence, 1 to 3 sentences. Set the option to whatever the
@@ -77,7 +77,7 @@ Question to ground: <QID> in audits/<CODE>/q-<CODE>.md. Evidence target (b2 id):
 
 Output (final message):
   <CODE> <QID>: GROUNDED (kept <letter>) | FLIPPED (<old> -> <new>)
-  report: .tmp_deploy/<CODE>-phase0-<DATE>.md
+  report: audits/<CODE>/<CODE>-phase0-<DATE>.md
   new Recommended line: <the line>
   vendors: <comma-separated flagships used>
 ```

@@ -39,4 +39,4 @@ a3:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 | domain_id=178 | phase0=.tmp_deploy/IRM-phase0-2026-06-14.md | reversed: none -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 | domain_id=178 | phase0=research/IRM-phase0-2026-06-14.md | reversed: none -->

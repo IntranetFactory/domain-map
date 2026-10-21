@@ -5,7 +5,7 @@ Keep your people safe and your sites compliant: log incidents, control hazards, 
 
 Capture every injury, near-miss, and hazard the moment it happens, then drive each one to a closed corrective action. Run job hazard analyses and risk assessments, schedule and complete inspections and audits, and track the training and contractor qualifications that keep your sites compliant. Manage chemicals and safety data sheets, monitor industrial-hygiene exposures and occupational-health records, and keep environmental permits, emissions, and OSHA logs audit-ready. One place to prove your safety and environmental programs are working, from the shop floor to the regulator.
 
-> EHS was built and loaded live at `record_status='new'` (domain_id=174): 4 modules, 11 capabilities, 15 masters, 5 regulations, 4 personas, and the full data-object, lifecycle, handoff, skill, and RACI footprint. Every band passes. The questions below are market-shape confirmations and optional additions; none of them blocked the build. The recommendations are grounded in a fresh vendor-surface study of the EHS flagships (Cority, Intelex, Sphera, Enablon, VelocityEHS, Benchmark Gensuite) at `.tmp_deploy/EHS-MGMT-phase0-2026-06-14.md`.
+> EHS was built and loaded live at `record_status='new'` (domain_id=174): 4 modules, 11 capabilities, 15 masters, 5 regulations, 4 personas, and the full data-object, lifecycle, handoff, skill, and RACI footprint. Every band passes. The questions below are market-shape confirmations and optional additions; none of them blocked the build. The recommendations are grounded in a fresh vendor-surface study of the EHS flagships (Cority, Intelex, Sphera, Enablon, VelocityEHS, Benchmark Gensuite) at `research/EHS-MGMT-phase0-2026-06-14.md`.
 
 ---
 
@@ -66,4 +66,4 @@ a5:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B3-S1 q5=B3-S2 | domain_id=174 | phase0=.tmp_deploy/EHS-MGMT-phase0-2026-06-14.md | reversed: none -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B3-S1 q5=B3-S2 | domain_id=174 | phase0=research/EHS-MGMT-phase0-2026-06-14.md | reversed: none -->

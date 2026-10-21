@@ -5,7 +5,7 @@ Run the day-to-day operations of a bank from one place: open accounts, originate
 
 Take a customer from application through KYC and AML checks to a live account, underwrite and disburse loans, send and screen wire transfers, post and reconcile transactions, and work disputes and investigation cases. Screen against sanctions and suspicious-activity signals, hand the right alerts to your risk and compliance team, and keep the regulatory filings (SAR, CTR, OFAC) that examiners expect.
 
-> Grounding: these recommendations are backed by a fresh vendor-surface study (7 flagship vendors plus adjacent cross-checks, 2025-2026 product docs) saved at `.tmp_deploy/BANK-OPS-phase0-2026-06-08.md`. Banking is a regulated market, so the BSA/OFAC compliance entities (KYC reviews, beneficial ownership, sanctions screening, AML alerts, SAR, CTR) load into the surface matrix regardless of how many vendors expose them publicly. The decisive market signal: origination and servicing are SEPARATE marketed markets (ICE Encompass holds ~50% of loan origination, Black Knight MSP is a distinct servicing platform, ICE had to build an explicit bridge between them), and financial-crime / KYC-AML is sold as a STANDALONE specialist market (Oracle FCCM and NICE Actimize are independent products that integrate WITH a core, not features baked into it).
+> Grounding: these recommendations are backed by a fresh vendor-surface study (7 flagship vendors plus adjacent cross-checks, 2025-2026 product docs) saved at `audits/BANK-OPS/BANK-OPS-phase0-2026-06-08.md`. Banking is a regulated market, so the BSA/OFAC compliance entities (KYC reviews, beneficial ownership, sanctions screening, AML alerts, SAR, CTR) load into the surface matrix regardless of how many vendors expose them publicly. The decisive market signal: origination and servicing are SEPARATE marketed markets (ICE Encompass holds ~50% of loan origination, Black Knight MSP is a distinct servicing platform, ICE had to build an explicit bridge between them), and financial-crime / KYC-AML is sold as a STANDALONE specialist market (Oracle FCCM and NICE Actimize are independent products that integrate WITH a core, not features baked into it).
 
 ---
 
@@ -130,4 +130,4 @@ a10:
 
 ---
 
-<!-- agent map, ignore: q1=B2-1 q2=B2-2 q3=B2-3 q4=B2-5.loan q5=B2-5.wire q6=B2-5.kyc q7=B2-5.case q8=B2-7 q9=B2-8 q10=B3 | domain_id=43 | phase0=.tmp_deploy/BANK-OPS-phase0-2026-06-08.md | reversed: none (fresh Phase 0 confirms the 7-module shape and all prior market-shape recommendations) -->
+<!-- agent map, ignore: q1=B2-1 q2=B2-2 q3=B2-3 q4=B2-5.loan q5=B2-5.wire q6=B2-5.kyc q7=B2-5.case q8=B2-7 q9=B2-8 q10=B3 | domain_id=43 | phase0=audits/BANK-OPS/BANK-OPS-phase0-2026-06-08.md | reversed: none (fresh Phase 0 confirms the 7-module shape and all prior market-shape recommendations) -->

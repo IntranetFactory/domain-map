@@ -27,7 +27,7 @@ last_audit: "2026-06-13"
 # which already recorded it (GRC audit, 2026-06-13). No catalog writes, no record_status touched.
 #
 # 2026-06-13: Phase 0 vendor-surface research run (Rule #22 forcing step for the market-shape b2)
-# at .tmp_deploy/OP-RES-phase0-2026-06-13.md. Verdict: OP-RES is master-bearing per the vendor
+# at audits/OP-RES/OP-RES-phase0-2026-06-13.md. Verdict: OP-RES is master-bearing per the vendor
 # evidence (Fusion, Castellan, Archer persist the mapping triad + testing/incident band as first-
 # class records; only ServiceNow IRM leans overlay), hybrid in posture (consumes CMDB business_
 # services, TPRM third-party master, SECOPS TLPT execution). q-OP-RES.md refreshed with the named-

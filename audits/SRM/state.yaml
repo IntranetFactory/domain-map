@@ -5,7 +5,7 @@ next_action_by: agent
 last_audit: "2026-06-19"
 
 # 2026-06-19 RESTRUCTURE EXECUTED (SUP-LIFE -> SRM), restructure-first pass. User approved in-chat
-# after SRM Phase 0 (.tmp_deploy/SRM-phase0-2026-06-19.md). Loader: .tmp_deploy/srm_restructure_2026_06_19.ts.
+# after SRM Phase 0 (audits/SRM/SRM-phase0-2026-06-19.md). Loader: .tmp_deploy/srm_restructure_2026_06_19.ts.
 # Full narrative + the resolved-item list in history.md 2026-06-19. Headline: domain 28 renamed to SRM;
 # 3 full modules (SRM-SUPPLIER-LIFECYCLE=405 / SRM-PERFORMANCE-MGMT=406 / SRM-RISK-COMPLIANCE=407);
 # the 6 existing masters modularized; 8 capabilities; domain skill 109 repurposed sup-life -> srm;

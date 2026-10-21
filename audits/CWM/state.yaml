@@ -95,7 +95,7 @@ b2:
       Fieldglass also bundle Services Procurement/SOW as a VMS tab, which is precisely why SOW is now its
       own SVCS-PROC domain that CWM EMBEDS rather than a CWM-owned module: hosting the SOW masters on CWM
       would bake in the contingent-workforce framing the services-procurement pure-play exists to deny.
-      Full report: .tmp_deploy/CWM-phase0-2026-06-19.md. Draft: .tmp_deploy/CWM-phaseB-draft-2026-06-19.md.
+      Full report: audits/CWM/CWM-phase0-2026-06-19.md. Draft: .tmp_deploy/CWM-phaseB-draft-2026-06-19.md.
       SOW design + verdict: .tmp_deploy/SOW-design-2026-06-19.md.
     why: |
       Net-new modules + masters + capabilities are expansive market structure (Rule #21): surfaced in a

@@ -6,7 +6,7 @@ Audit-ready ASC 842 and IFRS 16 lease accounting from contract to disclosure.
 
 Put every lease on the balance sheet with the right right-of-use asset, lease liability, and amortization schedule, then generate the journal entries, disclosures, and audit trail your external auditors will accept. Classify finance versus operating leases under ASC 842 or run the single lessee model under IFRS 16, handle modifications and remeasurements without rebuilding spreadsheets, and track critical dates and lease documents in one place. Built for the controller's team to stay compliant and close on time across the whole lease portfolio.
 
-> Grounding: backed by a fresh Phase 0 vendor-surface study (2026 product docs and M&A) saved at `.tmp_deploy/LEASE-ACCT-phase0-2026-06-14.md`. The point-solution-market test passes: three independent pure-plays whose flagship IS lease accounting (FinQuery/LeaseQuery, Trullion, Occupier). The accounting kernel was built as a clear, unowned market; the two questions below are about the lease-ADMINISTRATION layer, which genuinely overlaps the real-estate domains.
+> Grounding: backed by a fresh Phase 0 vendor-surface study (2026 product docs and M&A) saved at `audits/LEASE-ACCT/LEASE-ACCT-phase0-2026-06-14.md`. The point-solution-market test passes: three independent pure-plays whose flagship IS lease accounting (FinQuery/LeaseQuery, Trullion, Occupier). The accounting kernel was built as a clear, unowned market; the two questions below are about the lease-ADMINISTRATION layer, which genuinely overlaps the real-estate domains.
 
 ---
 
@@ -42,4 +42,4 @@ a3:
 
 ---
 
-<!-- agent map, ignore: q1=B2-SCOPE q2=B2-OVERLAP q3=B3-SUBSTRATE | domain_id=175 | modules=356,357 | phase0=.tmp_deploy/LEASE-ACCT-phase0-2026-06-14.md | reversed: none -->
+<!-- agent map, ignore: q1=B2-SCOPE q2=B2-OVERLAP q3=B3-SUBSTRATE | domain_id=175 | modules=356,357 | phase0=audits/LEASE-ACCT/LEASE-ACCT-phase0-2026-06-14.md | reversed: none -->

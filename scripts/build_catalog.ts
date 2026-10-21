@@ -16,7 +16,7 @@
 //                              the installable use-<code> skill folder rendered from the template.
 //
 // Ordering matters for freshness + speed: step 1 forces a fresh DB read and rewrites the shared
-// catalog cache (.tmp_deploy/.catalog-cache.json, 5-min TTL); step 2 reads that just-written cache
+// catalog cache (.cache/.catalog-cache.json, 5-min TTL); step 2 reads that just-written cache
 // (a cache hit, fast); step 3 pulls the catalog itself (its own bulk path, independent of the cache).
 //
 // Usage:

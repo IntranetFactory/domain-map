@@ -5,7 +5,7 @@ next_action_by: user
 last_audit: "2026-06-16"
 
 # DAP is NOT in the live catalog. This is a domain CANDIDATE, scoped 2026-06-16.
-# Phase 0 vendor surface: .tmp_deploy/DAP-phase0-2026-06-16.md
+# Phase 0 vendor surface: audits/DAP/DAP-phase0-2026-06-16.md
 # Backlog entry: audits/_missing-domains.md (## Pending review, "DAP — Digital Adoption Platform").
 # Coupled to the sibling candidate SOP-MGMT: the capture/in-app seam is the same decision
 # from both sides (DAP B2-DAP-SCOPE consumer-edge <-> SOP-MGMT B2-SOP-DAP-SCOPE). The
@@ -34,7 +34,7 @@ b2:
       as overlays) and the buyer (product / customer-success / PLG team, or IT enablement) are distinct
       from every adjacent domain: Employee Onboarding (id 99) orchestrates the HR new-hire journey, LMS
       (id 57) delivers graded out-of-app courseware, CSM (id 30) handles service cases. No DAP domain
-      exists. Phase 0: .tmp_deploy/DAP-phase0-2026-06-16.md.
+      exists. Phase 0: audits/DAP/DAP-phase0-2026-06-16.md.
     why: |
       New domain = a market-shape b2 (not b3). Creating DAP is structural; surfaced for the user's
       go/no-go. Gates every other DAP item.

@@ -4,7 +4,7 @@
 
 Map your supply chain beyond your direct suppliers, down through the tiers, and watch it for trouble. Continuously monitor external disruption signals (weather, geopolitics, financial distress, cyber, forced labor) across the suppliers and sites you depend on but often have no direct relationship with, score the risk, and orchestrate a response when a disruption hits.
 
-This is a NEW domain, just promoted from the candidate queue. Nothing is loaded yet. These four questions decide its shape; once you answer (rename this file to `a-SCRM.md`), I run the build (Phase 0 vendor research is already done at `.tmp_deploy/SCRM-phase0-2026-06-19.md`).
+This is a NEW domain, just promoted from the candidate queue. Nothing is loaded yet. These four questions decide its shape; once you answer (rename this file to `a-SCRM.md`), I run the build (Phase 0 vendor research is already done at `audits/SCRM/SCRM-phase0-2026-06-19.md`).
 
 ---
 
@@ -53,4 +53,4 @@ a4:
 
 ---
 
-<!-- agent map, ignore: q1=B2-SCRM-NODE-IDENTITY q2=B2-SCRM-MODULES q3=B2-SCRM-FORCED-LABOR q4=B2-SCRM-OWNER-FN | domain_id=new (unbuilt) | phase0=.tmp_deploy/SCRM-phase0-2026-06-19.md -->
+<!-- agent map, ignore: q1=B2-SCRM-NODE-IDENTITY q2=B2-SCRM-MODULES q3=B2-SCRM-FORCED-LABOR q4=B2-SCRM-OWNER-FN | domain_id=new (unbuilt) | phase0=audits/SCRM/SCRM-phase0-2026-06-19.md -->

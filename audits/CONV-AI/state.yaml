@@ -16,7 +16,7 @@ last_audit: "2026-06-13"
 
 # 2026-06-08 PHASE 0 ran (the forcing step the 2026-06-07 pass skipped before surfacing
 # market-shape b2 calls; see skill-changelog 2026-06-08 + SKILL.md Rule #22). Fresh vendor
-# study of 8 flagships -> .tmp_deploy/CONV-AI-phase0-2026-06-08.md. Confirmed market = chatbot/
+# study of 8 flagships -> audits/CONV-AI/CONV-AI-phase0-2026-06-08.md. Confirmed market = chatbot/
 # voice-bot build-and-run (live domain_name 'Conversational AI', desc 'Virtual agents, chatbots,
 # and voice bots for customer and employee self-service'); no CLIN-DEV-style pivot. Flagships:
 # Cognigy.AI, Kore.ai XO 11, Google Dialogflow CX, Microsoft Copilot Studio, Ada, Boost.ai

@@ -7,7 +7,7 @@ Build an organization that keeps running when something goes wrong. Start with a
 
 Keep the plans honest. Schedule tabletop, walkthrough, and full-interruption exercises, capture the gaps and action items each one surfaces, and feed the findings back into the plans so they get stronger with every test. When a real disruption hits, activate the right plan, stand up the response team, work the call tree and mass-notification roster, log every decision and outbound message, and stand down cleanly with an after-action record that improves the next response.
 
-> Grounding: these recommendations are backed by a fresh vendor-surface study (5 flagship BCM vendors plus Everbridge for the mass-notification boundary, 2025-2026 product docs) saved at `.tmp_deploy/BCM-phase0-2026-06-08.md`. The framing signal: this is the ISO 22301 / DORA / NIS2 operational-resilience market, where pure-play specialists (Fusion Framework System, Castellan) and suite vendors (ServiceNow BCM, Archer, MetricStream) all build their schema around the same BIA -> plan -> exercise -> crisis lifecycle. The one boundary to watch is mass notification: Everbridge inverts the stack (critical-event-management is the platform, BCM is the acquired module), while the BCM pure-plays embed emergency notification as a feature, not a separate market.
+> Grounding: these recommendations are backed by a fresh vendor-surface study (5 flagship BCM vendors plus Everbridge for the mass-notification boundary, 2025-2026 product docs) saved at `audits/BCM/BCM-phase0-2026-06-08.md`. The framing signal: this is the ISO 22301 / DORA / NIS2 operational-resilience market, where pure-play specialists (Fusion Framework System, Castellan) and suite vendors (ServiceNow BCM, Archer, MetricStream) all build their schema around the same BIA -> plan -> exercise -> crisis lifecycle. The one boundary to watch is mass notification: Everbridge inverts the stack (critical-event-management is the platform, BCM is the acquired module), while the BCM pure-plays embed emergency notification as a feature, not a separate market.
 
 ---
 
@@ -65,4 +65,4 @@ a5:
 
 ---
 
-<!-- agent map, ignore: q1=B2-1 q2=B2-2 q3=B2-3 q4=B1B-S5 q5=B3-BCP+B3-BIA+B3-BSVC+B3-DEPMAP+B3-RECSTRAT+B3-DRP+B3-EXERCISE+B3-EXFINDINGS+B3-CRISIS+B3-CRISCOMM+B3-EMERGCONTACT+B3-DORAREG | domain_id=17 | phase0=.tmp_deploy/BCM-phase0-2026-06-08.md -->
+<!-- agent map, ignore: q1=B2-1 q2=B2-2 q3=B2-3 q4=B1B-S5 q5=B3-BCP+B3-BIA+B3-BSVC+B3-DEPMAP+B3-RECSTRAT+B3-DRP+B3-EXERCISE+B3-EXFINDINGS+B3-CRISIS+B3-CRISCOMM+B3-EMERGCONTACT+B3-DORAREG | domain_id=17 | phase0=audits/BCM/BCM-phase0-2026-06-08.md -->

@@ -4,7 +4,7 @@
 
 Give employees one app to plan and run their day in a hybrid office: book a desk, room, parking spot or piece of equipment, see who from their team is coming in and pick a day to match, check in on arrival, find their way to the right neighborhood, and stay inside the company's return-to-office rules, while the workplace team gets occupancy analytics out the back.
 
-This is a NEW domain, just promoted from the candidate queue. You confirmed it should be a third sub-domain of REAL-EST alongside IWMS and CAFM. Nothing is loaded yet, and it has to coexist with IWMS, which already owns the underlying desk/room booking and floor-plan/occupancy records. These four questions decide its shape; once you answer (rename this file to `a-WORKPLACE-EXP.md`), I run the build (Phase 0 vendor research is already done at `.tmp_deploy/WORKPLACE-EXP-phase0-2026-06-19.md`).
+This is a NEW domain, just promoted from the candidate queue. You confirmed it should be a third sub-domain of REAL-EST alongside IWMS and CAFM. Nothing is loaded yet, and it has to coexist with IWMS, which already owns the underlying desk/room booking and floor-plan/occupancy records. These four questions decide its shape; once you answer (rename this file to `a-WORKPLACE-EXP.md`), I run the build (Phase 0 vendor research is already done at `audits/WORKPLACE-EXP/WORKPLACE-EXP-phase0-2026-06-19.md`).
 
 ---
 
@@ -52,4 +52,4 @@ a4:
 
 ---
 
-<!-- agent map, ignore: q1=B2-WEX-BOOKING-OWNERSHIP q2=B2-WEX-MODULES q3=B2-WEX-COMMS-BOUNDARY q4=B2-WEX-OWNER-FN | domain_id=new (unbuilt) | phase0=.tmp_deploy/WORKPLACE-EXP-phase0-2026-06-19.md -->
+<!-- agent map, ignore: q1=B2-WEX-BOOKING-OWNERSHIP q2=B2-WEX-MODULES q3=B2-WEX-COMMS-BOUNDARY q4=B2-WEX-OWNER-FN | domain_id=new (unbuilt) | phase0=audits/WORKPLACE-EXP/WORKPLACE-EXP-phase0-2026-06-19.md -->

@@ -6,7 +6,7 @@ last_audit: "2026-06-19"
 
 # 2026-06-19 NEW DOMAIN, promoted from audits/_missing-domains.md (SRM audit b2 B2-S4; user chose
 # "promote as its own new domain"). UNBUILT: nothing loaded to the catalog yet. Phase 0 vendor-surface
-# research done (.tmp_deploy/SCRM-phase0-2026-06-19.md). The build (Phase A-S) is gated on the
+# research done (audits/SCRM/SCRM-phase0-2026-06-19.md). The build (Phase A-S) is gated on the
 # market-shape decisions below per Rule #21/#22 (a NEW domain is an expansive addition: surface in a
 # q-file FIRST, load only after a-SCRM.md approves the shape). q-SCRM.md surfaces all four.
 #

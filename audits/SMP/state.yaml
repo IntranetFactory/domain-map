@@ -85,6 +85,6 @@ b3:
       lacks the access-governance / compliance-evidence layer every flagship now treats as core (SOX/SOC2
       user-access reviews, entitlement grants, GDPR/SOX data-deprovisioning evidence, per-leaver offboarding
       runs, discovery-source registry). A short verification pass confirms which to load.
-      Full surface: .tmp_deploy/SMP-market-surface-2026-06-16.json.
+      Full surface: audits/SMP/SMP-market-surface-2026-06-16.json.
     vendor_evidence: [Zluri, Torii, Josys, Setyl, BetterCloud, Productiv, Zylo]
     proposed_module: SMP-AUTOMATION (185)

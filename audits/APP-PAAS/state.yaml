@@ -14,7 +14,7 @@
 # present their product" reasoning, with no named-vendor Phase 0 report. See skill-changelog
 # 2026-06-08 + SKILL.md Rule #22 forcing step). Fresh vendor study of 9 flagship code-first
 # managed-runtime vendors (Heroku, Render, Fly.io, Railway, AWS Elastic Beanstalk, Google App
-# Engine, Azure App Service, Vercel, DigitalOcean App Platform) -> .tmp_deploy/APP-PAAS-phase0-2026-06-08.md.
+# Engine, Azure App Service, Vercel, DigitalOcean App Platform) -> audits/APP-PAAS/APP-PAAS-phase0-2026-06-08.md.
 # One recommendation REVERSED by named-vendor evidence: B2-S1.addonmarketplace - the prior call
 # kept "add-on marketplace" as its own top-level capability framed as a market-wide buyer surface;
 # Phase 0 shows the MARKETPLACE is a minority (only Heroku Elements + DigitalOcean run one; Render /

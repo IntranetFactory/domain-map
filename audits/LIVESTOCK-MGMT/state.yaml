@@ -5,7 +5,7 @@ next_action_by: user
 last_audit: "2026-06-14"
 
 # 2026-06-14 BUILD. Promote-as-domain verdict from Phase 0
-# (.tmp_deploy/LIVESTOCK-MGMT-phase0-2026-06-14.md): the general livestock / grazing
+# (audits/LIVESTOCK-MGMT/LIVESTOCK-MGMT-phase0-2026-06-14.md): the general livestock / grazing
 # management market (beef, sheep, cattle, mixed grazing) is a distinct SMB-farm software
 # market with >=3 independent flagship pure-plays, separate from DAIRY-MGMT (dairy vertical)
 # and FMIS (crop / whole-farm). Built domain 176 with 2 full modules (HERD 358, GRAZING 359),

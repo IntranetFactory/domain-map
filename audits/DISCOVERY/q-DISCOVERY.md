@@ -6,7 +6,7 @@ See every device, cloud resource, and service before you can manage it.
 
 Discovery scans your networks, cloud accounts, and directories to find the IT you actually run, then fingerprints each asset and maps how components connect into the business services they support. It turns blind spots into a normalized, reconciled inventory that feeds your CMDB, asset management, and operations tools, so teams stop guessing what exists and start acting on a trusted source of truth.
 
-> Grounding: these recommendations are backed by a fresh vendor-surface study (6 flagship vendors, 2025-2026 product docs) saved at `.tmp_deploy/DISCOVERY-phase0-2026-06-08.md`. The key boundary signal: the scanning vendors (ServiceNow Discovery, Device42, Lansweeper, BMC Helix Discovery, runZero) all master the raw collection plane (scans, discovered devices, sources, credentials), while the CMDB masters the reconciled configuration item downstream. The CAASM aggregator Axonius does NOT scan at all (it pulls from 1,200+ adapters), which confirms DISCOVERY's master set stops at the raw scan/device/source layer.
+> Grounding: these recommendations are backed by a fresh vendor-surface study (6 flagship vendors, 2025-2026 product docs) saved at `audits/DISCOVERY/DISCOVERY-phase0-2026-06-08.md`. The key boundary signal: the scanning vendors (ServiceNow Discovery, Device42, Lansweeper, BMC Helix Discovery, runZero) all master the raw collection plane (scans, discovered devices, sources, credentials), while the CMDB masters the reconciled configuration item downstream. The CAASM aggregator Axonius does NOT scan at all (it pulls from 1,200+ adapters), which confirms DISCOVERY's master set stops at the raw scan/device/source layer.
 
 ---
 
@@ -75,4 +75,4 @@ a6:
 
 ---
 
-<!-- agent map, ignore: q1=B2-MOD-SHAPE q2=B1A-BUILD q3=B2-MON-POLICIES q4=B2-SVC-MAPS q5=B2-SHADOW-IT q6=B3-DISCOVERY-PATTERNS+B3-DISCOVERY-CREDENTIALS+B3-DISCOVERY-SCHEDULES+B3-RECONCILIATION-RULES+B3-DISCOVERY-EXCLUSIONS+B3-NETWORK-SEGMENTS+B3-CLOUD-ACCOUNTS+B3-ASSET-TAGS | domain_id=5 | phase0=.tmp_deploy/DISCOVERY-phase0-2026-06-08.md | reversed: B2-SHADOW-IT a->c -->
+<!-- agent map, ignore: q1=B2-MOD-SHAPE q2=B1A-BUILD q3=B2-MON-POLICIES q4=B2-SVC-MAPS q5=B2-SHADOW-IT q6=B3-DISCOVERY-PATTERNS+B3-DISCOVERY-CREDENTIALS+B3-DISCOVERY-SCHEDULES+B3-RECONCILIATION-RULES+B3-DISCOVERY-EXCLUSIONS+B3-NETWORK-SEGMENTS+B3-CLOUD-ACCOUNTS+B3-ASSET-TAGS | domain_id=5 | phase0=audits/DISCOVERY/DISCOVERY-phase0-2026-06-08.md | reversed: B2-SHADOW-IT a->c -->

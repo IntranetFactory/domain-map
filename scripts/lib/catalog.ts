@@ -459,9 +459,9 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
 
 // ---------- file cache ----------
 
-// Default cache file lives under .tmp_deploy/ which is gitignored. Visible in the IDE
-// for inspection; easy to `rm` for forced refresh.
-export const DEFAULT_CATALOG_CACHE_FILE = "c:/dev/domain-map/.tmp_deploy/.catalog-cache.json";
+// Default cache file lives under .cache/. Visible in the IDE for inspection; easy to `rm`
+// for forced refresh.
+export const DEFAULT_CATALOG_CACHE_FILE = "c:/dev/domain-map/.cache/.catalog-cache.json";
 export const DEFAULT_CATALOG_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 export type CacheOptions = {

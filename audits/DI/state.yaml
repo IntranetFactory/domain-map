@@ -21,7 +21,7 @@ last_audit: "2026-06-13"
 #
 # 2026-06-08 PHASE 0 ran (Rule #22 forcing step; the 2026-06-07 pass surfaced market-shape b2
 # calls WITHOUT a current Phase 0 report, leaning on generic "vendor-neutral" reasoning). Fresh
-# vendor-surface study of 7 flagships -> .tmp_deploy/DI-phase0-2026-06-08.md. Market confirmed
+# vendor-surface study of 7 flagships -> audits/DI/DI-phase0-2026-06-08.md. Market confirmed
 # from the live domain row: Data Integration = ELT/ETL/CDC/replication for analytics, explicitly
 # "distinct from iPaaS". Flagships studied: Fivetran, Airbyte, dbt Labs, Confluent (Kafka Connect
 # + Schema Registry), Qlik Replicate / Striim (compliance-grade CDC), Informatica IDMC (CDIR +

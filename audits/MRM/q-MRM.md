@@ -5,7 +5,7 @@ Plan your marketing, allocate the budget, and reconcile every dollar of spend ba
 
 Build the annual and quarterly marketing plan as a hierarchy of plan lines, then allocate budget top-down across plans, campaigns, and channels. Track committed and actual spend against every plan line so you always know what is left to spend and where it went. Lay the whole program out on a shared marketing calendar, route budget allocations and spend through approval, and measure plan-level performance and marketing ROI. Connects to your work-management tasks, your asset library, and your campaign-execution tools without duplicating them.
 
-> Grounding: these recommendations are backed by a Phase 0 vendor-surface study saved at `.tmp_deploy/MRM-phase0-2026-06-14.md` (TrustRadius/Gartner/Forrester market reads plus named-vendor product docs). MRM was a deliberate BORDERLINE promote: it was built scoped tightly to the marketing planning + budget kernel that no existing domain owns, and everything that converges into Work Management, Digital Asset Management, or Marketing Automation is referenced rather than re-implemented.
+> Grounding: these recommendations are backed by a Phase 0 vendor-surface study saved at `audits/MRM/MRM-phase0-2026-06-14.md` (TrustRadius/Gartner/Forrester market reads plus named-vendor product docs). MRM was a deliberate BORDERLINE promote: it was built scoped tightly to the marketing planning + budget kernel that no existing domain owns, and everything that converges into Work Management, Digital Asset Management, or Marketing Automation is referenced rather than re-implemented.
 
 ---
 
@@ -72,4 +72,4 @@ a6:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B3-S1 q5=B3-S2 q6=B3-S3 | domain_id=173 | phase0=.tmp_deploy/MRM-phase0-2026-06-14.md | reversed: none -->
+<!-- agent map, ignore: q1=B2-S1 q2=B2-S2 q3=B2-S3 q4=B3-S1 q5=B3-S2 q6=B3-S3 | domain_id=173 | phase0=audits/MRM/MRM-phase0-2026-06-14.md | reversed: none -->

@@ -73,7 +73,7 @@ Confirm this table before B4 emits. It is total over all four `relationship_kind
 - Document the canonical rule in `module-shape.md` (and delete the stale `kind+necessity` -> delete-mode formula in `plan-generate-blueprints.md`, which lives at the repo root, around line 82).
 
 ### D. Verification
-- Snapshot `catalog/blueprints/` before changes. Force a catalog-cache refresh first (delete `.tmp_deploy/.catalog-cache.json` or pass `forceRefresh`): the cache validity check does not detect the new `entity_type` column, so a fresh-but-pre-change cache within its 5-minute TTL would emit `entity_type` as undefined.
+- Snapshot `catalog/blueprints/` before changes. Force a catalog-cache refresh first (delete `.cache/.catalog-cache.json` or pass `forceRefresh`): the cache validity check does not detect the new `entity_type` column, so a fresh-but-pre-change cache within its 5-minute TTL would emit `entity_type` as undefined.
 - Regenerate ONLY the existing blueprint files (one `bun run scripts/generate_blueprints.ts --module <CODE>` per file already in `catalog/blueprints/`). Do NOT use `--all`: the committed corpus is a curated subset (~18 modules), and `--all` would emit ~130 new blueprints for unclassified modules that have no committed file. Diff. Expected diffs: the new per-entity write-tier column in section 3; the new delete-mode / FK columns in section 5; and, in section 8, the M6 guard suppressing flag-derived overrides on classified catalog / junction / computed masters that still carry a legacy flag. No other section should move.
 - Gate: re-run `--module <CODE> --check` over the same existing files and confirm zero drift. Append a `skill-changelog` Decisions entry for the entity_type and delete-mode derivations.
 

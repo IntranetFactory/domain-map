@@ -5,7 +5,7 @@ next_action_by: user
 last_audit: "2026-06-14"
 
 # 2026-06-14 BUILD. Promoted from the triage queue (Phase 0:
-# .tmp_deploy/LEASE-ACCT-phase0-2026-06-14.md). Point-solution test PASSES: >=3
+# audits/LEASE-ACCT/LEASE-ACCT-phase0-2026-06-14.md). Point-solution test PASSES: >=3
 # independent flagship pure-plays whose flagship IS lease accounting (FinQuery/LeaseQuery,
 # Trullion, Occupier). Built domain_id 175 with 2 full modules (LEASE-ACCT-ACCOUNTING 356,
 # LEASE-ACCT-ADMINISTRATION 357), 7 capabilities, 10 masters, 7 solutions, 3 regulations

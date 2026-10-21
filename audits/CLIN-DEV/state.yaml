@@ -16,7 +16,7 @@ last_audit: "2026-06-13"
 
 # 2026-06-08 PHASE 0 ran (the step the prior passes skipped before surfacing market-shape
 # b2 calls; see skill-changelog 2026-06-08 + SKILL.md Rule #22 forcing step). Fresh vendor
-# study of 6 flagships -> .tmp_deploy/CLIN-DEV-phase0-2026-06-08.md.
+# study of 6 flagships -> audits/CLIN-DEV/CLIN-DEV-phase0-2026-06-08.md.
 # SCOPE NOTE: CLIN-DEV = Clinical Device Management (hospital clinical engineering / HTM CMMS
 # for medical equipment), NOT clinical-trial development (EDC/CTMS/eTMF). Live masters confirm
 # the hospital-HTM scope. Flagships studied: Nuvolo Connected Workplace for Healthcare, AIMS 3
@@ -157,7 +157,7 @@ b2:
       - "Two-module (RECOMMENDED, follows vendor packaging): CLIN-DEV-CMMS (medical_devices, device_models, device_locations, clinical_engineering_work_orders, device_maintenance_logs, preventive_maintenance_schedules, device_calibration_records, device_recalls, device_incident_reports, service_contracts, compliance evidence) + CLIN-DEV-STERILE-PROC (sterilization_cycles, instrument_trays, biological_indicator_results, or_case_carts)"
       - "Single CLIN-DEV-CORE module covering all 7 masters"
       - "Two-module (prior shape, now overruled by evidence): CLIN-DEV-INVENTORY (devices, maintenance, calibration, sterilization, work orders) + CLIN-DEV-SAFETY-VIGILANCE (device_recalls, device_incident_reports)"
-    why: "REVERSED 2026-06-08 by Phase 0 (.tmp_deploy/CLIN-DEV-phase0-2026-06-08.md). The prior recommended split (Inventory + Safety-Vigilance) rested on build-convenience (the minimal shape that unblocks the build), a Rule #22 violation. Named-vendor evidence overturns it: every flagship CMMS (Nuvolo, AIMS Hazard Alerts, EQ2 HEMS Alerts & Recall, ServiceNow CDM) bundles recall / hazard-alert response INTO the core product, so Safety-Vigilance is not a separately-marketed surface. The genuine product boundary is sterile processing (Censis CensiTrac, STERIS SPM: distinct product, distinct buyer = SPD manager, distinct workflow). Recommended split now follows vendor product packaging: CMMS core + Sterile Processing. IOMT-SEC (medical-device security, Asimily/Cynerio, Gartner-recognized distinct market) and MED-DEVICE-QMS (manufacturer QMS) promote to sibling domains, not modules."
+    why: "REVERSED 2026-06-08 by Phase 0 (audits/CLIN-DEV/CLIN-DEV-phase0-2026-06-08.md). The prior recommended split (Inventory + Safety-Vigilance) rested on build-convenience (the minimal shape that unblocks the build), a Rule #22 violation. Named-vendor evidence overturns it: every flagship CMMS (Nuvolo, AIMS Hazard Alerts, EQ2 HEMS Alerts & Recall, ServiceNow CDM) bundles recall / hazard-alert response INTO the core product, so Safety-Vigilance is not a separately-marketed surface. The genuine product boundary is sterile processing (Censis CensiTrac, STERIS SPM: distinct product, distinct buyer = SPD manager, distinct workflow). Recommended split now follows vendor product packaging: CMMS core + Sterile Processing. IOMT-SEC (medical-device security, Asimily/Cynerio, Gartner-recognized distinct market) and MED-DEVICE-QMS (manufacturer QMS) promote to sibling domains, not modules."
 
   - id: B2-S3
     summary: "Business-function owner for CLIN-DEV (DESTRUCTIVE repoint of existing owner row 257, surfaced)."

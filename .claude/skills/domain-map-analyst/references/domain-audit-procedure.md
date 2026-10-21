@@ -52,7 +52,7 @@ Cache as the **current footprint** + the **APQC coverage map** (handoff_id → l
 
 Spawn a `general-purpose` subagent (not `Explore` — Explore lacks `Write`, and the agent needs to persist JSON). Use the [prompt template below](#subagent-prompt-template).
 
-The subagent produces `.tmp_deploy/<DOMAIN>-market-surface-<YYYY-MM-DD>.json` with the vendor surface matrix + the diff against the current footprint.
+The subagent produces `audits/<DOMAIN>/<DOMAIN>-market-surface-<YYYY-MM-DD>.json` with the vendor surface matrix + the diff against the current footprint.
 
 ### Step 3 — Surface the gap report to the user, categorized into three buckets
 
@@ -288,7 +288,7 @@ Task:
    Recommend merges / splits / renames if not. Use the test: "if I had to onboard a
    first-time deployer to this domain, would the module names + scopes self-explain?"
 
-Output: save the result as JSON to .tmp_deploy/[DOMAIN_CODE]-market-surface-[YYYY-MM-DD].json:
+Output: save the result as JSON to audits/[DOMAIN_CODE]/[DOMAIN_CODE]-market-surface-[YYYY-MM-DD].json:
 
 {
   "domain_code": "<CODE>",
@@ -314,7 +314,7 @@ Output: save the result as JSON to .tmp_deploy/[DOMAIN_CODE]-market-surface-[YYY
 }
 
 Then also save a human-readable summary as markdown at
-.tmp_deploy/[DOMAIN_CODE]-market-surface-[YYYY-MM-DD].md alongside the JSON, with sections:
+audits/[DOMAIN_CODE]/[DOMAIN_CODE]-market-surface-[YYYY-MM-DD].md alongside the JSON, with sections:
 - Vendors
 - Surface matrix table
 - Diff summary counts

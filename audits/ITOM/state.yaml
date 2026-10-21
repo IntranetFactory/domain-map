@@ -3,7 +3,7 @@ domain: ITOM
 status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-08"
-phase0_report: ".tmp_deploy/ITOM-phase0-2026-06-08.md"
+phase0_report: "audits/ITOM/ITOM-phase0-2026-06-08.md"
 phase0_note: >
   2026-06-08 review pass ran Phase 0 vendor-surface research to ground the five market-shape
   b2 decisions (B2-S5, B2-S1, B2-S3, B2-S3a, B2-S4) per Rule #22, which the prior q-file
@@ -117,7 +117,7 @@ b2:
       Kaseya VSA) model a policy as a device-agent config bundle (CPU/RAM/disk/SMART thresholds + patch/AV/
       backup) and an alert as a per-device threshold breach (ConnectWise: 1100+ OOB conditions); ITOM
       (ServiceNow event-to-alert, BMC Helix) correlates to service/CI impact via CMDB. Same record, different
-      scope, not a full split. See .tmp_deploy/ITOM-phase0-2026-06-08.md D2.
+      scope, not a full split. See audits/ITOM/ITOM-phase0-2026-06-08.md D2.
     why: >
       ITOM is the broader market, but RMM as a distinct point-solution market may want its own
       monitoring shapes long-term; the decision affects every future RMM audit and the rollup M7
@@ -151,7 +151,7 @@ b2:
       alert-RULE DEFINITIONS (Datadog Monitors, Dynatrace Problems, Grafana alert rules, Prometheus
       Alertmanager) in the OBS domain, but the breach INSTANCE crossing the handoff is correctly ITOM's
       monitoring_alerts. Follow-up (OBS audit, not ITOM): ensure OBS masters its monitor/rule-definition
-      entity. See .tmp_deploy/ITOM-phase0-2026-06-08.md D3.
+      entity. See audits/ITOM/ITOM-phase0-2026-06-08.md D3.
     why: "Boundary question between OBS and ITOM data ownership; routes to OBS audit."
 
   - id: B2-S3a
@@ -169,7 +169,7 @@ b2:
       Re-anchor to AIOPS alert_suppression_rules (722) (option a). Suppression rules are AIOps-owned
       config objects: BigPanda maintenance plans, Moogsoft maintenance-window suppression, ServiceNow
       Predictive AIOps + Dynatrace Davis maintenance windows. A "suppression applied" event is the
-      application of that AIOPS-owned rule. See .tmp_deploy/ITOM-phase0-2026-06-08.md D4.
+      application of that AIOPS-owned rule. See audits/ITOM/ITOM-phase0-2026-06-08.md D4.
     why: "Cross-domain ownership question; resolution affects handoff 59 payload mapping."
 
   - id: B2-S4
@@ -187,7 +187,7 @@ b2:
       two objects proves two things not two names. BMC Helix event policies (deterministic) +
       Moogsoft/BigPanda ML correlation confirm. ITOM owns deterministic event_correlation_rules (new,
       module 267); AIOPS owns ML correlation (currently event_correlations 93). See
-      .tmp_deploy/ITOM-phase0-2026-06-08.md D5.
+      audits/ITOM/ITOM-phase0-2026-06-08.md D5.
     why: "Concept overlap with AIOPS; routes via AIOPS Bucket 3."
 
   - id: B2-S5
@@ -208,7 +208,7 @@ b2:
       - "(d) Promote runbook out, keep job-scheduling in ITOM"
     phase0_verdict: >
       Split one out: promote workload-automation to its own domain, keep runbook in ITOM (option a).
-      See .tmp_deploy/ITOM-phase0-2026-06-08.md D1.
+      See audits/ITOM/ITOM-phase0-2026-06-08.md D1.
     why: >
       Decision changes the ITOM module count and whether module 269 survives with its own master.
       Reverses the prior "promote both" recommendation on Phase 0 evidence (runbook IS natively

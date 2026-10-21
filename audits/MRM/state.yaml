@@ -4,7 +4,7 @@ status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-14"
 
-# 2026-06-14 BUILD. New domain built from Phase 0 (.tmp_deploy/MRM-phase0-2026-06-14.md),
+# 2026-06-14 BUILD. New domain built from Phase 0 (audits/MRM/MRM-phase0-2026-06-14.md),
 # scoped TIGHTLY to the marketing planning + budget kernel that no existing domain owns.
 # Loaded live at record_status='new': domain 173 (+ 7 metadata fields + catalog UX), 5
 # capabilities, 2 full modules (MRM-PLANNING 350, MRM-BUDGET 351), 5 solutions linked

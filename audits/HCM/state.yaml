@@ -15,7 +15,7 @@ b1a: []
 b1b:
   - id: B1B-NEIGHBOR-ROUTES
     summary: "Phase 0 (2026-06-09) routed 6 entity/statute placements off HCM to neighbor domains; auditing those neighbors to actually place them is POSTPONED by the user (a6). Parked, non-blocking, awaiting a user go - NOT deleted, because postpone = deferred, still open."
-    finding: "Routings to place when the neighbor domains are audited: worker_bank_accounts -> PAYROLL; medical_certifications -> WFM; i9_records -> ONBOARDING; regulation FMLA/FFCRA -> WFM; regulation I-9/E-Verify -> ONBOARDING; regulation HIPAA-BAA -> BEN-ADMIN. Each is backed by the 2026-06-09 Phase 0 (.tmp_deploy/HCM-phase0-entities-2026-06-09.md)."
+    finding: "Routings to place when the neighbor domains are audited: worker_bank_accounts -> PAYROLL; medical_certifications -> WFM; i9_records -> ONBOARDING; regulation FMLA/FFCRA -> WFM; regulation I-9/E-Verify -> ONBOARDING; regulation HIPAA-BAA -> BEN-ADMIN. Each is backed by the 2026-06-09 Phase 0 (audits/HCM/HCM-phase0-entities-2026-06-09.md)."
     blocked_by:
       - {type: user_decision, ref: a6-postpone-2026-06-09}
 

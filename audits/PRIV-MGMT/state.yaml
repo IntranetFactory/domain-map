@@ -3,7 +3,7 @@ domain: PRIV-MGMT
 status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-13"
-phase0_report: ".tmp_deploy/PRIV-MGMT-phase0-2026-06-08.md"  # Rule #22 forcing step run 2026-06-08; 5 flagships (OneTrust, TrustArc, Securiti, DataGrail, Transcend). Verdicts D1-D5 ground every market-shape b2/b3 below.
+phase0_report: "audits/PRIV-MGMT/PRIV-MGMT-phase0-2026-06-08.md"  # Rule #22 forcing step run 2026-06-08; 5 flagships (OneTrust, TrustArc, Securiti, DataGrail, Transcend). Verdicts D1-D5 ground every market-shape b2/b3 below.
 
 # next_action_by rationale: the 2026-06-13 pass ran the committed bidirectional B9d
 # resolver (B1A-B9D-VERIFY, now resolved -> history.md). The only PRIV-MGMT boundary
@@ -71,7 +71,7 @@ b1b:
     blocked_by:
       - {type: user_decision, ref: B2-1}
       - {type: user_decision, ref: B2-2}
-    phase0_note: "B3-1 / B3-3 Phase 0 vetting is COMPLETE as of 2026-06-08 (.tmp_deploy/PRIV-MGMT-phase0-2026-06-08.md); those are no longer blockers. The cluster now blocks only on the two user decisions B2-1 (re-home + consolidate) and B2-2 (module split + scope)."
+    phase0_note: "B3-1 / B3-3 Phase 0 vetting is COMPLETE as of 2026-06-08 (audits/PRIV-MGMT/PRIV-MGMT-phase0-2026-06-08.md); those are no longer blockers. The cluster now blocks only on the two user decisions B2-1 (re-home + consolidate) and B2-2 (module split + scope)."
     affected_modules: []
     affected_masters:
       - {data_object_id: 901, name: data_subject_requests, target_module_id: null, workflow: "DSR pipeline; would re-home from ATS-CANDIDATE-CRM"}
@@ -107,7 +107,7 @@ b2:
       - "(b) re-home all four but keep them as separate masters (one general DSR + a separate access master + a separate deletion master + consent); contradicts the Phase 0 D1 vendor model"
       - "(c) keep current ownership and have PRIV-MGMT consume via cross-domain handoffs only (contradicts flagship-vendor practice and the settled master-bearing classification)"
       - "(d) re-home only the LMS triplet and leave the ATS-CANDIDATE-CRM master for data_subject_requests in place if there is a defensible candidate-specific shape"
-    phase0_verdict: "D1 = option (a): re-home all four, consolidate 901+951+952 into one request master, re-home 950 as consent_records. Named-vendor evidence inline in .tmp_deploy/PRIV-MGMT-phase0-2026-06-08.md."
+    phase0_verdict: "D1 = option (a): re-home all four, consolidate 901+951+952 into one request master, re-home 950 as consent_records. Named-vendor evidence inline in audits/PRIV-MGMT/PRIV-MGMT-phase0-2026-06-08.md."
     destructive_followup: "Option (a) requires collapsing the existing 951 + 952 master rows in LMS-CT-GDPR. That DELETE/restructure is a pending destructive approval (Rule #21), surfaced and executed at build time, not now. B2-1 only sets direction."
     why: "B1B-S1-CLUSTER cannot be authored until this is decided. Every sub-item's master set, module set, and permission shape derives from this answer. Gates B1A-BUILD."
 

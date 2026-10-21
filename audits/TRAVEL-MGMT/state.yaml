@@ -5,7 +5,7 @@ next_action_by: user
 last_audit: "2026-06-14"
 
 # 2026-06-14 BUILD. TRAVEL-MGMT (domain_id 172) built and loaded at record_status='new'.
-# Phase 0 verdict promote-as-domain (.tmp_deploy/TRAVEL-MGMT-phase0-2026-06-14.md) realized:
+# Phase 0 verdict promote-as-domain (audits/TRAVEL-MGMT/TRAVEL-MGMT-phase0-2026-06-14.md) realized:
 #   Phase A: domain row + 7 metadata fields + catalog UX (pre-existing); 4 full modules
 #     (346 BOOKING-SOURCING, 347 TRIP-ITINERARY, 348 PROFILE-POLICY, 349 DUTY-OF-CARE) +
 #     domain_module_capabilities (8 capabilities, every capability realized, every module

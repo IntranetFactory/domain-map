@@ -127,7 +127,7 @@ b2:
       cost_anomalies, optimization_recommendations at FOCUS-normalized resource/tag grain). Parentage stays under
       ITAM (SKILL.md Rule #6 names FinOps an ITAM sub-domain). The re-audit proposes up to 6 modules mapped to the
       FinOps Framework capability domains; option (a)'s 2-module split is the minimal Rule #14-compliant shape.
-      Full report: .tmp_deploy/FINOPS-phase0-2026-06-16.md.
+      Full report: audits/FINOPS/FINOPS-phase0-2026-06-16.md.
     extra_reaudit: "2026-06-16 confirms build-out"
     depends_on_for_cascade: [B1A-M1, B1A-A2, B1A-B-DMDO, B1A-DOMAIN-SKILL, B1A-PHASE-P]
 

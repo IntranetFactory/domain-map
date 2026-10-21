@@ -5,7 +5,7 @@ Ship code-first apps to a managed runtime without running the servers yourself.
 
 Deploy web apps, APIs, and workers to a platform that builds on every commit, auto-scales, and provisions databases, caches, and queues as add-ons. Promote releases across environments, watch each deployment, and roll back a failed one without touching infrastructure. This covers the full path from a build to a running, scaled application: applications, environments, deployments, build records, runtime instances, and add-ons.
 
-> Grounding: these recommendations are backed by a fresh vendor-surface study (9 flagship code-first managed-runtime vendors, 2025-2026 product docs) saved at `.tmp_deploy/APP-PAAS-phase0-2026-06-08.md`. The study confirmed the build-vs-runtime split is vendor-real, reversed the add-on-marketplace framing (a marketplace is a Heroku/DigitalOcean specialty, not a market-wide surface; the universal capability is attaching a managed backing service), and confirmed all four substrate entities (config vars, log streams, custom domains, release versions) as Core across the vendor set.
+> Grounding: these recommendations are backed by a fresh vendor-surface study (9 flagship code-first managed-runtime vendors, 2025-2026 product docs) saved at `audits/APP-PAAS/APP-PAAS-phase0-2026-06-08.md`. The study confirmed the build-vs-runtime split is vendor-real, reversed the add-on-marketplace framing (a marketplace is a Heroku/DigitalOcean specialty, not a market-wide surface; the universal capability is attaching a managed backing service), and confirmed all four substrate entities (config vars, log streams, custom domains, release versions) as Core across the vendor set.
 
 ---
 
@@ -146,4 +146,4 @@ a14:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1.split q2=B2-S1.capability q3=B2-S1.addonmarketplace q4=B2-S3.deployments q5=B2-S3.buildrecords q6=B2-S3.addons q7=B2-S4 q8=B2-S5 q9=B2-H1 q10=B2-ALIASES q11=B3-RELEASE-VERSIONS q12=B3-SECRETS q13=B3-LOG-STREAMS q14=B3-CUSTOM-DOMAINS | domain_id=76 | phase0=.tmp_deploy/APP-PAAS-phase0-2026-06-08.md | reversed: B2-S1.addonmarketplace marketplace-framing -> managed-service-attachment framing (a kept as own capability but renamed) -->
+<!-- agent map, ignore: q1=B2-S1.split q2=B2-S1.capability q3=B2-S1.addonmarketplace q4=B2-S3.deployments q5=B2-S3.buildrecords q6=B2-S3.addons q7=B2-S4 q8=B2-S5 q9=B2-H1 q10=B2-ALIASES q11=B3-RELEASE-VERSIONS q12=B3-SECRETS q13=B3-LOG-STREAMS q14=B3-CUSTOM-DOMAINS | domain_id=76 | phase0=audits/APP-PAAS/APP-PAAS-phase0-2026-06-08.md | reversed: B2-S1.addonmarketplace marketplace-framing -> managed-service-attachment framing (a kept as own capability but renamed) -->

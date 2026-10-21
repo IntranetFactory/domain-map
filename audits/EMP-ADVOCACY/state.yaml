@@ -5,7 +5,7 @@ next_action_by: user
 last_audit: "2026-06-14"
 
 # 2026-06-14 NEW-DOMAIN BUILD (promote-as-domain from triage queue).
-# Phase 0 (.tmp_deploy/EMP-ADVOCACY-phase0-2026-06-14.md) cleared the point-solution test:
+# Phase 0 (audits/EMP-ADVOCACY/EMP-ADVOCACY-phase0-2026-06-14.md) cleared the point-solution test:
 # DSMN8, GaggleAMP, EveryoneSocial are flagship-advocacy products (two fully independent,
 # one acquired-but-standalone), plus Oktopost (independent, advocacy core pillar); Gartner
 # Peer Insights runs a dedicated "Employee Advocacy Tools" market category. SMM names

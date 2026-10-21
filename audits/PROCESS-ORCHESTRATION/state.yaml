@@ -7,7 +7,7 @@ last_audit: "2026-06-14"
 # 2026-06-14 NEW-DOMAIN BUILD. Promoted from the IBPMS triage candidate. The iBPMS *name* folds
 # (its low-code suite leaders Pega/Appian/Bizagi are already in the catalog under LCAP, and
 # LCAP-WORKFLOW-AUTO already claims "Where LCAP overlaps with BPM/iBPMS"); the *execution-runtime*
-# market is distinct and was unowned. Phase 0: .tmp_deploy/IBPMS-phase0-2026-06-14.md. Built domain
+# market is distinct and was unowned. Phase 0: research/IBPMS-phase0-2026-06-14.md. Built domain
 # 179 with 2 full modules (PROCESS-ORCHESTRATION-EXECUTION 364, PROCESS-ORCHESTRATION-CASE-DECISION
 # 365), 6 capabilities, 10 masters, 24 lifecycle states, 6 trigger_events, 4 outbound handoffs,
 # 15 intra+user relationships, 15 aliases, 1 system skill (466) + 14 tools + 16 domain_module_tools,

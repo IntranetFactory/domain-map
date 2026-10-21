@@ -30,7 +30,7 @@ last_audit: "2026-06-13"
 # Stripe Treasury / Plaid (payment rails), Fenergo / Alloy (KYC onboarding). Banking is a
 # regulated market, so kyc_records / aml_alerts / suspicious_activity_reports loaded into the
 # surface matrix regardless of vendor presence; >=1 financial-crime specialist (Oracle FCCM,
-# NICE Actimize) included per protocol. Report: .tmp_deploy/BANK-OPS-phase0-2026-06-08.md
+# NICE Actimize) included per protocol. Report: audits/BANK-OPS/BANK-OPS-phase0-2026-06-08.md
 # (flagship table, surface matrix entities x 7 vendors, compliance entities, modularization
 # hypothesis).
 #
@@ -182,7 +182,7 @@ b2:
     summary: "Module split for BANK-OPS, gates the build and ~9 b1b items."
     question: "Which module shape for BANK-OPS? (a) 7-module: BANK-OPS-ORIGINATION + BANK-OPS-ACCOUNT-MGMT + BANK-OPS-KYC-AML + BANK-OPS-PAYMENTS + BANK-OPS-CASES + BANK-OPS-LOAN-SERVICING + BANK-OPS-REGULATORY; (b) 5-module collapse KYC-AML + REGULATORY into BANK-OPS-COMPLIANCE; (c) 6-module collapse ORIGINATION + ACCOUNT-MGMT into BANK-OPS-ONBOARDING; (d) defer KYC-AML out to queued KYC-AML-PLATFORM domain (rehomes B1B-M1 / B1B-M4 / partly B1B-M2); (e) some other shape."
     options: ["a-7module", "b-5module-compliance", "c-6module-onboarding", "d-defer-kyc-aml-platform", "e-other"]
-    why: "Drives the entire build (B1A-BUILD, B1B-S1, B1B-S2), the M-band, E-band, F2-F5, the lifecycle realizing module FKs (B1B-B6), and re-homes several Bucket 1 / Bucket 3 candidates. Phase 0 (2026-06-08) recommends (a) the 7-module shape on named-vendor evidence: origination vs servicing are separate marketed markets (ICE Encompass ~50% origination share vs Black Knight MSP servicing), and KYC-AML is a standalone specialist market (Oracle FCCM / NICE Actimize sell it freestanding). (b) collapse matches Temenos / Fiserv / FIS bundling FCM into the core; (c) collapse matches nCino / Backbase one-journey onboarding; (d) defer is supported by the freestanding-specialist evidence but loses in-platform integration. See .tmp_deploy/BANK-OPS-phase0-2026-06-08.md."
+    why: "Drives the entire build (B1A-BUILD, B1B-S1, B1B-S2), the M-band, E-band, F2-F5, the lifecycle realizing module FKs (B1B-B6), and re-homes several Bucket 1 / Bucket 3 candidates. Phase 0 (2026-06-08) recommends (a) the 7-module shape on named-vendor evidence: origination vs servicing are separate marketed markets (ICE Encompass ~50% origination share vs Black Knight MSP servicing), and KYC-AML is a standalone specialist market (Oracle FCCM / NICE Actimize sell it freestanding). (b) collapse matches Temenos / Fiserv / FIS bundling FCM into the core; (c) collapse matches nCino / Backbase one-journey onboarding; (d) defer is supported by the freestanding-specialist evidence but loses in-platform integration. See audits/BANK-OPS/BANK-OPS-phase0-2026-06-08.md."
 
   - id: B2-2
     summary: "banking_cases vs CSM customer_cases reconciliation."

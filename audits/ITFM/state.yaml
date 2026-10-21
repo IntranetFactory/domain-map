@@ -5,7 +5,7 @@ next_action_by: user
 last_audit: "2026-06-16"
 
 # NEW-DOMAIN CANDIDATE. ITFM/TBM does not exist in the catalog yet. Phase 0 research is in
-# .tmp_deploy/ITFM-phase0-2026-06-16.md. Nothing is written to the live catalog until the
+# audits/ITFM/ITFM-phase0-2026-06-16.md. Nothing is written to the live catalog until the
 # create decision (B2-ITFM-CREATE) and shape decisions are approved via the a-file (Rule #21
 # research carve-out: net-new market structure is surfaced in a q-file first).
 

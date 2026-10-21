@@ -5,7 +5,7 @@ next_action_by: user
 last_audit: "2026-06-27"
 
 # SOP-MGMT is NOT in the live catalog. This is a domain CANDIDATE, scoped 2026-06-15.
-# Phase 0 vendor surface: .tmp_deploy/SOP-MGMT-phase0-2026-06-15.md
+# Phase 0 vendor surface: audits/SOP-MGMT/SOP-MGMT-phase0-2026-06-15.md
 # Backlog entry: audits/_missing-domains.md (## Pending review, "SOP-MGMT — Process Documentation and SOP Management").
 #
 # Decision log:

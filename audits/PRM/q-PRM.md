@@ -5,7 +5,7 @@ Run your channel program end to end: recruit and tier partners, register and pro
 
 Partner Relationship Management runs the indirect-revenue motion on one surface. Onboard channel partners into tiered programs, give them a branded portal with role-based access, and operate the day-to-day workflows that hold a channel program together. Register and protect joint deals with conflict resolution when two partners chase the same prospect. Fund partner-led marketing through market development requests and claims with proof of spend, plus co-op fund accrual. Enroll partners in training and track certifications so the right partners stay enabled. Score every partner each quarter on revenue, growth, certification compliance, and fund utilization, then run quarterly business reviews against a shared joint plan. Track partner-influenced pipeline and surface co-sell signals so the team knows where a partner already has the account. Built for channel and partner teams, with clean handoffs to marketing for through-channel campaigns, to finance for fund settlement and partner-channel commissions, and to your CRM for registered opportunities and qualified partner referrals.
 
-> Grounding: these recommendations are backed by a fresh vendor-surface study (18 flagship vendors, 2025-2026 product docs) saved at `.tmp_deploy/PRM-phase0-2026-06-08.md`. Two analyst signals frame the whole thing: Gartner renamed the category to "Partner and Ecosystem Relationship Management (PERM)" in Sept 2025 (PRM is absorbing co-sell), but Forrester still runs SEPARATE Waves for PRM Platforms (Q4 2025) and Through-Channel Marketing / PMAP (Q2 2025). Converging in name, not yet in product.
+> Grounding: these recommendations are backed by a fresh vendor-surface study (18 flagship vendors, 2025-2026 product docs) saved at `audits/PRM/PRM-phase0-2026-06-08.md`. Two analyst signals frame the whole thing: Gartner renamed the category to "Partner and Ecosystem Relationship Management (PERM)" in Sept 2025 (PRM is absorbing co-sell), but Forrester still runs SEPARATE Waves for PRM Platforms (Q4 2025) and Through-Channel Marketing / PMAP (Q2 2025). Converging in name, not yet in product.
 
 ---
 
@@ -107,4 +107,4 @@ a7:
 
 ---
 
-<!-- agent map, ignore: q1=B2-M1 q2=B2-S1 q3=B2-S2 q4=B2-T1 q5=B2-T2 q6=B2-R1 q7=B3-3+B3-4 | domain_id=96 | phase0=.tmp_deploy/PRM-phase0-2026-06-08.md | reversed: B2-T1 a->b, B2-T2 b->a -->
+<!-- agent map, ignore: q1=B2-M1 q2=B2-S1 q3=B2-S2 q4=B2-T1 q5=B2-T2 q6=B2-R1 q7=B3-3+B3-4 | domain_id=96 | phase0=audits/PRM/PRM-phase0-2026-06-08.md | reversed: B2-T1 a->b, B2-T2 b->a -->

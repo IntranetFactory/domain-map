@@ -4,7 +4,7 @@
 
 Run a homeowner or condo association the way the board and the management company actually work: keep the owner roster and unit records, run board elections and meetings, publish and enforce the governing documents (CC&Rs), handle architectural-review requests and covenant violations, levy and collect regular and special assessments, chase delinquencies through to liens, and fund the future with statutory reserve studies, plus the day-to-day of amenity bookings, common-area upkeep, and community communications.
 
-This is a NEW domain, just promoted from the candidate queue (it is a different business from landlord property management, which the catalog already has as RE-PROP-MGMT: that one is about renting units to tenants; this one is about owners governing themselves). Nothing is loaded yet. These four questions decide its shape; once you answer (rename this file to `a-HOA-MGMT.md`), I run the build (Phase 0 vendor research is already done at `.tmp_deploy/HOA-MGMT-phase0-2026-06-19.md`).
+This is a NEW domain, just promoted from the candidate queue (it is a different business from landlord property management, which the catalog already has as RE-PROP-MGMT: that one is about renting units to tenants; this one is about owners governing themselves). Nothing is loaded yet. These four questions decide its shape; once you answer (rename this file to `a-HOA-MGMT.md`), I run the build (Phase 0 vendor research is already done at `audits/HOA-MGMT/HOA-MGMT-phase0-2026-06-19.md`).
 
 ---
 
@@ -53,4 +53,4 @@ a4:
 
 ---
 
-<!-- agent map, ignore: q1=B2-HOA-MODULES q2=B2-HOA-MAINTENANCE q3=B2-HOA-VENDORS q4=B2-HOA-OWNER-FN | domain_id=new (unbuilt) | phase0=.tmp_deploy/HOA-MGMT-phase0-2026-06-19.md -->
+<!-- agent map, ignore: q1=B2-HOA-MODULES q2=B2-HOA-MAINTENANCE q3=B2-HOA-VENDORS q4=B2-HOA-OWNER-FN | domain_id=new (unbuilt) | phase0=audits/HOA-MGMT/HOA-MGMT-phase0-2026-06-19.md -->

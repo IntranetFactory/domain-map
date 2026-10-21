@@ -11,7 +11,7 @@
 #
 # 2026-06-08 PHASE 0 ran (the Rule #22 forcing step the 2026-06-07 pass skipped before
 # surfacing market-shape b2 calls; see skill-changelog 2026-06-08 + SKILL.md Rule #22).
-# Fresh vendor study of 5 flagships -> .tmp_deploy/AUDIT-phase0-2026-06-08.md. Flagships:
+# Fresh vendor study of 5 flagships -> audits/AUDIT/AUDIT-phase0-2026-06-08.md. Flagships:
 # AuditBoard (OpsAudit + SOXHUB + RiskOversight), Wolters Kluwer TeamMate+, Workiva,
 # Diligent HighBond (formerly ACL Galvanize), ServiceNow IRM Audit Management (suite peer).
 # NO recommendation REVERSED: the named-vendor surface CONFIRMED every prior call, but the

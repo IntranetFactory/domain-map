@@ -19,7 +19,7 @@ last_audit: "2026-06-13"
 #   resolver run (never two --write runs concurrently: they race on shared neighbor files).
 
 # PHASE 0 (2026-06-08): vendor-surface report run this pass to ground the market-shape b2s
-#   per Rule #22. Report: .tmp_deploy/CSM-phase0-2026-06-08.md (Zendesk, Salesforce Service
+#   per Rule #22. Report: audits/CSM/CSM-phase0-2026-06-08.md (Zendesk, Salesforce Service
 #   Cloud, ServiceNow CSM, Freshdesk, Intercom). Two recommendations REVERSED by fresh evidence:
 #     B2-CSM-KNOWLEDGE-MASTER : a -> c (4/5 flagships own a customer-facing KB; only ServiceNow
 #                               shares ITSM's). CSM-KNOWLEDGE should master its own KB.
