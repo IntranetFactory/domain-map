@@ -1,0 +1,52 @@
+[
+  {
+    "id": "domain_module_tools.requirement_level",
+    "description": "Whether the tool is irreducible for this unit's primary workflows (`required`) or covers a degraded / augmenting mode (`optional`). Both Semantius scores (semantius_score, semantius_agent_score) count required and optional tools in their denominator.",
+    "enum_values": [
+      "required",
+      "optional"
+    ],
+    "default_value": "required"
+  },
+  {
+    "id": "process_tools.requirement_level",
+    "description": "Whether the tool is irreducible for this unit's primary workflows (`required`) or covers a degraded / augmenting mode (`optional`). Both Semantius scores (semantius_score, semantius_agent_score) count required and optional tools in their denominator.",
+    "enum_values": [
+      "required",
+      "optional"
+    ],
+    "default_value": "required"
+  },
+  {
+    "id": "tools.coverage_tier",
+    "description": "Who provides the tool's implementation. `semantius` = Semantius covers it natively; flip a tool to `semantius` only when the capability ships on BOTH the `crud` MCP server AND the `semantius` CLI. `agent` = any state-of-the-art agent host covers it, through the model itself (generation, classification, extraction, translation, vision, reasoning over records) or a commodity connector or host tool (team chat, calendar, mail, issue trackers, web search and fetch, sandboxed shell). `integration` = Semantius maintains a curated out-of-the-box integration (e.g. an MCP server in the Semantius catalog). `vendor_platform` = the capability is the engine of a vendor's own platform (proprietary scoring, forecasting, inference, runtime, endpoint agent) and is not sold as a standalone service, so it must be built or approximated. `external` = an outside system, channel, or data provider the customer must connect. semantius_score counts `semantius` + `integration` as covered; semantius_agent_score also counts `agent`. Score derivations read this column, not `operation_kind`.",
+    "enum_values": [
+      {
+        "label": "Semantius",
+        "value": "semantius",
+        "description": "Semantius provides it natively (crud MCP server and semantius CLI)."
+      },
+      {
+        "label": "Agent",
+        "value": "agent",
+        "description": "Any state-of-the-art agent host provides it: the model itself or a commodity connector."
+      },
+      {
+        "label": "Integration",
+        "value": "integration",
+        "description": "Semantius maintains a curated out-of-the-box integration."
+      },
+      {
+        "label": "Vendor platform",
+        "value": "vendor_platform",
+        "description": "The engine of a vendor's own platform, not sold standalone: build or approximate."
+      },
+      {
+        "label": "External",
+        "value": "external",
+        "description": "An outside system, channel, or data provider the customer must connect."
+      }
+    ],
+    "default_value": "external"
+  }
+]

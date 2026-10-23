@@ -1106,3 +1106,57 @@ Both are the same entity-follows-the-unit principle plan-4 established for gates
 **Scope.** Catalog-wide. Generated `domain-map.json` re-emitted (CLM grid now 5 real modules; REAL-ESTATE-AGENT renders on its own bundle domain; `related_domains` still links them). Blueprints: 0/56 drift. Generated `spec.json` / blueprints otherwise stale until re-emitted per domain.
 
 **Status.** Active.
+
+### 2026-10-23 - `coverage_tier` refactored to five tiers; Semantius score split into `semantius_score` + `semantius_agent_score`
+
+**Context.** Building `catalog/domain-map/domain-list.json` surfaced three conflicting score definitions: SKILL.md (all tools, `coverage_tier='platform'`), `coverage_rollup.ts` (required tools only, `operation_kind IN (query, mutate)`), and the `requirement_level` field description ("the coverage rollup counts only `required` tools"). The three-value tier also lumped together tools a capable agent does natively (text generation, classification, team notification, calendar), tools that only exist inside a competing vendor's suite (deal-risk scoring, vulnerability prioritization, skills inference, metrics query engines), and genuine outside connectors.
+
+**Decision (executed, user-approved).** (1) `tools.coverage_tier` enum is now `semantius` / `agent` / `integration` / `vendor_platform` / `external` (default `external`); `platform` was renamed to `semantius` (2057 rows). (2) The 127 `external` tools were retiered by name and description: 6 to `semantius` (arithmetic / aggregation over Semantius data: `compute_tco_rollup`, `compute_portfolio_metrics`, `compute_dc_power_headroom`, `compute_skills_gap`, `compute_workforce_skills_heatmap`, `compute_advocate_influence_score`), 31 to `agent` (model-native generation / classification / extraction / vision / matching, plus commodity connectors and host tools: `notify_team`, `post_chat_message`, `create_calendar_event`, `fetch_email_activity`, `fetch_toolchain_work_items`, `search_web`, `web_scrape`, `fetch_wcag_rules`, `run_shell_command`), 24 to `vendor_platform` (revenue-intelligence models, vulnerability priority, anomaly scoring, ITAM identity reconciliation and title normalization, talent-intelligence inference and matching batches, lineage impact, the metrics-layer engine, RMM endpoint-agent actions, DXP render cache), 66 stay `external`. (3) Validation rule 99009 renamed `semantius_coverage_when_query_or_mutate` and now requires `semantius` for query / mutate tools. (4) Two scores replace `strict_score` / `operational_score`: `semantius_score` covers `semantius` + `integration`, `semantius_agent_score` adds `agent`; both use all tools (required and optional) as the denominator. `coverage_rollup.ts`, `emit_domain_list.ts`, SKILL.md § "Semantius score", `references/semantius-coverage-rollup.md`, README, and the `coverage_tier` / `requirement_level` field descriptions now agree.
+
+**Reasoning.** `operation_kind` describes the shape of work, not who provides it, so it cannot be the coverage partition. Splitting `agent` out answers "what runs with Semantius plus any capable agent" without overclaiming Semantius itself; splitting `vendor_platform` from `external` separates "build it" from "connect it", which `domains.business_logic` already describes at the domain grain. Counting all tools keeps both scores comparable; `requirement_level` explains a gap rather than hiding it.
+
+**Scope.** Catalog-wide. Revert source: `.tmp_deploy/snapshots/*_2026_10_23.json`; loader `.tmp_deploy/retier_coverage_2026_10_23.ts`. Per-tool tiers are a first-pass judgment from tool names and descriptions; correct individual rows with a one-row UPDATE (four tools carry no real description: `compute_vulnerability_priority`, `compute_dc_power_headroom`, `fetch_exploit_intel`, `generate_compliance_evidence`). Blueprints are unaffected (they render no coverage %).
+
+**Status.** Superseded in part the same day: `agent` split into three tiers, `integration` dropped (next entry).
+
+### 2026-10-23 - `agent` tier split into agent_native / agent_common / agent_first; `integration` dropped; three scores
+
+**Context.** Review of the five-tier scheme: "agent" mixed what the agent does on its own (its model, host tools) with what it does through the customer's office suite and with agent-ready services that need a subscription (e-signature, payments, telephony). `integration` (curated by Semantius) held no tools and drew the line `agent_first` now draws.
+
+**Decision (executed, user-approved).** Enum is now `semantius` / `agent_native` / `agent_common` / `agent_first` / `vendor_platform` / `external`. From `agent`: 26 to `agent_native`, 4 to `agent_common` (`notify_team`, `post_chat_message`, `create_calendar_event`, `fetch_email_activity`), 1 to `agent_first` (`fetch_toolchain_work_items`). From `external`: 2 to `semantius` (`receive_scanner_callback`, `receive_crawler_completion`, served by Semantius webhook receivers), 5 to `agent_native` (`scan_content_quality`, `invoke_webhook`, `generate_1094c_form`, `generate_1095c_form`, `fetch_weather_forecast`), 2 to `agent_common` (`store_blob`, `crawl_intranet_source`), 27 to `agent_first` (AI services, e-signature, payments, telephony and SMS, ad and social platforms, commerce feeds with self-serve APIs, CDN and redirect, accessibility scanning, routing, pricing and market-data APIs), 30 stay `external` (tax and regulatory filings, ACA e-file, EDI, MLS, GDS air and hotel, GDSN, lab and device feeds, endpoint telemetry, channel managers, marketplace and retailer feeds with gated access, always-on inbound mail / SMS / voice / file drops / event streams, outbound webhooks). Three scores: `semantius_score` (`semantius`), `semantius_agent_core` (+ `agent_native` + `agent_common`), `semantius_agent_first` (+ `agent_first`); `semantius_agent_score` is retired.
+
+**Reasoning.** The tiers now follow what the customer must add: nothing, a capable agent, their office suite, a subscription, a build, or integration work. Each score answers one buying question; the line between `agent_first` and `external` is "usable by an agent with only a subscription" versus "needs certified, contracted, device, or always-on integration".
+
+**Scope.** Catalog-wide. Revert source: `.tmp_deploy/snapshots/*_2026_10_23b.json`; loader `.tmp_deploy/retier_agent_tiers_2026_10_23.ts`. Whether a provider truly ships an MCP server or self-serve API was judged, not verified per vendor; correct individual rows with a one-row UPDATE.
+
+**Status.** Active.
+
+### 2026-10-23 - 10 `agent_first` tools moved to `vendor_platform` (no vendor-maintained agent access)
+
+**Decision (executed, user-approved).** After researching MCP servers / agent toolkits per `agent_first` tool (`catalog/domain-map/agent-first-tools.json`), tools with no vendor-maintained server moved to `vendor_platform`: community- or aggregator-only (`generate_image`, `purge_cdn_cache`, `fetch_tiktok_ads_insights`, `fetch_linkedin_ads_insights`, `syndicate_to_google_merchant`, `syndicate_to_shopify`, `fetch_exploit_intel`), fewer than 2 providers (`send_ad_conversion_event`, `fetch_livestock_market_prices`), and partial coverage only (`embed_text`). `agent_first` now means at least one vendor-published MCP server or agent toolkit exists. Revert source: `.tmp_deploy/snapshots/tools_coverage_tier_2026_10_23c.json`.
+
+**Status.** Active.
+
+### 2026-10-23 - `semantius` tier split into semantius_crud / semantius_workflow / semantius_platform plus business_logic; rule 99009 deleted
+
+**Context.** FIN scored 100% although a general-ledger posting needs balanced lines across rows, numbering, and period consistency. Every `query` / `mutate` tool was forced to `semantius` by validation rule 99009, so any write counted as covered regardless of the logic behind it. Semantius covers one record at a time (JsonLogic computed fields and validations, one related-record lookup), not multi-record transactions or aggregates.
+
+**Decision (executed, user-approved).** `semantius` (2065 tools) was split per `audits/_coverage-tier-review-2026-10-23-v2.csv`: first pass by hand and verb, then an independent second-opinion review (`audits/_coverage-tier-review-2026-10-23-second-opinion.md`, 98 corrections) and user decisions (`notify_person` and time-triggered single-record tools to `agent_common`, since agents run on a schedule). Result: semantius_crud 1515, semantius_workflow 438, business_logic 71, semantius_platform 6, vendor_platform +12, external +11, agent_first +4, agent_common +5, agent_native +3. Validation rule 99009 (query / mutate must be `semantius`) was deleted. `semantius_score` now counts every `semantius_*` tier; `business_logic` is uncovered in all scores.
+
+**Known gaps (not addressed).** The 68 keyword-flagged rows in the v2 file kept their verb-based tier. 339 tools have no primary-module link and enter no domain score. Many domains read engine output that no tool produces (second-opinion report, domain list).
+
+**Scope.** Catalog-wide. Revert source: `.tmp_deploy/snapshots/*_2026_10_23d.json`; loader `.tmp_deploy/apply_tier_review_v2_2026_10_23.ts`.
+
+**Status.** Active.
+
+### 2026-10-23 - `domains.site_catalog` added
+
+**Decision (executed, user-approved).** New boolean `domains.site_catalog` (default false) marks domains listed on the public site catalog. Seeded true for the 42 domains whose `semantius_agent_first` was 100; maintained by hand from here on. `scripts/emit_domain_list.ts` writes them to `catalog/domain-map/domain-list-site.json`. Loader: `.tmp_deploy/add_site_catalog_2026_10_23.ts`.
+
+**Status.** Active.
+
+### 2026-10-23 - `domains.catalog_prompt` added
+
+**Decision (executed, user-requested).** New text field `domains.catalog_prompt` holds the blueprint-starter prompt of the domain's entry in `catalog/domain-map/domain-list.json`. Seeded with the prompts of all 147 entries then in that file. `scripts/emit_domain_list.ts` now uses `catalog_prompt` as the entry prompt; when it is empty, the emitter generates a prompt and saves it there (never with `--stdout`, never overwriting). Loader: `.tmp_deploy/add_catalog_prompt_2026_10_23.ts`.
+
+**Status.** Active.

@@ -1,0 +1,13 @@
+{
+  "DATA-AI-PLAT": "Design a system that helps us bring all our data, pipelines, governance, analytics, and AI models onto one platform, so every team builds on the same trusted data.",
+  "DSPM": "My agent needs a system to find sensitive data across our cloud stores and SaaS apps, see who can reach it, and fix risky access before it leaks.",
+  "EPM": "I need a system to budget, forecast, and model scenarios in one place, so finance plans with driver-based numbers instead of spreadsheets.",
+  "HCMS": "Set up a system that lets us manage our content once and deliver it through APIs to every website, app, and channel.",
+  "KGP": "My agent needs a system to model our business as a connected knowledge graph that our apps can query and reason over.",
+  "LCAP": "We need a tool to design and run custom business applications visually, without writing code.",
+  "RE-INVEST": "Our team needs software to run our real estate funds end to end: underwrite acquisitions, value the portfolio, call capital, distribute returns, and report to investors.",
+  "REAL-EST": "Set up a system that lets us manage our properties, leases, workplaces, and building operations from one place.",
+  "SAM": "Can you build us something to know every software license we own, match it to what is installed, and be ready for every vendor audit?",
+  "UEM": "Design a system that helps us enroll, configure, and secure every laptop, phone, and tablet we own, across all operating systems.",
+  "WFM": "Help me build an app to schedule shifts, track time and attendance, manage leave, and forecast labor while staying compliant with labor law."
+}

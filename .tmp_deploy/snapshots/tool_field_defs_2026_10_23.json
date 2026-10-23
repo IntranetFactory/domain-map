@@ -1,0 +1,43 @@
+[
+  {
+    "id": "domain_module_tools.requirement_level",
+    "description": "Whether the tool is irreducible for this unit's primary workflows (`required`) or covers a degraded / augmenting mode (`optional`). Carried verbatim from the migrated `skill_tools` rows; the coverage rollup counts only `required` tools in its denominator.",
+    "enum_values": [
+      "required",
+      "optional"
+    ],
+    "default_value": "required"
+  },
+  {
+    "id": "process_tools.requirement_level",
+    "description": "Whether the tool is irreducible for this unit's primary workflows (`required`) or covers a degraded / augmenting mode (`optional`). Carried verbatim from the migrated `skill_tools` rows; the coverage rollup counts only `required` tools in its denominator.",
+    "enum_values": [
+      "required",
+      "optional"
+    ],
+    "default_value": "required"
+  },
+  {
+    "id": "tools.coverage_tier",
+    "description": "Where the tool's implementation lives today: `platform` = Semantius covers it natively; `external` = the customer must bring an external integration; `integration` = the platform maintains a curated OOTB integration (e.g. an MCP server in the Semantius catalog). Score derivations read this column, not `operation_kind`. Flip from `external` to `platform` only when the capability is shipped on BOTH the `crud` MCP server AND the `semantius` CLI; shipping one without the other does not count.",
+    "enum_values": [
+      "platform",
+      "external",
+      "integration"
+    ],
+    "default_value": "external"
+  },
+  {
+    "id": "tools.operation_kind",
+    "description": "What shape of work the tool performs. `query` and `mutate` read or write Semantius-mastered structured business data; `fetch` reads external data via a vendor API (no Semantius-side data model); `side_effect` triggers an external action with no business-data return; `compute` is pure computation, AI, or web automation; `inbound` receives an external event or message. The Semantius score derivation reads from `coverage_tier`, not from this column.",
+    "enum_values": [
+      "query",
+      "mutate",
+      "side_effect",
+      "compute",
+      "inbound",
+      "fetch"
+    ],
+    "default_value": "query"
+  }
+]

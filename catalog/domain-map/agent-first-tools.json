@@ -1,0 +1,757 @@
+{
+  "generated": "2026-10-23",
+  "tier": "agent_first",
+  "definition": "Tools an agent can use through an agent-ready outside service (an MCP server or a self-serve API) with a subscription and no integration work. Counted in semantius_agent_first, not in semantius_agent_core.",
+  "status_legend": {
+    "official": "MCP server or agent toolkit published by the vendor",
+    "official_beta": "vendor-published, in beta or early access",
+    "community": "open-source or third-party server over the vendor's public API",
+    "aggregator": "multi-app MCP gateway (Zapier, viaSocket) exposing the vendor's actions"
+  },
+  "caveat": "Researched from vendor docs, directories and reviews on 2026-10-23; directory listings disagree in places. Verify endpoints and scopes in each vendor's own documentation before relying on them.",
+  "tools": [
+    {
+      "tool_name": "execute_payment",
+      "operation_kind": "side_effect",
+      "description": "Initiate a payment via an external payment processor. Settlement returns via webhook.",
+      "domains": [
+        "B2C-COMM",
+        "FARMER-DIRECT-SALES",
+        "MARINA-MGMT",
+        "STR-MGMT"
+      ],
+      "providers": [
+        {
+          "vendor": "Stripe",
+          "offering": "Hosted MCP server mcp.stripe.com and Agent Toolkit (@stripe/mcp)",
+          "status": "official",
+          "url": "https://ecommerceguide.com/mcp/stripe-official-mcp/"
+        },
+        {
+          "vendor": "PayPal",
+          "offering": "Agent Toolkit & MCP Server (orders, invoices, subscriptions, disputes)",
+          "status": "official",
+          "url": "https://paypal.gitbook.com/agent-toolkit-and-mcp-server"
+        },
+        {
+          "vendor": "Square",
+          "offering": "Remote MCP server (beta), mcp.squareup.com, OAuth",
+          "status": "official_beta",
+          "url": "https://mcpservers.org/en/servers/square/square-mcp-server"
+        }
+      ],
+      "official_providers": 3
+    },
+    {
+      "tool_name": "fetch_competitor_rates",
+      "operation_kind": "fetch",
+      "description": "Fetch comparable-listing nightly rates and market demand signals from external pricing data sources.",
+      "domains": [
+        "STR-MGMT"
+      ],
+      "providers": [
+        {
+          "vendor": "AirROI",
+          "offering": "MCP server for comparable-listing rates and market demand",
+          "status": "official",
+          "url": "https://airroi.com/mcp-server/compare"
+        },
+        {
+          "vendor": "PriceLabs",
+          "offering": "PriceLabs MCP (beta): listing and market performance data",
+          "status": "official_beta",
+          "url": "https://www.rentalscaleup.com/weve-been-explaining-mcp-in-theory-pricelabs-new-ai-connector-lets-us-show-you-in-practice/"
+        }
+      ],
+      "official_providers": 2
+    },
+    {
+      "tool_name": "fetch_meta_ads_insights",
+      "operation_kind": "fetch",
+      "description": "Fetch campaign, ad-set, and ad delivery insights from the Meta (Facebook / Instagram) Marketing API.",
+      "domains": [
+        "SOCIAL-ADS"
+      ],
+      "providers": [
+        {
+          "vendor": "Meta",
+          "offering": "Meta Ads MCP server mcp.facebook.com/ads (reporting, campaigns, catalogs, tests)",
+          "status": "official",
+          "url": "https://improvado.io/blog/google-ads-meta-ads-mcp-claude"
+        },
+        {
+          "vendor": "Pipeboard",
+          "offering": "Meta Ads MCP, meta-ads.mcp.pipeboard.co (42 tools incl. insights)",
+          "status": "community",
+          "url": "https://github.com/pipeboard-co/meta-ads-mcp"
+        }
+      ],
+      "official_providers": 1
+    },
+    {
+      "tool_name": "fetch_seo_serp_data",
+      "operation_kind": "fetch",
+      "description": "Fetch search-engine results and ranking data from an external SEO data source for technical SEO context.",
+      "domains": [
+        "WEB-CONTOPS"
+      ],
+      "providers": [
+        {
+          "vendor": "DataForSEO",
+          "offering": "MCP server for SERP API (Google, Bing, Yahoo, Baidu), pay-as-you-go",
+          "status": "official",
+          "url": "https://nightwatch.io/blog/best-seo-mcp-servers/"
+        },
+        {
+          "vendor": "Ahrefs",
+          "offering": "Official MCP server over API v3 (keywords, rank tracking, site audit), read-only",
+          "status": "official",
+          "url": "https://dashthis.com/blog/seo-mcp/"
+        },
+        {
+          "vendor": "Semrush",
+          "offering": "Official MCP server for Semrush APIs (SEO, traffic, market data)",
+          "status": "official",
+          "url": "https://dashthis.com/blog/seo-mcp/"
+        }
+      ],
+      "official_providers": 3
+    },
+    {
+      "tool_name": "fetch_social_share_engagement",
+      "operation_kind": "fetch",
+      "description": "Fetch engagement data (clicks, reactions, comments, reach) for a posted share from the external social network API.",
+      "domains": [
+        "EMP-ADVOCACY"
+      ],
+      "providers": [
+        {
+          "vendor": "Ayrshare",
+          "offering": "MCP server over its API, which includes post analytics (posting and analytics scope disputed)",
+          "status": "official",
+          "url": "https://www.elitecontentmarketer.com/stack/ayrshare/"
+        },
+        {
+          "vendor": "Zapier",
+          "offering": "Zapier MCP actions for social networks",
+          "status": "aggregator",
+          "url": "https://zapier.com/mcp/linkedin-ads"
+        }
+      ],
+      "official_providers": 1,
+      "note": "Buffer's MCP server is create-only and pulls no metrics. Engagement-read coverage is thin."
+    },
+    {
+      "tool_name": "fetch_toolchain_work_items",
+      "operation_kind": "fetch",
+      "description": "Fetch work items and delivery events from an external delivery tool through a configured connection, to mirror into the value-stream model.",
+      "domains": [
+        "VSM"
+      ],
+      "providers": [
+        {
+          "vendor": "Atlassian",
+          "offering": "Remote MCP server for Jira and Confluence (Cloud)",
+          "status": "official",
+          "url": "https://docs.litellm.ai/docs/mcp_servers/atlassian"
+        },
+        {
+          "vendor": "GitHub",
+          "offering": "github/github-mcp-server (issues, pull requests, Actions), remote and local",
+          "status": "official",
+          "url": "https://docs.github.com/en/copilot/how-tos/context/model-context-protocol/using-the-github-mcp-server"
+        },
+        {
+          "vendor": "Linear",
+          "offering": "Official MCP server (issues, projects, cycles)",
+          "status": "official",
+          "url": "https://enterprisedna.co/directories/mcp/linear"
+        }
+      ],
+      "official_providers": 3
+    },
+    {
+      "tool_name": "make_phone_call",
+      "operation_kind": "side_effect",
+      "description": "Place an outbound phone call through a voice provider (SIP or REST). No business-data return.",
+      "domains": [
+        "CCAAS",
+        "SALES-ENG"
+      ],
+      "providers": [
+        {
+          "vendor": "Twilio",
+          "offering": "twilio-labs/mcp (Programmable Voice endpoints)",
+          "status": "official",
+          "url": "https://www.activepieces.com/blog/twilio-mcp-server-setup-for-claude-and-ai-agents-2026.md"
+        },
+        {
+          "vendor": "Telnyx",
+          "offering": "Remote MCP server api.telnyx.com/v2/mcp (telephony, AI assistants)",
+          "status": "official",
+          "url": "https://mcpservers.org/servers/team-telnyx/ai"
+        },
+        {
+          "vendor": "Vonage",
+          "offering": "Telephony MCP server (voice calls and SMS over the Vonage API)",
+          "status": "community",
+          "url": "https://glama.ai/mcp/servers/wlvbp1rtzh"
+        }
+      ],
+      "official_providers": 2
+    },
+    {
+      "tool_name": "optimize_nightly_rate",
+      "operation_kind": "compute",
+      "description": "Compute a recommended nightly rate from demand, seasonality, lead-time, and competitor-set signals.",
+      "domains": [
+        "STR-MGMT"
+      ],
+      "providers": [
+        {
+          "vendor": "PriceLabs",
+          "offering": "PriceLabs MCP (beta): read listings and performance, change base / min / max prices and date overrides",
+          "status": "official_beta",
+          "url": "https://developers.pricelabs.co/mcp/overview"
+        },
+        {
+          "vendor": "AirROI",
+          "offering": "MCP server for short-term rental market and pricing data",
+          "status": "official",
+          "url": "https://airroi.com/mcp-server/compare"
+        }
+      ],
+      "official_providers": 2,
+      "note": "No AirDNA MCP server found."
+    },
+    {
+      "tool_name": "optimize_route",
+      "operation_kind": "compute",
+      "description": "Compute an optimized travel route across a set of scheduled field visits under technician skill, parts, SLA, and geography constraints.",
+      "domains": [
+        "FSM"
+      ],
+      "providers": [
+        {
+          "vendor": "Mapbox",
+          "offering": "Official MCP server (directions, traveling-salesman optimization up to 12 stops, matrices), mcp.mapbox.com",
+          "status": "official",
+          "url": "https://github.com/mapbox/mcp-server/wiki"
+        },
+        {
+          "vendor": "Google Maps Platform",
+          "offering": "Maps Grounding Lite managed MCP server (geospatial data and routing); stop sequencing not confirmed",
+          "status": "official",
+          "url": "https://glama.ai/mcp/servers/as9a9ehjoh"
+        }
+      ],
+      "official_providers": 2
+    },
+    {
+      "tool_name": "post_social_message",
+      "operation_kind": "side_effect",
+      "description": "Publish a post or comment to an external social media platform. No business-data return.",
+      "domains": [
+        "SMM"
+      ],
+      "providers": [
+        {
+          "vendor": "Buffer",
+          "offering": "Official MCP server mcp.buffer.com/mcp (create scheduled posts and drafts; create-only)",
+          "status": "official",
+          "url": "https://www.post-bridge.com/best-social-media-mcp-servers"
+        },
+        {
+          "vendor": "Ayrshare",
+          "offering": "Hosted MCP server for its social API (sources conflict on whether it can post or only reads docs)",
+          "status": "official",
+          "url": "https://www.ayrshare.com/compare/buffer-api-alternative/"
+        }
+      ],
+      "official_providers": 2
+    },
+    {
+      "tool_name": "post_to_social_network",
+      "operation_kind": "side_effect",
+      "description": "Post an advocate's reshare to an external personal social network (LinkedIn, X, Facebook) the platform does not own.",
+      "domains": [
+        "EMP-ADVOCACY"
+      ],
+      "providers": [
+        {
+          "vendor": "Buffer",
+          "offering": "Official MCP server (posts to connected personal and company profiles)",
+          "status": "official",
+          "url": "https://www.post-bridge.com/best-social-media-mcp-servers"
+        },
+        {
+          "vendor": "Ayrshare",
+          "offering": "Hosted MCP server for its multi-network posting API",
+          "status": "official",
+          "url": "https://www.elitecontentmarketer.com/stack/ayrshare/"
+        }
+      ],
+      "official_providers": 2
+    },
+    {
+      "tool_name": "push_ad_platform_campaign",
+      "operation_kind": "fetch",
+      "description": "Push campaign, ad-set, ad, and budget changes out to the Meta, TikTok, and LinkedIn ad platforms via their Marketing APIs.",
+      "domains": [
+        "SOCIAL-ADS"
+      ],
+      "providers": [
+        {
+          "vendor": "Meta",
+          "offering": "Meta Ads MCP server (campaign creation and edits)",
+          "status": "official",
+          "url": "https://improvado.io/blog/google-ads-meta-ads-mcp-claude"
+        },
+        {
+          "vendor": "Pipeboard",
+          "offering": "Meta, TikTok and LinkedIn Ads MCP servers (write tools)",
+          "status": "community",
+          "url": "https://pipeboard.co/guides/ads-mcp"
+        }
+      ],
+      "official_providers": 1,
+      "note": "Google's open-source Google Ads MCP server is read-only, so it does not cover this tool."
+    },
+    {
+      "tool_name": "scan_content_accessibility",
+      "operation_kind": "compute",
+      "description": "Scan internal content against accessibility standards and return findings.",
+      "domains": [
+        "INTRANET-GOV"
+      ],
+      "providers": [
+        {
+          "vendor": "Deque",
+          "offering": "axe MCP Server (analyze and remediate; needs an axe DevTools subscription)",
+          "status": "official",
+          "url": "https://docs.deque.com/devtools-server/4.0.0/en/axe-mcp-server"
+        },
+        {
+          "vendor": "mcp-axe (open source)",
+          "offering": "MCP plugin running axe-core via Playwright or Selenium (URLs, HTML, batches)",
+          "status": "community",
+          "url": "https://pypi.org/project/mcp-axe/"
+        },
+        {
+          "vendor": "Accessibility Testing MCP (open source)",
+          "offering": "axe-core plus IBM Equal Access checks",
+          "status": "community",
+          "url": "https://glama.ai/mcp/servers/@joe-watkins/accessibility-testing-mcp/blob/daa40b86739dc1f78000ad73bfd9634a5c05b111/README.md"
+        }
+      ],
+      "official_providers": 1
+    },
+    {
+      "tool_name": "send_sms",
+      "operation_kind": "side_effect",
+      "description": "Send an SMS through an external messaging provider. No business-data return.",
+      "domains": [],
+      "providers": [
+        {
+          "vendor": "Twilio",
+          "offering": "twilio-labs/mcp (Twilio API incl. Messaging)",
+          "status": "official",
+          "url": "https://chatforest.com/reviews/telecommunications-messaging-mcp-servers/"
+        },
+        {
+          "vendor": "Telnyx",
+          "offering": "Remote MCP server api.telnyx.com/v2/mcp (messaging, telephony)",
+          "status": "official",
+          "url": "https://mcpservers.org/servers/team-telnyx/ai"
+        },
+        {
+          "vendor": "Vonage",
+          "offering": "Telephony MCP server over the Vonage API (Vonage's own server covers docs only)",
+          "status": "community",
+          "url": "https://glama.ai/mcp/servers/wlvbp1rtzh"
+        }
+      ],
+      "official_providers": 2
+    },
+    {
+      "tool_name": "sign_document",
+      "operation_kind": "side_effect",
+      "description": "Send a document for e-signature through an external e-signature provider. Envelope lifecycle returns via webhook.",
+      "domains": [
+        "ACCT-PRACT-MGMT",
+        "ACTIVITY-BOOKING",
+        "ATS",
+        "BEN-ADMIN",
+        "CLM",
+        "CWM",
+        "HCM",
+        "ITAM",
+        "LEGAL-PRACT-MGMT",
+        "MARINA-MGMT",
+        "ONBOARDING",
+        "RE-BROKERAGE",
+        "RE-CRE",
+        "RE-PROP-MGMT",
+        "REAL-EST",
+        "REAL-ESTATE-AGENT",
+        "SAM",
+        "SMP",
+        "TALENT-MGMT"
+      ],
+      "providers": [
+        {
+          "vendor": "DocuSign",
+          "offering": "Hosted MCP server (beta), mcp-d.docusign.com/mcp, OAuth",
+          "status": "official_beta",
+          "url": "https://chatforest.com/reviews/e-signature-digital-signing-mcp-servers/"
+        },
+        {
+          "vendor": "SignWell",
+          "offering": "MCP server (@signwell/mcp)",
+          "status": "official",
+          "url": "https://mcp.so/servers/signwell-mcp"
+        },
+        {
+          "vendor": "Dropbox Sign",
+          "offering": "mcp-dropbox-sign (signature requests, templates, bulk send)",
+          "status": "community",
+          "url": "https://mcpservers.org/de/servers/bmbouter/mcp-dropbox-sign"
+        }
+      ],
+      "official_providers": 2
+    },
+    {
+      "tool_name": "submit_redirect_request",
+      "operation_kind": "side_effect",
+      "description": "Submit a redirect request to the delivery platform when a broken link or retired page needs a forwarding rule.",
+      "domains": [
+        "WEB-CONTOPS"
+      ],
+      "providers": [
+        {
+          "vendor": "Netlify",
+          "offering": "Netlify MCP Server (Netlify API and CLI: projects, deploys, configuration)",
+          "status": "official",
+          "url": "https://docs.netlify.com/welcome/build-with-ai/netlify-mcp-server"
+        },
+        {
+          "vendor": "Vercel",
+          "offering": "Remote MCP server mcp.vercel.com (projects and deployments), OAuth",
+          "status": "official",
+          "url": "https://mcpservers.org/remote-mcp-servers/vercel"
+        }
+      ],
+      "official_providers": 2,
+      "note": "Redirect rules are part of each platform's project configuration; a dedicated redirect tool was not confirmed for either server."
+    },
+    {
+      "tool_name": "transcribe_audio",
+      "operation_kind": "compute",
+      "description": "Transcribe spoken audio to text via an external speech-to-text (ASR) engine.",
+      "domains": [
+        "CCAAS",
+        "CRM",
+        "REV-INTEL"
+      ],
+      "providers": [
+        {
+          "vendor": "ElevenLabs",
+          "offering": "elevenlabs-mcp (speech-to-text among its tools; local server deprecated in favor of the hosted one, which focuses on voice agents)",
+          "status": "official",
+          "url": "https://www.developersdigest.tech/mcp-servers/elevenlabs-mcp-local"
+        },
+        {
+          "vendor": "AssemblyAI",
+          "offering": "MCP server for the AssemblyAI API (transcribe, search transcripts)",
+          "status": "official",
+          "url": "https://sonix.ai/resources/mcp-servers-speech-to-text-transcription/"
+        },
+        {
+          "vendor": "Deepgram",
+          "offering": "Deepgram CLI with a built-in MCP server proxying the developer API",
+          "status": "official",
+          "url": "https://sonix.ai/resources/mcp-servers-speech-to-text-transcription/"
+        }
+      ],
+      "official_providers": 3
+    },
+    {
+      "tool_name": "trigger_external_a11y_rescan",
+      "operation_kind": "side_effect",
+      "description": "Trigger an external accessibility scanner to re-crawl a page or property after remediation.",
+      "domains": [
+        "WEB-CONTOPS"
+      ],
+      "providers": [
+        {
+          "vendor": "Deque",
+          "offering": "Axe Monitor MCP Server (monitored site scans)",
+          "status": "official",
+          "url": "https://docs.deque.com/monitor/8.8/en/monitor-mcp"
+        },
+        {
+          "vendor": "mcp-axe (open source)",
+          "offering": "On-demand axe-core rescans of URLs",
+          "status": "community",
+          "url": "https://pypi.org/project/mcp-axe/"
+        }
+      ],
+      "official_providers": 1
+    }
+  ],
+  "reclassified": [
+    {
+      "tool_name": "fetch_exploit_intel",
+      "operation_kind": "fetch",
+      "description": "fetch_exploit_intel",
+      "domains": [
+        "VULN-MGMT"
+      ],
+      "providers": [
+        {
+          "vendor": "Exploit Intelligence Platform",
+          "offering": "eip-mcp (VulnCheck KEV, EPSS, CISA KEV, ExploitDB), read-only",
+          "status": "community",
+          "url": "https://mcpservers.org/servers/exploitintel/eip-mcp"
+        },
+        {
+          "vendor": "Shodan",
+          "offering": "Shodan MCP servers (CVEDB lookups with EPSS and KEV)",
+          "status": "community",
+          "url": "https://glama.ai/mcp/servers/Cyreslab-AI/shodan-mcp-server"
+        },
+        {
+          "vendor": "cve-mcp (open source)",
+          "offering": "NVD, EPSS, CISA KEV, GitHub Advisory, OSV in 23 tools",
+          "status": "community",
+          "url": "https://images.glama.ai/mcp/servers/badchars/cve-mcp"
+        }
+      ],
+      "official_providers": 0,
+      "note": "The underlying feeds (CISA KEV, EPSS, NVD) are public, so an agent can also read them with web fetch.",
+      "moved_to": "vendor_platform",
+      "reason": "No vendor-maintained MCP server or agent toolkit; only community or aggregator servers."
+    },
+    {
+      "tool_name": "fetch_linkedin_ads_insights",
+      "operation_kind": "fetch",
+      "description": "Fetch campaign analytics from the LinkedIn Marketing (Campaign Manager) API.",
+      "domains": [
+        "SOCIAL-ADS"
+      ],
+      "providers": [
+        {
+          "vendor": "Zapier",
+          "offering": "Zapier MCP with LinkedIn Ads actions",
+          "status": "aggregator",
+          "url": "https://zapier.com/mcp/linkedin-ads"
+        },
+        {
+          "vendor": "Pipeboard",
+          "offering": "Ads MCP listing LinkedIn (campaigns, creatives, audience and demographic reporting)",
+          "status": "community",
+          "url": "https://pipeboard.co/guides/ads-mcp"
+        }
+      ],
+      "official_providers": 0,
+      "note": "No LinkedIn-maintained MCP server found; sources conflict on Pipeboard's LinkedIn coverage.",
+      "moved_to": "vendor_platform",
+      "reason": "No vendor-maintained MCP server or agent toolkit; only community or aggregator servers."
+    },
+    {
+      "tool_name": "fetch_livestock_market_prices",
+      "operation_kind": "fetch",
+      "description": "Fetch current saleyard and market price indicators for livestock classes from an external market-price feed.",
+      "domains": [
+        "LIVESTOCK-MGMT"
+      ],
+      "providers": [
+        {
+          "vendor": "pipeworx NASS MCP (open source)",
+          "offering": "USDA NASS QuickStats incl. cattle (annual survey data, not daily prices)",
+          "status": "community",
+          "url": "https://glama.ai/mcp/servers/pipeworx-io/mcp-nass"
+        }
+      ],
+      "official_providers": 0,
+      "note": "No MCP server found for daily livestock prices. USDA AMS LMPRS publishes them through a public API without authentication.",
+      "moved_to": "vendor_platform",
+      "reason": "Fewer than 2 providers with agent-ready access."
+    },
+    {
+      "tool_name": "fetch_tiktok_ads_insights",
+      "operation_kind": "fetch",
+      "description": "Fetch delivery and conversion insights from the TikTok Marketing API.",
+      "domains": [
+        "SOCIAL-ADS"
+      ],
+      "providers": [
+        {
+          "vendor": "Pipeboard",
+          "offering": "TikTok Ads MCP, tiktok-ads.mcp.pipeboard.co (59 tools incl. insights)",
+          "status": "community",
+          "url": "https://pipeboard.co/guides/ads-mcp"
+        },
+        {
+          "vendor": "Adspirer",
+          "offering": "Multi-platform ads MCP (listed among 2026 ad MCP servers)",
+          "status": "community",
+          "url": "https://www.adspirer.com/blog/best-ad-mcp-servers-2026"
+        }
+      ],
+      "official_providers": 0,
+      "note": "No TikTok-maintained MCP server found; second provider's TikTok coverage not confirmed.",
+      "moved_to": "vendor_platform",
+      "reason": "No vendor-maintained MCP server or agent toolkit; only community or aggregator servers."
+    },
+    {
+      "tool_name": "generate_image",
+      "operation_kind": "compute",
+      "description": "Generate an image from a text prompt via an external image generator.",
+      "domains": [
+        "SMM"
+      ],
+      "providers": [
+        {
+          "vendor": "Replicate",
+          "offering": "mcp-server-replicate (Flux, SDXL and other hosted models)",
+          "status": "community",
+          "url": "https://pypi.org/project/mcp-server-replicate/"
+        },
+        {
+          "vendor": "fal.ai",
+          "offering": "fal.ai MCP servers (text-to-image, LoRA styles, image editing)",
+          "status": "community",
+          "url": "https://lobehub.com/mcp?q=fal+ai"
+        }
+      ],
+      "official_providers": 0,
+      "note": "No vendor-maintained image-generation MCP server confirmed; the servers wrap the vendors' public APIs.",
+      "moved_to": "vendor_platform",
+      "reason": "No vendor-maintained MCP server or agent toolkit; only community or aggregator servers."
+    },
+    {
+      "tool_name": "purge_cdn_cache",
+      "operation_kind": "side_effect",
+      "description": "Purge cached assets from the content delivery network after a publish or unpublish.",
+      "domains": [
+        "DXP"
+      ],
+      "providers": [
+        {
+          "vendor": "Cloudflare",
+          "offering": "Official remote MCP server suite (DNS, Workers, R2, ...); cache purge through the community cloudflare-api-mcp server",
+          "status": "community",
+          "url": "https://glama.ai/mcp/servers/@zueai/cloudflare-api-mcp/inspect"
+        },
+        {
+          "vendor": "Fastly",
+          "offering": "FastlyMCP (Fastly API and CLI, incl. cache purge)",
+          "status": "community",
+          "url": "https://mcpservers.org/zh-CN/servers/Arodoid/FastlyMCP"
+        }
+      ],
+      "official_providers": 0,
+      "note": "Cloudflare's official servers do not list cache purge; both purge paths are community servers.",
+      "moved_to": "vendor_platform",
+      "reason": "No vendor-maintained MCP server or agent toolkit; only community or aggregator servers."
+    },
+    {
+      "tool_name": "send_ad_conversion_event",
+      "operation_kind": "fetch",
+      "description": "Send a server-side conversion event to an ad platform via the Meta Conversions API or TikTok Events API.",
+      "domains": [
+        "SOCIAL-ADS"
+      ],
+      "providers": [
+        {
+          "vendor": "Meta",
+          "offering": "Meta Ads MCP server covers signal health; Conversions API event sending not confirmed",
+          "status": "official",
+          "url": "https://improvado.io/blog/google-ads-meta-ads-mcp-claude"
+        }
+      ],
+      "official_providers": 1,
+      "note": "No MCP server found that sends server-side conversion events (Meta Conversions API, TikTok Events API).",
+      "moved_to": "vendor_platform",
+      "reason": "Fewer than 2 providers with agent-ready access."
+    },
+    {
+      "tool_name": "syndicate_to_google_merchant",
+      "operation_kind": "side_effect",
+      "description": "Push product listings to a search-engine shopping feed endpoint.",
+      "domains": [
+        "PIM"
+      ],
+      "providers": [
+        {
+          "vendor": "gmc-mcp (open source)",
+          "offering": "MCP server on Merchant API v1 (126 tools, dry-run and rollback)",
+          "status": "community",
+          "url": "https://pypi.org/project/gmc-mcp"
+        },
+        {
+          "vendor": "viaSocket",
+          "offering": "Hosted Google Merchant MCP (list, add, update, delete products)",
+          "status": "aggregator",
+          "url": "https://viasocket.com/mcp/google-merchant"
+        }
+      ],
+      "official_providers": 0,
+      "note": "No Google-maintained Merchant Center MCP server found.",
+      "moved_to": "vendor_platform",
+      "reason": "No vendor-maintained MCP server or agent toolkit; only community or aggregator servers."
+    },
+    {
+      "tool_name": "syndicate_to_shopify",
+      "operation_kind": "side_effect",
+      "description": "Push product listings and updates to a hosted ecommerce platform's product REST API.",
+      "domains": [
+        "PIM"
+      ],
+      "providers": [
+        {
+          "vendor": "Shopify Admin MCP (open source)",
+          "offering": "Shopify MCP Server over the GraphQL Admin API (31 tools: products, inventory, orders)",
+          "status": "community",
+          "url": "https://glama.ai/mcp/servers/kgoyal000/shopify-mcp-server"
+        },
+        {
+          "vendor": "Shopify",
+          "offering": "Storefront MCP server (official, storefront scope only, not product admin)",
+          "status": "official",
+          "url": "https://www.cleverence.com/articles/shopify-dev-documentation/storefront-mcp-server-shopify-dev-4821/"
+        }
+      ],
+      "official_providers": 1,
+      "note": "Product write-back runs through community Admin API servers; Shopify's own MCP does not cover listing management.",
+      "moved_to": "vendor_platform",
+      "reason": "No vendor-maintained MCP server or agent toolkit; only community or aggregator servers."
+    },
+    {
+      "tool_name": "embed_text",
+      "operation_kind": "compute",
+      "description": "Compute vector embeddings for text via an external vector embedding model.",
+      "domains": [],
+      "providers": [
+        {
+          "vendor": "Jina AI",
+          "offering": "Remote MCP server mcp.jina.ai (Reader, Embeddings, Reranker; embeddings surface through its dedup tools)",
+          "status": "official",
+          "url": "https://lobehub.com/en/mcp/jina-ai-jina-mcp"
+        },
+        {
+          "vendor": "Pinecone",
+          "offering": "Pinecone MCP server (upsert and semantic search over indexes; pairs with an embedding model)",
+          "status": "official",
+          "url": "https://learn.engineering.vips.edu/mcp/mcp-pinecone-server"
+        }
+      ],
+      "official_providers": 2,
+      "note": "No MCP server found that exposes a plain 'embed this text' tool from a major model provider. Not used by any domain today.",
+      "moved_to": "vendor_platform",
+      "reason": "Only partial MCP coverage: no server exposes plain text embedding from a major model provider."
+    }
+  ],
+  "updated": "2026-10-23"
+}

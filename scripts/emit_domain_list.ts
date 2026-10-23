@@ -7,25 +7,35 @@
 //
 //   {
 //     "name": "ATS",                       // domains.domain_code (the short name)
+//     "title": "Applicant Tracking and Recruiting", // domains.domain_name
+//     "tagline": "...",                    // domains.catalog_tagline ("" when not set)
 //     "domain_class": "point_solution",    // "domain" (top-level market) | "point_solution" (child
 //                                          //   market with its own parent_domain_id)
-//     "prompt": "Build me an applicant tracking system to manage ...",
-//     "department": "Talent Acquisition",  // the owner business function (business_function_domains)
-//     "industry": null,                    // domains.industry_id -> industries.industry_name
+//     "prompt": "I need a system to hire faster ...", // domains.catalog_prompt (filled beforehand by
+//                                          //   scripts/fill_catalog_prompts.ts from the tagline)
+//     "department": ["Human Resources", "Recruiting"], // owner business function (business_function_domains)
+//                                          //   as its path from the top-level function down
+//     "industry": null,                    // domains.industry_id -> industries, as its path from the
+//                                          //   top-level industry down, e.g. ["Agriculture, ...", "Crop Production"]
 //     "entities": ["Job Requisition", ...],// top 10 data objects (domain_data_objects)
 //     "vendors": ["Greenhouse", ...],      // top 10 vendors (solution_domains -> solutions -> vendors)
-//     "semantius_score": 93,               // strict Semantius score, integer percent, or null
+//     "semantius_score": 91,               // % handled by Semantius out of the box, or null
+//     "semantius_agent_core": 98,          // + the agent itself and the customer's office suite, or null
+//     "semantius_agent_first": 100,        // + agent-ready services that need a subscription, or null
 //     "min_org_size": "s"                  // size key of domains.min_org_size ("20 s <500" -> "s"):
 //                                          //   smallest realistic buyer by headcount (xs/s/m/l/xl)
 //   }
 //
-// semantius_score follows domain-map-analyst SKILL.md "Semantius score" (strict_score): distinct
-// tools over domain_module_tools of the domain's primary modules (domain_modules.domain_id) with
-// tools.coverage_tier='platform', divided by all of those distinct tools (required and optional).
-// null when the modules carry no tools (audit band F3), never 0-of-0.
+// The three scores follow domain-map-analyst SKILL.md "Semantius score": the distinct tools over
+// domain_module_tools of the domain's primary modules (domain_modules.domain_id), required and
+// optional, whose tools.coverage_tier is covered, divided by all of those distinct tools.
+// semantius_score covers every semantius* tier; semantius_agent_core adds agent_native +
+// agent_common; semantius_agent_first adds agent_first. null when the modules carry no tools (audit band F3),
+// never 0-of-0.
 //
-// Catalog-only: nothing is researched or written back. Every value comes from the live
-// domain_map module, so an entry with fewer than 10 vendors or entities reflects the catalog.
+// Catalog-only: nothing is researched. Every value comes from the live domain_map module, so an
+// entry with fewer than 10 vendors or entities reflects the catalog. Read-only: it never writes to
+// the catalog. Empty catalog_prompt values are reported; fill them with scripts/fill_catalog_prompts.ts.
 //
 // Standalone test: a vendor counts toward MIN_STANDALONE_VENDORS only through an active
 // (is_active_in_market) solution with coverage_level='primary' on the domain. Bundles have no
@@ -44,10 +54,13 @@
 //             (lowest solution_domains id per vendor: research lists market leaders first), then name.
 //
 // Usage:
-//   bun run scripts/emit_domain_list.ts              # write catalog/domain-map/domain-list.json (all domains)
+//   bun run scripts/emit_domain_list.ts              # write catalog/domain-map/domain-list.json (all entries)
+//                                                    # plus domain-list-100.json (semantius_agent_first = 100)
+//                                                    # and domain-list-others.json (the rest, incl. no score)
+//                                                    # and domain-list-site.json (domains.site_catalog = true)
 //   bun run scripts/emit_domain_list.ts --released   # only domains with a catalog_release date
 //   bun run scripts/emit_domain_list.ts --out p.json # custom output path
-//   bun run scripts/emit_domain_list.ts --stdout     # print the JSON, write nothing
+//   bun run scripts/emit_domain_list.ts --stdout     # print the JSON, write no files
 
 export {};
 
@@ -67,17 +80,20 @@ const OUT_PATH = flagValue("--out") ?? "c:/dev/domain-map/catalog/domain-map/dom
 
 const MIN_STANDALONE_VENDORS = 2;
 const TOP_N = 10;
-const PROMPT_ENTITY_COUNT = 3;
 
 type Entry = {
   name: string;
+  title: string;
+  tagline: string;
   domain_class: "domain" | "point_solution";
   prompt: string;
-  department: string | null;
-  industry: string | null;
+  department: string[] | null;
+  industry: string[] | null;
   entities: string[];
   vendors: string[];
   semantius_score: number | null;
+  semantius_agent_core: number | null;
+  semantius_agent_first: number | null;
   min_org_size: string | null;
 };
 
@@ -104,10 +120,10 @@ const [
 ] = await Promise.all([
     pg(
       "GET",
-      "/domains?select=id,domain_code,domain_name,domain_kind,catalog_release,parent_domain_id,industry_id,min_org_size,record_status&order=domain_code.asc&limit=10000",
+      "/domains?select=id,domain_code,domain_name,catalog_tagline,domain_kind,catalog_release,catalog_prompt,parent_domain_id,industry_id,min_org_size,site_catalog,record_status&order=domain_code.asc&limit=10000",
     ),
-    pg("GET", "/industries?select=id,industry_name&limit=10000"),
-    pg("GET", "/business_functions?select=id,business_function_name&limit=10000"),
+    pg("GET", "/industries?select=id,industry_name,parent_industry_id&limit=10000"),
+    pg("GET", "/business_functions?select=id,business_function_name,parent_business_function_id&limit=10000"),
     pg(
       "GET",
       "/business_function_domains?select=domain_id,business_function_id&responsibility_type=eq.owner&record_status=neq.rejected&limit=20000",
@@ -129,12 +145,38 @@ const [
     ),
     pg("GET", "/vendors?select=id,vendor_name&limit=20000"),
     pg("GET", "/domain_modules?select=id,domain_id&limit=10000"),
-    pg("GET", "/domain_module_tools?select=domain_module_id,tool_id&limit=50000"),
-    pg("GET", "/tools?select=id,coverage_tier&limit=20000"),
+    pg("GET", "/domain_module_tools?select=domain_module_id,tool_id,requirement_level&limit=50000"),
+    pg("GET", "/tools?select=id,tool_name,coverage_tier&limit=20000"),
   ]);
 
 const industryName = new Map<number, string>(industries.map((i: any) => [i.id, i.industry_name]));
+const industryParent = new Map<number, number | null>(industries.map((i: any) => [i.id, i.parent_industry_id]));
+
+// Path of an industry from its top-level ancestor down to itself.
+function industryPath(id: number): string[] {
+  const path: string[] = [];
+  const seen = new Set<number>();
+  for (let cur: number | null | undefined = id; cur != null && !seen.has(cur); cur = industryParent.get(cur)) {
+    seen.add(cur);
+    const name = industryName.get(cur);
+    if (name) path.unshift(name);
+  }
+  return path;
+}
 const functionName = new Map<number, string>(functions.map((f: any) => [f.id, f.business_function_name]));
+const functionParent = new Map<number, number | null>(functions.map((f: any) => [f.id, f.parent_business_function_id]));
+
+// Path of a business function from its top-level ancestor down to itself.
+function functionPath(id: number): string[] {
+  const path: string[] = [];
+  const seen = new Set<number>();
+  for (let cur: number | null | undefined = id; cur != null && !seen.has(cur); cur = functionParent.get(cur)) {
+    seen.add(cur);
+    const name = functionName.get(cur);
+    if (name) path.unshift(name);
+  }
+  return path;
+}
 const vendorName = new Map<number, string>(vendors.map((v: any) => [v.id, v.vendor_name]));
 const dataObjectById = new Map<number, any>(dataObjects.map((o: any) => [o.id, o]));
 const liveDomainIds = new Set<number>(domains.filter((d: any) => d.record_status !== "rejected").map((d: any) => d.id));
@@ -182,58 +224,46 @@ const primaryModuleDomain = new Map<number, number>(
   primaryModules.filter((m: any) => m.domain_id != null).map((m: any) => [m.id, m.domain_id]),
 );
 const toolTier = new Map<number, string>(tools.map((t: any) => [t.id, t.coverage_tier]));
+const toolNameById = new Map<number, string>(tools.map((t: any) => [t.id, t.tool_name]));
 const toolsByDomain = new Map<number, Set<number>>();
+const toolLevelByDomain = new Map<number, Map<number, string>>(); // required wins over optional
 for (const r of dmtRows) {
   const domainId = primaryModuleDomain.get(r.domain_module_id);
   if (domainId == null) continue;
   if (!toolsByDomain.has(domainId)) toolsByDomain.set(domainId, new Set());
   toolsByDomain.get(domainId)!.add(r.tool_id);
+  if (!toolLevelByDomain.has(domainId)) toolLevelByDomain.set(domainId, new Map());
+  const levels = toolLevelByDomain.get(domainId)!;
+  if (levels.get(r.tool_id) !== "required") levels.set(r.tool_id, r.requirement_level);
 }
 
-function semantiusScore(domainId: number): number | null {
+// semantius_score covers every semantius* tier (semantius_crud / _workflow / _platform);
+// each later score adds its agent tiers.
+const isSemantius = (tier: string) => tier.startsWith("semantius");
+const AGENT_CORE_TIERS = new Set(["agent_native", "agent_common"]);
+const AGENT_FIRST_TIERS = new Set([...AGENT_CORE_TIERS, "agent_first"]);
+const SEMANTIUS_ONLY = new Set<string>();
+
+function coverageScore(domainId: number, agentTiers: Set<string>): number | null {
   const toolIds = [...(toolsByDomain.get(domainId) ?? [])];
   if (!toolIds.length) return null;
-  const platform = toolIds.filter((id) => toolTier.get(id) === "platform").length;
-  return Math.round((platform / toolIds.length) * 100);
+  const hits = toolIds.filter((id) => {
+    const tier = toolTier.get(id) ?? "";
+    return isSemantius(tier) || agentTiers.has(tier);
+  }).length;
+  return Math.round((hits / toolIds.length) * 100);
 }
 
-// ---------- prompt ----------
-
-// Lowercase title-cased words for mid-sentence use, keep acronyms and mixed case
-// ("SLA Policies" -> "SLA policies", "AIOps" and "PaaS" unchanged, "Account-Based" -> "account-based").
-function sentenceCase(s: string): string {
-  return s
-    .split(/\s+/)
-    .map((w) =>
-      w
-        .split("-")
-        .map((part) => (/[A-Z]/.test(part.slice(1)) ? part : part.toLowerCase()))
-        .join("-"),
-    )
-    .join(" ");
-}
-
-function article(phrase: string): string {
-  if (/\bsoftware$/i.test(phrase)) return ""; // uncountable: "Build me agency management software"
-  const first = phrase.split(/\s+/)[0] ?? "";
-  if (first.length > 1 && first === first.toUpperCase()) return /^[AEFHILMNORSX]/.test(first) ? "an" : "a";
-  if (/^(uni|use|usa|eu)/i.test(first)) return "a";
-  return /^[aeiou]/i.test(first) ? "an" : "a";
-}
-
-function joinList(items: string[]): string {
-  if (items.length <= 2) return items.join(" and ");
-  return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
-}
-
-const SELF_NAMED_PRODUCT = /\b(system|systems|platform|software|suite|tool|engine|hub|portal|desk)$/i;
-
-function buildPrompt(domainName: string, entityPlurals: string[], index: number): string {
-  const opener = index % 2 === 0 ? "Build me" : "I need";
-  const base = sentenceCase(domainName.replace(/\s*\(.*?\)\s*/g, " ").trim());
-  const product = SELF_NAMED_PRODUCT.test(base) ? base : `${base} system`;
-  const manage = entityPlurals.length ? ` to manage ${joinList(entityPlurals.map(sentenceCase))}` : "";
-  return `${opener} ${[article(product), product].filter(Boolean).join(" ")}${manage}.`;
+// Tools keeping semantius_agent_first below 100: every tier none of the scores covers.
+function scoreGaps(domainId: number): { tool: string; tier: string; requirement: string }[] {
+  const levels = toolLevelByDomain.get(domainId) ?? new Map<number, string>();
+  return [...(toolsByDomain.get(domainId) ?? [])]
+    .filter((id) => {
+      const tier = toolTier.get(id) ?? "";
+      return !isSemantius(tier) && !AGENT_FIRST_TIERS.has(tier);
+    })
+    .map((id) => ({ tool: toolNameById.get(id) ?? `#${id}`, tier: toolTier.get(id) ?? "", requirement: levels.get(id) ?? "" }))
+    .sort((a, b) => a.tier.localeCompare(b.tier) || a.tool.localeCompare(b.tool));
 }
 
 // ---------- build ----------
@@ -244,6 +274,7 @@ const noDepartmentOrIndustry: string[] = [];
 const multiOwner: string[] = [];
 const thinEntities: string[] = [];
 const noScore: string[] = [];
+const noPrompt: string[] = []; // catalog_prompt empty: run scripts/fill_catalog_prompts.ts first
 
 for (const d of domains) {
   if (d.record_status === "rejected") continue;
@@ -256,13 +287,13 @@ for (const d of domains) {
     continue;
   }
 
-  const ownerNames = (ownersByDomain.get(d.id) ?? [])
-    .map((id) => functionName.get(id))
-    .filter((n): n is string => !!n)
-    .sort();
+  const ownerIds = (ownersByDomain.get(d.id) ?? [])
+    .filter((id) => functionName.has(id))
+    .sort((a, b) => functionName.get(a)!.localeCompare(functionName.get(b)!));
+  const ownerNames = ownerIds.map((id) => functionName.get(id)!);
   if (ownerNames.length > 1) multiOwner.push(`${d.domain_code}: picked ${ownerNames[0]} of ${ownerNames.join(", ")}`);
-  const department = ownerNames[0] ?? null;
-  const industry = d.industry_id != null ? (industryName.get(d.industry_id) ?? null) : null;
+  const department = ownerIds.length ? functionPath(ownerIds[0]) : null;
+  const industry = d.industry_id != null && industryName.has(d.industry_id) ? industryPath(d.industry_id) : null;
   if (!department && !industry) {
     noDepartmentOrIndustry.push(d.domain_code);
     continue;
@@ -295,19 +326,21 @@ for (const d of domains) {
     .filter((n): n is string => !!n);
 
   const isPointSolution = d.parent_domain_id != null && liveDomainIds.has(d.parent_domain_id);
+  const prompt: string = d.catalog_prompt?.trim() ?? "";
+  if (!prompt) noPrompt.push(d.domain_code);
   entries.push({
     name: d.domain_code,
+    title: d.domain_name ?? "",
+    tagline: d.catalog_tagline?.trim() ?? "",
     domain_class: isPointSolution ? "point_solution" : "domain",
-    prompt: buildPrompt(
-      d.domain_name,
-      entityObjects.slice(0, PROMPT_ENTITY_COUNT).map((o) => o.plural_label),
-      entries.length,
-    ),
+    prompt,
     department,
     industry,
     entities: entityObjects.map((o) => o.singular_label),
     vendors: vendorList,
-    semantius_score: semantiusScore(d.id),
+    semantius_score: coverageScore(d.id, SEMANTIUS_ONLY),
+    semantius_agent_core: coverageScore(d.id, AGENT_CORE_TIERS),
+    semantius_agent_first: coverageScore(d.id, AGENT_FIRST_TIERS),
     min_org_size: d.min_org_size ? d.min_org_size.split(/\s+/)[1] : null,
   });
   if (entries[entries.length - 1].semantius_score === null) noScore.push(d.domain_code);
@@ -318,12 +351,25 @@ for (const d of domains) {
 entries.sort(
   (a, b) =>
     Number(a.department === null) - Number(b.department === null) ||
-    (a.department ?? a.industry ?? "").localeCompare(b.department ?? b.industry ?? "") ||
+    (a.department?.join(" / ") ?? a.industry?.join(" / ") ?? "").localeCompare(b.department?.join(" / ") ?? b.industry?.join(" / ") ?? "") ||
     a.name.localeCompare(b.name),
 );
 
 // Project rule: em-dashes are forbidden in every emitted artifact.
-const json = JSON.stringify(entries, null, 2).replace(/\u2014/g, "-") + "\n";
+const toJson = (list: object[]) => JSON.stringify(list, null, 2).replace(/\u2014/g, "-") + "\n";
+const json = toJson(entries);
+// Split files next to the main one: fully reachable with agent-ready services vs the rest
+// (including entries without a score).
+const full = entries.filter((e) => e.semantius_agent_first === 100);
+// The site file lists the entries whose domain is flagged domains.site_catalog (maintained by hand).
+const siteCodes = new Set<string>(domains.filter((d: any) => d.site_catalog === true).map((d: any) => d.domain_code));
+const site = entries.filter((e) => siteCodes.has(e.name));
+const siteMissing = [...siteCodes].filter((c) => !site.some((e) => e.name === c)).sort();
+// The others file also names every tool holding semantius_agent_first below 100 (null = no tools).
+const domainIdByCode = new Map<string, number>(domains.map((d: any) => [d.domain_code, d.id]));
+const others = entries
+  .filter((e) => e.semantius_agent_first !== 100)
+  .map((e) => ({ ...e, score_gaps: e.semantius_agent_first === null ? null : scoreGaps(domainIdByCode.get(e.name)!) }));
 
 // ---------- report ----------
 
@@ -343,11 +389,18 @@ report("Skipped: no owner department and no industry (catalog gap)", noDepartmen
 report("Multiple owner functions (first alphabetically kept)", multiOwner);
 report(`Fewer than ${TOP_N} entities`, thinEntities);
 report("No Semantius score: modules carry no domain_module_tools (band F3)", noScore);
+report("site_catalog = true but not in the list (filtered out above)", siteMissing);
+report("Empty catalog_prompt (run scripts/fill_catalog_prompts.ts before exporting)", noPrompt);
 
 if (STDOUT) {
   process.stdout.write(json);
 } else {
   mkdirSync(dirname(OUT_PATH), { recursive: true });
   writeFileSync(OUT_PATH, json, "utf8");
-  console.error(`\nwrote ${OUT_PATH}`);
+  console.error(`\nwrote ${OUT_PATH} (${entries.length})`);
+  for (const [suffix, list] of [["-100", full], ["-others", others], ["-site", site]] as const) {
+    const path = OUT_PATH.replace(/\.json$/, `${suffix}.json`);
+    writeFileSync(path, toJson(list), "utf8");
+    console.error(`wrote ${path} (${list.length})`);
+  }
 }

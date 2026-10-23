@@ -1,0 +1,1497 @@
+[
+  {
+    "name": "FMIS",
+    "title": "Farm Management Information System",
+    "tagline": "Run the whole farm from one record: map every field, plan each season, log every operation, and turn it into yield and profit insight.",
+    "domain_class": "domain",
+    "prompt": "Build me a system to run the whole farm from one record: map every field, plan each season, log every operation, and turn it into yield and profit insight.",
+    "department": [
+      "Business Operations"
+    ],
+    "industry": [
+      "Agriculture, Forestry, Fishing and Hunting",
+      "Crop Production"
+    ],
+    "entities": [
+      "Field",
+      "Field Application",
+      "Crop Plan",
+      "Harvest Record",
+      "Machinery Telemetry Record",
+      "Planting Record",
+      "Ag Input Inventory",
+      "Variable-Rate Prescription"
+    ],
+    "vendors": [
+      "Bayer Crop Science",
+      "Corteva Agriscience",
+      "Conservis Corp",
+      "AgriWebb Pty Ltd",
+      "Trimble Inc",
+      "Deere and Company",
+      "Farmbrite Inc",
+      "AgWorld"
+    ],
+    "semantius_score": 100,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "xs"
+  },
+  {
+    "name": "NCDB",
+    "title": "No-Code Database",
+    "tagline": "Build a database without code. Model your data, capture it through forms, view it your way, and automate the rest.",
+    "domain_class": "domain",
+    "prompt": "Can you build us something to build a database without code. Model our data, capture it through forms, view it our way, and automate the rest?",
+    "department": [
+      "Business Operations"
+    ],
+    "industry": null,
+    "entities": [
+      "No-Code Record Definition",
+      "No-Code Form",
+      "No-Code Automation",
+      "No-Code Base",
+      "No-Code View"
+    ],
+    "vendors": [
+      "Airtable Inc.",
+      "Baserow B.V.",
+      "NocoDB Inc.",
+      "Rows Inc.",
+      "Stackby Solutions",
+      "Notion Labs Inc.",
+      "Grammarly Inc.",
+      "Quickbase",
+      "SmartSuite"
+    ],
+    "semantius_score": 87,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "xs"
+  },
+  {
+    "name": "RE-CRE",
+    "title": "Commercial Real Estate Operations",
+    "tagline": "Manage commercial leases, CAM reconciliations, rent escalations, and stacking plans across office, retail, and industrial portfolios.",
+    "domain_class": "domain",
+    "prompt": "We want to manage commercial leases, CAM reconciliations, rent escalations, and stacking plans across office, retail, and industrial portfolios.",
+    "department": [
+      "Business Operations"
+    ],
+    "industry": [
+      "Real Estate"
+    ],
+    "entities": [
+      "Commercial Lease",
+      "Building Certification",
+      "Sublease Transaction",
+      "CAM Charge",
+      "Stacking Plan",
+      "Tenant Credit Record",
+      "Investment Property"
+    ],
+    "vendors": [
+      "Yardi",
+      "MRI Software",
+      "VTS",
+      "CoStar Group",
+      "Accruent",
+      "Altus Group",
+      "London Computer Systems"
+    ],
+    "semantius_score": 78,
+    "semantius_agent_core": 89,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "WORK-MGMT",
+    "title": "Work Management",
+    "tagline": "Run every team's projects, tasks, and goals in one place, from first request to finished work.",
+    "domain_class": "domain",
+    "prompt": "Build me a system to run every team's projects, tasks, and goals in one place, from first request to finished work.",
+    "department": [
+      "Business Operations"
+    ],
+    "industry": null,
+    "entities": [
+      "Work Item",
+      "Work Project",
+      "Objective / OKR",
+      "Work Automation",
+      "Approval Chain",
+      "Custom Field",
+      "Form",
+      "Form Submission",
+      "Key Result",
+      "OKR Check-in"
+    ],
+    "vendors": [
+      "Monday.com Ltd.",
+      "Asana",
+      "Smartsheet",
+      "Mango Technologies Inc.",
+      "Wrike Inc.",
+      "Atlassian",
+      "37signals LLC",
+      "Teamwork.com Ltd.",
+      "Adobe",
+      "Microsoft"
+    ],
+    "semantius_score": 97,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "xs"
+  },
+  {
+    "name": "CSM",
+    "title": "Customer Service Management",
+    "tagline": "Capture every customer issue, triage it across channels, and resolve it fast against the support level the customer is owed.",
+    "domain_class": "domain",
+    "prompt": "Set up a system that lets us capture every customer issue, triage it across channels, and resolve it fast against the support level the customer is owed.",
+    "department": [
+      "Customer Service"
+    ],
+    "industry": null,
+    "entities": [
+      "Customer Case",
+      "Customer",
+      "Customer Entitlement",
+      "CSAT Response",
+      "Org Unit",
+      "Contract",
+      "Knowledge Article",
+      "Customer Event"
+    ],
+    "vendors": [
+      "ServiceNow Inc",
+      "Salesforce Inc",
+      "Zendesk",
+      "Freshworks",
+      "Intercom",
+      "Ada"
+    ],
+    "semantius_score": 83,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "xs"
+  },
+  {
+    "name": "FSM",
+    "title": "Field Service Management",
+    "tagline": "Schedule, dispatch, and complete on-site service work while keeping equipment, contracts, and customer commitments in sync.",
+    "domain_class": "domain",
+    "prompt": "We need a tool to schedule, dispatch, and complete on-site service work while keeping equipment, contracts, and customer commitments in sync.",
+    "department": [
+      "Customer Service",
+      "Customer Field Service"
+    ],
+    "industry": null,
+    "entities": [
+      "Installed Equipment Unit",
+      "Service Work Order",
+      "Dispatch Record",
+      "Field Visit",
+      "Customer Site",
+      "Service Contract",
+      "Service PM Schedule",
+      "Customer",
+      "Org Unit",
+      "Location"
+    ],
+    "vendors": [
+      "ServiceNow Inc",
+      "IFS",
+      "Salesforce Inc",
+      "PTC",
+      "Jobber",
+      "Praxedo",
+      "Oracle"
+    ],
+    "semantius_score": 89,
+    "semantius_agent_core": 96,
+    "semantius_agent_first": 100,
+    "min_org_size": "xs"
+  },
+  {
+    "name": "DATA-AI-PLAT",
+    "title": "Data and AI Platform",
+    "tagline": "",
+    "domain_class": "domain",
+    "prompt": "Design a system that helps us bring all our data, pipelines, governance, analytics, and AI models onto one platform, so every team builds on the same trusted data.",
+    "department": [
+      "Data and Analytics"
+    ],
+    "industry": null,
+    "entities": [
+      "Semantic Metric",
+      "Data Product",
+      "Ontology",
+      "AI Agent",
+      "Data Pipeline",
+      "Feature Set",
+      "Knowledge Graph Entity",
+      "Lakehouse Table",
+      "ML Model"
+    ],
+    "vendors": [
+      "Palantir Technologies",
+      "Databricks",
+      "Snowflake",
+      "Microsoft",
+      "Google",
+      "Amazon Web Services",
+      "IBM",
+      "SAP SE",
+      "Cloudera",
+      "Dataiku"
+    ],
+    "semantius_score": 100,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "SEM",
+    "title": "Strategy Execution Management",
+    "tagline": "Turn strategy into measurable execution your whole organization can see.",
+    "domain_class": "domain",
+    "prompt": "Our team needs software to turn strategy into measurable execution our whole organization can see.",
+    "department": [
+      "Executive"
+    ],
+    "industry": null,
+    "entities": [
+      "Strategic Initiative",
+      "Operating Review",
+      "Strategy Decision",
+      "Strategy Map",
+      "Objective / OKR"
+    ],
+    "vendors": [
+      "Cascade Strategy",
+      "ClearPoint Strategy",
+      "AchieveIt",
+      "Quantive",
+      "WorkBoard",
+      "Profit.co",
+      "i-nexus",
+      "Spider Strategies",
+      "Envisio",
+      "Microsoft"
+    ],
+    "semantius_score": 86,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "EHS",
+    "title": "Environmental, Health and Safety Management",
+    "tagline": "Keep your people safe and your sites compliant: log incidents, control hazards, run inspections, and stay ahead of OSHA and environmental rules.",
+    "domain_class": "domain",
+    "prompt": "Give my agent a system to keep our people safe and our sites compliant: log incidents, control hazards, run inspections, and stay ahead of OSHA and environmental rules.",
+    "department": [
+      "Facilities and Real Estate"
+    ],
+    "industry": null,
+    "entities": [
+      "Safety Incident",
+      "Corrective Action",
+      "EHS Inspection",
+      "EHS Risk Assessment",
+      "Hazard",
+      "Chemical Inventory Item",
+      "EHS Audit",
+      "EHS Training Record",
+      "Industrial Hygiene Sample",
+      "Contractor Safety Record"
+    ],
+    "vendors": [
+      "Cority",
+      "Intelex",
+      "Sphera",
+      "Wolters Kluwer",
+      "VelocityEHS",
+      "Benchmark Digital Partners"
+    ],
+    "semantius_score": 91,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "RE-INVEST",
+    "title": "Real Estate Investment Management",
+    "tagline": "",
+    "domain_class": "domain",
+    "prompt": "Our team needs software to run our real estate funds end to end: underwrite acquisitions, value the portfolio, call capital, distribute returns, and report to investors.",
+    "department": [
+      "Finance"
+    ],
+    "industry": [
+      "Real Estate"
+    ],
+    "entities": [
+      "Capital Call",
+      "Fund Distribution",
+      "Investment Fund",
+      "Investment Property",
+      "Limited Partner",
+      "Property Valuation",
+      "Asset Management Fee"
+    ],
+    "vendors": [
+      "Altus Group",
+      "Yardi",
+      "MRI Software",
+      "Juniper Square",
+      "AppFolio",
+      "Accruent"
+    ],
+    "semantius_score": 88,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "EXPENSE",
+    "title": "Expense Management",
+    "tagline": "Turn employee spending into clean, policy-checked, reimbursable records from receipt to repayment.",
+    "domain_class": "domain",
+    "prompt": "My agent needs a system to turn employee spending into clean, policy-checked, reimbursable records from receipt to repayment.",
+    "department": [
+      "Finance",
+      "Accounts Payable"
+    ],
+    "industry": null,
+    "entities": [
+      "Expense Line",
+      "Expense Report",
+      "Expense Policy",
+      "Travel Booking",
+      "Corporate Card",
+      "Card Transaction",
+      "Org Unit"
+    ],
+    "vendors": [
+      "Workday",
+      "SAP SE",
+      "Expensify",
+      "Navan",
+      "Rydoo",
+      "Brex",
+      "Ramp",
+      "Airwallex",
+      "Pleo",
+      "Mesh Payments"
+    ],
+    "semantius_score": 100,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "s"
+  },
+  {
+    "name": "SPEND-MGMT",
+    "title": "Corporate Spend Management",
+    "tagline": "Give every team a card, a budget, and clear rules, then see and control company spend in real time.",
+    "domain_class": "domain",
+    "prompt": "My agent needs a system to give every team a card, a budget, and clear rules, then see and control company spend in real time.",
+    "department": [
+      "Finance",
+      "Accounts Payable"
+    ],
+    "industry": null,
+    "entities": [
+      "Spend Policy",
+      "Card Authorization",
+      "Spend Request",
+      "Corporate Card Account",
+      "Vendor Payment Authorization",
+      "Expense Report",
+      "Expense Policy",
+      "Payment Run",
+      "Invoice"
+    ],
+    "vendors": [
+      "Ramp",
+      "Brex",
+      "Airwallex",
+      "Pleo",
+      "Mesh Payments",
+      "Navan",
+      "Spendesk",
+      "BILL",
+      "Coupa",
+      "Workday"
+    ],
+    "semantius_score": 100,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "s"
+  },
+  {
+    "name": "EPM",
+    "title": "Enterprise Performance Management",
+    "tagline": "",
+    "domain_class": "domain",
+    "prompt": "I need a system to budget, forecast, and model scenarios in one place, so finance plans with driver-based numbers instead of spreadsheets.",
+    "department": [
+      "Finance",
+      "Financial Planning and Analysis"
+    ],
+    "industry": null,
+    "entities": [
+      "Financial Plan",
+      "Forecast",
+      "Variance Analysis",
+      "Budget",
+      "Financial Scenario",
+      "Org Unit",
+      "Cost Center"
+    ],
+    "vendors": [
+      "Workday",
+      "Oracle",
+      "Anaplan",
+      "OneStream Software",
+      "Pigment",
+      "Vena Solutions",
+      "Planful",
+      "Board International",
+      "SAP SE",
+      "Prophix Software"
+    ],
+    "semantius_score": 89,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "s"
+  },
+  {
+    "name": "FRONTLINE-COMMS",
+    "title": "Frontline / Deskless Worker Communication",
+    "tagline": "Reach, task, and recognize your frontline workforce from one mobile app, no corporate email required.",
+    "domain_class": "domain",
+    "prompt": "Can you build us something to reach, task, and recognize our frontline workforce from one mobile app, no corporate email required?",
+    "department": [
+      "Human Resources"
+    ],
+    "industry": null,
+    "entities": [
+      "Frontline Broadcast",
+      "Frontline Task",
+      "Content Acknowledgment",
+      "Frontline Recognition",
+      "Frontline Task Submission",
+      "Shift Swap Request",
+      "Frontline Checklist",
+      "Frontline Message Channel",
+      "Frontline Learning Completion",
+      "Frontline Learning Module"
+    ],
+    "vendors": [
+      "WorkJam",
+      "Beekeeper AG",
+      "YOOBIC Ltd",
+      "Speakap B.V.",
+      "Flip GmbH"
+    ],
+    "semantius_score": 89,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "HCM",
+    "title": "Human Capital Management",
+    "tagline": "Run the single source of truth for your workforce, from the employee record to org structure, positions, and the full hire-to-retire lifecycle.",
+    "domain_class": "domain",
+    "prompt": "My agent needs a system to run the single source of truth for our workforce, from the employee record to org structure, positions, and the full hire-to-retire lifecycle.",
+    "department": [
+      "Human Resources"
+    ],
+    "industry": null,
+    "entities": [
+      "Employee",
+      "Org Unit",
+      "Position",
+      "Job Profile",
+      "Employment Event",
+      "Employment Contract",
+      "Worker Change Request",
+      "Work Eligibility Document",
+      "Emergency Contact",
+      "Employee Dependent"
+    ],
+    "vendors": [
+      "Workday",
+      "SAP SE",
+      "Oracle",
+      "UKG",
+      "ADP",
+      "Dayforce",
+      "BambooHR",
+      "HiBob",
+      "Rippling",
+      "Personio"
+    ],
+    "semantius_score": 85,
+    "semantius_agent_core": 95,
+    "semantius_agent_first": 100,
+    "min_org_size": "s"
+  },
+  {
+    "name": "EMP-EXP",
+    "title": "Employee Experience and Engagement",
+    "tagline": "Listen to your workforce continuously and turn what you hear into action that managers actually take.",
+    "domain_class": "point_solution",
+    "prompt": "I need a system to listen to our workforce continuously and turn what we hear into action that managers actually take.",
+    "department": [
+      "Human Resources",
+      "Employee Experience"
+    ],
+    "industry": null,
+    "entities": [
+      "Engagement Driver",
+      "Survey Campaign",
+      "Survey Response",
+      "Engagement Action Plan",
+      "Pulse Question Library",
+      "Employee",
+      "Org Unit"
+    ],
+    "vendors": [
+      "Workday",
+      "Culture Amp",
+      "LinkedIn",
+      "Qualtrics",
+      "Zensai",
+      "Lattice",
+      "15Five",
+      "Firstup Inc",
+      "Haiilo GmbH",
+      "Microsoft"
+    ],
+    "semantius_score": 100,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "s"
+  },
+  {
+    "name": "HRSD",
+    "title": "HR Service Delivery",
+    "tagline": "Give employees one place to ask HR questions, get answers, and track every request to resolution.",
+    "domain_class": "domain",
+    "prompt": "I want to give employees one place to ask HR questions, get answers, and track every request to resolution.",
+    "department": [
+      "Human Resources",
+      "HR Service Delivery"
+    ],
+    "industry": null,
+    "entities": [
+      "HR Case",
+      "HR Case Category",
+      "Employee",
+      "Knowledge Article",
+      "Service Request"
+    ],
+    "vendors": [
+      "ServiceNow Inc",
+      "Workday",
+      "Applaud HR",
+      "Enboarder",
+      "Kallidus",
+      "Leena AI",
+      "Workgrid Software"
+    ],
+    "semantius_score": 77,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "ATS",
+    "title": "Applicant Tracking and Recruiting",
+    "tagline": "Hire faster with a connected pipeline from sourcing through offer acceptance.",
+    "domain_class": "point_solution",
+    "prompt": "Give my agent a system to hire faster with a connected pipeline from sourcing through offer acceptance.",
+    "department": [
+      "Human Resources",
+      "Recruiting"
+    ],
+    "industry": null,
+    "entities": [
+      "Candidate",
+      "Application",
+      "Job Requisition",
+      "Offer",
+      "Background Check",
+      "Interview",
+      "Job Posting",
+      "Talent Pool",
+      "Offer Version",
+      "Pre-Employee"
+    ],
+    "vendors": [
+      "Workday",
+      "Greenhouse Software",
+      "Lever",
+      "iCIMS",
+      "SmartRecruiters",
+      "Ashby",
+      "Eightfold AI",
+      "Phenom",
+      "SAP SE"
+    ],
+    "semantius_score": 89,
+    "semantius_agent_core": 98,
+    "semantius_agent_first": 100,
+    "min_org_size": "s"
+  },
+  {
+    "name": "TALENT-MGMT",
+    "title": "Talent Management",
+    "tagline": "Grow, evaluate, and retain your people with one connected talent practice, from goals and reviews to succession and continuous feedback.",
+    "domain_class": "point_solution",
+    "prompt": "We want to grow, evaluate, and retain our people with one connected talent practice, from goals and reviews to succession and continuous feedback.",
+    "department": [
+      "Human Resources",
+      "Talent Development"
+    ],
+    "industry": null,
+    "entities": [
+      "Career Aspiration",
+      "Performance Review",
+      "Nine-Box Placement",
+      "Succession Plan",
+      "Feedback Record",
+      "Performance Goal",
+      "Talent Calibration",
+      "Employee",
+      "Org Unit",
+      "Position"
+    ],
+    "vendors": [
+      "Workday",
+      "SAP SE",
+      "Lattice",
+      "15Five",
+      "Betterworks",
+      "Cornerstone OnDemand",
+      "Leapsome",
+      "Zensai",
+      "Oracle",
+      "Eightfold AI"
+    ],
+    "semantius_score": 90,
+    "semantius_agent_core": 90,
+    "semantius_agent_first": 100,
+    "min_org_size": "s"
+  },
+  {
+    "name": "REMOTE-ACCESS",
+    "title": "Remote Access and Support",
+    "tagline": "Take control of any workstation or server, with the privilege, recording, and file-transfer controls your auditors expect.",
+    "domain_class": "domain",
+    "prompt": "Our team needs software to take control of any workstation or server, with the privilege, recording, and file-transfer controls our auditors expect.",
+    "department": [
+      "IT Operations"
+    ],
+    "industry": null,
+    "entities": [
+      "Remote Session",
+      "Session Recording"
+    ],
+    "vendors": [
+      "ConnectWise LLC",
+      "Zoho Corporation Pvt. Ltd.",
+      "TeamViewer SE",
+      "AnyDesk Software GmbH",
+      "Splashtop Inc.",
+      "BeyondTrust Corporation",
+      "GoTo Technologies USA, Inc.",
+      "RealVNC Limited",
+      "NinjaOne LLC",
+      "Kaseya Limited"
+    ],
+    "semantius_score": 80,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "xs"
+  },
+  {
+    "name": "WSC",
+    "title": "Workstream Collaboration",
+    "tagline": "Bring your teams into shared channels where conversation, calls, and files stay in one place.",
+    "domain_class": "domain",
+    "prompt": "Create a system so we can bring our teams into shared channels where conversation, calls, and files stay in one place.",
+    "department": [
+      "IT Operations",
+      "End-User Computing"
+    ],
+    "industry": null,
+    "entities": [
+      "Chat Channel",
+      "Chat Message",
+      "Chat Thread",
+      "Chat Message Attachment",
+      "External Guest Invitation",
+      "Channel Member",
+      "Channel File Share",
+      "Chat Huddle"
+    ],
+    "vendors": [
+      "Salesforce Inc",
+      "Microsoft",
+      "Google",
+      "Mattermost",
+      "Rocket.Chat",
+      "Cisco",
+      "Zoom"
+    ],
+    "semantius_score": 88,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "xs"
+  },
+  {
+    "name": "SAM",
+    "title": "Software Asset Management",
+    "tagline": "",
+    "domain_class": "point_solution",
+    "prompt": "Can you build us something to know every software license we own, match it to what is installed, and be ready for every vendor audit?",
+    "department": [
+      "IT Operations",
+      "IT Asset Management"
+    ],
+    "industry": null,
+    "entities": [
+      "Software Title",
+      "Software License",
+      "License Audit",
+      "Software Installation",
+      "Org Unit",
+      "Contract",
+      "Configuration Item"
+    ],
+    "vendors": [
+      "ServiceNow Inc",
+      "Flexera",
+      "Snow Software",
+      "USU Software",
+      "Lansweeper",
+      "Setyl Ltd",
+      "NinjaOne LLC",
+      "Kaseya Limited",
+      "ConnectWise LLC",
+      "N-able Inc."
+    ],
+    "semantius_score": 81,
+    "semantius_agent_core": 94,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "AIOPS",
+    "title": "AIOps",
+    "tagline": "Cut through alert noise and turn a flood of IT signals into a short list of correlated, root-caused issues your teams can act on before users feel the impact.",
+    "domain_class": "domain",
+    "prompt": "Give my agent a system to cut through alert noise and turn a flood of IT signals into a short list of correlated, root-caused issues our teams can act on before users feel the impact.",
+    "department": [
+      "IT Operations",
+      "IT Infrastructure"
+    ],
+    "industry": null,
+    "entities": [
+      "Event Correlation",
+      "Root Cause Analysis",
+      "Anomaly Detection",
+      "Incident Prediction",
+      "Alert Suppression Rule",
+      "ML Model Training Record",
+      "Predictive Signal",
+      "Alert"
+    ],
+    "vendors": [
+      "ServiceNow Inc",
+      "BigPanda",
+      "Datadog",
+      "Dynatrace"
+    ],
+    "semantius_score": 85,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "APM",
+    "title": "Application Portfolio Management",
+    "tagline": "See every application you run, score what it is worth, and decide what to keep, fix, or retire.",
+    "domain_class": "domain",
+    "prompt": "Help me build an app to see every application we run, score what it is worth, and decide what to keep, fix, or retire.",
+    "department": [
+      "IT Operations",
+      "IT Infrastructure"
+    ],
+    "industry": null,
+    "entities": [
+      "Enterprise Application",
+      "Technology Platform",
+      "Application Interface",
+      "Business Capability Map",
+      "Technology Fit Assessment",
+      "Application Total Cost of Ownership",
+      "Application Value Score"
+    ],
+    "vendors": [
+      "ServiceNow Inc",
+      "SAP SE",
+      "MEGA International",
+      "Software AG",
+      "Ardoq",
+      "IBM",
+      "BiZZdesign",
+      "Enterprise Architecture Solutions Ltd.",
+      "Mavim"
+    ],
+    "semantius_score": 100,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "l"
+  },
+  {
+    "name": "CMDB",
+    "title": "Configuration Management Database",
+    "tagline": "Keep one trusted record of every server, application, database, and the connections between them, so changes and incidents can be reasoned about in minutes.",
+    "domain_class": "domain",
+    "prompt": "I need a system to keep one trusted record of every server, application, database, and the connections between them, so changes and incidents can be reasoned about in minutes.",
+    "department": [
+      "IT Operations",
+      "IT Infrastructure"
+    ],
+    "industry": null,
+    "entities": [
+      "Configuration Item",
+      "CI Baseline",
+      "Service Map",
+      "CI Relationship",
+      "CI Class",
+      "Org Unit",
+      "Location",
+      "Hardware Asset",
+      "Change"
+    ],
+    "vendors": [
+      "ServiceNow Inc",
+      "Device42",
+      "BMC Software"
+    ],
+    "semantius_score": 100,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "LCAP",
+    "title": "Low-Code Application Platform",
+    "tagline": "",
+    "domain_class": "domain",
+    "prompt": "We need a tool to design and run custom business applications visually, without writing code.",
+    "department": [
+      "IT Operations",
+      "IT Infrastructure"
+    ],
+    "industry": null,
+    "entities": [
+      "Low-Code App",
+      "Low-Code Business Object",
+      "Low-Code Page",
+      "Low-Code Workflow",
+      "Low-Code Data Source"
+    ],
+    "vendors": [
+      "ServiceNow Inc",
+      "OutSystems",
+      "Siemens",
+      "Microsoft",
+      "Workday",
+      "Appian",
+      "Quickbase",
+      "Retool",
+      "Salesforce Inc",
+      "Pegasystems Inc."
+    ],
+    "semantius_score": 96,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "ITSM",
+    "title": "IT Service Management",
+    "tagline": "Run a responsive IT service desk that resolves incidents, fulfills requests, and ships changes without breaking the business.",
+    "domain_class": "domain",
+    "prompt": "Build me a system to run a responsive IT service desk that resolves incidents, fulfills requests, and ships changes without breaking the business.",
+    "department": [
+      "IT Operations",
+      "IT Service Desk"
+    ],
+    "industry": null,
+    "entities": [
+      "Incident",
+      "Service Request",
+      "Knowledge Article",
+      "Change",
+      "Problem",
+      "SLA",
+      "Service Catalog Item",
+      "CAB Meeting",
+      "Change Collision",
+      "Service Offering"
+    ],
+    "vendors": [
+      "ServiceNow Inc",
+      "Atlassian",
+      "Freshworks",
+      "Ivanti",
+      "BMC Software",
+      "NinjaOne LLC",
+      "Kaseya Limited",
+      "ConnectWise LLC",
+      "Syncro MSP Inc.",
+      "Atera Networks Ltd."
+    ],
+    "semantius_score": 83,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "s"
+  },
+  {
+    "name": "ABM-PLATFORM",
+    "title": "Account-Based Marketing Platform",
+    "tagline": "Know which accounts are in-market, then engage them across ads, web, and orchestration before competitors do.",
+    "domain_class": "domain",
+    "prompt": "We need a tool to know which accounts are in-market, then engage them across ads, web, and orchestration before competitors do.",
+    "department": [
+      "Marketing"
+    ],
+    "industry": null,
+    "entities": [
+      "ABM Campaign",
+      "Account Engagement Score",
+      "Account Identification",
+      "Account Journey",
+      "Ad Campaign Target",
+      "Intent Signal",
+      "Orchestration Playbook",
+      "Web Experience",
+      "Web Personalization Rule",
+      "Web Visitor Resolution"
+    ],
+    "vendors": [
+      "Demandbase",
+      "6sense",
+      "Madison Logic",
+      "NextRoll",
+      "Terminus",
+      "Mutiny"
+    ],
+    "semantius_score": 100,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "s"
+  },
+  {
+    "name": "LOYALTY",
+    "title": "Customer Loyalty Management",
+    "tagline": "Reward repeat customers with points, tiers, and personalized perks that grow customer lifetime value.",
+    "domain_class": "point_solution",
+    "prompt": "I'm looking for a way to reward repeat customers with points, tiers, and personalized perks that grow customer lifetime value.",
+    "department": [
+      "Marketing"
+    ],
+    "industry": null,
+    "entities": [
+      "Loyalty Member",
+      "Loyalty Tier",
+      "Loyalty Transaction",
+      "Redemption Reward",
+      "Redemption Transaction",
+      "Customer"
+    ],
+    "vendors": [
+      "Salesforce Inc",
+      "SAP SE",
+      "Marigold",
+      "Antavo",
+      "Annex Cloud",
+      "LoyaltyLion",
+      "Yotpo"
+    ],
+    "semantius_score": 100,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "xs"
+  },
+  {
+    "name": "PMM",
+    "title": "Product Marketing Management",
+    "tagline": "Run every product launch, win every competitive deal, and arm sales with the right message and content.",
+    "domain_class": "domain",
+    "prompt": "Help me build an app to run every product launch, win every competitive deal, and arm sales with the right message and content.",
+    "department": [
+      "Marketing"
+    ],
+    "industry": null,
+    "entities": [
+      "Battlecard",
+      "Competitive Intelligence Record",
+      "Competitor Profile",
+      "Content Engagement Event",
+      "Launch Plan",
+      "Messaging Framework",
+      "Persona Definition",
+      "Product Launch",
+      "Sales Enablement Content",
+      "Value Proposition"
+    ],
+    "vendors": [
+      "Klue",
+      "Crayon",
+      "Highspot",
+      "Seismic Software Inc",
+      "Aha! Labs Inc."
+    ],
+    "semantius_score": 91,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "s"
+  },
+  {
+    "name": "WEB-CONTOPS",
+    "title": "Web Content Operations & Governance",
+    "tagline": "Govern every page on your public website from one place.",
+    "domain_class": "domain",
+    "prompt": "Design a system that helps us govern every page on our public website from one place.",
+    "department": [
+      "Marketing"
+    ],
+    "industry": null,
+    "entities": [
+      "Brand Voice Violation",
+      "Content Audit",
+      "Accessibility Scan Finding",
+      "Broken Link Finding",
+      "Technical SEO Finding",
+      "Content Lifecycle Plan",
+      "Web Content Inventory Record"
+    ],
+    "vendors": [
+      "Siteimprove A/S",
+      "Bynder",
+      "Acrolinx GmbH",
+      "Conductor LLC",
+      "Lumar",
+      "Optimizely",
+      "AudioEye Inc",
+      "Acquia",
+      "Adobe",
+      "Sitecore"
+    ],
+    "semantius_score": 76,
+    "semantius_agent_core": 86,
+    "semantius_agent_first": 100,
+    "min_org_size": "s"
+  },
+  {
+    "name": "MA",
+    "title": "Marketing Automation",
+    "tagline": "Orchestrate marketing emails, nurture journeys, and lead scoring across email, SMS, push, and the web.",
+    "domain_class": "point_solution",
+    "prompt": "My agent needs a system to orchestrate marketing emails, nurture journeys, and lead scoring across email, SMS, push, and the web.",
+    "department": [
+      "Marketing",
+      "Demand Generation"
+    ],
+    "industry": null,
+    "entities": [
+      "Campaign",
+      "Nurture Journey",
+      "Lead Score",
+      "Marketing Email",
+      "Form",
+      "Customer",
+      "Contact",
+      "Customer Event"
+    ],
+    "vendors": [
+      "Salesforce Inc",
+      "Adobe",
+      "Oracle",
+      "HubSpot",
+      "Braze",
+      "Iterable",
+      "Klaviyo",
+      "Microsoft",
+      "SAP SE",
+      "ActiveCampaign"
+    ],
+    "semantius_score": 83,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "xs"
+  },
+  {
+    "name": "SRM",
+    "title": "Supplier Relationship Management",
+    "tagline": "Onboard new suppliers, qualify them against your standards, and monitor performance and risk on one supplier record.",
+    "domain_class": "domain",
+    "prompt": "Help me build an app to onboard new suppliers, qualify them against our standards, and monitor performance and risk on one supplier record.",
+    "department": [
+      "Procurement"
+    ],
+    "industry": null,
+    "entities": [
+      "Supplier",
+      "Supplier Qualification",
+      "Supplier Risk Assessment",
+      "Supplier Scorecard",
+      "Supplier Certification",
+      "Supplier Onboarding",
+      "Supplier Bank Account",
+      "Supplier Contact",
+      "Supplier Document",
+      "Supplier Information Request"
+    ],
+    "vendors": [
+      "SAP SE",
+      "HICX",
+      "ServiceNow Inc",
+      "Coupa",
+      "Ivalua",
+      "Jaggaer",
+      "Workday",
+      "JAGGAER"
+    ],
+    "semantius_score": 90,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "CWM",
+    "title": "Contingent Workforce Management",
+    "tagline": "Source contingent workers through approved staffing suppliers, manage rate cards, and reconcile timesheets and invoices end-to-end.",
+    "domain_class": "domain",
+    "prompt": "I want to source contingent workers through approved staffing suppliers, manage rate cards, and reconcile timesheets and invoices end-to-end.",
+    "department": [
+      "Procurement",
+      "Indirect Procurement"
+    ],
+    "industry": null,
+    "entities": [
+      "Contingent Worker",
+      "Contingent Invoice",
+      "Contingent Timesheet",
+      "Staffing Supplier",
+      "Preventive Maintenance Work Order",
+      "Rate Card"
+    ],
+    "vendors": [
+      "Workday",
+      "SAP SE",
+      "Beeline",
+      "Magnit",
+      "Utmost",
+      "Kelly Services",
+      "Deel"
+    ],
+    "semantius_score": 88,
+    "semantius_agent_core": 88,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "PROD-MGMT",
+    "title": "Product Management",
+    "tagline": "Turn customer signals into a prioritized roadmap and ship features your users actually asked for.",
+    "domain_class": "domain",
+    "prompt": "I want to turn customer signals into a prioritized roadmap and ship features our users actually asked for.",
+    "department": [
+      "Product Management"
+    ],
+    "industry": null,
+    "entities": [
+      "Product Feature",
+      "Beta Program",
+      "Customer Feedback Item",
+      "Product Metric",
+      "Product Release",
+      "Product Roadmap",
+      "Feature Request",
+      "Product Line",
+      "Value Stream"
+    ],
+    "vendors": [
+      "Productboard, Inc.",
+      "Aha! Labs Inc.",
+      "Atlassian",
+      "Pendo.io, Inc.",
+      "Airfocus GmbH",
+      "insightsoftware",
+      "Tempo Software",
+      "Craft.io Ltd.",
+      "Dragonboat, Inc."
+    ],
+    "semantius_score": 90,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "xs"
+  },
+  {
+    "name": "LIB-MGMT",
+    "title": "Library Management",
+    "tagline": "Run your library: catalog every title, lend every item, serve every patron.",
+    "domain_class": "domain",
+    "prompt": "Our team needs software to run our library: catalog every title, lend every item, serve every patron.",
+    "department": [
+      "Research and Development"
+    ],
+    "industry": [
+      "Libraries and Archives"
+    ],
+    "entities": [
+      "Library Patron",
+      "Bibliographic Record",
+      "Library Loan",
+      "Interlibrary Loan Request",
+      "Library Item",
+      "Library Acquisition Order",
+      "Library Hold",
+      "Library Fine",
+      "Library Vendor Account",
+      "Library Authority Record"
+    ],
+    "vendors": [
+      "Clarivate",
+      "SirsiDynix",
+      "OCLC",
+      "EBSCO Information Services",
+      "ByWater Solutions",
+      "Civica",
+      "Follett Software",
+      "Biblionix"
+    ],
+    "semantius_score": 98,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "s"
+  },
+  {
+    "name": "SALES-ENG",
+    "title": "Sales Engagement",
+    "tagline": "Reach more of the right prospects with structured outreach, and turn every call and email into coaching that lifts the whole team.",
+    "domain_class": "point_solution",
+    "prompt": "Design a system that helps us reach more of the right prospects with structured outreach, and turn every call and email into coaching that lifts the whole team.",
+    "department": [
+      "Sales"
+    ],
+    "industry": null,
+    "entities": [
+      "Call Recording",
+      "Cadence",
+      "Sales Email",
+      "Conversation Intelligence Record",
+      "Contact"
+    ],
+    "vendors": [
+      "Gong",
+      "Reply.io",
+      "Outreach",
+      "Salesloft",
+      "Apollo.io",
+      "Groove",
+      "Mixmax",
+      "Yesware",
+      "ZoomInfo",
+      "Clari"
+    ],
+    "semantius_score": 71,
+    "semantius_agent_core": 93,
+    "semantius_agent_first": 100,
+    "min_org_size": "s"
+  },
+  {
+    "name": "GTM-PLAN",
+    "title": "Go-to-Market Planning",
+    "tagline": "Plan your year. Decide where to play, how much capacity to invest, and which segments to lead with, then push the locked plan to Sales, Marketing, and Finance.",
+    "domain_class": "domain",
+    "prompt": "We want to plan our year. Decide where to play, how much capacity to invest, and which segments to lead with, then push the locked plan to Sales, Marketing, and Finance.",
+    "department": [
+      "Sales",
+      "Sales Operations"
+    ],
+    "industry": null,
+    "entities": [
+      "Account Score",
+      "Capacity Plan",
+      "GTM Plan",
+      "GTM Scenario",
+      "Ideal Customer Profile",
+      "Market Segment",
+      "Quota",
+      "Target Account List",
+      "Territory",
+      "Channel Mix Plan"
+    ],
+    "vendors": [
+      "Anaplan",
+      "Fullcast.io",
+      "Salesforce Inc",
+      "Pigment",
+      "Varicent",
+      "Xactly Corporation",
+      "Board International"
+    ],
+    "semantius_score": 100,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "EAP",
+    "title": "Enterprise Agile Planning",
+    "tagline": "Plan and coordinate agile delivery across every team, program, and portfolio in one place.",
+    "domain_class": "domain",
+    "prompt": "I need a system to plan and coordinate agile delivery across every team, program, and portfolio in one place.",
+    "department": [
+      "Software Engineering"
+    ],
+    "industry": null,
+    "entities": [
+      "Agile Feature",
+      "Program Increment",
+      "Portfolio Epic",
+      "Agile Release Train",
+      "Agile Roadmap",
+      "Cross-Team Dependency",
+      "PI Objective"
+    ],
+    "vendors": [
+      "Atlassian",
+      "Broadcom",
+      "Digital.ai",
+      "Planview",
+      "IBM",
+      "Microsoft",
+      "GitLab"
+    ],
+    "semantius_score": 91,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "VSM",
+    "title": "Value Stream Management",
+    "tagline": "See how work really flows across your whole delivery toolchain, and where it gets stuck.",
+    "domain_class": "domain",
+    "prompt": "I'm looking for a way to see how work really flows across our whole delivery toolchain, and where it gets stuck.",
+    "department": [
+      "Software Engineering"
+    ],
+    "industry": null,
+    "entities": [
+      "Delivery Value Stream",
+      "Flow Measurement",
+      "DORA Metric",
+      "Tool Connection",
+      "Delivery Bottleneck",
+      "Flow Metric Definition",
+      "Agile Feature",
+      "CI/CD Pipeline Run",
+      "Software Deployment",
+      "Pull / Merge Request"
+    ],
+    "vendors": [
+      "Planview",
+      "Broadcom",
+      "ServiceNow Inc",
+      "Digital.ai",
+      "GitLab"
+    ],
+    "semantius_score": 86,
+    "semantius_agent_core": 93,
+    "semantius_agent_first": 100,
+    "min_org_size": "m"
+  },
+  {
+    "name": "FLEET-MAINT",
+    "title": "Fleet Maintenance Management",
+    "tagline": "Keep every vehicle on the road and control what each mile costs to maintain.",
+    "domain_class": "point_solution",
+    "prompt": "I'm looking for a way to keep every vehicle on the road and control what each mile costs to maintain.",
+    "department": [
+      "Supply Chain",
+      "Logistics"
+    ],
+    "industry": null,
+    "entities": [
+      "Vehicle Work Order",
+      "Preventive Maintenance Schedule",
+      "Vehicle Parts Inventory Item",
+      "Maintenance Defect",
+      "Location",
+      "Org Unit"
+    ],
+    "vendors": [
+      "Fleetio",
+      "AssetWorks",
+      "Whip Around",
+      "Samsara",
+      "Geotab",
+      "Trimble Inc"
+    ],
+    "semantius_score": 80,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "xs"
+  },
+  {
+    "name": "TELEMATICS",
+    "title": "Vehicle Telematics",
+    "tagline": "See where every vehicle is, how it is driven, and whether it stays compliant, all from one connected view.",
+    "domain_class": "point_solution",
+    "prompt": "Create a system so we can see where every vehicle is, how it is driven, and whether it stays compliant, all from one connected view.",
+    "department": [
+      "Supply Chain",
+      "Logistics"
+    ],
+    "industry": null,
+    "entities": [
+      "Dashcam Event",
+      "Driver Behavior Event",
+      "Driver Safety Scorecard",
+      "ELD Log",
+      "Geofence Event",
+      "GPS Waypoint",
+      "Idle Event",
+      "Vehicle Trip"
+    ],
+    "vendors": [
+      "Samsara",
+      "Geotab",
+      "Motive",
+      "Verizon Connect",
+      "Bridgestone",
+      "Trimble Inc",
+      "Solera",
+      "Lytx"
+    ],
+    "semantius_score": 100,
+    "semantius_agent_core": 100,
+    "semantius_agent_first": 100,
+    "min_org_size": "xs"
+  }
+]

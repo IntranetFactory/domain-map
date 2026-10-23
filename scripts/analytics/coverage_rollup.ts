@@ -3,12 +3,17 @@
 // After the per-domain-skill migration (plans/per-domain-skill-restoration.md), tool requirements
 // live on the modules (`domain_module_tools`) and on the value-stream processes (`process_tools`),
 // NOT on per-module `skill_tools` (retired). A domain's coverage is the rollup of its modules'
-// tool requirements over the domain's PRIMARY modules only, deduped by tool with `required` winning
-// over `optional`. A starter that merely embeds a domain entity is a consumer of the market, not a
-// contributor, so its tools are NOT rolled into that market's score.
+// tool requirements over the domain's PRIMARY modules only, deduped by tool_id. A starter that merely
+// embeds a domain entity is a consumer of the market, not a contributor, so its tools are NOT rolled
+// into that market's score.
 //
-// Per-unit metric:
-//   % = (count of required tools whose operation_kind ∈ SEMANTIUS_COVERED) / (count of required tools)
+// Per-unit metrics (domain-map-analyst SKILL.md "Semantius score"), over ALL of the unit's distinct
+// tools, required and optional, classified by tools.coverage_tier. Each score covers the tiers of the
+// one before it plus its own (see SCORES):
+//   semantius_score        every semantius* tier                     (Semantius out of the box)
+//   semantius_agent_core   + agent_native + agent_common             (+ the agent and the office suite)
+//   semantius_agent_first  + agent_first                             (+ agent-ready subscriptions)
+// vendor_platform (build or approximate) and external (integration work) are gaps in all three.
 //
 // NO fallback. A domain whose modules carry zero `domain_module_tools` reads as INCOMPLETE because
 // it is incomplete (band M1/F3), not as 0-of-0 "covered". It is surfaced, never silently skipped.
@@ -16,7 +21,7 @@
 // Default: per-domain rollup for every domain that owns or hosts >=1 module, sorted by domain_code.
 // Flags:
 //   --process      Roll up the value-stream processes (`process_tools`) instead of domains.
-//   --diagnostic   Print only units <100% (or incomplete), with the tools dragging them down.
+//   --diagnostic   Print only units whose semantius_agent_first is <100% (or incomplete).
 //   --domain CODE  Restrict to one domain_code (ignored with --process).
 //   --csv          Machine-readable CSV instead of the human table.
 export {};
@@ -28,12 +33,17 @@ const PROCESS = args.includes("--process");
 const domainIdx = args.indexOf("--domain");
 const DOMAIN_FILTER = domainIdx >= 0 ? args[domainIdx + 1] : null;
 
-// Hardcoded Semantius-covered operation_kinds (operation_kind heuristic for "internal-data tools").
-// Excluded by design: fetch (external reads), side_effect (external writes), compute (pure
-// transforms), inbound (receive-shaped). For per-tool coverage truth read tools.coverage_tier.
-const SEMANTIUS_COVERED = new Set(["query", "mutate"]);
+// Every semantius* tier (semantius_crud / _workflow / _platform) counts in all three scores.
+const isSemantius = (tier: string) => tier.startsWith("semantius");
+const SCORES = [
+  { key: "semantius_score", agentTiers: new Set<string>() },
+  { key: "semantius_agent_core", agentTiers: new Set(["agent_native", "agent_common"]) },
+  { key: "semantius_agent_first", agentTiers: new Set(["agent_native", "agent_common", "agent_first"]) },
+];
+const covers = (s: (typeof SCORES)[number], tier: string) => isSemantius(tier) || s.agentTiers.has(tier);
+const WIDEST = SCORES[SCORES.length - 1];
 
-type Tool = { id: number; tool_name: string; operation_kind: string };
+type Tool = { id: number; tool_name: string; coverage_tier: string };
 type TR = { tool_id: number; requirement_level: string };
 
 async function call(body: any): Promise<any[]> {
@@ -49,28 +59,43 @@ async function call(body: any): Promise<any[]> {
 const get = (path: string) => call({ method: "GET", path });
 const LIMIT = 200000;
 
-type Row = { unit: string; label: string; pct: number | null; covered: number; required: number; notCovered: { name: string; kind: string }[] };
+type ToolRef = { name: string; tier: string; level: string };
+type Row = {
+  unit: string;
+  label: string;
+  pcts: (number | null)[]; // one per SCORES entry
+  counts: number[]; // covered tools per SCORES entry
+  total: number;
+  agentTools: ToolRef[]; // agent_* tools: covered by the agent scores only
+  gaps: ToolRef[]; // vendor_platform / external: uncovered in every score
+};
 
 // Reduce a set of (tool_id, requirement_level) into the coverage row, deduped by tool_id with
-// `required` winning over `optional`.
-function rollup(unit: string, label: string, trs: TR[], toolKind: Map<number, string>, toolName: Map<number, string>): Row {
+// `required` winning over `optional` (the level is reported on tool lists; both levels count in the score).
+function rollup(unit: string, label: string, trs: TR[], toolTier: Map<number, string>, toolName: Map<number, string>): Row {
   const level = new Map<number, string>();
   for (const r of trs) {
     const prev = level.get(r.tool_id);
     if (prev !== "required") level.set(r.tool_id, r.requirement_level);
   }
-  const required = [...level.entries()].filter(([, lv]) => lv === "required").map(([tid]) => tid);
-  const covered = required.filter(tid => SEMANTIUS_COVERED.has(toolKind.get(tid) ?? ""));
-  const notCovered = required
-    .filter(tid => !SEMANTIUS_COVERED.has(toolKind.get(tid) ?? ""))
-    .map(tid => ({ name: toolName.get(tid) ?? `?#${tid}`, kind: toolKind.get(tid) ?? "?" }));
-  const pct = required.length ? Math.round((covered.length / required.length) * 100) : null;
-  return { unit, label, pct, covered: covered.length, required: required.length, notCovered };
+  const all = [...level.keys()];
+  const tierOf = (tid: number) => toolTier.get(tid) ?? "?";
+  const ref = (tid: number): ToolRef => ({ name: toolName.get(tid) ?? `?#${tid}`, tier: tierOf(tid), level: level.get(tid)! });
+  const counts = SCORES.map(s => all.filter(tid => covers(s, tierOf(tid))).length);
+  return {
+    unit,
+    label,
+    pcts: counts.map(n => (all.length ? Math.round((n / all.length) * 100) : null)),
+    counts,
+    total: all.length,
+    agentTools: all.filter(tid => tierOf(tid).startsWith("agent_")).map(ref),
+    gaps: all.filter(tid => !covers(WIDEST, tierOf(tid))).map(ref),
+  };
 }
 
 async function main() {
-  const tools = (await get(`/tools?select=id,tool_name,operation_kind&limit=${LIMIT}`)) as Tool[];
-  const toolKind = new Map(tools.map(t => [t.id, t.operation_kind]));
+  const tools = (await get(`/tools?select=id,tool_name,coverage_tier&limit=${LIMIT}`)) as Tool[];
+  const toolTier = new Map(tools.map(t => [t.id, t.coverage_tier]));
   const toolName = new Map(tools.map(t => [t.id, t.tool_name]));
 
   const rows: Row[] = [];
@@ -84,7 +109,7 @@ async function main() {
     for (const r of pt) { const a = byProc.get(r.process_id) ?? []; a.push(r); byProc.set(r.process_id, a); }
     for (const p of processes) {
       if (!byProc.has(p.id)) continue; // only value-stream processes that carry tools
-      rows.push(rollup(p.process_key, p.process_name, byProc.get(p.id)!, toolKind, toolName));
+      rows.push(rollup(p.process_key, p.process_name, byProc.get(p.id)!, toolTier, toolName));
     }
   } else {
     const [domains, modules, dmt] = await Promise.all([
@@ -116,36 +141,41 @@ async function main() {
       if (bundleDomainIds.has(did)) continue; // exclude bundle-domains (plan §4)
       const code = domainCode.get(did) ?? `?#${did}`;
       if (DOMAIN_FILTER && code !== DOMAIN_FILTER) continue;
-      rows.push(rollup(code, code, trByDomain.get(did) ?? [], toolKind, toolName));
+      rows.push(rollup(code, code, trByDomain.get(did) ?? [], toolTier, toolName));
     }
   }
 
   rows.sort((a, b) => a.unit.localeCompare(b.unit));
 
   if (CSV) {
-    console.log(`${PROCESS ? "process_key" : "domain_code"},pct,covered,required`);
-    for (const r of rows) console.log(`${r.unit},${r.pct ?? "incomplete"},${r.covered},${r.required}`);
+    console.log(`${PROCESS ? "process_key" : "domain_code"},${SCORES.map(s => s.key).join(",")},total_tools`);
+    for (const r of rows) console.log(`${r.unit},${r.pcts.map(p => p ?? "incomplete").join(",")},${r.total}`);
     return;
   }
 
   console.log(`Unit: ${PROCESS ? "value-stream process (process_tools)" : "domain (domain_module_tools, primary modules)"}`);
-  console.log(`Semantius-covered set: { ${[...SEMANTIUS_COVERED].join(", ")} }`);
-  console.log(`Mode: ${DIAGNOSTIC ? "diagnostic (<100% / incomplete only)" : "full rollup"}\n`);
+  for (const s of SCORES) console.log(`${s.key.padEnd(22)} covers { semantius*${[...s.agentTiers].map(t => ", " + t).join("")} }`);
+  console.log(`Mode: ${DIAGNOSTIC ? "diagnostic (semantius_agent_first <100% / incomplete only)" : "full rollup"}\n`);
 
-  let full = 0, incomplete = 0;
+  const fmt = (p: number | null) => (p === null ? " n/a" : `${String(p).padStart(3)}%`);
+  const list = (ts: ToolRef[]) => ts.map(t => `${t.name}(${t.tier}${t.level === "optional" ? ", optional" : ""})`).join(", ");
+  const widest = (r: Row) => r.pcts[r.pcts.length - 1];
+  let hidden = 0, incomplete = 0;
   for (const r of rows) {
-    if (r.pct === null) incomplete++;
-    if (DIAGNOSTIC && r.pct === 100) { full++; continue; }
-    const flag = r.pct === null ? "∅" : r.pct === 100 ? "✅" : "⬇";
-    const pctStr = r.pct === null ? "n/a" : `${String(r.pct).padStart(3)}%`;
-    let line = `${flag} ${pctStr}  ${r.unit.padEnd(20)} ${r.covered}/${r.required}`;
-    if (r.pct === null) line += `   ↳ INCOMPLETE: no required domain_module_tools (band M1/F3)`;
-    else if (r.pct < 100) line += `   ↳ NOT covered: ${r.notCovered.map(t => `${t.name}(${t.kind})`).join(", ")}`;
+    if (r.pcts[0] === null) incomplete++;
+    if (DIAGNOSTIC && widest(r) === 100) { hidden++; continue; }
+    const flag = r.pcts[0] === null ? "∅" : widest(r) === 100 ? "✅" : "⬇";
+    let line = `${flag} ${r.pcts.map(fmt).join(" ")}  ${r.unit.padEnd(20)} ${r.counts.join("/")}/${r.total}`;
+    if (r.pcts[0] === null) line += `   ↳ INCOMPLETE: no domain_module_tools (band M1/F3)`;
+    else {
+      if (r.agentTools.length) line += `   ↳ agent: ${list(r.agentTools)}`;
+      if (r.gaps.length) line += `   ↳ NOT covered: ${list(r.gaps)}`;
+    }
     console.log(line);
   }
-  const totalFull = rows.filter(r => r.pct === 100).length;
-  if (DIAGNOSTIC) console.log(`\nHidden (100% covered): ${full}`);
-  console.log(`\nTotal: ${totalFull}/${rows.length} units at 100% Semantius-covered; ${incomplete} incomplete (no tools).`);
+  if (DIAGNOSTIC) console.log(`\nHidden (semantius_agent_first 100%): ${hidden}`);
+  const at100 = SCORES.map((s, i) => `${rows.filter(r => r.pcts[i] === 100).length} at 100% ${s.key}`).join(", ");
+  console.log(`\nTotal: ${rows.length} units; ${at100}; ${incomplete} incomplete (no tools).`);
 }
 
 await main();

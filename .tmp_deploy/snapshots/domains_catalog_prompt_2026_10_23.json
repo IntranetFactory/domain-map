@@ -1,0 +1,872 @@
+[
+  {
+    "id": 1,
+    "domain_code": "ITSM",
+    "catalog_prompt": "I need an IT service management system to manage incidents, service requests, and knowledge articles."
+  },
+  {
+    "id": 2,
+    "domain_code": "ITOM",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 3,
+    "domain_code": "ITAM",
+    "catalog_prompt": "Build me an IT asset management system to manage asset lifecycle events, asset contracts, and org units."
+  },
+  {
+    "id": 4,
+    "domain_code": "CMDB",
+    "catalog_prompt": "Build me a configuration management database system to manage configuration items, CI baselines, and service maps."
+  },
+  {
+    "id": 5,
+    "domain_code": "DISCOVERY",
+    "catalog_prompt": "I need a discovery and service mapping system to manage discovered devices, discovery scans, and discovery sources."
+  },
+  {
+    "id": 6,
+    "domain_code": "AIOPS",
+    "catalog_prompt": "I need an AIOps system to manage event correlations, root cause analyses, and anomaly detections."
+  },
+  {
+    "id": 7,
+    "domain_code": "OBS",
+    "catalog_prompt": "Build me an observability system to manage error groups, SLOs, and distributed traces."
+  },
+  {
+    "id": 8,
+    "domain_code": "TEST-MGMT",
+    "catalog_prompt": "I need a test management system to manage test cases, test runs, and test defects."
+  },
+  {
+    "id": 9,
+    "domain_code": "SPM",
+    "catalog_prompt": "I need a strategic portfolio management system to manage strategic initiatives, resource allocations, and roadmap items."
+  },
+  {
+    "id": 10,
+    "domain_code": "APM",
+    "catalog_prompt": "Build me an application portfolio management system to manage enterprise applications, technology platforms, and application interfaces."
+  },
+  {
+    "id": 11,
+    "domain_code": "SECOPS",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 12,
+    "domain_code": "SOAR",
+    "catalog_prompt": "Build me a security orchestration, automation and response system."
+  },
+  {
+    "id": 13,
+    "domain_code": "VULN-MGMT",
+    "catalog_prompt": "Build me a vulnerability management system to manage vulnerabilities, vulnerability assessments, and vulnerability remediations."
+  },
+  {
+    "id": 14,
+    "domain_code": "THREAT-INTEL",
+    "catalog_prompt": "Build me a threat intelligence system."
+  },
+  {
+    "id": 15,
+    "domain_code": "GRC",
+    "catalog_prompt": "I need a governance, risk and compliance system to manage compliance obligations, issues, and compliance evidences."
+  },
+  {
+    "id": 16,
+    "domain_code": "AUDIT",
+    "catalog_prompt": "I need an audit management system to manage audit findings, audit engagements, and audit plans."
+  },
+  {
+    "id": 17,
+    "domain_code": "BCM",
+    "catalog_prompt": "Build me a business continuity management system."
+  },
+  {
+    "id": 18,
+    "domain_code": "OP-RES",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 19,
+    "domain_code": "TPRM",
+    "catalog_prompt": "Build me a third-party risk management system to manage assessment responses, due-diligence questionnaires, and onboarding requests."
+  },
+  {
+    "id": 20,
+    "domain_code": "PRIV-MGMT",
+    "catalog_prompt": "I need a privacy management system."
+  },
+  {
+    "id": 21,
+    "domain_code": "ESG",
+    "catalog_prompt": "Build me an ESG management system to manage emissions records, ESG metrics, and ESG disclosures."
+  },
+  {
+    "id": 22,
+    "domain_code": "HRSD",
+    "catalog_prompt": "I need an HR service delivery system to manage HR cases, HR case categories, and employees."
+  },
+  {
+    "id": 23,
+    "domain_code": "IWMS",
+    "catalog_prompt": "Build me a workplace and space management system to manage locations, workplace service requests, and desk bookings."
+  },
+  {
+    "id": 24,
+    "domain_code": "VIS-MGMT",
+    "catalog_prompt": "Build me a visitor management system to manage visitor registrations, visitor check-ins, and visitor audit logs."
+  },
+  {
+    "id": 25,
+    "domain_code": "LSD",
+    "catalog_prompt": "Build me a legal service delivery system to manage in-house legal matters, legal holds, and legal advice records."
+  },
+  {
+    "id": 26,
+    "domain_code": "CLM",
+    "catalog_prompt": "I need a contract lifecycle management system to manage contracts, contract clauses, and contract obligations."
+  },
+  {
+    "id": 27,
+    "domain_code": "S2P",
+    "catalog_prompt": "Build me a source-to-pay system to manage purchase orders, invoices, and purchase requisitions."
+  },
+  {
+    "id": 28,
+    "domain_code": "SRM",
+    "catalog_prompt": "Build me a supplier relationship management system to manage suppliers, supplier qualifications, and supplier risk assessments."
+  },
+  {
+    "id": 29,
+    "domain_code": "AP-AUTO",
+    "catalog_prompt": "Build me an accounts payable automation system to manage invoice matches, payment runs, and org units."
+  },
+  {
+    "id": 30,
+    "domain_code": "CSM",
+    "catalog_prompt": "Build me a customer service management system to manage customer cases, customers, and customer entitlements."
+  },
+  {
+    "id": 31,
+    "domain_code": "FSM",
+    "catalog_prompt": "Build me a field service management system to manage installed equipment, service work orders, and dispatch records."
+  },
+  {
+    "id": 32,
+    "domain_code": "OMS",
+    "catalog_prompt": "I need an order management system to manage order allocations, return authorization (RMA)s, and inventory locations."
+  },
+  {
+    "id": 33,
+    "domain_code": "KMS",
+    "catalog_prompt": "Build me a knowledge management system to manage knowledge base articles, article revisions, and article feedback."
+  },
+  {
+    "id": 34,
+    "domain_code": "CONV-AI",
+    "catalog_prompt": "I need a conversational AI system to manage conversation flows, intent definitions, and bot definitions."
+  },
+  {
+    "id": 35,
+    "domain_code": "IGA",
+    "catalog_prompt": "I need an identity governance and administration system to manage employees, IGA provisioning events, and IGA access requests."
+  },
+  {
+    "id": 36,
+    "domain_code": "IPAAS",
+    "catalog_prompt": "I need an integration platform as a service system to manage integration data mappings, integration recipes, and integration runs."
+  },
+  {
+    "id": 37,
+    "domain_code": "LCAP",
+    "catalog_prompt": "I need a low-code application platform to manage low-code apps, low-code business objects, and low-code pages."
+  },
+  {
+    "id": 38,
+    "domain_code": "RPA",
+    "catalog_prompt": "I need a robotic process automation system to manage RPA bots, RPA activity logs, and RPA executions."
+  },
+  {
+    "id": 39,
+    "domain_code": "IDP",
+    "catalog_prompt": "Build me an intelligent document processing system to manage document classification results, extracted records, and capture batches."
+  },
+  {
+    "id": 40,
+    "domain_code": "PROC-MIN",
+    "catalog_prompt": "Build me a process mining system to manage discovered process models, event logs, and extracted business rules."
+  },
+  {
+    "id": 41,
+    "domain_code": "FINOPS",
+    "catalog_prompt": "Build me a cloud financial operations system."
+  },
+  {
+    "id": 42,
+    "domain_code": "TELCO-BSS",
+    "catalog_prompt": "I need a telecommunications OSS/BSS system to manage telco service orders, telco subscriptions, and network inventory records."
+  },
+  {
+    "id": 43,
+    "domain_code": "BANK-OPS",
+    "catalog_prompt": "I need a banking operations system to manage account applications, bank account openings, and banking cases."
+  },
+  {
+    "id": 44,
+    "domain_code": "INS-CLAIMS",
+    "catalog_prompt": "Build me an insurance claims management system to manage insurance claims, insurance policies, and claim settlements."
+  },
+  {
+    "id": 45,
+    "domain_code": "HC-PATIENT",
+    "catalog_prompt": "Build me a healthcare patient operations system to manage clinical encounters, patient appointments, and clinical notes."
+  },
+  {
+    "id": 46,
+    "domain_code": "PS-LIC",
+    "catalog_prompt": "I need a public-sector licensing and permitting system to manage permit inspections, code violation / citations, and issued license records."
+  },
+  {
+    "id": 47,
+    "domain_code": "MFG-OPS",
+    "catalog_prompt": "Build me a manufacturing connected operations system to manage production orders, produced units, and production downtime events."
+  },
+  {
+    "id": 48,
+    "domain_code": "RET-STORE",
+    "catalog_prompt": "Build me a retail store operations system to manage store tasks, store audits, and mystery shopper records."
+  },
+  {
+    "id": 49,
+    "domain_code": "UTIL-OPS",
+    "catalog_prompt": "Build me an utilities operations system to manage utility meters, outage events, and meter reads."
+  },
+  {
+    "id": 50,
+    "domain_code": "CLIN-DEV",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 51,
+    "domain_code": "HAM",
+    "catalog_prompt": "I need a hardware asset management system to manage hardware assets, hardware disposal records, and hardware models."
+  },
+  {
+    "id": 52,
+    "domain_code": "SAM",
+    "catalog_prompt": "I need a software asset management system to manage software titles, software licenses, and license audits."
+  },
+  {
+    "id": 53,
+    "domain_code": "EAM",
+    "catalog_prompt": "I need an enterprise asset management system to manage EAM work orders, equipment PM schedules, and industrial assets."
+  },
+  {
+    "id": 54,
+    "domain_code": "HCM",
+    "catalog_prompt": "I need a human capital management system to manage employees, org units, and positions."
+  },
+  {
+    "id": 55,
+    "domain_code": "PAYROLL",
+    "catalog_prompt": "Build me a payroll management system to manage employees, pay runs, and pay slips."
+  },
+  {
+    "id": 56,
+    "domain_code": "ATS",
+    "catalog_prompt": "Build me an applicant tracking and recruiting system to manage candidates, applications, and job requisitions."
+  },
+  {
+    "id": 57,
+    "domain_code": "LMS",
+    "catalog_prompt": "Build me a learning management system to manage courses, compliance training assignments, and course enrollments."
+  },
+  {
+    "id": 58,
+    "domain_code": "TALENT-MGMT",
+    "catalog_prompt": "Build me a talent management system to manage career aspirations, performance reviews, and nine-box placements."
+  },
+  {
+    "id": 59,
+    "domain_code": "WFM",
+    "catalog_prompt": "Build me a workforce management system to manage shifts, time entries, and absence requests."
+  },
+  {
+    "id": 60,
+    "domain_code": "COMP-MGMT",
+    "catalog_prompt": "Build me a compensation management system to manage equity grants, compensation statements, and salary bands."
+  },
+  {
+    "id": 61,
+    "domain_code": "BEN-ADMIN",
+    "catalog_prompt": "I need a benefits administration system to manage benefit enrollments, benefit plans, and life events."
+  },
+  {
+    "id": 62,
+    "domain_code": "EMP-EXP",
+    "catalog_prompt": "Build me an employee experience and engagement system to manage engagement drivers, survey campaigns, and survey responses."
+  },
+  {
+    "id": 63,
+    "domain_code": "PA",
+    "catalog_prompt": "I need a people analytics system to manage people KPIs, attrition forecasts, and engagement surveys."
+  },
+  {
+    "id": 64,
+    "domain_code": "CWM",
+    "catalog_prompt": "I need a contingent workforce management system to manage contingent workers, contingent invoices, and contingent timesheets."
+  },
+  {
+    "id": 65,
+    "domain_code": "FIN",
+    "catalog_prompt": "I need a core financial management system to manage journal entries, fixed assets, and cost centers."
+  },
+  {
+    "id": 66,
+    "domain_code": "EPM",
+    "catalog_prompt": "I need an enterprise performance management system to manage financial plans, forecasts, and variance analyses."
+  },
+  {
+    "id": 67,
+    "domain_code": "EXPENSE",
+    "catalog_prompt": "I need an expense management system to manage expense lines, expense reports, and expense policies."
+  },
+  {
+    "id": 68,
+    "domain_code": "PSA",
+    "catalog_prompt": "Build me a professional services automation system to manage projects, project assignments, and project billing milestones."
+  },
+  {
+    "id": 69,
+    "domain_code": "CRM",
+    "catalog_prompt": "I need a customer relationship management system to manage customers, opportunities, and contacts."
+  },
+  {
+    "id": 70,
+    "domain_code": "MA",
+    "catalog_prompt": "I need a marketing automation system to manage campaigns, nurture journeys, and lead scores."
+  },
+  {
+    "id": 71,
+    "domain_code": "B2C-COMM",
+    "catalog_prompt": "Build me a digital commerce system to manage orders, products, and storefronts."
+  },
+  {
+    "id": 72,
+    "domain_code": "CDP",
+    "catalog_prompt": "Build me a customer data platform to manage customers, audience segments, and customer attributes."
+  },
+  {
+    "id": 73,
+    "domain_code": "CPQ",
+    "catalog_prompt": "Build me a configure-price-quote system to manage CPQ contract drafts, product configurations, and quote discounts."
+  },
+  {
+    "id": 74,
+    "domain_code": "BI",
+    "catalog_prompt": "Build me a business intelligence and analytics system to manage BI dashboards, BI saved queries, and BI reports."
+  },
+  {
+    "id": 75,
+    "domain_code": "WSC",
+    "catalog_prompt": "Build me a workstream collaboration system to manage chat channels, chat messages, and chat threads."
+  },
+  {
+    "id": 76,
+    "domain_code": "APP-PAAS",
+    "catalog_prompt": "I need an application platform-as-a-service system to manage PaaS addons, PaaS applications, and PaaS build records."
+  },
+  {
+    "id": 77,
+    "domain_code": "DXP",
+    "catalog_prompt": "Build me a digital experience platform to manage web pages, digital experiences, and A/B tests."
+  },
+  {
+    "id": 78,
+    "domain_code": "LOYALTY",
+    "catalog_prompt": "I need a customer loyalty management system to manage loyalty members, loyalty tiers, and loyalty transactions."
+  },
+  {
+    "id": 79,
+    "domain_code": "APIM",
+    "catalog_prompt": "I need an API management system to manage API deployments, API consumer registrations, and API specifications."
+  },
+  {
+    "id": 80,
+    "domain_code": "VSDP",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 81,
+    "domain_code": "KUBE-PLAT",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 82,
+    "domain_code": "NPMD",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 83,
+    "domain_code": "DEM",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 84,
+    "domain_code": "DCIM",
+    "catalog_prompt": "Build me a data center infrastructure management system to manage data center cabinets, DC capacity plans, and data center cooling units."
+  },
+  {
+    "id": 85,
+    "domain_code": "SMP",
+    "catalog_prompt": "I need a SaaS management platforms system to manage SaaS applications, SaaS subscriptions, and SMP license seat assignments."
+  },
+  {
+    "id": 86,
+    "domain_code": "UEM",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 87,
+    "domain_code": "MDM",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 88,
+    "domain_code": "DCG",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 89,
+    "domain_code": "DI",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 90,
+    "domain_code": "DQ",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 91,
+    "domain_code": "ECM",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 92,
+    "domain_code": "DAM",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 93,
+    "domain_code": "HCMS",
+    "catalog_prompt": "Build me a headless content management system to manage content entries, content releases, and content types."
+  },
+  {
+    "id": 94,
+    "domain_code": "ESIGN",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 95,
+    "domain_code": "SALES-ENG",
+    "catalog_prompt": "I need a sales engagement system to manage call recordings, cadences, and sales emails."
+  },
+  {
+    "id": 96,
+    "domain_code": "PRM",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 97,
+    "domain_code": "SUB-MGMT",
+    "catalog_prompt": "Build me a subscription and revenue lifecycle management system to manage customers, customer subscriptions, and customer invoices."
+  },
+  {
+    "id": 98,
+    "domain_code": "CCAAS",
+    "catalog_prompt": "I need a contact center as a service system to manage contact records, support sessions, and CCaaS call recordings."
+  },
+  {
+    "id": 99,
+    "domain_code": "ONBOARDING",
+    "catalog_prompt": "Build me an employee onboarding system to manage onboarding journeys, onboarding tasks, and onboarding document collections."
+  },
+  {
+    "id": 100,
+    "domain_code": "SWP",
+    "catalog_prompt": "I need a strategic workforce planning system to manage headcount plans, position demand forecasts, and workforce scenarios."
+  },
+  {
+    "id": 101,
+    "domain_code": "PROD-MGMT",
+    "catalog_prompt": "Build me a product management system to manage product features, beta programs, and customer feedback items."
+  },
+  {
+    "id": 102,
+    "domain_code": "SALES-PERF",
+    "catalog_prompt": "Build me a sales performance management system."
+  },
+  {
+    "id": 103,
+    "domain_code": "REV-INTEL",
+    "catalog_prompt": "I need a revenue intelligence system to manage conversation intelligence records, captured activities, and forecast submissions."
+  },
+  {
+    "id": 104,
+    "domain_code": "GTM-PLAN",
+    "catalog_prompt": "Build me a go-to-market planning system to manage account scores, capacity plans, and GTM plans."
+  },
+  {
+    "id": 105,
+    "domain_code": "ACCT-PLAN",
+    "catalog_prompt": "I need a strategic account planning system."
+  },
+  {
+    "id": 106,
+    "domain_code": "SMM",
+    "catalog_prompt": "Build me a social media management system to manage social posts, social accounts, and social mentions."
+  },
+  {
+    "id": 126,
+    "domain_code": "INTRANET",
+    "catalog_prompt": "Build me an employee communications & intranet system."
+  },
+  {
+    "id": 127,
+    "domain_code": "COLLAB-GOV",
+    "catalog_prompt": "I need a collaboration governance system."
+  },
+  {
+    "id": 128,
+    "domain_code": "WEB-CONTOPS",
+    "catalog_prompt": "I need a web content operations & governance system to manage brand voice violations, content audits, and accessibility scan findings."
+  },
+  {
+    "id": 129,
+    "domain_code": "DATA-AI-PLAT",
+    "catalog_prompt": "I need a data and AI platform to manage semantic metrics, data products, and ontologies."
+  },
+  {
+    "id": 130,
+    "domain_code": "RMM",
+    "catalog_prompt": "Build me a remote monitoring and management system to manage alerts, automation scripts, and monitoring policies."
+  },
+  {
+    "id": 131,
+    "domain_code": "MSP-PSA",
+    "catalog_prompt": "Build me an MSP professional services automation system to manage MSP tickets, MSP service contracts, and MSP client organizations."
+  },
+  {
+    "id": 132,
+    "domain_code": "REMOTE-ACCESS",
+    "catalog_prompt": "I need a remote access and support system to manage remote sessions and session recordings."
+  },
+  {
+    "id": 133,
+    "domain_code": "SPEND-MGMT",
+    "catalog_prompt": "Build me a corporate spend management system to manage spend policies, card authorizations, and spend requests."
+  },
+  {
+    "id": 134,
+    "domain_code": "NCDB",
+    "catalog_prompt": "I need a no-code database system to manage no-code record definitions, no-code forms, and no-code automations."
+  },
+  {
+    "id": 135,
+    "domain_code": "WORK-MGMT",
+    "catalog_prompt": "I need a work management system to manage work items, work projects, and objective / OKRs."
+  },
+  {
+    "id": 136,
+    "domain_code": "BPA",
+    "catalog_prompt": "I need a business process architecture system to manage business process models, business capability maps, and process simulation runs."
+  },
+  {
+    "id": 137,
+    "domain_code": "METRICS-LAYER",
+    "catalog_prompt": "I need a metrics layer / headless BI system to manage metric definitions, dimensional models, and metric access policies."
+  },
+  {
+    "id": 138,
+    "domain_code": "KGP",
+    "catalog_prompt": "I need a knowledge graph platform to manage KGP ontologies and KGP knowledge graph entities."
+  },
+  {
+    "id": 139,
+    "domain_code": "DLP",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 140,
+    "domain_code": "DSPM",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 141,
+    "domain_code": "REAL-EST",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 142,
+    "domain_code": "CAFM",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 143,
+    "domain_code": "RE-BROKERAGE",
+    "catalog_prompt": "I need a real estate brokerage and agent operations system to manage real estate transactions, commission splits, and real estate listings."
+  },
+  {
+    "id": 144,
+    "domain_code": "RE-PROP-MGMT",
+    "catalog_prompt": "Build me a residential property management system to manage rental units, rental applications, and rental leases."
+  },
+  {
+    "id": 145,
+    "domain_code": "RE-CRE",
+    "catalog_prompt": "Build me a commercial real estate operations system to manage commercial leases, building certifications, and sublease transactions."
+  },
+  {
+    "id": 146,
+    "domain_code": "RE-INVEST",
+    "catalog_prompt": "I need a real estate investment management system to manage capital calls, fund distributions, and investment funds."
+  },
+  {
+    "id": 147,
+    "domain_code": "FLEET-MGMT",
+    "catalog_prompt": "Build me a fleet management system to manage fleet assignments, drivers, and fuel transactions."
+  },
+  {
+    "id": 148,
+    "domain_code": "TELEMATICS",
+    "catalog_prompt": "Build me a vehicle telematics system to manage dashcam events, driver behavior events, and driver safety scorecards."
+  },
+  {
+    "id": 149,
+    "domain_code": "FLEET-MAINT",
+    "catalog_prompt": "I need a fleet maintenance management system to manage vehicle work orders, preventive maintenance schedules, and vehicle parts inventory items."
+  },
+  {
+    "id": 150,
+    "domain_code": "LEGAL-PRACT-MGMT",
+    "catalog_prompt": "I need a legal practice management system to manage legal matters, engagement letters, and client invoices."
+  },
+  {
+    "id": 151,
+    "domain_code": "VET-PRACT-MGMT",
+    "catalog_prompt": "I need a veterinary practice management system to manage animal patients, veterinary vaccinations, and controlled substance ledger entries."
+  },
+  {
+    "id": 152,
+    "domain_code": "ACCT-PRACT-MGMT",
+    "catalog_prompt": "Build me an accounting practice management system to manage client engagements, tax returns, and time entries."
+  },
+  {
+    "id": 153,
+    "domain_code": "AGENCY-MGMT",
+    "catalog_prompt": "Build me agency management software to manage agency jobs, agency time entries, and creative deliverables."
+  },
+  {
+    "id": 154,
+    "domain_code": "FMIS",
+    "catalog_prompt": "I need a farm management information system to manage fields, field applications, and crop plans."
+  },
+  {
+    "id": 155,
+    "domain_code": "FOOD-TRACE",
+    "catalog_prompt": "Build me a food traceability and provenance system to manage traceability lots, critical tracking events, and recall events."
+  },
+  {
+    "id": 156,
+    "domain_code": "DAIRY-MGMT",
+    "catalog_prompt": "Build me a dairy herd management system to manage breeding events, bulk milk shipments, and cow health events."
+  },
+  {
+    "id": 157,
+    "domain_code": "FSQM",
+    "catalog_prompt": "I need a food safety and quality management system to manage HACCP plans, food safety incidents, and critical control points."
+  },
+  {
+    "id": 158,
+    "domain_code": "FARMER-DIRECT-SALES",
+    "catalog_prompt": "Build me a farmer-direct sales platform to manage butcher orders, CSA memberships, and delivery routes."
+  },
+  {
+    "id": 159,
+    "domain_code": "INV-CRM",
+    "catalog_prompt": "I need an investor relationship and deal flow management system to manage VC deals, investor contacts, and investment memos."
+  },
+  {
+    "id": 160,
+    "domain_code": "FUND-ADMIN",
+    "catalog_prompt": "Build me a private capital fund administration system to manage funds, LP subscriptions, and capital calls."
+  },
+  {
+    "id": 161,
+    "domain_code": "PORT-MONIT",
+    "catalog_prompt": "Build me a portfolio monitoring for private capital system to manage portfolio companies, fund position returns, and portco valuations."
+  },
+  {
+    "id": 162,
+    "domain_code": "CAP-TABLE",
+    "catalog_prompt": "Build me a cap table management and equity administration system to manage cap tables, equity grants, and exit scenarios."
+  },
+  {
+    "id": 163,
+    "domain_code": "EM-FUND-PLATFORM",
+    "catalog_prompt": "Build me an emerging manager fund platform to manage fund formations, SPVs, and SPV subscriptions."
+  },
+  {
+    "id": 164,
+    "domain_code": "INV-MGMT",
+    "catalog_prompt": "Build me an inventory management system to manage stock items, stock movements, and stock locations."
+  },
+  {
+    "id": 165,
+    "domain_code": "PLM",
+    "catalog_prompt": "Build me a product lifecycle management system to manage engineering parts, product compliance declarations, and engineering change orders."
+  },
+  {
+    "id": 166,
+    "domain_code": "SEM",
+    "catalog_prompt": "Build me a strategy execution management system to manage strategic initiatives, operating reviews, and strategy decisions."
+  },
+  {
+    "id": 167,
+    "domain_code": "PIM",
+    "catalog_prompt": "I need a product information management system to manage PIM products, PIM digital assets, and PIM syndication jobs."
+  },
+  {
+    "id": 168,
+    "domain_code": "LIB-MGMT",
+    "catalog_prompt": "Build me a library management system to manage library patrons, bibliographic records, and library loans."
+  },
+  {
+    "id": 169,
+    "domain_code": "SKILLS-MGMT",
+    "catalog_prompt": "I need a skills management system to manage skill profiles, competency models, and skills."
+  },
+  {
+    "id": 170,
+    "domain_code": "TLNT-INTEL",
+    "catalog_prompt": "I need a talent intelligence system to manage fit scores, mobility recommendations, and opportunities."
+  },
+  {
+    "id": 171,
+    "domain_code": "INTRANET-GOV",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 172,
+    "domain_code": "TRAVEL-MGMT",
+    "catalog_prompt": "I need a corporate travel management system to manage business trips, trip bookings, and traveler profiles."
+  },
+  {
+    "id": 173,
+    "domain_code": "MRM",
+    "catalog_prompt": "I need a marketing resource management system to manage marketing plan lines, marketing budget allocations, and marketing plans."
+  },
+  {
+    "id": 174,
+    "domain_code": "EHS",
+    "catalog_prompt": "I need an environmental, health and safety management system to manage safety incidents, corrective actions, and EHS inspections."
+  },
+  {
+    "id": 175,
+    "domain_code": "LEASE-ACCT",
+    "catalog_prompt": "Build me a lease accounting and administration system to manage lease agreements, lease liabilities, and lease modifications."
+  },
+  {
+    "id": 176,
+    "domain_code": "LIVESTOCK-MGMT",
+    "catalog_prompt": "I need a livestock management system to manage animals, mobs, and grazing plans."
+  },
+  {
+    "id": 177,
+    "domain_code": "SOCIAL-ADS",
+    "catalog_prompt": "I need a paid social advertising system to manage social ad creatives, social ad campaigns, and social ads."
+  },
+  {
+    "id": 178,
+    "domain_code": "INSIDER-RISK",
+    "catalog_prompt": "I need an insider risk management system to manage insider risk cases, user risk scores, and monitored activities."
+  },
+  {
+    "id": 179,
+    "domain_code": "PROCESS-ORCHESTRATION",
+    "catalog_prompt": "I need a process orchestration system to manage process instances, process activities, and case records."
+  },
+  {
+    "id": 180,
+    "domain_code": "FRONTLINE-COMMS",
+    "catalog_prompt": "I need a frontline / deskless worker communication system to manage frontline broadcasts, frontline tasks, and content acknowledgments."
+  },
+  {
+    "id": 181,
+    "domain_code": "EMP-ADVOCACY",
+    "catalog_prompt": "I need an employee advocacy platform to manage advocate profiles, advocacy content items, and advocacy programs."
+  },
+  {
+    "id": 182,
+    "domain_code": "STR-MGMT",
+    "catalog_prompt": "I need a short-term and vacation rental management system to manage reservations, short-term rental listings, and channel connections."
+  },
+  {
+    "id": 183,
+    "domain_code": "MARINA-MGMT",
+    "catalog_prompt": "Build me a marina management system to manage vessels, boaters, and slips."
+  },
+  {
+    "id": 184,
+    "domain_code": "PMM",
+    "catalog_prompt": "I need a product marketing management system to manage battlecards, competitive intelligence records, and competitor profiles."
+  },
+  {
+    "id": 185,
+    "domain_code": "ABM-PLATFORM",
+    "catalog_prompt": "Build me an account-based marketing platform to manage ABM campaigns, account engagement scores, and account identifications."
+  },
+  {
+    "id": 186,
+    "domain_code": "EAP",
+    "catalog_prompt": "Build me an enterprise agile planning system to manage agile features, program increments, and portfolio epics."
+  },
+  {
+    "id": 187,
+    "domain_code": "VSM",
+    "catalog_prompt": "I need a value stream management system to manage delivery value streams, flow measurements, and DORA metrics."
+  },
+  {
+    "id": 188,
+    "domain_code": "REAL-ESTATE-AGENT",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 189,
+    "domain_code": "HVAC-SVC-MGMT",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 190,
+    "domain_code": "IT-OPS-STARTER",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 191,
+    "domain_code": "BGV",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 192,
+    "domain_code": "SVCS-PROC",
+    "catalog_prompt": ""
+  },
+  {
+    "id": 193,
+    "domain_code": "ACTIVITY-BOOKING",
+    "catalog_prompt": "I need a tours, activities & experiences booking system to manage activity bookings, activity departures, and activity products."
+  }
+]

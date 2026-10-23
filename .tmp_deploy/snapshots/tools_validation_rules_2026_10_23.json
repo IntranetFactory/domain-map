@@ -1,0 +1,102 @@
+[
+  {
+    "table_name": "tools",
+    "validation_rules": [
+      {
+        "code": "99007",
+        "name": "data_object_only_when_query_or_mutate",
+        "message": "A data_object_id may only be set when operation_kind is query or mutate.",
+        "jsonlogic": {
+          "or": [
+            {
+              "==": [
+                {
+                  "var": "data_object_id"
+                },
+                null
+              ]
+            },
+            {
+              "in": [
+                {
+                  "var": "operation_kind"
+                },
+                [
+                  "query",
+                  "mutate"
+                ]
+              ]
+            }
+          ]
+        },
+        "description": "side_effect and compute tools have no business-data return value; the FK is meaningless for them and must stay null."
+      },
+      {
+        "code": "99008",
+        "name": "data_object_required_when_query_or_mutate",
+        "message": "A data_object_id is required when operation_kind is query or mutate.",
+        "jsonlogic": {
+          "or": [
+            {
+              "!": [
+                {
+                  "in": [
+                    {
+                      "var": "operation_kind"
+                    },
+                    [
+                      "query",
+                      "mutate"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "!=": [
+                {
+                  "var": "data_object_id"
+                },
+                null
+              ]
+            }
+          ]
+        },
+        "description": "Pairs with data_object_only_when_query_or_mutate. query and mutate tools must name the data_object they read or write so the 100% Semantius derivation can resolve solution coverage."
+      },
+      {
+        "code": "99009",
+        "name": "platform_coverage_when_query_or_mutate",
+        "message": "coverage_tier must be 'platform' when operation_kind is query or mutate.",
+        "jsonlogic": {
+          "or": [
+            {
+              "!": [
+                {
+                  "in": [
+                    {
+                      "var": "operation_kind"
+                    },
+                    [
+                      "query",
+                      "mutate"
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "coverage_tier"
+                },
+                "platform"
+              ]
+            }
+          ]
+        },
+        "description": "query and mutate tools operate against a Semantius-mastered data_object (enforced by data_object_required_when_query_or_mutate). Only the platform can serve queries/mutates against its own data_objects; external/integration coverage is incoherent for this operation_kind."
+      }
+    ]
+  }
+]
