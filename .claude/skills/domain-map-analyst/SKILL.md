@@ -1892,37 +1892,25 @@ When authoring a `skills` row with `skill_type='domain'` (one-to-one with a doma
 
 For each domain skill the killer-hypothesis rollup is: `semantius_score` (see § "Semantius score": all tools, every `semantius_*` tier). **100% means every workflow primitive the skill needs is delivered by the platform OOTB — no external connector required.**
 
-Empirical result across 12 candidate domains:
+The reliable predictors of a `semantius_score` below 100%: the domain's workflow **(a)** keeps several records consistent (ledgers, balances, numbering, batch runs: `business_logic`), **(b)** generates or classifies text, or reasons over records (`agent_native`), **(c)** reaches people or calendars through the office suite (`agent_common`), **(d)** needs an outside service such as e-signature, payments or telephony (`agent_first`), or **(e)** depends on a vendor's proprietary engine or an integration (`vendor_platform`, `external`). Which of the three scores a gap lowers follows from its tier; run `bun run scripts/analytics/coverage_rollup.ts --diagnostic` for the current figures instead of relying on numbers written here.
 
-| Tranche | 100% Semantius? |
-|---|---|
-| **Pure governance / register / lifecycle** — GRC (16/16), AUDIT (17/17), DCG (15/15), DQ (10/10), MDM (11/11) | ✅ 100% |
-| **Pure planning / portfolio / catalog** — APM (9/9), SPM (17/17), SWP (13/13), EPM (8/8), ESG (15/15) | ✅ 100% |
-| **Pure operational substrate** — CMDB (7/7) | ✅ 100% |
-| **Analytics + comms** — PA (12/14) | ❌ 86% — `generate_text` (compute, attrition narratives) and `send_email` (side_effect, engagement-survey distribution) are non-negotiable for PA's core workflow |
+### Cross-tranche tool patterns
 
-The reliable predictor of *not* being 100% Semantius: the domain's core workflow involves **(a)** generating narrative/explanation text the user reads, **(b)** distributing artefacts to recipients via external channels (email, SMS, mailers), or **(c)** running ML/statistical scoring beyond what computed_fields express. PA hits (a) + (b). When you encounter a domain-skill draft that looks like it needs LLM generation or external comms in the *required* set, that's the signal to expect a sub-100% result — and the signal that the domain genuinely benefits from non-Semantius tool delivery.
+The non-CRUD tools that recur in REQUIRED sets, with the tier that decides which score they lower (re-check the tier in `tools.coverage_tier`; it is the source of truth):
 
-### Cross-tranche external-tool patterns
-
-After running 22 domain-skill drafts across the catalog (12 hypothesis-candidates + 10 obvious-non-Semantius), the external tools that appear in REQUIRED sets cluster into recognisable shapes:
-
-| Pattern | Tool | Where it appears as required | Why |
+| Pattern | Tool | Tier | Why |
 |---|---|---|---|
-| **Universal external dependency** | `send_email` | ITSM, HCM, ATS, MA, ESIGN, PAYROLL, S2P, LMS, PA (9 of 22 skills) | Operational systems all need notifications to humans. The most-frequent reason a skill drops below 100% Semantius. |
-| **Talent + contract domains** | `sign_document` | HCM, ATS, ESIGN, S2P (4 of 22) | Contracts, offer letters, supplier agreements all need e-signature. |
-| **Calendar-driven scheduling** | `create_calendar_event` | ATS (interview scheduling) | Anywhere a human appointment is part of the workflow. |
-| **ChatOps for operational systems** | `post_chat_message` | ITSM (major-incident bridge) | Slack/Teams integration for real-time ops coordination. |
-| **Voice / SMS / telephony domains** | `make_phone_call`, `send_sms` | CCAAS | When the channel itself is the workflow. |
-| **Audio + sentiment analytics** | `transcribe_audio`, `detect_sentiment` | CCAAS (call recordings), PA (engagement surveys), SMM (mentions) | "Listen to humans at scale" workflows. |
-| **External payment processors** | `execute_payment` | PAYROLL | Bank transfers / ACH always external. |
-| **External social platforms** | `post_social_message` | SMM | LinkedIn/X/Meta/TikTok/Instagram publish APIs. |
-| **ML scoring beyond computed_fields** | `classify_text`, `generate_text` | MA (lead scoring), PA (attrition narratives) | When the domain's workflow involves AI-driven text classification or generation that exceeds what JsonLogic computed_fields can express. |
+| **Notifications to humans** | `send_email` / `notify_person` / `notify_team` | `semantius_platform` / `agent_common` / `agent_common` | Operational systems all notify people; transactional email ships on Semantius, any-channel notification runs through the office suite. |
+| **Talent + contract domains** | `sign_document` | `agent_first` | Contracts, offer letters, supplier agreements need e-signature. |
+| **Calendar-driven scheduling** | `create_calendar_event` | `agent_common` | Anywhere a human appointment is part of the workflow. |
+| **ChatOps for operational systems** | `post_chat_message` | `agent_common` | Team-chat coordination (major-incident bridge). |
+| **Voice / SMS / telephony domains** | `make_phone_call`, `send_sms` | `agent_first` | When the channel itself is the workflow. |
+| **Audio + sentiment analytics** | `transcribe_audio` / `detect_sentiment` | `agent_first` / `agent_native` | "Listen to humans at scale" workflows. |
+| **Payment processors** | `execute_payment` | `agent_first` | Bank transfers and card payments run through a payment service. |
+| **Social platforms** | `post_social_message` | `agent_first` | Publishing through the networks' APIs. |
+| **Text classification and generation** | `classify_text`, `generate_text` | `agent_native` | Lead scoring, narratives, drafting: the agent's own model. |
 
-The lowest-% skills in the catalog are the ones that combine multiple of these patterns:
-- **CCAAS at 60%** — voice + SMS + transcription + sentiment (4 external requirements)
-- **ESIGN at 67%** — `sign_document` IS the workflow; small required-tool set magnifies the ratio
-- **HCM / ATS / S2P at 83-86%** — email + e-signature combo for talent/supplier comms
+Domains that combine several of these patterns have the largest gap between `semantius_score` and the agent scores.
 
 The "almost-Semantius" canaries are domains whose only gaps are one or two commodity tools (notification, e-signature, payment): one UPDATE on that tool's `coverage_tier` (e.g. `notify_person` to `semantius_platform` once Semantius routes notifications itself, on BOTH the `crud` MCP server AND the `semantius` CLI) moves them to 100%. Find them with `bun run scripts/analytics/coverage_rollup.ts --diagnostic`; do not rely on figures written here.
 
@@ -1956,8 +1944,8 @@ Process skills (`skill_type='process'`) span multiple domains and orchestrate cr
    Surface the two sets to the user before drafting tools; they're the editorial input that determines the skill's surface.
 2. **Auto-derive query tools** — every master `data_object` across `query_domains` contributes its existing `query_<master>` tool as REQUIRED. The catalog already has these from the domain-skill derivation pass; no new query tools needed. Dedupe by `tool_name`.
 3. **Auto-derive mutate tools** — for each `mutate_domain`, link any existing `update_<master>` / `create_<master>` / verb-driven mutate tool as REQUIRED. Mutates are sparser than queries — skip the master if no mutate exists yet (don't auto-generate generic ones).
-4. **Add cross-cutting externals** — apply the recurring patterns from [§ Cross-tranche external-tool patterns](#cross-tranche-external-tool-patterns). Email + sign_document + chat are the most common; if the process involves customer-facing comms or contract execution, add the relevant external tool as REQUIRED.
-5. **Apply the coverage rollup** ([references/semantius-coverage-rollup.md](references/semantius-coverage-rollup.md)) — process skills sit at 92-97% by design (every workflow needs at least `send_email`). 100% is rare and usually means the skill is mis-modeled as a process skill when it's actually a domain skill.
+4. **Add cross-cutting externals** — apply the recurring patterns from [§ Cross-tranche tool patterns](#cross-tranche-tool-patterns). Email + sign_document + chat are the most common; if the process involves customer-facing comms or contract execution, add the relevant external tool as REQUIRED.
+5. **Apply the coverage rollup** ([references/semantius-coverage-rollup.md](references/semantius-coverage-rollup.md)) and report all three scores. Process skills rarely reach 100% `semantius_score`, because value streams usually notify people (`agent_common`) or call outside services; a process skill at 100% may be a domain skill mis-modeled as a process skill.
 
 Reference loader: [scripts/loaders/load_p25b_process_skills.ts](../../../scripts/loaders/load_p25b_process_skills.ts). It reads the involved-domain sets from a hard-coded map (one entry per process skill), pulls live master sets, links tools idempotently.
 

@@ -68,7 +68,13 @@ Changing the openers or the conversion does not touch saved prompts. Applying a 
 
 The summary and gap lists go to stderr; the JSON goes to the file (or stdout with `--stdout`).
 
-Every run writes four files: `domain-list.json` (all entries), `domain-list-100.json` (entries with `semantius_agent_first` = 100) and `domain-list-others.json` (all other entries, including those without a score). Each entry in the others file adds `score_gaps`: every tool keeping `semantius_agent_first` below 100 (tier `business_logic`, `vendor_platform` or `external`) as `{tool, tier, requirement}`; `null` when the domain has no tools. A fourth file, `domain-list-site.json`, holds the entries whose domain has `domains.site_catalog = true` (the hand-maintained public site list, seeded with the 100% domains); flagged domains that the list filters out are reported on stderr. The split files sit next to the main one, also with `--out`.
+Every run writes four files:
+- `domain-list.json`: all entries.
+- `domain-list-100.json`: entries with `semantius_agent_first` = 100.
+- `domain-list-others.json`: all other entries, including those without a score. Each entry adds `score_gaps`: every tool keeping `semantius_agent_first` below 100 (tier `business_logic`, `vendor_platform` or `external`) as `{tool, tier, requirement}`; `null` when the domain has no tools.
+- `domain-list-site.json`: entries whose domain has `domains.site_catalog = true` (the hand-maintained public site list, seeded with the 100% domains); flagged domains that the list filters out are reported on stderr.
+
+The split files sit next to the main one, also with `--out`.
 
 ## Entry shape
 
