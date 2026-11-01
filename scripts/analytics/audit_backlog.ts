@@ -5,10 +5,10 @@
 // counts parsed from existing audit files. Lets a backfill pass prioritize
 // "low-hanging fruit": lots of entities already loaded, few open questions.
 //
-// Read-only. No DB writes. Produces:
+// Read-only. No DB writes, no audit-file writes. Produces:
 //   - human-readable table (default), split into two sections:
-//       1. AUDITED  — has an audits/<CODE>.md; sorted by entities/questions ratio
-//       2. UNAUDITED — never audited; sorted by entity_count descending
+//       1. AUDITED: has an audits/<CODE>/state.yaml; sorted by entities/questions ratio
+//       2. UNAUDITED: no state.yaml; sorted by entity_count descending
 //   - --json for downstream orchestration (e.g. parallel subagent dispatch)
 //
 // Run from project root (semantius reads .env from cwd):
@@ -26,17 +26,19 @@
 //   M1  zero domain_modules
 //   F2  any full module (module_kind != 'starter') without domain_module_tools
 //   H1  cross-domain handoffs with no handoff_processes rows
-//   AUD audits/<DOMAIN_CODE>.md does not exist
+//   AUD audits/<DOMAIN_CODE>/state.yaml does not exist
 //
 // Entity count = master data_objects + capabilities + modules + outbound handoffs
 //                + linked solutions. The "catalog footprint" of the domain.
 //
-// Pending questions = Bucket 2 + Bucket 3 item counts parsed from the Summary
-// section of the existing audit file. NULL when no audit file exists.
+// Pending questions = items waiting on the user in audits/<CODE>/state.yaml (schema v2, read
+// with js-yaml): every b2 decision plus every b1b blocked on a user decision. bucket2 / bucket3
+// are the b2 / b3 item counts. NULL when no state.yaml exists.
 
 import { spawn } from "bun";
 import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
+import yaml from "js-yaml";
 
 const args = process.argv.slice(2);
 const JSON_OUT = args.includes("--json");
@@ -135,51 +137,42 @@ for (const r of solDomains) {
   solCountByDomain.set(r.domain_id, (solCountByDomain.get(r.domain_id) ?? 0) + 1);
 }
 
-// Parse the frontmatter status (if any) from the audit file.
-function parseAuditStatus(code: string): { status: string; open_questions: number } | null {
-  const auditPath = resolve(AUDITS_DIR, `${code}.md`);
-  if (!existsSync(auditPath)) return null;
-  const text = readFileSync(auditPath, "utf8");
-  if (!text.startsWith("---\n")) return null;
-  const end = text.indexOf("\n---\n", 4);
-  if (end < 0) return null;
-  const block = text.slice(4, end);
-  let status = "";
-  let openQ = 0;
-  for (const line of block.split("\n")) {
-    const m = /^(\w+)\s*:\s*(.+?)\s*$/.exec(line);
-    if (!m) continue;
-    if (m[1] === "status") status = m[2];
-    else if (m[1] === "open_questions") openQ = Number(m[2]);
+const statePath = (code: string) => resolve(AUDITS_DIR, code, "state.yaml");
+
+// Read audits/<CODE>/state.yaml (schema v2) with js-yaml. null when absent or unparsable.
+const stateCache = new Map<string, any | null>();
+function readStateYaml(code: string): any | null {
+  if (stateCache.has(code)) return stateCache.get(code);
+  let doc: any | null = null;
+  const p = statePath(code);
+  if (existsSync(p)) {
+    try {
+      doc = yaml.load(readFileSync(p, "utf8")) ?? {};
+    } catch {
+      console.error(`warning: ${p} does not parse as YAML; treated as missing`);
+    }
   }
-  if (!status) return null;
-  return { status, open_questions: openQ };
+  stateCache.set(code, doc);
+  return doc;
+}
+const itemCount = (v: unknown): number => (Array.isArray(v) ? v.length : 0);
+
+// status + open questions (b2 decisions + b1b items blocked on a user decision).
+function parseAuditStatus(code: string): { status: string; open_questions: number } | null {
+  const doc = readStateYaml(code);
+  if (!doc || !doc.status) return null;
+  const b1b: any[] = Array.isArray(doc.b1b) ? doc.b1b : [];
+  const userBlocked = b1b.filter((it) =>
+    (Array.isArray(it?.blocked_by) ? it.blocked_by : []).some((b: any) => b?.type === "user_decision"),
+  ).length;
+  return { status: String(doc.status), open_questions: itemCount(doc.b2) + userBlocked };
 }
 
-// Parse Bucket 2 + Bucket 3 item counts from the audit file's Summary section.
-// Looks for lines like "Bucket 2 (...): 6 items" or "Bucket 2 ... **6 items**".
-// Returns null when no audit file exists; returns {b2, b3} (zeros if not stated).
+// b2 / b3 item counts. Returns null when no state.yaml exists.
 function parseAuditPending(code: string): { b2: number; b3: number } | null {
-  const auditPath = resolve(AUDITS_DIR, `${code}.md`);
-  if (!existsSync(auditPath)) return null;
-  const text = readFileSync(auditPath, "utf8");
-  // Stop scanning at "### Decisions" if present so resolved items drop out.
-  // We only scan the LAST audit section since prior sections are historical.
-  const sections = text.split(/^## \d{4}-\d{2}-\d{2}/m);
-  const last = sections[sections.length - 1] ?? text;
-  const decisionIdx = last.indexOf("### Decisions");
-  const scanText = decisionIdx >= 0 ? last.slice(0, decisionIdx) : last;
-  const re = /Bucket\s+([23])\b[^]*?(\d+)\s+items/gi;
-  let b2 = 0;
-  let b3 = 0;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(scanText)) !== null) {
-    const which = m[1];
-    const n = Number(m[2]);
-    if (which === "2" && b2 === 0) b2 = n;
-    if (which === "3" && b3 === 0) b3 = n;
-  }
-  return { b2, b3 };
+  const doc = readStateYaml(code);
+  if (!doc) return null;
+  return { b2: itemCount(doc.b2), b3: itemCount(doc.b3) };
 }
 
 type Finding = { id: string; detail: string };
@@ -213,8 +206,7 @@ const rows: Row[] = [];
 for (const d of domains) {
   const code = d.domain_code as string;
   const isLeadership = LEADERSHIP_TIER.has(code);
-  const auditPath = resolve(AUDITS_DIR, `${code}.md`);
-  const hasAuditFile = existsSync(auditPath);
+  const hasAuditFile = existsSync(statePath(code));
   const findings: Finding[] = [];
 
   // A1 — metadata zeroed
@@ -265,7 +257,7 @@ for (const d of domains) {
   }
 
   // AUD — audit file presence
-  if (!hasAuditFile) findings.push({ id: "AUD", detail: "no audits/<code>.md file" });
+  if (!hasAuditFile) findings.push({ id: "AUD", detail: "no audits/<code>/state.yaml" });
 
   const solCount = solCountByDomain.get(d.id) ?? 0;
   const outboundCount = outboundHandoffsByDomain.get(d.id) ?? 0;
@@ -273,8 +265,7 @@ for (const d of domains) {
 
   const statusInfo = parseAuditStatus(code);
   const pending = parseAuditPending(code);
-  // Prefer frontmatter open_questions when present (it's the authoritative
-  // human-curated count); fall back to Summary parse.
+  // Prefer the user-facing open-question count from state.yaml; fall back to b2 + b3.
   const pendingQ = statusInfo ? statusInfo.open_questions
                  : pending ? pending.b2 + pending.b3
                  : null;
@@ -383,11 +374,11 @@ if (!STATUS_FILTER && (SECTION === "both" || SECTION === "unaudited")) {
 console.log(`\n* leadership-tier domain — B1 (zero masters) is by-design, not a gap.`);
 console.log(`\nColumns:`);
 console.log(`  ent    entity_count = masters + capabilities + modules + outbound_handoffs + linked_solutions`);
-console.log(`  Q      open decisions across Bucket 1 + Bucket 2 + Bucket 3 (from frontmatter); "-" if no audit`);
+console.log(`  Q      open user questions in audits/<CODE>/state.yaml (b2 + b1b blocked on a user decision); "-" if no state.yaml`);
 console.log(`  ratio  ent / max(Q, 1) - higher = quicker to close out`);
 console.log(`  score  count of failing structural checks (A1/A2/B1/C1/M1/F2/H1/AUD)`);
 console.log(`\nLegend (findings column):`);
 console.log(`  A1=metadata  A2=<3 caps  B1=no masters  C1=no func ownership`);
 console.log(`  M1=no modules  F2=full module missing domain_module_tools  H1=untagged xdom handoffs  AUD=no audit file`);
 console.log(`\nNext: dispatch a Validate (mode b1) on a low-hanging-fruit batch, or run subagents`);
-console.log(`with --json output to draft audits/<CODE>.md files for human review.\n`);
+console.log(`with --json output to refresh audits/<CODE>/state.yaml for human review.\n`);

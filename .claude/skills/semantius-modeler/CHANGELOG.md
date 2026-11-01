@@ -8,6 +8,222 @@ Entries below are newest first.
 
 ---
 
+## One permission per process gate at `gated` and `raci`
+
+2026-11-01. At `gated` every process gate collapsed to `<slug>:admin`, while at `raci` each gate had its own permission the admin did not hold, so moving a module between the two levels rewrote its permissions and rules, and under `raci` nobody but the Accountable role could take a step when that person was absent. Rules: `references/stage-1-parse.md` (§8.1 columns, permission-citation checks, the orphan-gate check, the select-rule example, RACI plan), `references/stage-2-reconcile.md` (2j, Stage 2.5 table), `references/stage-4-execute.md` (the Stage 2.5 table copy, 4b, 4k), `references/stage-5-verify.md` (checks 3a, 5 and 7, the Access inclusions block, the access-level line), `references/stage-3-plan.md` (the access-level line, the orphan-gate question), `references/conflict-resolution.md` (the permission-citation rows).
+
+1. **Every gate has its own `workflow-gate (lifecycle)` permission at `gated` and `raci`.** The admin role holds every gate through the `<slug>:admin` hierarchy at `gated`, and every gate except a high-risk one at `raci`.
+2. **Spec §8.1 has six columns:** `high risk?` (✓ / -) follows `included in :admin?` and is filled only on lifecycle rows. Stage 1 carries it as `high_risk`.
+3. **Gate rules cite `has_permission`**, so a refused caller gets the rule's own code and message. Every check that looks for a permission citation (Stage 1, the undeclared-permission and orphan-gate rows in conflict-resolution) accepts `has_permission` as well as `require_permission`, and a creation gate counts when its insert rule cites it.
+4. **The living A-gate is the `or` of `is_raci_actor` and `has_permission` on the gate**, inside the usual `workflow_state` transition `if`. Living mode grants no role the gate; documentation mode still grants the Accountable role its gates in Stage 4k.
+5. **Stage 5 checks the admin's gate inclusions (check 3a):** an `<slug>:admin` → gate row for every gate at `gated` and for every gate that is not high-risk at `raci`, and none for a high-risk gate at `raci`. Such a row already live on a high-risk gate is reported as a problem and never deleted.
+6. **A missing Accountable assignment in living mode** leaves the step to the admin role, and locks only a high-risk step.
+7. **The `raci` access-level line** reads "business roles take the restricted steps, and admins can step in except on high-risk steps" in the Stage 3 plan and the Stage 5 report.
+8. **Living mode realizes a restricted creation:** a `create` gate has a create A-gate (the same `or` inside the insert `if`, with the entity's initial state) and a `process_gates` row with `gate_kind` `create` and the initial state as `to_state`. Stage 1 accepts both and refuses an A-gate whose entity and state match no `process_gates` row; Stage 4k materializes them and Stage 5 checks them.
+9. **Stage 4k derives each A-gate's name, code and message**, which the spec's enforcement rules do not carry: `<entity>_<to_state>_accountable_gate` (`<entity>_create_accountable_gate` for a creation); the next codes in the spec's sequence after its highest §3 rule code; "Only the <role> or an admin can <step>.", or "Only the <role> can <step>." on a high-risk gate. A §3 rule with the same logic is taken as the A-gate, so none is added twice.
+10. **An unused restricted-step permission no longer stops the parse.** Stage 1 flags it, and Stage 3 asks whether to create it anyway or send the design back to the analyst; in fast flow it is created as designed.
+11. **The select-rule bypass check's example permission check is `has_permission`.**
+12. **In living mode `_enforcement rules_` is the one home of the gate rules:** Stage 1 and 4k take each A-gate from that table, not from §3 `validation_rules`. The duplicate guard of point 9 stays as a safety net.
+13. **C-block rules get the same derivation:** `<entity>_<to_state>_consultation_gate`, the next code in the same sequence as the A-gates, and "<Step> needs the <consulted role>'s input first." ("Approving an offer needs the legal manager's input first."); on a state with no gate permission the step is "Moving a <singular label> to <state in plain words>" ("Moving a contract to signed needs the legal manager's input first."). Stage 5 check 7 verifies them like the A-gates.
+8. **Stage 4k grants gates only from the Accountable row.** A Responsible row carries no gate list and gets only the gated entities' write tier.
+
+---
+
+## The deploy never edits .gitignore
+
+2026-10-30. The skill told the agent to add `.tmp_deploy/` to the user's `.gitignore`, an edit to a shared, committed file nobody asked for. In an ATS run the folder disappeared in a workspace restore after it had been ignored. Rule: `SKILL.md`, "Generated artifacts".
+
+1. **The agent does not add, change or create a `.gitignore` entry** for the scratch folder.
+
+## The closing block hands over the spec only
+
+2026-10-29. In an ATS fast run the closing block carried "Download the ATS design" next to "Download the ATS spec", although the spec the same run produced had already superseded the design. The Closing Contract said what belonged in the block but not that nothing else may be added, and the exit check could only fail on a missing line, so an extra one passed. Rules: `SKILL.md`, "Closing Contract: clean and sticky"; `../semantius-admin/SKILL.md`, "Exit check (fast flow)"; `../semantius-admin/references/fast-flow.md`, section 6.
+
+1. **The closing block is a closed set:** the status line, the Open link, the spec download (fast runs only), the sample-data question, and nothing else. Guided and expert flow carry the status line, the Open link and the question.
+2. **The spec is the only file handed over.** No download line for the design document, the deploy script, the run log or any other file, and no "for reference" line. The design document is linked only when the user asks for it, in a later turn, once. The contract outranks the general habit of handing over every file produced.
+3. **The exit check counts instead of checking presence,** over the lines after the `---`: no absolute URLs outside the Open link and the spec download line (whose link form is the environment's and is not judged); exactly 1 file download link in a fast run, 0 in guided or expert flow; the sample-data question present unless already answered.
+4. **The exit check also checks link targets:** the Open link's URL is exactly `<ui_baseurl>/<module_slug>` with the System Name in its text, and the download line hands over `<system_slug>-semantic-spec.md`, the deployed spec, and no other file.
+5. **A failure is fixed before sending:** an extra line is deleted, a line with a wrong target is corrected, a missing Open link, spec download line or sample-data question is added, and the block is re-scanned.
+
+---
+
+## Label columns fixed by one call; seed text from the row's parent
+
+2026-10-29. Every create was followed by a hand-written label-column pass (title, description, `catalog_field_code`, input type, uniqueness), and the check run halted on it: a recorded `create_entity` did not record the label column the platform creates, so the post-create read found nothing. In a seed, offer summaries were drawn from their own pool while the job-opening link was dealt separately, so eight rows named the wrong opening. Rules: `references/scaffold-lib.ts` (`syncLabelColumns`), `references/deploy-lib.ts` (check run), `references/deploy-script-template.md` (helper table, step 4), `references/stage-1-parse.md` (label-column notes), `references/stage-4-execute.md` (4c), `references/stage-6-sample-data.md` (script pattern, "Records, not fields"), SKILL.md (committed resources).
+
+1. **`syncLabelColumns(labelColumns)` runs the label-column post-create pass** after the fields pass: one read, then one `update_field` per label column that differs from its §3 row. A re-run sends nothing.
+2. **In a check run, a recorded `create_entity` also records its label column field** as the platform creates it, so later reads find it.
+3. **Each seeded table opens with a `// Drivers:` line** naming each driver and the fields derived from it.
+4. **Text that names another record is composed from the parent dealt to the row**, the same row that gives the FK id, never from a pool of its own.
+
+---
+
+## Sample data: re-run-safe by default where a table has a unique field
+
+2026-10-29. A seed script that halted partway could not be re-run: every table went in with `postMany`, a bare insert, so the tables that had landed were inserted twice, and the recovery was to inspect and finish or clear by hand. Rules: `references/stage-6-sample-data.md` (script pattern, "Re-running the seed (idempotency)").
+
+1. **A table with a unique field is seeded with `seedEnsureMany(path, rows, <that field>)`**: a `unique_value` field, or the label column with the `unique` marker. A table with none uses `postMany`.
+2. **After a halt partway**, the script is fixed and re-run as is when every table that landed used `seedEnsureMany`; otherwise what landed is inspected first, as before.
+
+---
+
+## Platform references read once per conversation
+
+2026-10-29. In an end-to-end run the analyst and the modeler each read the same use-semantius files in full in one conversation, so about 1,200 lines entered the context twice. Rules: SKILL.md, Step 0 (hard gate).
+
+1. **`../use-semantius/SKILL.md`, `data-modeling.md`, `jsonlogic.md` and `select-rule.md` are read once per conversation.** A file already in the conversation and not summarized away is not read again; after a context reset it is read again.
+
+---
+
+## Fewer task-list reads and one log call per stage
+
+2026-10-29. A `TaskUpdate` had to be preceded by a fresh `TaskList` in every response, and the admin's hand-off gate read the list twice, so each stage change cost extra sequential turns; fast-flow picks were logged one Bash call each. Rules: `../semantius-admin/references/task-tracking.md` (section 2 rule 4, section 3 record step), `../semantius-admin/references/fast-flow.md` (section 5, go-ahead marker), SKILL.md (task sequencing around the closing block).
+
+1. **A `TaskUpdate` uses an id from a `TaskCreate`, `TaskList` or `TaskUpdate` result still in context**; `TaskList` comes first only after a context reset, and where a step needs the list's state (duplicate guard, gate, resume, end-of-run check).
+2. **All of a stage's `log_pick` lines go in one Bash call.**
+
+---
+
+## Stage 5 entity and field checks run as code
+
+2026-10-29. Stage 5 areas 5, 5a and 6 were done by hand: ad-hoc reads per entity and a model comparing large JSON and strings byte for byte, which is slow and unreliable. Rules: `references/scaffold-lib.ts` (`verifyEntities`), `references/deploy-script-template.md` (helper table, step 6, Cardinal rule 8), `references/stage-5-verify.md` (areas 5, 5a, 6), SKILL.md (committed resources).
+
+1. **`verifyEntities(entityExpect, fieldExpect)`** re-reads the entities, their fields and the FK targets (three reads) and asserts label column, owning module, label parent, key type, entity provenance, byte-for-byte labels and description, `select_rule`; per field title, description, `unique_value`, `reference_table` and its target, enum values in order with their stated label and hints, `input_type_rule`, `catalog_field_code` on fields this run created, and no reserved-name fields. Live fields the spec does not declare are a warning.
+2. **It runs inside `runDeploy` right after `verifyScaffold`** and throws on any mismatch, so the deploy halts instead of reporting success. A halt gets one silent re-run of the same command, which sends the drifted values again; a second halt is reported as a stopped deploy. A `select_rule` / `input_type_rule` mismatch is a warning, so Stage 5 still offers the user a retry. Its findings feed the Stage 5 report; the agent does not repeat these checks with its own reads.
+3. **Still checked by hand:** the lifecycle state field name (`workflow_state`).
+
+---
+
+## Deploy scripts: ensureFields and a check run before every run
+
+2026-10-29. An ATS deploy halted twice on script errors before it succeeded: its `create_field` rows had no `table_name` (the `table_name=eq.<t>` filter passed to `ensureMany` scopes the read only, it never reaches the rows), and a helper went undefined after an edit. Each halt cost a fix and a full re-run. Rules: `references/deploy-lib.ts`, `references/scaffold-lib.ts`, `references/deploy-script-template.md` (run block, "Check run first", helper table, step 4, Cardinal rule 10), `references/stage-4-execute.md` (script paragraph, 4d), `references/stage-6-sample-data.md` (script invocation), SKILL.md (committed resources, cheat table).
+
+1. **`ensureFields(table, rows)`** is the fields pass of one entity: it stamps `table_name` and `catalog_field_code` (= `field_name` when absent) on every row and refuses a row without `field_name` / `format`, naming another table, or carrying `required` / `is_nullable`, then makes one `ensureMany` call.
+2. **`DEPLOY_CHECK=1`** runs a deploy or seed script end to end with live reads and every write checked and recorded but not sent; later reads see the rows it would have created. It refuses a `create_field` row without `table_name` / `field_name` / `format`, a `create_entity` row without `table_name` or an integer `module_id`, a double-wrapped payload, and update / delete calls without their key. `verifyScaffold` and `stampDeployedVersion` are skipped, and `runDeploy` prints `CHECK RUN passed` or `CHECK RUN HALTED`.
+3. **Every deploy and seed script runs as `DEPLOY_CHECK=1 bun run <script> && bun run <script>`**: one tool call, and a script error halts before anything is written.
+
+---
+
+## Sample data: street names dealt, guarded and per country
+
+2026-10-28. A seeded suppliers table again had `Market Street` on every row, with only the house number varying. The script built the street from one literal name; `r.pick` listed street as a field where repeats are fine, "one shared street pool is fine" read as one street, and `assertSeedDistinct` on the full street passes because the house numbers differ. Rules: `references/stage-6-sample-data.md`, "Data has to read plausibly", the script pattern and "Records, not fields"; `references/deploy-lib.ts`; `references/deploy-script-template.md`, the helper table.
+
+1. **Street names are dealt** from a pool of at least 8 names with `r.deal(streets, n)`; street is no longer a `pick` example.
+2. **The street name is guarded without its house number:** the example passes the dealt names to `assertSeedDistinct`, and the guard list names the street.
+3. **The street follows the place's country:** each country has its own pool of street names and puts the house number where that country does (`1432 Market Street`, `Hauptstraße 12`, `12 rue Victor Hugo`). With no country field, every place is in the US, as before.
+4. **A house number kept in its own field goes there**, and the street field holds the name only.
+
+---
+
+## Sample data: dealt enums and parents, unique names past the pool, totals from children
+
+2026-10-28. A review of the seeded-generator rules found that the example repeated account names above 12 rows (a 409 on a unique name), `tuples` looped forever on a pool with a repeated entry, contacts picked their account at random so fields taken from the parent rarely varied enough for `assertSeedDistinct`, enum values came out in a fixed cycle and two enums of the same length moved in step, `slugify` dropped letters such as ø and ł and turned non-Latin names into an empty string, and an invoice total did not match its lines. Rules: `references/stage-6-sample-data.md`, the script pattern, "Records, not fields", "Uniqueness" and the realistic-data list; `references/deploy-lib.ts`; `references/deploy-script-template.md`, the helper table.
+
+1. **Every enum is dealt with `r.deal(values, n)`**, shuffled, every value once before any repeats; a repeated value weights the mix. The index-cycling `pick(values, i)` is removed from `deploy-lib.ts`.
+2. **FK parents are dealt with `r.deal(parentRows, n)`**, so every parent gets a child before any gets a second.
+3. **The example builds account names with `r.tuples`** from two pools (144 names). New `r.distinct(pool, n)` throws when a pool has fewer than `n` different entries. A label column or `unique_value` field is checked with `assertSeedDistinct(..., rows.length)`.
+4. **`r.tuples` removes repeated pool entries** before checking the pool sizes, and falls back to walking the combinations in order near exhaustion, so it always ends.
+5. **`slugify` transliterates ø, æ, œ, ß, ł, đ, ð, þ and ı** and throws when no Latin letter is left; a non-Latin name carries a Latin form for its email.
+6. **A parent's totals come from its children:** build the children first, sum them into the parent, insert the parents, then the children with ids matched by the parent's natural key. New invoice / invoice-lines example.
+7. **A place outside the US, Canada, the UK and Australia leaves the phone empty**, since those are the countries with a range reserved for fiction.
+8. **Re-runs converge only for the unchanged script:** editing a count, a pool or the order of draws can change that table's rows and its children's.
+9. **The UK address example reads `London EC1A 1BB`.**
+
+---
+
+## Sample data: whole records from a seeded generator
+
+2026-10-28. A seeded accounts table read like a counter: every row on Market Street, house numbers 100 to 109, postal codes 10000 to 10009 that matched none of the cities, phones 555-0101 to 555-0110. Each field came from its own index formula, and the Stage 6 example itself showed `${pick(streets, i)} ${100 + i}`. Rules: `references/stage-6-sample-data.md`, the script pattern, "Records, not fields" and "Uniqueness"; `references/deploy-lib.ts`; `references/deploy-script-template.md`, the helper table.
+
+1. **New `rng(table)` in `deploy-lib.ts`:** one fixed-seed (42) generator per table with `pick`, `int`, `chance`, `deal` (every entry once before any repeats) and `tuples` (distinct combinations, each part dealt; throws when the pools are too small). The same script writes the same rows on every run, so `seedEnsureMany` keys stay stable. `combine` is removed; `pick(values, i)` stays for the §5 enum driver; `uniq` stays for code-like fields.
+2. **New `slugify` and `exampleDomain`:** an invented company's email and web domain is `<name>.example.com`, which is reserved and never receives mail. A person's email is `first.last@<their company's domain>`. Company names are invented, never real brands.
+3. **Addresses come from a place:** city, state or region, country, the city's own postal codes and the phone area code travel together. With no country field on the entity or on any record it belongs to, places are in the US; with one, they span several countries in each country's format, and the country written is a value the field allows. A record that belongs to another takes its parent's place.
+4. **No base + index in a value a person reads** (house number, postal code, phone, amount, date). Phones use the ranges reserved for fiction (US and Canada 555-0100 to 555-0199, UK 07700 900xxx and 020 7946 0xxx, Australia (0X) 5550 xxxx).
+5. **The script pattern seeds accounts and contacts** instead of campaigns and leads, showing places, dealt names, `tuples` for people and emails from the account's domain. A pool for a field checked by `assertSeedDistinct` holds at least 8 entries.
+
+---
+
+## Entity icon goes to `entities.icon_name`
+
+2026-10-27. The platform renamed `entities.icon_url` to `icon_name`; the analyst's §3 line is now `**Icon:**`. Rules: `references/stage-1-parse.md`, the §3 entity lines and the mapping table; `references/stage-4-execute.md`, 4c; `references/deploy-script-template.md`, the schema preflight.
+
+1. **`**Icon:**` is parsed into `icon_name`** and stamped on `create_entity` / `update_entity`; it is omitted when the line is absent or empty.
+2. **The schema preflight expects `icon_name`** on `create_entity`.
+
+---
+
+## No invalid icon name is ever deployed
+
+2026-10-27. The modeler sent every icon name the spec carried without checking it, so a hand-edited spec, one saved before the analyst's icon gate, or a copied `none` would deploy a name that is not an icon. The analyst now also writes `  - icon: none <!-- finder: …: no fit -->` where no icon fits. Rules: `references/scaffold-lib.ts`, `checkEnumIcons`, `iconFindings` and the module icon; `references/deploy-script-template.md`, the copy step and steps 4 to 6; `references/stage-1-parse.md`, "Enum values from §5"; `references/stage-4-execute.md`, 4a and 4d; `references/stage-5-verify.md`, checks 1 and 5 and the "Icons not deployed" block.
+
+1. **Icons are checked at deploy time against the bundled Lucide list** (`lucide-icon-tags.json`, copied into `.tmp_deploy/` next to the libs), on every enum field, new or existing, and on the module's `icon_name`.
+2. **`icon: none` deploys as no icon** (`""`, never the text "none"), and on a live field it removes the live icon.
+3. **An unknown enum icon deploys as no icon; an unknown module icon deploys as `box`.** Each is listed as a 🟡 in the Stage 5 report's "Icons not deployed" block.
+4. **Each enum field is merged with live once,** on the create path too, so a cleared icon never comes back from a second merge.
+
+---
+
+## Label column reaches the live table
+
+2026-10-27. The 4c ✨ New rule did not list `label_column` among the `create_entity` payload keys, and Stage 5 only checked that `label_column` was set, not that it named the spec's field. Rules: `references/stage-4-execute.md`, 4c "✨ New"; `references/deploy-script-template.md`, steps 0 and 3; `references/stage-5-verify.md`, check 5.
+
+1. **The 4c ✨ New rule names `label_column`** as a key of the `create_entity` payload, from the `**Label column:**` line. The platform stores it on create and auto-creates that field. Based entities and junctions without the line omit it.
+2. **Preflight lists `label_column`** among the `create_entity` keys.
+3. **Verify compares the value:** live `label_column` must equal the spec's for each owned table; a different value is a 🛑, re-pointed with `update_entity`.
+
+---
+
+## Fast run: the spec download links a top-level copy; clean writes are not errors
+
+2026-10-27. The download route serves flat names only, from the top level of `/workspace`, so the link to `semantius/specs/<system_slug>-semantic-spec.md` never resolved. Separately, a run called a file saved cleanly through a shell heredoc "a file write error". Rules: `SKILL.md`, "Closing Contract: clean and sticky" and "Narration restraint"; `references/stage-6-sample-data.md`; `../semantius-admin/references/fast-flow.md`, section 6.
+
+1. **Copy, then link:** after the Stage 5b stamp, in the response that completes the Verify task, the deployed spec is copied byte-for-byte with `cp` to `/workspace/<system_slug>-semantic-spec.md`; the closing block links that copy.
+2. **The link form is `[Download the <System Name> spec](/workspace/{sessionId}/<file name>)`,** with `{sessionId}` written literally (the client fills it in) and spaces and parentheses percent-encoded in the file name only. A file in a subfolder is never linked.
+3. **A write is an error only when a tool call failed.** A clean write is not narrated; a failed one is reported with the tool's error verbatim, and the run stops.
+
+---
+
+## Fast run: the closing block links the deployed spec
+
+2026-10-27. A fast run names none of the files it writes, so after the deploy the user had no way to get the spec that was deployed. Rules: `SKILL.md`, "Closing Contract: clean and sticky"; `../semantius-admin/references/fast-flow.md`, sections 4.1 and 6.
+
+1. **In a fast run the closing block has four lines:** the status line, the "Open in UI" link, `[Download the <System Name> spec](<spec path>)`, then the sample-data question. The path is the deployed spec (the `Input artifact:` path, after the Stage 5b stamp), relative to the workspace root.
+2. **The link re-attaches with the sticky footer** while the sample-data question is unanswered.
+3. **Guided and expert runs are unchanged:** three lines, no download link.
+
+---
+
+## Verification report: one fixed shape, in plain language
+
+2026-10-26. A fast-run report dropped the Roles and Permission hierarchy blocks, wrote the handoffs and skipped links as prose paragraphs, put them before Counters, and added facts the template has no place for (record-id prefixes, lifecycle states, "a kind of", shared-module hints). The template allowed it: it was an example, not a contract, and it used tokens the Writing Conventions ban (`module_type`, `origin=`, `lineage`, slugs, permission names), so a run kept some of them and paraphrased the rest. Rules: `references/stage-5-verify.md`, "Structured Stage 5 report".
+
+1. **The shape is required:** one code block, the blocks in a fixed order under fixed headings, each line in one of the listed forms, no other facts and no prose, lines of at most 80 characters. Two tables say when each block is rendered and what its lines hold.
+2. **Plain language:** modules, tables, fields and roles by display name; permissions by level (view, edit, admin) or by action; no slugs, column names, `origin` or `module_type`. Block names: Tables, Access inclusions, Rules on shared tables, Ownership, Business roles, Handoffs to other modules, Links not added, Steps skipped, Business process rules. Counters lose the `origin` breakdown.
+3. **New Checks block:** one ✓ or 🛑 line per check area (module setup, tables and fields, names and descriptions, choice lists, visibility and field display rules), with one indented line per problem. The verdict line reads `🛑 Verification failed: <N> problems, listed under Checks.` when any remain.
+4. **Closing lines in a fixed order:** read-visibility callouts, verdict, access level, then the summary line, reworded in plain language.
+
+---
+
+## Seed data reads plausibly; a computed label column deploys disabled
+
+2026-10-23. A seeded person table had one surname on every row: the Stage 6 example built first + last name pairs with `combine(i, [firstNames, lastNames])`, whose second pool only advances past `i = F`, so at the default 10 rows with 10 first names every row took `lastNames[0]`. The count guard passed, and nothing checked whether the values read sensibly. Rules: `references/stage-6-sample-data.md`; `references/deploy-lib.ts`.
+
+1. **The name-pair examples (first run and re-run) use a coprime stride:** `pick(firstNames, i)` with `pick(lastNames, i * 3)`. `combine` is used only when the target is larger than its first pool's length.
+2. **New `assertSeedDistinct(table, rows, fields, minDistinct?)` in `deploy-lib.ts`:** called after each insert on the human-facing fields generated from pools (name parts, company, city, label column); it prints a per-field receipt and exits non-zero when a field has fewer than `min(rows, 8)` distinct non-empty values. It sees columns only, so name parts that exist only inside one combined field are passed to it as their own values. Listed in `deploy-script-template.md` and imported in the seed-script pattern.
+3. **"Data has to read plausibly, not just hit the count"**, a Stage 6 subsection next to the count contract, names the fields to guard.
+4. **The label column's input type is set after `create_entity`:** the platform creates it as `required`, so the post-create `update_field` sends `"disabled"` when a computed field fills it (a person's `display_name`), otherwise the §3 `Required` value when that is not `required` (`references/stage-1-parse.md`, "Label-column input type"; `references/stage-4-execute.md`, 4d). Checked on a live instance: a computed label column fills on insert, overrides a typed value, recomputes on update and accepts `disabled`.
+5. **The seed report adds label samples:** the first three `_label` values of each seeded table, read with `select=_label` at the end of the seed script. They never fail the seed; a line that looks wrong gets a one-clause note.
+
+---
+
+## Pre-deploy question says "deployment"
+
+2026-10-16.
+
+1. **The pre-write question after the plan** is *"Plan shown above. Proceed with deployment?"*. It is still asked in guided and expert flow; fast flow's go-ahead counts as this confirmation.
+
+---
+
 ## `label` is a §5 property
 
 2026-10-16. Paired with the analyst entry "every enum entry gets a label and a color; `label` is a §5 property".

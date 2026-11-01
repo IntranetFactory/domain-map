@@ -76,14 +76,14 @@ Each row assigns ONE actor ONE RACI letter on ONE process. The actor is polymorp
 
 ### The four letters and how they realize (no new permission tier)
 
-- **R (responsible).** *persona*: grant the process's gates + the gated entities' write tier. *skill*: require/emit `process_tools` (or, for a domain skill, `domain_module_tools`) coverage of the process's mutating ops (the AI-native case, R = agent).
-- **A (accountable).** *persona*: an approval gate. *skill*: an autonomous-action note (rare; usually A stays human even when R is an agent).
+- **R (responsible).** *persona*: the gated entities' write tier, never the gate. *skill*: require/emit `process_tools` (or, for a domain skill, `domain_module_tools`) coverage of the process's mutating ops (the AI-native case, R = agent).
+- **A (accountable).** *persona*: holds every gate of the process (`grant gates [...]` in the blueprint's §9 realization), following RACI's one-Accountable-per-process rule; each gated process has exactly one Accountable row (E4). Admins also hold every gate except the high-risk ones (`data_object_lifecycle_states.is_high_risk`), so they can step in when the Accountable person is absent. *skill*: an autonomous-action note (rare; usually A stays human even when R is an agent).
 - **C (consulted).** a consultation lifecycle state when input is required (`consultation_blocking = true`), else a read grant.
-- **I (informed).** No derived grant or notification wiring today: the catalog has no `webhook_receiver` entity and `trigger_events` carry no actor FK, so an Informed assignment cannot resolve to a notification side effect. It is a recorded responsibility fact, the `process_raci` I row itself, which surfaces in the per-function RACI reveal (B9e) but produces no permission or notification grant.
+- **I (informed).** The blueprint's §9 realization lists the `trigger_events` on the process's gated entities, the events an Informed actor would hear about (`⚠ no event wired` when there are none). Nothing is wired or granted for it: the catalog has no `webhook_receiver` entity and `trigger_events` carry no actor FK. The `process_raci` I row is a recorded responsibility fact that also surfaces in the per-function RACI reveal (B9e).
 
 ### The process-to-permission edge
 
-A Responsible/Accountable assignment resolves to concrete gates through `data_object_lifecycle_states.process_id` (which gate realizes process P). This is a SECOND, distinct edge from `process_raci.process_id` (which RACI row is about process P). Authoring a persona's responsibility therefore has two parts: the `process_raci` row AND populating `process_id` on the process's gated lifecycle transitions. A `process_raci` R/A row whose process has no `process_id`-wired gate derives no grant (a review-band finding).
+An Accountable assignment resolves to concrete gates through `data_object_lifecycle_states.process_id` (which gate realizes process P), and a Responsible assignment resolves to the write tier of the same gated entities. This is a SECOND, distinct edge from `process_raci.process_id` (which RACI row is about process P). Authoring a persona's responsibility therefore has two parts: the `process_raci` row AND populating `process_id` on the process's gated lifecycle transitions. A `process_raci` A row whose process has no `process_id`-wired gate derives no grant (`⚠ no gate wired` in the blueprint; a review-band finding). A gate whose verb is really the author's own action (such as `submit_scorecard`) is flagged by E4d for remodeling as an owner rule.
 
 ### Skill actors are deferred
 

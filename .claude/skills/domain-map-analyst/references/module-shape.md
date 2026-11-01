@@ -338,7 +338,7 @@ Target absent (cross-scope edge: the referenced table is not installed in this u
 
 A required reference / association edge to an absent target is "required-if-present": the FK materializes only when the tenant also installs the target, never forcing it (the plan-4 keystone). A required COMPOSITION edge to an absent child is a self-containment violation surfaced as the M9 relationship-layer audit finding (resolve by embedding the child or relaxing, never silently dropped).
 
-`owner_side` orients WHICH endpoint physically holds the FK (the child side); it does not change the mode or format and is surfaced in its own column. `clear` is the Semantius term for SET NULL (the platform `reference_delete_mode` enum is `restrict` / `clear` / `cascade`). `inheritance` is defensive (0 live edges as of 2026-06-01).
+`owner_side` names the **parent** endpoint (the lifecycle owner and cascade root, the "one" side of a `one_to_many`); the FK column lives on the other endpoint, the child. It does not change the mode or format and is surfaced in its own column (SKILL.md B6b). `clear` is the Semantius term for SET NULL (the platform `reference_delete_mode` enum is `restrict` / `clear` / `cascade`). `inheritance` is defensive (0 live edges as of 2026-06-01).
 
 ### `data_object_aliases`
 

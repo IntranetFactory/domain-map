@@ -82,7 +82,7 @@ flowchart LR
 **Key prefix:** asset
 **Audit log:** yes
 **Edit mode:** sidebar
-**Icon URL:** https://example.invalid/asset.svg
+**Icon:** https://example.invalid/asset.svg
 **Catalog entity code:** `assets`
 **Entity type:** operational_workflow
 **Label parent:** `vendor_id`
@@ -128,6 +128,79 @@ flowchart LR
         },
         {
           "require_permission": "demo-ops-pro:retire_asset"
+        },
+        true
+      ]
+    }
+  },
+  {
+    "code": "99002",
+    "name": "deploy_needs_gate",
+    "message": "Only the accountable role or an admin can deploy an asset.",
+    "description": "Deploying is a process gate; an admin can step in.",
+    "jsonlogic": {
+      "if": [
+        {
+          "and": [
+            {
+              "value_changed": "workflow_state"
+            },
+            {
+              "==": [
+                {
+                  "var": "workflow_state"
+                },
+                "deployed"
+              ]
+            }
+          ]
+        },
+        {
+          "or": [
+            {
+              "is_raci_actor": [
+                "assets",
+                "deployed",
+                "accountable"
+              ]
+            },
+            {
+              "has_permission": "demo-ops-pro:deploy_asset"
+            }
+          ]
+        },
+        true
+      ]
+    }
+  },
+  {
+    "code": "99003",
+    "name": "procure_needs_gate",
+    "message": "Only the accountable role can procure an asset.",
+    "description": "Procuring (creating) an asset is a high-risk process gate.",
+    "jsonlogic": {
+      "if": [
+        {
+          "==": [
+            {
+              "var": "$old"
+            },
+            null
+          ]
+        },
+        {
+          "or": [
+            {
+              "is_raci_actor": [
+                "assets",
+                "in_stock",
+                "accountable"
+              ]
+            },
+            {
+              "has_permission": "demo-ops-pro:procure_asset"
+            }
+          ]
         },
         true
       ]
@@ -260,15 +333,17 @@ _(none: reverse-engineered from a live module)_
 
 ## 8.1 Permissions catalog
 
-| permission | tier | description | included in `:admin`? | reconciliation |
-| --- | --- | --- | --- | --- |
-| `demo-ops-pro:read` | baseline-read | Read access to every record in the module. | ✓ | (none) |
-| `demo-ops-pro:manage` | baseline-manage | Create and edit records in the module. | ✓ | (none) |
-| `demo-ops-pro:admin` | baseline-admin | Administer reference data and settings. | - | (none) |
-| `demo-ops-pro:approve_vendor` | workflow-gate (lifecycle) | Approve a vendor for use. | - | (none) |
-| `demo-ops-pro:link` | narrow | Link assets to secondary vendors. | ✓ | (none) |
-| `demo-ops-pro:retire_asset` | workflow-gate (rule) | Retire an asset. | ✓ | (none) |
-| `demo-ops-pro:view_all_assets` | override | See every asset, not only your own. | ✓ | (none) |
+| permission | tier | description | included in `:admin`? | high risk? | reconciliation |
+| --- | --- | --- | --- | --- | --- |
+| `demo-ops-pro:read` | baseline-read | Read access to every record in the module. | ✓ | - | (none) |
+| `demo-ops-pro:manage` | baseline-manage | Create and edit records in the module. | ✓ | - | (none) |
+| `demo-ops-pro:admin` | baseline-admin | Administer reference data and settings. | - | - | (none) |
+| `demo-ops-pro:approve_vendor` | workflow-gate (lifecycle) | Approve a vendor for use. | - | ✓ | (none) |
+| `demo-ops-pro:deploy_asset` | workflow-gate (lifecycle) | Deploy an asset. | ✓ | - | (none) |
+| `demo-ops-pro:link` | narrow | Link assets to secondary vendors. | ✓ | - | (none) |
+| `demo-ops-pro:procure_asset` | workflow-gate (lifecycle) | Procure an asset. | - | ✓ | (none) |
+| `demo-ops-pro:retire_asset` | workflow-gate (rule) | Retire an asset. | ✓ | - | (none) |
+| `demo-ops-pro:view_all_assets` | override | See every asset, not only your own. | ✓ | - | (none) |
 
 ## 8.2 Business rules
 
@@ -294,6 +369,7 @@ _(none: not extracted from live state by semantius-optimizer; author by hand)_
 | `demo-ops-pro:manage` | `demo-ops-pro:read` | ♻ exists |
 | `demo-ops-pro:admin` | `demo-ops-pro:retire_asset` | ♻ exists |
 | `demo-ops-pro:admin` | `demo-ops-pro:view_all_assets` | ♻ exists |
+| `demo-ops-pro:admin` | `demo-ops-pro:deploy_asset` | ♻ exists |
 | `demo-ops-pro:manage` | `demo-ops-pro:link` | ♻ exists |
 
 **Processes:**

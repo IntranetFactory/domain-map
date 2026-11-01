@@ -8,6 +8,232 @@ The entries below are written in reverse chronological order (newest first). Eac
 
 ---
 
+## One permission per gate, admin override, high-risk gates
+
+2026-11-01. The gate permissions depended on the access level: under `gated` every gate collapsed to `<slug>:admin`, under `raci` each gate had its own permission that `<slug>:admin` did not include. Moving a module between the two created or deleted permissions and rewrote every gate rule, and under `raci` an admin could not move a record when the Accountable person was absent or a record was stuck. Every gate now has its own permission at both enforcing levels, and the level and the RACI mode decide only who holds it. Rules: `references/stage-10-workflow-perms.md` (restricted steps, access levels, Approvals options, after the decision, body table, body conversion), `references/semantic-blueprint-template.md` (§7, §8.1 tiers and rows, §9 hierarchy and living mode, frontmatter `access_scope`), `references/stage-11-governance.md` (Steps 4 and 5, the R and A rows, switching to `gated`), `references/stage-8-9-rules-classification.md`, `references/audit-checklist.md`, `references/modes-audit-extend-rebuild.md`, SKILL.md (Conventions 9 and 10, the mode table, Pre-save verification), `references/consistency-check.ts` and `evals/consistency-check/`.
+
+1. **One `workflow-gate (lifecycle)` permission per gate under `gated` and `raci`** (a gated state or a §8.2 `create` rule): its own §8.1 row, and the §7 `derived gate` is that code at both levels. `basic`, `advanced` and `custom` are unchanged (`derived gate` is `<slug>:admin`, no gate rows).
+2. **Who holds a gate.** `gated`: the admin role, through a §9.1 `<slug>:admin` → gate row for every gate (`included in :admin?` ✓). `raci`: the Accountable role of the confirmed matrix (the RACI rule, unchanged), and the admin role for every gate except the high-risk ones, through the same hierarchy rows, so an admin can step in. Responsible holds the gated entities' write tier and never a gate: the template's RACI `responsible` row and the Stage 11 R mapping carry the write tier only. In living mode a gate's rule is `or(is_raci_actor(<entity>, <to_state>, "accountable"), has_permission(<gate>))`; the platform's `is_raci_actor` is unchanged.
+3. **High-risk gates.** §7 has a `high risk?` column (✓ / -) right after `requires_permission?`, carried at every access level and meaningful only on gated rows. Under `raci` a high-risk gate has `included in :admin?` = `-` and no admin → gate row, so only the Accountable role takes the step. Under `gated` the mark has no effect: the admin holds every gate, since nobody else could.
+4. **Capture.** The restricted-steps turn has a `High risk` column: the architect proposes yes for financial approvals, compliance sign-offs and hiring decisions, and the user confirms it in the same turn (no new question; who takes the steps is still not named there). A restricted creation has no §7 row and carries no mark. A catalog clone takes the catalog's flag; Customize, Extend and Rebuild keep the marks, and a §7 table without the column gets it with `-` on every row.
+5. **Labels.** The access-level table states who holds each level's gates. The Approvals option `Business roles` reads "Each step is assigned to a business role, such as a hiring manager; admins can step in except on high-risk steps. You confirm who does what next." The question-4 plain words for `raci` read "business roles take the restricted steps, and admins can step in except on high-risk steps".
+6. **Switching to `gated` after a RACI draft** keeps the gate rows (every gate ✓, missing admin → gate rows added) and drops only the RACI trio drafted in that run.
+7. **Body table and conversion** have a `gated` column: baseline read, manage and admin, the gate's own code and §8.1 row, the `create` rule on the gate's own permission, and an admin → gate row for every gate. The `create` rule cell for `basic` / `advanced` / `custom` says the analyst drops the rule.
+8. **Pre-save and audit** check the `high risk?` column (present, ✓ only on gated rows) and the admin roll-up by level (every gate at `gated`; every non-high-risk gate and no high-risk one at `raci`). The audit suggests the high-risk mark for financial approvals, compliance sign-offs and hiring decisions that lack it.
+9. **Checker (`consistency-check.ts`).** Blueprints: `workflow-gate (lifecycle)` rows are allowed under `gated`; at `gated` a §7 `derived gate` must be the gate's own §8.1 code, as at `raci`; `included in :admin?` must be ✓, except a gate whose §7 `high risk?` is ✓ under `raci`, which must be `-`; a §9.1 `<slug>:admin` → gate row is required for every non-high-risk gate and forbidden for every high-risk one under `raci`, and required for every gate under `gated`; the §7 `high risk?` column is read by header. Specs: the FK-scope check treats every lifecycle gate code as `<slug>:admin` at `gated`, so its results are the same at every level and real `raci` divergences are still flagged, and the `permCodes` parse recognizes `has_permission` as well as `require_permission`.
+10. **Checker fixtures.** `evals/consistency-check/` holds blueprints at `gated`, at `raci` with and without a high-risk gate, and at `basic`, with their expected issues and a runner.
+11. **Checker: the `§7 high risk` check** runs at every access level, including a blueprint with no `access_scope`: each cell is exactly ✓ or `-`, ✓ only on a row whose `requires_permission?` is ✓, and the rows that derive the same gate code agree. Under `raci` a gate whose rows disagree is reported once and skipped by the admin roll-up checks.
+12. **Checker: specs follow the full rule.** Spec §8.1 is read by header name (a five-column table reads as all `-`); `high risk?` is ✓ or `-` on lifecycle rows and `-` on every other row; under `raci` a non-high-risk lifecycle gate needs ✓ and its §9.1 `<slug>:admin` → gate row, a high-risk one `-` and no row; under `gated` every lifecycle gate needs ✓ and the row.
+
+The file format version stays `3.1`.
+
+---
+
+## Empty-section rule names the RACI trio
+
+2026-10-29. The template's empty-section rule listed only the §3 sub-blocks and `**Key types:**` as left out when empty, while §9 says the RACI trio is absent outside `raci`, so the two read as a conflict. Rules: `references/semantic-blueprint-template.md` ("Empty-section convention").
+
+1. **The RACI trio (RACI realization, Processes wired, §9.2 functional ownership) is an omit exception**: absent under every access level other than `raci` unless inherited, never a `_(none: …)_` placeholder.
+
+---
+
+## Checker: write-time refusals on specs
+
+2026-10-29. Three spec mistakes reached deploy and halted it there, where each costs a fix and a re-run instead of one edit before saving. Rules: `references/consistency-check.ts` (spec checks `reserved field name`, `label parent`, `validation rules`); the analyst's pre-save table.
+
+1. **`reserved field name`:** a §3 field named `_…` or `…_id_label` fails; the platform keeps those names for its composed label columns.
+2. **`label parent`:** a `**Label parent:**` that does not name one of the entity's own `reference` / `parent` fields fails (`23514`).
+3. **`validation rules`:** a rules block that is not a JSON array, a model rule whose `code` is not class 99 (`99000`-`99999`, `90905`), or a rule name repeated within an entity fails. Platform rules (`source_module: "platform"`) are skipped.
+
+Reused and dropped entities are not checked. Blueprints are unaffected.
+
+---
+
+## Checker: FK scope on specs
+
+2026-10-29. The analyst's Stage 8 FK scope fix turns a `parent` + `cascade` link into `reference` + `restrict` when the child has its own permissions, or an audit log and a lifecycle, and the checker now enforces it. Rules: `references/consistency-check.ts`, `parseSpecEntities` and the `FK scope` check in `checkSpec`; `references/semantic-blueprint-template.md` (`delete_mode`) and `references/stage-3-entities.md`, where the analyst consumes §5 shapes verbatim except for the fix.
+
+1. **The spec parser reads three more facts:** `**Edit permission:**` (absent = `manage`), `**Audit log:**` (absent = `no`), and the `require_permission` codes inside each entity's `**Validation rules**` JSON.
+2. **A §4 row with `Kind` `parent` and `cascade`** whose `To` has fields is reported when the child's edit permission differs from the parent's, or the child has a code the parent lacks, or the child is audit-logged and has a `workflow_state` field.
+3. **It is an error with `--require-icons`** (the analyst's pre-save run) and a warning otherwise, so the modeler and optimizer runs still pass existing specs.
+4. **Blueprints are not checked:** they carry none of these facts.
+
+---
+
+## Fast-flow go-ahead: summary and question in one response
+
+2026-10-28. A fast run sent the go-ahead summary as a response of its own; a response with no tool call ends the turn, so the go-ahead question was never asked and the run stopped with nothing open to answer. Rules: `references/stage-3-entities.md` (Fast flow), SKILL.md Turn-end check, `../semantius-admin/references/fast-flow.md` sections 3 and 7.
+
+1. **The go-ahead is one response:** the summary is its text, the Go-ahead `AskUserQuestion` its only tool call. The deployed-tables read, the must-haves writes and task updates happen in earlier responses.
+2. **The summary's closing sentence** ("After your go-ahead I build and deploy…") is not an ask; the Turn-end check names it.
+3. **A user message while the go-ahead is open** that is not an answer to it gets a short reply, then the summary and the question again, in the same response.
+4. **The diagnostic log records the go-ahead:** `go-ahead: asking` in the response before the question, `go-ahead: answered <option>` when the answer arrives. A log with the first line and no second is a run that stopped before the user saw the question.
+
+---
+
+## Checker: `icon: none` with finder evidence, and `--require-icons`
+
+2026-10-27. The analyst now records every enum entry's icon check, so the §5 grammar needs a "checked, none fits" state and the analyst's pre-save run needs to refuse an unchecked entry. Rules: `references/consistency-check.ts`, `parseSpecEnums` and `uncheckedIcons`.
+
+1. **`  - icon: none <!-- finder: <query>, <query>: no fit -->`** is a valid §5 icon sub-bullet. `icon: none` without the finder queries is an error.
+2. **`--require-icons`** fails every §5 entry with no icon line. Without the flag a missing icon line is accepted, so the modeler's pre-deploy run and the optimizer's round-trip check are unchanged.
+
+---
+
+## A clean file write is never narrated as an error
+
+2026-10-27. A run told the user it "hit a file write error" after a file saved cleanly through a shell heredoc. Rules: `SKILL.md`, "Narration restraint".
+
+1. **A write is an error only when a tool call failed,** whatever method wrote the file.
+2. **On success, nothing is said about how the file was written;** on a real failure, the tool's error is quoted verbatim and the run stops.
+
+---
+
+## API object column keeps the vendor's API name unchanged
+
+2026-10-26. The <Vendor> API object column of the entity table kept showing wrong names. Stage 3 said to convert the vendor's names with `vendor-names.ts` with no exception for that column, the script needs singular input, so a plural API name (HubSpot `leads`) was changed before conversion, and the stage-3 examples themselves showed names not spelled the vendor's way (ServiceNow `Incident` for `incident`). Rules: `references/stage-3-entities.md`, the template vendor bullet, the template-mode note and the ambiguity traps; `references/stage-2-naming.md`, the naming rules table and "Converting a product's names".
+
+1. **The <Vendor> API object column is never converted.** Only the Technical name comes from `vendor-names.ts` (lowercase, snake_case, plural).
+2. **The cell and the §3 note copy the vendor's API name unchanged:** same casing, same singular or plural (ServiceNow `incident`, HubSpot `leads`, Salesforce `Opportunity`).
+3. **The singular given to the script is only its input;** it never goes in the cell.
+4. **The ambiguity-trap examples spell each vendor's objects the way its API does** (HubSpot `leads`/`contacts`/`deals`, Pipedrive `leads`/`persons`, Zendesk Sell `leads`/`contacts`, Zendesk `tickets`, ServiceNow `incident`/`problem`/`change_request`, Jira `issue`, MS Dynamics `opportunity`).
+
+## Entity table: technical name always, product column never dropped, no "Shown as"
+
+2026-10-25. A fast-flow go-ahead for a design following ServiceNow (16 entities) showed only Entity, What it holds and Shown as: the required ServiceNow API object column was missing, and no column showed the table names, so the user approved a design without seeing a single identifier. The "Shown as" column mostly repeated the entity's name ("Control Name" for Controls) or guessed ("Risk Number or Title"), and nothing reads it: it was chat-only, and the analyst picks the field that names each record on its own in its field stage. Rules: `references/stage-3-entities.md`, the template-mode note and "Present the list as a table"; SKILL.md, Writing Convention 8 (banned and required lists, Pre-emit check); `../semantius-admin/references/fast-flow.md`, section 3; `../semantius-admin/references/writing-conventions.md`, Convention 8.
+
+1. **Columns, in order:** Name, Technical name, <Vendor> API object (only when following a product), What it holds. The fast-flow go-ahead summary uses the same columns and order.
+2. **Technical name is always shown:** the table name in backticks, byte-for-byte the §3 `data_object`.
+3. **The <Vendor> API object column is never dropped when following a product.** An API object that can't be named reads "not confirmed", even when every cell does. The modern design has no such column.
+4. **Writing Convention 8 exception:** these two columns are the one place identifiers appear in chat. The Pre-emit check verifies the table's header and cells before sending.
+5. **No "Shown as" column.** A followed product's composite display name ("First Last") is still built by the analyst's display-name rule.
+
+---
+
+## Product knowledge the model lacks is looked up on the web
+
+2026-10-25. Every vendor fallback asked the user or dropped the product as soon as training knowledge ran out (an unfamiliar regional vendor, a very new product, a niche category), and every skill banned `WebFetch` outright, so the web was never consulted. Rules: SKILL.md, "Reference material" and Step 0 "Catalog source"; `references/stage-1-capture.md`, "Products that fit" and the four-object test; `references/stage-2-naming.md`; `references/stage-3-entities.md`, the template-mode note; `../semantius-admin/SKILL.md`, core invariants.
+
+1. **Knowledge first, then the web.** When training knowledge does not give the products in a category, a product's headline objects, or its API object names, search with `WebSearch` and read the product's own documentation, API reference or data-export reference with `WebFetch` before asking the user or falling back. Only what the pages confirm is used, spelled their way.
+2. **The four-object test counts looked-up objects.** A product passes when four headline objects are named from knowledge or the lookup.
+3. **The existing fallbacks apply only after the lookup:** the one-sentence "can't name its records" answer, the API object choice (switch, paste, or leave empty), the no-incumbents skip, and in a fast run modern names with "inspired by" at most.
+4. **`curl` stays the only way to fetch an artifact.** The web tools serve product knowledge only; a blueprint or spec at a URL is fetched with `curl`.
+
+---
+
+## Entity table: "Shown as" gives field titles, the product column gives API names
+
+2026-10-24. A fast-flow go-ahead for a design following Sine showed "Shown as" values as loose lowercase phrases ("expected visitor and date"), and its "Sine object" column only repeated each entity's name in the singular: in template mode the entity names are made from the product's display names, so a display name in that column checks nothing. Rules: `references/stage-3-entities.md`, the template-mode note and "Present the list as a table"; `references/stage-2-naming.md`, naming rules table; `../semantius-admin/references/fast-flow.md`, section 3.
+
+1. **"Shown as" gives the title of the field that names each record, in Title Case**, as the user will see it ("Full Name"). A name built from several fields lists their titles joined by " + " ("First Name + Last Name").
+2. **The product column is "<Vendor> API object":** the name the product's API or data export uses, in its own casing (Salesforce `Opportunity`, ServiceNow `incident`). The display name does not count. The §3 notes cell carries `<Vendor> API object: <Name>`.
+3. **An API object that can't be named** (also for a product with no API or data export) leaves that entity's cell empty, with no note in §3: guided and expert flow ask first (switch to the modern design, paste the product's list of records, or go on with the cell empty); fast flow goes on without asking. No "inspired by <Vendor>" text is written.
+
+---
+
+## A direct new build with no saved flow reaches fast flow; free-text replies are answered and re-asked
+
+2026-10-24. A direct call with no customizations file ran as guided flow ("the default when you have not picked one") and created its tasks before the fast-flow hand-off: two rules still read no saved flow as guided without naming the hand-off. In the same run, a question written into the "Also track" free-text slot got a long answer with the options as a prose list, and the question was never asked again. Rules: SKILL.md, Step 0, "Task tracking", "Expert flow" and "AskUserQuestion mechanics"; `../semantius-admin/references/interaction-flow.md`, section 2.
+
+1. **No saved flow is read as guided only after the hand-off check.** A direct new build whose request does not ask to be guided goes to the admin, and a missing customizations file counts as no saved flow.
+2. **Stage tasks are created only once the hand-off has not applied.**
+3. **A free-text reply that does not answer the question** gets a short answer, and the same question is fired again in that response, its options changed only where the reply changed them. The options are never turned into a prose list.
+
+---
+
+## Entity table shows how each entity appears in lists
+
+2026-10-23. A user could approve a design without seeing that Contacts would be listed by first name only. Rules: `references/stage-3-entities.md`, "Present the list as a table" and the template-mode note; `../semantius-admin/references/fast-flow.md`, section 3.
+
+1. **The entity table has a "Shown as" column:** the field each entity appears as in lists ("full name" for Contacts, blank for a link table). It is chat-only and adds no column to §3.
+2. **The fast-flow go-ahead summary's entity table carries the same column.**
+3. **Template mode:** a followed product's composite display name ("First Last") is named in "Shown as" and built by the analyst's display-name rule, never reduced to a first-name-only label.
+
+---
+
+## Fast flow is the default
+
+2026-10-23. A new module ran in guided flow unless the user had said "fast flow", so most people answered every question one at a time without knowing a shorter path existed. Rules: `../semantius-admin/references/interaction-flow.md`, sections 1 and 2; `../semantius-admin/references/fast-flow.md`, section 2.
+
+1. **With no saved flow, a new build runs in fast flow.** A saved `guided` or `expert` still applies; any other saved value reads as not set. The go-ahead's "Ask me along the way" remains the way out for one module.
+2. **A request that asks to be guided runs that one build in guided flow**, saved nowhere, narrated *"Using guided flow for this one."*: "guide me", "walk me through", "step by step", "assist me", "help me design / decide / think through", "ask me as we go". A plain "help me build / set up / get" is not a hint: it is how most people ask for a system they want done.
+3. **Runs that start from an existing design** (clone, deploy, customize, extend, audit) still run in guided flow, or expert when saved. The line *"Fast flow covers new builds only; this run uses guided flow."* is shown only when the user saved fast flow.
+4. **The architect called directly** on a new idea hands the run to the admin when fast flow is saved or nothing is saved, unless the request asks to be guided. The architect and analyst on their own still read no saved flow as guided: a run is fast only when the admin says so.
+
+---
+
+## Go-ahead option "Ask me along the way"
+
+2026-10-23. The fast-flow go-ahead's third option read "Ask me as usual for this build": "build" as a noun is the skills' word, not the user's, and "as usual" made the other two options sound unusual. Rules: `../semantius-admin/references/fast-flow.md`, section 3.
+
+1. **The option is "Ask me along the way"**, description *"I'll guide you through each piece of the design so we can shape it to how you work."* What it does is unchanged: the rest of this run is in guided flow, and fast flow stays on.
+
+---
+
+## A followed product's names are converted by a script
+
+2026-10-23. Following a product converted its record names to `table_name` by hand, and nothing said how to split a run of capitals (`SLAPolicy`), how to make a compound name plural (`OpportunityLineItem`), or what to do with a name already in lowercase or a custom record (`Invoice__c`), so the same product name could convert differently from run to run. The field-naming rule sat in the architect's naming table, but the architect writes no fields. Rules: `references/stage-2-naming.md`, `../use-semantius/references/vendor-names.ts`.
+
+1. **`vendor-names.ts` converts every name of a followed product**, never by hand: `bun vendor-names.ts entity:<Name>… field:<Name>…`, each name singular and spelled the product's way. A run of capitals is one word, a name already in lowercase is kept as written, only the last word of a table name becomes plural, labels keep acronyms in capitals. It answers `skip:` for a custom record or field and for a field the platform creates on every table, `built-in:` for a record name that lands on a platform built-in, and `reserved:` for a forbidden field name. Tests: `bun test` from the repo root (`scripts/vendor-names.test.ts`).
+2. **The naming rules table** points to the script for records and to the analyst (`stage-4-fields.md`, "Fields of a followed product") for fields; Stage 3 converts with the script when it drafts a product's records.
+
+---
+
+## Fast flow asks guided flow's design question; fast flow is no longer experimental
+
+2026-10-23. A fast run of "i need an applicant tracker, use the fast flow" opened with "Which of these is closest to what you need?": Greenhouse, Lever, Workable, and "None of these, design from scratch". That question came from the discovery interview, where it only runs when no product fits. In fast flow it chose the product whose structure was copied, always under modern names, so the modern design, guided flow's recommended default, was reachable only as "design from scratch", and following a product lost the point of following it: data moves to and from a product easily only when the records and the names line up. Rules: `references/stage-1-capture.md`, `references/stage-2-naming.md`, `../semantius-admin/references/fast-flow.md`.
+
+1. **Fast flow asks Stage 2's design question**, the one guided flow asks: "Modern design (Recommended)" first, then up to 3 products as "Follow <Product>". It is fired in the same call as "Must-haves", and the modern option's description names the one or two practices that set it apart, because fast flow shows no guidance aside. It is left out when the request names a product (that product is followed) or no product fits (modern). A typed answer runs the typed-answer step, as in guided flow. Fast flow no longer asks "Closest to"; the guided and expert discovery interview keeps it.
+2. **A followed product brings its records and names** (`naming_mode: template:<product>`), as in guided flow. Fast flow no longer forces modern names. The go-ahead summary opens with *"Following <Product>'s records and names."* or, for the modern design, *"Built on current best practice, with modern, self-describing names."*, and its entity table names the product object each entity maps to.
+3. **An uncertain product object is not asked about in fast flow:** the entity is marked "inspired by <Product>" and named so in the go-ahead summary's entity table.
+4. **The must-haves come from the products on the list**, because both questions are asked before the design is known.
+5. **Fast flow is no longer marked experimental.** The switch line is *"Switched to fast flow."*, and the "Fast flow" sections of the admin, architect, analyst and modeler drop the label.
+
+---
+
+## An unreachable verification host never stops a run
+
+2026-10-18. A standalone guided run ("i want to track leads") ran every stage, wrote the blueprint and passed `consistency-check.ts`, then ended on a note that the icon check could not run because `cdn.jsdelivr.net` was blocked by the sandbox's egress allow list, with no next step. `lucide-icons.ts` downloaded the icon list at run time and exited 2 when it could not, the same code as a usage error, and the `icon_name` gate read any non-zero exit as an unknown icon. The guided close-out assumed an orchestrator moves the run on, which a standalone run does not have.
+
+1. **The icon list is bundled, and the icon tool is two scripts.** `lucide-icons.ts` (with its `check` / `find` subcommands) is replaced by `use-semantius/references/lucide-icon-checker.ts <name…>` (exit 0 valid, 1 unknown name, 2 no arguments) and `lucide-icon-finder.ts <query…>` (exit 0 a query matched, 1 none, 2 no arguments). Both read `lucide-icon-tags.json`, a snapshot of one `lucide-static` release (its `version` key), and need no network. Maintainers refresh the snapshot with `bun run update-icons` from the repo root.
+2. **A blocked host is named, never worked around** (shared preflight, `semantius-admin/references/preflight.md`). A tool install that gets the allow list's `egress denied` 403 stops with the host and "your admin must allow it" (check 2). The same 403 from the Semantius host, which the CLI reports as exit 5, stops with the host instead of starting a sign-in that cannot help (check 3b). No mirror, proxy, other host or retry.
+3. **Guided close-out, standalone** (no `Run context:` block): the one line carries one clause naming the next step (*Wrote `<path>`. Say the word and I'll set it up in Semantius.*). Still no question widget, no second paragraph, no deploy confirmation.
+4. **`circle-question-mark` replaces `circle-help`** as the example icon in the blueprint template and Stage 13: Lucide renamed the icon, and the checker rejects the old name.
+5. **The icon search is one run with a defined end.** The finder takes up to five queries, most specific first (`"user plus" user person "contact card"`; the words of one query must all match), and answers them in that order, one line per query. Stage 13 takes the first icon that fits; when none fits, the module icon is `box`. Before, nothing said when to stop searching or what to use after an empty search.
+
+Minor: no file format change, no change to the blueprint's shape, and no change to any confirmation the user is asked.
+
+---
+
+## No turn without an ask
+
+2026-10-17.
+
+1. **The Stage 1 guidance aside is never a turn of its own.** It opens the turn of the next question: the Stage 2 design question in guided flow, the name and scope question in expert flow, the Stage 3 entity list when Stage 2 skips its question. A turn that asked nothing left the user with nothing to answer.
+2. **The pre-emit check also confirms the turn ends with an ask**: a turn that names a coming question, decision or step contains it. Scan tokens: "next I", "then I", "before we continue", "one decision", "I'll now", "let me know once". The close-out line is the one turn that needs none.
+3. **A "you didn't ask" report is answered with the question**, never with an explanation of why the turn was shaped that way (Narration restraint).
+
+---
+
+## Deploy question after the design is expert-only
+
+2026-10-16.
+
+1. **Guided flow close-out** is *"Wrote `<path>`."* with no deploy question or invitation; under the admin the run goes straight on to the analyst.
+2. **Expert flow close-out** is *"Wrote `<path>`. Deploy it now?"*. Under the admin a yes moves on to the analyst, a no ends the run after the design.
+
+---
+
+## Stage 7 handoffs confirmation is expert-only
+
+2026-10-16.
+
+1. **Guided and fast flow send nothing for Stage 7:** no lead-in line, no proposal, no question. The handoffs are drafted, accepted as drafted, and written to §6 in Stage 13.
+2. **A handoff to a state the source lifecycle lacks** is asked about in expert flow only; guided and fast flow drop it.
+3. **Stage 7 is in the skipped-question tables** (SKILL.md and interaction-flow.md section 3).
+
+---
+
 ## checker: every enum entry gets a label and a color; `label` is a §5 property
 
 2026-10-16. Paired with the analyst entry of the same name.

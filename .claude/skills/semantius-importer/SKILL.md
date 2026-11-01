@@ -12,8 +12,7 @@ description: >-
   `export_module`), moving modules or tables between hosts, backups or
   restores (semantius-transfer), deploying blueprints or specs
   (semantius-admin / semantius-modeler), designing a multi-entity system
-  (semantius-architect), CSV work with no Semantius target, or
-  webhook-receiver ingestion (see use-semantius references/webhook-import.md).
+  (semantius-architect), or CSV work with no Semantius target.
   For xlsx, ask for a CSV export first; CSV-only.
 ---
 
@@ -25,7 +24,7 @@ description: >-
 
 - Do NOT start this skill, or any of its stages, in an agent that another agent started to run on its own (a background worker, subagent, executor, or Task). Those agents cannot ask the user questions, so they cannot run this skill correctly. Running in the cloud is fine when the user is talking to that agent directly.
 - Do NOT write a delegation prompt that tells another agent to run this skill, "build and deploy end to end", or "make the decisions yourself".
-- If you cannot call a tool that asks the user a question and waits for the answer, STOP at once. Make no writes. Report back: "This skill is interactive and must be run in the user's conversation." Muse chat is the exception: there you ask in chat text and the tap picker, so do not stop; follow the **Muse chat** paragraph of this skill.
+- If you cannot call a tool that asks the user a question and waits for the answer, STOP at once. Make no writes. Report back: "This skill is interactive and must be run in the user's conversation." Muse chat is the exception: there you ask in chat text and the tap picker, so do not stop; follow the question-format step of the shared preflight. For dot, OpenAI's personal assistant, and other similarly limited tools without a supported interactive question tool, do not stop: read `../semantius-admin/references/dot-questions.md`, ask questions in chat, and wait for the user's reply before continuing.
 - An agent's general habit of delegating long or multi-step work does not apply here. This rule overrides it.
 
 **What may be delegated:** only steps that ask nothing and change nothing the user has not confirmed.
@@ -36,7 +35,6 @@ Division of responsibility:
 
 - **This skill** owns the workflow: introspect → map → detect → decide → import → verify, and the decision points along the way.
 - **use-semantius** owns every low-level operation (CLI syntax, payload shapes, response contracts, Golden Rules). Loaded at Step 0; it wins on any conflict.
-- **webhook-import.md** (in use-semantius) remains the reference for signed-webhook ingestion — external systems pushing rows one at a time. Not this skill's path.
 
 ## Operating modes
 
@@ -57,19 +55,11 @@ Self-contained — no other skill file needs to be read for these. They govern c
 1. **US English spellings, always**: optimize, behavior, customize, organization, analyze — never the British forms.
 2. **No em-dashes (`—`) in chat output.** Use a comma, parentheses, a semicolon, or two sentences instead. (Skill and reference files may use them; the ban is on what the user reads in chat.)
 3. **Plain language.** Say "table", "field", "row", "the file" — never internal jargon (csvschema verdict, disposition, mapping artifact) without a plain-English gloss.
-4. **Narration restraint.** Never announce what you are about to do ("Let me read...", "Now let me check..."). Do the work; render only the decision points and the final report. Play-by-play between tool calls is noise.
+4. **Narration restraint.** Never announce what you are about to do ("Let me read...", "Now let me check..."). Do the work; render only the decision points and the final report. Play-by-play between tool calls is noise. A file write is an error only when a tool call failed: a file saved cleanly through a shell heredoc or a script is not one. On success, say nothing about how the file was written; on a real failure, quote the tool's error verbatim and stop.
 5. **Data is sacred.** CSV values travel into Semantius byte-for-byte except for the coercions the mapping explicitly declares; house style (spelling, dash policy) is never applied to payloads, titles, or enum values derived from the file.
 
-**Muse chat: no `AskUserQuestion` tool.** If `AskUserQuestion` is not in
-this session's tool list, load
-[`../semantius-admin/references/muse-questions.md`](../semantius-admin/references/muse-questions.md)
-before the first question of the run, and follow it in place of every
-`AskUserQuestion` rule in this skill, for single-select and
-`multiSelect: true` alike. Skip the load when the tool is present. One
-load per run covers every skill active in the same conversation.
-
 6. **`AskUserQuestion` fires alone.** Apply mapping edits, re-renders, and task updates first, in earlier steps, then call `AskUserQuestion` as the only tool call of its response; a sibling tool call in the same response cancels the pause and the run continues before the user has answered. The answers arrive as a `<user_answers>` input block keyed by question text; there is no `user_answers` tool, never call one.
-   **Option count is 2 to 4 per question object, never 1 and never 5**; the tool rejects the whole call otherwise, including every other question in it. When the options come from data (one per column, candidate table, module), shape the list before firing: a single-select pick list shows at most the 3 best candidates (2 when two fixed options must stay) plus the stage's fixed alternative ("Create new", "Skip"), and the question text says another can be typed in (the tool always adds its own free-text slot, so never list an "Other" option); a multiSelect with more than 4 items becomes several question objects with the same header and the text suffixed ` (<i> of <N>)`, each holding 2 to 4 items (5 → 3 + 2, never 4 + 1); exactly 1 item with no fixed alternative means no question (the one item counts as chosen). Never pad with a filler option, never merge two items into one option. The tool has no pre-checked option; "(Recommended)" on one label is the only default marker.
+   **Option count is 2 to 4 per question object, never 1 and never 5**; the tool rejects the whole call otherwise, including every other question in it. When the options come from data (one per column, candidate table, module), shape the list before firing: a single-select pick list shows at most the 3 best candidates (2 when two fixed options must stay) plus the stage's fixed alternative ("Create new", "Skip"), and the question text says another can be written in (the tool always adds its own free-text slot, so never list an "Other" option); a multiSelect with more than 4 items becomes several question objects with the same header and the text suffixed ` (<i> of <N>)`, each holding 2 to 4 items (5 → 3 + 2, never 4 + 1); exactly 1 item with no fixed alternative means no question (the one item counts as chosen). Never pad with a filler option, never merge two items into one option. The tool has no pre-checked option; "(Recommended)" on one label is the only default marker.
 7. **Task tracking and the question ledger.** The harness task tools (`TaskCreate` / `TaskUpdate` / `TaskList` / `TaskGet`) track the run and the open questions. Full mechanics: [`../semantius-admin/references/task-tracking.md`](../semantius-admin/references/task-tracking.md). The importer's part, in short:
    - **Stage tasks.** At Step 0, `TaskList`, then `TaskCreate` the stage tasks from the Workflow table below (subject verbatim, `activeForm` = subject), all `pending`, then, in the same response, one `TaskUpdate` per task (`addBlockedBy: [<previous task id>]` for every task after the first; `status: in_progress` for the first; under the admin also `addBlocks: [<the in-progress unprefixed pipeline task id from TaskList>]`); a compare-only run creates only the first two, schema-only the first three. One `in_progress` at a time; `completed` when the stage's mandatory commands ran; a halted stage stays `in_progress` with `halted: <reason>` in its description. Never a task for preflight, workspace setup, or `bun add`.
    - **Ledger stages: 2, 3, 4.** Every question those stages ask is a `Q:` task first (subject = `Q: ` + the exact question text, one task per question object, description = header, options with the Recommended default, `Decides:`, `Recorded in: <mapping.json path>`), created all at once at the start of the stage (E) and gated in one call — `TaskUpdate` the stage task with `addBlockedBy: [<every Q: task id>]` — so the stage shows as blocked while any question is open, asked in batches of up to four per call (B then A), and completed only after the answer is in `mapping.json` (R). Standalone, no ledger task: the mode question (Operating modes), the previous-run-folder question (Stage 2), the single pre-write gate (Stage 4). `TaskList` clean of open `Q:` tasks is a mandatory command of Stages 2, 3, and 4 (checklist below); no plan render, dry run, or write happens while a `Q:` task is pending or in progress.
@@ -79,7 +69,9 @@ load per run covers every skill active in the same conversation.
 
 ## Preflight (before Step 0, every invocation)
 
-The shared environment checks live in **[`../semantius-admin/references/preflight.md`](../semantius-admin/references/preflight.md)**; do not duplicate them. Standalone summary: install the toolchain if missing, probe `getCurrentUser` to confirm the CLI is authenticated, halt if the org guard trips. This skill runs from wherever the user's CSV work happens; it needs no repository and makes no assumptions about one. This skill critically needs **Bun** (the import script runs with `bun run`); `jq` is convenient but optional; `yq` and the customizations file are not used.
+The shared environment checks live in **[`../semantius-admin/references/preflight.md`](../semantius-admin/references/preflight.md)**; do not duplicate them. Standalone summary: install the toolchain if missing, probe `getCurrentUser` to confirm the CLI is authenticated. This skill runs from wherever the user's CSV work happens; it needs no repository and makes no assumptions about one. This skill critically needs **Bun** (the import script runs with `bun run`); `jq` is convenient but optional; `yq` and the customizations file are not used.
+
+**Nothing about preflight reaches chat:** not the checks, not whether a `Run context:` block is present (under the admin or on your own), not the org, not the customizations path. The user sees only the setup and halt lines the shared preflight's Output discipline names.
 
 Preflight check 1 (**never `cd`**) binds this skill's helper scripts too, not only bare `semantius` commands: `create-fields.ts` and `import.ts` spawn `semantius call crud …`, a child process inherits the shell's cwd, and the CLI reads `.env` from that cwd. So every helper is run **from `<cwd>` by path** — `bun run <run-folder>/<helper>` with `<run-folder>` = `.tmp_import/run-<ts>` — never from inside the run folder; the one step that needs the run folder as its working directory is the dependency install, done as `bun add --cwd <run-folder> csv-parse`. Run from inside the run folder, the CLI never reads the session's `.env`: every field create and batch insert either fails with an auth error (exit 5) that reads like a CLI bug, or, worse, lands with whatever the global `.env` or the current host supplies. Mechanics and rationale: import-script-template.md → Workspace layout.
 
@@ -144,7 +136,7 @@ The schema is a wrapper: `{id_mode, id_move_column?, record_count, fields}`. Rec
 
 ### Stage 2 — Map and review
 
-First create the run workspace with the **canonical setup block** (import-script-template.md → Workspace layout): `<cwd>/.tmp_import/run-<timestamp>/` (a scratch folder under the current working directory — never `$TMPDIR` / `/tmp/` / `$env:TEMP`, which a sandbox restart can wipe mid-run; add `.tmp_import/` to `.gitignore` once), then all four copies under their **final names** — the `.csvschema.json`, `render-plan.ts`, `create-fields.ts`, and `references/import.template.ts` copied **as `import.ts`** (the rename happens here at setup, never in Stage 5) — and `bun add --cwd <run-folder> csv-parse`. The shell stays in `<cwd>` throughout; the run folder is only ever addressed by path (Preflight, check 1). If a previous run folder for the same table exists, offer to reuse and reconfigure it instead. The mapping lives in that folder as `mapping.json` from the first proposal on.
+First create the run workspace with the **canonical setup block** (import-script-template.md → Workspace layout): `<cwd>/.tmp_import/run-<timestamp>/` (a scratch folder under the current working directory — never `$TMPDIR` / `/tmp/` / `$env:TEMP`, which a sandbox restart can wipe mid-run), then all four copies under their **final names** — the `.csvschema.json`, `render-plan.ts`, `create-fields.ts`, and `references/import.template.ts` copied **as `import.ts`** (the rename happens here at setup, never in Stage 5) — and `bun add --cwd <run-folder> csv-parse`. The shell stays in `<cwd>` throughout; the run folder is only ever addressed by path (Preflight, check 1). If a previous run folder for the same table exists, offer to reuse and reconfigure it instead. The mapping lives in that folder as `mapping.json` from the first proposal on.
 
 Apply schema-mapping.md sections 2–7 to produce the proposed mapping:
 
@@ -192,10 +184,10 @@ The "Decision" column below is the ledger for this stage: at the start of Stage 
 |---|---|---|
 | Entity exists, everything matched | reuse as-is, import only | confirmation gate only |
 | Entity exists, missing fields | add them via `create_field` | ask: add fields / drop those columns / report only / abort |
-| Entity exists, mismatched fields | per the possible-vs-impossible classification | ask per report: `update_field` (only when classified possible) / coerce-in-script into the live format / drop / report only (4 options at most; "stop" is typed into the free-text slot and aborts) |
+| Entity exists, mismatched fields | per the possible-vs-impossible classification | ask per report: `update_field` (only when classified possible) / coerce-in-script into the live format / drop / report only (4 options at most; "stop" is written into the free-text slot and aborts) |
 | Entity exists, extra live **required** fields not in the CSV | blocker | ask: constant value for all rows / make the field optional / abort |
 | Entity absent, target module known | create the entity there | confirmation gate only |
-| Entity absent, no module | create the module first | ask: at most 3 existing modules from `read_module '{}'` (closest names to the table or file) / create a new one (2 to 4 options; another module is typed into the free-text slot; zero existing modules: no question, create it) |
+| Entity absent, no module | create the module first | ask: at most 3 existing modules from `read_module '{}'` (closest names to the table or file) / create a new one (2 to 4 options; another module is written into the free-text slot; zero existing modules: no question, create it) |
 
 Creation order (mechanics in data-modeling.md, `read_*` before every `create_*` so a re-run never double-creates):
 
@@ -205,7 +197,7 @@ Creation order (mechanics in data-modeling.md, `read_*` before every `create_*` 
 
 **Insert-only.** The import never modifies existing rows; updating existing records from a re-import is **postponed** (README → Postponed) and must not be offered, planned, or reported. With a unique key set (`natural_key` in `mapping.json`, `unique_value: true` on that field), rows whose key value already exists are skipped; without one, every run inserts every row. On an existing target entity whose chosen key field is not unique live, say so plainly and offer making it unique via the possible-change classification (`update_field` with `unique_value: true`, which fails loudly when live duplicates exist) or import without a unique key.
 
-**One pre-write confirmation gate** (`AskUserQuestion`, never a typed y/n; a standalone question, not a ledger task): render the complete numbered plan — module ops, entity, each field, planned alterations, then the import (rows and batches) — and get one approval before the first write. Precondition: `TaskList` shows no `Q:` task pending or in progress (every Stage 2-4 decision recorded); an open one means back to the ledger, not to the gate. Run the helpers in an earlier step; the gate's `AskUserQuestion` is the only tool call of its response. Every number and field line in the plan comes from the helpers, not from prose arithmetic: `bun run <run-folder>/render-plan.ts` for the mapping table and counts, `bun run <run-folder>/create-fields.ts --dry-run` for the exact `create_field` payloads. The per-topic decisions above happen during analysis; the gate is a single yes.
+**One pre-write confirmation gate** (`AskUserQuestion`, never a y/n asked in chat text; a standalone question, not a ledger task): render the complete numbered plan — module ops, entity, each field, planned alterations, then the import (rows and batches) — and get one approval before the first write. Precondition: `TaskList` shows no `Q:` task pending or in progress (every Stage 2-4 decision recorded); an open one means back to the ledger, not to the gate. Run the helpers in an earlier step; the gate's `AskUserQuestion` is the only tool call of its response. Every number and field line in the plan comes from the helpers, not from prose arithmetic: `bun run <run-folder>/render-plan.ts` for the mapping table and counts, `bun run <run-folder>/create-fields.ts --dry-run` for the exact `create_field` payloads. The per-topic decisions above happen during analysis; the gate is a single yes.
 
 **Schema-only mode ends here** after the catalog writes, reporting what was created plus the deep link.
 
@@ -248,7 +240,6 @@ Filters, column selection, and pagination follow the normal PostgREST syntax fro
 
 - deletes anything in the catalog (`delete_entity`, `delete_field`, `delete_module`, ...) — cleanup of test or mistaken imports is the user's explicit call;
 - models multi-entity systems, junction tables, or RBAC beyond the module's two standard permissions — route to `semantius-architect`;
-- creates webhook receivers — that is webhook-import.md's path;
 - writes sample or probe records outside the import itself;
 - edits files it did not create this run (the CSV stays untouched);
 - imports into `users` or other platform built-ins.

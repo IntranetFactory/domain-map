@@ -1,6 +1,6 @@
 schema_version: 2
 domain: SVCS-PROC
-domain_id: 192
+extra_domain_id: 192
 status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-19"

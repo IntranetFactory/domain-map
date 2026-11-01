@@ -8,6 +8,10 @@
  *
  * Usage:  bun run spec-extract-lib.ts <module_slug> [outfile] [--force]
  *         bun run spec-extract-lib.ts --from-fixture <fixture.json> [outfile] [--force]
+ *         bun run spec-extract-lib.ts <module_slug> --diagram
+ *
+ * `--diagram` prints only the §2 Mermaid block to stdout and writes no file. It is
+ * cut from the same render as a full run, so it equals that run's §2 diagram.
  *
  * `--from-fixture` renders the same markdown from a JSON snapshot of the live
  * reads (shape documented at `loadLive()` / the round-trip eval under
@@ -376,11 +380,11 @@ function entityDetail(e: any, fields: any[]): string {
   if (editSuffix !== "manage") out.push(`**Edit permission:** ${editSuffix}`);
   // UI/cube/icon lines (canonical spec §1), pinned right after **Edit permission:**.
   // Edit mode / Cube mode: bare enum value, no backticks; omit at the platform default
-  // `auto` (verified via `create_*` schema + every live row reads back "auto"). Icon URL:
-  // plain URL value, NO backticks; omit when empty/null.
+  // `auto` (verified via `create_*` schema + every live row reads back "auto"). Icon:
+  // a Lucide icon name or an icon URL, NO backticks; omit when empty/null.
   if (e.edit_mode && e.edit_mode !== "auto") out.push(`**Edit mode:** ${e.edit_mode}`);
   if (e.cube_mode && e.cube_mode !== "auto") out.push(`**Cube mode:** ${e.cube_mode}`);
-  if (e.icon_url) out.push(`**Icon URL:** ${e.icon_url}`);
+  if (e.icon_name) out.push(`**Icon:** ${e.icon_name}`);
   out.push(`**Catalog entity code:** \`${e.catalog_entity_code || e.table_name}\``);
   out.push(`**Entity type:** ${e.entity_type}`);
   if (e.catalog_owner_module) out.push(`**Catalog owner:** ${e.catalog_owner_module}`);
@@ -612,37 +616,134 @@ function includedClosure(rootName: string, hierarchy: any[]): Set<string> {
   return seen;
 }
 
+/** Permission codes a JsonLogic value cites through `require_permission` or
+ *  `has_permission` (both unary: a bare code string or a one-element array). */
+function citedPermissions(v: any, out: Set<string> = new Set()): Set<string> {
+  if (Array.isArray(v)) {
+    for (const x of v) citedPermissions(x, out);
+  } else if (v !== null && typeof v === "object") {
+    for (const [k, x] of Object.entries(v)) {
+      if (k === "require_permission" || k === "has_permission") {
+        for (const a of Array.isArray(x) ? x : [x]) {
+          if (typeof a === "string") out.add(a);
+          else citedPermissions(a, out);
+        }
+      } else citedPermissions(x, out);
+    }
+  }
+  return out;
+}
+
+/** True when a JsonLogic value carries `{"value_changed": "workflow_state"}` (a
+ *  `workflow_state` transition rule). */
+function hasStateTransition(v: any): boolean {
+  if (Array.isArray(v)) return v.some(hasStateTransition);
+  if (v === null || typeof v !== "object") return false;
+  return Object.entries(v).some(([k, x]) =>
+    k === "value_changed" ? (Array.isArray(x) ? x[0] : x) === "workflow_state" : hasStateTransition(x),
+  );
+}
+
+/** True when a JsonLogic value is the insert check `{"==": [{"var": "$old"}, null]}`
+ *  (either operand order). */
+function isInsertCheck(v: any): boolean {
+  if (v === null || typeof v !== "object" || Array.isArray(v) || !Array.isArray(v["=="]) || v["=="].length !== 2) return false;
+  const isOld = (x: any) => x !== null && typeof x === "object" && !Array.isArray(x) && x.var === "$old";
+  const [a, b] = v["=="];
+  return (isOld(a) && b === null) || (isOld(b) && a === null);
+}
+
+/** Codes cited in the gated branch of a create guard: an `if` whose condition is the
+ *  insert check, `{"if": [{"==": [{"var": "$old"}, null]}, <gate check>, true]}`, where
+ *  the gate check is `has_permission(<gate>)` or the living form
+ *  `or(is_raci_actor(...), has_permission(<gate>))`. */
+function createGateCodes(v: any, out: Set<string> = new Set()): Set<string> {
+  if (Array.isArray(v)) {
+    for (const x of v) createGateCodes(x, out);
+  } else if (v !== null && typeof v === "object") {
+    for (const [k, x] of Object.entries(v)) {
+      if (k === "if" && Array.isArray(x) && x.length >= 2 && isInsertCheck(x[0])) citedPermissions(x[1], out);
+      createGateCodes(x, out);
+    }
+  }
+  return out;
+}
+
+/** Codes in a `has_permission` branch of an `or` that also holds an `is_raci_actor`
+ *  branch (the living A-gate: `or(is_raci_actor(...), has_permission(<gate>))`). */
+function raciGateCodes(v: any, out: Set<string> = new Set()): Set<string> {
+  const isOp = (b: any, op: string) => b !== null && typeof b === "object" && !Array.isArray(b) && op in b;
+  if (Array.isArray(v)) {
+    for (const x of v) raciGateCodes(x, out);
+  } else if (v !== null && typeof v === "object") {
+    for (const [k, x] of Object.entries(v)) {
+      if (k === "or" && Array.isArray(x) && x.some((b) => isOp(b, "is_raci_actor"))) {
+        for (const b of x) {
+          if (!isOp(b, "has_permission")) continue;
+          for (const a of Array.isArray(b.has_permission) ? b.has_permission : [b.has_permission]) {
+            if (typeof a === "string") out.add(a);
+          }
+        }
+      }
+      raciGateCodes(x, out);
+    }
+  }
+  return out;
+}
+
 /**
  * §8.1 Permissions catalog. The `tier` vocabulary MUST be one the modeler accepts
  * (stage-1-parse: baseline-read | baseline-manage | baseline-admin |
  * workflow-gate (lifecycle) | workflow-gate (rule) | override | narrow) — a bare
  * `workflow-gate` is a deploy-time 🛑. Live state carries no tier column, so the
- * non-baseline tiers are a HEURISTIC over what the spec itself can prove:
+ * non-baseline tiers are a HEURISTIC over what the spec itself can prove. A rule
+ * CITES a code through `require_permission` or `has_permission` in an owned entity's
+ * validation_rules / select_rule JSON.
  *   narrow                   the suffix is an owned entity's `edit_permission` suffix
  *   override                 `view_all_*` / `manage_all_*` row-scope codes (tested before
  *                            the rule test: they are wired into select_rule via has_permission)
- *   workflow-gate (rule)     the code occurs in an owned entity's validation_rules /
- *                            select_rule JSON (a `require_permission` / `has_permission`)
- *   workflow-gate (lifecycle) everything else (a gated transition)
+ *   workflow-gate (lifecycle) cited by a `workflow_state` transition rule (a validation
+ *                            rule carrying `{"value_changed": "workflow_state"}`), in the
+ *                            `has_permission` branch of an `or` next to `is_raci_actor`, or
+ *                            in the gated branch of a create guard (an `if` on
+ *                            `{"==": [{"var": "$old"}, null]}`)
+ *   workflow-gate (rule)     cited by any other rule
+ *   workflow-gate (lifecycle) everything else (a gated transition no rule cites)
  * `included in :admin?` is derived from the live hierarchy: ✓ iff `<slug>:admin`
  * transitively includes the permission. With no admin permission (two-permission
  * fallback) every row is ✓ except a `baseline-admin` row, which is always `-`.
+ * `high risk?` is filled only on `workflow-gate (lifecycle)` rows under
+ * `access_scope: raci`: ✓ when `<slug>:admin` does not include the gate (its
+ * `included in :admin?` is `-`), else `-`. Under every other access level, and on
+ * every other row, it is `-` (under `gated` the admin holds every gate, so live state
+ * cannot show which gates are high-risk).
  * `reconciliation` is `(none)`: live state cannot recover a `re-prefixed-from` origin.
  */
 function permissionsCatalog(mod: any, perms: any[], hierarchy: any[], owned: any[]): string {
   const out: string[] = [
     "## 8.1 Permissions catalog",
     "",
-    "| permission | tier | description | included in `:admin`? | reconciliation |",
-    "| --- | --- | --- | --- | --- |",
+    "| permission | tier | description | included in `:admin`? | high risk? | reconciliation |",
+    "| --- | --- | --- | --- | --- | --- |",
   ];
   const slug: string = mod.module_slug;
   const editSuffixes = new Set<string>(
     owned.map((e) => permSuffix(String(e.edit_permission || ""), slug)).filter((s) => s && s !== "manage" && s !== "admin"),
   );
-  const ruleText = owned
-    .map((e) => JSON.stringify([e.validation_rules || [], e.select_rule || {}]))
-    .join("\n");
+  const cited = new Set<string>();
+  const lifecycleCited = new Set<string>();
+  for (const e of owned) {
+    const rules = Array.isArray(e.validation_rules) ? e.validation_rules : e.validation_rules ? [e.validation_rules] : [];
+    for (const rule of rules) {
+      const codes = citedPermissions(rule);
+      for (const c of codes) cited.add(c);
+      if (hasStateTransition(rule)) for (const c of codes) lifecycleCited.add(c);
+      for (const c of raciGateCodes(rule)) lifecycleCited.add(c);
+      for (const c of createGateCodes(rule)) lifecycleCited.add(c);
+    }
+    for (const c of citedPermissions(e.select_rule || {})) cited.add(c);
+  }
+  const raci = String(mod.access_scope) === "raci";
   const adminPerm = perms.find((p) => permSuffix(p.permission_name, slug) === "admin");
   const adminClosure = adminPerm ? includedClosure(adminPerm.permission_name, hierarchy) : null;
 
@@ -665,13 +766,15 @@ function permissionsCatalog(mod: any, perms: any[], hierarchy: any[], owned: any
     // `override` before the rule test: a row-scope override is wired INTO the entity's
     // select_rule via `has_permission`, so it would otherwise read as a rule gate.
     else if (/^(view_all_|manage_all_)/.test(suffix)) tier = "override";
-    else if (ruleText.includes(`"${name}"`)) tier = "workflow-gate (rule)";
+    else if (lifecycleCited.has(name)) tier = "workflow-gate (lifecycle)";
+    else if (cited.has(name)) tier = "workflow-gate (rule)";
     else tier = "workflow-gate (lifecycle)";
     let inAdmin: string;
     if (tier === "baseline-admin") inAdmin = "-";
     else if (adminClosure) inAdmin = adminClosure.has(p.permission_name) ? "✓" : "-";
     else inAdmin = "✓";
-    out.push(`| \`${name}\` | ${tier} | ${p.description} | ${inAdmin} | (none) |`);
+    const highRisk = raci && tier === "workflow-gate (lifecycle)" && inAdmin === "-" ? "✓" : "-";
+    out.push(`| \`${name}\` | ${tier} | ${p.description} | ${inAdmin} | ${highRisk} | (none) |`);
   }
   return out.join("\n");
 }
@@ -989,17 +1092,21 @@ function render(data: LiveData): string {
 
 async function main() {
   // Arg parse: positional <module_slug> [outfile] (or --from-fixture <json> [outfile]),
-  // plus an optional order-independent --force flag. --force is the ONLY way to
-  // overwrite an existing outfile.
+  // plus optional order-independent --force and --diagram flags. --force is the ONLY
+  // way to overwrite an existing outfile; --diagram writes no file at all.
   const rawArgs = Bun.argv.slice(2);
   const force = rawArgs.includes("--force");
+  const diagramOnly = rawArgs.includes("--diagram");
   const fixtureIdx = rawArgs.indexOf("--from-fixture");
   const fixturePath = fixtureIdx >= 0 ? rawArgs[fixtureIdx + 1] : null;
   // Drop the fixture path only when --from-fixture is present (fixtureIdx -1 would otherwise drop argv[0], the slug).
-  const positional = rawArgs.filter((a, i) => a !== "--force" && a !== "--from-fixture" && (fixtureIdx < 0 || i !== fixtureIdx + 1));
+  const positional = rawArgs.filter(
+    (a, i) => a !== "--force" && a !== "--diagram" && a !== "--from-fixture" && (fixtureIdx < 0 || i !== fixtureIdx + 1),
+  );
   const usage =
     "usage: bun run spec-extract-lib.ts <module_slug> [outfile] [--force]\n" +
-    "       bun run spec-extract-lib.ts --from-fixture <fixture.json> [outfile] [--force]";
+    "       bun run spec-extract-lib.ts --from-fixture <fixture.json> [outfile] [--force]\n" +
+    "       bun run spec-extract-lib.ts <module_slug> --diagram";
   if (fixtureIdx >= 0 && !fixturePath) throw new Error(usage);
   const slug = fixturePath ? null : positional[0];
   if (!fixturePath && !slug) throw new Error(usage);
@@ -1009,7 +1116,7 @@ async function main() {
   // script never spends a run's worth of network work and then clobbers a file.
   // Refuse unless --force; the skill's Stage 2a asks the user first and passes --force
   // only on an explicit "replace" (or passes a different, non-colliding outfile).
-  if (!force && (await Bun.file(outfile).exists())) {
+  if (!diagramOnly && !force && (await Bun.file(outfile).exists())) {
     console.error(
       `refusing to overwrite existing file: ${outfile}\n` +
         `Choose a different output path, or pass --force to replace it.`,
@@ -1032,6 +1139,12 @@ async function main() {
   }
 
   const md = render(data);
+  if (diagramOnly) {
+    const block = md.match(/^```mermaid\n[\s\S]*?\n```$/m);
+    if (!block) throw new Error("render produced no Mermaid block");
+    console.log(block[0]);
+    return;
+  }
   await Bun.write(outfile, md);
   console.log(
     `Wrote ${outfile}: ${data.ownedRaw.length} owned entities, ${data.related.length} related, ${data.perms.length} permissions.`,

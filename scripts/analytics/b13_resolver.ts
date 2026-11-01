@@ -9,13 +9,16 @@
 //   bun run scripts/analytics/b13_resolver.ts --write      # apply catalog-wide
 //   bun run scripts/analytics/b13_resolver.ts WFM          # dry-run, one domain
 //   bun run scripts/analytics/b13_resolver.ts WFM --write  # apply, one domain
+//   bun run scripts/analytics/b13_resolver.ts --out <file> # dry-run, also save the delta to <file>
 //
 // entity_type classification is additive-corrective (Rule #21: agent does it without asking,
 // lands reviewable in the records). record_status is NEVER touched (Rule #1). --dry-run is the
 // verification surface: every proposed class + the signal that fired is printed before any write.
 
 const WRITE = process.argv.includes("--write");
-const DOM = process.argv.slice(2).find((a) => a !== "--write" && a !== "--dry-run") || null;
+const outIdx = process.argv.indexOf("--out");
+const OUT = outIdx >= 0 ? process.argv[outIdx + 1] ?? null : null;
+const DOM = process.argv.slice(2).find((a, i, all) => a !== "--write" && a !== "--dry-run" && a !== "--out" && all[i - 1] !== "--out") || null;
 
 async function sem(req: any): Promise<any> {
   const proc = Bun.spawn(["semantius", "call", "crud", "postgrestRequest", JSON.stringify(req)], { stdout: "pipe", stderr: "pipe" });
@@ -95,8 +98,8 @@ if (WRITE) {
   const left = await sem({ method: "GET", path: `/data_objects?entity_type=eq.unclassified&id=in.(${ids.join(",")})&select=id` });
   console.log(`patched ${done}; unclassified remaining in this set: ${left.length}`);
 } else {
-  // Write the delta as a reviewable artifact (current -> proposed per object), the q-/a- shape
-  // but consolidated catalog-wide. Edit the `proposed` column to correct any row, then apply.
+  // Print the delta as a reviewable table (current -> proposed per object), the q-/a- shape
+  // but consolidated catalog-wide. A dry run writes no file unless --out names one.
   const byDom: Record<string, typeof rows> = {};
   for (const r of rows) (byDom[r.dom] = byDom[r.dom] || []).push(r);
   const lines: string[] = [
@@ -111,7 +114,10 @@ if (WRITE) {
     for (const r of byDom[dom]) lines.push(`| ${r.name} | unclassified | ${r.et} | ${r.conf} | ${r.why} |`);
     lines.push("");
   }
-  const out = `.tmp_deploy/b13-classification-delta-2026-06-11.md`;
-  await Bun.write(out, lines.join("\n"));
-  console.log(`\ndelta written to ${out} (dry-run: nothing patched). Review/edit the proposed column, then re-run with --write to apply.`);
+  console.log("\n" + lines.join("\n"));
+  if (OUT) {
+    await Bun.write(OUT, lines.join("\n"));
+    console.log(`delta also written to ${OUT}`);
+  }
+  console.log(`\ndry-run: nothing patched. Review the proposed column, then re-run with --write to apply.`);
 }

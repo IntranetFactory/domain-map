@@ -1,8 +1,8 @@
 # Mass-audit subagent prompt
 
 Reusable instructions for a `general-purpose` subagent running a Validate b1
-(per-domain audit) against a single `<DOMAIN_CODE>` and writing a draft
-`audits/<DOMAIN_CODE>.md`. Used during mass-backfill waves where the orchestrator
+(per-domain audit) against a single `<DOMAIN_CODE>` and writing its draft
+audit into `audits/<DOMAIN_CODE>/`. Used during mass-backfill waves where the orchestrator
 runs 3-4 subagents per wave.
 
 ## When to use
@@ -14,8 +14,10 @@ to finish, reviews the produced audit files, then dispatches the next wave.
 
 ## What the subagent produces
 
-ONE artifact: a new file at `audits/<DOMAIN_CODE>.md` (or, if the file exists,
-a new dated section appended per `audits/README.md`). NOTHING ELSE. No DB
+The domain's audit files in `audits/<DOMAIN_CODE>/`, per `audits/README.md`: a
+new dated section appended to `history.md`, `state.yaml` rewritten with the open
+items (including the `checks:` block that `domain_health.ts --record` writes),
+and `q-<DOMAIN_CODE>.md` when the status is `feedback_needed`. NOTHING ELSE. No DB
 writes. No blueprint regeneration. No load scripts. No chat narrative beyond
 a one-line completion summary.
 
@@ -29,9 +31,9 @@ does NOT load a `domains` row for the candidate.
 
 ```
 You are a domain-map audit subagent. Your sole task: run a Validate b1 audit
-(4 passes) against domain `<DOMAIN_CODE>` and write the audit to
-`audits/<DOMAIN_CODE>.md` in the format defined by `audits/README.md`. You do
-not load anything to the database. You produce one markdown file and stop.
+(4 passes) against domain `<DOMAIN_CODE>` and write the audit into
+`audits/<DOMAIN_CODE>/` in the format defined by `audits/README.md`. You do
+not load anything to the database. You write the audit files and stop.
 
 ## Hard constraints (these have all been violated before; do not violate them)
 
@@ -116,31 +118,35 @@ not load anything to the database. You produce one markdown file and stop.
 - `.claude/skills/domain-map-analyst/references/domain-audit-procedure.md`
 - `audits/README.md` for the output file format
 - `audits/_missing-domains.md` for the candidate-queue file format
-- One existing audit file as a reference (e.g. `audits/APM.md` or `audits/ATS.md`)
-  to match the prose style and section layout
+- One existing audit as a reference (e.g. `audits/ATS/history.md` and
+  `audits/ATS/state.yaml`) to match the prose style and section layout
 
 ## Procedure
 
 ### Pre-flight
 
-1. Verify tenant: `semantius call crud getCurrentUser '{}'` — confirm the
-   response's `semantius_org` is the intended tests tenant. If anything looks
-   off, STOP and report.
+1. Verify tenant: `semantius call crud getCurrentUser '{}'`: confirm the
+   response's `semantius_org` is `domain-map` (not the stale `adenin` copy or
+   the legacy `tests` org). If anything looks off, STOP and report.
 
 2. Resolve `<DOMAIN_CODE>` to its `id`:
    `semantius call crud postgrestRequest '{"method":"GET","path":"/domains?domain_code=eq.<DOMAIN_CODE>&select=id,domain_code,domain_name,description"}'`
    If the result is empty, STOP — this is a wrong-code dispatch.
 
-3. Check if `audits/<DOMAIN_CODE>.md` already exists. If yes, read it and
-   plan to APPEND a new dated section. Never overwrite or delete existing
-   audit history. If no, plan to create the file from scratch.
+3. Read `audits/<DOMAIN_CODE>/state.yaml` and skim `history.md` if they exist
+   (SKILL.md audit recipe step 0): the recorded worklist is where the audit
+   continues from. You APPEND a new dated section to `history.md`; never
+   overwrite or delete existing audit history.
 
 ### Pass 1 — Structural (per-domain completeness checklist)
 
-Run every in-scope band check from SKILL.md § "Per-domain completeness
-checklist": S1-S3, A1-A3 (skip A5 unless explicitly asked), M1-M7, B1-B15,
-C1-C2, D1, E1-E6, F1-F5, F7, H1. For each failing check, capture the query
-output snippet so the audit file shows evidence.
+Run `bun run scripts/analytics/domain_health.ts --domain <DOMAIN_CODE> --record`
+from the project root. It runs every mechanical check of SKILL.md § "Per-domain
+completeness checklist" (the one canonical check list) and records the results
+in the `checks:` block of `state.yaml`. Then work every check it lists as
+`agent` or `delegated` (skip A5 unless explicitly asked; H1 and B9d are never
+skipped). For each failing check, capture the offending rows so the audit shows
+evidence.
 
 Classify each finding:
 - **In-scope fix** — this domain owns the fix. Goes to Bucket 1.
@@ -212,8 +218,8 @@ summary instead of the full 5-section diff.
 
 ## Output
 
-Write or append-to `audits/<DOMAIN_CODE>.md` following EXACTLY the format
-in `audits/README.md`:
+Append a new dated section to `audits/<DOMAIN_CODE>/history.md` in this
+format:
 
 ```markdown
 ## <YYYY-MM-DD> — Validate b1 (full 4-pass)
@@ -255,42 +261,25 @@ market-shape question, you have not finished Pass 2 for it.]
 [B8 inbound / B10 / pairwise gaps that route to other domains' audits]
 ```
 
-Use the EXACT bucket-count phrasing in the Summary (`**Bucket 2 (...): N items.**`)
-so the `audit_backlog.ts` parser can read it.
+Use the EXACT bucket-count phrasing in the Summary (`**Bucket 2 (...): N items.**`).
 
-## After writing the audit file, set the workflow state
+## After writing history.md, write the workflow state
 
-Initialize the audit's frontmatter so the orchestrator's queue picks it up:
-
-```bash
-bun run "C:/dev/domain-map/scripts/analytics/audit_state.ts" \
-  --init <DOMAIN_CODE> \
-  --status feedback_needed \
-  --questions <Bucket1_count + Bucket2_count + Bucket3_count> \
-  --by agent
-```
-
-Every B1 item counts as an open decision (per constraint #10). The user
-batches Bucket 1 approvals but still owns the decision.
-
-If the audit file already had frontmatter (you appended a new dated section
-to an existing audit), use `--set` instead of `--init`:
-
-```bash
-bun run "C:/dev/domain-map/scripts/analytics/audit_state.ts" \
-  --set <DOMAIN_CODE> \
-  --status feedback_needed \
-  --questions <new_total_open_questions> \
-  --by agent
-```
-
-The helper enforces Rule #1: agents cannot flip out of `feedback_needed`.
-You CAN flip into it (from `new`, or from `research_needed` when follow-up
-questions surfaced).
+Rewrite `audits/<DOMAIN_CODE>/state.yaml` per the v2 schema in
+`audits/README.md`: Bucket 1 items become `b1a` (or `b1b` when blocked),
+Bucket 2 items `b2` (market-shape ones with their `evidence`), Bucket 3 items
+`b3`; set `status`, `next_action_by` and `last_audit`. Keep the `checks:` block
+the health script wrote, and never hand-edit it. Every Bucket 1 item counts as
+an open decision (per constraint #10): the user batches Bucket 1 approvals but
+still owns the decision, so the status is `feedback_needed`. Then write
+`q-<DOMAIN_CODE>.md` per SKILL.md Rule #22 and run
+`bun run scripts/analytics/qfile_grounding_lint.ts <DOMAIN_CODE>` until it exits
+clean. (`scripts/analytics/audit_state.ts` is a read-only report of these files;
+it writes nothing.)
 
 ## When done
 
-Print ONE line to stdout: `Wrote audits/<DOMAIN_CODE>.md (Bucket 1: N, Bucket
+Print ONE line to stdout: `Wrote audits/<DOMAIN_CODE>/ (Bucket 1: N, Bucket
 2: M, Bucket 3: K, candidates queued: P, status: feedback_needed).` Then
 exit. Do not narrate the audit content; the orchestrator reads the file
 directly.
@@ -309,7 +298,7 @@ Per wave:
    single assistant turn for concurrency. Each Agent gets a copy of the
    prompt above with `<DOMAIN_CODE>` substituted.
 3. Wait for all Agents in the wave to return.
-4. Surface the produced `audits/<CODE>.md` files to the user for review.
+4. Surface the produced `audits/<CODE>/` files to the user for review.
 5. Dispatch the next wave on user approval.
 
 ## Why this prompt is the size it is

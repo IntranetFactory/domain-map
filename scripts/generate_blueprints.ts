@@ -19,13 +19,20 @@
 //   bun run scripts/generate_blueprints.ts --regenerate --check # CI drift check over existing files
 //   bun run scripts/generate_blueprints.ts --released           # a file for every module hosted on a RELEASED domain
 //   bun run scripts/generate_blueprints.ts --all                # (re)generate a file for EVERY module (rare)
+//   bun run scripts/generate_blueprints.ts --lint               # R1-R8 over the existing blueprints' modules; writes nothing
+//
+// Every emit also runs the derived-result invariants R1-R8 (./lib/blueprint_invariants.ts) and
+// prints their findings to stderr (Policy 1: warn, never throw). `--lint` writes no file, prints the
+// findings with a per-rule summary, and exits non-zero on any `fail` finding; it lints the existing
+// blueprint files' modules by default, or the --module / --released / --all selection.
+//
+// Importable: the CLI runs only when this file is the entry point (import.meta.main). Tests import
+// renderBlueprint(modules, index, all) to render a blueprint from an offline fixture catalog.
 //
 // "Regenerate" means refresh what already exists on disk; it never creates a file for a module
 // that has no blueprint yet (that is what --all does). Default to --regenerate. Use --all only
 // when explicitly asked to (re)generate the entire corpus, because it walks every domain_modules
 // row and can be far slower and wider than the curated set of committed blueprints.
-
-export {};
 
 import { writeFileSync, mkdirSync, existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
@@ -34,93 +41,72 @@ import {
   clearCatalogCache,
   isDomainReleased,
   loadCachedCatalog,
-  loadModuleCatalog,
   ROLE_ORDER,
   ROLE_RANK,
   type AllRelationships,
   type CatalogIndex,
   type CoMasterRow,
-  type DataObject,
-  type Domain,
   type IndustryRow,
   type ModuleCatalog,
   type ModuleRow,
   type OwnerInfo,
   type ScopeRow,
 } from "./lib/catalog";
+import {
+  deriveBlueprintModel,
+  makeDeriveCtx,
+  moduleSlug,
+  type BlueprintModel,
+  type DeriveCtx,
+  type HandoffModel,
+  type RelationshipModel,
+} from "./lib/blueprint_derive";
+import { checkModel, RULE_IDS, RULES, type ModelFinding } from "./lib/blueprint_invariants";
 
-// ---------- args ----------
-const args = argv.slice(2);
-const ALL = args.includes("--all");
-const RELEASED = args.includes("--released");
-const REGEN = args.includes("--regenerate");
-const CHECK = args.includes("--check");
-const NO_CACHE = args.includes("--no-cache");
-const CLEAR_CACHE = args.includes("--clear-cache");
-function flagValue(name: string): string | null {
-  const i = args.indexOf(name);
-  return i >= 0 && i + 1 < args.length ? args[i + 1] : null;
-}
-const MODULE_CODE = flagValue("--module");
-
-if (CLEAR_CACHE) {
-  const cleared = clearCatalogCache();
-  console.error(cleared ? "catalog cache cleared" : "no catalog cache to clear");
-  if (!ALL && !MODULE_CODE) exit(0);
-}
-
-if (!ALL && !RELEASED && !REGEN && !MODULE_CODE) {
-  console.error("usage:");
-  console.error("  generate_blueprints.ts --module <MODULE_CODE> [--no-cache] [--clear-cache]");
-  console.error("  generate_blueprints.ts --regenerate [--check] [--no-cache]   # refresh ONLY existing blueprint files");
-  console.error("  generate_blueprints.ts --released [--check] [--no-cache]      # (re)generate a file for every module hosted on a RELEASED domain");
-  console.error("  generate_blueprints.ts --all [--check] [--no-cache]          # (re)generate a file for EVERY module");
-  console.error("  generate_blueprints.ts --clear-cache");
-  exit(2);
-}
+// ---------- CLI flags (set by main) ----------
+// Only the IO driver reads these; the renderers below never do.
+let CHECK = false;
 
 const ROOT = "c:/dev/domain-map";
 const BLUEPRINTS_DIR = `${ROOT}/catalog/blueprints`;
 const BLUEPRINT_SUFFIX = "-semantic-blueprint.md";
 const TODAY = new Date().toISOString().slice(0, 10);
-// Blueprint format/schema version (front-matter `blueprint_version`). The producer owns this and
-// bumps it only when the file SHAPE changes. 3.0 (vs 2.x) adds exactly two Section 3 columns:
-// `canonical code` (the stable uber-model identity, beside the deployed `data_object`) and a
-// relocated `entity_type` (now immediately before `write tier`). No other section changed shape.
-// Emit exactly this one version key, never a consumer/authoring-tool version.
-const BLUEPRINT_VERSION = "3.0";
+// Blueprint file format version (front-matter `version`): the architect's semantic-blueprint format
+// the catalog blueprints follow (semantius-architect references/semantic-blueprint-template.md). The
+// format owns this value; it changes only when the architect's format version changes. 3.1 carries
+// the 3.0 Section 3 columns (`canonical code` beside `data_object`, `entity_type` immediately before
+// `write tier`) plus the §7 `high risk?` column. Emit exactly this one version key, never a
+// consumer/authoring-tool version.
+const BLUEPRINT_VERSION = "3.1";
 
-// ---------- catalog index (loaded once via lib) ----------
-// Types, pg helper, and scoped query helpers live in ./lib/catalog.ts. Aliasing
-// index.xxx into local consts keeps existing render functions calling the same
-// names (dataObjectsById, modulesById, etc.) without churn.
-const { index, all: allRelationships } = (await loadCachedCatalog({ forceRefresh: NO_CACHE })) as {
-  index: CatalogIndex;
-  all: AllRelationships;
-};
-const { domainsById, domainsByCode, dataObjectsById, industriesById, modulesById, modulesByCode } = index;
-const allModules = index.modules;
-const USERS_ID = index.usersId;
-void allModules; // referenced by emitOneModuleBlueprint driver below
-void domainsByCode; // exported alias for future callers; harmless if unused here
+// ---------- catalog bindings (set by bindCatalog) ----------
+// The markdown renderers below read the catalog through these module bindings; bindCatalog sets
+// them from a loaded (or offline fixture) CatalogIndex + AllRelationships before any render.
+let domainsById: CatalogIndex["domainsById"];
+let dataObjectsById: CatalogIndex["dataObjectsById"];
+let industriesById: CatalogIndex["industriesById"];
+let modulesById: CatalogIndex["modulesById"];
+let USERS_ID = -1;
+// The derivation rules (./lib/blueprint_derive.ts) read the catalog only through this context.
+let deriveCtx: DeriveCtx;
+
+function bindCatalog(index: CatalogIndex, all: AllRelationships): void {
+  ({ domainsById, dataObjectsById, industriesById, modulesById } = index);
+  USERS_ID = index.usersId;
+  deriveCtx = makeDeriveCtx(index, all);
+}
+
+// Render one blueprint (the full markdown file) for a scope of modules from an already-loaded
+// catalog. Pure apart from the emit-time console warnings: no catalog fetch, no file IO.
+export function renderBlueprint(modules: ModuleRow[], index: CatalogIndex, all: AllRelationships): string {
+  bindCatalog(index, all);
+  return emitBlueprint(modules);
+}
 
 // ---------- helpers ----------
 
 function lowerSlug(code: string): string {
   return code.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-}
-
-function moduleSlug(code: string): string {
-  // ATS-CANDIDATE-CRM → ats-candidate-crm (used as permission prefix per §4.6)
-  return code.toLowerCase().replace(/_/g, "-");
-}
-
-function entitySingularToken(o: DataObject): string {
-  return o.singular_label.toLowerCase().replace(/\s+/g, "_");
-}
-
-function entityPluralToken(o: DataObject): string {
-  return o.plural_label.toLowerCase().replace(/\s+/g, "_");
 }
 
 function tableRow(cells: (string | number | boolean | null | undefined)[]): string {
@@ -323,7 +309,7 @@ function renderAliases(aliasRows: any[]): string[] {
   return out;
 }
 
-function renderRelationshipTable(rows: any[], opts: { includeOwnerSide: boolean; includeKind: boolean; targetInScope: boolean }): string[] {
+function renderRelationshipTable(rows: RelationshipModel[], opts: { includeOwnerSide: boolean; includeKind: boolean }): string[] {
   const out: string[] = [];
   if (rows.length === 0) return out;
   const headers: string[] = ["from", "verb", "to", "cardinality"];
@@ -332,7 +318,7 @@ function renderRelationshipTable(rows: any[], opts: { includeOwnerSide: boolean;
   if (opts.includeOwnerSide) headers.push("owner_side");
   headers.push("delete_mode", "fk_format", "notes");
   out.push(tableHeader(headers));
-  for (const r of rows) {
+  for (const { edge: r, deleteMode: dm } of rows) {
     const a = dataObjectsById.get(r.data_object_id as number);
     const b = dataObjectsById.get(r.related_data_object_id as number);
     if (!a || !b) continue;
@@ -346,8 +332,7 @@ function renderRelationshipTable(rows: any[], opts: { includeOwnerSide: boolean;
     cells.push(r.is_required ? "required" : "optional");
     if (opts.includeOwnerSide) cells.push(r.owner_side || "");
     // B4 + Plan 4 step C: resolved ON DELETE mode + Semantius FK format per edge, presence-
-    // conditional on whether the other endpoint is in the emitted scope (opts.targetInScope).
-    const dm = deriveDeleteMode(r.relationship_kind, r.owner_side, Boolean(r.is_required), opts.targetInScope);
+    // conditional on whether the other endpoint is in the emitted scope (derived in the model).
     cells.push(dm.mode, dm.fkFormat);
     cells.push(r.notes || "");
     out.push(tableRow(cells));
@@ -419,43 +404,8 @@ function masteredIn(r: ScopeRow, owners: Map<number, OwnerInfo>): { code: string
   return { code: "-", label: "-" };
 }
 
-// M1 (plan-1-consistency.md): the single canonical gate-code derivation, shared by the §7
-// lifecycle renderer and §8 deriveWorkflowGatesAndRules so the two can never disagree on a
-// gate's module prefix. Canonical fallback: a state with NULL domain_module_id is gated by
-// the module that masters its data_object in scope. Returns null when no module resolves
-// (the §7 caller renders a blank/annotation; §8 simply does not mint the gate).
-function deriveGate(
-  state: any,
-  scopeRows: ScopeRow[],
-  reprefixModuleIdSet?: Set<number>,
-): { code: string; gateModule: ModuleRow; verbSegment: string; obj: DataObject; reprefixed: boolean } | null {
-  const obj = dataObjectsById.get(state.data_object_id as number);
-  if (!obj) return null;
-  const realizingId = state.domain_module_id as number | null;
-  const gateModule = realizingId !== null
-    ? modulesById.get(realizingId)
-    : scopeRows.find((r) => r.data_object_id === state.data_object_id && r.role === "master")?.modules[0];
-  if (!gateModule) return null;
-  const verbSegment = state.permission_verb_override
-    ? (state.permission_verb_override as string)
-    : `${state.state_name}_${entitySingularToken(obj)}`;
-  // Plan 4 step D: re-prefix the gate to the installing unit when the canonical realizing module
-  // is NOT in the emitted scope but this scope carries the entity as `embedded_master`. The entity
-  // is present standalone, so its gate must be realized (and minted in §8) under the installing
-  // module's slug instead of dangling at the absent realizer's prefix. `gateModule` is left
-  // pointing at the canonical realizer so the §7 "realizing module" column can annotate the
-  // re-prefix. When `reprefixModuleIdSet` is omitted this is a no-op (byte-identical to before).
-  let prefixModule = gateModule;
-  let reprefixed = false;
-  if (reprefixModuleIdSet && !reprefixModuleIdSet.has(gateModule.id)) {
-    const here = scopeRows.find((r) => r.data_object_id === state.data_object_id);
-    if (here && here.role === "embedded_master" && here.modules.length > 0) {
-      prefixModule = here.modules[0];
-      reprefixed = true;
-    }
-  }
-  return { code: `${moduleSlug(prefixModule.domain_module_code)}:${verbSegment}`, gateModule, verbSegment, obj, reprefixed };
-}
+// The gate-code derivation (M1 deriveGate) and every other derivation rule live in
+// ./lib/blueprint_derive.ts; the renderers below read their results from the BlueprintModel.
 
 function renderDependencies(scopeRows: ScopeRow[], owners: Map<number, OwnerInfo>): string[] {
   const out: string[] = [];
@@ -507,14 +457,17 @@ function renderDependencies(scopeRows: ScopeRow[], owners: Map<number, OwnerInfo
 // data_object. Front matter difference is the length of the `domain_modules:` list.
 // ============================================================
 
-async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<string> {
+function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
   if (modules.length === 0) throw new Error("emitBlueprint requires at least one module");
 
   // All scoped queries (DMDO aggregation, aliases, relationships, co-masters, owners,
   // lifecycle states, handoff attribution, related-module derivation) live in
   // ./lib/catalog.ts. Same code path that emit_domain_map.ts uses, so the two emitters
-  // can never report different facts for the same module.
-  const cat: ModuleCatalog = loadModuleCatalog(modules.map((m) => m.id), index, allRelationships);
+  // can never report different facts for the same module. Every derived value sections 2-9
+  // show (write tiers, delete modes, gates, permissions, roles, RACI) is computed once, in
+  // ./lib/blueprint_derive.ts, into the BlueprintModel; the code below only renders it.
+  const model: BlueprintModel = deriveBlueprintModel(modules, deriveCtx);
+  const cat: ModuleCatalog = model.catalog;
   const {
     scopeRows,
     scopeRolesById,
@@ -524,20 +477,14 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
     coMasters,
     owners,
     lifecycleRows,
-    outboundHandoffs,
-    inboundHandoffs,
-    relatedModuleIds,
     parentDomains,
   } = cat;
-  const moduleIdSet = new Set(modules.map((m) => m.id));
+  const moduleIdSet = model.moduleIdSet;
   // M1 cross-section consistency: collect the in-scope gates §7 shows and the gates §8 mints,
   // then warn (Policy 1, never throw) if §7 shows an in-scope gate §8 fails to mint.
   const section7InScopeGates = new Set<string>();
   const section8Gates = new Set<string>();
-  const relatedModules: ModuleRow[] = [...relatedModuleIds]
-    .map((id) => modulesById.get(id))
-    .filter((m): m is ModuleRow => Boolean(m));
-  relatedModules.sort((a, b) => a.domain_module_code.localeCompare(b.domain_module_code));
+  const relatedModules = model.relatedModules;
 
   // ---- render ----
   const out: string[] = [];
@@ -583,22 +530,14 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
       : modules[0].catalog_description || "";
 
   // persona: the deduplicated persona actors realized in the §9 RACI tables (B3), aggregated
-  // across every module in scope. Only `actorKind === "persona"` rows count; agent-skill
-  // actors are excluded. Same derivation the §9 loop renders per module, sorted for a stable
-  // emit. Empty array when no `process_raci` rows are wired to this scope's gated processes.
-  const personaSet = new Set<string>();
-  for (const m of modules) {
-    const mScopeRows = scopeRows.filter((r) => r.modules.includes(m));
-    const mLifecycle = moduleLifecycleScope(m, mScopeRows, lifecycleRows, moduleIdSet);
-    for (const g of deriveRaciRealization(mScopeRows, mLifecycle, allRelationships, moduleIdSet)) {
-      if (g.actorKind === "persona") personaSet.add(g.actor);
-    }
-  }
-  const personas = [...personaSet].sort();
+  // across every module in scope (model.personas, from the same per-module RACI the §9 loop
+  // renders, sorted for a stable emit). Empty when no `process_raci` rows are wired to this
+  // scope's gated processes.
+  const personas = model.personas;
 
   out.push("---");
   out.push("artifact: semantic-blueprint");
-  out.push(`blueprint_version: "${BLUEPRINT_VERSION}"`);
+  out.push(`version: "${BLUEPRINT_VERSION}"`);
   out.push("license: MIT");
   out.push(`system_name: ${escapeYaml(systemDescription)}`);
   if (catalogTagline) out.push(`tagline: ${escapeYaml(catalogTagline)}`);
@@ -728,7 +667,7 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
     headers.push("notes");
     out.push(tableHeader(headers, ["right"]));
     const sortOrder = ["master", "embedded_master", "contributor", "consumer", "derived"];
-    const sorted = [...scopeRows].sort((a, b) => {
+    const sorted = [...model.entities].sort((a, b) => {
       const ra = sortOrder.indexOf(a.role) === -1 ? 99 : sortOrder.indexOf(a.role);
       const rb = sortOrder.indexOf(b.role) === -1 ? 99 : sortOrder.indexOf(b.role);
       if (ra !== rb) return ra - rb;
@@ -738,9 +677,8 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
     for (const r of sorted) {
       const o = r.data_object;
       const owner = masteredIn(r, owners);
-      // B2: per-entity write tier from entity_type (junctions consult their neighbors).
-      const epTypes = o.entity_type === "junction" ? neighborEntityTypes(r.data_object_id, rels) : [];
-      const wt = deriveWriteTier(o.entity_type, epTypes);
+      // B2: per-entity write tier from entity_type (junctions consult their neighbors), derived in the model.
+      const wt = r.writeTier;
       const wtCell = wt.write === null ? "read-only" : `\`${wt.write}\`${wt.pending ? " _(pending)_" : ""}`;
       // `canonical code`: the stable uber-model identity (3.0). The domain map IS the uber-model
       // and uses canonical, agent-optimized naming, so canonical code == data_object here (spec
@@ -780,18 +718,18 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("");
   out.push("### 5.1 Intra-scope edges");
   out.push("");
-  if (rels.intra.length === 0) {
+  if (model.relationships.intra.length === 0) {
     out.push(noneSection("no relationships with both endpoints inside the scope"));
   } else {
-    out.push(...renderRelationshipTable(rels.intra, { includeOwnerSide: true, includeKind: true, targetInScope: true }));
+    out.push(...renderRelationshipTable(model.relationships.intra, { includeOwnerSide: true, includeKind: true }));
   }
   out.push("");
   out.push("### 5.2 Built-in edges (`users` and other platform built-ins)");
   out.push("");
-  if (rels.userRels.length === 0) {
+  if (model.relationships.userRels.length === 0) {
     out.push(noneSection("no relationships against platform built-ins"));
   } else {
-    out.push(...renderRelationshipTable(rels.userRels, { includeOwnerSide: true, includeKind: false, targetInScope: true }));
+    out.push(...renderRelationshipTable(model.relationships.userRels, { includeOwnerSide: true, includeKind: false }));
   }
   out.push("");
   out.push("### 5.3 Cross-scope edges");
@@ -800,21 +738,21 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("");
   out.push("_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._");
   out.push("");
-  if (rels.crossOutbound.length === 0) {
+  if (model.relationships.crossOutbound.length === 0) {
     out.push(noneSection("no outbound cross-scope edges from this scope's masters or contributors"));
   } else {
-    out.push(...renderRelationshipTable(rels.crossOutbound, { includeOwnerSide: false, includeKind: false, targetInScope: false }));
+    out.push(...renderRelationshipTable(model.relationships.crossOutbound, { includeOwnerSide: false, includeKind: false }));
   }
   out.push("");
   out.push("#### 5.3b Context edges on embedded shells and consumed entities");
   out.push("");
   out.push("_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._");
   out.push("");
-  if (rels.crossContext.length === 0) {
+  if (model.relationships.crossContext.length === 0) {
     out.push(noneSection("no context cross-scope edges on this scope's embedded shells or consumed entities"));
   } else {
     // Rule 4 (no raw HTML): plain markdown table, never a `<details>` / `<summary>` collapsible.
-    out.push(...renderRelationshipTable(rels.crossContext, { includeOwnerSide: false, includeKind: false, targetInScope: false }));
+    out.push(...renderRelationshipTable(model.relationships.crossContext, { includeOwnerSide: false, includeKind: false }));
   }
   out.push("");
 
@@ -831,18 +769,18 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("");
   out.push("### 6.2 Outbound handoffs (events this scope publishes)");
   out.push("");
-  if (outboundHandoffs.length === 0) {
+  if (model.handoffs.outbound.length === 0) {
     out.push(noneSection("no outbound handoffs whose payload is in this scope"));
   } else {
-    out.push(...renderHandoffTable(outboundHandoffs, "outbound"));
+    out.push(...renderHandoffTable(model.handoffs.outbound, "outbound"));
   }
   out.push("");
   out.push("### 6.3 Inbound handoffs (events this scope reacts to)");
   out.push("");
-  if (inboundHandoffs.length === 0) {
+  if (model.handoffs.inbound.length === 0) {
     out.push(noneSection("no inbound handoffs whose payload is in this scope"));
   } else {
-    out.push(...renderHandoffTable(inboundHandoffs, "inbound"));
+    out.push(...renderHandoffTable(model.handoffs.inbound, "inbound"));
   }
   out.push("");
   out.push("### 6.4 Master providers (modules / domains that own masters this scope embeds)");
@@ -864,19 +802,12 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   if (lifecycleRows.length === 0) {
     out.push(noneSection("no lifecycle states for the entities in this scope"));
   } else {
-    const byObj = new Map<number, any[]>();
-    for (const ls of lifecycleRows) {
-      const did = ls.data_object_id as number;
-      if (!byObj.has(did)) byObj.set(did, []);
-      byObj.get(did)!.push(ls);
-    }
-    for (const [did, states] of [...byObj.entries()].sort((a, b) =>
-      (dataObjectsById.get(a[0])?.data_object_name ?? "").localeCompare(dataObjectsById.get(b[0])?.data_object_name ?? ""),
-    )) {
-      const obj = dataObjectsById.get(did);
-      if (!obj) continue;
+    // model.lifecycle: one entry per entity, sorted by data_object_name, each state carrying the
+    // gate the shared deriveGate resolves against the whole emitted scope.
+    for (const { dataObject: obj, scopeRow, states: stateModels } of model.lifecycle) {
+      const did = obj.id;
+      const states = stateModels.map((sm) => sm.state);
       out.push(`### \`${obj.data_object_name}\` (${obj.singular_label})`);
-      const scopeRow = scopeRows.find((r) => r.data_object_id === did);
       if (scopeRow && scopeRow.role !== "master") {
         const ownerInfo = owners.get(did);
         const ownerLabel = ownerInfo && ownerInfo.modules.length > 0
@@ -890,14 +821,14 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
       out.push("");
       const headers = ["order", "state_name", "initial?", "terminal?"];
       if (showModulesCol) headers.push("realizing module");
-      headers.push("requires_permission?", "derived gate", "description");
+      // `high risk?` sits right after `requires_permission?` (architect template §7): ✓ only on a
+      // gated row whose catalog state is_high_risk; it changes who holds the gate only under `raci`.
+      headers.push("requires_permission?", "high risk?", "derived gate", "description");
       out.push(tableHeader(headers));
-      for (const s of states) {
+      for (const { state: s, gate: g } of stateModels) {
         const realizingId = s.domain_module_id as number | null;
         // M1: gate code comes from the single shared deriveGate (canonical fallback: NULL
-        // domain_module_id is gated by the in-scope master's owning module). Byte-identical
-        // to the previous inline computation on every resolving path.
-        const g = deriveGate(s, scopeRows, moduleIdSet);
+        // domain_module_id is gated by the in-scope master's owning module), resolved in the model.
         let gate = s.requires_permission && g ? `\`${g.code}\`` : "";
         // Plan 4 step D: a re-prefixed gate is realized locally by the installing unit, so it
         // counts as in-scope for the M1 §7-vs-§8 cross-check even though its canonical realizer
@@ -926,7 +857,7 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
           s.is_terminal ? "✓" : "",
         ];
         if (showModulesCol) cells.push(realizingLabel);
-        cells.push(s.requires_permission ? "✓" : "", gate, s.description || "");
+        cells.push(s.requires_permission ? "✓" : "", s.requires_permission && s.is_high_risk ? "✓" : "", gate, s.description || "");
         out.push(tableRow(cells));
       }
       // M4-emit (Policy 1): soft-assert the state-machine shape — exactly one is_initial, at
@@ -954,12 +885,10 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   // §8 Permissions and business rules
   out.push("## 8. Permissions and business rules (derived)");
   out.push("");
+  // §8 and §9 read the per-module derivations from model.perModule (one entry per module, in
+  // `modules` order); the §8 permission set there is the same one the §9 hierarchy is built from.
   if (modules.length === 1) {
-    const m = modules[0];
-    const slug = moduleSlug(m.domain_module_code);
-    const moduleScopeRows = scopeRows.filter((r) => r.modules.includes(m));
-    const moduleLifecycle = moduleLifecycleScope(m, moduleScopeRows, lifecycleRows, moduleIdSet);
-    const { permissions, businessRules } = deriveWorkflowGatesAndRules(slug, moduleScopeRows, moduleLifecycle, m.id, moduleIdSet);
+    const { permissions, businessRules } = model.perModule[0];
     for (const p of permissions) if (p.tier === "workflow-gate (lifecycle)") section8Gates.add(p.code);
     out.push("### 8.1 Permissions");
     out.push("");
@@ -976,11 +905,7 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
     }
     out.push("");
   } else {
-    modules.forEach((m, idx) => {
-      const slug = moduleSlug(m.domain_module_code);
-      const moduleScopeRows = scopeRows.filter((r) => r.modules.includes(m));
-      const moduleLifecycle = moduleLifecycleScope(m, moduleScopeRows, lifecycleRows, moduleIdSet);
-      const { permissions, businessRules } = deriveWorkflowGatesAndRules(slug, moduleScopeRows, moduleLifecycle, m.id, moduleIdSet);
+    model.perModule.forEach(({ module: m, permissions, businessRules }, idx) => {
       for (const p of permissions) if (p.tier === "workflow-gate (lifecycle)") section8Gates.add(p.code);
       out.push(`### 8.${idx + 1} \`${m.domain_module_code}\``);
       out.push("");
@@ -1005,15 +930,7 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   out.push("");
   out.push("_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`; none of it is stored in the catalog (the deployer provisions it from this blueprint)._");
   out.push("");
-  modules.forEach((m, idx) => {
-    const slug = moduleSlug(m.domain_module_code);
-    const moduleScopeRows = scopeRows.filter((r) => r.modules.includes(m));
-    const moduleLifecycle = moduleLifecycleScope(m, moduleScopeRows, lifecycleRows, moduleIdSet);
-    const { permissions } = deriveWorkflowGatesAndRules(slug, moduleScopeRows, moduleLifecycle, m.id, moduleIdSet);
-    const baseRoles = deriveBaselineRoles(slug, moduleScopeRows, rels);
-    const hierarchy = derivePermissionHierarchy(slug, permissions);
-    const raci = deriveRaciRealization(moduleScopeRows, moduleLifecycle, allRelationships, moduleIdSet);
-
+  model.perModule.forEach(({ module: m, baselineRoles: baseRoles, hierarchy, wiredProcesses, raci }, idx) => {
     out.push(`### 9.${idx + 1} \`${m.domain_module_code}\``);
     out.push("");
     out.push("**Baseline roles:**");
@@ -1026,7 +943,6 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
     out.push(tableHeader(["permission", "includes"]));
     for (const e of hierarchy) out.push(tableRow([`\`${e.including}\``, `\`${e.included}\``]));
     out.push("");
-    const wiredProcesses = deriveWiredProcesses(moduleLifecycle, allRelationships);
     if (wiredProcesses.length > 0) {
       out.push("**Processes wired:**");
       out.push("");
@@ -1044,7 +960,7 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
     }
     out.push("");
   });
-  const ownership = deriveMarketRaci(parentDomains, allRelationships);
+  const ownership = model.functionalOwnership;
   out.push(`### 9.${modules.length + 1} Functional ownership and default grants`);
   out.push("");
   if (ownership.length === 0) {
@@ -1079,7 +995,7 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   // violations without bricking the corpus; the M5 / M6 hard checks live in audit band B12.
   // entity_type is the exception: it is now an architect/analyst-authored field, so a missing
   // value is an authoring defect, not a soft degrade. It is a HARD emit gate (B13, thrown below):
-  // the module fails and emits no file rather than producing an invalid `unclassified` 3.0 blueprint.
+  // the module fails and emits no file rather than producing an invalid `unclassified` 3.1 blueprint.
   {
     const lifecycleObjIds = new Set<number>((lifecycleRows ?? []).map((s: any) => s.data_object_id as number));
     const modCodes = modules.map((m) => m.domain_module_code).join("+");
@@ -1087,7 +1003,7 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
     for (const r of scopeRows) {
       const o = r.data_object;
       const et = o.entity_type;
-      // 3.0 acceptance + B13 hard gate: a blueprint_version 3.0 file MUST NOT carry `unclassified`
+      // B13 hard gate: a version 3.1 blueprint MUST NOT carry `unclassified`
       // in §3 (it is the platform's un-set default, never an authored value). Collect every in-scope
       // row whose source `data_objects.entity_type` is unset and throw after the loop, so one run
       // reports all offenders at once. The fix is to classify the data_object upstream; the emitter
@@ -1106,7 +1022,7 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
         console.warn(`  ⚠ M6: \`${o.data_object_name}\` is ${et} but carries the personal_content flag (overrides suppressed) (${modCodes})`);
       }
     }
-    // B13 hard gate: refuse to emit a 3.0 blueprint that would carry any unclassified entity_type.
+    // B13 hard gate: refuse to emit a 3.1 blueprint that would carry any unclassified entity_type.
     // entity_type is architect/analyst-authored; an unset value must be fixed upstream, not emitted.
     if (unclassified.length > 0) {
       throw new Error(
@@ -1120,17 +1036,13 @@ async function emitBlueprint(modules: ModuleRow[], kindLabel?: string): Promise<
   return out.join("\n").replace(/—/g, "-");
 }
 
-function renderHandoffTable(rows: any[], direction: "outbound" | "inbound"): string[] {
+function renderHandoffTable(rows: HandoffModel[], direction: "outbound" | "inbound"): string[] {
   const out: string[] = [];
   const headers = direction === "outbound"
     ? ["source module", "target domain", "target module", "trigger_event", "transition", "payload", "integration", "friction", "description"]
     : ["target module", "source domain", "source module", "trigger_event", "transition", "payload", "integration", "friction", "description"];
   out.push(tableHeader(headers));
-  for (const h of rows) {
-    const sourceMod = modulesById.get(h.source_domain_module_id as number);
-    const targetMod = modulesById.get(h.target_domain_module_id as number);
-    const sourceDom = domainsById.get(h.source_domain_id as number);
-    const targetDom = domainsById.get(h.target_domain_id as number);
+  for (const { row: h, sourceModule: sourceMod, targetModule: targetMod, sourceDomain: sourceDom, targetDomain: targetDom } of rows) {
     const sourceModLabel = sourceMod ? sourceMod.domain_module_code : "_(domain-level)_";
     const targetModLabel = targetMod ? targetMod.domain_module_code : "_(domain-level)_";
     const sourceDomLabel = sourceDom ? sourceDom.domain_code : `domain #${h.source_domain_id}`;
@@ -1154,356 +1066,6 @@ function renderHandoffTable(rows: any[], direction: "outbound" | "inbound"): str
 }
 
 // ============================================================
-// Derivation helpers (permissions + business rules)
-// ============================================================
-
-type Permission = { code: string; tier: string; description: string; includedInAdmin: boolean };
-type BusinessRule = { name: string; dataObject: string; sourceFlag: string; intent: string };
-
-// B2 (plan-2-entity-type-tiers.md): the per-entity write tier, derived from `entity_type`.
-// Read is uniformly `:read`; the write tier selects which existing module baseline governs
-// mutations. No new permission is minted: `:manage` / `:admin` already exist per module.
-// `endpointEntityTypes` matters only for junctions (admin when a linked endpoint is a catalog).
-// `unclassified` (and null / unknown) map to `:manage`, flagged pending (m2). This is now
-// defense-in-depth only: the emitter HARD-aborts any module carrying an unclassified entity_type
-// (B13 gate in emitBlueprint), so a real 3.0 file never ships a pending tier from a missing class.
-// The graceful default is kept so non-emit callers (e.g. audits) can derive a tier without crashing.
-type WriteTier = { read: string; write: string | null; pending: boolean };
-
-function deriveWriteTier(entityType: string | null | undefined, endpointEntityTypes: string[] = []): WriteTier {
-  switch (entityType) {
-    case "operational_workflow":
-    case "operational_record":
-      return { read: ":read", write: ":manage", pending: false };
-    case "catalog":
-      return { read: ":read", write: ":admin", pending: false };
-    case "junction":
-      return { read: ":read", write: endpointEntityTypes.includes("catalog") ? ":admin" : ":manage", pending: false };
-    case "computed":
-      return { read: ":read", write: null, pending: false };
-    default: // unclassified, null, or any unknown value
-      return { read: ":read", write: ":manage", pending: true };
-  }
-}
-
-// B4 (plan-2-entity-type-tiers.md) + Plan 4 step C: the resolved ON DELETE mode + Semantius FK
-// format per edge, derived from (relationship_kind, is_required, targetInScope). `targetInScope`
-// is the Plan 4 presence-conditional dimension: when the edge's other endpoint is NOT in the
-// emitted scope (a cross-scope §5.3 edge), the referenced table is absent from this deployable
-// unit, so no FK / no constraint can be emitted here regardless of is_required. A required
-// reference / association edge to an absent target is "required-if-present" (the FK materializes
-// only when the tenant also installs the target, never forcing it to install, the keystone of
-// plan-4). A required COMPOSITION edge to an absent child is a self-containment violation surfaced
-// as a step-B audit finding, never silently dropped. `owner_side` orients WHICH endpoint
-// physically holds the FK (its own column) and does not change the mode/format. The applied
-// ON DELETE lands in the tenant DB at deploy. M7 (Plan 1) already normalized owner_side.
-type DeleteMode = { mode: string; fkFormat: string };
-
-function deriveDeleteMode(
-  relationshipKind: string,
-  ownerSide: string | null | undefined,
-  isRequired: boolean,
-  targetInScope = true,
-): DeleteMode {
-  void ownerSide; // orients the FK side (its own column); mode/format are owner_side-independent
-  if (!targetInScope) {
-    // Plan 4 step C: the referenced entity is absent from this deployable unit; no FK to emit.
-    if (relationshipKind === "composition" && isRequired) {
-      return { mode: "⚠ audit: required composed child out of scope", fkFormat: "n/a" };
-    }
-    return { mode: isRequired ? "none (required-if-present)" : "none", fkFormat: "n/a" };
-  }
-  switch (relationshipKind) {
-    case "composition":
-      return { mode: "cascade", fkFormat: "parent" };
-    case "reference":
-    case "association":
-      return isRequired ? { mode: "restrict", fkFormat: "reference" } : { mode: "clear", fkFormat: "reference" };
-    case "inheritance":
-      return { mode: "restrict", fkFormat: "reference" };
-    default:
-      return { mode: "restrict", fkFormat: "reference" }; // defensive: unknown kind
-  }
-}
-
-// B2: entity_types of a data_object's relationship neighbors. Used to resolve a junction's
-// write tier (a junction that links a catalog entity is admin-governed, else manage).
-function neighborEntityTypes(doId: number, rels: { all: any[] }): string[] {
-  const types = new Set<string>();
-  for (const r of rels.all) {
-    const otherId = r.data_object_id === doId
-      ? (r.related_data_object_id as number)
-      : r.related_data_object_id === doId
-        ? (r.data_object_id as number)
-        : null;
-    if (otherId === null) continue;
-    const o = dataObjectsById.get(otherId);
-    if (o?.entity_type) types.add(o.entity_type);
-  }
-  return [...types];
-}
-
-// Plan 4 step D: the lifecycle states a module realizes when emitted as a standalone unit.
-// `master`-here or this-module-realized states (the pre-plan-4 set), PLUS states for entities
-// carried as `embedded_master` whose canonical realizing module is out of the emitted scope (the
-// installing unit realizes and mints those gates locally, re-prefixed by deriveGate). For a module
-// whose embedded entities all have in-scope realizers this returns the same set as before.
-function moduleLifecycleScope(
-  m: ModuleRow,
-  moduleScopeRows: ScopeRow[],
-  lifecycleRows: any[],
-  moduleIdSet: Set<number>,
-): any[] {
-  return (lifecycleRows ?? []).filter((s: any) => {
-    const here = moduleScopeRows.find((r) => r.data_object_id === s.data_object_id);
-    const masterHere = here?.role === "master";
-    const embeddedHere = here?.role === "embedded_master";
-    const realizerOutOfScope = s.domain_module_id != null && !moduleIdSet.has(s.domain_module_id as number);
-    return masterHere || s.domain_module_id === m.id || (embeddedHere && realizerOutOfScope);
-  });
-}
-
-function deriveWorkflowGatesAndRules(
-  slug: string,
-  moduleObjects: any[],
-  lifecycleRows: any[],
-  thisModuleId: number,
-  emittedModuleIdSet: Set<number>,
-): { permissions: Permission[]; businessRules: BusinessRule[] } {
-  const permissions: Permission[] = [];
-  const businessRules: BusinessRule[] = [];
-
-  permissions.push({ code: `${slug}:read`, tier: "baseline-read", description: "Read access to every entity in the module", includedInAdmin: true });
-  permissions.push({ code: `${slug}:manage`, tier: "baseline-manage", description: "Edit operational records", includedInAdmin: true });
-  permissions.push({ code: `${slug}:admin`, tier: "baseline-admin", description: "Edit reference data and inherit every workflow gate below", includedInAdmin: false });
-
-  const moduleMasterIds = new Set(
-    moduleObjects.filter((r) => r.role === "master").map((r) => r.data_object_id as number),
-  );
-  const moduleEmbeddedIds = new Set(
-    moduleObjects.filter((r) => r.role === "embedded_master").map((r) => r.data_object_id as number),
-  );
-  for (const ls of lifecycleRows) {
-    if (!ls.requires_permission) continue;
-    const realizingId = ls.domain_module_id as number | null;
-    const ownsAsRealizer = realizingId === thisModuleId;
-    const ownsAsMaster = realizingId === null && moduleMasterIds.has(ls.data_object_id as number);
-    // Plan 4 step D: the installing unit realizes (and mints, re-prefixed) the gate for an entity
-    // it carries as `embedded_master` whose canonical realizing module is out of the emitted
-    // scope. Without this a starter (or any standalone-emitted module embedding such an entity)
-    // shows the gate in §7 but mints nothing in §8.1, leaving the transition ungoverned.
-    const realizerOutOfScope = realizingId !== null && !emittedModuleIdSet.has(realizingId);
-    const ownsByEmbedding = realizerOutOfScope && moduleEmbeddedIds.has(ls.data_object_id as number);
-    if (!ownsAsRealizer && !ownsAsMaster && !ownsByEmbedding) continue;
-    // M1: same shared deriveGate as §7, passed the emitted scope so the re-prefix is identical.
-    // On the realizer/master paths the realizer is in scope, so the re-prefix is a no-op and the
-    // code stays `${slug}:...` (byte-identical to before); on the embedded path it re-prefixes to
-    // this installing module's slug, which is also `${slug}`.
-    const g = deriveGate(ls, moduleObjects, emittedModuleIdSet);
-    if (!g) continue;
-    // Override collision (modules.md §4): two transitions can collapse to one gate code, made
-    // more common by plan-4 re-prefixing (e.g. candidates.hired + job_applications.hired both
-    // → `<unit>:hire_candidate`). Mint the permission once; the deployer treats them as one.
-    if (permissions.some((p) => p.code === g.code)) continue;
-    permissions.push({
-      code: g.code,
-      tier: "workflow-gate (lifecycle)",
-      description: `Transition \`${g.obj.data_object_name}\` into state \`${ls.state_name}\``,
-      includedInAdmin: true,
-    });
-  }
-
-  for (const r of moduleObjects) {
-    // Plan 4: personal_content overrides + business rules follow the ENTITY, not the role. A unit
-    // carrying an entity as `embedded_master` is its local master when deployed standalone, so it
-    // mints the same row-scope governance, re-prefixed to this unit (`slug`),
-    // exactly as the gate mint above does. (Single-module blueprints are the only kind emitted, so
-    // an `embedded_master` row here always means the canonical master is out of scope.)
-    if (r.role !== "master" && r.role !== "embedded_master") continue;
-    const o = r.data_object as DataObject;
-    if (!o) continue;
-    // M6 (plan-2-entity-type-tiers.md): personal_content overrides are valid only on operational
-    // entities. Suppress on catalog / junction / computed masters (corrective where a classified
-    // master still carries a legacy flag; a no-op otherwise). `unclassified` keeps its overrides
-    // until classified (m2 graceful degradation).
-    if (o.entity_type === "catalog" || o.entity_type === "junction" || o.entity_type === "computed") continue;
-    const entitySingular = entitySingularToken(o);
-    const entityPlural = entityPluralToken(o);
-    if (o.has_personal_content) {
-      permissions.push({
-        code: `${slug}:view_all_${entityPlural}`,
-        tier: "override (personal_content)",
-        description: `View all \`${o.data_object_name}\` rows beyond row-scope`,
-        includedInAdmin: true,
-      });
-      permissions.push({
-        code: `${slug}:manage_all_${entityPlural}`,
-        tier: "override (personal_content)",
-        description: `Manage all \`${o.data_object_name}\` rows beyond row-scope`,
-        includedInAdmin: true,
-      });
-      businessRules.push({
-        name: `${entitySingular}_edit_scope`,
-        dataObject: o.data_object_name,
-        sourceFlag: "has_personal_content",
-        intent: `Row-scope by default; override via \`${slug}:view_all_${entityPlural}\` / \`${slug}:manage_all_${entityPlural}\``,
-      });
-    }
-  }
-
-  return { permissions, businessRules };
-}
-
-// ============================================================
-// §9 / §10 derivations (Plan 3, step B). All DERIVED + emitted, never stored:
-// a persona's bundle = f(role_modules reach, process_raci gates, the tier policy);
-// the hierarchy = f(tiers); the deployer provisions the tenant from the blueprint.
-// ============================================================
-
-type BaselineRole = { code: string; grant: string };
-type HierarchyEdge = { including: string; included: string };
-type RaciGrant = { actor: string; actorKind: string; raci: string; process: string; realization: string };
-type FunctionalOwnership = { responsibility: string; func: string; defaultRole: string; defaultTier: string };
-type WiredProcess = { name: string; key: string; code: string; pcfId: string; level: string; description: string };
-
-// B1: three baseline roles per module. viewer/manager always; admin only when the module
-// has an admin-tier (catalog write) entity, decided by the same deriveWriteTier as §3.
-function deriveBaselineRoles(slug: string, moduleScopeRows: ScopeRow[], rels: { all: any[] }): BaselineRole[] {
-  const hasAdminTier = moduleScopeRows.some((r) => {
-    if (r.role !== "master") return false;
-    const o = r.data_object;
-    const ep = o.entity_type === "junction" ? neighborEntityTypes(r.data_object_id, rels) : [];
-    return deriveWriteTier(o.entity_type, ep).write === ":admin";
-  });
-  const roles: BaselineRole[] = [
-    { code: `${slug}_viewer`, grant: `${slug}:read` },
-    { code: `${slug}_manager`, grant: `${slug}:manage` },
-  ];
-  if (hasAdminTier) roles.push({ code: `${slug}_admin`, grant: `${slug}:admin` });
-  return roles;
-}
-
-// B2: hierarchy from the §8 permission set. admin includes manage includes read, and admin
-// includes every workflow gate / personal_content override.
-function derivePermissionHierarchy(slug: string, permissions: Permission[]): HierarchyEdge[] {
-  const edges: HierarchyEdge[] = [
-    { including: `${slug}:admin`, included: `${slug}:manage` },
-    { including: `${slug}:manage`, included: `${slug}:read` },
-  ];
-  for (const p of permissions) {
-    if (p.tier.startsWith("workflow-gate") || p.tier.startsWith("override")) {
-      edges.push({ including: `${slug}:admin`, included: p.code });
-    }
-  }
-  return edges;
-}
-
-// B3: realize each process_raci row. The relevant processes are those wired to this scope's
-// gated lifecycle states via data_object_lifecycle_states.process_id (the process-to-permission
-// edge). Branch on the RACI letter and the actor kind (persona vs agent skill).
-function deriveRaciRealization(moduleScopeRows: ScopeRow[], moduleLifecycle: any[], arel: AllRelationships, moduleIdSet: Set<number>): RaciGrant[] {
-  const grants: RaciGrant[] = [];
-  const processIds = new Set<number>();
-  for (const ls of moduleLifecycle) if (ls.process_id != null) processIds.add(ls.process_id as number);
-  for (const pid of processIds) {
-    const proc = arel.processesById.get(pid);
-    // RACI table references the process by its unique process_key (process_name is not unique).
-    const procKey = proc?.process_key ?? `process#${pid}`;
-    const gateCodes = moduleLifecycle
-      .filter((ls) => ls.process_id === pid && ls.requires_permission)
-      .map((ls) => deriveGate(ls, moduleScopeRows, moduleIdSet)?.code)
-      .filter((c): c is string => Boolean(c));
-    for (const row of arel.processRaciByProcessId.get(pid) ?? []) {
-      const isPersona = row.actor_role_id != null;
-      const actorKind = isPersona ? "persona" : "skill";
-      const actor = isPersona
-        ? (arel.domainRolesById.get(row.actor_role_id as number)?.role_code ?? `role#${row.actor_role_id}`)
-        : `skill#${row.actor_skill_id}`;
-      let realization = "";
-      switch (row.raci) {
-        case "responsible":
-          realization = isPersona
-            ? `grant gates [${gateCodes.join(", ") || "none wired"}] + the gated entities' write tier`
-            : "require process_tools coverage of the process's mutating ops";
-          break;
-        case "accountable":
-          realization = isPersona ? "approval gate" : "autonomous-action note";
-          break;
-        case "consulted":
-          realization = row.consultation_blocking ? "blocking consultation state" : "advisory read grant";
-          break;
-        case "informed":
-          realization = "notification side effect (trigger_event / webhook_receiver)";
-          break;
-        default:
-          realization = String(row.raci);
-      }
-      grants.push({ actor, actorKind, raci: String(row.raci), process: procKey, realization });
-    }
-  }
-  return grants;
-}
-
-// B3 companion: the distinct processes that appear in the RACI realization table (those wired
-// to this module's gated lifecycle states AND carrying >=1 process_raci row), surfaced with
-// their APQC PCF code / level / description so the blueprint is self-contained. Iteration order
-// mirrors deriveRaciRealization (first-seen in moduleLifecycle) so the reference table and the
-// RACI table list processes in the same order.
-function deriveWiredProcesses(moduleLifecycle: any[], arel: AllRelationships): WiredProcess[] {
-  const out: WiredProcess[] = [];
-  const seen = new Set<number>();
-  for (const ls of moduleLifecycle) {
-    const pid = ls.process_id as number | null;
-    if (pid == null || seen.has(pid)) continue;
-    seen.add(pid);
-    if ((arel.processRaciByProcessId.get(pid) ?? []).length === 0) continue;
-    const proc = arel.processesById.get(pid);
-    const name = proc?.process_name ?? `process#${pid}`;
-    out.push({
-      name,
-      key: proc?.process_key ? String(proc.process_key) : "",
-      code: proc?.process_code ? String(proc.process_code) : "",
-      pcfId: proc?.external_id ? String(proc.external_id) : "",
-      level: proc?.hierarchy_level != null ? String(proc.hierarchy_level) : "",
-      description: proc?.description ? String(proc.description) : "",
-    });
-  }
-  return out;
-}
-
-// (B4 deriveDeployableClosure removed in the Plan 3 review, 2026-06-02: "deployable closure /
-// required modules" was the wrong frame -- a module is self-contained, so it has no hard
-// prerequisites; related modules live in the front-matter `related_modules`, and the
-// self-containment invariant is an audit-band check, not an emitted section.)
-
-// B5: market RACI (M11) + default grant (M13). From business_function_domains for the scope's
-// domain(s): owner -> admin, contributor -> manage, consumer -> read.
-function deriveMarketRaci(parentDomains: Domain[], arel: AllRelationships): FunctionalOwnership[] {
-  const TIER: Record<string, { role: string; tier: string }> = {
-    owner: { role: "admin", tier: ":admin" },
-    contributor: { role: "manage", tier: ":manage" },
-    consumer: { role: "read", tier: ":read" },
-  };
-  const out: FunctionalOwnership[] = [];
-  const seen = new Set<string>();
-  for (const d of parentDomains) {
-    for (const bfd of arel.businessFunctionDomainsByDomainId.get(d.id) ?? []) {
-      const fn = arel.businessFunctionsById.get(bfd.business_function_id as number);
-      const func = fn?.business_function_name ?? `function#${bfd.business_function_id}`;
-      const rt = String(bfd.responsibility_type);
-      const key = `${rt}:${func}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      const t = TIER[rt] ?? { role: "?", tier: "?" };
-      out.push({ responsibility: rt, func, defaultRole: t.role, defaultTier: t.tier });
-    }
-  }
-  const ord: Record<string, number> = { owner: 0, contributor: 1, consumer: 2 };
-  out.sort((a, b) => (ord[a.responsibility] ?? 9) - (ord[b.responsibility] ?? 9) || a.func.localeCompare(b.func));
-  return out;
-}
-
-// ============================================================
 // IO + driver
 // ============================================================
 
@@ -1517,8 +1079,16 @@ function blueprintBodyIgnoringDate(s: string): string {
   return s.replace(/\r\n/g, "\n").replace(/^created_at: .*$/m, "created_at:");
 }
 
+// The derived-result invariants R1-R8 for one emitted unit. The model is derived again from the
+// same catalog the render used (derivation is pure and in-memory), so emitBlueprint stays unchanged.
+function modelFindings(modules: ModuleRow[]): ModelFinding[] {
+  return checkModel(deriveBlueprintModel(modules, deriveCtx), { ctx: deriveCtx });
+}
+
 async function emitOneModuleBlueprint(m: ModuleRow): Promise<{ path: string; changed: boolean }> {
-  const md = await emitBlueprint([m]);
+  const md = emitBlueprint([m]);
+  // Phase 3 invariants on every emit (Policy 1: warn on stderr, never throw; --lint fails on them).
+  for (const f of modelFindings([m])) console.warn(`  ⚠ ${f.id} (${f.result}): ${f.detail} (${f.module})`);
   const outPath = resolve(BLUEPRINTS_DIR, `${moduleSlug(m.domain_module_code)}${BLUEPRINT_SUFFIX}`);
   let changed = true;
   if (existsSync(outPath)) {
@@ -1577,57 +1147,167 @@ async function emitModuleList(modules: ModuleRow[], label: string): Promise<void
   if (bad) exit(1);
 }
 
-if (MODULE_CODE) {
-  const m = modulesByCode.get(MODULE_CODE);
-  if (!m) {
-    console.error(`module ${MODULE_CODE} not found in domain_modules`);
+// --lint: the derived-result invariants R1-R8 over a module list. Writes no file. Each module is
+// also rendered in memory, so an emit failure (e.g. the B13 entity_type gate) counts as a failure.
+// Exits non-zero on any `fail` finding or emit failure; `warn` findings never fail the run.
+function lintModuleList(modules: ModuleRow[], label: string): void {
+  const byRule = new Map<string, { fail: number; warn: number; modules: Set<string> }>();
+  const byModule = new Map<string, { fail: number; warn: number }>();
+  const failures: { code: string; message: string }[] = [];
+  for (const m of modules) {
+    let findings: ModelFinding[];
+    try {
+      emitBlueprint([m]);
+      findings = modelFindings([m]);
+    } catch (e) {
+      const message = (e as Error).message;
+      failures.push({ code: m.domain_module_code, message });
+      console.log(`FAILED  ${m.domain_module_code}: ${message}`);
+      continue;
+    }
+    for (const f of findings) {
+      console.log(`${f.result.padEnd(4)}  ${f.id}  ${f.module}  ${f.detail}`);
+      const r = byRule.get(f.id) ?? { fail: 0, warn: 0, modules: new Set<string>() };
+      r[f.result]++;
+      r.modules.add(f.module);
+      byRule.set(f.id, r);
+      const mm = byModule.get(f.module) ?? { fail: 0, warn: 0 };
+      mm[f.result]++;
+      byModule.set(f.module, mm);
+    }
+  }
+  const fails = [...byRule.values()].reduce((n, r) => n + r.fail, 0);
+  const warns = [...byRule.values()].reduce((n, r) => n + r.warn, 0);
+  console.log("");
+  console.log(`lint summary (${label}): ${modules.length} module(s), ${fails} fail, ${warns} warn, ${failures.length} emit failure(s)`);
+  for (const id of RULE_IDS) {
+    const r = byRule.get(id);
+    console.log(`  ${id}  ${RULES[id].severity.padEnd(4)}  ${String(r ? r[RULES[id].severity] : 0).padStart(4)} finding(s) in ${String(r?.modules.size ?? 0).padStart(3)} module(s)  ${RULES[id].title}`);
+  }
+  const top = [...byModule.entries()]
+    .sort((a, b) => b[1].fail - a[1].fail || b[1].warn - a[1].warn || (a[0] < b[0] ? -1 : 1))
+    .slice(0, 10);
+  if (top.length > 0) {
+    console.log("  top offenders:");
+    for (const [code, c] of top) console.log(`    ${code.padEnd(32)} ${c.fail} fail, ${c.warn} warn`);
+  }
+  for (const f of failures) console.error(`  emit failure ${f.code}: ${f.message}`);
+  if (fails > 0 || failures.length > 0) exit(1);
+}
+
+async function main(): Promise<void> {
+  const args = argv.slice(2);
+  const ALL = args.includes("--all");
+  const RELEASED = args.includes("--released");
+  const REGEN = args.includes("--regenerate");
+  CHECK = args.includes("--check");
+  const LINT = args.includes("--lint");
+  const NO_CACHE = args.includes("--no-cache");
+  const CLEAR_CACHE = args.includes("--clear-cache");
+  const flagValue = (name: string): string | null => {
+    const i = args.indexOf(name);
+    return i >= 0 && i + 1 < args.length ? args[i + 1] : null;
+  };
+  const MODULE_CODE = flagValue("--module");
+
+  if (CLEAR_CACHE) {
+    const cleared = clearCatalogCache();
+    console.error(cleared ? "catalog cache cleared" : "no catalog cache to clear");
+    if (!ALL && !MODULE_CODE) exit(0);
+  }
+
+  if (!ALL && !RELEASED && !REGEN && !MODULE_CODE && !LINT) {
+    console.error("usage:");
+    console.error("  generate_blueprints.ts --module <MODULE_CODE> [--no-cache] [--clear-cache]");
+    console.error("  generate_blueprints.ts --regenerate [--check] [--no-cache]   # refresh ONLY existing blueprint files");
+    console.error("  generate_blueprints.ts --released [--check] [--no-cache]      # (re)generate a file for every module hosted on a RELEASED domain");
+    console.error("  generate_blueprints.ts --all [--check] [--no-cache]          # (re)generate a file for EVERY module");
+    console.error("  generate_blueprints.ts --lint [--module <CODE> | --released | --all] [--no-cache]  # R1-R8 only; writes no file");
+    console.error("  generate_blueprints.ts --clear-cache");
     exit(2);
   }
-  try {
-    const r = await emitOneModuleBlueprint(m);
-    console.log(`${r.changed ? (CHECK ? "WOULD-CHANGE" : "wrote") : "unchanged"}  ${MODULE_CODE}  →  ${r.path}`);
-    if (CHECK && r.changed) exit(1);
-  } catch (e) {
-    console.error(`FAILED module ${MODULE_CODE}: ${(e as Error).message}`);
-    exit(1);
+
+  // ---------- catalog index (loaded once via lib) ----------
+  const { index, all: allRelationships } = (await loadCachedCatalog({ forceRefresh: NO_CACHE })) as {
+    index: CatalogIndex;
+    all: AllRelationships;
+  };
+  bindCatalog(index, allRelationships);
+  const { modulesByCode } = index;
+  const allModules = index.modules;
+
+  if (MODULE_CODE) {
+    const m = modulesByCode.get(MODULE_CODE);
+    if (!m) {
+      console.error(`module ${MODULE_CODE} not found in domain_modules`);
+      exit(2);
+    }
+    if (LINT) {
+      lintModuleList([m], "module");
+      return;
+    }
+    try {
+      const r = await emitOneModuleBlueprint(m);
+      console.log(`${r.changed ? (CHECK ? "WOULD-CHANGE" : "wrote") : "unchanged"}  ${MODULE_CODE}  →  ${r.path}`);
+      if (CHECK && r.changed) exit(1);
+    } catch (e) {
+      console.error(`FAILED module ${MODULE_CODE}: ${(e as Error).message}`);
+      exit(1);
+    }
+  } else if (REGEN || (LINT && !RELEASED && !ALL)) {
+    // Refresh ONLY the blueprint files already on disk. Map each filename slug back to its
+    // module; never (re)generate a file for a module that has no committed blueprint. A bare
+    // `--lint` lints this same set.
+    const bySlug = new Map(allModules.map((m) => [moduleSlug(m.domain_module_code), m] as const));
+    const modules: ModuleRow[] = [];
+    const orphans: string[] = [];
+    for (const slug of blueprintSlugsOnDisk()) {
+      const m = bySlug.get(slug);
+      if (m) modules.push(m);
+      else orphans.push(slug);
+    }
+    if (orphans.length > 0) {
+      console.error(`note: ${orphans.length} blueprint file(s) have no matching module and were left untouched: ${orphans.join(", ")}`);
+    }
+    if (LINT) {
+      console.log(`linting ${modules.length} existing blueprint(s) (no file written)`);
+      lintModuleList(modules, "existing blueprints");
+      return;
+    }
+    console.log(`regenerating ${modules.length} existing blueprint(s) (no new files created)`);
+    await emitModuleList(modules, "regenerate");
+  } else if (RELEASED) {
+    // Every module hosted on a RELEASED domain (catalog_release != null), where "hosted" means the
+    // module's primary domain (domain_id) is released OR a DERIVED host domain is released (for a
+    // starter, a market whose entity it embeds; see deriveHostDomains / references/deprecations.md).
+    // Unlike --regenerate this CREATES a blueprint for a released module that
+    // has none yet (the build_catalog contract: "blueprints for all modules of released domains").
+    const releasedDomainIds = new Set<number>();
+    for (const d of index.domains) if (isDomainReleased(d)) releasedDomainIds.add(d.id);
+    const hostDomainsByModule = new Map<number, Set<number>>();
+    for (const h of allRelationships.hostDomains) {
+      const mid = h.domain_module_id as number;
+      if (!hostDomainsByModule.has(mid)) hostDomainsByModule.set(mid, new Set());
+      hostDomainsByModule.get(mid)!.add(h.domain_id as number);
+    }
+    const modules = allModules.filter((m) => {
+      if (m.domain_id !== null && releasedDomainIds.has(m.domain_id)) return true;
+      for (const did of hostDomainsByModule.get(m.id) ?? []) if (releasedDomainIds.has(did)) return true;
+      return false;
+    });
+    if (LINT) {
+      lintModuleList(modules, "released");
+      return;
+    }
+    console.log(`generating blueprints for ${modules.length} module(s) hosted on ${releasedDomainIds.size} released domain(s)`);
+    await emitModuleList(modules, "released");
+  } else if (ALL) {
+    if (LINT) {
+      lintModuleList(allModules, "all");
+      return;
+    }
+    await emitModuleList(allModules, "all");
   }
-} else if (REGEN) {
-  // Refresh ONLY the blueprint files already on disk. Map each filename slug back to its
-  // module; never (re)generate a file for a module that has no committed blueprint.
-  const bySlug = new Map(allModules.map((m) => [moduleSlug(m.domain_module_code), m] as const));
-  const modules: ModuleRow[] = [];
-  const orphans: string[] = [];
-  for (const slug of blueprintSlugsOnDisk()) {
-    const m = bySlug.get(slug);
-    if (m) modules.push(m);
-    else orphans.push(slug);
-  }
-  if (orphans.length > 0) {
-    console.error(`note: ${orphans.length} blueprint file(s) have no matching module and were left untouched: ${orphans.join(", ")}`);
-  }
-  console.log(`regenerating ${modules.length} existing blueprint(s) (no new files created)`);
-  await emitModuleList(modules, "regenerate");
-} else if (RELEASED) {
-  // Every module hosted on a RELEASED domain (catalog_release != null), where "hosted" means the
-  // module's primary domain (domain_id) is released OR a DERIVED host domain is released (for a
-  // starter, a market whose entity it embeds; see deriveHostDomains / references/deprecations.md).
-  // Unlike --regenerate this CREATES a blueprint for a released module that
-  // has none yet (the build_catalog contract: "blueprints for all modules of released domains").
-  const releasedDomainIds = new Set<number>();
-  for (const d of index.domains) if (isDomainReleased(d)) releasedDomainIds.add(d.id);
-  const hostDomainsByModule = new Map<number, Set<number>>();
-  for (const h of allRelationships.hostDomains) {
-    const mid = h.domain_module_id as number;
-    if (!hostDomainsByModule.has(mid)) hostDomainsByModule.set(mid, new Set());
-    hostDomainsByModule.get(mid)!.add(h.domain_id as number);
-  }
-  const modules = allModules.filter((m) => {
-    if (m.domain_id !== null && releasedDomainIds.has(m.domain_id)) return true;
-    for (const did of hostDomainsByModule.get(m.id) ?? []) if (releasedDomainIds.has(did)) return true;
-    return false;
-  });
-  console.log(`generating blueprints for ${modules.length} module(s) hosted on ${releasedDomainIds.size} released domain(s)`);
-  await emitModuleList(modules, "released");
-} else if (ALL) {
-  await emitModuleList(allModules, "all");
 }
+
+if (import.meta.main) await main();

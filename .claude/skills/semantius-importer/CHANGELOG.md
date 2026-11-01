@@ -2,6 +2,19 @@
 
 This file is history, not contract: it is **not** loaded into context at runtime. The body of `SKILL.md` is always the current contract. Newest entries first.
 
+## The import never edits .gitignore
+
+2026-10-30. Paired with the modeler's entry of the same name. The skill told the agent to add `.tmp_import/` to the user's `.gitignore`, an edit to a shared, committed file nobody asked for.
+
+- `SKILL.md`, Stage 4 run workspace, and `references/import-script-template.md`, Workspace layout: the agent does not add, change or create a `.gitignore` entry for the run folder.
+- The run folder is described as scratch, with no claim about whether it is ignored or committed. The rule never to copy `.env` into it now rests on the folder possibly being committed or shared.
+
+## A clean file write is never narrated as an error
+
+2026-10-27. Paired with the architect and analyst entries of the same name and the modeler's entry of the same date.
+
+- `SKILL.md`, writing convention 4: a write is an error only when a tool call failed; a file saved cleanly through a shell heredoc or a script is not one. On success nothing is said about how it was written; on a real failure the tool's error is quoted verbatim and the run stops.
+
 ## enum entries get a label and a color
 
 2026-10-15. Paired with the analyst entry of the same name.

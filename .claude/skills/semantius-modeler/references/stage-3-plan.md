@@ -84,7 +84,7 @@ The Stage 3 plan emits these standardized line types when master-data operations
 | `🌱 Seeded <master>_manager with N members from <original>_manager` | Branch B promotion seeds the master's manager role from the original module's manager-role members. Snapshot-time copy; new `<original>_manager` members added later don't auto-inherit master stewardship. |
 | `💡 Cluster hint: <entity> → <cluster>` | An entity in this deploy carries an analyst-emitted `**Shared master cluster:**` annotation, and the hint is shaping a Stage 2d follow-up 1 default (existing-master match or new-module name suggestion). Informational; the user can override at the prompt. |
 | `🏷 module_kind = <kind>` | Informational label from frontmatter (`domain` / `master` / `starter` / etc.). No behavior switch. |
-| `🔐 Access level: <plain words>` | The spec's `access_scope`, named in plain words: `basic` "view and edit"; `advanced` "view, edit and admin"; `gated` "the admin takes the restricted steps"; `raci` "business roles take the restricted steps"; `custom` "permissions set up by hand, left as they are". |
+| `🔐 Access level: <plain words>` | The spec's `access_scope`, named in plain words: `basic` "view and edit"; `advanced` "view, edit and admin"; `gated` "the admin takes the restricted steps"; `raci` "business roles take the restricted steps, and admins can step in except on high-risk steps"; `custom` "permissions set up by hand, left as they are". |
 | `👥 Personas to provision: <list>` | Per-persona summary from §9 RACI + frontmatter `persona`. Stage 4k creates each named persona as a tenant role and grants its RACI permissions. Each line names the persona slug and the count of grants. **Shown only under `access_scope: raci`.** |
 | `🏢 Functional ownership: owner = <function>.<role>, contributor = <function>.<role>` | Summary from §9.2 functional ownership table. Stage 4l grants the named default-tier permission to the named default role for each row. |
 | `🔁 Re-prefix: <slug>:<verb> (catalog <module> not installed)` | The permission row in §8.1 carries a `re-prefixed-from <catalog-module>.<verb>` annotation AND the catalog module isn't installed. Stage 4a-scaffold mints the permission under the installing-unit slug; Stage 2i has queued it for future reconciliation. |
@@ -122,7 +122,7 @@ Example master-data plan block (Branch B promotion + Branch A wire-up + cluster 
 
 > **Fast flow, after the go-ahead:** no `Q:` task and no question: pick the candidate whose table name exactly matches the row's `To`, else "Skip this link"; log it with `log_pick modeler`; don't ask.
 
-**Resolve Field-name collisions next.** Any row marked 🛑 Field-name collision in Stage 2g (the auto-generated `<target_singular>_id` already exists on `from_table`) is one `Q:` task each (`Q: <From Label> already has a field named <fk>. Use another name for the link, or skip it?`), batched with the ambiguous rows. `multiSelect: false`, exactly 2 options: `"Name the link linked_<target_singular>_id instead (Recommended)"` (the deployer derives the name, checks it is free on `from_table` against the field list Stage 2g already read, and appends `_2` if it is taken) and `"Skip this link"`; any other field name is typed into the tool's free-text slot (never list an "Other" option; a 1-option question is rejected by the tool) and gets the same free-name check, re-asked once if taken. Unresolved-source rows are also surfaced here for the user to fix the model via the analyst skill before this stage retries.
+**Resolve Field-name collisions next.** Any row marked 🛑 Field-name collision in Stage 2g (the auto-generated `<target_singular>_id` already exists on `from_table`) is one `Q:` task each (`Q: <From Label> already has a field named <fk>. Use another name for the link, or skip it?`), batched with the ambiguous rows. `multiSelect: false`, exactly 2 options: `"Name the link linked_<target_singular>_id instead (Recommended)"` (the deployer derives the name, checks it is free on `from_table` against the field list Stage 2g already read, and appends `_2` if it is taken) and `"Skip this link"`; any other field name is written into the tool's free-text slot (never list an "Other" option; a 1-option question is rejected by the tool) and gets the same free-name check, re-asked once if taken. Unresolved-source rows are also surfaced here for the user to fix the model via the analyst skill before this stage retries.
 
 > **Fast flow, after the go-ahead:** no `Q:` task and no question: take the Recommended option (name the link `linked_<target_singular>_id`, with the same free-name check); log it with `log_pick modeler`; don't ask. An unresolved-source row is still a stop.
 
@@ -158,11 +158,13 @@ The modeler does NOT drive `AskUserQuestion` widgets for cross-module collisions
 
 **The only confirmation the modeler asks** (in guided and expert flow) is the final pre-execute yes/no after the plan summary:
 
-> *"Plan shown above. Proceed with execution?"*
+> *"Plan shown above. Proceed with deployment?"*
 
 > **Fast flow, after the go-ahead:** don't render the plan; the go-ahead was this confirmation. Proceed to Stage 4 and log one line, "Deploy plan applied as prepared", with `log_pick modeler`; don't ask.
 
-A `select_rule` create / modify or an `edit_permission` tier flip still pauses for explicit confirmation in guided and expert flow (medium-risk: read-visibility or write-tier change; standalone questions, not ledger tasks, like the pre-execute yes/no, the 4e-merge conflict prompt, and the 4f live-present prompt in Stage 4). These are the only mid-flow prompts.
+A `select_rule` create / modify or an `edit_permission` tier flip still pauses for explicit confirmation in guided and expert flow (medium-risk: read-visibility or write-tier change; standalone questions, not ledger tasks, like the pre-execute yes/no, the 4e-merge conflict prompt, and the 4f live-present prompt in Stage 4). So does an orphan workflow permission that Stage 1 flagged (a restricted-step permission no rule uses): one standalone question, create it anyway or send the design back to the analyst (`conflict-resolution.md`). These are the only mid-flow prompts.
+
+> **Fast flow, after the go-ahead:** an orphan workflow permission is created as designed; log it with `log_pick modeler`; don't ask.
 
 ### Merge / rename rules (informational)
 

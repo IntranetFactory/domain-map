@@ -25,7 +25,7 @@ description: >-
 
 - Do NOT start this skill, or any of its stages, in an agent that another agent started to run on its own (a background worker, subagent, executor, or Task). Those agents cannot ask the user questions, so they cannot run this skill correctly. Running in the cloud is fine when the user is talking to that agent directly.
 - Do NOT write a delegation prompt that tells another agent to run this skill, "build and deploy end to end", or "make the decisions yourself".
-- If you cannot call a tool that asks the user a question and waits for the answer, STOP at once. Make no writes. Report back: "This skill is interactive and must be run in the user's conversation." Muse chat is the exception: there you ask in chat text and the tap picker, so do not stop; follow the **Muse chat** paragraph of this skill.
+- If you cannot call a tool that asks the user a question and waits for the answer, STOP at once. Make no writes. Report back: "This skill is interactive and must be run in the user's conversation." Muse chat is the exception: there you ask in chat text and the tap picker, so do not stop; follow the question-format step of the shared preflight. For dot, OpenAI's personal assistant, and other similarly limited tools without a supported interactive question tool, do not stop: read `../semantius-admin/references/dot-questions.md`, ask questions in chat, and wait for the user's reply before continuing.
 - An agent's general habit of delegating long or multi-step work does not apply here. This rule overrides it.
 
 **What may be delegated:** only steps that ask nothing and change nothing the user has not confirmed.
@@ -60,22 +60,14 @@ The two always-on rules that govern every chat message are kept here verbatim (f
 
 **Pre-emit check** (mandatory): before sending any chat message or firing any `AskUserQuestion`, scan the assembled text for any banned token. Rewrite before sending. While expert flow is off, two questions are not sent (the first 3d question, 4.N N2); every other question is (see "Expert flow" below). In a fast run after the go-ahead, none is sent (see "Fast flow" below).
 
-**Muse chat: no `AskUserQuestion` tool.** If `AskUserQuestion` is not in
-this session's tool list, load
-[`../semantius-admin/references/muse-questions.md`](../semantius-admin/references/muse-questions.md)
-before the first question of the run, and follow it in place of every
-`AskUserQuestion` rule in this skill, for single-select and
-`multiSelect: true` alike. Skip the load when the tool is present. One
-load per run covers every skill active in the same conversation.
-
-**AskUserQuestion mechanics** (not a numbered convention; the tool description is authoritative). Fire `AskUserQuestion` **alone in its own response**: apply edits, re-renders, policy-file reads, and task updates first, in earlier steps, then call it with no other tool call beside it. A sibling tool call in the same response cancels the pause and the run continues before the user has answered. The answers arrive as a `<user_answers>` **input block** keyed by question text; there is no `user_answers` tool, never call one. Dismiss (`cancelled: true`) and typed replies are handled per the tool description.
+**AskUserQuestion mechanics** (not a numbered convention; the tool description is authoritative). Fire `AskUserQuestion` **alone in its own response**: apply edits, re-renders, policy-file reads, and task updates first, in earlier steps, then call it with no other tool call beside it. A sibling tool call in the same response cancels the pause and the run continues before the user has answered. The answers arrive as a `<user_answers>` **input block** keyed by question text; there is no `user_answers` tool, never call one. Dismiss (`cancelled: true`) and free-text replies are handled per the tool description.
 
 **Option count is 2 to 4 per question object, never 1 and never 5.** The tool rejects the whole call otherwise, every other question in it included. When the options come from data (one per entity, field, property, concept, file, column), count the items (K) and shape the list before firing:
 
 - **K = 2 to 4:** one question object, K options.
 - **K = 5 or more (multiSelect):** several question objects, same header, question text suffixed ` (<i> of <N>)`, filled in source order in chunks of 4; when the last chunk would hold 1, move the last item of the previous chunk into it (5 → 3 + 2, 6 → 4 + 2, 9 → 4 + 3 + 2). At most four question objects per call; the rest go in the next call, after the answers arrive.
 - **K = 1:** a 2-option single-select (the item, plus the "None" / "Skip" option the stage text names), or no widget where the stage text says the one item counts as chosen.
-- **Single-select pick list (the user chooses one candidate):** never split across questions. List at most the 3 best candidates (2 when two fixed options such as "Create new" and "Skip" must stay), keep the stage's fixed alternative so the count never drops to 1, and say in the question text that another can be typed in. With 0 candidates the widget does not fire (the stage text says what happens instead). The tool always adds its own free-text slot: never list an "Other" option.
+- **Single-select pick list (the user chooses one candidate):** never split across questions. List at most the 3 best candidates (2 when two fixed options such as "Create new" and "Skip" must stay), keep the stage's fixed alternative so the count never drops to 1, and say in the question text that another can be written in the free-text slot. With 0 candidates the widget does not fire (the stage text says what happens instead). The tool always adds its own free-text slot: never list an "Other" option.
 - Never pad with a filler option, never merge two items into one option.
 - The tool has no pre-checked or default-selected option; "(Recommended)" on one label is the only default marker, so word a multiSelect so that selecting nothing is the safe outcome.
 
@@ -86,11 +78,12 @@ load per run covers every skill active in the same conversation.
 - **`Q:` templates** (fill placeholders, never reword): `Q: Which optional parts do you want to set up? (<i> of <N>)` (`(1 of 1)` omitted when one question suffices); `Q: <Plural Label> exists already as part of <Module Display Name>. Adopt it now?`; `Q: <Plural Label> also exists in <Module Display Name>. Use theirs, keep our own, or share one copy?`; `Q: <Plural Label> looks like <Other Plural Label> in <Module Display Name>. Same thing?`; `Q: <Module Display Name> is not set up yet. Wait for it, create the records here, or skip?`; `Q: <Plural Label>: keep the live <property>, or apply the design's?`; `Q: <Plural Label>: keep the design's value for which of these? Anything you leave unselected takes the live value. (<i> of <N>)` (the 3f.6 cosmetic batch; `(1 of 1)` omitted when one question suffices); `Q: <Plural Label> and the <Other Plural Label> in <Module Display Name> both hold <things>. Keep each one once?` (3c.1 and 4.N, when the live entity can be shared); `Q: <Plural Label> and the <Other Plural Label> in <Module Display Name> both hold <things>, but they can't be combined as set up. Keep them separate?` (3c.1, locked key); `Q: This design keeps <things> once as <Plural Label>. Use the <Other Plural Label> in <Module Display Name> instead?` (3c.1, the design's own shared record exists live); `Q: <Plural Label>: <the N2 / N7 question from stage-4-fields.md Step 4.N>` (4.N). Where a stage file specifies a different question wording, that wording wins and becomes the subject; the point is that subject and question text are identical.
 - **Standalone (no ledger task, unchanged):** the 3g closing confirmation and its "Adjust the fields" / "Revise the plan" follow-ups (a "revise" sets the affected `Q:` tasks back to `pending` and re-enters the ledger instead of re-deriving), and every prose question in the Audit / Rebuild modes.
 
-**Narration restraint.** Plain language is necessary but not sufficient. Volume matters too. The user did not ask for a narrated walkthrough of the skill's internal work; they asked for a reconciled spec. Hard rules:
+**Narration restraint.** Plain language is necessary but not sufficient. Volume matters too. The user did not ask for a narrated walkthrough of the skill's internal work; they asked for a reconciled spec. When no user-facing question or result is due, emit NO chat text at all. Run the tool call silently and let the tool-call line stand as the trace. Hard rules:
 
-- **Do not announce what you're about to do** before doing it. No *"Let me load the use-semantius reference..."*, no *"Let me classify each entity..."*, no *"Let me check this against the live catalog..."*. Just do the work; the tool-call lines in the transcript are enough.
+- **Do not announce what you're about to do, and do not emit progress chatter** before, between, or after tool calls. No *"Let me load the use-semantius reference..."*, no *"Let me classify each entity..."*, no *"Let me check this against the live catalog..."*, no *"Got it, mapping..."*, *"Designing your blueprint now."*, *"Preflight is done, now setting up..."*, *"Got your request, checking how to run this."*, *"Switching to..."*, *"Fixing the repeat, tracing..."*. Just do the work; the tool-call lines in the transcript are enough. Three tool calls in a row must not produce three chat lines: if the next required output is a question or a result, ask it or deliver it; otherwise say nothing.
 - **Do not narrate self-corrections** mid-flight; fix them silently.
-- **The verification phase is one plain-language line, not a blow-by-blow.** The pre-save checks (the consistency gate, the banned-token / spelling / em-dash scans, the rule-block validation) are internal mechanics. Narrate the whole phase as **at most one** business-language status line (e.g. *"Double-checking the design holds together before saving..."*), then go quiet. Never a per-check trail, never an enumerated pass count on success (*"9 of 9 rule blocks valid, every entity and label agrees"* is banned, that is a result only a data modeler reads), and never the machinery by name (`consistency check`, `banned-token scan`, `rule blocks`, `prose conventions`, `argv`, the checker's filename). On a real failure, surface in plain language only what the user must decide or fix. (This one consolidated status line is the sole exception to the announce-before rule above; the per-step *"Let me check..."* announcements stay banned.)
+- **A file write is an error only when a tool call failed.** A file saved cleanly through a shell heredoc or a script is not an error, even when the method felt indirect. On success, say nothing about how the file was written; on a real failure, quote the tool's error verbatim and stop. Never describe a routine write as *"I hit a file write error"*.
+- **The verification phase is silent.** The pre-save checks (the consistency gate, the banned-token / spelling / em-dash scans, the rule-block validation) are internal mechanics. Never a per-check trail, never an enumerated pass count on success (*"9 of 9 rule blocks valid, every entity and label agrees"* is banned, that is a result only a data modeler reads), and never the machinery by name (`consistency check`, `banned-token scan`, `rule blocks`, `prose conventions`, `argv`, the checker's filename). On a real failure, surface in plain language only what the user must decide or fix.
 - **Do not list per-bucket counts and stage-by-stage progress** after each step. One concise plan summary at Stage 3 (the reconciliation decisions) and one close-out line after writing is plenty.
 - **Do not announce the next skill in the pipeline as boilerplate.** A one-clause hint at the close-out is fine; a separate "Next step:" paragraph is not.
 
@@ -148,9 +141,11 @@ The environment checks are shared across all four Semantius skills and live in o
   ```
 
   When the `Run context:` block is present the admin already ran the preflight; export `CUSTOMIZATIONS_FILE` from the header's path and skip the checks.
-- **Standalone (no `Run context:` block):** run the shared preflight yourself. In brief: stay in the repo root; install the toolchain (Bun, jq, yq) if missing; probe `getCurrentUser` to install/authenticate the CLI and halt if the org is `adenin`; compute `CUSTOMIZATIONS_FILE="semantius/${org}/customizations.yaml"`. The full per-check procedure, install matrix, and exit handling are in the reference file.
+- **Standalone (no `Run context:` block):** run the shared preflight yourself. In brief: stay in the repo root; install the toolchain (Bun, jq, yq) if missing; probe `getCurrentUser` to install/authenticate the CLI; compute `CUSTOMIZATIONS_FILE="semantius/${org}/customizations.yaml"`. The full per-check procedure, install matrix, and exit handling are in the reference file.
 
-After preflight, narrate one short line on first invocation: *"Using customizations from `semantius/<org>/customizations.yaml`"* (if the file exists) or *"No customizations file yet; will create on first decision."* (if absent). The file is created lazily by the first widget answer.
+**Nothing about preflight reaches chat:** not the checks, not whether a `Run context:` block is present (under the admin or on your own), not the org, not the customizations path. The user sees only the setup and halt lines the shared preflight's Output discipline names, and the expert-flow line below.
+
+After preflight, in expert flow only (read the switch as "Expert flow" below describes), narrate one short line on first invocation: *"Using customizations from `semantius/<org>/customizations.yaml`"* (if the file exists) or *"No customizations file yet; will create on first decision."* (if absent). In guided and fast flow, say nothing about the file. The file is created lazily by the first widget answer.
 
 ---
 
@@ -162,6 +157,8 @@ Before doing anything else, read the use-semantius skill and its data-modeling r
 Read: ../use-semantius/SKILL.md
 Read: ../use-semantius/references/data-modeling.md
 ```
+
+**Once per conversation.** A file of this list that is already in this conversation (read earlier in the same run, e.g. by an earlier skill of the pipeline) and not summarized away is not read again; read it again after a context reset.
 
 The data-modeling reference gives you the mandatory creation order, all field formats, the Golden Rules, and exact CLI syntax. Everything below follows those patterns. Also read `../use-semantius/references/cli-usage.md` if you need help with CLI invocation, piping, or error handling. The rule-level references (`../use-semantius/references/jsonlogic.md` for `computed_fields` / `validation_rules` / `input_type_rule`, `../use-semantius/references/select-rule.md` for `select_rule`) are loaded by the stage files that author them (Stages 6, 7, 10) — don't preload them here.
 
@@ -237,7 +234,7 @@ Default to Reconcile unless the user references an existing spec. The rest of th
 
 ---
 
-## Fast flow (experimental)
+## Fast flow
 
 - **When:** a run is a fast run for the analyst only when the run context carries `Interaction flow: fast`, or the admin pipeline task's marker (`TaskGet`) says `fast: go-ahead given` (`fast: guided flow for this build` means guided flow). A saved `fast` in `$CUSTOMIZATIONS_FILE` on its own counts as guided flow, and so does a direct call. Check at Step 0 and after a context reset; in a fast run, read [`../semantius-admin/references/fast-flow.md`](../semantius-admin/references/fast-flow.md) at Step 0 and again after a context reset.
 - **The turn rule** (fast-flow.md 4.1): no `AskUserQuestion`, no message ending in a question, no rendered plan or proposal. Each question point takes the pick its "Fast flow, after the go-ahead" line names and logs one line (fast-flow.md section 5).
@@ -258,10 +255,10 @@ The architect decides the module's access level (frontmatter `access_scope`: `cu
 | `custom` | no permission or role rows (§8.1 and the §9.1 baseline-roles and hierarchy tables each carry `_(none: permissions set up by hand)_`): the module's permissions were set up by hand and are left as they are | `manage` (the modeler maps it to the module's current manage permission) | off | none | none |
 | `basic` | `<slug>:read` + `<slug>:manage`; viewer + manager roles; the single `manage → read` edge | `manage` on every owned entity (a catalog entity's `:admin` tier is written as `manage`; the blueprint stays unchanged) | off | not enforced: no gate rules | none |
 | `advanced` | `read` + `manage` + `admin`; viewer + manager + admin roles; `admin → manage → read`; field-level permissions as below (when the blueprint's §8.1 has no `baseline-admin` row, add `<slug>:admin`, the admin role and the `admin → manage` edge) | per the §3 `write tier` | on | not enforced: no gate rules | none |
-| `gated` | as `advanced` | per the §3 `write tier` | on | enforced: entering a gated state (and a §8.2 `create` rule) gets a `validation_rules` entry requiring `<slug>:admin` | none |
-| `raci` | as `advanced`, plus one `workflow-gate (lifecycle)` row per gate, **not** included in `<slug>:admin` | per the §3 `write tier` | on | enforced: each gate's own permission | realized (Stage 9.5) |
+| `gated` | as `advanced`, plus one `workflow-gate (lifecycle)` row per gate, every one included in `<slug>:admin` (an `admin → <gate>` row for each, high-risk gates too) | per the §3 `write tier` | on | enforced: entering a gated state (and a §8.2 `create` rule) gets a `validation_rules` entry checking the gate's own permission with `has_permission`; the admin role holds every gate | none |
+| `raci` | as `advanced`, plus one `workflow-gate (lifecycle)` row per gate, included in `<slug>:admin` except a high-risk gate (an `admin → <gate>` row for each non-high-risk gate, none for a high-risk one) | per the §3 `write tier` | on | enforced: each gate's own permission, checked with `has_permission` (in `living` mode in an `or` with the Accountable check `is_raci_actor`, written only in the §9.1 `_enforcement rules_`, never also in §3); the Accountable role and, except on a high-risk gate, the admin role take the step | realized (Stage 9.5) |
 
-Field-level permissions are the `workflow-gate (rule)` / `override` permissions (rolled up under `<slug>:admin`) and `narrow` permissions (rolled up under `<slug>:manage`) that Stages 5, 7 and 10 author. Functional-ownership grants (§9.2) and lifecycle handoffs run from `advanced` up. The lifecycle state machine exists at every access level (every lifecycle entity keeps its `workflow_state` enum field); under `custom`, `basic` and `advanced` its transitions are simply ungated. The `persona` frontmatter key is emitted only under `raci` with a RACI matrix.
+Field-level permissions are the `workflow-gate (rule)` / `override` permissions (rolled up under `<slug>:admin`) and `narrow` permissions (rolled up under `<slug>:manage`) that Stages 5, 7 and 10 author. Functional-ownership grants (§9.2) and lifecycle handoffs run from `advanced` up. The lifecycle state machine exists at every access level (every lifecycle entity keeps its `workflow_state` enum field); under `custom`, `basic` and `advanced` its transitions are simply ungated. A gate's §8.1 `high risk?` mark (carried from the blueprint's §7 `high risk?`) changes only who holds the gate under `raci`: the admin role does not, so only the Accountable role takes that step; under `gated` it has no effect. The `persona` frontmatter key is emitted only under `raci` with a RACI matrix.
 
 The result satisfies the analyst's own §8.1/§9.1 invariants by construction and the modeler's parse-time validation; the Stage 11 pre-save verifier checks the coherence of each access level (the "Verification gates" below).
 
@@ -294,8 +291,8 @@ The Task column is the exact subject of the stage task (Task tracking, above); s
 | 5. Workflow perms | W3 / W4 / W4n / W5 workflow-permission scan | After fields | **emits nothing** under `basic` / `custom` | (same task) | `references/stage-5-workflow-perms.md` |
 | 6. Input-type | Conditional input-type scan | After Stage 5 | n/a | (same task) | `references/stage-6-input-type.md` |
 | 7. Select rule | Row-level read-access scan | After Stage 6 | **no select_rule** under `basic` / `custom` | (same task) | `references/stage-7-select-rule.md` |
-| 8. Consistency gate | Holistic view / edit-rules cross-check | After 5/6/7/9/10 | n/a | (same task) | **resident** (Verification gates) |
-| 9 + 9.5 Governance | Cross-tier FK validation + RACI / persona reconciliation | After Stage 8 inputs | **RACI only under `raci`**; `basic`: viewer + manager only | (same task) | `references/stage-9-governance.md` |
+| 8. Consistency gate | Audit-log settle + FK scope fix + view / edit-rules cross-check | After 5/6/7/9/10 | n/a | (same task) | **resident** (Verification gates) |
+| 9 + 9.5 Governance | Tier and key validation + RACI / persona reconciliation | After Stage 8 inputs | **RACI only under `raci`**; `basic`: viewer + manager only | (same task) | `references/stage-9-governance.md` |
 | 10. Rules | Computed fields + validation rules (families F1-F15) | After governance | **drop permission-gated rules** under `basic` / `custom` | (same task) | `references/stage-10-rules.md` |
 | 11. Write | Frontmatter, section deltas, write the spec, close-out | After all stages pass | n/a | `Match › Write the file and double-check it` | `references/stage-11-write.md` (pre-save gates resident) |
 | Modes B/C/D | Audit / Extend / Rebuild | Non-reconcile invocations | n/a | `Match › Review the file` / `Match › Extend the design` (its Stage 2/3 re-run is a **ledger** stage) / `Match › Rebuild the file` | `references/modes-audit-extend-rebuild.md` |
@@ -337,9 +334,47 @@ Stage 8 and the Stage 11 pre-save verification are kept resident because they ar
 
 ## Stage 8: View & edit rules consistency gate
 
-After Stages 5/6/7/9/10, run a holistic consistency pass over every owned entity:
+After Stages 5/6/7/9/10, run a holistic consistency pass over every owned entity. Steps 0 and 1 come first, in this order.
 
-For each entity, cross-check:
+**Step 0: settle the audit log.** Write every owned entity's `**Audit log:**` line now (rule: `semantic-spec-template.md`, `**Audit log:**` bullet). Step 1 reads it.
+
+**Step 1: FK scope fix (fixes, never asks).** Look at every §4 row where:
+
+- `Kind` is `parent` (junction legs say `junction` and are skipped),
+- `Delete behavior` is `cascade`,
+- `To` has its own §3 block with a Fields table in this spec, and
+- the `From` field is not already a live field (in the Stage 2 index) with format `parent`.
+
+`From` is the child and `To` is the parent. For both, read from their §3 blocks:
+
+- **Edit permission:** the `**Edit permission:**` value with backticks removed; no line means `manage`.
+- **Permission codes:** every `<code>` in `"require_permission": "<code>"` or `"has_permission": "<code>"` inside the `**Validation rules**` JSON. Under `access_scope: gated`, a `workflow-gate (lifecycle)` code counts as `<slug>:admin` (the admin role holds every gate there).
+- **Audit log:** the `**Audit log:**` value; no line means `no`.
+- **Lifecycle:** whether the Fields table has a `workflow_state` row.
+
+The row **fires** when any one holds:
+
+- **T1:** the child's Edit permission differs from the parent's.
+- **T2:** the child has a permission code the parent does not have.
+- **T3:** the child's Audit log is `yes` and the child has a lifecycle.
+
+Why: `parent` says the child shares the parent's permission model and dies with it. A child with its own permissions, or audit-logged records with their own lifecycle (feedback, offers, applications), must survive routine deletion of the parent (`../use-semantius/references/data-modeling.md`, divergent-permission-scope rule).
+
+For each row that fires, make exactly these edits:
+
+1. In the child's §3 Fields row for that field, change Format `` `parent` `` to `` `reference` ``.
+2. In the same row's Reference / Notes cell, replace `↳` with `→`; if the parentheses after the target say `cascade`, change it to `restrict`; delete any `parent label:` annotation.
+3. In the §4 row, set `Kind` to `reference`, `fk_format` to `reference`, and `Delete behavior` to `restrict`.
+4. In the child's §3 **Relationships** sentence for that link, change `cascade on delete` to `restrict on delete`. Change nothing else in the sentence.
+5. Leave `Required`, `relationship_label` and `**Label parent:**` as they are.
+
+Keep a list of the fixed rows (child, field, parent) for the Closing message.
+
+When the field already exists live as `parent`, don't fix it. Add one 🟡 §7.2 entry instead: "`<child>`.`<field>` is kept with its `<parent>` but has its own permissions or history; changing it to restrict needs a migration of the live field."
+
+`consistency-check.ts` reports every row that still fires (check `FK scope`); fix each one the same way and re-run it.
+
+**Step 2: cross-check.** For each entity, cross-check:
 
 - **`view_permission`** (always `<slug>:read` on the entity record).
 - **`edit_permission`** (`<slug>:manage` default, `<slug>:admin` for admin-tier, `<slug>:<narrow>` for narrow).
@@ -350,12 +385,12 @@ For each entity, cross-check:
 
 Failure modes (all 🔴 blockers, halt save):
 
-- A `require_permission` argument references a permission code not in §8.1.
+- A `require_permission` or `has_permission` argument (in a §3 rule or a §9.1 `_enforcement rules_` row) references a permission code not in §8.1.
 - A `select_rule` references a column that isn't on this entity.
 - A `select_rule` JsonLogic body contains a **throwing operator** (`require_permission` or `throw_error`). A `select_rule` compiles to a per-row `FOR SELECT` policy evaluated on every read; a throw aborts the entire read instead of hiding the row. Permission checks inside a `select_rule` must use the non-throwing `has_permission` (it returns `false` rather than throwing). See use-semantius `jsonlogic.md`, which calls `require_permission` *"Wrong shape for `select_rule`"*. This is the check whose absence let `require_permission` ship inside a read rule.
 - An entity's `**Edit permission:** admin` annotation but the `baseline-admin` row (`<slug>:admin`) isn't declared in §8.1.
 - An `override`-tier `view_all_<plural>` / `manage_all_<plural>` row in §8.1 with no `select_rule` on the matching entity (the row-scope playbook's owner + oversight shape mints both together), or vice versa.
-- A `<slug>:<workflow>` permission declared in §8.1 but never invoked by any `require_permission` rule.
+- A `<slug>:<workflow>` permission declared in §8.1 but never invoked by any `require_permission` or `has_permission` rule (a §3 rule, or in `living` mode a §9.1 `_enforcement rules_` row, the only place a living-mode gate rule is written).
 - A `<slug>:<workflow>` permission invoked by a rule but missing from §8.1.
 - A `validation_rules` rule references `{"var": "$old.x"}` where `x` isn't on this entity.
 - Bypass-prose in a `select_rule` `description` that doesn't reconcile with the JsonLogic body.
@@ -374,17 +409,18 @@ Before writing the file, run these checks. ANY failure halts save and prints a s
 | Every blueprint §3 entity has a Reconciliation decision | missing decisions list |
 | No `reuse-from` entity carries a Fields block | over-spec list |
 | No `create-new` / `rename-incoming-from` / `promote-to-master` entity is missing a Fields block | under-spec list |
-| Every `require_permission` argument is in §8.1 Permissions catalog | unbound permissions list |
+| Every `require_permission` and `has_permission` argument (in §3 rules and in the living-mode §9.1 `_enforcement rules_`) is in §8.1 Permissions catalog | unbound permissions list |
 | Frontmatter carries `tagline` and `icon_name` (required, carried verbatim from the blueprint); `module_kind` carried verbatim when the blueprint has it, otherwise the key is **omitted** (never `null`); `description` / `license` carried when the blueprint has them (absence is not a finding); `persona` is REQUIRED under `access_scope: raci` when §9 carries a RACI matrix and MUST BE ABSENT under every other access level (see the coherence rows below) | missing / forbidden frontmatter keys |
 | §9 governance section is present; §9.1 is populated unless `access_scope: custom`; §9.2 carries the blueprint's functional ownership from `advanced` up (a `_(none: …)_` placeholder when the blueprint has none, and under `basic` and `custom`) | missing or empty §9 |
 | Frontmatter `access_scope` is present and equals the blueprint's value (one of `custom` / `basic` / `advanced` / `gated` / `raci`) | missing or changed access level |
 | When `access_scope: custom`: §8.1 and §9.1 carry no permission or role rows; every owned entity has `**Edit permission:** manage`; no field-level permission rows and no rule gating on a permission; no RACI realization / Processes / §9.2 ownership rows; no `persona` frontmatter | access_scope incoherence list |
 | When `access_scope: basic`: §8.1 carries exactly `<slug>:read` + `<slug>:manage` (no `baseline-admin` / `workflow-gate` / `override` / `narrow`); no §3 entity has `**Edit permission:** admin` or a narrow tier; §9.1 carries only viewer + manager + the single `manage → read` row (plus, when a based entity's base lives in another module, the cross-module family edit grant: `<slug>:manage` including the base's edit permission; see `stage-3-shared-base.md`); no RACI realization / Processes / §9.2 ownership rows; no `persona` frontmatter | access_scope incoherence list |
-| When `access_scope: advanced` or `gated`: §8.1 carries `<slug>:read` + `<slug>:manage` + `<slug>:admin` and no `workflow-gate (lifecycle)` row; no RACI realization / Processes rows; no `persona` frontmatter. `advanced`: no rule gates a lifecycle transition. `gated`: every gated §7 state and every §8.2 `create` rule has a `validation_rules` entry requiring `<slug>:admin` | access_scope incoherence list |
-| When `access_scope: raci`: §8.1 carries one `workflow-gate (lifecycle)` row per gated §7 state and per §8.2 `create` rule, none included in `<slug>:admin` (no `admin → <gate>` row in §9.1); the RACI realization, Processes and §9.2 ownership rows are present; every process has exactly one accountable row, and every gate is in the `grant gates [...]` list of exactly one accountable row (the RACI rule); `persona` frontmatter is present | access_scope incoherence list |
+| When `access_scope: advanced`: §8.1 carries `<slug>:read` + `<slug>:manage` + `<slug>:admin` and no `workflow-gate (lifecycle)` row; no rule gates a lifecycle transition; no RACI realization / Processes rows; no `persona` frontmatter | access_scope incoherence list |
+| When `access_scope: gated`: §8.1 carries `<slug>:read` + `<slug>:manage` + `<slug>:admin` plus one `workflow-gate (lifecycle)` row per gated §7 state and per §8.2 `create` rule, each with `included in :admin?` ✓ (high-risk gates too) and an `admin → <gate>` row in §9.1; every other §8.1 row has `high risk?` `-`; every gated §7 state and every §8.2 `create` rule has a §3 `validation_rules` entry whose `has_permission` cites that gate; no RACI realization / Processes rows; no `persona` frontmatter | access_scope incoherence list |
+| When `access_scope: raci`: §8.1 carries one `workflow-gate (lifecycle)` row per gated §7 state and per §8.2 `create` rule; a gate with `high risk?` `-` has `included in :admin?` ✓ and an `admin → <gate>` row in §9.1, a gate with `high risk?` ✓ has `-` and no such row; every other §8.1 row has `high risk?` `-`; in `documentation` mode every gated §7 state and every §8.2 `create` rule has a §3 `validation_rules` entry whose `has_permission` cites that gate; in `living` mode each has exactly one §9.1 `_enforcement rules_` A-gate row instead (`has_permission` in an `or` with `is_raci_actor`), no §3 `validation_rules` entry repeats an A-gate, and each `create` gate has a `create` `_process_gates_` row on the entity's initial state; the RACI realization, Processes and §9.2 ownership rows are present; every process has exactly one accountable row, and every gate is in the `grant gates [...]` list of exactly one accountable row (the RACI rule); `persona` frontmatter is present | access_scope incoherence list |
 | **RACI provenance — mechanically enforced by `consistency-check.ts`.** When the spec carries a RACI matrix, frontmatter MUST carry `raci_mode` (`living`/`documentation`) AND `raci_mode_source` (`computed-default`/`non-interactive`; `raci_mode` is auto-derived from instance state, so this gate never produces `user-answer`), and the §9 `**RACI mode:**` line must match `raci_mode`. The checker fails the save on any missing / invalid / mismatched value. | RACI provenance missing / inconsistent |
 | Every `re-prefixed-from` annotation in §8.1 names a catalog module and a verb; the verb appears on the relevant entity in §3 | malformed re-prefix list |
-| §4 rows carry `fk_format` and the delete behavior consumed verbatim from the **blueprint's** §5.1 / §5.2 / §5.3a, not re-derived. **Exception:** a row whose `From` is an `is_a` entity is never `cascade` (use `restrict` / `clear`; enforced by `consistency-check.ts`) | column-missing list |
+| §4 rows carry `fk_format` and the delete behavior consumed verbatim from the **blueprint's** §5.1 / §5.2 / §5.3a, not re-derived. **Exceptions:** a row whose `From` is an `is_a` entity is never `cascade` (use `restrict` / `clear`); a row changed by the Stage 8 FK scope fix is `reference` + `restrict` (both enforced by `consistency-check.ts`) | column-missing list |
 | §6 `Outbound handoffs` / `Inbound handoffs` rows carry the `transition` column; for an Outbound `lifecycle` row (or an Inbound row whose `payload` is a declared §3 entity), `to_state` is one of that entity's `workflow_state` enum values | mismatched-state list |
 | Every `select_rule` column references a real field on the entity | dangling columns list |
 | No throwing operator inside any `select_rule` (`require_permission` / `throw_error` abort the per-row read; permission checks must use the non-throwing `has_permission`) | throwing-select_rule list |
@@ -399,13 +435,16 @@ Before writing the file, run these checks. ANY failure halts save and prints a s
 | **JsonLogic permission references resolve** — every `require_permission(<code>)` and every `has_permission(<code>)` argument in JsonLogic resolves to a permission row in §8.1 OR a known platform-level permission | unbound permission code list |
 | **JsonLogic enum-value references resolve** — every literal value compared against an enum-typed field in JsonLogic exists in that field's `enum_values` as a **value**, never a label (after any Stage 3f.2 merge) | unknown enum literals list |
 | **Enum entries well-formed** — every §5 bullet and hint sub-bullet follows the §5 grammar in `semantic-spec-template.md`; every entry carries a label and a color, and labels and hints follow `stage-4-fields.md` ("Enum values, labels and hints"); each Notes `enum_values:` set equals its §5 values; every `default:` is a value, never a label (enforced by `consistency-check.ts`) | enum list (entity, field, issue) |
-| **Icons exist** — every §5 `icon` and the frontmatter `icon_name` pass `bun "<skill-folder>/../use-semantius/references/lucide-icons.ts" check <name…>` (a URL always passes) | unknown icon list |
+| **Every enum entry's icon checked** — every §5 entry carries either `` - icon: `<name>` `` or `- icon: none <!-- finder: <query>, …: no fit -->` naming the finder queries tried (`stage-4-fields.md` rule 3); an entry with no icon line is unchecked and blocks the save, it never means that no icon fits (enforced by `consistency-check.ts --require-icons`) | unchecked entry list (entity, field, value) |
+| **Icons exist** — every §5 `icon` and the frontmatter `icon_name` pass `bun "<skill-folder>/../use-semantius/references/lucide-icon-checker.ts" <name…>` (a URL always passes) | unknown icon list |
 | **Label column is text** — the §3 row named by `**Label column:**` (and marked `` `label_column` ``) has Format `string`, never `enum`, `multiline`, a FK or any other format: the platform creates it as text and locks its format (`90219`) (enforced by `consistency-check.ts`) | label list (entity, field, format) |
 | **JsonLogic rename cascade complete** — for every rename recorded in Stage 3f.1 / 3f.3, grep the assembled spec text for the old token; the count must be zero | partial rename list (token, line numbers where stale references remain) |
 | **No enum value would orphan live records** — for every adopted entity, no **value** (compared by value; a label change orphans nothing) in `live_distinct_enum_values_in_use` is missing from the spec's final `enum_values` for that field UNLESS a §7.1 🔴 blocker documents the required pre-deploy data migration | enum drop list (entity, field, dropped value, live record count) |
 | **No cross-primitive format change** without §7.1 🔴 blocker | format-change list (entity, field, live format, spec format) |
 | **Permission tier downgrade has user consent** (Stage 3f.3 option 2 explicitly picked) | unconfirmed downgrade list (entity, live tier, spec tier) |
-| **Validation-rule identity**: every `validation_rules` entry carries a `name` (snake_case, unique within the entity) and a `code` matching `^99[0-9]{3}$` (class-99 SQLSTATE; the platform rejects any other shape with `90905`), assigned sequentially from `99001` in §3 entity order then array order | rule-identity list (entity, rule name, issue) |
+| **Validation-rule identity**: every `validation_rules` entry carries a `name` (snake_case, unique within the entity) and a `code` matching `^99[0-9]{3}$` (class-99 SQLSTATE; the platform rejects any other shape with `90905`), assigned sequentially from `99001` in §3 entity order then array order; the block is a JSON array (enforced by `consistency-check.ts`; fix: renumber the codes, rename the repeated rule) | rule-identity list (entity, rule name, issue) |
+| **No reserved field names**: no §3 field name starts with `_` or ends in `_id_label`; the platform keeps those for its composed label columns and refuses them (enforced by `consistency-check.ts`; fix: rename the field) | field list (entity, field) |
+| **Label parent is a link**: a `**Label parent:**` names one of the entity's own §3 fields with Format `reference` or `parent`; the platform refuses anything else (`23514`) (enforced by `consistency-check.ts`; fix: name the entity's FK to the parent, or drop the line) | entity list (entity, named field, issue) |
 | **Key types valid and not changed on a live entity** (Stage 9 rule 5): every `**Key type:**` is `bigint` / `text` / `uuid` / `typeid` / `is_a` / `has_a`; `typeid` and `is_a` have a well-formed `**Key prefix:**` unique in the spec and the live catalog, any other type has none; no entity that exists live carries a key type (or `**Based on:**`) different from its live one unless a §7.1 🔴 rebuild blocker documents it | key-type list (entity, issue) |
 | **Families valid** (Stage 9 rule 5): every `is_a` / `has_a` entity has a `**Based on:**` naming a declared entity whose key type fits (live-checked when reused); no `**Label column:**` / `**Label parent:**` / `**Order column:**` on a based entity; its Fields list only its own fields; no `_process_gates_` row names it; no `table_name` ends in `_ext` and `<table_name>_ext` is free live; roles that write it also write its base (a cross-module edit grant when the base lives elsewhere). The file-level part is enforced by `consistency-check.ts` | family list (entity, issue) |
 
@@ -413,14 +452,14 @@ Before writing the file, run these checks. ANY failure halts save and prints a s
 
 ```bash
 # <skill-folder> = the directory this skill's SKILL.md was read from (absolute path; works for plugin and workspace installs alike)
-bun "<skill-folder>/../semantius-architect/references/consistency-check.ts" "semantius/specs/<slug>-semantic-spec.md"
+bun "<skill-folder>/../semantius-architect/references/consistency-check.ts" --require-icons "semantius/specs/<slug>-semantic-spec.md"
 ```
 
 For a spec it byte-compares: the frontmatter `entities:` list ⟺ §2 `Table name` ⟺ §3 sub-section headings (the entity set, strict 1:1); §2 `Singular label` ⟺ the §3 heading singular label (per entity); that every §4 / §5 / §8.2 / mermaid reference resolves to a declared entity; and that every §2 mermaid edge's direction + verb agrees with what §3 `relationship_label` + §4 `Cardinality`/`Kind` derive (a `parent`-kind row is always drawn as a bare arrow with no verb, per the junction convention; every other row's verb comes from §3, never invented at diagram time). It is **content-agnostic** on prose — it never judges language or casing, only that every occurrence of a name (and now every diagram edge) agrees with its source. A non-zero exit prints the exact entity and the disagreeing locations; fix every reported line and re-run until exit 0 before narrating the close-out. Do not substitute reading for running it.
 
 The drift / JsonLogic block of checks is the analyst's safety net against modeler-time halts. Any failure means the spec would be rejected by the modeler at deploy time anyway, so failing now (in the analyst, where the user has full context) is strictly better than failing later (in the modeler, where the user has lost the conversational thread). Every check above corresponds to a modeler refusal condition documented in `../semantius-modeler/SKILL.md` and `../../docs/architecture.md §6` failure modes.
 
-**Narrating this phase (slim, plain, one line).** Everything above, the checks table, the mechanical consistency gate, the scans, the rule-block / JsonLogic validation, is internal QA. Per Narration restraint, the user sees **at most one** plain-language progress line for the entire phase (*"Double-checking the design holds together before saving..."*), never the checker / scans / rule blocks by name, never an enumerated pass count on success, and never a narrated re-run when a check has to be re-invoked (a tooling hiccup like swallowed output is fixed silently, not reported). Surface output only when a check **fails**, and then name, in plain language, what the user must decide or fix.
+**Narrating this phase (silent on success).** Everything above, the checks table, the mechanical consistency gate, the scans, the rule-block / JsonLogic validation, is internal QA. Per Narration restraint, the user sees no chat text for the phase, never the checker / scans / rule blocks by name, never an enumerated pass count on success, and never a narrated re-run when a check has to be re-invoked (a tooling hiccup like swallowed output is fixed silently, not reported). Surface output only when a check **fails**, and then name, in plain language, what the user must decide or fix.
 
 ---
 
@@ -436,7 +475,9 @@ One line; no "next step" hint in admin-orchestrated mode (the admin narrates whe
 
 **Stand-alone** (no handoff header):
 
-> *Done. Wrote the design to `semantius/specs/<slug>-semantic-spec.md` (<plain-English summary>). Ask me to deploy it whenever you're ready, or run `/semantius:deploy`.*
+> *Done. Wrote the design to `semantius/specs/<slug>-semantic-spec.md` (<plain-English summary>). When you're ready, ask me to deploy it.*
+
+**Kept records.** When the Stage 8 FK scope fix changed at least one row, append one sentence to the end of either line above (same line, admin-orchestrated or stand-alone): *"<Parent Plural Label> that still have <Child Plural Label> can't be deleted now, so those records are kept."* One clause per parent, joined with "; " (e.g. *"Interviews that still have Scorecards can't be deleted now, so those records are kept; Applications that still have Offers can't be deleted now, so those records are kept."*). A fast run has no close-out and logs nothing for the fix: it is a rule, not a pick.
 
 **Never** emit raw `reconciliation_summary: {...}` curly-brace data, "Tell the admin to invoke the modeler," or any skill-name references. Use the plain-English translation table from §3g (create-new → "new", promote-to-master → "adopted from <module>", reuse-from → "reusing existing from <module>", dropped → "skipped", reuse-from semantius_builtin.* → "reusing platform built-in").
 

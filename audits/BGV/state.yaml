@@ -1,7 +1,7 @@
 schema_version: 2
 domain: BGV
-domain_id: 191
-status: built
+extra_domain_id: 191
+status: audit_stale
 next_action_by: agent
 last_audit: "2026-06-19"
 

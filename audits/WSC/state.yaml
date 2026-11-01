@@ -141,7 +141,7 @@ b2:
       Recording it now means that the moment Workstream Collaboration decides who does this work, this step already has a named owner instead of being rediscovered later as a gap. Surfaced as q-WSC.md q13.
     extra_b9d_added: "2026-06-13"
 
-b2_superseded:
+extra_b2_superseded:
   - id: B2-S3
     summary: "SUPERSEDED 2026-06-06 (per-domain-skill restoration). Rule #15 notes-pollution on 6 skill_tools rows across WSC system skills 174/175/176."
     note: "skill_tools is DROPPED under the per-domain-skill restoration (see supersession header). The notes-pollution question on skill_tools rows is moot: the table is retired and per-module tool requirements move to domain_module_tools. No action; retained for provenance only. Tool re-authoring is tracked in audits/_modularization-backlog.md."

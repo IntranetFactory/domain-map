@@ -325,7 +325,7 @@ extra_modularization:
   module_shape: "3-module (FSQM-HACCP-CCP, FSQM-HYGIENE-CONTROL, FSQM-AUDIT-SUPPLIER); supersedes prior B2-MODULE-SHAPE which is now closed"
   m1_cured: true
 
-b1a_resolved_2026_06_06:
+extra_b1a_resolved_2026_06_06:
   note: "Resolved during 2026-06-06 b1a execution; detail in history.md. Listed here for traceability only."
   items:
     - {id: B1A-MODULE-SYSTEM-SKILLS, result: "3 system skills 383/384/385 on modules 259/263/264 + 21 skill_tools (channel abstractions instead of send_email); legacy skill 64 + 8 skill_tools deleted"}

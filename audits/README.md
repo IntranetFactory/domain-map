@@ -60,9 +60,17 @@ b3:    # vendor research pending (Phase 0): discretionary ADDITIVE entities that
     rationale: <full text>
     vendor_evidence: [...]
     proposed_module: ...           # optional
+
+checks:  # written ONLY by `domain_health.ts --record`; never hand-edited
+  checklist_version: <int>        # CHECKLIST_VERSION of scripts/lib/health/registry.ts at the run
+  run_at: "<ISO timestamp>"
+  results:
+    - {id: <check id>, result: pass | fail | warn | agent | delegated | skipped, rows: [<row ids>]}
 ```
 
 `next_action_by` derives by priority: agent (b1a non-empty) > user (b2) > research (b3) > blocked (only b1b) > done.
+
+**The `checks:` block** records what the last Validate run actually verified: one entry per checklist ID, with the mechanical result and the offending row ids. `agent` means the check (or its judgment half) is the agent's to work in that run, `delegated` names a check run by another script (B9d, B9e), `skipped` a retired or reserved ID. `domain_health.ts --record` splices it in as text, replacing only the region from `checks:` to the next top-level key, so comments and every other key survive; a "report" or "check only" run does not record. `bun run scripts/analytics/domain_health.ts --stale` lists domains whose recorded `checklist_version` is older than the script's, or missing. The block is a run record, not an open-items list, so the hygiene rule below does not apply to it.
 
 **Execution contract (SKILL.md Rule #21).** A *review / audit / validate / finish* run EXECUTES all additive/corrective `b1a` inline (`record_status='new'`), so a properly-run review leaves `b1a` empty and the domain ends `next_action_by: user` (an open `b2` or a destructive step needs approval), `blocked` (only `b1b` remains), or `done`. `b3` is non-blocking and never sets `next_action_by` on its own; it parks in the ideas backlog. Only a *report / check* run is read-only and may leave `b1a` populated.
 
@@ -84,7 +92,7 @@ b3:    # vendor research pending (Phase 0): discretionary ADDITIVE entities that
 - `affected_entities[]`: flat list of entity names.
 - `vendor_evidence[]`: flat list of vendor names or `{vendor, evidence: 1st_class|secondary|absent}`.
 
-Audit-specific extras must be prefixed `extra_` (e.g. `extra_loader_group:`, `extra_sequencing:`).
+Audit-specific extras must be prefixed `extra_` (e.g. `extra_loader_group:`, `extra_sequencing:`), on items and at the top level alike. The only top-level keys are the schema keys above (including the script-written `checks:`) and `extra_`-prefixed ones.
 
 ### Self-containment rules
 

@@ -8,13 +8,13 @@ description: >-
   deploys. Deterministic, with an optional audit pass after saving. Trigger
   when the user wants to extract / export / optimize / snapshot /
   reverse-engineer / pull / regenerate a spec from a live Semantius module,
-  build a spec for a module created without one, or bring a customized live
-  module back in sync with a markdown spec. Example phrases: "generate a spec
-  from the `{slug}` module", "reverse-engineer the `{slug}` module into a
-  spec", "someone built a module in the UI, get me a spec", "pull `{slug}`
-  down to a semantic spec". Do NOT trigger for moving a module with its data
-  between hosts, or backing it up as a restorable file: that is
-  semantius-transfer; this skill produces a markdown spec.
+  build a spec for a module created without one, bring a customized live
+  module back in sync with a markdown spec, or see a diagram of a deployed
+  module. Example phrases: "generate a spec from the `{slug}` module",
+  "reverse-engineer the `{slug}` module into a spec", "someone built a
+  module in the UI, get me a spec", "draw a diagram of the `{slug}` module".
+  Do NOT trigger for moving a module with its data between hosts, or
+  backing it up as a restorable file: that is semantius-transfer.
 ---
 
 # semantius-optimizer Skill
@@ -101,6 +101,9 @@ Read first:
 ```
 1. Pick module  →  2. Pre-flight the output path, then run the extractor  →  3. Present + verify  →  (4. Audit, only if the user later asks)
 ```
+
+A request for only a diagram of the module runs the shorter
+[Diagram-only run](#diagram-only-run) instead, which writes no file.
 
 ### Communicating during the run — work quietly; the report is the deliverable
 
@@ -242,8 +245,10 @@ entity of another module such as a family base); every §3 field's name / format
 required / Notes; §3 Relationships prose (with the family sentence); §4 rows; §5
 enumerations (a `{value, label}` entry as a `` - `value` `` bullet with its `label`, `color`, `icon` and `description` as property sub-bullets); the dotted family
 edges;
-§8.1 permission names, descriptions, and `included in :admin?` (derived from the live
-hierarchy); §9.1 baseline roles (with `♻ exists`, since live is the source), §9.1
+§8.1 permission names, descriptions, `included in :admin?` (derived from the live
+hierarchy) and, under `access_scope: raci`, `high risk?` (✓ on a
+`workflow-gate (lifecycle)` row that the `<slug>:admin` hierarchy does not include);
+§9.1 baseline roles (with `♻ exists`, since live is the source), §9.1
 hierarchy (plus a cross-module row only when it is a family edit grant), §9.1
 Processes catalog. Entity order is the canonical `entity_type` tier
 then `table_name` A->Z, so it round-trips against a convention-compliant spec.
@@ -261,10 +266,18 @@ then `table_name` A->Z, so it round-trips against a convention-compliant spec.
 6. Built-in entity description (e.g. `users`) — live value, not authored prose.
 7. §6 link table, §6 `### Outbound handoffs` / `### Inbound handoffs`, §7.1, §7.2 —
    emitted as `_(none: …)_` placeholders (the platform exposes no handoff registry).
-8. §8.1 `tier` — a heuristic (narrow / override / workflow-gate (rule) /
-   workflow-gate (lifecycle)) over what the spec can prove, always a value the
-   modeler accepts; `reconciliation` is `(none)` (a `re-prefixed-from` origin is not
-   recoverable).
+8. §8.1 `tier`: a heuristic over what the spec can prove, always a value the modeler
+   accepts. `narrow` is an owned entity's edit permission, `override` a `view_all_*` /
+   `manage_all_*` code. A code a rule cites through `has_permission` or
+   `require_permission` is `workflow-gate (lifecycle)` when the citing rule is a
+   `workflow_state` transition rule (`value_changed` on `workflow_state`), the code
+   sits in the `has_permission` branch next to `is_raci_actor`, or it is checked by a
+   create guard (an insert-only rule, `if` on `{"==": [{"var": "$old"}, null]}`), and
+   `workflow-gate (rule)` otherwise; a code no rule cites is
+   `workflow-gate (lifecycle)`. `reconciliation` is `(none)` (a `re-prefixed-from`
+   origin is not recoverable). Under `access_scope: gated`, `high risk?` is `-` on
+   every row: the admin holds every gate there, so live state cannot show which gates
+   are high-risk.
 9. §8.2 Business rules and §9.2 Functional ownership — `_(none: …)_` placeholders
    (the definitional reason under `access_scope: basic` / `custom`, "not extracted"
    otherwise; the Processes placeholder is definitional under every value but `raci`).
@@ -282,6 +295,33 @@ separately and plainly. Observed on `it-ops-starter`: the modeler dropping the
 label-field title and some `field.description` values; a malformed hyphen/underscore
 role slug from the architect. A plain generate run has no source to diff, so this note
 does not apply to it.
+
+## Diagram-only run
+
+When the user asks only for a picture of a deployed module ("draw a diagram of the
+`{slug}` module", "show how the `{slug}` entities relate"), no spec is written, so
+Stage 2a and Stage 3 do not apply:
+
+1. Pick the module as in Stage 1.
+2. Run the extractor in diagram mode:
+
+   ```bash
+   bun run references/spec-extract-lib.ts <module_slug> --diagram
+   ```
+
+   It prints the §2 Mermaid block a full run would write, built from live state with
+   the conventions of `semantius-architect/references/stage-5-mermaid.md`: one node per
+   entity (related entities of other modules and built-ins included), each edge labeled
+   with its link field's `relationship_label`, dotted edges for entity families,
+   built-ins and shared masters shaded green. Never draw the diagram by hand, and never
+   as an `erDiagram` listing columns.
+3. Show the printed block unchanged in a `mermaid` fence, after one line naming the
+   module and its entity count. Only when a relationship edge (`-->`) has no label, add
+   one line naming those edges (`<from> → <to>`): their link fields carry no
+   relationship label in the live module, so the arrow has no text until one is set.
+
+Work quietly, as in a full run: the user sees the module picker when it is needed,
+then the diagram.
 
 ## Stage 4: Audit the extracted spec for live-model defects (only when the user asks)
 
@@ -324,7 +364,7 @@ analyst template:
 
 1. **Offline round-trip (always available):** `bun evals/round-trip/check.ts` from
    this skill folder. It renders `evals/round-trip/fixture-*.json` (JSON snapshots of
-   the live reads, `basic` modules and one `raci` module) via `--from-fixture`, diffs
+   the live reads: `basic` modules, one `gated` and one `raci` module) via `--from-fixture`, diffs
    each against its committed `expected-*.md` golden, runs the architect's
    `consistency-check.ts` on the render, and lints the analyst template's skeleton
    against the extractor. Exit 0 means green. After an intentional extractor change,

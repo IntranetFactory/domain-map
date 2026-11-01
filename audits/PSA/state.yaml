@@ -17,7 +17,7 @@ b1a: []
 
 # Items the agent could not execute without approval: destructive work (DELETE,
 # overwrite a non-empty value, replace/restructure) is never done unapproved (Rule #21).
-b1a_destructive_awaiting_approval:
+extra_b1a_destructive_awaiting_approval:
   - id: B1A-H1-REPLACE-DELETIONS
     summary: "Delete the 2 weak discovery_substring handoff_processes rows (process 569) on handoffs 132 + 1129."
     finding: "Both handoffs now carry a better agent_curated tag (132 -> process 808 already present; 1129 -> process 148 inserted 2026-06-06). The weak discovery_substring rows (process 569 'Assign resources to product/service project') remain alongside and should be removed. 569 is a weak match: 132's target is procurement of contingent staff (S2P), 1129's target is the CRM renewal trigger, neither is internal resource assignment."

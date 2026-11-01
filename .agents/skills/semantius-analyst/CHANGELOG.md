@@ -8,6 +8,167 @@ Entries below are newest first. Each entry follows the maintainer template: what
 
 ---
 
+## One permission per process gate, admin override, high-risk gates
+
+2026-11-01. Under `gated` every process gate collapsed to `<slug>:admin`, while under `raci` each gate had its own permission held only by the Accountable role, so moving a module between the two levels created or deleted permissions and rewrote every gate rule, and under `raci` an admin could not move a record when the Accountable person was absent. Gate rules used `require_permission`, which throws when the caller lacks the permission, so a gate rule could not return its own `code` and `message`, and the living-mode `or` with `is_raci_actor` depended on branch order. The template's responsible RACI row also listed gates, against the RACI rule (only the accountable row holds a process's gates). Rules: SKILL.md ("What each access level authors", Stage 8, pre-save table), `references/semantic-spec-template.md` (§8.1, §8.2, §9.1 hierarchy, process gates and enforcement rules, `access_scope`), `references/stage-1-parse.md` (§7, §8.1), `references/stage-5-workflow-perms.md`, `references/stage-9-governance.md` (access-level short-circuit, Step 2, living mode, re-prefix), `references/stage-10-rules.md` ("Gate rules", F7, F8), `references/modes-audit-extend-rebuild.md`, `references/stage-3-confirm.md`.
+
+1. **Every gate has its own `workflow-gate (lifecycle)` permission under `gated` and `raci`.** Under `gated` the admin role holds every gate through the hierarchy (`included in :admin?` ✓ and an `admin → <gate>` row for each, high-risk gates too). Under `raci` the Accountable role holds it, and so does the admin role except on a high-risk gate.
+2. **Spec §8.1 has six columns:** `| permission | tier | description | included in :admin? | high risk? | reconciliation |`. `high risk?` (✓ / -) is filled on `workflow-gate (lifecycle)` rows from the blueprint's §7 `high risk?` (parsed by header name), and is `-` on every other row and on a `create` gate.
+3. **Every gate rule uses `has_permission`** and returns its own `code` and `message`: the transition gate and the `create` rule, under `gated` and `raci`. In `living` mode the A-gate is `or(is_raci_actor(<entity>, <to_state>, "accountable"), has_permission(<gate>))`, and the accountable role is granted no gate.
+4. **Permission-citation checks recognize `has_permission`** as well as `require_permission` (Stage 8, pre-save table, Audit mode). The Stage 8 FK scope fix counts a gate code as `<slug>:admin` under `gated`.
+5. **The pre-save coherence rows split `advanced` and `gated`**; under `raci` they check `included in :admin?` and the `admin → <gate>` rows against `high risk?`.
+6. **A responsible RACI row holds only the gated entities' write tier**, never a gate; in `documentation` mode the gate grants come from the accountable row alone.
+7. **In `living` mode a `create` gate is a create A-gate:** `{"if": [{"==": [{"var": "$old"}, null]}, {"or": [{"is_raci_actor": ["<entity>", "<initial state>", "accountable"]}, {"has_permission": "<gate>"}]}, true]}`, with `<initial state>` the entity's `initial?` §7 state, plus a `_process_gates_` row (`gate_kind` `create`, `to_state` that initial state). The Accountable role can do the restricted creation and the admin keeps the override.
+8. **Stage 10 F7 (owner edit) uses `has_permission`** for the override branch, since `require_permission` throws inside an `or`.
+9. **The spec's §8.2 `source flag` list includes `create`** (skeleton and guidance).
+10. **In `living` mode the §9.1 `_enforcement rules_` table is the one home of the gate rules** (transition A-gates, create A-gates, C-blocks): the analyst writes no A-gate into the entity's §3 `validation_rules`, and the modeler derives each row's `name`, `code` and `message`. Under `gated` and in `documentation` mode the `has_permission` gate rule stays a §3 `validation_rules` entry. The coherence and permission-citation checks read the `_enforcement rules_` rows in `living` mode.
+
+---
+
+## RACI lines absent outside raci; concrete icon queries first
+
+2026-10-29. Stage 9.5 said to write the RACI realization as a `_(none: …)_` placeholder under every access level other than `raci`, while the template, the pre-save table and the optimizer leave it out; the checker reads any `**RACI realization:**` line as a RACI matrix, so following Stage 9.5 failed the save. The icon rule made the first query the enum's meaning plus the entry's (`"invoice paid"`), which matches no Lucide icon, so icon search took a second round. Rules: `references/stage-9-governance.md` (access-level short-circuit), `references/semantic-spec-template.md` ("Empty-section convention"), `references/stage-4-fields.md` ("Enum values, labels and hints", rule 3).
+
+1. **Outside `raci`, the RACI mode, RACI realization and RACI plan lines are absent**, never a placeholder; **Processes** and §9.2 keep their `_(none: …)_` placeholders.
+2. **Icon queries start with what the icon would show**, an object plus a mark or an action (`"banknote check"`, `"user search"`); the enum-plus-entry query comes last.
+
+---
+
+## Pre-save: write-time refusals checked
+
+2026-10-29. Rules: SKILL.md, pre-save table (rows "Validation-rule identity", "No reserved field names", "Label parent is a link"); checks in `../semantius-architect/references/consistency-check.ts`.
+
+1. **The pre-save run now fails** on a reserved field name (`_…`, `…_id_label`), a `**Label parent:**` that is not one of the entity's own `reference` / `parent` fields, and a validation rule whose code is not class 99, whose name repeats, or a rules block that is not a JSON array. Each row names its fix, so a fast run applies it and continues.
+
+---
+
+## Platform references read once per conversation
+
+2026-10-29. In an end-to-end run the analyst and the modeler each read the same use-semantius files in full in one conversation, so about 1,200 lines entered the context twice. Rules: SKILL.md, Step 0.
+
+1. **`../use-semantius/SKILL.md` and `data-modeling.md` are read once per conversation.** A file already in the conversation and not summarized away is not read again; after a context reset it is read again.
+
+---
+
+## Fewer task-list reads and one log call per stage
+
+2026-10-29. A `TaskUpdate` had to be preceded by a fresh `TaskList` in every response, and the admin's hand-off gate read the list twice, so each stage change cost extra sequential turns; fast-flow picks were logged one Bash call each. Rules: `../semantius-admin/references/task-tracking.md` (section 2 rule 4, section 3 record step), `../semantius-admin/references/fast-flow.md` (section 5, go-ahead marker), `references/stage-3-confirm.md` (revising the plan).
+
+1. **A `TaskUpdate` uses an id from a `TaskCreate`, `TaskList` or `TaskUpdate` result still in context**; `TaskList` comes first only after a context reset, and where a step needs the list's state (duplicate guard, gate, resume, end-of-run check).
+2. **All of a stage's `log_pick` lines go in one Bash call.**
+
+---
+
+## Icon check in one finder call
+
+2026-10-29. The Stage 4 icon check ran the Lucide finder once per enum entry, so a spec with dozens of entries spent dozens of sequential tool calls on it. Rules: `references/stage-4-fields.md` ("Enum values, labels and hints", rule 3); `../use-semantius/references/lucide-icon-finder.ts` (`--batch`); `../use-semantius/SKILL.md` (reference table).
+
+1. **One finder call for all entries of all enums:** `lucide-icon-finder.ts --batch -` reads a JSON object on stdin, one label per entry mapped to its queries, and prints each label as `## <label>` with its query lines. Each label is searched on its own.
+2. **One checker call** for every taken icon.
+3. The choice stays per entry and unchanged: the first hit only when it clearly fits, otherwise no icon, recorded on the entry as before.
+
+No file format change.
+
+---
+
+## FK scope fix in Stage 8
+
+2026-10-29. An ATS run shipped `scorecards.interview_id` and `offers.application_id` as `parent` + `cascade`, so deleting an interview or an application silently deleted interview feedback and offers. The divergent-permission-scope rule (`../use-semantius/references/data-modeling.md`) forbids that shape, but no stage applied it. Stage 9 compared only the §3 write tiers, which never carry a narrow tier, and it ran before Stage 10 wrote the `require_permission` rules. It also trusted the blueprint's FK shapes, while the architect left the check to the analyst. Rules: SKILL.md Stage 8 (Steps 0 and 1), the pre-save row on §4 FK shapes, Closing message ("Kept records"); `references/stage-9-governance.md` rules 2-3; `references/stage-4-fields.md`; `references/stage-1-parse.md`, `references/stage-2-inspect.md` and `references/semantic-spec-template.md`, where FK shapes are consumed verbatim except for the fix.
+
+1. **Stage 8 Step 0** settles every owned entity's `**Audit log:**` line before the fix reads it.
+2. **Stage 8 Step 1** checks every §4 `parent` + `cascade` row whose parent has its own §3 block. It fires on T1 (the child's edit permission differs from the parent's), T2 (the child has a `require_permission` code the parent lacks) or T3 (the child is audit-logged and has a `workflow_state`). A row that fires becomes `reference` + `restrict` through five fixed edits, never a question.
+3. **Fields already live as `parent` are left alone,** with a 🟡 §7.2 note, because flipping a live field needs a migration.
+4. **Junction legs are not checked.**
+5. **The close-out names the parents** that can no longer be deleted while they have such records; a fast run logs nothing for it.
+6. **`consistency-check.ts --require-icons` fails** a row that still fires (check `FK scope`).
+
+The file format version is unchanged: no column, key or annotation is added.
+
+---
+
+## Entity icon is `**Icon:**`, stored in `entities.icon_name`
+
+2026-10-27. The platform renamed `entities.icon_url` to `icon_name`, which now takes a Lucide icon name or an icon URL like the module's `icon_name`. The file format version is unchanged. Rules: `references/semantic-spec-template.md`, §3 skeleton and the `**Icon:**` note; `references/stage-11-write.md`, delta 10; `references/stage-2-inspect.md`, the adopted entity index and the drift axes; `references/stage-3f-drift.md`, the drift axes and the cosmetic tier.
+
+1. **The §3 line is `**Icon:** <icon_name>`,** a Lucide icon name or an icon URL, no backticks, after `**Cube mode:**`. It is omitted when empty.
+2. **Drift compares `icon_name`,** in the cosmetic tier.
+
+---
+
+## Every enum entry gets an icon check; the icon itself is optional
+
+2026-10-27. Icons were optional ("an entry gets an icon when a fitting icon exists"), so under time pressure the finder step was skipped and every entry shipped with a label and a color only. A wrong icon is worse than no icon, so the gate enforces that the check ran, never that an icon was set. Rules: `references/stage-4-fields.md`, "Enum values, labels and hints" rule 3; `references/semantic-spec-template.md`, §5 Enumerations; `references/stage-11-write.md`, deltas 13 and 14; `SKILL.md`, "Verification gates".
+
+1. **Every entry is checked before save:** one finder run per entry, up to five queries most specific first (the enum's meaning and the entry's together first), and the checker on a taken icon. The first hit is taken only when it clearly matches the entry's meaning; on any doubt, no icon.
+2. **Two states, no third:** `` - icon: `<name>` `` (passed the checker) or `- icon: none <!-- finder: <query>, <query>: no fit -->` (the queries tried). A missing icon line means not checked yet, never "none fits".
+3. **The pre-save gate fails an unchecked entry:** the analyst runs `consistency-check.ts --require-icons`, which fails any §5 entry with no icon line and any `icon: none` without its finder queries.
+4. **Fast flow runs the check too,** after the go-ahead, and logs one line per enum with `log_pick` ("<N> set, <M> none").
+
+---
+
+## A clean file write is never narrated as an error
+
+2026-10-27. A run told the user it "hit a file write error" after a file saved cleanly through a shell heredoc. Rules: `SKILL.md`, "Narration restraint" (kept verbatim with `../semantius-admin/references/writing-conventions.md`).
+
+1. **A write is an error only when a tool call failed,** whatever method wrote the file.
+2. **On success, nothing is said about how the file was written;** on a real failure, the tool's error is quoted verbatim and the run stops.
+
+---
+
+## A followed product's fields are looked up on the web when not known
+
+2026-10-25. Drafting the fields of a followed product relied on training knowledge alone, so an unfamiliar or very new product got guessed field names. Rules: `references/stage-4-fields.md`, "Fields of a followed product".
+
+1. **When knowledge of the product's fields falls short,** search with `WebSearch` and read the product's own API or data-export reference with `WebFetch` before drafting; only field names the pages confirm are used, spelled their way.
+2. **`curl` stays the only way to fetch a blueprint at a URL.** The web tools serve product knowledge only.
+
+---
+
+## A person is labelled by full name
+
+2026-10-23. A contact entity got `firstname` as its label column, the only required text field, so lists read "Marta", "Daniel" and child records "Marta › Question about pricing". The label-column rule covered a type or category as the only identifier, but not an identity made of several values. Rules: `references/stage-4-fields.md`, "Composite or non-text identity".
+
+1. **A person entity** (contact, lead, candidate, employee, customer contact) takes a `display_name` string field as its label column (Required `no`, deployed `disabled`), kept current by a Stage 10 computed field from the name parts, which stay ordinary fields.
+2. **An address-like entity** uses the same pattern (street plus number or unit).
+3. **A record numbered by a code** uses the code field as its label column when it is text, otherwise a `display_name` built from it.
+4. **A followed product whose screens show "First Last"** has a composite display name, so the rule applies even when the product keeps no display-name field.
+
+---
+
+## Fields of a followed product take the product's names
+
+2026-10-23. A spec following a product (`naming_mode: template:<vendor>`) got the product's record names from the blueprint, but its fields were named the analyst's own way: the rule to use the product's field names sat only in the architect, which writes no fields. Moving data to and from the product, the reason to follow it, needs both. Rules: `references/stage-4-fields.md`, "Fields of a followed product".
+
+1. **A field the product has takes the product's own name**, converted by `bun "<skill-folder>/../use-semantius/references/vendor-names.ts" field:<Name>…`, never by hand (`FirstName` → `first_name`, `SLAPolicyId` → `sla_policy_id`, HubSpot `firstname` kept as written). A custom field one company added (`Region__c`) and a field the platform creates on every table (`Id`) are left out.
+2. **Its label is the product's own label**, or the script's when that is not known.
+3. **The platform's fixed names win:** the lifecycle state field stays `workflow_state` and a link field `<target_singular>_id`, whatever the product calls them.
+4. **A field the product doesn't have** gets a self-describing name.
+
+---
+
+## Rule failures described as the platform reports them
+
+2026-10-20. The spec template and Stage 10 said a write rejected by validation rules returns every failing rule in an `errors` array, and the template gave `throw_error` SQLSTATE `23514`. The platform stops at the first failing rule and raises its `code` as the error code, and `throw_error` raises `99000`.
+
+1. The semantic-spec template and `stage-10-rules.md` describe one failure per write, returned with the rule's `code` and `message`.
+2. The template gives `throw_error` SQLSTATE `99000`.
+
+Minor: no file format change, no change to the spec's shape, and no change to any confirmation the user is asked.
+
+---
+
+## The icon check needs no network
+
+2026-10-18. In a sandbox whose egress allow list blocks `cdn.jsdelivr.net`, `lucide-icons.ts check` could not download the icon list and exited 2, the same code as a usage error, and the "Icons exist" pre-save row read any non-zero exit as an unknown icon: a Blocker caused by the environment, not the design.
+
+1. **The icon list is bundled, and the icon tool is two scripts.** "Icons exist" runs `use-semantius/references/lucide-icon-checker.ts <name…>` (exit 0 valid, 1 unknown name, 2 no arguments) and Stage 4 finds icons with `lucide-icon-finder.ts <query…>`, replacing `lucide-icons.ts check` / `find`. Both read `lucide-icon-tags.json`, a snapshot of one `lucide-static` release, so "Icons exist" no longer depends on a host.
+2. **`circle-question-mark` replaces `circle-help`** as the example icon in the spec template: Lucide renamed the icon, and the checker rejects the old name.
+3. **The icon search is one run with a defined end.** Stage 4 runs the finder once with up to five queries, most specific first (the words of one query must all match), and takes the first icon that fits; when none fits, the entry gets no icon.
+
+Minor: no file format change, no change to the spec's shape, and no change to any confirmation the user is asked.
+
+---
+
 ## every enum entry gets a label and a color; `label` is a §5 property
 
 2026-10-16. A deployed `workflow_state` showed raw values (`checked_in`) because readable values got no label, and colors were limited to state-like enums while tools like Airtable and SmartSuite color the options of every select field. The label sat inline on the value bullet while every other property was a named sub-bullet.

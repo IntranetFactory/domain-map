@@ -231,10 +231,10 @@ _(none: reverse-engineered from a live module)_
 
 ## 8.1 Permissions catalog
 
-| permission | tier | description | included in `:admin`? | reconciliation |
-| --- | --- | --- | --- | --- |
-| `partners:read` | baseline-read | Read access to every record in the module. | ✓ | (none) |
-| `partners:manage` | baseline-manage | Create and edit records in the module. | ✓ | (none) |
+| permission | tier | description | included in `:admin`? | high risk? | reconciliation |
+| --- | --- | --- | --- | --- | --- |
+| `partners:read` | baseline-read | Read access to every record in the module. | ✓ | - | (none) |
+| `partners:manage` | baseline-manage | Create and edit records in the module. | ✓ | - | (none) |
 
 ## 8.2 Business rules
 

@@ -228,6 +228,33 @@ for (const j of starterJunctions) {
 }
 ```
 
+### Catalog invariant pre-flight
+
+Any loader that writes `data_object_relationships`, `trigger_events`, `handoffs`, `process_raci` or `data_object_lifecycle_states` MUST run the shared shape checks in [scripts/lib/catalog_invariants.ts](../../../../scripts/lib/catalog_invariants.ts) before any POST or PATCH. They are the same functions `domain_health.ts` runs (B6b, B7b, B9c, B9f, E4, E4b, E4c, E4d), so the audit and the write path cannot disagree. Every new invariant goes into both places.
+
+Scope is **only the rows being written**: pass the incoming batch, plus the existing rows each new row interacts with (for `process_raci`, the process's existing Accountable rows; for `handoffs`, the rows sharing a `trigger_event_id`; for `trigger_events`, the lifecycle states of their entities). Never the whole catalog, so existing drift never blocks a load. Incoming rows have no id yet: pass any stable label as `id` so the message names the row.
+
+| helper | refuses the load (`errors`) | warns and loads (`warnings`) |
+|---|---|---|
+| `preflightRelationships(rows, {usersId, masterDomainsByDataObject})` | B7b: a `users` edge that is `many_to_many` with kind `reference` | B6b (soft by policy), B7b verb naming two roles |
+| `preflightProcessRaci(incoming, existing)` | E4: a new Accountable on a process that already has one | E4 zero Accountable / Responsible after the batch (a batch may add R first), E4c |
+| `preflightTriggerEvents(incoming, lifecycleStates)` | none | B9c blank or unresolved `to_state` |
+| `preflightHandoffs(incoming, existing)` | none | B9f same event + source module + target module |
+| `preflightLifecycleStates(incoming)` | none | E4b gate with no `process_id`, E4d author-action gate (`submit_*`) |
+
+```typescript
+import { preflightRelationships } from "../lib/catalog_invariants.ts";
+
+const pre = preflightRelationships(incomingRels, { usersId, nameOf, masterDomainsByDataObject });
+for (const w of pre.warnings) console.log(`  warn ${w}`);
+if (pre.errors.length > 0) {
+  for (const e of pre.errors) console.error(`  ERROR ${e}`);
+  process.exit(1); // before any write
+}
+```
+
+[scripts/loaders/load_cluster_drafts.ts](../../../../scripts/loaders/load_cluster_drafts.ts) is the reference wiring (relationships batch, with the endpoints' master rows fetched for the B6b composition-coherence rule).
+
 ## Naming conventions to enforce
 
 These have been consistent across 80+ handoffs and 120+ data_objects. Don't drift.

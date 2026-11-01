@@ -1,10 +1,10 @@
-*Reference for `semantius-architect`. Loaded on demand; the resident SKILL.md stage index points here.*
+*Reference for `semantius-architect`. Read before this stage's first output in a run (mandatory load, SKILL.md stage index).*
 
 ### Stage 8: Business-rule emission
 
 Computed fields, validation rules, and the 15-family scan walk moved to the analyst skill. The blueprint stops at entity level: §8 declares permissions and business rules at the intent level only (`rule_name + data_object + source_flag + intent`). The analyst converts each blueprint §8.2 rule into JsonLogic and runs the full scan walk in its Stage 10.
 
-**Approvals are not a §8.2 source flag.** An approval is a gated lifecycle transition: a §7 `requires_permission? = ✓` row into the approved state; under the `raci` access level it also gets the matching `<system_slug>:approve_<noun>` `workflow-gate (lifecycle)` row in §8.1 and the §9 RACI Accountable actor (see the body table in stage-10-workflow-perms.md). Genuine multi-party approval (a count of distinct approvers) is a field-level rule the analyst authors; the blueprint just declares the gated transition.
+**Approvals are not a §8.2 source flag.** An approval is a gated lifecycle transition: a §7 `requires_permission? = ✓` row into the approved state; under the `gated` and `raci` access levels it also gets the matching `<system_slug>:approve_<noun>` `workflow-gate (lifecycle)` row in §8.1, and under `raci` the §9 RACI Accountable actor (see the body table in stage-10-workflow-perms.md). Genuine multi-party approval (a count of distinct approvers) is a field-level rule the analyst authors; the blueprint just declares the gated transition.
 
 ### Stage 9 — Classify each entity's `entity_type`, then derive its write tier (D9)
 
@@ -90,7 +90,7 @@ The hint is **optional and per-entity**; omit it when the entity is not a master
 
 The mapping is not closed; coin a new cluster name when the entity is a recognizable master concept that doesn't fit one of the above (e.g. `pricing` for `price_lists`, `pricing_tiers`; `geo` for `countries`, `regions`, `time_zones`). Use snake_case. Prefer a domain noun the user would recognize at the prompt over an entity-name suffix.
 
-The hint never overrides the user — the deployer surfaces it as a recommendation at Stage 2d follow-up 1, and the user can always pick a different host module or type a custom name at the prompt. **Authors review the cluster classification at confirmation time, same as the `entity_type` classification.** It fills the "Could be shared with other tools" column of the same Stage 9 table, in plain words:
+The hint never overrides the user — the deployer surfaces it as a recommendation at Stage 2d follow-up 1, and the user can always pick a different host module or write a custom name at the prompt. **Authors review the cluster classification at confirmation time, same as the `entity_type` classification.** It fills the "Could be shared with other tools" column of the same Stage 9 table, in plain words:
 
 > | What's tracked | Kind | Kind of editing | Why | Could be shared with other tools |
 > |---|---|---|---|---|

@@ -79,9 +79,9 @@ The `description` field is a compact tagline (≤40 chars) shown beside `module_
 
 Other optional fields on `modules`: `icon_name`, `domain_code`, `access_scope`, `view_permission`, `manage_permission`, `admin_permission`, `logo_url`, `logo_color`, `home_page`, `settings`, `dashboard_config`, see the `crud-tools.md` reference for the full field list. Three of these are top-level module classification columns (set them on `create_module` / `update_module`, not inside `settings`):
 
-- **`icon_name`** — the module's UI icon: a Lucide icon name or an icon URL (see "Icons are Lucide icons" under the Field Format Quick Reference); distinct from the entity-level `icon_url` and the module `logo_url`. The module's `logo_color` has format `color`.
+- **`icon_name`** — the module's UI icon: a Lucide icon name or an icon URL (see "Icons are Lucide icons" under the Field Format Quick Reference), like an entity's `icon_name`; distinct from the module `logo_url`. The module's `logo_color` has format `color`.
 - **`domain_code`** — short uppercase business-domain code the module belongs to (`ATS`, `HCM`, `ITSM`, `CRM`). Groups related modules; many modules — and many `catalog_module_code`s — can share one `domain_code`.
-- **`access_scope`** — the permission structure of the module (its access level, decided by `semantius-architect`). `enum_values`: `custom` ("Custom permission structure"), `basic` ("Two permissions: view and edit"), `advanced` ("Three permissions: view, edit and admin."), `gated` ("Three permissions: view, edit and admin and process gates"), `raci` ("Three permissions: view, edit and admin and enforced process gates."); default `custom`.
+- **`access_scope`**: the permission structure of the module (its access level, decided by `semantius-architect`). `enum_values`: `custom` ("Custom permission structure"), `basic` ("Two permissions: view and edit"), `advanced` ("Three permissions: view, edit and admin."), `gated` ("Three permissions: view, edit and admin, plus a permission per process gate held by admins"), `raci` ("Three permissions: view, edit and admin, plus a permission per process gate held by RACI roles (and admins, except high-risk gates)"); default `custom`.
 
 Permission naming convention: **always `<module_slug>:<action>`** (e.g., `crm:read`, `crm:manage`). The permission prefix is the slug, not the display name, `crm:read`, never `CRM:read`.
 
@@ -104,7 +104,7 @@ semantius call crud create_entity '{
     "module_id": 3,
     "view_permission": "catalog:read",
     "edit_permission": "catalog:manage",
-    "icon_url": "https://example.com/icon.svg",
+    "icon_name": "package",
     "audit_log": false
   }
 }'
@@ -201,11 +201,12 @@ Platform meta-schema. **Never declare in a domain model.** The deployer manages 
 | `label_column` | Snake_case **field name** that identifies a record (e.g. `product_name`). NOT a human-readable title. Optional on `create_entity`: set it on every entity that has a natural local label; omit it for a junction table, whose `_label` the platform composes from the parent legs (see "Junction tables" below). Never set it on an `is_a` / `has_a` entity: it comes from the base (`90242`). **Always single-line text:** `create_entity` creates this field as `text`, and as a core column its format can never change afterwards (`90219`), so a label column is never an `enum`, number, date, boolean or FK. When the only identifying attribute is a type or category, pick another text field, or on a junction omit `label_column`. |
 | `module_id` | Required on `create_entity` — must be a valid (non-null) integer module id; `null` is rejected. Find with `read_module`. On `update_entity` it stays optional, but a provided value must still be a non-null integer. |
 | `view_permission` | Required, name string (e.g. `"catalog:read"`) |
-| `edit_permission` | Required, name string (e.g. `"catalog:manage"`) |
+| `edit_permission` | Required, name string (e.g. `"catalog:manage"`). Gates INSERT, UPDATE and DELETE alike; there is no separate delete permission. To restrict one operation (e.g. only some roles may delete), add a `validation_rules` entry that tests `$mode` (see `jsonlogic.md`, *Detecting the operation*). |
 | `id_type` | Optional key type, **set on create and locked afterwards**: changing it is refused with `90233`, so omit it on `update_entity`. `auto_increment` (default when omitted): a 64-bit number the database assigns. `bigint`: a 64-bit number the caller supplies on every insert. `text`: a text key the caller supplies. `uuid`: a time-ordered UUIDv7 the database assigns. `typeid`: a prefixed, sortable TypeID such as `acct_01h455vb4pex5vsknk084sn02q`, assigned by the database; requires `id_prefix`. `is_a` / `has_a`: a subtype or an optional extension of another entity, sharing its key; requires `id_refentity` (and `id_prefix` for `is_a`); see `entity-families.md` before choosing either. `computed`: system tables only, refused for a new entity (`90234`). A key type missed at create means rebuilding the entity, so decide it up front: `typeid` suits ids that users or other systems see, `auto_increment` internal tables. |
 | `id_prefix` | TypeID prefix: required when `id_type` is `typeid` or `is_a`, empty otherwise. Up to 63 lowercase letters and underscores, starting and ending with a letter (e.g. `acct`), **unique among entities**. A `typeid` prefix may be changed later: new ids take the new prefix, existing ids keep theirs, and an id with a former prefix can no longer be inserted. An `is_a` prefix never changes (`90245`). |
 | `id_refentity` | Only with `id_type` `is_a` / `has_a`, and then required: the `table_name` of the base this entity is based on. `is_a` needs a managed `typeid` or `is_a` base; `has_a` a managed `typeid` base (`90240`). Set on create only; never send it on `update_entity` (`90241`). See `entity-families.md`. |
-| `icon_url` | Optional, URL to an icon representing this entity in the UI |
+| `icon_name` | Optional. The icon shown for the entity in the UI: a Lucide icon name in kebab-case or an icon URL (see "Icons are Lucide icons" under the Field Format Quick Reference). Leave it unset unless the user asks for a specific icon. |
+| `name_sort` | Optional text sort key that orders entities in navigation. Leave it unset unless the user wants a specific navigation order. |
 | `edit_mode` | Optional. Controls how records open for editing: `auto` (default, system decides), `sidebar`, `modal`, or `page`. Set only when the user has a specific UX requirement. |
 | `cube_mode` | Optional. OLAP cube generation: `auto` (default, include in cube) or `disabled`. Set to `disabled` to exclude the entity from cube queries. |
 | `audit_log` | Optional boolean, default `false`. When `true`, every INSERT / UPDATE / DELETE on this entity is recorded by the platform. Enable on entities where change history matters (contracts, financial records, policy data); leave off for high-volume or ephemeral data where audit noise outweighs the value. |
@@ -302,7 +303,7 @@ Choose `format` carefully. Format **can** be changed after creation, but **only 
 
 > ℹ️ **Colors are written as hex.** A `color` field, the `color` of an enum entry and a module's `logo_color` accept any HTML color; write lowercase `#rrggbb` (e.g. `#22c55e`). A value read back from the platform is kept as it is.
 
-> ℹ️ **Icons are Lucide icons.** An `icon` field, the `icon` of an enum entry and a module's `icon_name` take a Lucide icon name in kebab-case (e.g. `circle-check`, `users`, `shopping-cart`; never the PascalCase React component name `CircleCheck`), or an icon URL. The UI always uses the latest Lucide release, so every current icon is available. Find a name with `bun "<skill-folder>/references/lucide-icons.ts" find <word…>` (icon names whose name or tags contain every word), and confirm names with `bun "<skill-folder>/references/lucide-icons.ts" check <name…>` (exit 1 names the unknown ones; a URL always passes). Every icon a skill writes passes `check`. From another skill the path is `"<skill-folder>/../use-semantius/references/lucide-icons.ts"`.
+> ℹ️ **Icons are Lucide icons.** An `icon` field, the `icon` of an enum entry and the `icon_name` of a module or entity take a Lucide icon name in kebab-case (e.g. `circle-check`, `users`, `shopping-cart`; never the PascalCase React component name `CircleCheck`), or an icon URL. The UI always uses the latest Lucide release, so every current icon is available. Find a name by running `bun "<skill-folder>/references/lucide-icon-finder.ts" <query…>` once, with up to five queries for the meaning, most specific first (`"user plus" user person "contact card"`; a query of several words matches only icons that have them all), and take the first icon, in that order, that fits the meaning. If none fits, an enum entry and an entity get no icon and a module icon is `box`. Confirm names with `bun "<skill-folder>/references/lucide-icon-checker.ts" <name…>` (exit 1 names the unknown ones; a URL always passes). Every icon a skill writes passes the checker. From another skill the folder is `"<skill-folder>/../use-semantius/references/"`. Both scripts need no network: they read `lucide-icon-tags.json`, a snapshot of a Lucide release bundled next to them, so an icon added to Lucide after that release is reported unknown; pick another name.
 
 > 🛑 **Any field with `reference_table` MUST use `format: "reference"` or `format: "parent"`. Never combine `reference_table` with scalar formats (`integer`, `uuid`, `string`, etc.). This will always fail.**
 
@@ -373,6 +374,7 @@ Nullability is also computed by format (via the platform's `is_nullable()` rule)
 **Rule:** you do **not** need to send `default_value` on `create_field`. Only set it explicitly when the auto-default is wrong for the domain, e.g. a non-zero starting balance, a non-initial enum state (`archived` instead of `draft`), a specific seed string.
 
 - **Enum lifecycle ordering matters.** The auto-default for a required enum is `enum_values[0]` (the first entry's value, never its label), so list values in lifecycle order (`draft`, `pending`, `new`, `open`, `active` first). If the natural starting value isn't first, either reorder the list or pass `default_value` explicitly. An explicit `default_value` is always a value too.
+- **`default_value` is stored as text**, whatever the format. A number or boolean is converted (`1` is stored as `"1"`, `true` as `"true"`), and a JSON array or object as its JSON text. Give a value that fits the format: a whole number for an integer field, `true` or `false` for a boolean, valid JSON for a JSON field. Example: a required `integer` field `seats_purchased` with a `>= 1` rule takes `"default_value": "1"` (or `1`), because the auto-default `0` would break the rule.
 - **There is no settable `is_nullable` flag** — nullability is computed purely from `format` (the `is_nullable()` rule above): only `reference`, `date`, and `date-time` are nullable. For every other format the column is NOT NULL with the auto-default regardless of `input_type`; declaring the field optional doesn't make it nullable.
 
 ```bash
@@ -533,14 +535,13 @@ Three separate `create_field` calls for the three fields would be three round tr
 | `unique_value` | boolean | Enforces uniqueness at database level |
 | `enum_values` | array | Required when `format: "enum"`: the allowed entries, each a value or a `{"value", "label"}` object with an optional `description`, `color` and `icon`. Records and `default_value` hold the value, never the label; never an object map. See "Enum values and labels" above. |
 | `precision` | integer (0–18) | For `format: "number"` only, number of digits after the decimal point in the generated `NUMERIC` column. Defaults to `2` (suits money and most measured quantities). Set higher (e.g. `4`–`6`) for tax rates, FX rates, or scientific values; `0` for integer-like counts that still want NUMERIC semantics. |
-| `default_value` | string | Override for the platform's auto-default. Only set when the auto-default is wrong for the domain. See `### default_value` above for the auto-default table per format. |
+| `default_value` | string | Override for the platform's auto-default. Only set when the auto-default is wrong for the domain. See `### default_value` above for the auto-default table per format. Stored as text: a number or boolean is converted (`1` → `"1"`, `true` → `"true"`), a JSON array or object to its JSON (`{}` → `"{}"`). |
 | `reference_table` | string | Target entity's `table_name` for `reference`/`parent` fields |
 | `reference_delete_mode` | string | `restrict`, `clear`, or `cascade`. On an `is_a` entity never `cascade` (`90249`): set `restrict` or `clear` explicitly, on `parent` fields too. |
 | `relationship_label` | string | Optional verb describing the relationship (e.g. `"employs"`, `"contains"`). Applies to `reference` and `parent` fields. Used as the edge label in ER diagrams and in navigation breadcrumbs. Always optional, omit when the direction is obvious from the field name. |
 | `singular_label_parent` | string | Optional override for the parent entity's singular label, used by `parent` fields only. Useful when one entity has multiple `parent` fields pointing at the same table (e.g. `billing_address_id` vs `shipping_address_id`, both → `addresses`) and the default labels are ambiguous. |
 | `plural_label_parent` | string | Optional override for the parent entity's plural label, used by `parent` fields only. Pair with `singular_label_parent`. |
 | `cube_type` | string | OLAP cube participation: `disabled`, `auto` (default), `dimension`, `measure`. See `### cube_type Values` above. |
-| `icon_url` | string | Optional icon URL for this field in the UI |
 | `catalog_field_code` | string | Core provenance column: stable design-time field identity (the blueprint field name, e.g. `status`), the field-rename join key. Write-once: set on create or filled once while empty, then never changed. Empty = not generated from a catalog spec. See "Platform provenance / meta columns" above. |
 
 ---
@@ -565,7 +566,7 @@ The platform manages nullability internally based on format and delete-mode; the
 | **Lifecycle-bound child with divergent permission scope** — overrides the two rows above | `reference` | `restrict` (default) or `clear` |
 | Lifecycle-bound child with divergent permission scope, accepting silent cascade-delete (high-risk) — overrides the two rows above | `reference` | `cascade` |
 
-**Divergent-permission-scope rule.** `format: parent` semantically asserts that the child shares the parent's permission model. When a child has its own conditional permission gate (a `validation_rules` rule whose JsonLogic invokes `require_permission` (see `jsonlogic.md`) against a workflow permission that the parent does not require, or a §3 `**Edit permission:**` annotation that differs from the parent's tier), `parent` is the wrong shape. Use `format: reference` instead. Pick the delete mode by lifecycle behavior: `restrict` when children must be explicitly cleaned up before the parent (recommended default for audit-logged decision evidence like scorecards or signed offers), `clear` when orphan-survival is acceptable (e.g. an authored note may survive its application being deleted), `cascade` only when the user explicitly accepts the silent cascade-delete trade-off (the shape says "permission scope is divergent" but the platform deletes anyway when the lifecycle owner goes).
+**Divergent-permission-scope rule.** `format: parent` semantically asserts that the child shares the parent's permission model. When a child has its own conditional permission gate (a `validation_rules` rule whose JsonLogic invokes `has_permission` or `require_permission` (see `jsonlogic.md`) against a workflow permission that the parent does not require, or a §3 `**Edit permission:**` annotation that differs from the parent's tier), `parent` is the wrong shape. Use `format: reference` instead. Pick the delete mode by lifecycle behavior: `restrict` when children must be explicitly cleaned up before the parent (recommended default for audit-logged decision evidence like scorecards or signed offers), `clear` when orphan-survival is acceptable (e.g. an authored note may survive its application being deleted), `cascade` only when the user explicitly accepts the silent cascade-delete trade-off (the shape says "permission scope is divergent" but the platform deletes anyway when the lifecycle owner goes).
 
 ### `reference`: Cross-Entity Link (Independent Lifecycle)
 
@@ -662,7 +663,7 @@ This rule — **gates and overrides follow the ENTITY's current owning module, n
 
 ### ✅ Low-Risk (do freely)
 - Add new fields
-- Update descriptions, labels, UI hints (`width`, `field_order`, `icon_url`)
+- Update descriptions, labels, UI hints (`width`, `field_order`, `icon_name`, `name_sort`)
 - Add `searchable: true` to fields
 - Create new entities in new or existing modules
 - Add new permissions/roles/assignments
@@ -816,7 +817,7 @@ Only use `postgrestRequest` or `sqlToRest` for:
 | `role_permissions` | Role ↔ Permission M:N | Junction with audit fields |
 | `users` | Actor identities | Assigned roles via `user_roles` |
 | `user_roles` | User ↔ Role M:N | Junction with audit fields |
-| `webhook_receivers` | Import/integration endpoints | Scoped to a target table |
+| `webhook_receivers` | Integration endpoints for external systems | Scoped to a target table |
 | `webhook_receiver_logs` | Audit log of webhook calls | Belongs to a receiver |
 
 ---

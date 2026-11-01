@@ -35,7 +35,7 @@ b1a:  # B1A-B9D-VERIFY executed 2026-06-11. The b3 load was KEPT (a-CLM.md q1=a,
       + domain_module_tools, and a CLM Semantius re-score for full Phase-B/S completeness.
     action: "Author the tooling/handoffs additively at record_status='new'. Non-blocking; does not gate feedback_needed."
 
-b1a_destructive_awaiting_approval: []  # B1A-SELF-CONTAIN EXECUTED 2026-06-11 via a-CLM.md q1=a
+extra_b1a_destructive_awaiting_approval: []  # B1A-SELF-CONTAIN EXECUTED 2026-06-11 via a-CLM.md q1=a
   # ("delete both, but be sure they are embed master, optional on the other side").
   # DELETE dmdo 647 (CLM-REPOSITORY x saas_subscriptions) + 648 (CLM-REPOSITORY x software_licenses)
   # -> M9 self-containment restored. PATCH dmdo 97 (SMP-RENEWAL-VENDOR x legal_contracts) contributor

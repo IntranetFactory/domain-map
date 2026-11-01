@@ -3,8 +3,8 @@ domain: ITOM
 status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-08"
-phase0_report: "audits/ITOM/ITOM-phase0-2026-06-08.md"
-phase0_note: >
+extra_phase0_report: "audits/ITOM/ITOM-phase0-2026-06-08.md"
+extra_phase0_note: >
   2026-06-08 review pass ran Phase 0 vendor-surface research to ground the five market-shape
   b2 decisions (B2-S5, B2-S1, B2-S3, B2-S3a, B2-S4) per Rule #22, which the prior q-file
   surfaced without a Phase 0 report. Two recommendations reversed on the fresh evidence:

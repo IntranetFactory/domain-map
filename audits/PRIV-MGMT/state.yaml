@@ -3,7 +3,7 @@ domain: PRIV-MGMT
 status: feedback_needed
 next_action_by: user
 last_audit: "2026-06-13"
-phase0_report: "audits/PRIV-MGMT/PRIV-MGMT-phase0-2026-06-08.md"  # Rule #22 forcing step run 2026-06-08; 5 flagships (OneTrust, TrustArc, Securiti, DataGrail, Transcend). Verdicts D1-D5 ground every market-shape b2/b3 below.
+extra_phase0_report: "audits/PRIV-MGMT/PRIV-MGMT-phase0-2026-06-08.md"  # Rule #22 forcing step run 2026-06-08; 5 flagships (OneTrust, TrustArc, Securiti, DataGrail, Transcend). Verdicts D1-D5 ground every market-shape b2/b3 below.
 
 # next_action_by rationale: the 2026-06-13 pass ran the committed bidirectional B9d
 # resolver (B1A-B9D-VERIFY, now resolved -> history.md). The only PRIV-MGMT boundary

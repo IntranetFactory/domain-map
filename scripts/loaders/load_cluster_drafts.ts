@@ -19,6 +19,7 @@ export {};
 
 import { readFileSync, existsSync } from "node:fs";
 import { argv } from "node:process";
+import { preflightRelationships, type RelationshipRow } from "../lib/catalog_invariants.ts";
 
 const EXECUTE = argv.includes("--execute");
 const clusterArgIdx = argv.indexOf("--cluster");
@@ -261,19 +262,49 @@ for (const e of edges) {
   if (!["true", "false"].includes(e.required)) validationErrors.push(`edge ${e.cluster}/${e.domain_code}: invalid required '${e.required}'`);
 }
 
-// Step C (m4b, m5, M7): relationship shape pre-flight. Soft warnings per Policy 1 — these
-// never block the load, but surface edges that violate the owner_side / verb-direction
-// invariants so they can be normalized before they reach the catalog.
-const shapeWarnings: string[] = [];
-for (const e of edges) {
-  if (!e.inverse_verb || e.inverse_verb.trim() === "") {
-    shapeWarnings.push(`${e.cluster}/${e.domain_code}: empty inverse_verb on '${e.from} ${e.verb} ${e.to}' (m4b)`);
-  }
-  if ((e.cardinality === "one_to_many" || e.kind === "composition") && e.owner_side === "target") {
-    const tag = e.kind === "composition" ? "composition" : "one_to_many";
-    shapeWarnings.push(`${e.cluster}/${e.domain_code}: ${tag} edge '${e.from} ${e.verb} ${e.to}' has owner_side=target; owner_side must name the parent (cascade root). If target is genuinely the parent the row is semantically OK but non-canonical; prefer authoring parent-first (owner_side=source, forward verb parent-to-child) (m5/M7)`);
+// Step C: catalog invariant pre-flight, shared with the health check
+// (scripts/lib/catalog_invariants.ts; loader-idiom.md "Catalog invariant pre-flight").
+// Scope is ONLY this batch, plus the existing rows each new edge interacts with: the master rows
+// of its endpoints (for the B6b composition-coherence rule). Existing catalog drift never blocks.
+//   error (refuses --execute): B7b, a users edge that is many_to_many with kind reference
+//   warn (loads anyway):       B6b (m4b / m5 / M7, soft per SKILL.md), B7b verb naming two roles
+const usersId = idByName.get("users") ?? -1;
+const nameById = new Map<number, string>(allObjs.map((o) => [o.id as number, String(o.data_object_name)]));
+const incomingRels: RelationshipRow[] = edges
+  .filter((e) => idByName.has(e.from) && idByName.has(e.to))
+  .map((e) => ({
+    id: `${e.cluster}/${e.domain_code}: ${e.from} ${e.verb} ${e.to}`,
+    data_object_id: idByName.get(e.from)!,
+    related_data_object_id: idByName.get(e.to)!,
+    relationship_type: e.cardinality,
+    relationship_kind: e.kind,
+    relationship_verb: e.verb,
+    inverse_verb: e.inverse_verb,
+    owner_side: e.owner_side,
+  }));
+const masterDomainsByDataObject = new Map<number, Set<number>>();
+const endpointIds = [...new Set(incomingRels.flatMap((r) => [r.data_object_id, r.related_data_object_id]))];
+for (let i = 0; i < endpointIds.length; i += 150) {
+  const chunk = endpointIds.slice(i, i + 150);
+  const masterRows: any[] = (await postgrest(
+    "GET",
+    `/domain_module_data_objects?role=eq.master&data_object_id=in.(${chunk.join(",")})&select=data_object_id,domain_modules(domain_id)&limit=20000`,
+  )) ?? [];
+  for (const m of masterRows) {
+    const dom = m.domain_modules?.domain_id;
+    if (dom == null) continue;
+    let s = masterDomainsByDataObject.get(m.data_object_id);
+    if (!s) masterDomainsByDataObject.set(m.data_object_id, (s = new Set()));
+    s.add(dom);
   }
 }
+const preflight = preflightRelationships(incomingRels, {
+  usersId,
+  nameOf: (id) => nameById.get(id) ?? `#${id}`,
+  masterDomainsByDataObject,
+});
+const shapeWarnings: string[] = preflight.warnings;
+validationErrors.push(...preflight.errors);
 
 const seenAliases = new Set<string>();
 for (const a of aliases) {
@@ -306,7 +337,7 @@ if (softWarnings.length > 0) {
 }
 
 if (shapeWarnings.length > 0) {
-  console.log(`\nSHAPE WARNINGS (${shapeWarnings.length}), soft, do not block (m4b/m5/M7):`);
+  console.log(`\nSHAPE WARNINGS (${shapeWarnings.length}), soft, do not block (B6b m4b/m5/M7, B7b two-role verb):`);
   for (const w of shapeWarnings.slice(0, 30)) console.log(`  ${w}`);
   if (shapeWarnings.length > 30) console.log(`  …+${shapeWarnings.length - 30} more`);
 }

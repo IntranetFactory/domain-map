@@ -326,9 +326,9 @@ Every entity exposes a read-only **`_label`** — its composed, human-readable l
 | `module_name` | string | **Unique display name shown in the UI module selector and on the landing page header** (e.g. `CRM`, `ITSM`, `CMDB`). Keep acronyms as acronyms, this is the human-facing name. Required. |
 | `module_slug` | string | URL-safe slug, **required and non-empty**. Lowercase letters, digits, `_`, and `-` only (regex `^[a-z0-9_-]+$`; hyphen is now allowed). Used in URLs, permission prefixes, and as the foreign-key target when referenced from semantic-model files. Convention: matches the source model's `system_slug` (e.g. `crm`, `itsm`, `ben-admin`). Accepted: `ben-admin`, `ben_admin`, `bm1`. Rejected: `""`, `Ben-Admin`, `ben admin`. Violations error with `module_slug must be lowercase alphanumeric, underscore, or hyphen`. |
 | `description` | string | Compact tagline shown beside `module_name` in the selector dropdown and on the landing page (e.g. `Customer Relationship Management`, `IT Service Management`). For acronym `module_name`s use the plain English expansion; for non-acronyms use a 2-4 word disambiguating phrase. Aim for ≤40 characters. Optional. |
-| `icon_name` | string | The icon shown for the module in the UI: a Lucide icon name in kebab-case or an icon URL (see "Icons are Lucide icons" in data-modeling.md); distinct from the entity-level `icon_url` and from the module `logo_url`. Optional. |
+| `icon_name` | string | The icon shown for the module in the UI: a Lucide icon name in kebab-case or an icon URL (see "Icons are Lucide icons" in data-modeling.md), like an entity's `icon_name`; distinct from the module `logo_url`. Optional. |
 | `domain_code` | string | Short uppercase business-domain code the module belongs to (e.g. `ATS`, `HCM`, `ITSM`, `CRM`). Groups related modules; many modules — and many `catalog_module_code`s — can share one `domain_code`. Optional. |
-| `access_scope` | enum | Permission structure of the module (its access level, decided by `semantius-architect`). `enum_values`: `custom` ("Custom permission structure"), `basic` ("Two permissions: view and edit"), `advanced` ("Three permissions: view, edit and admin."), `gated` ("Three permissions: view, edit and admin and process gates"), `raci` ("Three permissions: view, edit and admin and enforced process gates."); default `custom`. Optional. |
+| `access_scope` | enum | Permission structure of the module (its access level, decided by `semantius-architect`). `enum_values`: `custom` ("Custom permission structure"), `basic` ("Two permissions: view and edit"), `advanced` ("Three permissions: view, edit and admin."), `gated` ("Three permissions: view, edit and admin, plus a permission per process gate held by admins"), `raci` ("Three permissions: view, edit and admin, plus a permission per process gate held by RACI roles (and admins, except high-risk gates)"); default `custom`. Optional. |
 | `view_permission` | string | Permission name required to see the module in the selector (e.g. `crm:read`). FK to `permissions.permission_name`, so the permission must already exist when `create_module` runs (each request is its own transaction). Defaults to `user:read`: create the module with that default (or another existing permission), create the module's own permissions, then point the module at them with `update_module`. Optional. |
 | `manage_permission` / `admin_permission` | string | The module's manage and admin permission, by name (e.g. `crm:manage`). FKs to `permissions.permission_name`; same must-already-exist rule, so wire them with `update_module` after the permissions are created. Optional. |
 | `default_viewer_role_id` / `default_manager_role_id` / `default_admin_role_id` | integer | The module's default roles, as numeric role ids (FK to `roles.id`). Wire with `update_module` once the roles exist. Optional. |
@@ -384,7 +384,7 @@ Creates an inheritance link: a broader permission includes a narrower one. Reads
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `data` | object \| object[] | yes | One object, or a **non-empty array** to create every edge of a module's chain in one request. Each requires: `including_permission_name` (broader), `included_permission_name` (narrower); optional `origin` (`model` for a deployed module, `model_master`, `user`). `id` is auto-generated as `"<including_permission_name>.<included_permission_name>"` (e.g. `"crm:manage.crm:read"`). Example: `{"data": {"including_permission_name": "crm:manage", "included_permission_name": "crm:read", "origin": "model"}}` |
+| `data` | object \| object[] | yes | One object, or a **non-empty array** to create every edge of a module's chain in one request. Each requires: `including_permission_name` (broader), `included_permission_name` (narrower); optional `origin` (leave unset by hand, defaults to `user`; `model` / `model_master` are set only by a `semantius-modeler` deploy). `id` is auto-generated as `"<including_permission_name>.<included_permission_name>"` (e.g. `"crm:manage.crm:read"`). Example: `{"data": {"including_permission_name": "crm:manage", "included_permission_name": "crm:read"}}` |
 
 ### `read_permission_hierarchy`
 Accepts common read parameters. Filter by `including_permission_name` or `included_permission_name`.
@@ -407,7 +407,7 @@ Accepts common read parameters. Filter by `including_permission_name` or `includ
 ### `create_role`
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `data` | object \| object[] | yes | One object, or a **non-empty array** to create several roles in one request (a module's viewer + manager [+ admin] go in one call). Each requires: `role_name`. Strongly recommended for a scaffold role: `slug` (snake_case `^[a-z0-9_]+$`; auto-derived from `role_name` when omitted — pass it explicitly to control the handle), `module_id` (owning module; omit and the role is an orphan), `origin` (`"model"` for a domain-module scaffold role, `"model_master"` for a master; omit and it defaults to `"user"`). Optional: `description`. **There is no `name` or `label` field** — use `role_name` / `slug`. |
+| `data` | object \| object[] | yes | One object, or a **non-empty array** to create several roles in one request (a module's viewer + manager [+ admin] go in one call). Each requires: `role_name`. Strongly recommended for a scaffold role: `slug` (snake_case `^[a-z0-9_]+$`; auto-derived from `role_name` when omitted — pass it explicitly to control the handle), `module_id` (owning module; omit and the role is an orphan). Optional: `description`, `origin` (leave unset by hand, it defaults to `"user"`; `"model"` for a domain-module role and `"model_master"` for a master-module role are set only by a `semantius-modeler` deploy). **There is no `name` or `label` field** — use `role_name` / `slug`. |
 
 ### `read_role`
 Accepts common read parameters.
@@ -502,7 +502,7 @@ Accepts common read parameters. Filter by `user_id` or `role_id`.
 | `data` | object \| object[] | yes | One object, or a non-empty array to create several receivers in one request. Each requires: `label`, `table_name`, `auth_type` (`"hmac"`), `secret` (random alphanumeric string) |
 
 ### `read_webhook_receiver`
-Accepts common read parameters. Key filter: `"label=eq.Agent Import&table_name=eq.<table>"`.
+Accepts common read parameters. Key filter: `"label=eq.<label>&table_name=eq.<table>"`.
 
 ### `update_webhook_receiver`
 | Parameter | Type | Required | Description |

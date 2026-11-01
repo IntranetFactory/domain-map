@@ -134,6 +134,11 @@ function buildItems(r: Rec): Item[] {
 
 // ---- state.yaml surgical merge ----
 const SECTION_RE = /^(b1a|b1b|b2|b3):/;
+// Any top-level key (column 0), e.g. the `checks:` block domain_health.ts --record splices in.
+// The b1a region ends at the next top-level key, so a following block is kept verbatim in the tail
+// instead of being parsed as part of the last b1a item (or dropped when b1a is empty).
+const TOP_KEY_RE = /^[A-Za-z_][\w-]*[ \t]*:/;
+const CHECKS_KEY_RE = /^checks[ \t]*:/;
 
 function newStatus(cur: string): string {
   return cur === "feedback_needed" || cur === "passed" ? cur : "audit_stale";
@@ -154,7 +159,7 @@ function mergeFile(path: string, newItems: Item[]): { changed: boolean; eol: str
   const lines = raw.split(/\r?\n/);
 
   // locate first section key
-  let firstSectionIdx = lines.findIndex((l) => SECTION_RE.test(l));
+  let firstSectionIdx = lines.findIndex((l) => SECTION_RE.test(l) || CHECKS_KEY_RE.test(l));
   if (firstSectionIdx < 0) firstSectionIdx = lines.length; // no sections at all
 
   // find b1a span
@@ -165,10 +170,10 @@ function mergeFile(path: string, newItems: Item[]): { changed: boolean; eol: str
 
   if (b1aIdx >= 0) {
     headerEnd = b1aIdx; // header = [0, b1aIdx)
-    // end of b1a region = next section after b1a, else EOF
+    // end of b1a region = next top-level key after b1a (a section or a block such as checks:), else EOF
     let next = -1;
     for (let i = b1aIdx + 1; i < lines.length; i++) {
-      if (SECTION_RE.test(lines[i])) { next = i; break; }
+      if (TOP_KEY_RE.test(lines[i])) { next = i; break; }
     }
     tailStart = next >= 0 ? next : lines.length;
     // collect item bodies between b1aIdx+1 and tailStart, dropping trailing blanks

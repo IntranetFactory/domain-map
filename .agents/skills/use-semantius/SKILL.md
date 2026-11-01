@@ -9,7 +9,9 @@ description: >-
   tables; run analytical queries across Semantius data; get a web UI link
   (deep link) to a record, list, or module; or send transactional emails via
   the Semantius email service (`crud sendEmail`). Also trigger when
-  writing shell scripts or Bun scripts that chain semantius commands.
+  writing shell scripts or Bun scripts that chain semantius commands, and on
+  any request containing `[blank]` (a sample prompt the user has not filled in,
+  e.g. "which fields are in [blank]").
 ---
 
 # use-semantius Skill
@@ -63,12 +65,20 @@ Understanding which layer you're working with determines which tools to use:
 | `references/crud-tools.md` | Layer 1 typed tools + Layer 2 postgrestRequest/sqlToRest reference; § "Bulk operations" (array `data` / `id`, one call per set of records) |
 | `references/cube-queries.md` | Layer 3, CubeJS query DSL, date filtering, analysis modes |
 | `references/cube-tools.md` | Layer 3, discover/validate/load/chart tool signatures |
-| `references/webhook-import.md` | Bulk import of records into Layer 2 via signed webhook |
-| `references/lucide-icons.ts` | Run it (`bun`), don't read it: `find <word…>` finds Lucide icon names, `check <name…>` confirms them before an icon is written; see `data-modeling.md` → "Icons are Lucide icons" |
+| `references/webhooks.md` | Receiving records from external systems through signed webhook receivers: setup, signing, logs |
+| `references/lucide-icon-finder.ts` | Run it (`bun`), don't read it: `<query…>` (one or more words each, most specific first) lists Lucide icon names per query, in that order; `--batch -` takes a JSON object on stdin mapping labels to their queries and answers every label in one call; see `data-modeling.md` → "Icons are Lucide icons" |
+| `references/lucide-icon-checker.ts` | Run it (`bun`), don't read it: `<name…>` confirms Lucide icon names before an icon is written, exit 1 names the unknown ones; see `data-modeling.md` → "Icons are Lucide icons" |
+| `references/vendor-names.ts` | Run it (`bun`), don't read it: `entity:<Name>…` and `field:<Name>…` convert a followed product's record and field names (singular, spelled the product's way) into `table_name` and labels, or `field_name` and label; never convert them by hand. Used by `semantius-architect` (`stage-2-naming.md`) and `semantius-analyst` (`stage-4-fields.md`) |
 
 ---
 
 ## Quick Decision Guide
+
+**The request contains `[blank]`?**
+→ Ask before anything else, see "Unfilled `[blank]` placeholders" below. Run nothing until every blank is filled
+
+**The request lacks a value it needs ("add a field": to which kind of record)?**
+→ Ask for it, see "Asking the user to pick a value" below
 
 **Managing schema, create/modify entities, fields, modules?**
 → Layer 1, read `references/data-modeling.md`, follow mandatory creation order
@@ -78,6 +88,9 @@ Understanding which layer you're working with determines which tools to use:
 
 **Computed fields, validation rules, or conditional field behavior (readonly/hidden/required depending on the record)?**
 → Layer 1, read `references/jsonlogic.md`, entity-level and field-level JsonLogic, operators, cross-entity lookups
+
+**Only some users may do one thing to a record (delete it, close it, approve it, change one field)?**
+→ Layer 1, read `references/jsonlogic.md` § *Detecting the operation*. An entity's `edit_permission` covers insert, update and delete together, so a gate on one operation or transition is a validation rule that tests `$mode` (or the changed field) and then checks who the caller is: an owner match such as `$old.owner_user_id == $user_id` needs no permission, while `has_permission` needs one, created with `references/rbac.md`
 
 **Setting up permissions, roles, users?**
 → Layer 1, read `references/rbac.md`
@@ -98,7 +111,7 @@ Understanding which layer you're working with determines which tools to use:
 → Read `references/cli-usage.md`
 
 **Importing a CSV file?**
-→ The `semantius-importer` skill is the front door: it introspects the file (`utils/get_csvschema`), creates or reuses the entity, and bulk-loads in batches. `references/webhook-import.md` covers the signed-webhook path (external systems pushing rows).
+→ The `semantius-importer` skill is the front door: it introspects the file (`utils/get_csvschema`), creates or reuses the entity, and bulk-loads in batches.
 
 **Moving entities or a module to another host, backing one up, restoring an export?**
 → The `semantius-transfer` skill runs the workflow; `references/cli-usage.md` § "Moving Entities and Modules Between Hosts" has the mechanics.
@@ -108,6 +121,48 @@ Understanding which layer you're working with determines which tools to use:
 
 **A baked recipe (e.g. from a `semantius-skill-maker`-generated skill) hit an unexpected 409/422 and you suspect schema drift?**
 → Live introspect with `read_entity` / `read_field`, see `references/data-modeling.md` § "Runtime schema introspection (live FK / shape lookup)". Do not silently adapt the recipe; abort, surface the drift, recommend regenerating the domain skill.
+
+---
+
+## Asking the user to pick a value
+
+Use this for every `[blank]` (next section) and whenever a request lacks a value it needs to run: "add a field" needs the kind of record, "who is the contact for a customer" needs the customer. A value the user gave, now or earlier in the conversation, is not lacking.
+
+1. **Know what you ask for.** The platform's own concepts are built-in tables:
+
+   | The user says | Table |
+   |---|---|
+   | solution | `modules` |
+   | kind of record, record type, table | `entities` |
+   | field | `fields` |
+   | permission | `permissions` |
+   | role | `roles` |
+   | user, person | `users` |
+   | webhook | `webhook_receivers` |
+   | dashboard | `dashboards` |
+   | process | `processes` |
+   | queue | `queues` |
+   | audit log | `audit_record_logs` |
+
+   A word naming one of the instance's own kinds of record ("task", "project", "customer") asks for one record of that kind; match the word by meaning against the entities' labels.
+2. **Read 21, show 20.** Read the candidates with a limit of 21, sorted alphabetically by display label: a module's `module_name`, an entity's `plural_label`, a field's `title`, a permission's or role's `description`, a user's `display_name`, a record's `label`. Never show a `table_name`, slug, `module:action` name or id. Start the question by naming what it asks for, then give the names on one line, separated by commas, never as a bulleted list: "Which project? Apollo, Bluebird, Cascade, Delta Rollout."
+   - **20 or fewer came back:** the list is complete. Show them all.
+   - **21 came back:** there are more. Show the first 20, end the line with "and more", then ask for words to search the rest, with examples that fit what is asked: for a record, part of its name or another detail of it ("Not in the list? Tell me part of the name, a city or a country."); for a kind of record, what it is about ("Not in the list? Tell me what it's about, for example orders or staff.").
+3. **Search by meaning.** Turn the user's words into search words: the words themselves, their synonyms and related terms ("staff" → staff, employee, personnel, user). Run a full-text search for each on the whole table (`search_vector=wfts(simple).<word>`, `references/crud-tools.md`); on a table without searchable fields, use `ilike` on the display label instead. Show the matches the same way, on one line, and give a name that repeats its record type in brackets ("Status (Orders)"). Nothing found: say so and ask for other words.
+4. **Never pick for the user.** Never ask "do you mean X?" about a candidate you picked yourself, and never hint which one fits. A value the request creates (the name of a new field or permission) is free text: ask for it once its container is known.
+5. **Ask in plain words, in the chat.** "Which solution?", "Which kind of record?", "What should the new field be called?" Never use internal terms such as entity, table or module. One question per value; wait for the reply.
+
+---
+
+## Unfilled `[blank]` placeholders
+
+The plugin's sample prompts use `[blank]` where the user puts a name from the live instance ("which fields are in [blank]", "add permission [blank] to solution [blank]"). The token `[blank]`, in any case, is a blank the user did not fill.
+
+1. **Never fill it yourself.** Do not guess it from context, even when only one candidate fits. Do not put it in a `semantius` command. Run nothing until every blank is filled. The only calls allowed before then are the reads and searches that find the candidates.
+2. **Work out each blank's kind from the word next to it**, with the table in "Asking the user to pick a value" ("solution [blank]", "field [blank]", "customer [blank]"). Any other blank ("fields in [blank]", "how many [blank]", "states of [blank]") is a kind of record (`entities`).
+3. **Ask in the order of the request.** When the request has a solution blank and another blank in it ("add permission [blank] to solution [blank]"), ask about the solution first; the answer filters the next list. Never add a question the request does not contain.
+4. **Ask for each blank** as "Asking the user to pick a value" describes. A blank the request creates ("add permission [blank]") is a new name.
+5. **Then run it.** Once every blank is filled, restate the full request in one line ("Adding the permission Close tickets to the Service Desk solution.") and run it under the Golden Rules below.
 
 ---
 

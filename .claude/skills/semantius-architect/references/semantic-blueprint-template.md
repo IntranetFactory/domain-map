@@ -17,7 +17,7 @@ version: "3.1"
 naming_mode: {{template:<vendor> | agent-optimized — greenfield only; omit in catalog-clone files}}
 license: {{license slug, e.g. MIT}}
 system_name: {{System display name shown to the user AND used as the module name — keep acronyms as acronyms (CRM, ITSM, CMDB)}}
-icon_name: {{Module icon: a Lucide icon name in kebab-case or an icon URL, e.g. briefcase, users, circle-help}}
+icon_name: {{Module icon: a Lucide icon name in kebab-case or an icon URL, e.g. briefcase, users, circle-question-mark}}
 tagline: {{One-line marketing-voice line for catalog / card surfaces, ALSO used as the module record's short description (modules.description) shown beside the name in the selector. Elevator pitch — keep it concise enough for the chip.}}
 description: {{Longer marketing-voice prose for the catalog page (1-3 paragraphs). Reads to a buyer, not to the analyst. Multi-line YAML block (|) is fine.}}
 system_slug: {{system_slug_kebab_case}}
@@ -138,7 +138,7 @@ _**Audience and register:** the downstream skills, not a human reviewer. The arc
 - **`mastered in`** — `-` when this module owns the entity (role = `master`). Otherwise, the kebab-case slug of the catalog owner module (`ats-candidate-crm`, `lms-skills`, `talent-succession-career`). For `embedded_master`, this names the *future* owner.
 - **`mastered label`** — `-` when `mastered in` is `-`. Otherwise, the human-readable display name of the **owning module** (`Candidate CRM`, `Skills and Learning Paths`, `Succession and Career Planning`). It names the owner module, NOT this entity (the entity's own labels are the `singular` / `plural` columns); the analyst uses it in user-facing prompts so users don't see raw slugs. For platform built-ins (`users`, `roles`), use `_(platform built-in)_` in both `mastered in` and `mastered label`.
 - **`necessity`** — `required` or `optional`. Optional entities are presented to the user during reconciliation; the user picks which to include. Common candidates for optional: `locations` (some orgs have one), `cost_centers` (some orgs don't track), `tags` (nice-to-have).
-- **(behavior flags removed)** — row-scope visibility, field locks, and approval requirements are **not** §3 columns. Approvals are gated lifecycle transitions (§7 `requires_permission?`; under `raci` also the matching §8.1 `workflow-gate`) and/or §9 RACI. Row-scope and field-lock rules are authored by the analyst as field-level JsonLogic (`select_rule` / `validation_rules`) during reconciliation; when a specific row-scope requirement is known up front and cannot be derived, state it in the **Additional Requirements Specification** section (e.g. *"`user_bookmarks` is private to its creator — scope on `created_by`"*).
+- **(behavior flags removed)**: row-scope visibility, field locks, and approval requirements are **not** §3 columns. Approvals are gated lifecycle transitions (§7 `requires_permission?`; under `gated` and `raci` also the matching §8.1 `workflow-gate`) and/or §9 RACI. Row-scope and field-lock rules are authored by the analyst as field-level JsonLogic (`select_rule` / `validation_rules`) during reconciliation; when a specific row-scope requirement is known up front and cannot be derived, state it in the **Additional Requirements Specification** section (e.g. *"`user_bookmarks` is private to its creator; scope on `created_by`"*).
 - **`entity_type`** — the entity's **data-class axis**, mirroring the closed upstream `data_objects.entity_type` set: one of `operational_workflow`, `operational_record`, `catalog`, `junction`, `computed` (the sixth value `unclassified` is the platform's empty default and is **not** authored here — emit a concrete class). This is the **primary classification**: `write tier` derives FROM it, never the reverse. Sourced from Stage 9 (carry-forward from the upstream `data_objects` value for catalog-clones when it is classified; otherwise derive via the Stage 9 ladder, reading §5 for junctions and §7 for workflow-vs-record). Maps to the platform's `entities.entity_type`. The set is **closed** — never coin a value outside it.
 - **`write tier`** — the entity's edit-permission tier, **DERIVED from `entity_type`** (do not classify the tier independently): `catalog` → `:admin`; `operational_workflow` / `operational_record` → `:manage`; `junction` → neighbor-based (`:manage` by default, following its parents); `computed` → `:read` (read-only). One of `:manage` (operational, default), `:admin` (reference / config), `:read` (computed / read-only), or `:manage` _(pending)_ when the tier depends on what gets installed (`embedded_master` rows whose catalog owner isn't yet present and may shift the tier). Consumed by the analyst verbatim (the analyst does not re-derive the tier — it validates against the live catalog and emits drift only).
 
@@ -193,7 +193,7 @@ Edges where both endpoints are §3 entities owned or co-located in this module. 
 - **`kind`** — `reference` (independent lifecycle, default) or `parent` (master-detail child; child has no meaning without parent).
 - **`necessity`** — `required` means the FK is NOT NULL in the spec; `optional` is nullable. **Presence-conditional**: a `required` edge is a mandatory FK only when the target entity is installed in the same deploy; it NEVER forces the target to install. See §5.3 vocabulary for cross-scope expression.
 - **`owner_side`** — `source` means the row's `from` column owns the FK column; `target` means the `to` column does. Useful when `owner_side` is non-obvious from cardinality alone.
-- **`delete_mode`** — what happens to this row when the referenced row is deleted. `restrict` (default for `kind=reference`; protects the parent), `clear` (NULL the FK on the child; only valid when `necessity=optional`), `cascade` (default for `kind=parent`; deletes the child). The analyst consumes this verbatim — does not re-derive at deploy time.
+- **`delete_mode`** — what happens to this row when the referenced row is deleted. `restrict` (default for `kind=reference`; protects the parent), `clear` (NULL the FK on the child; only valid when `necessity=optional`), `cascade` (default for `kind=parent`; deletes the child). The analyst consumes this verbatim — does not re-derive at deploy time, except rows changed by the analyst's Stage 8 FK scope fix (a `parent` + `cascade` edge becomes `reference` + `restrict`).
 - **`fk_format`** — the Semantius FK shape on the field-level spec. `parent` for ownership/composition + junction-table edges (both FK fields in an M:N junction use `parent`); `reference` otherwise. Same value the analyst writes to `fields.format`; emitting it here makes the analyst's FK-shape derivation consume-only.
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
@@ -283,11 +283,11 @@ For every entity with `role = master` in §3, emit one sub-section. Entities wit
 
 ### `{{master_table_name}}` ({{Singular Label}})
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| ---: | --- | :---: | :---: | :---: | --- | --- |
-| 1 | `{{state_1}}` | ✓ | - | - | - | {{one-line description}} |
-| 2 | `{{state_2}}` | - | - | ✓ | `{{system_slug}}:{{permission_suffix}}` | {{description of the gated transition}} |
-| 3 | `{{state_3}}` | - | ✓ | - | - | {{terminal state description}} |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| ---: | --- | :---: | :---: | :---: | :---: | --- | --- |
+| 1 | `{{state_1}}` | ✓ | - | - | - | - | {{one-line description}} |
+| 2 | `{{state_2}}` | - | - | ✓ | ✓ \| - | `{{system_slug}}:{{permission_suffix}}` | {{description of the gated transition}} |
+| 3 | `{{state_3}}` | - | ✓ | - | - | - | {{terminal state description}} |
 
 **Column rules:**
 
@@ -295,19 +295,20 @@ For every entity with `role = master` in §3, emit one sub-section. Entities wit
 - **`state_name`** — backticked snake_case enum value.
 - **`initial?`** — ✓ on exactly one row per entity (the first state new records land in).
 - **`terminal?`** — ✓ on every terminal state (no transitions out of this state).
-- **`requires_permission?`** — ✓ when transitioning *into* this state requires a specific permission beyond `baseline-manage` (a process gate). Architect Stage 10 (W1/W2) marks these; under the `raci` access level the corresponding permission row appears in §8.1 as a `workflow-gate (lifecycle)` row.
-- **`derived gate`** — when `requires_permission? = ✓`, this column carries the permission code that gates the transition: under `raci` the gate's own code (`<system_slug>:<suffix>`), under every other access level `<system_slug>:admin`. Otherwise `-`. When the gate cannot be resolved (e.g. under `raci` the named verb is missing from §8.1), emit `⚠ unresolved gate: <reason>` instead of fabricating a code.
+- **`requires_permission?`**: ✓ when transitioning *into* this state requires a specific permission beyond `baseline-manage` (a process gate). Architect Stage 10 (W1/W2) marks these; under the `gated` and `raci` access levels the corresponding permission row appears in §8.1 as a `workflow-gate (lifecycle)` row.
+- **`high risk?`**: ✓ when the gated step is high risk (a financial approval, a compliance sign-off, a hiring decision), confirmed by the user in the Stage 10 restricted-steps turn; a catalog clone takes the catalog's flag. `-` otherwise, and always `-` on a row whose `requires_permission?` is `-`. Carried at every access level; it has an effect only under `raci`, where the admin does not hold a high-risk gate (no §9.1 `<system_slug>:admin` → gate row, `included in :admin?` = `-`), so only the Accountable role can take the step. Under `gated` the admin holds every gate, high-risk ones too.
+- **`derived gate`**: when `requires_permission? = ✓`, this column carries the permission code that gates the transition: under `gated` and `raci` the gate's own code (`<system_slug>:<suffix>`), under every other access level `<system_slug>:admin`. Otherwise `-`. When the gate cannot be resolved (e.g. under `gated` or `raci` the named verb is missing from §8.1), emit `⚠ unresolved gate: <reason>` instead of fabricating a code.
 
 **State field (fixed name `workflow_state`).** The field that stores this lifecycle is materialized downstream (by the analyst) as a single required `enum` named **exactly `workflow_state`**: its `enum_values` are the `state_name`s above in `order`, its default is the `initial?` state. This name is fixed platform-wide — never `status` / `state` / `lifecycle_state`. The deployer rejects any module that stores lifecycle state under another field name.
 
 **Data-quality annotations (soft):** §7 cells may carry `⚠ <reason>` annotations when the emitter detects a malformed shape. These are surface flags meant to be FIXED upstream, not modeled around:
 
 - `⚠ state-machine shape` (in the `description` cell of an offending row) — the state has no incoming transition, or there's no path from `initial` to this state, or a terminal state has outgoing transitions. The architect surfaces; the analyst skips that row's downstream emission and asks the user to fix the source data.
-- `⚠ unresolved gate: <reason>` (in the `derived gate` cell) — `requires_permission? = ✓` but, under `raci`, the canonical gate verb is missing from §8.1 or §8.2.
+- `⚠ unresolved gate: <reason>` (in the `derived gate` cell): `requires_permission? = ✓` but, under `gated` or `raci`, the canonical gate verb is missing from §8.1 or §8.2.
 
 Example row with annotations:
 
-| 4 | `{{state_4}}` | - | - | ✓ | ⚠ unresolved gate: verb missing from §8.1 | ⚠ state-machine shape: no incoming transition |
+| 4 | `{{state_4}}` | - | - | ✓ | - | ⚠ unresolved gate: verb missing from §8.1 | ⚠ state-machine shape: no incoming transition |
 
 ## 8. Permissions and business rules (derived)
 
@@ -320,18 +321,18 @@ The full permission catalog and rule list. The analyst expands this to spec-form
 | `{{system_slug}}:read` | baseline-read | Read access to every entity in the module | ✓ |
 | `{{system_slug}}:manage` | baseline-manage | Edit operational records | ✓ |
 | `{{system_slug}}:admin` | baseline-admin | Edit reference data | - |
-| `{{system_slug}}:{{workflow_suffix}}` | workflow-gate (lifecycle) | Transition `{{table}}` into state `{{state}}` | - |
+| `{{system_slug}}:{{workflow_suffix}}` | workflow-gate (lifecycle) | Transition `{{table}}` into state `{{state}}` | ✓ _(- for a high-risk gate under `raci`)_ |
 
 **Tier vocabulary:**
 
 - **`baseline-read`** — module-wide read; usually held by every module user.
 - **`baseline-manage`** — module-wide edit on operational records.
-- **`baseline-admin`** — module-wide edit on reference/config records; under the `gated` access level it is also the permission every process gate checks.
-- **`workflow-gate (lifecycle)`** — `raci` only: gates a specific lifecycle transition or a restricted creation (per §7 `requires_permission?` rows and §8.2 `create` rules); held only by the business roles of the RACI matrix, never included in `:admin`.
-- **`workflow-gate (rule)`** — gates a specific business rule (per §8.2 rules with `require_permission`).
+- **`baseline-admin`**: module-wide edit on reference/config records; through the §9.1 hierarchy it also includes every process gate under the `gated` access level, and every gate except the high-risk ones under `raci`.
+- **`workflow-gate (lifecycle)`**: present under `gated` and `raci`; gates a specific lifecycle transition or a restricted creation (per §7 `requires_permission?` rows and §8.2 `create` rules). Under `gated` it is included in `:admin`, so the admin role takes every gated step. Under `raci` it is held by the Accountable business role of the RACI matrix and included in `:admin` unless the gate is high risk (§7 `high risk?` ✓), so an admin can step in when the Accountable person is absent.
+- **`workflow-gate (rule)`**: gates a specific business rule (per §8.2 rules with `require_permission` / `has_permission`).
 - **`narrow`** — sub-tier of `baseline-manage` granted to external participants (e.g. panel interviewers); declared explicitly when the workflow involves outsiders who write specific tables without broader operational access.
 
-**Rows by access level** (frontmatter `access_scope`; the body table in stage-10-workflow-perms.md): `baseline-read` and `baseline-manage` always; `baseline-admin` when the design has reference data entities or a process gate, and always under `raci`; `workflow-gate (lifecycle)` rows only under `raci`.
+**Rows by access level** (frontmatter `access_scope`; the body table in stage-10-workflow-perms.md): `baseline-read` and `baseline-manage` always; `baseline-admin` when the design has reference data entities or a process gate, and always under `gated` and `raci`; `workflow-gate (lifecycle)` rows only under `gated` and `raci`, one per gate (state or `create`).
 
 ### 8.2 Business rules
 
@@ -350,7 +351,7 @@ The full permission catalog and rule list. The analyst expands this to spec-form
 
 ## 9. Roles, RACI, and responsibilities (derived)
 
-_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`. In `documentation` mode the deployer provisions them as RBAC grants (none of it stored in the catalog); in `living` mode the RACI matrix is stored in the catalog (`processes` / `raci_assignments` / `process_gates`) and enforced live (`is_raci_actor` / `has_consultation`). The architect stays **mode-agnostic** — it names processes (with a stable `process_key`), actors, letters, and per-consulted mode; the analyst picks the mode and the concrete realization._
+_Baseline roles, the permission hierarchy, and RACI realization are DERIVED from this scope's entity-type write tiers + `process_raci`. In `documentation` mode the deployer provisions them as RBAC grants (none of it stored in the catalog); in `living` mode the RACI matrix is stored in the catalog (`processes` / `raci_assignments` / `process_gates`) and enforced live (`is_raci_actor` / `has_consultation`; a gate's rule passes for the live Accountable actor or for a holder of the gate's own permission, `or(is_raci_actor(<entity>, <to_state>, "accountable"), has_permission(<gate>))`, so the admin can step in on a non-high-risk gate). The architect stays **mode-agnostic**: it names processes (with a stable `process_key`), actors, letters, and per-consulted mode; the analyst picks the mode and the concrete realization._
 
 ### 9.1 `{{SYSTEM_SLUG_UPPER}}`
 
@@ -366,15 +367,16 @@ _Role slugs use `{{system_slug}}` **with every `-` replaced by `_`** (call it `{
 
 **Permission hierarchy:**
 
-_The hierarchy is roll-up: `:admin` includes `:manage`, `:manage` includes `:read`, `:admin` rolls up every `workflow-gate (rule)` permission in §8.1, and `:manage` includes every `narrow`-tier permission in §8.1 (so full-tier holders pass the narrow check external participants hold in isolation). A `workflow-gate (lifecycle)` permission (`raci` only) is never rolled up: only the business roles of the RACI matrix hold it._
+_The hierarchy is roll-up: `:admin` includes `:manage`, `:manage` includes `:read`, `:admin` rolls up every `workflow-gate (rule)` permission in §8.1, and `:manage` includes every `narrow`-tier permission in §8.1 (so full-tier holders pass the narrow check external participants hold in isolation). `:admin` also rolls up the `workflow-gate (lifecycle)` permissions: every one under `gated` (the admin takes every gated step), and every one except the high-risk gates (§7 `high risk?` ✓) under `raci` (so an admin can step in when the Accountable person is absent). A high-risk gate under `raci` has no hierarchy row: only the Accountable role of the RACI matrix holds it._
 
 | permission | includes |
 | --- | --- |
 | `{{system_slug}}:admin` | `{{system_slug}}:manage` |
 | `{{system_slug}}:manage` | `{{system_slug}}:read` |
 | `{{system_slug}}:admin` | `{{system_slug}}:{{rule_gate_1}}` |
+| `{{system_slug}}:admin` | `{{system_slug}}:{{lifecycle_gate_1}}` |
 | `{{system_slug}}:manage` | `{{system_slug}}:{{narrow_1}}` |
-| _(repeat one row per `workflow-gate (rule)` permission under `:admin`, and one row per `narrow` tier under `:manage`; emitter MUST list every such §8.1 permission)_ | |
+| _(repeat one row per `workflow-gate (rule)` permission under `:admin`, one row per `workflow-gate (lifecycle)` permission under `:admin` (every gate under `gated`, every non-high-risk gate under `raci`), and one row per `narrow` tier under `:manage`; emitter MUST list every such §8.1 permission)_ | |
 
 **Processes wired:**
 
@@ -395,7 +397,7 @@ _The process catalog — one row per process, referenced by `process_key` from t
 
 | actor | kind | raci | process_key | consult_mode | realization |
 | --- | --- | --- | --- | --- | --- |
-| `{{ACTOR-NAME-UPPER}}` | persona \| skill | responsible | {{process_key}} | — | grant gates [{{slug:verb_1, slug:verb_2}}] + the gated entities' write tier |
+| `{{ACTOR-NAME-UPPER}}` | persona \| skill | responsible | {{process_key}} | — | the gated entities' write tier |
 | `{{ACTOR-NAME-UPPER}}` | persona \| skill | accountable | {{process_key}} | — | grant gates [{{slug:verb_1}}] + the gated entities' write tier |
 | `{{ACTOR-NAME-UPPER}}` | persona \| skill | consulted | {{process_key}} | read \| notify \| block | advisory read grant |
 | `{{ACTOR-NAME-UPPER}}` | persona \| skill | informed | {{process_key}} | — | notification side effect (trigger_event / webhook_receiver) |
@@ -407,8 +409,8 @@ _The process catalog — one row per process, referenced by `process_key` from t
 - **`raci`** — `responsible` / `accountable` / `consulted` / `informed`. Multiple Rs per process are allowed; exactly one A per process (under `raci` the accountable row holds its process's gates: the RACI rule, stage-11-governance.md).
 - **`process_key`** — references a row in the **Processes wired** catalog above; every `process_key` used here MUST be defined there. This is the *only* process identifier on the RACI row — the display name lives in the catalog, not here (so renaming a process is a one-row edit).
 - **`consult_mode`** — only for `consulted` rows: `read` (default — passive advisory read), `notify` (push a notification when the process reaches the gated transition), or `block` (the transition is gated until the consulted party has acted, e.g. "Legal must be consulted before an offer goes out" → `block`). Leave `—` on R / A / I rows. The whole column may be omitted when every consultation is `read`.
-- **`realization`** — human-facing *intent* only. How the row is actually realized depends on the module's RACI mode (the analyst decides): in `documentation` mode it compiles to the RBAC grants below; in `living` mode it becomes live RACI rows + rules (`is_raci_actor` for A, `has_consultation` for C-block, the emit trigger for C-notify / I). Author the intent; do not encode enforcement mechanics. The mapping below is the documentation-mode default:
-  - R → `grant gates [<list>] + the gated entities' write tier`. The gate list is the permission codes the actor needs to perform the process.
+- **`realization`**: human-facing *intent* only. How the row is actually realized depends on the module's RACI mode (the analyst decides): in `documentation` mode it compiles to the RBAC grants below; in `living` mode it becomes live RACI rows + rules (`is_raci_actor` for A, resolved live with no gate grant, inside a gate rule that also passes for a holder of the gate's own permission; `has_consultation` for C-block; the emit trigger for C-notify / I). Author the intent; do not encode enforcement mechanics. The mapping below is the documentation-mode default:
+  - R → `the gated entities' write tier`. Responsible never holds a gate: the process's accountable row holds its gates.
   - A → `grant gates [<the process's gate codes>] + the gated entities' write tier` (the accountable role holds its process's gates); a process without a gate → `the gated entities' write tier`.
   - C → `advisory read grant` (a row-scoped read added during deploy; or `consultation lifecycle state` when the process has an explicit consultation step in §7).
   - I → `notification side effect (trigger_event / webhook_receiver)` — wired as a notify action at deploy time, not a permission.
@@ -440,11 +442,11 @@ _Market-level RACI: which business function OWNS / CONTRIBUTES-TO / CONSUMES thi
 ## Authoring guidance
 
 - **Use the fenced ```` ```markdown ```` block** so the blueprint is self-contained when copied.
-- **Table columns are fixed** — don't rename or reorder. The analyst parses by header.
+- **Table columns are fixed**: don't rename or reorder. The analyst parses by header, so a reader that does not know a column (such as the §7 `high risk?` column, right after `requires_permission?`) ignores it.
 - **§2 Mermaid diagram is required.** Every §3 entity must appear; every §5 edge must appear. Regenerate when entities or relationships change.
 - **§7 lifecycle states**: one sub-section per `role = master` entity that has lifecycle. Reference-data masters without lifecycle (e.g. `recruitment_sources`) are skipped from §7 but still appear in §3.
-- **§7 `requires_permission?` ✓ rows carry a `derived gate` per the access level:** under `raci`, the gate's own code with a matching §8.1 `workflow-gate (lifecycle)` row; under every other access level, `<slug>:admin` and no §8.1 gate row. The architect's pre-save verification enforces this.
-- **§9 emission — two layers.** The §9.1 **baseline roles** and **permission hierarchy** are always emitted (derived from §8.1; process gates are never rolled up under `<slug>:admin`). The §9.1 **RACI realization** + **Processes wired** catalog and **§9.2 functional ownership** (the RACI trio) follow the access level: required under `raci` (drafted when missing and always confirmed by the user, Stage 11); under every other access level never drafted, and preserved unchanged when inherited from a catalog source. When RACI realization is present, its rows MUST mention every persona in the frontmatter `persona` list (and vice versa); when it is absent, omit the `persona` key.
+- **§7 `requires_permission?` ✓ rows carry a `derived gate` per the access level:** under `gated` and `raci`, the gate's own code with a matching §8.1 `workflow-gate (lifecycle)` row; under every other access level, `<slug>:admin` and no §8.1 gate row. The architect's pre-save verification enforces this.
+- **§9 emission: two layers.** The §9.1 **baseline roles** and **permission hierarchy** are always emitted (derived from §8.1; a process gate rolls up under `<slug>:admin` under `gated`, and under `raci` unless it is high risk). The §9.1 **RACI realization** + **Processes wired** catalog and **§9.2 functional ownership** (the RACI trio) follow the access level: required under `raci` (drafted when missing and always confirmed by the user, Stage 11); under every other access level never drafted, and preserved unchanged when inherited from a catalog source. When RACI realization is present, its rows MUST mention every persona in the frontmatter `persona` list (and vice versa); when it is absent, omit the `persona` key.
 - **No fields. No JsonLogic. No DDL.** The blueprint is platform-agnostic and entity-level only. Field-level work happens in the analyst's spec.
 - **The one field-level exception, `## Additional Requirements Specification`.** An OPTIONAL, omit-when-unused free-prose section between §2 and §3 for a requirement the analyst must honor but cannot derive from the entity-level structure (a field a cost / rollup view depends on, a fixed unit or currency, a cross-module dedup rule). Compact technical register, backticked identifiers expected; Conventions 6 / 8 do not apply, Conventions 1 / 2 do. Author on greenfield only when genuinely needed; preserve and adjust on clone / customize / extend. Keep it narrow, it is not a backdoor for field tables.
 - **Greenfield vs catalog-clone.** Greenfield: §5.3 and §6 are **kept (heading present) and carry the canonical `_(none: <short reason>)_` placeholder** when the conversation surfaced no cross-scope edges / cross-domain context; §6 carries the handoff rows the user accepted in the Stage 7 confirmation, and rows never shown are not written; the §9 RACI trio (RACI realization / Processes wired / functional ownership) is emitted only under the `raci` access level (an all-or-nothing trio inside §9, not a top-level-section omission — §9 and §9.1 stay present). Catalog-clone: §5.3, §6, the §9 optional layer, and `related_modules` are inherited from the source and preserved — trimmed/extended only as the customize conversation requires; any §5.3/§6 sub-block trimmed empty keeps its heading with the `_(none: …)_` placeholder.
@@ -457,7 +459,7 @@ _Market-level RACI: which business function OWNS / CONTRIBUTES-TO / CONSUMES thi
 - **`version: "3.1"`** — the file format version, the same in blueprint and spec files. It changes only when the file format changes, and only with the user's approval. Downstream parsers read §3 **by header name, not column position**.
 - **`license`** — catalog metadata (e.g. `MIT`). Passes through to the spec; not provisioned to the module record today (follow-up when the platform exposes a `modules.license` column).
 - **`system_name`** — the display name shown to the user; also the module name (maps to `modules.module_name`). Acronyms stay as acronyms (ATS, CRM, ITSM).
-- **`icon_name`** — the module's UI icon: a Lucide icon name in kebab-case (e.g. `briefcase`, `users`, `circle-help`) or an icon URL; find a name as `use-semantius/references/data-modeling.md` → "Icons are Lucide icons" describes. Maps to `modules.icon_name`.
+- **`icon_name`** — the module's UI icon: a Lucide icon name in kebab-case (e.g. `briefcase`, `users`, `circle-question-mark`) or an icon URL; find a name as `use-semantius/references/data-modeling.md` → "Icons are Lucide icons" describes. Maps to `modules.icon_name`.
 - **`tagline`** — one-line marketing-voice line for catalog / card surfaces (the elevator pitch). Also used by the deployer as the module record's `description` column (`modules.description`), shown beside the name in the selector — so keep it concise enough for the chip. Distinct from §1 Overview (analyst-voice narrative).
 - **`description`** — longer marketing-voice prose for the catalog page. Multi-line YAML block (`|`) is fine. Reads to a buyer, not to the analyst. Distinct from §1 Overview which is analyst-voice; not provisioned today (follow-up when the platform exposes a `modules.long_description` column).
 - **`system_slug`** — lowercase kebab-case identifier (`it-ops-starter`). Equals the module slug the deployer creates. The file name is exactly `<system_slug>-semantic-blueprint.md`. **Never** appears as another name in §8.
@@ -470,22 +472,22 @@ _Market-level RACI: which business function OWNS / CONTRIBUTES-TO / CONSUMES thi
 
   | Value | Permissions | Process gates |
   |---|---|---|
-  | `custom` | set up by hand; the pipeline creates or changes no permission, role or access level | — |
+  | `custom` | set up by hand; the pipeline creates or changes no permission, role or access level | none |
   | `basic` | `<slug>:read`, `<slug>:manage` | not enforced |
   | `advanced` | `read`, `manage`, `admin` | not enforced |
-  | `gated` | `read`, `manage`, `admin` | enforced: entering a gated state (or a gated creation) requires `<slug>:admin` directly; no per-gate permission |
-  | `raci` | `read`, `manage`, `admin`, plus one `workflow-gate (lifecycle)` permission per gate | enforced: each gate's own permission, held **only** by the business roles the confirmed RACI matrix names; **not** included in `<slug>:admin` |
+  | `gated` | `read`, `manage`, `admin`, plus one `workflow-gate (lifecycle)` permission per gate | enforced: each gate's own permission, held by the admin role (`<slug>:admin` includes every gate) |
+  | `raci` | `read`, `manage`, `admin`, plus one `workflow-gate (lifecycle)` permission per gate | enforced: each gate's own permission, held by the Accountable business role the confirmed RACI matrix names, and by the admin role except on high-risk gates |
 
   `gated` and `raci` require at least one process gate; `raci` also requires the RACI trio (confirmed matrix).
 - **`raci_mode`** — OPTIONAL hint, read by the analyst's existing RACI-mode derivation; only meaningful when `access_scope: raci`.
 
 ### Mode handling
 
-- **Greenfield**: §5.3 and §6 (all four sub-sections) are **kept (headings present) with the canonical `_(none: <short reason>)_` placeholder** unless the user explicitly requested cross-scope edges or cross-domain handoffs; the §6 rows the user accepts in the Stage 7 confirmation count as requested. No bare empty headings, no free-text stubs — every canonical heading is present and either populated or placeholdered.
+- **Greenfield**: §5.3 and §6 (all four sub-sections) are **kept (headings present) with the canonical `_(none: <short reason>)_` placeholder** unless the user explicitly requested cross-scope edges or cross-domain handoffs; the §6 rows accepted in Stage 7 (confirmed in expert flow, as drafted in guided and fast flow) count as requested. No bare empty headings, no free-text stubs — every canonical heading is present and either populated or placeholdered.
 - **Catalog-clone**: inherit §5.3 and §6 from the source blueprint. Let the user trim or extend during the customize conversation. After trim: any sub-section that ends up empty **keeps its heading and carries the `_(none: <short reason>)_` placeholder** — never omit the heading.
 - **Customize**: load the source blueprint, present its §1 + §3 table to the user, ask what to change; the rest of the file is preserved unless the change requires it. Apply the same keep-with-placeholder rule after any trim.
 - **`## Additional Requirements Specification` (all modes)**: OPTIONAL and omit-when-unused. Greenfield authors it only when a non-derivable requirement exists; catalog-clone and customize **preserve and adjust** it like any inherited section, never silently drop it. It is not a canonical section, so its absence is never a placeholder case and is never flagged.
 
-**Empty-section convention (the single rule).** Every canonical top-level / numbered section (and the §5.3 / §6 sub-blocks) is **always present**. When a section is intentionally empty, keep its heading and write the canonical placeholder **`_(none: <short reason>)_`** (lowercase `none`, a **colon** not an em-dash; bare `_(none)_` is allowed when a reason adds nothing) in place of its table or rows. **Omitting a canonical section is forbidden**, **bare empty headings are forbidden**, and **free-text stubs** like *"no cross-scope edges declared"*, *"no cross-domain context"*, or *"no industry-scoped aliases"* are forbidden. The architect's pre-save verification rejects a **missing** canonical section (and a non-canonical free-text stub), and **accepts** the `_(none: …)_` placeholder. The only omit-when-empty exceptions are the §3 per-entity sub-blocks (Computed fields / Validation rules / Input-type rules / Select rule), which are field-level and not authored at blueprint stage, and the §3 `**Key types:**` sub-block (present only when some entity uses a non-default key).
+**Empty-section convention (the single rule).** Every canonical top-level / numbered section (and the §5.3 / §6 sub-blocks) is **always present**. When a section is intentionally empty, keep its heading and write the canonical placeholder **`_(none: <short reason>)_`** (lowercase `none`, a **colon** not an em-dash; bare `_(none)_` is allowed when a reason adds nothing) in place of its table or rows. **Omitting a canonical section is forbidden**, **bare empty headings are forbidden**, and **free-text stubs** like *"no cross-scope edges declared"*, *"no cross-domain context"*, or *"no industry-scoped aliases"* are forbidden. The architect's pre-save verification rejects a **missing** canonical section (and a non-canonical free-text stub), and **accepts** the `_(none: …)_` placeholder. The only omit-when-empty exceptions are the §3 per-entity sub-blocks (Computed fields / Validation rules / Input-type rules / Select rule), which are field-level and not authored at blueprint stage, and the §3 `**Key types:**` sub-block (present only when some entity uses a non-default key), and the §9 RACI trio (RACI realization, Processes wired, §9.2 functional ownership), which is absent under every access level other than `raci` unless inherited from a source blueprint (never a `_(none: …)_` placeholder in its place).
 
 **Mode detection by `naming_mode`:** Greenfield blueprints carry `naming_mode: template:<vendor>` or `naming_mode: agent-optimized` in the frontmatter. Catalog-clone blueprints don't carry `naming_mode` at all. This is the canonical signal — also drives the frontmatter rule that greenfield files don't carry `departments` / `industries` (they always carry `related_modules`), and catalog-clone files don't carry `naming_mode`.

@@ -190,8 +190,8 @@ export type RawCatalogIndex = {
 };
 
 // Pure in-memory: build the index Maps from raw arrays. Reused by loadCatalogIndex
-// (fresh from PostgREST) and the cache loader (deserialized from disk).
-function buildCatalogIndex(raw: RawCatalogIndex): CatalogIndex {
+// (fresh from PostgREST), the cache loader (deserialized from disk), and offline test fixtures.
+export function buildCatalogIndex(raw: RawCatalogIndex): CatalogIndex {
   const users = raw.dataObjects.find((d) => d.kind === "platform_builtin" && d.data_object_name === "users");
   return {
     domains: raw.domains,
@@ -251,6 +251,7 @@ export type AllRelationships = {
   processes: any[]; // business_processes
   handoffProcesses: any[]; // handoff_processes (process<->handoff junction, APQC tagging) with handoff endpoints embedded
   processTools: any[]; // process_tools (process<->tool coverage; consumed only for the "process used somewhere" set)
+  triggerEvents: any[]; // trigger_events (the events an entity publishes; §9 Informed rows list them)
 
   // Pre-built indices keyed by id, populated by loadAllRelationships.
   dmdoByModuleId: Map<number, any[]>;
@@ -269,9 +270,10 @@ export type AllRelationships = {
   domainRolesById: Map<number, any>;
   businessFunctionsById: Map<number, any>;
   processesById: Map<number, any>;
+  triggerEventsByDataObjectId: Map<number, any[]>;
 };
 
-type RawRelationships = {
+export type RawRelationships = {
   dmdo: any[];
   ddo: any[];
   aliases: any[];
@@ -287,11 +289,13 @@ type RawRelationships = {
   processes: any[];
   handoffProcesses: any[];
   processTools: any[];
+  triggerEvents?: any[]; // optional so a cache file written before the trigger_events load still parses
 };
 
 // Pure in-memory: build the Map indices from raw arrays. Reused by loadAllRelationships
-// (fresh from PostgREST) and loadCachedAllRelationships (deserialized from disk).
-function buildRelationshipIndices(raw: RawRelationships): AllRelationships {
+// (fresh from PostgREST), loadCachedAllRelationships (deserialized from disk), and offline
+// test fixtures.
+export function buildRelationshipIndices(raw: RawRelationships): AllRelationships {
   // Deterministic lifecycle order. The `/data_object_lifecycle_states` query orders by
   // (data_object_id, state_order), but state_order is not guaranteed unique per entity (a data bug
   // the §7 M4 soft-assert flags, e.g. okr_objectives with two states at order 4). Tied rows then
@@ -303,6 +307,27 @@ function buildRelationshipIndices(raw: RawRelationships): AllRelationships {
     ((a.state_order ?? -1) - (b.state_order ?? -1)) ||
     (String(a.state_name ?? "") < String(b.state_name ?? "") ? -1 : String(a.state_name ?? "") > String(b.state_name ?? "") ? 1 : 0),
   );
+  // The dmdo, relationship, process_raci, role_modules and business_processes queries carry no
+  // `order=`, so PostgREST returns them in heap order, which can change between fetches. Sort them
+  // here for the same reason as the lifecycle sort above.
+  const byNum = (...keys: string[]) => (a: any, b: any): number => {
+    for (const k of keys) {
+      const d = (a[k] ?? -1) - (b[k] ?? -1);
+      if (d) return d;
+    }
+    return 0;
+  };
+  raw.dmdo.sort((a: any, b: any) =>
+    byNum("domain_module_id", "data_object_id")(a, b) ||
+    (String(a.role ?? "") < String(b.role ?? "") ? -1 : String(a.role ?? "") > String(b.role ?? "") ? 1 : 0),
+  );
+  raw.relationships.sort(byNum("id", "data_object_id", "related_data_object_id"));
+  (raw.processRaci ?? []).sort(byNum("id"));
+  (raw.roleModules ?? []).sort(byNum("id"));
+  (raw.processes ?? []).sort(byNum("id"));
+  // trigger_events is fetched `order=id.asc`; sorted here too so the cache-read path and offline
+  // fixtures see the same order as a fresh fetch.
+  const triggerEvents = [...(raw.triggerEvents ?? [])].sort(byNum("id"));
 
   const groupBy = <T>(rows: T[], keyFn: (r: T) => number | null | undefined): Map<number, T[]> => {
     const out = new Map<number, T[]>();
@@ -343,6 +368,7 @@ function buildRelationshipIndices(raw: RawRelationships): AllRelationships {
     processes: raw.processes ?? [],
     handoffProcesses: raw.handoffProcesses ?? [],
     processTools: raw.processTools ?? [],
+    triggerEvents,
     dmdoByModuleId: groupBy(raw.dmdo, (r: any) => r.domain_module_id),
     dmdoByDataObjectId: groupBy(raw.dmdo, (r: any) => r.data_object_id),
     ddoByDomainId: groupBy(raw.ddo, (r: any) => r.domain_id),
@@ -359,6 +385,7 @@ function buildRelationshipIndices(raw: RawRelationships): AllRelationships {
     domainRolesById: new Map((raw.domainRoles ?? []).map((r: any) => [r.id as number, r])),
     businessFunctionsById: new Map((raw.businessFunctions ?? []).map((r: any) => [r.id as number, r])),
     processesById: new Map((raw.processes ?? []).map((r: any) => [r.id as number, r])),
+    triggerEventsByDataObjectId: groupBy(triggerEvents, (r: any) => r.data_object_id),
   };
 }
 
@@ -406,7 +433,7 @@ export function deriveHostDomains(
 }
 
 export async function loadAllRelationships(): Promise<AllRelationships> {
-  const [dmdo, ddo, aliases, relationships, lifecycle, handoffs, modulesForHost, domainRoles, roleModules, processRaci, businessFunctions, businessFunctionDomains, processes, handoffProcesses, processTools] = await Promise.all([
+  const [dmdo, ddo, aliases, relationships, lifecycle, handoffs, modulesForHost, domainRoles, roleModules, processRaci, businessFunctions, businessFunctionDomains, processes, handoffProcesses, processTools, triggerEvents] = await Promise.all([
     pg("GET", "/domain_module_data_objects?select=domain_module_id,data_object_id,role,necessity,notes&limit=20000"),
     // domain_data_objects (the legacy domain-grain rollup) is RETIRED: masters derive from
     // domain_module_data_objects. The source is kept empty (not a GET) so the entity can be
@@ -415,9 +442,9 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     // 2026-06-02 "<masters> audit definition reads the module junction".
     Promise.resolve([] as any[]),
     pg("GET", "/data_object_aliases?select=data_object_id,alias_name,alias_type,is_preferred,industry_id,solution_id,notes&order=alias_name.asc&limit=20000"),
-    pg("GET", "/data_object_relationships?select=data_object_id,related_data_object_id,relationship_type,relationship_kind,relationship_verb,inverse_verb,is_required,owner_side,notes&limit=20000"),
-    pg("GET", "/data_object_lifecycle_states?select=data_object_id,state_name,state_order,description,is_initial,is_terminal,requires_permission,permission_verb_override,domain_module_id,process_id&order=data_object_id.asc,state_order.asc&limit=20000"),
-    pg("GET", "/handoffs?select=source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,data_object_id,integration_pattern,friction_level,description,notes,data_objects(data_object_name),trigger_events(event_name,description,from_state,to_state,event_category)&order=target_domain_id.asc&limit=20000"),
+    pg("GET", "/data_object_relationships?select=id,data_object_id,related_data_object_id,relationship_type,relationship_kind,relationship_verb,inverse_verb,is_required,owner_side,notes&limit=20000"),
+    pg("GET", "/data_object_lifecycle_states?select=id,data_object_id,state_name,state_order,description,is_initial,is_terminal,requires_permission,is_high_risk,permission_verb_override,domain_module_id,process_id&order=data_object_id.asc,state_order.asc&limit=20000"),
+    pg("GET", "/handoffs?select=id,trigger_event_id,source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,data_object_id,integration_pattern,friction_level,description,notes,data_objects(data_object_name),trigger_events(event_name,description,from_state,to_state,event_category)&order=target_domain_id.asc&limit=20000"),
     // hostDomains is DERIVED, not stored (the `domain_module_host_domains` table was dropped).
     // Fetch the modules needed to derive it (id + primary domain + kind); deriveHostDomains() below
     // turns this plus dmdo into the same {domain_module_id, domain_id} shape every reader expects.
@@ -436,6 +463,9 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     pg("GET", "/handoff_processes?select=handoff_id,process_id,role,proposal_source,record_status,handoff:handoffs(source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id)&limit=20000"),
     // process_tools contributes only to the "process used somewhere" set (small today); process_id suffices.
     pg("GET", "/process_tools?select=process_id&limit=20000"),
+    // trigger_events: the events each entity publishes. The blueprint's §9 Informed rows list the
+    // events on their process's gated entities (blueprint_derive.ts deriveRaciRealization).
+    pg("GET", "/trigger_events?select=id,event_name,data_object_id,domain_module_id,event_category,from_state,to_state&order=id.asc&limit=20000"),
   ]);
 
   return buildRelationshipIndices({
@@ -454,6 +484,7 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     processes: processes ?? [],
     handoffProcesses: handoffProcesses ?? [],
     processTools: processTools ?? [],
+    triggerEvents: triggerEvents ?? [],
   });
 }
 
@@ -515,6 +546,7 @@ export function writeCatalogCache(
         processes: all.processes.length,
         handoffProcesses: all.handoffProcesses.length,
         processTools: all.processTools.length,
+        triggerEvents: all.triggerEvents.length,
       },
     },
     index: {
@@ -539,6 +571,7 @@ export function writeCatalogCache(
       processes: all.processes,
       handoffProcesses: all.handoffProcesses,
       processTools: all.processTools,
+      triggerEvents: all.triggerEvents,
     },
   };
   writeFileSync(cacheFile, JSON.stringify(payload), "utf8");
@@ -567,9 +600,10 @@ export async function loadCachedCatalog(
     try {
       const text = readFileSync(cacheFile, "utf8");
       const parsed: CacheFilePayload = JSON.parse(text);
-      // Cache file might predate the index extension — require both index and raw
-      // sections to consider it valid. Otherwise fall through to fresh fetch.
-      if (parsed.index && parsed.raw) {
+      // Cache file might predate the index extension or the trigger_events load: require the
+      // index and raw sections and raw.triggerEvents to consider it valid. Otherwise fall through
+      // to a fresh fetch (an old cache would otherwise read as "no events" for its whole TTL).
+      if (parsed.index && parsed.raw && Array.isArray(parsed.raw.triggerEvents)) {
         const generatedAt = new Date(parsed._meta.generated_at).getTime();
         const ageMs = Date.now() - generatedAt;
         if (ageMs < ttlMs) {
@@ -585,7 +619,7 @@ export async function loadCachedCatalog(
           `catalog cache stale (age ${Math.round(ageMs / 1000)}s > ttl ${Math.round(ttlMs / 1000)}s), refreshing from server`,
         );
       } else {
-        console.error("catalog cache file predates index extension, refreshing from server");
+        console.error("catalog cache file predates the current cache shape, refreshing from server");
       }
     } catch (e) {
       console.error(`catalog cache unreadable (${(e as Error).message}), refreshing from server`);

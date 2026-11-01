@@ -1,6 +1,6 @@
 schema_version: 2
 domain: SRM
-status: built
+status: audit_stale
 next_action_by: agent
 last_audit: "2026-06-19"
 

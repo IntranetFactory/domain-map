@@ -43,6 +43,132 @@ let writeCount = 0;
 /** Count of successful mutating write CALLS so far (a bulk call counts once; feeds the halt / success summary). */
 export const writes = (): number => writeCount;
 
+// ───────────────────────────────── check run ────────────────────────────────────
+//
+// `DEPLOY_CHECK=1 bun run .tmp_deploy/deploy_<slug>.ts` runs the whole script with
+// every write checked and recorded but NEVER sent: reads still go to live, and the
+// rows a create would have added are kept in memory and returned by later reads
+// that match them (`eq.`, `in.()` and `is.null` filters), so `ensure*` re-reads,
+// FK ids and the next stage behave as on a real run. A recorded `create_entity`
+// also records the label column field the platform creates with the entity (title
+// from `singular_label`, `input_type: "required"`, no description, no
+// `catalog_field_code`), so the post-create read of it finds it. A script error (an undefined
+// helper, a wrong payload shape, a field row without `table_name`) halts the dry
+// run before anything reached the platform. Updates to rows that already exist
+// live are not reflected in later reads, and `verifyScaffold` /
+// `stampDeployedVersion` are skipped: a check run checks the script, not the result.
+
+export const CHECK_RUN = process.env.DEPLOY_CHECK === "1";
+const dryRows = new Map<string, any[]>();   // read tool (or `pg:/<table>`) → rows a check-run create added
+let dryId = 0;
+const dryWarned = new Set<string>();
+
+/** `col=op.value` triples of a PostgREST filter / query string (`select`, `order`, `limit`, `offset` dropped); `null` when a part is not of that form. */
+function parseFilters(filters: string): Array<[string, string, string]> | null {
+  const out: Array<[string, string, string]> = [];
+  for (const part of filters.split("&")) {
+    if (!part) continue;
+    const eq = part.indexOf("=");
+    if (eq < 0) return null;
+    const col = part.slice(0, eq);
+    if (["select", "order", "limit", "offset"].includes(col)) continue;
+    const rest = part.slice(eq + 1);
+    const dot = rest.indexOf(".");
+    if (dot < 0) return null;
+    out.push([col, rest.slice(0, dot), rest.slice(dot + 1)]);
+  }
+  return out;
+}
+
+const decode = (s: string): string => { try { return decodeURIComponent(s); } catch { return s; } };
+const unquote = (s: string): string => (s.startsWith('"') && s.endsWith('"') ? s.slice(1, -1).replace(/\\(.)/g, "$1") : s);
+
+/** Rows of the check-run store under `key` that match `filters`. An unsupported operator matches nothing (warned once). */
+function dryMatch(key: string, filters: string): any[] {
+  const rows = dryRows.get(key) ?? [];
+  if (!rows.length) return [];
+  const triples = parseFilters(filters);
+  const warn = (what: string): any[] => {
+    if (!dryWarned.has(what)) { dryWarned.add(what); console.warn(`  [check run] ${what}: rows this check run created are not matched`); }
+    return [];
+  };
+  if (!triples) return warn(`unparsed filter "${filters}"`);
+  const tests: Array<(r: any) => boolean> = [];
+  for (const [col, op, raw] of triples) {
+    if (op === "eq") { const v = unquote(decode(raw)); tests.push((r) => String(r[col]) === v); }
+    else if (op === "in") {
+      const set = new Set(raw.replace(/^\(|\)$/g, "").split(",").map((v) => unquote(decode(v))));
+      tests.push((r) => set.has(String(r[col])));
+    } else if (op === "is" && raw === "null") tests.push((r) => r[col] === null || r[col] === undefined);
+    else return warn(`operator ${op}. on ${col}`);
+  }
+  return rows.filter((r) => tests.every((t) => t(r)));
+}
+
+/** The shape checks a check run applies before recording a write; each problem is one line of the halt. */
+function dryProblems(tool: string, p: any): string[] {
+  const problems: string[] = [];
+  if (tool.startsWith("create_")) {
+    const rows = Array.isArray(p?.data) ? p.data : p?.data && typeof p.data === "object" ? [p.data] : null;
+    if (!rows || !rows.length) return [`${tool}: data must be an object or a non-empty array`];
+    rows.forEach((r: any, i: number) => {
+      const name = r.field_name ?? r.table_name ?? r.permission_name ?? r.module_slug ?? r.slug ?? `row ${i}`;
+      if ("data" in r) problems.push(`${tool} ${name}: payload wrapped twice ({data: {data: …}}); pass raw rows`);
+      if (tool === "create_field") {
+        for (const k of ["table_name", "field_name", "format"]) if (typeof r[k] !== "string" || !r[k]) problems.push(`create_field ${name}: no ${k}`);
+        if ("is_nullable" in r) problems.push(`create_field ${name}: is_nullable is platform-computed; leave it out`);
+        if ("required" in r) problems.push(`create_field ${name}: there is no required column; mandatory is input_type: "required"`);
+      }
+      if (tool === "create_entity") {
+        if (typeof r.table_name !== "string" || !r.table_name) problems.push(`create_entity ${name}: no table_name`);
+        if (typeof r.module_id !== "number") problems.push(`create_entity ${name}: module_id must be an integer id`);
+      }
+    });
+  } else if (tool === "update_entity") {
+    if (p?.table_name === undefined) problems.push("update_entity: table_name goes at the top level (use updateEntity)");
+    if (!p?.data || typeof p.data !== "object") problems.push("update_entity: no data");
+  } else if (tool === "update_field" || tool === "delete_field") {
+    if (p?.id === undefined) problems.push(`${tool}: needs id "<table_name>.<field_name>"`);
+  } else if (tool.startsWith("update_") || tool.startsWith("delete_")) {
+    if (p?.id === undefined && p?.permission_name === undefined && p?.table_name === undefined) problems.push(`${tool}: no id`);
+  }
+  return problems;
+}
+
+/** The check-run `write`: check, record in the store, return what the platform would. Counts like a real write. */
+function dryWrite(tool: string, payload: any, label: string): any {
+  const problems = dryProblems(tool, payload);
+  if (problems.length) throw new Error(`write ${label} refused by the check run:\n  - ${problems.join("\n  - ")}`);
+  const key = `read_${tool.replace(/^(create|update|delete)_/, "")}`;
+  const store = dryRows.get(key) ?? [];
+  dryRows.set(key, store);
+  let out: any[] = [];
+  if (tool.startsWith("create_")) {
+    out = (Array.isArray(payload.data) ? payload.data : [payload.data]).map((r: any) => ({
+      ...r, id: r.id ?? (tool === "create_field" ? `${r.table_name}.${r.field_name}` : -(++dryId)),
+    }));
+    store.push(...out);
+    if (tool === "create_entity") {   // the platform creates the label column field with the entity
+      const fields = dryRows.get("read_field") ?? [];
+      dryRows.set("read_field", fields);
+      for (const r of out) if (r.label_column) fields.push({
+        id: `${r.table_name}.${r.label_column}`, table_name: r.table_name, field_name: r.label_column, format: "text",
+        title: r.singular_label ?? "", description: "", catalog_field_code: "", input_type: "required", unique_value: false,
+      });
+    }
+  } else {
+    const keyCol = payload.permission_name !== undefined ? "permission_name" : payload.id !== undefined ? "id" : "table_name";
+    const keys = new Set([payload[keyCol]].flat().map(String));
+    const hit = (r: any) => keys.has(String(r[keyCol]));
+    out = store.filter(hit);
+    if (tool.startsWith("update_")) for (const r of out) Object.assign(r, payload.data);
+    else dryRows.set(key, store.filter((r) => !hit(r)));
+  }
+  writeCount++;
+  console.log(`  [check run] ${label}: ${tool.startsWith("create_") ? `${out.length} row(s)` : "checked"}, not sent`);
+  return out;
+}
+
 /**
  * Loud mutating call (`create_*` / `update_*` / `delete_*` / `postgrestRequest`
  * POST/PATCH/DELETE). The payload goes over stdin, so no shell quoting layer
@@ -54,6 +180,7 @@ export const writes = (): number => writeCount;
  * `--single` for them.
  */
 export async function write(tool: string, payload: unknown, label = tool): Promise<any> {
+  if (CHECK_RUN) return dryWrite(tool, payload, label);
   const proc = Bun.spawn(["semantius", "call", "crud", tool], {
     stdin: "pipe", stdout: "pipe", stderr: "pipe",
   });
@@ -90,9 +217,12 @@ export async function read1(tool: string, filters: string): Promise<any | null> 
     new Response(proc.stderr).text(),
   ]);
   const code = await proc.exited;
-  if (code === 0) return JSON.parse(out);   // exactly one row
-  if (code === 1) return null;              // not found — the normal create branch
-  throw new Error(`read1 ${tool} failed (exit ${code}): ${err}`);  // 2/3/4/5 — halt
+  if (code !== 0 && code !== 1) throw new Error(`read1 ${tool} failed (exit ${code}): ${err}`);  // 2/3/4/5 — halt
+  const live = code === 0 ? JSON.parse(out) : null;   // 0 → exactly one row; 1 → not found, the normal create branch
+  if (!CHECK_RUN) return live;
+  const rows = [...(live ? [live] : []), ...dryMatch(tool, filters)];
+  if (rows.length > 1) throw new Error(`read1 ${tool} (${filters}): ${rows.length} rows match in the check run (ambiguous, exit 2 on a real run)`);
+  return rows[0] ?? null;
 }
 
 /**
@@ -172,7 +302,8 @@ export async function readMany(tool: string, filters: string): Promise<any[]> {
   const code = await proc.exited;
   if (code !== 0) throw new Error(`readMany ${tool} failed (exit ${code}): ${err}`);
   const parsed = JSON.parse(out);
-  return Array.isArray(parsed) ? parsed : [parsed];
+  const live = Array.isArray(parsed) ? parsed : [parsed];
+  return CHECK_RUN ? [...live, ...dryMatch(tool, filters)] : live;
 }
 
 // ───────────────────────────── bulk (array) primitives ────────────────────────
@@ -314,6 +445,33 @@ export async function ensureMany(
   return live;
 }
 
+/**
+ * The fields pass of ONE entity: create-if-missing for its field rows → `Map<field_name, liveRow>`.
+ * Stamps what every `create_field` item needs and a hand-built row most often lacks: `table_name`
+ * (the `table_name=eq.<t>` read filter does not put it on the rows) and `catalog_field_code` (the
+ * spec `field_name`, when the row carries none). Refuses before writing a row without `field_name`
+ * or `format`, a row naming another table, and the two from-memory columns (`required`, `is_nullable`).
+ * Then one `ensureMany`: one read, ONE `create_field` call for the missing rows, one re-read.
+ *
+ *   const live = await ensureFields("tickets", fieldRows.tickets.filter((f) => !liveBy.has(f.field_name)));
+ */
+export async function ensureFields(
+  table: string, rows: ReadonlyArray<Record<string, unknown>>,
+): Promise<Map<string, any>> {
+  const problems: string[] = [];
+  const stamped = rows.map((r, i) => {
+    const name = typeof r.field_name === "string" && r.field_name ? r.field_name : `row ${i}`;
+    if (name === `row ${i}`) problems.push(`row ${i}: no field_name`);
+    if (typeof r.format !== "string" || !r.format) problems.push(`${name}: no format`);
+    if (r.table_name !== undefined && r.table_name !== table) problems.push(`${name}: table_name ${r.table_name} is not ${table}`);
+    if ("required" in r) problems.push(`${name}: there is no required column; mandatory is input_type: "required"`);
+    if ("is_nullable" in r) problems.push(`${name}: is_nullable is platform-computed; leave it out`);
+    return { ...r, table_name: table, catalog_field_code: r.catalog_field_code || r.field_name };
+  });
+  if (problems.length) throw new Error(`ensureFields ${table}: refusing to write:\n  - ${problems.join("\n  - ")}`);
+  return ensureMany("read_field", "field_name", (f) => f.field_name, "create_field", stamped, `table_name=eq.${table}`);
+}
+
 const BASED_KEY_TYPES = new Set(["is_a", "has_a"]);
 
 /**
@@ -433,6 +591,24 @@ export async function pgRequest(
       `(the CLI rejects it, SINGLE_ARRAY_INPUT); use postMany() for a bulk insert`,
     );
   }
+  const [table, query = ""] = path.split("?");
+  const key = `pg:${table}`;
+  if (CHECK_RUN && method !== "GET") {
+    let out: any[] = [];
+    if (method === "POST") {
+      out = (Array.isArray(body) ? body : [body]).map((r: any) => ({ ...r, id: r?.id ?? -(++dryId) }));
+      dryRows.set(key, [...(dryRows.get(key) ?? []), ...out]);
+    } else {
+      out = dryMatch(key, query);
+      if (method === "PATCH") {
+        for (const r of out) Object.assign(r, body);
+        const id = parseFilters(query)?.find(([c, op]) => c === "id" && op === "eq")?.[2];
+        if (!out.length && id !== undefined) out = [{ ...(body as object), id: decode(id) }];   // a live row
+      } else dryRows.set(key, (dryRows.get(key) ?? []).filter((r) => !out.includes(r)));
+    }
+    console.log(`  [check run] ${method} ${table}: ${out.length} row(s), not sent`);
+    return single ? out[0] ?? null : out;
+  }
   const argv = single
     ? ["semantius", "--single", "call", "crud", "postgrestRequest"]
     : ["semantius", "call", "crud", "postgrestRequest"];
@@ -446,6 +622,13 @@ export async function pgRequest(
     new Response(proc.stderr).text(),
   ]);
   const code = await proc.exited;
+  if (CHECK_RUN) {   // a GET: live rows plus the rows this check run inserted; a table the check run would create is not live yet
+    const created = dryMatch(key, query);
+    const dryTable = dryRows.has(key) || (dryRows.get("read_entity") ?? []).some((e) => `/${e.table_name}` === table);
+    if (code !== 0 && !dryTable) throw new Error(`pgRequest ${method} ${path} failed (exit ${code}): ${err}`);
+    const live = code === 0 && out.trim() ? JSON.parse(out) : [];
+    return [...(Array.isArray(live) ? live : [live]), ...created];
+  }
   if (code !== 0) throw new Error(`pgRequest ${method} ${path} failed (exit ${code}): ${err}`);
   return out.trim() ? JSON.parse(out) : null;
 }
@@ -501,7 +684,7 @@ export async function seedEnsure(
  * from a failed call landed. Bare INSERT: a re-run appends a second set — use
  * `seedEnsureMany` when a re-run is plausible.
  *
- *   const campaigns = await postMany("/campaigns", campaignRows);   // rows built in a loop, one call
+ *   const accounts = await postMany("/accounts", accountRows);   // rows built in a loop, one call
  */
 export async function postMany(
   path: string, rows: ReadonlyArray<Record<string, unknown>>, size = BATCH_SIZE,
@@ -541,7 +724,7 @@ export async function postMany(
  * the missing rows, and return ALL rows WITH ids in INPUT order (so FK capture
  * and per-table counts work exactly like `postMany`). `keyField` must be a
  * unique, stable-across-runs column present on every row (a `unique_value`
- * field built with `uniq(base, i)` / `combine(...)`); empty or duplicate keys are
+ * field: the fixed-seed `rng` regenerates it on every run); empty or duplicate keys are
  * rejected. Same uniform-keys rule as `postMany`. It never upserts (no
  * `on_conflict`, no `merge-duplicates`): existing rows are returned unchanged,
  * which is what `is_a` / `has_a` entities require (an upsert on them fails 42P10).
@@ -556,7 +739,7 @@ export async function postMany(
  *     only the extension's own fields plus `id` (a differing base value is refused,
  *     90246). Change base values afterwards with `patchById(<base table>, id, …)`.
  *
- *   const leads = await seedEnsureMany("/leads", leadRows, "email");
+ *   const contacts = await seedEnsureMany("/contacts", contactRows, "email");
  */
 export async function seedEnsureMany(
   path: string, rows: ReadonlyArray<Record<string, unknown>>, keyField: string,
@@ -568,7 +751,7 @@ export async function seedEnsureMany(
     return String(k);
   });
   if (new Set(keys).size !== keys.length) {
-    throw new Error(`seedEnsureMany ${table}: duplicate "${keyField}" values in the input — build the key with uniq() / combine()`);
+    throw new Error(`seedEnsureMany ${table}: duplicate "${keyField}" values in the input — build the key from r.deal / r.tuples parts, or uniq() for a code`);
   }
   const byKey = new Map<string, any>();
   for (const part of chunk(keys)) {
@@ -603,34 +786,118 @@ export async function patchById(
 }
 
 /**
- * Index-cycling pick: `pool[i % pool.length]`. The seed-factory primitive — drive each row's values
- * off the row index so a `for (let i = 0; i < target; i++)` loop both hits the count STRUCTURALLY and
- * gives even coverage (every §5 enum value and every pool entry appears in turn). Prefer this over
- * `Math.random()` picking, which can miss enum values and makes coverage non-deterministic.
+ * Seeded random generator for sample data, one per table: `const r = rng("contacts")`. The seed is fixed
+ * (42) and the table name gives each table its own sequence, so a re-run of the UNCHANGED script writes
+ * the same rows and `seedEnsureMany` converges. Any edit to the script (a table's count, a pool, the
+ * order of draws) can change that table's rows and the rows of every table that draws parents from it.
+ * Never `Math.random()`.
+ *   - `r.pick(pool)`         one random entry; repeats are fine (job title, email local part)
+ *   - `r.int(min, max)`      an integer in [min, max] (house number, quantity, amount, day offset)
+ *   - `r.chance(p)`          true with probability p (booleans with a realistic mix)
+ *   - `r.deal(pool, n)`      n entries, every pool entry once before any repeats, shuffled: enum values
+ *                            (each value appears once n >= the value count; repeat a value in the pool
+ *                            to weight it), FK parents, places, street names
+ *   - `r.distinct(pool, n)`  n DIFFERENT entries; throws when the pool has fewer than n (names, labels)
+ *   - `r.tuples(n, pools)`   n DISTINCT combinations, each part dealt (first + last name, two-word names);
+ *                            throws when the pools cannot give n combinations
  */
-export const pick = <T>(pool: T[], i: number): T => pool[i % pool.length];
+export function rng(stream: string, seed = 42) {
+  let s = seed >>> 0;
+  for (let k = 0; k < stream.length; k++) s = Math.imul(s ^ stream.charCodeAt(k), 0x01000193) >>> 0;
+  const next = (): number => {   // mulberry32
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const nonEmpty = (pool: readonly unknown[], what: string) => {
+    if (!pool.length) throw new Error(`rng("${stream}").${what}: empty pool`);
+  };
+  const int = (min: number, max: number): number => min + Math.floor(next() * (max - min + 1));
+  const chance = (p: number): boolean => next() < p;
+  const pick = <T>(pool: readonly T[]): T => {
+    nonEmpty(pool, "pick");
+    return pool[Math.floor(next() * pool.length)];
+  };
+  const deal = <T>(pool: readonly T[], n: number): T[] => {
+    nonEmpty(pool, "deal");
+    const out: T[] = [];
+    while (out.length < n) {
+      const round = [...pool];
+      for (let k = round.length - 1; k > 0; k--) {
+        const j = Math.floor(next() * (k + 1));
+        [round[k], round[j]] = [round[j], round[k]];
+      }
+      out.push(...round);
+    }
+    return out.slice(0, n);
+  };
+  const distinct = <T>(pool: readonly T[], n: number): T[] => {
+    const values = [...new Set(pool)];
+    if (values.length < n) {
+      throw new Error(`rng("${stream}").distinct: ${n} different entries asked, the pool has ${values.length}; build them with r.tuples`);
+    }
+    return deal(values, n);
+  };
+  const tuples = <T>(n: number, pools: ReadonlyArray<readonly T[]>): T[][] => {
+    pools.forEach((p) => nonEmpty(p, "tuples"));
+    const sets = pools.map((p) => [...new Set(p)]);   // a repeated pool entry is not a second value
+    const space = sets.reduce((acc, p) => acc * p.length, 1);
+    if (space < n) {
+      throw new Error(`rng("${stream}").tuples: ${n} distinct combinations asked, the pools give only ${space}; add pool entries`);
+    }
+    const key = (t: T[]) => JSON.stringify(t);
+    const seen = new Set<string>();
+    const firstFree = (): T[] => {   // near exhaustion: walk the combinations in order
+      for (let idx = 0; ; idx++) {
+        let q = idx;
+        const t = sets.map((p) => { const v = p[q % p.length]; q = Math.floor(q / p.length); return v; });
+        if (!seen.has(key(t))) return t;
+      }
+    };
+    const columns = sets.map((p) => deal(p, n));
+    const out: T[][] = [];
+    for (let k = 0; k < n; k++) {
+      let t = columns.map((c) => c[k]);
+      for (let tries = 0; seen.has(key(t)) && tries < 100; tries++) t = sets.map((p) => pick(p));
+      if (seen.has(key(t))) t = firstFree();
+      seen.add(key(t));
+      out.push(t);
+    }
+    return out;
+  };
+  return { next, int, chance, pick, deal, distinct, tuples };
+}
+
+const LATIN: Record<string, string> = { "ø": "o", "æ": "ae", "œ": "oe", "ß": "ss", "ł": "l", "đ": "d", "ð": "d", "þ": "th", "ı": "i" };
 
 /**
- * Mixed-radix pick across several pools so the row index visits every COMBINATION, not lockstep.
- * `combine(i, [firstNames, lastNames])` → `[ firstNames[i % F], lastNames[⌊i/F⌋ % L] ]`, giving F×L
- * distinct tuples from two small pools (vs. only max(F,L) when both share the same `i`). Compose enough
- * pools that the product of their lengths >= target, and every row's tuple is distinct. Destructure the
- * result: `const [fn, ln] = combine(i, [firstNames, lastNames]);`.
+ * Lowercase ASCII token for email local parts and domains: letters without a decomposed form
+ * transliterated (ø → o, æ → ae, ß → ss, ł → l, đ → d), accents stripped, everything but a-z / 0-9
+ * dropped. `slugify("Søren Østergaard")` → "sorenostergaard". Throws when nothing Latin is left
+ * (`李伟`, `Иван`): such a name carries a Latin form for its email.
  */
-export const combine = <T>(i: number, pools: T[][]): T[] => {
-  const out: T[] = [];
-  let q = i;
-  for (const p of pools) { out.push(p[q % p.length]); q = Math.floor(q / p.length); }
+export function slugify(s: string): string {
+  const out = s.toLowerCase()
+    .replace(/[øæœßłđðþı]/g, (c) => LATIN[c])
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]/g, "");
+  if (!out) throw new Error(`slugify("${s}"): no Latin letters left; give the name a Latin form for its email`);
   return out;
-};
+}
 
 /**
- * Collision-proof token for a `unique_value` / DB-UNIQUE field (email, code, external id): a base string
- * plus the strictly-increasing row index (and optional suffix). `uniq("ACCT-", i)` → "ACCT-0", "ACCT-1", …;
- * `uniq("ava.chen", i, "@example.com")` → "ava.chen0@example.com", … Never collides because `i` is unique
- * per row. A repeat in a `unique_value` field makes the insert fail with 409 and ABORTS the seed run before
- * the count guard runs — so compose such fields with `uniq` (or `combine` with product >= target), never a
- * bare `pick`.
+ * Sample-data email / web domain for an invented company: `exampleDomain("Beacon Foods")` →
+ * "beaconfoods.example.com". Subdomains of example.com are reserved (RFC 2606, RFC 6761) and never
+ * receive mail, so a seeded address reads as real and cannot deliver.
+ */
+export const exampleDomain = (companyName: string): string => `${slugify(companyName)}.example.com`;
+
+/**
+ * Collision-proof token for a CODE-LIKE `unique_value` field (account code, SKU, invoice number): a base
+ * string plus the strictly-increasing row index (and optional suffix). `uniq("ACCT-", i)` → "ACCT-0",
+ * "ACCT-1", … Never collides because `i` is unique per row. Never on a field a person reads as a name.
  */
 export const uniq = (base: string, i: number, suffix = ""): string => `${base}${i}${suffix}`;
 
@@ -693,19 +960,75 @@ export function assertSeedCounts(
 }
 
 /**
+ * Seed-distinctness guard: the readability counterpart of `assertSeedCounts`.
+ *
+ * A count guard proves the table is full; it cannot see that every row carries the same surname, the
+ * same company or a one-word label. `assertSeedDistinct("contacts", rows, ["lastname"])` fails loudly
+ * when a human-facing component degenerates to a handful of values across the table, which is what
+ * happens when a component comes from a too-small pool or from one literal.
+ *
+ * - `fields` names one or more columns of the rows just inserted (human name parts, company, city,
+ *   street name, label column). A part that lives inside a combined value (a surname inside a full
+ *   name, a street name behind its house number) is passed as its own column. Empty strings and nulls
+ *   are excluded from the count: an optional field may legitimately repeat.
+ * - `minDistinct` defaults to `min(rows.length, 8)`: on a 10-row table that demands 8 distinct values,
+ *   which is enough to catch a constant column without punishing genuinely low-cardinality data
+ *   (call it only on fields where variety IS expected).
+ * - Prints a per-field receipt on success and exits non-zero (halting the seed script) on failure,
+ *   exactly like `assertSeedCounts`, so a degenerate column can never ship behind a green count line.
+ */
+export function assertSeedDistinct(
+  table: string,
+  rows: ReadonlyArray<Record<string, unknown>>,
+  fields: ReadonlyArray<string>,
+  minDistinct = Math.min(rows.length, 8),
+): void {
+  const fails: string[] = [];
+  for (const f of fields) {
+    const values = rows.map((r) => r[f]).filter((v) => v !== "" && v !== null && v !== undefined);
+    const distinct = new Set(values.map((v) => String(v))).size;
+    if (distinct >= Math.min(minDistinct, values.length)) {
+      console.log(`  ✓ ${table}.${f}: ${distinct} distinct`);
+    } else {
+      fails.push(`${table}.${f}: ${distinct} distinct value(s) across ${rows.length} row(s), expected >= ${minDistinct}`);
+    }
+  }
+  if (fails.length) {
+    console.error(`\nSEED DISTINCTNESS FAILURE — ${fails.length} problem(s):`);
+    for (const m of fails) console.error(`  🛑 ${m}`);
+    console.error("Deal the field from a pool of at least 8 entries (r.deal / r.tuples), then re-run.");
+    process.exit(1);
+  }
+}
+
+/**
  * Halting harness. Run the bespoke orchestration inside this; it OWNS the
  * try/catch so the agent's script can't add a swallow-and-continue one. On
  * success: a summary line plus a reminder that the "model is live" line waits
- * for Stage 5 verification. On any thrown error: the loud halt message and a
- * NON-ZERO process exit, so the operator sees the failure and re-runs. Never
- * prints a success-shaped result over a partial deploy.
+ * for Stage 5 verification and is followed by the modeler's Closing Contract
+ * (a reused or adapted script never skips it). On any thrown error: the loud
+ * halt message and a NON-ZERO process exit, so the operator sees the failure
+ * and re-runs. Never prints a success-shaped result over a partial deploy.
  */
 export async function runDeploy(orchestration: () => Promise<void>): Promise<void> {
+  if (CHECK_RUN) {
+    try {
+      await orchestration();
+      console.log(`\nCHECK RUN passed: ${writeCount} write call(s) checked, none sent. Nothing changed live. Run the same script without DEPLOY_CHECK to deploy.`);
+    } catch (err) {
+      console.error(`\nCHECK RUN HALTED after ${writeCount} checked write call(s): ${err instanceof Error ? err.message : String(err)}`);
+      console.error("Nothing was sent. Fix the script and check-run it again before deploying.");
+      process.exit(1);
+    }
+    return;
+  }
   try {
     await orchestration();
     console.log(
       `\n${writeCount} write call(s) applied with no errors (a bulk call counts once). ` +
-      "Run Stage 5 verification before reporting the model live.",
+      "Run Stage 5 verification before reporting the model live, then send the modeler's Closing Contract " +
+      "(semantius-modeler SKILL.md, \"Closing Contract: clean and sticky\"): the Open link " +
+      "(getCurrentUser → ui_baseurl), the spec download link in a fast run, and the sample-data question.",
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

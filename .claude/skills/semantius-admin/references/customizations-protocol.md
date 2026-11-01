@@ -30,7 +30,7 @@ Every Stage 3 / authoring-stage widget reads and writes one path in `$CUSTOMIZAT
 | Analyst Stage 3f.2 | Enum drift | `.drift.enum.<entity>.<field>` | scalar |
 | Analyst Stage 3f.3 | Permission drift | `.drift.permission.<entity>.edit_permission` | scalar |
 | Analyst Stage 3f.4 | Format drift | `.drift.format.<entity>.<field>` | scalar |
-| Admin / architect / analyst, when the user says "expert flow", "guided flow", or "fast flow" | Interaction flow switch | `.interaction_flow` | scalar (`guided` \| `expert` \| `fast`; absent = `guided`); org-wide; never written by a widget or by a default ([`interaction-flow.md`](./interaction-flow.md), section 2) |
+| Admin / architect / analyst, when the user says "expert flow", "guided flow", or "fast flow" | Interaction flow switch | `.interaction_flow` | scalar (`guided` \| `expert` \| `fast`; absent = `fast`, the default); org-wide; never written by a widget or by a default ([`interaction-flow.md`](./interaction-flow.md), section 2) |
 | Modeler pre-execute | y/n consent | not cached | n/a (asks per item; in a fast run the go-ahead covers it) |
 
 When extending: prefer fewer, broader keys. The whole point is to deduplicate; over-specific keys defeat that. The cross-scope link path (`.links.<blueprint>.<field>`) is the deliberate exception — link targets often don't generalize across blueprints, so they're keyed by blueprint+field naturally.
@@ -106,7 +106,7 @@ Not a paragraph. Not a section header. One line. The user sees that policy resol
 ## 7.6 What is NOT written to the file
 
 - **Modeler's pre-execute `y/n`.** The modeler asks before writing in guided and expert flow. Policy does not change this. In a fast run the user's go-ahead is that confirmation, given once for the whole build ([`fast-flow.md`](./fast-flow.md)).
-- **Free-text "Other" answers** that the user typed in. The slug-collision-naming widget (3d sub) lists no "Other" option (the tool adds its own free-text slot); a name typed into that slot is used for the current decision but is NOT written to `.slug_collision_naming` — the next collision should re-ask. The user's typed value is a one-off, not a standing rule.
+- **Free-text "Other" answers** that the user wrote in. The slug-collision-naming widget (3d sub) lists no "Other" option (the tool adds its own free-text slot); a name written into that slot is used for the current decision but is NOT written to `.slug_collision_naming` — the next collision should re-ask. The user's free-text value is a one-off, not a standing rule.
 - **Explicit-cancel selections.** Master-vs-master option 4 ("Stop, I want to think about it") and any other cancel-style choice halts the run without writing.
 - **Decisions inside the modeler.** The modeler consumes specs only; the spec already carries every decision by the time the modeler runs.
 - **Defaults applied in guided flow, and fast-flow picks.** When one of the skipped questions takes its literal default ([`interaction-flow.md`](./interaction-flow.md), section 3), or a fast run picks an answer after the go-ahead ([`fast-flow.md`](./fast-flow.md), section 4), nothing is written: the user never made that decision, so it must not become standing policy. With expert flow on, the question is asked, and an answer already in the file is never overwritten by a default.

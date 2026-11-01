@@ -15,13 +15,18 @@
  * 1 = at least one inconsistency (or a parse/usage error). Warnings (`⚠`) are
  * printed but never fail a file.
  *
- * Usage:  bun consistency-check.ts <file.md> [<file2.md> ...]
+ * Usage:  bun consistency-check.ts [--require-icons] <file.md> [<file2.md> ...]
  *         bun consistency-check.ts --emit-mermaid <file.md>
+ *
+ * `--require-icons` (the analyst's pre-save run) also fails a spec §5 entry with no
+ * icon line: its icon check has not run. Without it a missing icon line is accepted,
+ * as in a spec extracted from live or one deployed by the modeler.
  */
 
 import { readFileSync } from "node:fs";
 
 type Issue = { check: string; detail: string; warn?: boolean };
+type CheckOpts = { requireIcons: boolean };
 
 const BUILTINS = new Set(["users", "roles", "permissions"]);
 // A valid Semantius data_object / table_name: lower snake_case, starts with a letter, only [a-z0-9_].
@@ -493,8 +498,61 @@ function checkBlueprint(text: string, lines: string[]): Issue[] {
     }
   }
 
+  issues.push(...checkLifecycleHighRisk(text, lines));
   issues.push(...checkAccessScope(text, lines));
 
+  return issues;
+}
+
+/** Every row of a §7 lifecycle table, with its entity (the ``### `table` `` heading above it) and its table's header. */
+function lifecycleStateRows(lines: string[]): { entity: string; header: string[]; row: string[] }[] {
+  const out: { entity: string; header: string[]; row: string[] }[] = [];
+  let entity = "";
+  let block: string[] = [];
+  const flush = () => { for (const r of rowsWithHeaders(block)) out.push({ entity, ...r }); block = []; };
+  for (const l of topSection(lines, 7)) {
+    const m = l.match(/^###\s+`([a-z][a-z0-9_]*)`/);
+    if (m) { flush(); entity = m[1]; continue; }
+    block.push(l);
+  }
+  flush();
+  return out;
+}
+
+/**
+ * §7 `high risk?`, read by header name (a table without the column passes, every row `-`): each
+ * cell is ✓ or -, ✓ only on a row with `requires_permission?` ✓, and the rows deriving one gate
+ * agree on it. Rows whose `derived gate` names no gate of its own (`<slug>:admin`, `-`, `⚠ …`)
+ * are not compared.
+ */
+function checkLifecycleHighRisk(text: string, lines: string[]): Issue[] {
+  const issues: Issue[] = [];
+  const admin = `${frontmatter(text).get("system_slug") ?? ""}:admin`;
+  const byGate = new Map<string, { on: string[]; off: string[] }>();
+  for (const { entity, header, row } of lifecycleStateRows(lines)) {
+    if (!header.includes("high risk?")) continue;
+    const cell = (name: string) => (header.indexOf(name) >= 0 ? (row[header.indexOf(name)] ?? "").replace(/`/g, "").trim() : "");
+    const state = `\`${entity}\`.\`${cell("state_name")}\``;
+    const hr = cell("high risk?"), gated = cell("requires_permission?").includes("✓");
+    if (hr !== "✓" && hr !== "-") {
+      issues.push({ check: "§7 high risk", detail: `§7 ${state}: \`high risk?\` is "${hr}"; it is ✓ or -` });
+      continue;
+    }
+    if (hr === "✓" && !gated) {
+      issues.push({ check: "§7 high risk", detail: `§7 ${state} has \`high risk?\` ✓ but \`requires_permission?\` is not ✓; only a gated state can be high-risk` });
+      continue;
+    }
+    const gate = cell("derived gate");
+    if (!gated || !gate || gate === "-" || gate === admin || gate.startsWith("⚠")) continue;
+    const g = byGate.get(gate) ?? { on: [], off: [] };
+    (hr === "✓" ? g.on : g.off).push(state);
+    byGate.set(gate, g);
+  }
+  for (const [gate, g] of byGate) {
+    if (g.on.length && g.off.length) {
+      issues.push({ check: "§7 high risk", detail: `§7 rows deriving \`${gate}\` disagree on \`high risk?\` (✓ on ${g.on.join(", ")}; - on ${g.off.join(", ")}); mark the gate high-risk on every row that derives it or on none` });
+    }
+  }
   return issues;
 }
 
@@ -517,7 +575,14 @@ function rowsWithHeaders(block: string[]): { header: string[]; row: string[] }[]
 /**
  * Frontmatter `access_scope` (the access level the architect's permission step decides)
  * against the body: the value is in the closed set; `gated` / `raci` need a process gate;
- * `raci` needs the RACI realization table; `workflow-gate (lifecycle)` rows only under `raci`.
+ * `raci` needs the RACI realization table; `workflow-gate (lifecycle)` rows only under `gated`
+ * and `raci`. A §7 ✓ row's `derived gate` is the gate's own §8.1 code under `gated` and `raci`,
+ * `<slug>:admin` under every other level. The admin holds a gate through `included in :admin?` ✓
+ * and a §9.1 `<slug>:admin` → gate row: every gate under `gated` (high-risk ones too), every gate
+ * except the high-risk ones under `raci`, where a high-risk gate is `-` with no hierarchy row. A gate
+ * is high-risk when the §7 row deriving it has `high risk?` ✓ (read by header name); with no such
+ * column, or for a gate no §7 row derives (a §8.2 `create` gate), it is not. A gate whose §7 rows
+ * disagree on `high risk?` is reported by `checkLifecycleHighRisk` and skipped by the `raci` checks.
  * A missing key is a warning (catalog sources never carry it).
  */
 function checkAccessScope(text: string, lines: string[]): Issue[] {
@@ -550,7 +615,8 @@ function checkAccessScope(text: string, lines: string[]): Issue[] {
       lifecycleRows.push(at(header, row, "permission"));
     }
   }
-  if ((scope === "gated" || scope === "raci") && stateGates + createRules + lifecycleRows.length === 0) {
+  const enforcing = scope === "gated" || scope === "raci";
+  if (enforcing && stateGates + createRules + lifecycleRows.length === 0) {
     // A warning only: a live module that lost its last gate keeps its level (it is never lowered).
     issues.push({ check: "access_scope", detail: `\`access_scope: ${scope}\` has no process gate (a §7 row with requires_permission? ✓ or a §8.2 \`create\` rule); allowed only when the live module already has this access level`, warn: true });
   }
@@ -589,40 +655,70 @@ function checkAccessScope(text: string, lines: string[]): Issue[] {
         if (n !== 1) issues.push({ check: "access_scope", detail: `RACI rule: process gate \`${code}\` is in the \`grant gates [...]\` list of ${n} accountable rows; under raci exactly one accountable row holds it` });
       }
     }
-  } else if (lifecycleRows.length > 0) {
-    issues.push({ check: "access_scope", detail: `§8.1 carries \`workflow-gate (lifecycle)\` rows (${lifecycleRows.join(", ")}) but \`access_scope: ${scope}\` allows them only under raci` });
+  } else if (!enforcing && lifecycleRows.length > 0) {
+    issues.push({ check: "access_scope", detail: `§8.1 carries \`workflow-gate (lifecycle)\` rows (${lifecycleRows.join(", ")}) but \`access_scope: ${scope}\` allows them only under gated and raci` });
   }
-  // §7 derived gate follows the access level: the gate's own §8.1 code under raci, `<slug>:admin` otherwise.
+  // §7 derived gate follows the access level: the gate's own §8.1 code under gated and raci,
+  // `<slug>:admin` otherwise. The row's `high risk?` ✓ marks the gate it derives as high-risk.
   const slug = frontmatter(text).get("system_slug") ?? "";
+  const highRisk = new Set<string>(), notHighRisk = new Set<string>();
   for (const { header, row } of rowsWithHeaders(topSection(lines, 7))) {
     if (!header.includes("requires_permission?") || !at(header, row, "requires_permission?").includes("✓")) continue;
     const gate = at(header, row, "derived gate");
     if (gate.startsWith("⚠")) continue;
-    const ok = scope === "raci" ? lifecycleRows.includes(gate) : gate === `${slug}:admin`;
-    if (!ok) issues.push({ check: "access_scope", detail: `§7 derived gate \`${gate}\` does not follow \`access_scope: ${scope}\` (expected ${scope === "raci" ? "a §8.1 workflow-gate (lifecycle) code" : `${slug}:admin`})` });
+    const hr = at(header, row, "high risk?");
+    if (hr === "✓") highRisk.add(gate);
+    else if (hr === "-") notHighRisk.add(gate);
+    const ok = enforcing ? lifecycleRows.includes(gate) : gate === `${slug}:admin`;
+    if (!ok) issues.push({ check: "access_scope", detail: `§7 derived gate \`${gate}\` does not follow \`access_scope: ${scope}\` (expected ${enforcing ? "a §8.1 workflow-gate (lifecycle) code" : `${slug}:admin`})` });
   }
-  if (scope === "raci") {
-    // Under raci a process gate is never rolled up under admin: `-` in §8.1 and no §9.1 admin → gate row.
+  if (enforcing) {
+    // The admin holds a process gate (✓ in §8.1 and a §9.1 admin → gate row): every gate under gated,
+    // every gate except the high-risk ones under raci (`-` in §8.1 and no admin → gate row).
+    const adminHolds = (code: string) => scope === "gated" || !highRisk.has(code);
+    const undecided = (code: string) => scope === "raci" && highRisk.has(code) && notHighRisk.has(code);
     for (const { header, row } of rowsWithHeaders(subSection(s8, /^###\s+8\.1\b/))) {
-      if (at(header, row, "tier").startsWith("workflow-gate (lifecycle)") && at(header, row, "included in :admin?") !== "-") {
-        issues.push({ check: "access_scope", detail: `§8.1 \`${at(header, row, "permission")}\` is a process gate: under raci its \`included in :admin?\` is -` });
+      if (!at(header, row, "tier").startsWith("workflow-gate (lifecycle)")) continue;
+      const code = at(header, row, "permission");
+      if (undecided(code)) continue;
+      const included = at(header, row, "included in :admin?");
+      if (adminHolds(code) && !included.includes("✓")) {
+        issues.push({ check: "access_scope", detail: scope === "gated"
+          ? `§8.1 \`${code}\` is a process gate: under gated its \`included in :admin?\` is ✓ (the admin holds every gate, high-risk ones too)`
+          : `§8.1 \`${code}\` is a process gate §7 does not mark high risk: under raci its \`included in :admin?\` is ✓` });
+      } else if (!adminHolds(code) && included !== "-") {
+        issues.push({ check: "access_scope", detail: `§8.1 \`${code}\` is a high-risk process gate (§7 \`high risk?\` ✓): under raci its \`included in :admin?\` is -` });
       }
     }
-    const h = lines.findIndex((l) => /^\*\*Permission hierarchy:\*\*/.test(l.trim()));
-    const hTable: string[] = [];
-    if (h >= 0) {
-      for (const l of lines.slice(h + 1)) {
-        if (isTableRow(l)) hTable.push(l);
-        else if (hTable.length || (l.trim() !== "" && !l.trim().startsWith("_"))) break;
-      }
-    }
-    for (const { header, row } of rowsWithHeaders(hTable)) {
-      if (at(header, row, "permission") === `${slug}:admin` && lifecycleRows.includes(at(header, row, "includes"))) {
-        issues.push({ check: "access_scope", detail: `§9.1 rolls \`${at(header, row, "includes")}\` up under \`${slug}:admin\`; under raci a process gate has no hierarchy row` });
+    const rolledUp = hierarchyIncludes(lines, `${slug}:admin`);
+    for (const code of lifecycleRows) {
+      if (undecided(code)) continue;
+      if (adminHolds(code) && !rolledUp.has(code)) {
+        issues.push({ check: "access_scope", detail: `§9.1 has no \`${slug}:admin\` → \`${code}\` row; under ${scope} the admin holds every ${scope === "gated" ? "" : "non-high-risk "}process gate through the hierarchy` });
+      } else if (!adminHolds(code) && rolledUp.has(code)) {
+        issues.push({ check: "access_scope", detail: `§9.1 rolls \`${code}\` up under \`${slug}:admin\`; under raci a high-risk process gate has no hierarchy row` });
       }
     }
   }
   return issues;
+}
+
+/** The codes the `**Permission hierarchy:**` table (blueprint and spec §9.1) lists as included by `permission`. */
+function hierarchyIncludes(lines: string[], permission: string): Set<string> {
+  const h = lines.findIndex((l) => /^\*\*Permission hierarchy:\*\*/.test(l.trim()));
+  const hTable: string[] = [];
+  if (h >= 0) {
+    for (const l of lines.slice(h + 1)) {
+      if (isTableRow(l)) hTable.push(l);
+      else if (hTable.length || (l.trim() !== "" && !l.trim().startsWith("_"))) break;
+    }
+  }
+  const out = new Set<string>();
+  for (const { header, row } of rowsWithHeaders(hTable)) {
+    const cell = (name: string) => (header.indexOf(name) >= 0 ? (row[header.indexOf(name)] ?? "").replace(/`/g, "").trim() : "");
+    if (cell("permission") === permission) out.add(cell("includes"));
+  }
+  return out;
 }
 
 // ---------- SPEC checks ----------
@@ -635,6 +731,11 @@ type SpecEntity = {
   labelColumn: string;         // `**Label column:**` (backticks stripped; "" = absent)
   lines: Set<string>;        // which `**Key:**` lines the block carries (e.g. "Label column")
   reconciliation: string;      // `**Reconciliation:**` ("" = absent = create-new)
+  editPermission: string;      // `**Edit permission:**` (backticks stripped; "manage" = absent)
+  auditLog: string;            // `**Audit log:**` ("no" = absent)
+  permCodes: Set<string>;      // `require_permission` / `has_permission` codes in the `**Validation rules**` JSON
+  rulesJson: string;           // the `**Validation rules**` fence, verbatim ("" = absent)
+  labelParent: string;         // `**Label parent:**` (backticks stripped; "" = absent)
   fields: SpecField[];
 };
 
@@ -643,12 +744,26 @@ function parseSpecEntities(lines: string[]): Map<string, SpecEntity> {
   const out = new Map<string, SpecEntity>();
   let cur: SpecEntity | null = null;
   let inFence = false;
+  let afterRules = false; // the last non-blank line outside a fence was `**Validation rules**`
+  let inRules = false;    // inside the fence that follows it
   for (const l of topSection(lines, 3)) {
-    if (/^```/.test(l)) { inFence = !inFence; continue; }
-    if (inFence) continue;
+    if (/^```/.test(l)) {
+      inFence = !inFence;
+      inRules = inFence && afterRules;
+      afterRules = false;
+      continue;
+    }
+    if (inFence) {
+      if (inRules && cur) {
+        for (const m of l.matchAll(/"(?:require|has)_permission"\s*:\s*"([^"]+)"/g)) cur.permCodes.add(m[1]);
+        cur.rulesJson += `${l}\n`;
+      }
+      continue;
+    }
+    if (l.trim() !== "") afterRules = l.trim() === "**Validation rules**";
     const h = l.match(/^###\s+3\.\d+\s+`([^`]+)`/);
     if (h) {
-      cur = { keyType: null, keyPrefix: null, basedOn: "", labelColumn: "", lines: new Set(), reconciliation: "", fields: [] };
+      cur = { keyType: null, keyPrefix: null, basedOn: "", labelColumn: "", lines: new Set(), reconciliation: "", editPermission: "manage", auditLog: "no", permCodes: new Set(), rulesJson: "", labelParent: "", fields: [] };
       out.set(h[1].trim(), cur);
       continue;
     }
@@ -661,7 +776,10 @@ function parseSpecEntities(lines: string[]): Map<string, SpecEntity> {
       else if (key === "Key prefix") cur.keyPrefix = value;
       else if (key === "Based on") cur.basedOn = value.replace(/`/g, "").trim();
       else if (key === "Label column") cur.labelColumn = value.replace(/`/g, "").trim();
+      else if (key === "Label parent") cur.labelParent = value.replace(/`/g, "").trim();
       else if (key === "Reconciliation") cur.reconciliation = value;
+      else if (key === "Edit permission") cur.editPermission = value.replace(/`/g, "").trim() || "manage";
+      else if (key === "Audit log") cur.auditLog = value.replace(/`/g, "").trim() || "no";
       continue;
     }
     if (!isTableRow(l) || isSeparatorRow(l)) continue;
@@ -682,16 +800,49 @@ function parseEnumNotes(notes: string): { values: string[] | null; def: string |
   return { values, def: dm ? dm[1] : null };
 }
 
+/**
+ * Why a `default:` value does not fit its field's format, or null when it fits. Formats not listed
+ * take any text. Date and date-time defaults may also be the SQL expressions the platform uses.
+ */
+function defaultProblem(format: string, def: string): string | null {
+  const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s));
+  switch (format) {
+    case "integer": case "int32": case "int64":
+      return /^-?\d+$/.test(def) ? null : "is not a whole number";
+    case "rating":
+      return /^[0-5]$/.test(def) ? null : "is not a whole number from 0 to 5";
+    case "number": case "float": case "double":
+      return /^-?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(def) ? null : "is not a number";
+    case "boolean":
+      return def === "true" || def === "false" ? null : 'is not "true" or "false"';
+    case "json": case "object": case "array": {
+      let v: unknown;
+      try { v = JSON.parse(def); } catch { return "is not valid JSON"; }
+      if (format === "array" && !Array.isArray(v)) return "is not a JSON array";
+      if (format === "object" && (v === null || typeof v !== "object" || Array.isArray(v))) return "is not a JSON object";
+      return null;
+    }
+    case "date":
+      return def === "CURRENT_DATE" || isDate(def) ? null : "is not a date (YYYY-MM-DD) or CURRENT_DATE";
+    case "date-time":
+      return def === "CURRENT_TIMESTAMP" || (isDate(def.slice(0, 10)) && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(def) && !Number.isNaN(Date.parse(def)))
+        ? null : "is not an ISO date-time or CURRENT_TIMESTAMP";
+  }
+  return null;
+}
+
 /** The property keys of a §5 entry, in the order they must appear. */
 const ENUM_PROP_KEYS = ["label", "color", "icon", "description"] as const;
 type EnumHintKey = Exclude<(typeof ENUM_PROP_KEYS)[number], "label">;
-type SpecEnumEntry = { value: string; label: string | null; hints: Partial<Record<EnumHintKey, string>> };
-const ENUM_PROP_FORM = 'property sub-bullets go directly under their entry, indented exactly two spaces, in this order and each at most once: "  - label: text", "  - color: `#rrggbb`", "  - icon: `lucide-name`", "  - description: text"';
+// `iconNone` holds the finder queries of an `icon: none` decision; null when the entry has none.
+type SpecEnumEntry = { value: string; label: string | null; hints: Partial<Record<EnumHintKey, string>>; iconNone: string | null };
+const ENUM_PROP_FORM = 'property sub-bullets go directly under their entry, indented exactly two spaces, in this order and each at most once: "  - label: text", "  - color: `#rrggbb`", "  - icon: `lucide-name`" or "  - icon: none <!-- finder: <query>, <query>: no fit -->", "  - description: text"';
+const ICON_NONE = /^none <!-- finder: (\S.*?): no fit -->$/;
 
 /**
  * §5 blocks: ``### `table.field` `` then one bullet per entry, `` - `value` ``, followed by
- * property sub-bullets (`  - label: …`, `  - color: `…``, `  - icon: `…``, `  - description: …`,
- * in that order). Returns value lists, the parsed entries, and every line that breaks the grammar.
+ * property sub-bullets (`  - label: …`, `  - color: `…``, `  - icon: `…`` or `  - icon: none <!-- finder: …: no fit -->`,
+ * `  - description: …`, in that order). Returns value lists, the parsed entries, and every line that breaks the grammar.
  */
 function parseSpecEnums(lines: string[]): { blocks: Map<string, string[]>; entries: Map<string, SpecEnumEntry[]>; bad: string[] } {
   const blocks = new Map<string, string[]>();
@@ -703,7 +854,7 @@ function parseSpecEnums(lines: string[]): { blocks: Map<string, string[]>; entri
   let lastHint = -1;
   let key = "";
   const flagUnlabeled = () => {
-    if (last && last.label === null && Object.keys(last.hints).length) {
+    if (last && last.label === null && (Object.keys(last.hints).length || last.iconNone !== null)) {
       bad.push(`\`${key}\`: entry \`${last.value}\` has hints but no label; add "  - label: <Label>" as its first sub-bullet`);
     }
   };
@@ -718,7 +869,7 @@ function parseSpecEnums(lines: string[]): { blocks: Map<string, string[]>; entri
     if (b) {
       flagUnlabeled();
       if (b[2]) bad.push(`\`${key}\`: "${l.trim()}" puts the label on the value bullet; write "- \`${b[1]}\`" with "  - label: ${b[2].trim()}" under it`);
-      last = { value: b[1], label: b[2] ? b[2].trim() : null, hints: {} };
+      last = { value: b[1], label: b[2] ? b[2].trim() : null, hints: {}, iconNone: null };
       lastHint = b[2] ? 0 : -1;
       cur.push(b[1]);
       curEntries.push(last);
@@ -731,10 +882,17 @@ function parseSpecEnums(lines: string[]): { blocks: Map<string, string[]>; entri
     }
     const hk = s[1], idx = (ENUM_PROP_KEYS as readonly string[]).indexOf(hk);
     if (idx < 0) { bad.push(`\`${key}\`: entry \`${last.value}\` has unknown property \`${hk}\` (${ENUM_PROP_FORM})`); continue; }
-    if (hk === "label" ? last.label !== null : hk in last.hints) { bad.push(`\`${key}\`: entry \`${last.value}\` repeats \`${hk}\` (${ENUM_PROP_FORM})`); continue; }
+    const seen = hk === "label" ? last.label !== null : hk in last.hints || (hk === "icon" && last.iconNone !== null);
+    if (seen) { bad.push(`\`${key}\`: entry \`${last.value}\` repeats \`${hk}\` (${ENUM_PROP_FORM})`); continue; }
     if (idx < lastHint) { bad.push(`\`${key}\`: entry \`${last.value}\` has \`${hk}\` out of order (${ENUM_PROP_FORM})`); continue; }
     lastHint = idx;
     let v = s[2].trim();
+    if (hk === "icon" && /^none\b/.test(v)) {
+      const n = v.match(ICON_NONE);
+      if (!n) { bad.push(`\`${key}\`: entry \`${last.value}\` "icon: none" must name the finder queries tried: "  - icon: none <!-- finder: <query>, <query>: no fit -->"`); continue; }
+      last.iconNone = n[1].trim();
+      continue;
+    }
     if (hk === "color" || hk === "icon") {
       const bt = v.match(/^`([^`]+)`$/);
       if (!bt) { bad.push(`\`${key}\`: entry \`${last.value}\` ${hk} must be backticked: "  - ${hk}: \`${v.replace(/`/g, "")}\`"`); continue; }
@@ -745,6 +903,21 @@ function parseSpecEnums(lines: string[]): { blocks: Map<string, string[]>; entri
   }
   flagUnlabeled();
   return { blocks, entries, bad };
+}
+
+/**
+ * `--require-icons` (the analyst's pre-save run): every §5 entry records its icon check, as
+ * `icon: `name`` or `icon: none <!-- finder: …: no fit -->`. No icon line means not checked yet.
+ */
+function uncheckedIcons(entries: Map<string, SpecEnumEntry[]>): Issue[] {
+  const out: Issue[] = [];
+  for (const [key, list] of entries) {
+    const unchecked = list.filter((e) => !e.hints.icon && e.iconNone === null).map((e) => `\`${e.value}\``);
+    if (unchecked.length) {
+      out.push({ check: "§5 enum icons", detail: `\`${key}\`: ${unchecked.join(", ")} carry no icon line, so their icon check has not run; run it (stage-4-fields.md, "Enum values, labels and hints") and write "  - icon: \`<name>\`" or "  - icon: none <!-- finder: <query>, <query>: no fit -->"` });
+    }
+  }
+  return out;
 }
 
 /** Warnings on §5 labels and hints: the drafting rules of the analyst's stage-4-fields.md. */
@@ -799,7 +972,54 @@ function parseProcessGateEntities(lines: string[]): string[] {
     .filter(Boolean);
 }
 
-function checkSpec(text: string, lines: string[], fm: ReturnType<typeof frontmatter>): Issue[] {
+/** The `## 8.1 Permissions catalog` rows of a spec, parsed by header name; with no `high risk?` column every row reads `-`. */
+function parseSpecPermissions(lines: string[]): { permission: string; tier: string; included: string; highRisk: string }[] {
+  const out: { permission: string; tier: string; included: string; highRisk: string }[] = [];
+  for (const { header, row } of rowsWithHeaders(subSection(lines, /^##\s+8\.1\b/))) {
+    if (!header.includes("permission") || !header.includes("tier")) continue;
+    const cell = (name: string, absent: string) => (header.indexOf(name) >= 0 ? (row[header.indexOf(name)] ?? "").replace(/`/g, "").trim() : absent);
+    out.push({ permission: cell("permission", ""), tier: cell("tier", ""), included: cell("included in :admin?", ""), highRisk: cell("high risk?", "-") });
+  }
+  return out;
+}
+
+/**
+ * Spec §8.1 `high risk?` against the access level: ✓ or - on a `workflow-gate (lifecycle)` row, -
+ * on every other row. The admin holds a lifecycle gate through `included in :admin?` ✓ and a §9.1
+ * `<slug>:admin` → gate row: every gate under `gated` (high-risk ones too), every gate except the
+ * high-risk ones under `raci`, where a high-risk gate is `-` with no hierarchy row.
+ */
+function checkSpecGates(lines: string[], fm: ReturnType<typeof frontmatter>): Issue[] {
+  const issues: Issue[] = [];
+  const scope = fm.get("access_scope");
+  const admin = `${fm.get("system_slug") ?? ""}:admin`;
+  const rolledUp = hierarchyIncludes(lines, admin);
+  for (const p of parseSpecPermissions(lines)) {
+    const lifecycle = p.tier.startsWith("workflow-gate (lifecycle)");
+    if (lifecycle && p.highRisk !== "✓" && p.highRisk !== "-") {
+      issues.push({ check: "§8.1 high risk", detail: `§8.1 \`${p.permission}\`: \`high risk?\` is "${p.highRisk}"; a \`workflow-gate (lifecycle)\` row carries ✓ or -` });
+    } else if (!lifecycle && p.highRisk !== "-") {
+      issues.push({ check: "§8.1 high risk", detail: `§8.1 \`${p.permission}\` is a ${p.tier || "(no tier)"} row: its \`high risk?\` is - (only a \`workflow-gate (lifecycle)\` row can be high-risk)` });
+    }
+    if (!lifecycle || (scope !== "gated" && scope !== "raci")) continue;
+    const adminHolds = scope === "gated" || p.highRisk !== "✓";
+    if (adminHolds && !p.included.includes("✓")) {
+      issues.push({ check: "access_scope", detail: scope === "gated"
+        ? `§8.1 \`${p.permission}\` is a process gate: under gated its \`included in :admin?\` is ✓ (the admin holds every gate, high-risk ones too)`
+        : `§8.1 \`${p.permission}\` is a process gate that is not high-risk: under raci its \`included in :admin?\` is ✓` });
+    } else if (!adminHolds && p.included !== "-") {
+      issues.push({ check: "access_scope", detail: `§8.1 \`${p.permission}\` is a high-risk process gate (\`high risk?\` ✓): under raci its \`included in :admin?\` is -` });
+    }
+    if (adminHolds && !rolledUp.has(p.permission)) {
+      issues.push({ check: "access_scope", detail: `§9.1 has no \`${admin}\` → \`${p.permission}\` row; under ${scope} the admin holds every ${scope === "gated" ? "" : "non-high-risk "}process gate through the hierarchy` });
+    } else if (!adminHolds && rolledUp.has(p.permission)) {
+      issues.push({ check: "access_scope", detail: `§9.1 rolls \`${p.permission}\` up under \`${admin}\`; under raci a high-risk process gate has no hierarchy row` });
+    }
+  }
+  return issues;
+}
+
+function checkSpec(text: string, lines: string[], fm: ReturnType<typeof frontmatter>, opts: CheckOpts): Issue[] {
   const issues: Issue[] = [];
 
   // §2 entity summary: | # | `table` | Singular | Purpose |
@@ -955,6 +1175,29 @@ function checkSpec(text: string, lines: string[], fm: ReturnType<typeof frontmat
       issues.push({ check: "family", detail: `§4 \`${r.from}\`.\`${r.field}\` → \`${r.to}\`: \`${r.from}\` is an is_a entity, so its delete behavior cannot be cascade (use restrict or clear)` });
     }
   }
+  // FK scope (analyst Stage 8 FK scope fix): a `parent` + `cascade` child with its own permission
+  // scope, or audit-logged with its own lifecycle, must be `reference` + `restrict`. An error only in
+  // the analyst's pre-save run (`--require-icons`); a warning for the modeler and optimizer.
+  // Under `gated` every §8.1 `workflow-gate (lifecycle)` code counts as `<slug>:admin` (the admin
+  // holds every gate), so a child and parent gated on their own lifecycle gates share one scope.
+  const gatedCodes = fm.get("access_scope") === "gated"
+    ? new Set(parseSpecPermissions(lines).filter((p) => p.tier.startsWith("workflow-gate (lifecycle)")).map((p) => p.permission))
+    : new Set<string>();
+  const scopeCodes = (codes: Set<string>) => new Set([...codes].map((c) => (gatedCodes.has(c) ? `${fm.get("system_slug") ?? ""}:admin` : c)));
+  for (const r of parseSpecRelationshipRows(lines)) {
+    if (r.kind.replace(/`/g, "") !== "parent" || !/^cascade$/i.test(r.del)) continue;
+    const child = ents.get(r.from), parent = ents.get(r.to);
+    if (!child || !parent || parent.fields.length === 0) continue;
+    const signals: string[] = [];
+    if (child.editPermission !== parent.editPermission) signals.push(`edit permission \`${child.editPermission}\` differs from the parent's \`${parent.editPermission}\``);
+    const parentCodes = scopeCodes(parent.permCodes);
+    const own = [...scopeCodes(child.permCodes)].filter((c) => !parentCodes.has(c));
+    if (own.length) signals.push(`checks ${own.map((c) => `\`${c}\``).join(", ")} the parent does not`);
+    if (child.auditLog === "yes" && child.fields.some((f) => f.name === "workflow_state")) signals.push("audit log yes with its own lifecycle");
+    if (signals.length) {
+      issues.push({ check: "FK scope", detail: `§4 \`${r.from}\`.\`${r.field}\` → \`${r.to}\`: ${signals.join("; ")}; use reference + restrict (analyst Stage 8 FK scope fix)`, warn: !opts.requireIcons });
+    }
+  }
   // RACI process gates are not available on based entities (platform 90249).
   for (const ent of parseProcessGateEntities(lines)) {
     if (basedIds.includes(ent)) issues.push({ check: "family", detail: `§9 _process_gates_ names \`${ent}\`, an ${keys.get(ent)!.type} entity; process gates are not available on based entities` });
@@ -962,6 +1205,47 @@ function checkSpec(text: string, lines: string[], fm: ReturnType<typeof frontmat
   // `<table>_ext` is the platform's storage table of a based entity, so no entity may end in `_ext`.
   for (const id of allIds) {
     if (/_ext$/.test(id)) issues.push({ check: "data_object name", detail: `entity \`${id}\` ends in \`_ext\`, which the platform reserves for the storage table of an is_a / has_a entity` });
+  }
+
+  // Write-time refusals the spec already shows, for every entity this spec deploys:
+  //  - a field named `_…` or `…_id_label` (reserved for the composed `_label` / `<fk>_label` columns);
+  //  - a `**Label parent:**` that is not a `reference` / `parent` field of the entity (23514);
+  //  - a validation rule whose `code` is not class 99 (`99000`-`99999`, 90905), a rule `name`
+  //    repeated within the entity, or a rules block that is not a JSON array.
+  for (const [id, e] of ents) {
+    if (BUILTINS.has(id) || /^(reuse-from|dropped)\b/.test(e.reconciliation)) continue;
+    for (const f of e.fields) {
+      if (f.name.startsWith("_") || f.name.endsWith("_id_label")) {
+        issues.push({ check: "reserved field name", detail: `§3 \`${id}\`.\`${f.name}\`: names starting with \`_\` or ending in \`_id_label\` are reserved for the platform's composed label columns; rename the field` });
+      }
+    }
+    if (e.labelParent) {
+      const fk = e.fields.find((f) => f.name === e.labelParent);
+      if (!fk || !/^(reference|parent)$/.test(fk.format)) {
+        issues.push({ check: "label parent", detail: `§3 \`${id}\` **Label parent:** \`${e.labelParent}\` ${fk ? `has format \`${fk.format}\`` : "is not a field of the entity"}; it must name one of the entity's own \`reference\` / \`parent\` fields` });
+      }
+    }
+    const raw = e.rulesJson.trim();
+    if (raw && !/^_\(none/.test(raw)) {
+      let rules: unknown;
+      try { rules = JSON.parse(raw); } catch (err) {
+        issues.push({ check: "validation rules", detail: `§3 \`${id}\` **Validation rules** is not valid JSON (${err instanceof Error ? err.message : err})` });
+        continue;
+      }
+      if (!Array.isArray(rules)) {
+        issues.push({ check: "validation rules", detail: `§3 \`${id}\` **Validation rules** must be a JSON array` });
+        continue;
+      }
+      const names = new Set<string>();
+      for (const r of rules as any[]) {
+        if (r?.source_module === "platform") continue;
+        if (!/^99\d{3}$/.test(String(r?.code ?? ""))) {
+          issues.push({ check: "validation rules", detail: `§3 \`${id}\` rule \`${r?.name ?? "?"}\` has code \`${r?.code ?? ""}\`; a model rule's code is class 99 (\`99000\`-\`99999\`), numbered from \`99001\` in §3 entity order` });
+        }
+        if (r?.name && names.has(r.name)) issues.push({ check: "validation rules", detail: `§3 \`${id}\` repeats rule name \`${r.name}\`; rule names are unique within an entity` });
+        if (r?.name) names.add(r.name);
+      }
+    }
   }
 
   // The label column is created by create_entity as single-line text and its format is locked
@@ -981,6 +1265,7 @@ function checkSpec(text: string, lines: string[], fm: ReturnType<typeof frontmat
     const { blocks, entries, bad } = parseSpecEnums(lines);
     for (const b of bad) issues.push({ check: "§5 enum entries", detail: b });
     issues.push(...enumHintWarnings(entries));
+    if (opts.requireIcons) issues.push(...uncheckedIcons(entries));
     for (const [id, e] of ents) {
       for (const f of e.fields) {
         if (f.format !== "enum") continue;
@@ -995,6 +1280,20 @@ function checkSpec(text: string, lines: string[], fm: ReturnType<typeof frontmat
           issues.push({ check: "enum default", detail: `\`${id}.${f.name}\`: default "${def}" is not one of its values [${allowed.join(", ")}] (a default is always a value, never a label)` });
         }
       }
+    }
+  }
+
+  // Field defaults: `default:` is quoted, and its value fits the field's format (enum defaults are checked above).
+  for (const [id, e] of ents) {
+    for (const f of e.fields) {
+      if (/\bdefault:\s*[^\s"]/.test(f.notes)) {
+        issues.push({ check: "default value", detail: `\`${id}.${f.name}\`: write the default in double quotes, \`default: "<value>"\`, for every format` });
+        continue;
+      }
+      const { def } = parseEnumNotes(f.notes);
+      if (def === null || f.format === "enum") continue;
+      const problem = defaultProblem(f.format, def);
+      if (problem) issues.push({ check: "default value", detail: `\`${id}.${f.name}\` (${f.format}): default "${def}" ${problem}` });
     }
   }
 
@@ -1013,6 +1312,9 @@ function checkSpec(text: string, lines: string[], fm: ReturnType<typeof frontmat
       }
     }
   }
+
+  // §8.1 `high risk?` and the admin roll-up of process gates, by access level.
+  issues.push(...checkSpecGates(lines, fm));
 
   // --- RACI-mode decision provenance (the governance-mode gate) ---
   // When the spec carries a RACI matrix (§9.1 "RACI realization:"), the governance-mode
@@ -1245,14 +1547,14 @@ function checkVersion(fm: ReturnType<typeof frontmatter>): Issue[] {
   return [{ check: "version", detail: `not in the current file format (\`version\` must be \`3.x\`, found \`${v ?? "(none)"}\`)` }];
 }
 
-function checkFile(path: string): { issues: Issue[]; artifact: string } {
+function checkFile(path: string, opts: CheckOpts): { issues: Issue[]; artifact: string } {
   // Normalize BOM + CRLF/CR so the checker is line-ending agnostic (Windows files are often CRLF).
   const text = readFileSync(path, "utf8").replace(/^﻿/, "").replace(/\r\n?/g, "\n");
   const lines = text.split("\n");
   const fm = frontmatter(text);
   const artifact = fm.get("artifact") ?? "(unknown)";
   if (artifact === "semantic-blueprint") return { issues: [...checkVersion(fm), ...checkBlueprint(text, lines)], artifact };
-  if (artifact === "semantic-spec") return { issues: [...checkVersion(fm), ...checkSpec(text, lines, fm)], artifact };
+  if (artifact === "semantic-spec") return { issues: [...checkVersion(fm), ...checkSpec(text, lines, fm, opts)], artifact };
   return { issues: [{ check: "artifact", detail: `unrecognized or missing \`artifact:\` (got "${artifact}"); expected semantic-blueprint or semantic-spec` }], artifact };
 }
 
@@ -1296,16 +1598,17 @@ function main() {
     emitMermaidMode(args[1]);
     return;
   }
-  const files = args;
+  const opts: CheckOpts = { requireIcons: args.includes("--require-icons") };
+  const files = args.filter((a) => a !== "--require-icons");
   if (files.length === 0) {
-    console.error("usage: bun consistency-check.ts <file.md> [<file2.md> ...]\n       bun consistency-check.ts --emit-mermaid <file.md>");
+    console.error("usage: bun consistency-check.ts [--require-icons] <file.md> [<file2.md> ...]\n       bun consistency-check.ts --emit-mermaid <file.md>");
     process.exit(2);
   }
   let failed = 0;
   for (const path of files) {
     let res;
     try {
-      res = checkFile(path);
+      res = checkFile(path, opts);
     } catch (err) {
       console.log(`\n${path}\n  [ERROR] ${(err as Error).message}`);
       failed++;

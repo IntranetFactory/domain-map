@@ -167,7 +167,7 @@ b3:
       2026-06-07 for this reason (they may migrate to LOG-MGMT / IRM).
 
 # --- Report-only, owed by other domains (do not block OBS; clear as those domains finish) ---
-blocked_by_other_domains:
+extra_blocked_by_other_domains:
   - {id: RO-1, owing: AIOPS, finding: "6 OBS->AIOPS handoffs (608,609,610,612,613) + inbound 606; AIOPS target_domain_module_id NULL", routed: "AIOPS b1 B10b target side"}
   - {id: RO-2, owing: ITSM, finding: "5 OBS->ITSM handoffs (55,611,614,615,618); inbound rels 194/195 are ITSM's B8 outbound (already correct)", routed: "ITSM b1"}
   - {id: RO-3, owing: VSDP, finding: "2 OBS->VSDP handoffs (616,617) + inbound 773; VSDP target_domain_module_id NULL", routed: "VSDP b1 B10b + B8"}

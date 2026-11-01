@@ -50,6 +50,10 @@ if (!DOMAIN_CODE && !MIGRATE) {
 }
 const AUDITS = "c:/dev/domain-map/audits";
 const SECTION = /^(b1a|b1b|b2|b3):/;
+// Any top-level key (column 0), e.g. the `checks:` block domain_health.ts --record splices in.
+// insertB2 ends the b2 region here so a new item never lands inside a following block.
+const TOP_KEY = /^[A-Za-z_][\w-]*[ \t]*:/;
+const CHECKS_KEY = /^checks[ \t]*:/;
 
 // ----------------------------------------------------------------------------- read layer
 type Row = Record<string, any>;
@@ -498,13 +502,14 @@ function insertB2(ownerCode: string, itemLines: string[], id: string): "added" |
   if (b2Idx >= 0) {
     if (/^b2:\s*\[\s*\]\s*$/.test(lines[b2Idx])) lines[b2Idx] = "b2:";
     let next = lines.length;
-    for (let i = b2Idx + 1; i < lines.length; i++) { if (SECTION.test(lines[i])) { next = i; break; } }
+    for (let i = b2Idx + 1; i < lines.length; i++) { if (TOP_KEY.test(lines[i])) { next = i; break; } }
     let lastNonBlank = next - 1;
     while (lastNonBlank > b2Idx && lines[lastNonBlank].trim() === "") lastNonBlank--;
     lines.splice(lastNonBlank + 1, 0, ...itemLines);
   } else {
     const b3Idx = lines.findIndex((l) => /^b3:/.test(l));
-    const at = b3Idx >= 0 ? b3Idx : lines.length;
+    const checksIdx = lines.findIndex((l) => CHECKS_KEY.test(l));
+    const at = b3Idx >= 0 ? b3Idx : checksIdx >= 0 ? checksIdx : lines.length;
     lines.splice(at, 0, "b2:", ...itemLines, "");
   }
   writeFileSync(path, lines.join(eol), "utf8");

@@ -37,9 +37,10 @@ These run on every owned entity (skip `reuse-from` / `dropped`):
   - Keep each fact once: run Stage 4's N-checks on every owned entity and report each finding as a 🟡 with its fix (N1 copies, N2 numbered repeats, N3 junction fields about one side, N6 family placement, N7 a type enum switching more than 3 fields, N8 a live duplicate).
 
 - **Permissions consistency** (cross-check §8.1 Permissions catalog + §9.1 hierarchy vs every entity / rule):
-  - Every `require_permission` argument is in §8.1 (🔴 if not).
+  - Every `require_permission` and `has_permission` argument is in §8.1 (🔴 if not).
   - Every entity with `**Edit permission:** admin` has the `baseline-admin` row (`<slug>:admin`) declared in §8.1 (🔴 if missing).
-  - Every `workflow-gate (rule)` row is invoked by at least one rule; every `workflow-gate (lifecycle)` row is invoked by a `require_permission` rule on the gated entity's `workflow_state` transition or referenced by a §9.1 `process_gates` row (the spec has no lifecycle table; the blueprint's §7 `requires_permission?` states become these) (🟡 if dead).
+  - Every `workflow-gate (rule)` row is invoked by at least one rule; every `workflow-gate (lifecycle)` row is cited by the `has_permission` of a gate rule on the gated entity's `workflow_state` transition or of a §8.2 `create` rule, in every RACI mode (in `living` mode by a §9.1 `_enforcement rules_` A-gate, inside its `or` with `is_raci_actor`; an A-gate repeated in §3 `validation_rules` is 🔴) (the spec has no lifecycle table; the blueprint's §7 `requires_permission?` states become these) (🟡 if dead).
+  - Every `workflow-gate (lifecycle)` row's `included in :admin?` agrees with its `high risk?` and the access level: ✓ with a §9.1 `<slug>:admin` → gate row, except a high-risk gate under `raci`, which is `-` with no such row; every other §8.1 row has `high risk?` `-` (🔴 on disagreement).
   - Every `narrow` row is consumed by an entity's `Edit permission:` annotation or a rule (🟡 if dead).
   - No `workflow-gate` permission is included by `<slug>:manage` in §9.1 (🔴 — defeats the gate).
   - Every `narrow` permission rolls up under `<slug>:manage` or higher in §9.1 (🔴 — narrow tier would be unreachable otherwise).
@@ -90,9 +91,10 @@ When the user wants to add entities, fields, rules, or §6 link rows to an exist
 2. Capture what to add (entity / field / rule) via conversation.
 3. **If adding entities**, re-run Stage 2 reconciliation against the live catalog for the new entities only. Same collision detection, same widgets, same ledger: the widgets are `Q:` tasks under the `Match › Extend the design` stage task, and step 4 starts only when `TaskList` shows none pending or in progress.
 4. **If adding fields to an existing owned entity**, apply Stage 4 field elicitation for the new fields. Then re-run Stages 5-10 (scans, consistency gate) on the affected entity.
-5. **If adding rules**, draft the JsonLogic; run the Stage 8 consistency gate.
-6. Stamp `version: "3.1"`.
-7. Write the updated file at **`semantius/specs/<system_slug>-semantic-spec.md`** (create the folder if missing). If the input file you read in step 1 sits at the workspace root, leave that file alone; the `semantius/specs/` path is the truth-source. Run the pre-save verification block from Stage 11.
+5. **If adding rules**, draft the JsonLogic; run the Stage 8 consistency gate. A gate rule cites the gate's own permission with `has_permission` (Stage 10, "Gate rules").
+6. **Keep the gate marks.** Existing §8.1 rows keep their `included in :admin?` and `high risk?` cells. A `workflow-gate (lifecycle)` row added for a new gated state takes its `high risk?` from the blueprint's §7 (Stage 1), and its `included in :admin?` and §9.1 `<slug>:admin` → gate row from the access level (SKILL.md, "What each access level authors").
+7. Stamp `version: "3.1"`.
+8. Write the updated file at **`semantius/specs/<system_slug>-semantic-spec.md`** (create the folder if missing). If the input file you read in step 1 sits at the workspace root, leave that file alone; the `semantius/specs/` path is the truth-source. Run the pre-save verification block from Stage 11.
 
 ---
 
@@ -101,7 +103,7 @@ When the user wants to add entities, fields, rules, or §6 link rows to an exist
 Use when the blueprint has materially changed (entities added/removed, role classifications flipped, lifecycle states added) and the spec needs a fresh pass rather than a series of Extends.
 
 1. Read the existing spec as content, not structure. Extract user-confirmed decisions worth preserving: `promotion_decisions`, custom field titles diverging from blueprint defaults, hand-tuned descriptions in §1, §7 questions and their resolutions.
-2. Drive a fresh Stage 1-10 pass with the current blueprint as input.
+2. Drive a fresh Stage 1-10 pass with the current blueprint as input (the §8.1 `high risk?` marks are re-read from its §7, and every gate rule cites the gate's own permission with `has_permission`).
 3. **Carry forward** the preserved decisions where they still apply (e.g. a `promote-to-master` decision for an entity that's still in the blueprint).
 4. Show the user a diff summary: what's new, what's changed, what's removed.
-5. Stamp `version: "3.1"`, write a fresh file at **`semantius/specs/<system_slug>-semantic-spec.md`** (create the folder if missing). If the input spec sits at the workspace root, leave that file untouched; the `semantius/specs/` path is the canonical location. Git tracks both files; the user can `git mv` or delete the root copy when ready.
+5. Stamp `version: "3.1"`, write a fresh file at **`semantius/specs/<system_slug>-semantic-spec.md`** (create the folder if missing). If the input spec sits at the workspace root, leave that file untouched; the `semantius/specs/` path is the canonical location. Git tracks both files; the user can `git mv` or delete the root copy when ready. Run the pre-save verification block from Stage 11.

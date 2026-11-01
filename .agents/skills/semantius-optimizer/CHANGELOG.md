@@ -8,6 +8,35 @@ Entries below are newest first.
 
 ---
 
+## One permission per gate: §8.1 `high risk?` and the lifecycle-gate heuristic
+
+2026-11-01. Paired with the gate permission model (one `workflow-gate (lifecycle)` permission per gate at `gated` and `raci`, held by the admin except high-risk gates under `raci`, every gate rule citing it through `has_permission`).
+
+1. **`spec-extract-lib.ts`** emits the six-column §8.1 header ``| permission | tier | description | included in `:admin`? | high risk? | reconciliation |``. `high risk?` is ✓ only on a `workflow-gate (lifecycle)` row under `access_scope: raci` that `<slug>:admin` does not include; it is `-` on every other row and at every other level (at `gated` the admin holds every gate, so live state cannot show the marker).
+2. **Tier heuristic.** Every gate is now cited by a rule, so "cited means `workflow-gate (rule)`" would misclassify every lifecycle gate. A code is `workflow-gate (lifecycle)` when its citing validation rule carries `value_changed` on `workflow_state`, or when it sits in the `has_permission` branch of an `or` next to `is_raci_actor`; any other cited code stays `workflow-gate (rule)`, and an uncited one stays `workflow-gate (lifecycle)`. Citations are read structurally from `require_permission` and `has_permission` operands instead of a text match on the rules JSON.
+3. **Round-trip:** `fixture-full.json` gains `deploy_asset` (a living A-gate transition rule, included by `:admin`, `high risk?` -) next to `approve_vendor` (no `:admin` row, `high risk?` ✓); new `fixture-gated.json` / `expected-gated.md` (an `access_scope: gated` module with a `has_permission` transition gate that `:admin` includes and a `has_permission` rule gate); every golden gains the column. SKILL.md Category A / B describe the column and the heuristic.
+4. **Create gates.** A code cited in the gated branch of a create guard (an insert-only rule, `{"if": [{"==": [{"var": "$old"}, null]}, <gate check>, true]}`, where the gate check is `has_permission(<gate>)` or the living `or(is_raci_actor(<entity>, <initial state>, "accountable"), has_permission(<gate>))`) is `workflow-gate (lifecycle)`, so its tier and `high risk?` come out right instead of reading as a rule gate. `fixture-gated.json` gains the plain create gate `create_request` (included by `:admin`), and `fixture-full.json` the high-risk living create gate `procure_asset` (no `:admin` row, `high risk?` ✓); goldens regenerated.
+
+---
+
+## Entity icon is read from `icon_name`
+
+2026-10-27. Paired with the analyst entry "Entity icon is `**Icon:**`, stored in `entities.icon_name`".
+
+1. **`spec-extract-lib.ts`** emits `**Icon:** <icon_name>` from the live `entities.icon_name`, omitted when empty.
+2. **The round-trip fixtures** carry `icon_name`, and `expected-full.md` has the `**Icon:**` line.
+
+---
+
+## Diagram-only run
+
+2026-10-24. A request for only a diagram of a deployed module now has a route; without one, an agent drew its own `erDiagram` listing every column instead of the blueprint-style flowchart.
+
+1. **`spec-extract-lib.ts`** takes `--diagram`: it renders as usual, prints only the §2 Mermaid block to stdout, and writes no file (the overwrite guard is skipped). The block is cut from the same render, so it equals a full run's §2.
+2. **SKILL.md** gains the "Diagram-only run" section and the diagram trigger in the description (the "pull `{slug}` down" example phrase and the closing "produces a markdown spec" clause dropped to stay under the 1024-character limit).
+
+---
+
 ## `label` is a §5 property
 
 2026-10-16. Paired with the analyst entry "every enum entry gets a label and a color; `label` is a §5 property".

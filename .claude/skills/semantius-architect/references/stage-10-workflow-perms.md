@@ -1,10 +1,10 @@
-*Reference for `semantius-architect`. Loaded on demand; the resident SKILL.md stage index points here.*
+*Reference for `semantius-architect`. Read before this stage's first output in a run (mandatory load, SKILL.md stage index).*
 
 ### Stage 10, Workflow-permission scan — W1 / W2 / W6 ONLY (architect scope)
 
 > **Architect scope.** The architect runs only families **W1**, **W2**, and **W6** — these are detectable at the blueprint level (from §7 lifecycle states + §3 entity classifications, no field shapes needed). Families **W3 (submit-then-lock)**, **W4 (ownership-scoped edit)**, **W4n (narrow-tier external write)**, and **W5 (reassignment)** require field-level shapes and have moved to the analyst (analyst Stage 5).
 >
-> The architect's job is to identify process gates (W1: transition to terminal state; W2: lifecycle closure; W6: create-time gating on restricted entities): mark the `requires_permission? = ✓` flag on the relevant §7 lifecycle rows, and record each W6 gate as a §8.2 rule with source flag `create`. Whether a gate also gets its own `workflow-gate (lifecycle)` row in §8.1 depends on the access level the permission step below decides (only under `raci`). The deeper field-driven gates are the analyst's responsibility.
+> The architect's job is to identify process gates (W1: transition to terminal state; W2: lifecycle closure; W6: create-time gating on restricted entities): mark the `requires_permission? = ✓` flag on the relevant §7 lifecycle rows, and record each W6 gate as a §8.2 rule with source flag `create`. Whether a gate also gets its own `workflow-gate (lifecycle)` row in §8.1 depends on the access level the permission step below decides (under `gated` and `raci`). The deeper field-driven gates are the analyst's responsibility.
 
 **Lifecycle state field name (fixed `workflow_state`).** Every §7 lifecycle state machine the architect emits is materialized downstream (by the analyst, deployed by the modeler) as a single required `enum` field named **exactly `workflow_state`** — its values are the §7 `state_name`s, its default the `initial?` state. This name is fixed platform-wide. The architect never refers to the state field as `status` / `state` / `lifecycle_state` anywhere (a §3 Description, a §7 cell, a §8.2 rule intent); name the concept in plain English ("the lifecycle state", "once the offer is approved") per Writing Convention 6, and know the field it lands in is `workflow_state`. The deployer FAILS LOUD on any module that stores lifecycle state under another field name, so this is a hard contract, not a preference.
 
@@ -24,7 +24,7 @@ Walk these six families against every entity:
 | W4 | **Ownership-scoped edit** | Entity carries `created_by` / `author_id` / `owner_id` / `assignee_id` / `interviewer_user_id` / `submitter_user_id` AND §3 framing is *personal / individual / private / their own / drafted by* (notes, comments, drafts, personal feedback, journal entries, individual scorecards). Same as Stage 8 family 13's default fire rule. | `<slug>:manage_all_<plural>` (the elevated override; the owner-equality check is the cheap path) |
 | W4n | **External-participant write (narrow tier)** | Entity whose primary writers are *outside* the module's normal operational role: panel interviewers (engineers, PMs, AEs writing `interview_feedback` without recruiter access), external reviewers (a partner organization's reviewer writing performance feedback), vendor reps (a supplier writing into a procurement portal), guest contributors (an external author writing into a CMS draft). Detection signals: §3 prose explicitly names "external", "panel", "guest", "vendor rep", "outside the team"; OR the entity is the only table a class of users needs to write while the rest of the module is recruiter / agent / employee facing. Often co-fires with W3 (the external participant is also the submitter-of-evidence) and W4 elevated (manager-override on the same table). | `<slug>:<role_noun>` declared as a `narrow`-tier row in §8.1 (e.g. `ats:interview`, `perf:reviewer`, `procurement:vendor_rep`); a §8.2 `narrow_write` rule (`<entity>_write_restricted_to_<role>`) scopes writes to the row's owner |
 | W5 | **Ownership reassignment** | Owner / assignee FK (`recruiter_id`, `account_owner_id`, `assignee_id`, `coordinator_id`, `manager_id`) where business policy is "this is rebalanced occasionally, but not by anyone". Often signaled by §3 prose mentioning "reassign", "transfer", "rebalance", "hand off". | `<slug>:reassign_<plural>` |
-| W6 | **High-weight create / start** | A few entity shapes gate *creation* itself, not just transitions (issuing a new requisition, opening a new GL period, starting a new appraisal cycle). Signal: a §3 entity description that says opening / issuing / starting the entity is restricted to a specific role. Rare; only fire when the description explicitly names a restriction. | a §8.2 rule with source flag `create`; under `raci` also `<slug>:open_<noun>`, `<slug>:issue_<noun>` |
+| W6 | **High-weight create / start** | A few entity shapes gate *creation* itself, not just transitions (issuing a new requisition, opening a new GL period, starting a new appraisal cycle). Signal: a §3 entity description that says opening / issuing / starting the entity is restricted to a specific role. Rare; only fire when the description explicitly names a restriction. | a §8.2 rule with source flag `create`; under `gated` and `raci` also `<slug>:open_<noun>`, `<slug>:issue_<noun>` |
 
 #### The scan-table artifact (mandatory)
 
@@ -51,7 +51,7 @@ The point of mechanical rules is to defeat under-detection. Default behavior is 
 - **W4 fires by default** when Stage 8 family 13 fired on the same entity. They are the same signal viewed from two angles (the JsonLogic in §3 vs the permission code in §8).
 - **W4n fires** when the entity's primary writers are detectably outside the module's normal operational role — §3 prose names "external" / "panel" / "guest" / "vendor rep" framing, OR the analyst can identify a real class of users that should write this single table without holding `<slug>:manage`. Override with a §7.2 entry naming a domain reason every operational user genuinely needs full `manage`-tier access to write this table. The narrow tier proposed by W4n is declared as a `narrow`-tier row in §8.1 and consumed by a §8.2 `narrow_write` rule; in the §9.1 hierarchy it rolls up under `<slug>:manage` (so `manage` holders transitively pass the narrow check).
 - **W5 fires** only when §3 prose explicitly names reassignment as a policy event ("recruiters can be rebalanced", "transferring ownership"). Otherwise mark `none — no reassignment policy in §3`.
-- **W6 fires** only when §3 prose explicitly says creation is restricted. Otherwise mark `none — creation unrestricted per §3`. When it fires, record it as a §8.2 rule with source flag `create` (and, under `raci` only, its §8.1 `workflow-gate (lifecycle)` row `<slug>:open_<noun>` / `<slug>:issue_<noun>`, whose code the §8.2 rule's intent names so the analyst binds the insert rule to it).
+- **W6 fires** only when §3 prose explicitly says creation is restricted. Otherwise mark `none — creation unrestricted per §3`. When it fires, record it as a §8.2 rule with source flag `create` (and, under `gated` and `raci`, its §8.1 `workflow-gate (lifecycle)` row `<slug>:open_<noun>` / `<slug>:issue_<noun>`, whose code the §8.2 rule's intent names so the analyst binds the insert rule to it).
 
 #### Naming convention for proposed permissions
 
@@ -72,28 +72,30 @@ The point of mechanical rules is to defeat under-detection. Default behavior is 
 
 #### Present the restricted steps to the user
 
-The scan table above stays your working table (mandatory, one row per entity); it is not shown. Required in guided and expert flow; it is its own turn, never combined with another stage's confirmation. Show the gates that fired as restricted steps in plain words (Convention 8), then one plain line for every other entity:
+The scan table above stays your working table (mandatory, one row per entity); it is not shown. Required in guided and expert flow; it is its own turn, never combined with another stage's confirmation. Show the gates that fired as restricted steps in plain words (Convention 8), with a `High risk` column, then one plain line for every other entity:
 
 > **Restricted steps.**
 >
-> | Restricted step | Why it's restricted |
-> |---|---|
-> | Approving a job offer | it commits the company to a salary |
-> | Hiring a candidate | it starts an employment |
-> | Publishing a job posting | it makes the posting public |
+> | Restricted step | Why it's restricted | High risk |
+> |---|---|---|
+> | Approving a job offer | it commits the company to a salary | yes |
+> | Hiring a candidate | it starts an employment | yes |
+> | Publishing a job posting | it makes the posting public | no |
 >
 > - Interview notes: no restricted step, notes are routine.
 > - Candidate sources: no restricted step, it is a setup list.
 >
 > Does this look right?
 
+**High risk** is proposed in the same table and confirmed with it, never asked as a separate question: propose `yes` for financial approvals, compliance sign-offs and hiring decisions, `no` for every other step, and take the user's changes in the same loop. The mark lands in the §7 `high risk?` column of the gated state, so it applies to gated states only; a restricted creation (W6) has no §7 row and its cell stays empty. A catalog clone takes the catalog's `high risk?` flag as the proposal.
+
 Before the permission step below has run, describe these only as restricted steps and never say who takes them: the access level is not decided yet. In expert flow, when the access-level question can follow, you may add "Who takes them is settled next."
 
-> **Fast flow, after the go-ahead:** don't show the proposal and don't ask; accept the gates as scanned and log one line ([fast-flow.md](../../semantius-admin/references/fast-flow.md), section 4). Then run the permission step below with `--flow fast` and take its result.
+> **Fast flow, after the go-ahead:** don't show the proposal and don't ask; accept the gates and their high-risk marks as scanned and log one line ([fast-flow.md](../../semantius-admin/references/fast-flow.md), section 4). Then run the permission step below with `--flow fast` and take its result.
 
 Loop on feedback until confirmed. Then run the permission step below. The confirmed gates feed:
 
-- §7: the `requires_permission? = ✓` mark on each gated state, and its `derived gate` cell per the body table below.
+- §7: the `requires_permission? = ✓` mark on each gated state, its `high risk?` mark (✓ for a step confirmed as high risk, `-` otherwise), and its `derived gate` cell per the body table below.
 - §8.2: the matching business rules (`lifecycle` / `owner_edit` / `narrow_write` / `create` source flags); the analyst converts each rule's intent to JsonLogic at spec time.
 - §8.1 and §9.1: per the body table below.
 
@@ -107,11 +109,11 @@ Runs as the last step of Stage 10, after the user confirmed the gate scan. The o
 
 | `access_scope` | Permissions | Process gates |
 |---|---|---|
-| `custom` | set up by hand; the pipeline creates or changes no permission, role or access level | — |
+| `custom` | set up by hand; the pipeline creates or changes no permission, role or access level | none |
 | `basic` | `<slug>:read`, `<slug>:manage` | not enforced |
 | `advanced` | `read`, `manage`, `admin` | not enforced |
-| `gated` | `read`, `manage`, `admin` | enforced: entering a gated state (or a gated creation) requires `<slug>:admin` directly; no per-gate permission |
-| `raci` | `read`, `manage`, `admin`, plus one `workflow-gate (lifecycle)` permission per gate | enforced: each gate's own permission, held **only** by the business roles the confirmed RACI matrix names; **not** included in `<slug>:admin` |
+| `gated` | `read`, `manage`, `admin`, plus one `workflow-gate (lifecycle)` permission per gate | enforced: each gate's own permission, held by the admin role (`<slug>:admin` includes every gate) |
+| `raci` | `read`, `manage`, `admin`, plus one `workflow-gate (lifecycle)` permission per gate | enforced: each gate's own permission, held by the Accountable business role the confirmed RACI matrix names, and by the admin role except on high-risk gates |
 
 **Run the script:**
 
@@ -146,23 +148,30 @@ bun "<skill-folder>/references/decide-access-scope.ts" --slug <system_slug> --fl
    - `View, edit and admin`: *"Adds an admin level that maintains the lookup lists and settings."* → `advanced`
 3. `ask.kind = level`, options `gated` / `raci` (expert flow). Header `Approvals`. Question: *"Who should take the restricted steps, such as <first gate in plain words>?"* The recommended option leads.
    - `The admin`: *"Only admins can take these steps."* → `gated`
-   - `Business roles`: *"Each step is assigned to a business role, such as a hiring manager. You confirm who does what next."* → `raci`
+   - `Business roles`: *"Each step is assigned to a business role, such as a hiring manager; admins can step in except on high-risk steps. You confirm who does what next."* → `raci`
 4. Existing module (`facts.current_access_scope` is one of `ask.options`; expert flow). Header and option texts as in question 2 (options `basic` / `advanced` only) or question 3 (otherwise), except the current level, which is labeled `Keep as it is` with a description naming the current level in plain words (→ `--answer <facts.current_access_scope>`). The question starts *"<System name> currently uses <current level in plain words>."*, followed by the question text of 2 or 3. The recommended option leads.
 
-Plain level words (question 4 only): `basic` "view and edit"; `advanced` "view, edit and admin"; `gated` "the admin takes the restricted steps"; `raci` "business roles take the restricted steps".
+Plain level words (question 4 only): `basic` "view and edit"; `advanced` "view, edit and admin"; `gated` "the admin takes the restricted steps"; `raci` "business roles take the restricted steps, and admins can step in except on high-risk steps".
 
 **After the decision:**
 
-- Result `raci`: Stage 11 drafts the RACI matrix (or shows the one the blueprint already carries) and the user confirms it. The access level is stamped only after the matrix is confirmed; if the user would rather have the admin take the steps, the access level is `gated`: set it directly without running the script again (the one result not taken from the script), and switch the body to the non-`raci` column of the body table below. When the live module already uses `raci` (`facts.current_access_scope` is `raci`), `gated` is not offered: the access level is never lowered, so the user edits the matrix until it is confirmed.
+- Result `raci`: Stage 11 drafts the RACI matrix (or shows the one the blueprint already carries) and the user confirms it. The access level is stamped only after the matrix is confirmed; if the user would rather have the admin take the steps, the access level is `gated`: set it directly without running the script again (the one result not taken from the script), keep the gate rows (set every gate's `included in :admin?` to ✓ and add any missing §9.1 `<slug>:admin` → gate row), and drop only the RACI trio drafted in this run. When the live module already uses `raci` (`facts.current_access_scope` is `raci`), `gated` is not offered: the access level is never lowered, so the user edits the matrix until it is confirmed.
 - Stage 13 writes `access_scope` into the frontmatter, and the body follows the access level:
 
-| Part | `raci` | every other access level |
-|---|---|---|
-| §8.1 baseline rows | read, manage, admin | read, manage; plus admin when the design has reference data entities or a gate |
-| §7 `derived gate` on a ✓ row | `<slug>:<verb>` (the naming table above) | `<slug>:admin` |
-| §8.1 `workflow-gate (lifecycle)` rows | one per gate (state or `create`); `included in :admin?` = `-` | none |
-| §8.2 `create` rule (restricted creation) | present; the analyst gates inserts on the gate's own permission | present; the analyst gates inserts on `<slug>:admin` |
-| §9.1 hierarchy | admin→manage→read; no admin→gate rows | admin→manage→read when admin exists |
-| RACI trio (realization + Processes wired + §9.2) | required; drafted and confirmed in Stage 11, following the RACI rule (each gate in exactly one process, each process with exactly one accountable row that holds its gates) | kept unchanged when inherited; never drafted |
+| Part | `raci` | `gated` | every other access level |
+|---|---|---|---|
+| §8.1 baseline rows | read, manage, admin | read, manage, admin | read, manage; plus admin when the design has reference data entities or a gate |
+| §7 `derived gate` on a ✓ row | `<slug>:<verb>` (the naming table above) | `<slug>:<verb>` (the naming table above) | `<slug>:admin` |
+| §7 `high risk?` | ✓ / - per gate | ✓ / - per gate (no effect at this level) | ✓ / - per gate (no effect) |
+| §8.1 `workflow-gate (lifecycle)` rows | one per gate (state or `create`); `included in :admin?` ✓, or `-` on a high-risk gate | one per gate (state or `create`); `included in :admin?` ✓ (high-risk too) | none |
+| §8.2 `create` rule (restricted creation) | present; the analyst gates inserts on the gate's own permission | present; the analyst gates inserts on the gate's own permission | present; dropped by the analyst |
+| §9.1 hierarchy | admin→manage→read, plus admin→gate for every non-high-risk gate | admin→manage→read, plus admin→gate for every gate | admin→manage→read when admin exists |
+| RACI trio (realization + Processes wired + §9.2) | required; drafted and confirmed in Stage 11, following the RACI rule (each gate in exactly one process, each process with exactly one accountable row that holds its gates) | kept unchanged when inherited (documentation); never drafted | kept unchanged when inherited; never drafted |
 
-**When the blueprint already has a body** (Customize first step, Clone, Extend, Rebuild), convert it to the access level. First, a §8.1 `workflow-gate (lifecycle)` row that no §7 ✓ row names (an older W6 creation gate) becomes a §8.2 rule with source flag `create`, so the gate is kept. Under every level except `raci`: set each ✓ row's `derived gate` to `<slug>:admin`, and delete every §8.1 `workflow-gate (lifecycle)` row and every §9.1 `<slug>:admin` → <that gate> row. Under `raci`: give each gate (state or `create`) one §8.1 `workflow-gate (lifecycle)` row with `included in :admin?` = `-`, set its §7 `derived gate` to that code, and delete every §9.1 `<slug>:admin` → <gate> row. Inherited RACI rows keep their gate codes at every level (outside `raci` they are documentation).
+**When the blueprint already has a body** (Customize first step, Clone, Extend, Rebuild), convert it to the access level. First, a §8.1 `workflow-gate (lifecycle)` row that no §7 ✓ row names (an older W6 creation gate) becomes a §8.2 rule with source flag `create`, so the gate is kept. Every §7 `high risk?` mark is kept as it is at every level (a §7 table without the column gets it, with `-` on every row). Then:
+
+- `basic` / `advanced` / `custom`: set each ✓ row's `derived gate` to `<slug>:admin`, and delete every §8.1 `workflow-gate (lifecycle)` row and every §9.1 `<slug>:admin` → <that gate> row.
+- `gated`: keep one §8.1 `workflow-gate (lifecycle)` row per gate (state or `create`; a gate without one gets it, named per the naming table above) with `included in :admin?` = ✓ (high-risk too), set each ✓ row's §7 `derived gate` to that code, and make sure every gate has its §9.1 `<slug>:admin` → <gate> row.
+- `raci`: keep one §8.1 `workflow-gate (lifecycle)` row per gate (state or `create`; a gate without one gets it, named per the naming table above) with `included in :admin?` = ✓, or `-` when its §7 `high risk?` is ✓; set each ✓ row's §7 `derived gate` to that code; a §9.1 `<slug>:admin` → <gate> row exists for every non-high-risk gate and is absent for every high-risk one.
+
+Inherited RACI rows keep their gate codes at every level (outside `raci` they are documentation).
