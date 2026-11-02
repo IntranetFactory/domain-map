@@ -176,13 +176,33 @@ describe("rule 4: admin role", () => {
 // ---------- rule 5: realization text names the gates and the events ----------
 
 describe("rule 5: realization text", () => {
-  test("an Accountable row on a process with no minted gate says ⚠ no gate wired", () => {
+  test("an Accountable row on a process with no gated state gets the write tier alone", () => {
     const model = helpDesk({
       lifecycle: [open, lifecycleState({ id: 2, data_object_id: TICKETS, state_name: "triaged", state_order: 2, process_id: 500 }), closed],
       processes: [processRow(500, "triage_tickets")],
       processRaci: [raciRow(1, 500, AGENT, "responsible"), raciRow(2, 500, LEAD, "accountable")],
     });
+    expect(raciOf(model, "accountable")).toEqual(["SUPPORT-LEAD: the gated entities' write tier"]);
+  });
+
+  test("an Accountable row whose only gated state mints no gate here says ⚠ no gate wired", () => {
+    const model = helpDesk({
+      lifecycle: [open, gated(2, "resolved", 2, { process_id: 500, domain_module_id: X }), closed],
+      processes: [processRow(500, "resolve_tickets")],
+      processRaci: [raciRow(1, 500, AGENT, "responsible"), raciRow(2, 500, LEAD, "accountable")],
+    });
     expect(raciOf(model, "accountable")).toEqual(["SUPPORT-LEAD: ⚠ no gate wired"]);
+  });
+
+  test("an Informed row on a process with no gated state lists the events on its wired state", () => {
+    const model = helpDesk({
+      lifecycle: [open, lifecycleState({ id: 2, data_object_id: TICKETS, state_name: "triaged", state_order: 2, process_id: 500 }), closed],
+      processes: [processRow(500, "triage_tickets")],
+      processRaci: [raciRow(1, 500, LEAD, "accountable"), raciRow(2, 500, WATCHER, "informed")],
+      // blank to_state: matched on the name suffix
+      triggerEvents: [triggerEvent({ id: 1, event_name: "ticket.triaged", data_object_id: TICKETS })],
+    });
+    expect(raciOf(model, "informed")).toEqual(["SUPPORT-WATCHER: notify on trigger_events [ticket.triaged]"]);
   });
 
   test("an Informed row lists only the trigger_events that fire on the process's gated transitions", () => {

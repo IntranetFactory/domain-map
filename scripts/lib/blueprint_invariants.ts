@@ -196,7 +196,7 @@ function checkInformedRows(pm: ModuleAccessModel, report: (rows: string[], detai
   for (const g of pm.raci) {
     if (raciLetter(g.raci) !== "I") continue;
     if (notifiedEvents(g.realization).length > 0) continue;
-    report([g.actor, g.process], `Informed row \`${g.actor}\` on \`${g.process}\` resolves to no trigger_event (no event on the process's gated entities): "${g.realization}"`);
+    report([g.actor, g.process], `Informed row \`${g.actor}\` on \`${g.process}\` resolves to no trigger_event (no event on the process's wired transitions): "${g.realization}"`);
   }
 }
 

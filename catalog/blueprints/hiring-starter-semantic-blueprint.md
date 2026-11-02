@@ -107,8 +107,8 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `job_requisitions` | is advertised through | `job_postings` | one_to_many | reference | yes | source | restrict | reference | - |
 | `job_requisitions` | receives | `job_applications` | one_to_many | reference | yes | source | restrict | reference | - |
 | `job_postings` | is applied to via | `job_applications` | one_to_many | reference | yes | source | restrict | reference | - |
-| `candidates` | submits | `job_applications` | one_to_many | reference | yes | target | restrict | reference | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | reference | yes | target | restrict | reference | - |
+| `candidates` | submits | `job_applications` | one_to_many | reference | yes | source | restrict | reference | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | reference | no | source | clear | reference | - |
 | `job_applications` | schedules | `interviews` | one_to_many | reference | yes | source | restrict | reference | - |
 | `interviews` | is scored via | `interview_scorecards` | one_to_many | reference | yes | source | restrict | reference | - |
 | `job_applications` | results in | `job_offers` | one_to_many | reference | yes | source | restrict | reference | - |
@@ -137,7 +137,6 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `hcm_positions` | spawns | `job_requisitions` | one_to_many | no | - |
 | `job_profiles` | feeds | `job_postings` | one_to_many | no | - |
 | `skill_profiles` | feeds | `candidates` | one_to_many | no | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | yes | - |
 | `recruitment_agencies` | sources | `candidates` | one_to_many | yes | - |
 | `recruitment_events` | attracts | `candidates` | one_to_many | yes | - |
 | `talent_pools` | groups | `candidates` | many_to_many | - | - |
@@ -146,7 +145,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `headcount_plans` | authorizes | `job_requisitions` | one_to_many | yes | - |
 | `position_demand_forecasts` | triggers | `job_requisitions` | one_to_many | no | - |
 | `interview_kits` | shapes | `interviews` | one_to_many | no | - |
-| `interview_panels` | produces | `interview_scorecards` | one_to_many | no | - |
+| `interview_panels` | produces | `interview_scorecards` | one_to_many | yes | - |
 | `interviewer_availability_slots` | booked_for | `interviews` | one_to_one | no | - |
 | `employees` | applies_as | `candidates` | one_to_many | no | - |
 
@@ -154,6 +153,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
+| `candidates` | is referred through | `candidate_referrals` | one_to_many | yes | - |
 | `job_applications` | requires | `candidate_assessments` | one_to_many | yes | - |
 | `job_offers` | is contingent on | `background_checks` | one_to_many | yes | - |
 | `job_offers` | spawns | `onboarding_journeys` | one_to_one | yes | - |
@@ -171,21 +171,21 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `job_requisitions` | defines_pipeline | `application_stages` | one_to_many | yes | - |
 | `job_applications` | transitions_via | `application_stage_transitions` | one_to_many | yes | - |
 | `job_requisitions` | gated_by | `requisition_approvals` | one_to_many | yes | - |
-| `job_postings` | syndicates_via | `job_posting_distributions` | one_to_many | no | - |
-| `job_postings` | asks | `application_screening_questions` | one_to_many | no | - |
-| `job_applications` | answers_via | `application_screening_answers` | one_to_many | no | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | no | - |
+| `job_postings` | syndicates_via | `job_posting_distributions` | one_to_many | yes | - |
+| `job_postings` | asks | `application_screening_questions` | one_to_many | yes | - |
+| `job_applications` | answers_via | `application_screening_answers` | one_to_many | yes | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | yes | - |
 | `interviews` | convenes | `interview_panels` | one_to_one | yes | - |
 | `job_offers` | evolves_through | `offer_versions` | one_to_many | yes | - |
-| `job_offers` | gated_by | `offer_approvals` | one_to_many | no | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | no | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | no | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | no | - |
-| `job_applications` | disposed_via | `application_dispositions` | one_to_many | no | - |
+| `job_offers` | gated_by | `offer_approvals` | one_to_many | yes | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | yes | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | yes | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | yes | - |
+| `job_applications` | disposed_via | `application_dispositions` | one_to_many | yes | - |
 | `job_applications` | logged_via | `applicant_flow_records` | one_to_one | yes | - |
 | `job_requisitions` | staffed_by | `hiring_team_assignments` | one_to_many | yes | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | no | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | no | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | yes | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | yes | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | no | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | no | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | no | - |
@@ -203,13 +203,13 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | HIRING-STARTER | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
-| HIRING-STARTER | HCM | HCM-ORG-POSITIONS | `headcount.approved` | `approved` _(state_change)_ | `job_requisitions` | event_stream | low | Headcount approval (often originating from HCM/SWP) confirmed back to HCM; gives ATS green light to source. |
+| HIRING-STARTER | HCM | HCM-ORG-POSITIONS | `headcount.approved` | `pending_approval` → `open` _(state_change)_ | `job_requisitions` | event_stream | low | Requisition approved and opened for recruiting in ATS; confirms to HCM that the approved headcount is now being recruited against. |
 | HIRING-STARTER | HCM | HCM-ORG-POSITIONS | `requisition.filled` | `filled` _(state_change)_ | `job_requisitions` | event_stream | low | Requisition fill closes headcount slot; HCM headcount-plan updates. |
 | HIRING-STARTER | HCM | HCM-LIFECYCLE-WORKFLOWS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | medium | Offer acceptance signals firm hiring intent; HCM creates pending-employee record. |
 | HIRING-STARTER | ATS | ATS-TALENT-POOLS | `job_application.rejected` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
-| HIRING-STARTER | COMP-MGMT | COMP-STATEMENTS | `job_offer.signed` | `signed` _(lifecycle)_ | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
+| HIRING-STARTER | COMP-MGMT | COMP-STATEMENTS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
 | HIRING-STARTER | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
-| HIRING-STARTER | PA | PA-WORKFORCE-METRICS | `recruitment_source.attributed` | _(lifecycle)_ | `recruitment_sources` | batch_sync | low | Source attribution feeds people-analytics quality-of-hire and cost-per-hire models. |
+| HIRING-STARTER | PA | PA-WORKFORCE-METRICS | `recruitment_source.attributed` | _(signal)_ | `recruitment_sources` | batch_sync | low | Source attribution feeds people-analytics quality-of-hire and cost-per-hire models. |
 | HIRING-STARTER | PA | PA-WORKFORCE-METRICS | `interview_scorecard.submitted` | _(lifecycle)_ | `interview_scorecards` | event_stream | low | - |
 | HIRING-STARTER | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
 | HIRING-STARTER | SWP | SWP-DEMAND-FORECAST | `requisition.filled` | `filled` _(state_change)_ | `job_requisitions` | event_stream | low | Filled requisition feeds SWP actuals-vs-plan reconciliation. |
@@ -220,10 +220,10 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | HIRING-STARTER | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
 | HIRING-STARTER | HCM | HCM-CORE-WORKER | `employee.terminated` | `terminated` _(lifecycle)_ | `job_requisitions` | api_call | low | Employee termination in HCM optionally triggers backfill requisition consideration in ATS. Low friction when SWP-driven; some orgs auto-open a backfill req on regrettable losses, others route through SWP for approval first. |
-| HIRING-STARTER | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
+| HIRING-STARTER | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | `hot` _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
 | HIRING-STARTER | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 | HIRING-STARTER | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | _(lifecycle)_ | `job_offers` | lifecycle_progression | medium | - |
-| HIRING-STARTER | SWP | SWP-DEMAND-FORECAST | `headcount.approved` | `approved` _(state_change)_ | `job_requisitions` | api_call | high | Approved headcount in SWP authorizes requisition creation in ATS. THIS IS THE CO-MASTER BRIDGE: SWP masters the intent slice (approved position, budget, time window) and ATS masters the execution slice (pipeline, candidates, interviews, offer). High friction because SWP's plan structure (org × geo × level × time) rarely matches ATS's requisition template structure (job code × location × hiring manager × pay range), requiring mapping rules that drift as either side evolves. |
+| HIRING-STARTER | SWP | SWP-DEMAND-FORECAST | `headcount_plan.approved` | `draft` → `approved` _(state_change)_ | `job_requisitions` | api_call | high | Approved headcount in SWP authorizes requisition creation in ATS. THIS IS THE CO-MASTER BRIDGE: SWP masters the intent slice (approved position, budget, time window) and ATS masters the execution slice (pipeline, candidates, interviews, offer). High friction because SWP's plan structure (org × geo × level × time) rarely matches ATS's requisition template structure (job code × location × hiring manager × pay range), requiring mapping rules that drift as either side evolves. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -260,7 +260,7 @@ _This scope holds `interview_scorecards` as **embedded_master**; the canonical s
 | order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | - | Interviewer is filling in ratings and notes against the rubric. |
-| 2 | `submitted` | - | ✓ | ✓ | - | `hiring-starter:submit_scorecard` | Scorecard submitted and locked; hire/no-hire recommendation recorded. |
+| 2 | `submitted` | - | ✓ | - | - | - | Scorecard submitted and locked; hire/no-hire recommendation recorded. |
 
 ### `interviews` (Interview)
 
@@ -342,7 +342,6 @@ _This scope holds `job_requisitions` as **embedded_master**; the canonical state
 | `hiring-starter:publish_posting` | workflow-gate (lifecycle) | Transition `job_postings` into state `published` | ✓ |
 | `hiring-starter:hire_candidate` | workflow-gate (lifecycle) | Transition `candidates` into state `hired` or `job_applications` into state `hired` | ✓ |
 | `hiring-starter:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` (⚠ no process) | ✓ |
-| `hiring-starter:submit_scorecard` | workflow-gate (lifecycle) | Transition `interview_scorecards` into state `submitted` | ✓ |
 | `hiring-starter:approve_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `approved` | ✓ |
 | `hiring-starter:rescind_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `rescinded` (⚠ no process) | ✓ |
 | `hiring-starter:view_all_candidates` | override (personal_content) | View all `candidates` rows beyond row-scope | ✓ |
@@ -388,7 +387,6 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `hiring-starter:admin` | `hiring-starter:publish_posting` |
 | `hiring-starter:admin` | `hiring-starter:hire_candidate` |
 | `hiring-starter:admin` | `hiring-starter:flag_do_not_hire` |
-| `hiring-starter:admin` | `hiring-starter:submit_scorecard` |
 | `hiring-starter:admin` | `hiring-starter:approve_offer` |
 | `hiring-starter:admin` | `hiring-starter:rescind_offer` |
 | `hiring-starter:admin` | `hiring-starter:view_all_candidates` |
@@ -424,7 +422,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `HIRING-MANAGER` | persona | accountable | `hire_candidate` | grant gates [hiring-starter:hire_candidate] + the gated entities' write tier |
 | `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notify on trigger_events [candidate.hired] |
 | `HIRING-MANAGER` | persona | responsible | `interview_candidates` | the gated entities' write tier |
-| `RECRUITING-MANAGER` | persona | accountable | `interview_candidates` | grant gates [hiring-starter:submit_scorecard] + the gated entities' write tier |
+| `RECRUITING-MANAGER` | persona | accountable | `interview_candidates` | the gated entities' write tier |
 | `RECRUITING-RECRUITER` | persona | consulted | `interview_candidates` | advisory read grant |
 | `RECRUITING-COORDINATOR` | persona | informed | `interview_candidates` | notify on trigger_events [interview_scorecard.submitted] |
 | `RECRUITING-RECRUITER` | persona | responsible | `draw_up_make_offer` | the gated entities' write tier |

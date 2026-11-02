@@ -110,14 +110,14 @@ _`field_required` applies only when both entities are installed. It never makes 
 
 | from | verb | to | cardinality | kind | field_required | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `candidates` | submits | `job_applications` | one_to_many | reference | yes | target | restrict | reference | - |
+| `candidates` | submits | `job_applications` | one_to_many | reference | yes | source | restrict | reference | - |
 | `job_applications` | schedules | `interviews` | one_to_many | reference | yes | source | restrict | reference | - |
 | `interviews` | is scored via | `interview_scorecards` | one_to_many | reference | yes | source | restrict | reference | - |
 | `job_applications` | requires | `candidate_assessments` | one_to_many | reference | yes | source | restrict | reference | - |
 | `interview_kits` | shapes | `interviews` | one_to_many | reference | no | source | clear | reference | - |
 | `interview_kits` | includes | `interview_questions` | many_to_many | reference | - | source | cascade | parent | - |
 | `interviews` | convenes | `interview_panels` | one_to_one | composition | yes | source | cascade | parent | - |
-| `interview_panels` | produces | `interview_scorecards` | one_to_many | composition | no | source | cascade | parent | - |
+| `interview_panels` | produces | `interview_scorecards` | one_to_many | composition | yes | source | cascade | parent | - |
 | `candidate_assessment_templates` | instantiates_as | `candidate_assessments` | one_to_many | reference | no | source | clear | reference | - |
 | `interviewer_availability_slots` | booked_for | `interviews` | one_to_one | reference | no | source | clear | reference | - |
 
@@ -144,8 +144,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `skill_profiles` | feeds | `candidates` | one_to_many | no | - |
 | `job_requisitions` | receives | `job_applications` | one_to_many | yes | - |
 | `job_postings` | is applied to via | `job_applications` | one_to_many | yes | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | yes | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | yes | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | no | - |
 | `recruitment_agencies` | sources | `candidates` | one_to_many | yes | - |
 | `recruitment_events` | attracts | `candidates` | one_to_many | yes | - |
 | `talent_pools` | groups | `candidates` | many_to_many | - | - |
@@ -155,6 +154,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
+| `candidates` | is referred through | `candidate_referrals` | one_to_many | yes | - |
 | `job_applications` | results in | `job_offers` | one_to_many | yes | - |
 | `candidates` | becomes | `employees` | one_to_one | yes | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | yes | - |
@@ -165,15 +165,15 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | yes | - |
 | `candidates` | discloses_via | `fcra_disclosures` | one_to_many | yes | - |
 | `job_applications` | transitions_via | `application_stage_transitions` | one_to_many | yes | - |
-| `job_applications` | answers_via | `application_screening_answers` | one_to_many | no | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | no | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | no | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | no | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | no | - |
-| `job_applications` | disposed_via | `application_dispositions` | one_to_many | no | - |
+| `job_applications` | answers_via | `application_screening_answers` | one_to_many | yes | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | yes | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | yes | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | yes | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | yes | - |
+| `job_applications` | disposed_via | `application_dispositions` | one_to_many | yes | - |
 | `job_applications` | logged_via | `applicant_flow_records` | one_to_one | yes | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | no | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | no | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | yes | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | yes | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | no | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | no | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | no | - |
@@ -211,7 +211,7 @@ _`role` and `install_optional` here belong to the other module named in that row
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ATS-INTERVIEWS | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
-| ATS-INTERVIEWS | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-INTERVIEWS | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | `hot` _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-INTERVIEWS | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
@@ -275,7 +275,7 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 | order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `draft` | ✓ | - | - | - | - | Interviewer is filling in ratings and notes against the rubric. |
-| 2 | `submitted` | - | ✓ | ✓ | - | `ats-interviews:submit_scorecard` | Scorecard submitted and locked; hire/no-hire recommendation recorded. |
+| 2 | `submitted` | - | ✓ | - | - | - | Scorecard submitted and locked; hire/no-hire recommendation recorded. |
 
 ### `interviewer_availability_slots` (Interviewer Availability Slot)
 
@@ -322,7 +322,6 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | `ats-interviews:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
 | `ats-interviews:hire_candidate` | workflow-gate (lifecycle) | Transition `candidates` into state `hired` or `job_applications` into state `hired` | ✓ |
 | `ats-interviews:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` (⚠ no process) | ✓ |
-| `ats-interviews:submit_scorecard` | workflow-gate (lifecycle) | Transition `interview_scorecards` into state `submitted` | ✓ |
 | `ats-interviews:view_all_candidates` | override (personal_content) | View all `candidates` rows beyond row-scope | ✓ |
 | `ats-interviews:manage_all_candidates` | override (personal_content) | Manage all `candidates` rows beyond row-scope | ✓ |
 | `ats-interviews:view_all_applications` | override (personal_content) | View all `job_applications` rows beyond row-scope | ✓ |
@@ -360,7 +359,6 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `ats-interviews:manage` | `ats-interviews:read` |
 | `ats-interviews:admin` | `ats-interviews:hire_candidate` |
 | `ats-interviews:admin` | `ats-interviews:flag_do_not_hire` |
-| `ats-interviews:admin` | `ats-interviews:submit_scorecard` |
 | `ats-interviews:admin` | `ats-interviews:view_all_candidates` |
 | `ats-interviews:admin` | `ats-interviews:manage_all_candidates` |
 | `ats-interviews:admin` | `ats-interviews:view_all_applications` |
@@ -383,7 +381,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `HIRING-MANAGER` | persona | accountable | `hire_candidate` | grant gates [ats-interviews:hire_candidate] + the gated entities' write tier |
 | `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notify on trigger_events [candidate.hired] |
 | `HIRING-MANAGER` | persona | responsible | `interview_candidates` | the gated entities' write tier |
-| `RECRUITING-MANAGER` | persona | accountable | `interview_candidates` | grant gates [ats-interviews:submit_scorecard] + the gated entities' write tier |
+| `RECRUITING-MANAGER` | persona | accountable | `interview_candidates` | the gated entities' write tier |
 | `RECRUITING-RECRUITER` | persona | consulted | `interview_candidates` | advisory read grant |
 | `RECRUITING-COORDINATOR` | persona | informed | `interview_candidates` | notify on trigger_events [interview_scorecard.submitted] |
 

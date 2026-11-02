@@ -46,7 +46,7 @@ flowchart TD
   users -->|"approves"| job_offers
   users -->|"owns pre-employee record"| pre_employees
   users -->|"owns as recruiter"| candidates
-  right_to_work_verifications -->|"has verifier"| users
+  users -->|"verifies"| right_to_work_verifications
   class candidates embedded_master;
   class job_offers embedded_master;
   class pre_employees master;
@@ -87,7 +87,7 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `users` | approves | `job_offers` | one_to_many | yes | source | restrict | reference | - |
 | `users` | owns pre-employee record | `pre_employees` | one_to_many | yes | source | restrict | reference | - |
 | `users` | owns as recruiter | `candidates` | one_to_many | no | source | clear | reference | - |
-| `right_to_work_verifications` | has verifier | `users` | many_to_many | - | source | cascade | parent | - |
+| `users` | verifies | `right_to_work_verifications` | one_to_many | no | source | clear | reference | - |
 
 ### 5.3 Links to entities outside this blueprint
 
@@ -98,8 +98,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
 | `skill_profiles` | feeds | `candidates` | one_to_many | no | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | yes | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | yes | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | no | - |
 | `recruitment_agencies` | sources | `candidates` | one_to_many | yes | - |
 | `recruitment_events` | attracts | `candidates` | one_to_many | yes | - |
 | `talent_pools` | groups | `candidates` | many_to_many | - | - |
@@ -111,6 +110,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
 | `candidates` | submits | `job_applications` | one_to_many | yes | - |
+| `candidates` | is referred through | `candidate_referrals` | one_to_many | yes | - |
 | `job_offers` | is contingent on | `background_checks` | one_to_many | yes | - |
 | `job_offers` | spawns | `onboarding_journeys` | one_to_one | yes | - |
 | `job_offers` | triggers | `benefit_enrollments` | one_to_one | yes | - |
@@ -123,14 +123,14 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `candidates` | consents_via | `candidate_consents` | one_to_many | yes | - |
 | `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | yes | - |
 | `candidates` | discloses_via | `fcra_disclosures` | one_to_many | yes | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | no | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | yes | - |
 | `job_offers` | evolves_through | `offer_versions` | one_to_many | yes | - |
-| `job_offers` | gated_by | `offer_approvals` | one_to_many | no | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | no | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | no | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | no | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | no | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | no | - |
+| `job_offers` | gated_by | `offer_approvals` | one_to_many | yes | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | yes | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | yes | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | yes | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | yes | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | yes | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | no | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | no | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | no | - |
@@ -153,7 +153,7 @@ _`role` and `install_optional` here belong to the other module named in that row
 | ATS-PRE-EMPLOYEE-RECORD | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
 | ATS-PRE-EMPLOYEE-RECORD | HCM | HCM-LIFECYCLE-WORKFLOWS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | medium | Offer acceptance signals firm hiring intent; HCM creates pending-employee record. |
 | ATS-PRE-EMPLOYEE-RECORD | HCM | HCM-LIFECYCLE-WORKFLOWS | `pre_employee.activated` | `in_progress` → `activated` _(state_change)_ | `pre_employees` | event_stream | medium | Pre-employee activation hands the canonical reconciliation to HCM-mastered `employees`. ATS owns the pre-employee lifecycle stage (paperwork, background check, pre-boarding); at start-date the pre_employee row is reconciled into the HCM employee record. Identifier mapping (pre_employee_id → employee_id) is the canonical reconciliation gap. Replaces / complements the older candidate.hired and job_offer.accepted handoffs by carrying the proper post-acceptance reconciliation milestone. |
-| ATS-PRE-EMPLOYEE-RECORD | COMP-MGMT | COMP-STATEMENTS | `job_offer.signed` | `signed` _(lifecycle)_ | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
+| ATS-PRE-EMPLOYEE-RECORD | COMP-MGMT | COMP-STATEMENTS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
 | ATS-PRE-EMPLOYEE-RECORD | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
 | ATS-PRE-EMPLOYEE-RECORD | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
 

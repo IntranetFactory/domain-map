@@ -545,3 +545,7 @@ Read-only structural + B-band pass over SWP (domain id 100), live PostgREST. Zer
 ### Net effect
 
 No catalog rows written, no record_status touched (Rule #1). Read-only audit only.
+
+## 2026-11-02: `B2-S3` / q4 closed by a new SWP event
+
+Requested by the user as "fix 1.4" of the ATS Hiring Starter blueprint review; details in `audits/ATS/history.md`. New event 1790 `headcount_plan.approved` on `headcount_plans` (draft -> approved). Handoffs 14 and 1149 moved to it from ATS event 62, with source modules and the `job_requisitions` payload unchanged. SWP now publishes on an entity it masters, so the question of keeping or re-anchoring the source on event 62 no longer applies; `B2-S3` and q4 were removed. The remaining questions keep their numbers.

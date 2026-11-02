@@ -91,6 +91,11 @@ for (const d of decisions) {
   const r = byId.get(d.id);
   if (!r || !conflict(r)) continue;
   ownerCount++;
+  // Neither end is the one side: many on each. Nothing to flip, and no single field to place.
+  if (/really many-to-many/i.test(d.note ?? "")) {
+    merge(d.id, { relationship_type: "many_to_many", owner_side: "source" });
+    continue;
+  }
   if (d.parent === "source") {
     merge(d.id, { owner_side: "source", ...(d.verb_ok ? {} : { relationship_verb: r.inverse_verb, inverse_verb: r.relationship_verb }) });
   } else {

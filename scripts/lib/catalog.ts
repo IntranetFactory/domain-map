@@ -462,7 +462,7 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     // process_tools contributes only to the "process used somewhere" set (small today); process_id suffices.
     pg("GET", "/process_tools?select=process_id&limit=20000"),
     // trigger_events: the events each entity publishes. The blueprint's §9 Informed rows list the
-    // events on their process's gated entities (blueprint_derive.ts deriveRaciRealization).
+    // events on their process's wired transitions (blueprint_derive.ts deriveRaciRealization).
     pg("GET", "/trigger_events?select=id,event_name,data_object_id,domain_module_id,event_category,from_state,to_state&order=id.asc&limit=20000"),
   ]);
 

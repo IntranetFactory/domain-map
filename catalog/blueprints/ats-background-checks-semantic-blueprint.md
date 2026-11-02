@@ -71,13 +71,13 @@ flowchart TD
   candidates -->|"screened_via"| drug_health_screenings
   users -->|"approves"| job_offers
   users -->|"owns as recruiter"| candidates
-  background_checks -->|"has requester"| users
-  background_check_components -->|"has owner"| users
-  background_check_adjudications -->|"has adjudicator"| users
-  adverse_action_notices -->|"has owner"| users
-  background_check_disputes -->|"has owner"| users
-  pre_adverse_action_notices -->|"has owner"| users
-  drug_health_screenings -->|"has coordinator"| users
+  users -->|"requests"| background_checks
+  users -->|"owns"| background_check_components
+  users -->|"adjudicates"| background_check_adjudications
+  users -->|"owns"| adverse_action_notices
+  users -->|"owns"| background_check_disputes
+  users -->|"owns"| pre_adverse_action_notices
+  users -->|"coordinates"| drug_health_screenings
   class candidates embedded_master;
   class job_offers embedded_master;
   class background_checks embedded_master;
@@ -133,9 +133,9 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `candidates` | discloses_via | `fcra_disclosures` | one_to_many | composition | yes | source | cascade | parent | - |
 | `background_checks` | adjudicated_via | `background_check_adjudications` | one_to_one | reference | yes | source | restrict | reference | - |
 | `background_check_adjudications` | triggers | `adverse_action_notices` | one_to_one | reference | no | source | clear | reference | - |
-| `background_check_components` | disputed_via | `background_check_disputes` | one_to_many | reference | no | target | clear | reference | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | composition | no | source | cascade | parent | - |
-| `background_checks` | triggers_pre_notice | `pre_adverse_action_notices` | one_to_many | composition | no | source | cascade | parent | - |
+| `background_check_components` | disputed_via | `background_check_disputes` | one_to_many | reference | no | source | clear | reference | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | composition | yes | source | cascade | parent | - |
+| `background_checks` | triggers_pre_notice | `pre_adverse_action_notices` | one_to_many | composition | yes | source | cascade | parent | - |
 | `background_checks` | gated_by | `fcra_summary_of_rights_acknowledgements` | one_to_one | reference | yes | source | restrict | reference | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | reference | no | source | clear | reference | - |
 
@@ -145,13 +145,13 @@ _`field_required` applies only when both entities are installed. It never makes 
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `users` | approves | `job_offers` | one_to_many | yes | source | restrict | reference | - |
 | `users` | owns as recruiter | `candidates` | one_to_many | no | source | clear | reference | - |
-| `background_checks` | has requester | `users` | many_to_many | - | source | cascade | parent | - |
-| `background_check_components` | has owner | `users` | many_to_many | - | source | cascade | parent | - |
-| `background_check_adjudications` | has adjudicator | `users` | many_to_many | - | source | cascade | parent | - |
-| `adverse_action_notices` | has owner | `users` | many_to_many | - | source | cascade | parent | - |
-| `background_check_disputes` | has owner | `users` | many_to_many | - | source | cascade | parent | - |
-| `pre_adverse_action_notices` | has owner | `users` | many_to_many | - | source | cascade | parent | - |
-| `drug_health_screenings` | has coordinator | `users` | many_to_many | - | source | cascade | parent | - |
+| `users` | requests | `background_checks` | one_to_many | yes | source | restrict | reference | - |
+| `users` | owns | `background_check_components` | one_to_many | no | source | clear | reference | - |
+| `users` | adjudicates | `background_check_adjudications` | one_to_many | yes | source | restrict | reference | - |
+| `users` | owns | `adverse_action_notices` | one_to_many | no | source | clear | reference | - |
+| `users` | owns | `background_check_disputes` | one_to_many | no | source | clear | reference | - |
+| `users` | owns | `pre_adverse_action_notices` | one_to_many | no | source | clear | reference | - |
+| `users` | coordinates | `drug_health_screenings` | one_to_many | no | source | clear | reference | - |
 
 ### 5.3 Links to entities outside this blueprint
 
@@ -162,8 +162,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
 | `skill_profiles` | feeds | `candidates` | one_to_many | no | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | yes | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | yes | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | no | - |
 | `recruitment_agencies` | sources | `candidates` | one_to_many | yes | - |
 | `recruitment_events` | attracts | `candidates` | one_to_many | yes | - |
 | `talent_pools` | groups | `candidates` | many_to_many | - | - |
@@ -175,6 +174,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
 | `candidates` | submits | `job_applications` | one_to_many | yes | - |
+| `candidates` | is referred through | `candidate_referrals` | one_to_many | yes | - |
 | `job_offers` | spawns | `onboarding_journeys` | one_to_one | yes | - |
 | `job_offers` | triggers | `benefit_enrollments` | one_to_one | yes | - |
 | `job_offers` | seeds | `compensation_statements` | one_to_one | yes | - |
@@ -186,13 +186,13 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `candidates` | noted_via | `recruiter_interactions` | one_to_many | no | - |
 | `candidates` | consents_via | `candidate_consents` | one_to_many | yes | - |
 | `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | yes | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | no | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | yes | - |
 | `job_offers` | evolves_through | `offer_versions` | one_to_many | yes | - |
-| `job_offers` | gated_by | `offer_approvals` | one_to_many | no | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | no | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | no | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | no | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | no | - |
+| `job_offers` | gated_by | `offer_approvals` | one_to_many | yes | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | yes | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | yes | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | yes | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | yes | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | no | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | no | - |
 | `candidates` | verified_via | `right_to_work_verifications` | one_to_many | no | - |
@@ -212,7 +212,7 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 | ATS-BACKGROUND-CHECKS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
 | ATS-BACKGROUND-CHECKS | HCM | HCM-LIFECYCLE-WORKFLOWS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | medium | Offer acceptance signals firm hiring intent; HCM creates pending-employee record. |
 | ATS-BACKGROUND-CHECKS | PAYROLL | PAYROLL-RUN | `background_check.cleared` | _(lifecycle)_ | `background_checks` | api_call | medium | Cleared background check unblocks final pay setup at start date; PAYROLL setup proceeds. |
-| ATS-BACKGROUND-CHECKS | COMP-MGMT | COMP-STATEMENTS | `job_offer.signed` | `signed` _(lifecycle)_ | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
+| ATS-BACKGROUND-CHECKS | COMP-MGMT | COMP-STATEMENTS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
 | ATS-BACKGROUND-CHECKS | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
 | ATS-BACKGROUND-CHECKS | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
 

@@ -2,7 +2,11 @@
 
 ## Status (2026-11-02)
 
-Steps 0 to 4 are done and waiting for review. Nothing from steps 1 to 4 is committed. Steps 5 to 8 have not started.
+Steps 1 to 6 are done. Nothing is committed in either repo, including step 0. The user regenerates the other 47 blueprints one by one, so step 7 is theirs, and step 8 is also theirs. The test deploy was skipped by the user's decision, so the analyst and modeler rules are not proven by a deploy.
+
+Step 6 results: 178 `users` links, 470 `owner_side` conflicts and 144 optional composition links fixed, with `.tmp_deploy/catalog_cleanup_step6_2026_11_02.ts` and `backups/catalog-cleanup-step6-2026-11-02.json`. Prevention is in place, with `.tmp_deploy/catalog_prevention_step6_2026_11_02.ts`. `owner_side` is computed, and the computed field and the validation rule passed live tests.
+
+Remaining findings, not from this plan: `--released --lint` still fails on 4 R4 findings in LMS modules. 97 modules outside the released set cannot generate a blueprint, mostly for a missing `entity_type`, which will surface during step 7.
 
 Decided during review, and applied to the skills:
 1. **Junction leg to an external entity:** a documented exception. Every leg stays `parent` and `cascade`, because a junction row is only a link. `cascade` stays invalid on spec §6 rows. Not yet proven by a deploy.

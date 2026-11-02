@@ -41,17 +41,6 @@ a3:
 
 ---
 
-q4: Two requisition-creation handoffs publish from the SWP planning side on an event whose payload is mastered by the recruiting domain. Should they keep the SWP source, or be re-anchored to the recruiting module that owns the data?
-
-- a) keep the SWP source and record the co-mastering (Signal-1) exception in the audit notes
-- b) re-anchor both handoffs to the recruiting pipeline module
-
-Recommended: a. SWP co-masters requisitions as the canonical Signal-1 example, which licenses it to publish requisition-creation events from planning, and keeping the source avoids overwriting a non-empty value. Option (b) re-anchors a value, so it needs your call.
-
-a4:
-
----
-
 q5: A fifth SWP role, Org Design Practitioner, was in a prior design but is not live today (four roles exist now). Was it intentionally dropped, or should it be re-authored?
 
 - a) confirm the four-role posture is intentional and close the drift
@@ -135,4 +124,4 @@ a9:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S5 q2=B2-S1 q3=B2-S2 q4=B2-S3 q5=B2-S4 q6=B2-S6 q7=B1A-SELF-CONTAIN q8=B3-S1+B3-S2+B3-S3 q9=B3-S4 q10=B2-B9D-OWN-980 q11=B2-B9D-OWN-1322 q12=B2-B9D-OWN-1324 | domain_id=100 -->
+<!-- agent map, ignore: q1=B2-S5 q2=B2-S1 q3=B2-S2 q5=B2-S4 q6=B2-S6 q7=B1A-SELF-CONTAIN q8=B3-S1+B3-S2+B3-S3 q9=B3-S4 q10=B2-B9D-OWN-980 q11=B2-B9D-OWN-1322 q12=B2-B9D-OWN-1324 | domain_id=100 -->

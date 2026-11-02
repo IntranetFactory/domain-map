@@ -15,6 +15,9 @@
 //      + catalog/skills/*                                              released domain/bundle, plus
 //                              the installable use-<code> skill folder rendered from the template.
 //
+// A lint step (generate_blueprints.ts --released --lint) runs between 2 and 3. It writes nothing, and
+// a failure there fails the build at the end like any other step.
+//
 // Ordering matters for freshness + speed: step 1 forces a fresh DB read and rewrites the shared
 // catalog cache (.cache/.catalog-cache.json, 5-min TTL); step 2 reads that just-written cache
 // (a cache hit, fast); step 3 pulls the catalog itself (its own bulk path, independent of the cache).

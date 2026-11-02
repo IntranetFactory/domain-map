@@ -1209,4 +1209,24 @@ Wording changes in the checklist (readings of existing rules, each now naming it
 
 **Scope.** SKILL.md (Rules #13, #15, #16, #20; Phase B; the channel rule; S3, M7, M9, B6, B6b, B10, B14; the data-object research section) and references module-shape.md, modules.md, canonical-examples.md, domain-audit-procedure.md. Code and catalog changes are recorded in the plan. Blueprint emission stays a separate, user-triggered step.
 
-**Status.** Active. The old `necessity` column stays in the catalog only until the user deletes it after review.
+**Status.** Active. The old `necessity` column was deleted on 2026-11-02, with its values in `backups/necessity-column-2026-11-02.json`.
+
+## 2026-11-02 - Relationship data defects fixed at the root, and stopped from coming back
+
+**Context.** Blueprints showed conflicting link data because the catalog held it, and nothing stopped it being written or published. `users` links were stored as many-to-many (211 rows), `owner_side` and the cardinality disagreed (470 rows), and optional composition links contradicted their `parent` field (144 rows).
+
+**Decision.**
+- **`owner_side` is computed from the cardinality,** except on `one_to_one` and `many_to_many`, because it stored the same fact twice. Each existing conflict was decided by what the link means, because in many rows the cardinality was the wrong value, not `owner_side`.
+- **A validation rule refuses a new `many_to_many` reference to `users`.** A role is one person per record, and a genuine panel or team is a junction or an association.
+- **An optional composition link is a defect when its child has no other parent.** Children with several possible parents use `reference` links instead, because two `parent` fields cannot both be mandatory.
+- **`--lint` blocks on these defects and on R7,** and `build_catalog.ts` runs it.
+
+**Reasoning.** Audits alone could not fix this: only 1 of 184 domains had recorded health checks. Fixing the rows without the rules would let the same defects return.
+
+**Scope.** SKILL.md (B6b, B7b, Blueprints), module-shape.md, `scripts/generate_blueprints.ts`, `scripts/build_catalog.ts`, and the catalog via `.tmp_deploy/catalog_cleanup_step6_2026_11_02.ts` and `.tmp_deploy/catalog_prevention_step6_2026_11_02.ts`.
+
+**Status.** Active.
+
+## 2026-11-02 - A process does not need a gate in the blueprint
+
+Removing the `submit_scorecard` gate (ATS q5) left `interview_candidates` wired only to an unrestricted state, and the generator printed `⚠ no gate wired` and `⚠ no event wired`, although the architect template (9.1) covers a process without a gate. `deriveRaciRealization` now gives that Accountable row the write tier alone and matches Informed events on every wired state. `⚠ no gate wired` now means a gated state is wired but the module mints no gate for it. `process_id` no longer implies a gated state.

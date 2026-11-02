@@ -87,7 +87,7 @@ flowchart TD
   locations -->|"rolls_up_to"| locations
   job_requisitions -->|"defines_pipeline"| application_stages
   job_applications -->|"transitions_via"| application_stage_transitions
-  application_stages -->|"lands_at"| application_stage_transitions
+  application_stages -->|"receives"| application_stage_transitions
   job_requisitions -->|"gated_by"| requisition_approvals
   job_postings -->|"syndicates_via"| job_posting_distributions
   job_postings -->|"asks"| application_screening_questions
@@ -189,20 +189,20 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `job_requisitions` | is advertised through | `job_postings` | one_to_many | reference | yes | source | restrict | reference | - |
 | `job_requisitions` | receives | `job_applications` | one_to_many | reference | yes | source | restrict | reference | - |
 | `job_postings` | is applied to via | `job_applications` | one_to_many | reference | yes | source | restrict | reference | - |
-| `candidates` | submits | `job_applications` | one_to_many | reference | yes | target | restrict | reference | - |
+| `candidates` | submits | `job_applications` | one_to_many | reference | yes | source | restrict | reference | - |
 | `org_units` | rolls_up_to | `org_units` | one_to_many | reference | no | source | clear | reference | - |
 | `locations` | rolls_up_to | `locations` | one_to_many | reference | no | source | clear | reference | - |
 | `job_requisitions` | defines_pipeline | `application_stages` | one_to_many | reference | yes | source | restrict | reference | - |
 | `job_applications` | transitions_via | `application_stage_transitions` | one_to_many | composition | yes | source | cascade | parent | - |
-| `application_stages` | lands_at | `application_stage_transitions` | one_to_many | reference | yes | target | restrict | reference | - |
+| `application_stages` | receives | `application_stage_transitions` | one_to_many | reference | yes | source | restrict | reference | - |
 | `job_requisitions` | gated_by | `requisition_approvals` | one_to_many | composition | yes | source | cascade | parent | - |
-| `job_postings` | syndicates_via | `job_posting_distributions` | one_to_many | composition | no | source | cascade | parent | - |
-| `job_postings` | asks | `application_screening_questions` | one_to_many | composition | no | source | cascade | parent | - |
-| `job_applications` | answers_via | `application_screening_answers` | one_to_many | composition | no | source | cascade | parent | - |
+| `job_postings` | syndicates_via | `job_posting_distributions` | one_to_many | composition | yes | source | cascade | parent | - |
+| `job_postings` | asks | `application_screening_questions` | one_to_many | composition | yes | source | cascade | parent | - |
+| `job_applications` | answers_via | `application_screening_answers` | one_to_many | composition | yes | source | cascade | parent | - |
 | `application_screening_questions` | answered_by | `application_screening_answers` | one_to_many | reference | yes | source | restrict | reference | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | composition | no | source | cascade | parent | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | composition | no | source | cascade | parent | - |
-| `job_applications` | disposed_via | `application_dispositions` | one_to_many | composition | no | source | cascade | parent | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | composition | yes | source | cascade | parent | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | composition | yes | source | cascade | parent | - |
+| `job_applications` | disposed_via | `application_dispositions` | one_to_many | composition | yes | source | cascade | parent | - |
 | `job_applications` | logged_via | `applicant_flow_records` | one_to_one | composition | yes | source | cascade | parent | - |
 | `job_requisitions` | staffed_by | `hiring_team_assignments` | one_to_many | composition | yes | source | cascade | parent | - |
 | `applicant_flow_records` | audited_via | `ofccp_audit_trails` | one_to_many | composition | yes | source | cascade | parent | - |
@@ -216,8 +216,8 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `users` | owns | `job_profiles` | one_to_many | no | source | clear | reference | - |
 | `users` | is recruiter for | `job_requisitions` | one_to_many | yes | source | restrict | reference | - |
 | `users` | owns as recruiter | `job_applications` | one_to_many | yes | source | restrict | reference | - |
-| `org_units` | has members | `users` | one_to_many | no | target | clear | reference | - |
-| `locations` | houses | `users` | one_to_many | no | target | clear | reference | - |
+| `org_units` | has members | `users` | one_to_many | no | source | clear | reference | - |
+| `locations` | houses | `users` | one_to_many | no | source | clear | reference | - |
 | `users` | is assigned to | `hiring_team_assignments` | one_to_many | yes | source | restrict | reference | - |
 | `users` | owns as recruiter | `candidates` | one_to_many | no | source | clear | reference | - |
 | `users` | publishes | `job_postings` | one_to_many | yes | source | restrict | reference | - |
@@ -247,8 +247,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `skill_profiles` | feeds | `candidates` | one_to_many | no | - |
 | `org_units` | sponsors | `benefit_plans` | many_to_many | - | - |
 | `survey_campaigns` | targets | `org_units` | many_to_many | - | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | yes | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | yes | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | no | - |
 | `recruitment_agencies` | sources | `candidates` | one_to_many | yes | - |
 | `recruitment_events` | attracts | `candidates` | one_to_many | yes | - |
 | `talent_pools` | groups | `candidates` | many_to_many | - | - |
@@ -273,6 +272,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `hcm_positions` | requires | `compliance_assignments` | one_to_many | no | - |
 | `org_units` | sponsors | `compliance_assignments` | one_to_many | no | - |
 | `org_units` | owns | `action_plans` | one_to_many | no | - |
+| `candidates` | is referred through | `candidate_referrals` | one_to_many | yes | - |
 | `job_applications` | schedules | `interviews` | one_to_many | yes | - |
 | `job_applications` | requires | `candidate_assessments` | one_to_many | yes | - |
 | `job_applications` | results in | `job_offers` | one_to_many | yes | - |
@@ -290,10 +290,10 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `candidates` | consents_via | `candidate_consents` | one_to_many | yes | - |
 | `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | yes | - |
 | `candidates` | discloses_via | `fcra_disclosures` | one_to_many | yes | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | no | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | no | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | no | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | no | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | yes | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | yes | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | yes | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | yes | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | no | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | no | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | no | - |
@@ -314,6 +314,7 @@ _`role` and `install_optional` here belong to the other module named in that row
 | `job_postings` | HIRING-STARTER (Hiring Starter) - ATS | embedded_master | - | - |
 | `job_postings` | TLNT-INTEL-MOBILITY (Mobility, Succession and Fit) - TLNT-INTEL | consumer | - | - |
 | `job_requisitions` | HCM-ORG-POSITIONS (Organization and Position Management) - HCM | consumer | yes | - |
+| `job_requisitions` | HIRING-STARTER (Hiring Starter) - ATS | embedded_master | yes | - |
 | `job_requisitions` | SWP-DEMAND-FORECAST (Demand Forecast) - SWP | contributor | - | - |
 | `job_requisitions` | TLNT-INTEL-MOBILITY (Mobility, Succession and Fit) - TLNT-INTEL | consumer | - | - |
 
@@ -348,12 +349,12 @@ _`role` and `install_optional` here belong to the other module named in that row
 | ATS-RECRUITMENT-PIPELINE | HCM | HCM-CORE-WORKER | `employee.terminated` | `terminated` _(lifecycle)_ | `hcm_positions` | lifecycle_progression | low | Position transitions from filled to open as the incumbent terminates; org-position module recomputes vacancy and span-of-control rollups. |
 | ATS-RECRUITMENT-PIPELINE | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
 | ATS-RECRUITMENT-PIPELINE | HCM | HCM-CORE-WORKER | `employee.terminated` | `terminated` _(lifecycle)_ | `job_requisitions` | api_call | low | Employee termination in HCM optionally triggers backfill requisition consideration in ATS. Low friction when SWP-driven; some orgs auto-open a backfill req on regrettable losses, others route through SWP for approval first. |
-| ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-RECRUITMENT-PIPELINE | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | `hot` _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-INTERVIEWS | `candidate_assessment.failed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-INTERVIEWS | `candidate_assessment.passed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-RECRUITMENT-PIPELINE | ATS | ATS-INTERVIEWS | `interview.completed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
-| ATS-RECRUITMENT-PIPELINE | SWP | SWP-DEMAND-FORECAST | `headcount.approved` | `approved` _(state_change)_ | `job_requisitions` | api_call | high | Approved headcount in SWP authorizes requisition creation in ATS. THIS IS THE CO-MASTER BRIDGE: SWP masters the intent slice (approved position, budget, time window) and ATS masters the execution slice (pipeline, candidates, interviews, offer). High friction because SWP's plan structure (org × geo × level × time) rarely matches ATS's requisition template structure (job code × location × hiring manager × pay range), requiring mapping rules that drift as either side evolves. |
+| ATS-RECRUITMENT-PIPELINE | SWP | SWP-DEMAND-FORECAST | `headcount_plan.approved` | `draft` → `approved` _(state_change)_ | `job_requisitions` | api_call | high | Approved headcount in SWP authorizes requisition creation in ATS. THIS IS THE CO-MASTER BRIDGE: SWP masters the intent slice (approved position, budget, time window) and ATS masters the execution slice (pipeline, candidates, interviews, offer). High friction because SWP's plan structure (org × geo × level × time) rarely matches ATS's requisition template structure (job code × location × hiring manager × pay range), requiring mapping rules that drift as either side evolves. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 

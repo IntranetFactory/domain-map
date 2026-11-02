@@ -42,7 +42,7 @@ flowchart TD
   referral_payouts["Referral Payouts"]
   referral_campaigns["Referral Campaigns"]
   users["Users"]
-  candidate_referrals -->|"introduces"| candidates
+  candidates -->|"is referred through"| candidate_referrals
   candidate_referrals -->|"earns"| referral_payouts
   referral_rewards -->|"governs"| referral_payouts
   referral_campaigns -->|"overrides"| referral_rewards
@@ -81,7 +81,7 @@ _`field_required` applies only when both entities are installed. It never makes 
 
 | from | verb | to | cardinality | kind | field_required | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | reference | yes | target | restrict | reference | - |
+| `candidates` | is referred through | `candidate_referrals` | one_to_many | reference | yes | source | restrict | reference | - |
 | `candidate_referrals` | earns | `referral_payouts` | one_to_one | reference | no | source | clear | reference | - |
 | `referral_rewards` | governs | `referral_payouts` | one_to_many | reference | yes | source | restrict | reference | - |
 | `referral_campaigns` | overrides | `referral_rewards` | one_to_many | reference | no | source | clear | reference | - |
@@ -104,7 +104,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
 | `skill_profiles` | feeds | `candidates` | one_to_many | no | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | yes | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | no | - |
 | `recruitment_agencies` | sources | `candidates` | one_to_many | yes | - |
 | `recruitment_events` | attracts | `candidates` | one_to_many | yes | - |
 | `talent_pools` | groups | `candidates` | many_to_many | - | - |
@@ -123,12 +123,12 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `candidates` | consents_via | `candidate_consents` | one_to_many | yes | - |
 | `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | yes | - |
 | `candidates` | discloses_via | `fcra_disclosures` | one_to_many | yes | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | no | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | no | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | no | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | no | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | no | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | no | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | yes | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | yes | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | yes | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | yes | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | yes | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | yes | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | no | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | no | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | no | - |

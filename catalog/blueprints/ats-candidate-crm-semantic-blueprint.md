@@ -164,20 +164,20 @@ _`field_required` applies only when both entities are installed. It never makes 
 
 | from | verb | to | cardinality | kind | field_required | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | reference | yes | target | restrict | reference | - |
-| `recruitment_agencies` | sources | `candidates` | one_to_many | reference | yes | target | restrict | reference | - |
-| `recruitment_events` | attracts | `candidates` | one_to_many | reference | yes | target | restrict | reference | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | reference | no | source | clear | reference | - |
+| `recruitment_agencies` | sources | `candidates` | one_to_many | reference | yes | source | restrict | reference | - |
+| `recruitment_events` | attracts | `candidates` | one_to_many | reference | yes | source | restrict | reference | - |
 | `talent_pools` | groups | `candidates` | many_to_many | reference | - | target | cascade | parent | - |
-| `candidates` | engaged_via | `candidate_engagements` | one_to_many | reference | no | target | clear | reference | - |
-| `candidate_nurture_campaigns` | generates | `candidate_engagements` | one_to_many | composition | no | source | cascade | parent | - |
-| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | reference | yes | target | restrict | reference | - |
+| `candidates` | engaged_via | `candidate_engagements` | one_to_many | reference | no | source | clear | reference | - |
+| `candidate_nurture_campaigns` | generates | `candidate_engagements` | one_to_many | composition | yes | source | cascade | parent | - |
+| `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | reference | yes | source | restrict | reference | - |
 | `recruitment_events` | has_attendance | `recruiting_event_attendances` | one_to_many | composition | yes | source | cascade | parent | - |
-| `candidates` | noted_via | `recruiter_interactions` | one_to_many | reference | no | target | clear | reference | - |
+| `candidates` | noted_via | `recruiter_interactions` | one_to_many | reference | no | source | clear | reference | - |
 | `candidates` | consents_via | `candidate_consents` | one_to_many | composition | yes | source | cascade | parent | - |
 | `talent_pools` | targets | `candidate_nurture_campaigns` | many_to_many | reference | - | source | cascade | parent | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | composition | no | source | cascade | parent | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | composition | no | source | cascade | parent | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | composition | no | source | cascade | parent | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | composition | yes | source | cascade | parent | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | composition | yes | source | cascade | parent | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | composition | yes | source | cascade | parent | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | reference | no | source | clear | reference | - |
 | `recruitment_agencies` | submits_via | `agency_submissions` | one_to_many | reference | no | source | clear | reference | - |
 | `candidates` | submitted_via | `agency_submissions` | one_to_many | reference | no | source | clear | reference | - |
@@ -212,7 +212,6 @@ _External entities are optional: this blueprint never installs them. If one exis
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
 | `skill_profiles` | feeds | `candidates` | one_to_many | no | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | yes | - |
 | `talent_segments` | materializes_into | `talent_pools` | one_to_many | no | - |
 | `dlp_incidents` | triggers_privacy_review | `data_subject_requests` | one_to_many | no | - |
 | `employees` | applies_as | `candidates` | one_to_many | no | - |
@@ -222,16 +221,17 @@ _External entities are optional: this blueprint never installs them. If one exis
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
 | `candidates` | submits | `job_applications` | one_to_many | yes | - |
+| `candidates` | is referred through | `candidate_referrals` | one_to_many | yes | - |
 | `candidates` | becomes | `employees` | one_to_one | yes | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | yes | - |
-| `internal_opportunities` | receives | `opportunity_applications` | one_to_many | no | - |
+| `internal_opportunities` | receives | `opportunity_applications` | one_to_many | yes | - |
 | `internal_opportunities` | ranked by | `fit_scores` | one_to_many | no | - |
 | `talent_pools` | has_member | `talent_pool_memberships` | one_to_many | yes | - |
 | `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | yes | - |
 | `candidates` | discloses_via | `fcra_disclosures` | one_to_many | yes | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | no | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | no | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | no | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | yes | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | yes | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | yes | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | no | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | no | - |
 | `candidates` | verified_via | `right_to_work_verifications` | one_to_many | no | - |
@@ -264,7 +264,7 @@ _`role` and `install_optional` here belong to the other module named in that row
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ATS-CANDIDATE-CRM | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
 | ATS-CANDIDATE-CRM | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
-| ATS-CANDIDATE-CRM | PA | PA-WORKFORCE-METRICS | `recruitment_source.attributed` | _(lifecycle)_ | `recruitment_sources` | batch_sync | low | Source attribution feeds people-analytics quality-of-hire and cost-per-hire models. |
+| ATS-CANDIDATE-CRM | PA | PA-WORKFORCE-METRICS | `recruitment_source.attributed` | _(signal)_ | `recruitment_sources` | batch_sync | low | Source attribution feeds people-analytics quality-of-hire and cost-per-hire models. |
 | ATS-CANDIDATE-CRM | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
 | ATS-CANDIDATE-CRM | TLNT-INTEL | TLNT-INTEL-MOBILITY | `opportunity.opened` | `open` _(state_change)_ | `internal_opportunities` | lifecycle_progression | low | A newly opened opportunity triggers MOBILITY to recompute match inferences and fit scores for eligible employees. |
 

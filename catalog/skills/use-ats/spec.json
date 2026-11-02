@@ -1840,7 +1840,7 @@
     },
     {
       "from": "application_stages",
-      "verb": "lands_at",
+      "verb": "receives",
       "to": "application_stage_transitions",
       "cardinality": "one_to_many",
       "required": true
@@ -1856,13 +1856,6 @@
       "from": "candidate_nurture_campaigns",
       "verb": "generates",
       "to": "candidate_engagements",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "candidate_referrals",
-      "verb": "introduces",
-      "to": "candidates",
       "cardinality": "one_to_many",
       "required": true
     },
@@ -1899,7 +1892,7 @@
       "verb": "documented_via",
       "to": "candidate_documents",
       "cardinality": "one_to_many",
-      "required": false
+      "required": true
     },
     {
       "from": "candidates",
@@ -1920,7 +1913,14 @@
       "verb": "annotated_via",
       "to": "candidate_notes",
       "cardinality": "one_to_many",
-      "required": false
+      "required": true
+    },
+    {
+      "from": "candidates",
+      "verb": "is referred through",
+      "to": "candidate_referrals",
+      "cardinality": "one_to_many",
+      "required": true
     },
     {
       "from": "candidates",
@@ -1934,7 +1934,7 @@
       "verb": "submits_via",
       "to": "data_subject_requests",
       "cardinality": "one_to_many",
-      "required": false
+      "required": true
     },
     {
       "from": "candidates",
@@ -1948,7 +1948,7 @@
       "verb": "self_identifies_via",
       "to": "eeo_responses",
       "cardinality": "one_to_many",
-      "required": false
+      "required": true
     },
     {
       "from": "candidates",
@@ -1962,7 +1962,7 @@
       "verb": "acknowledges_via",
       "to": "fcra_summary_of_rights_acknowledgements",
       "cardinality": "one_to_many",
-      "required": false
+      "required": true
     },
     {
       "from": "candidates",
@@ -2011,7 +2011,7 @@
       "verb": "self_ids_via",
       "to": "voluntary_self_identifications",
       "cardinality": "one_to_many",
-      "required": false
+      "required": true
     },
     {
       "from": "hcm_positions",
@@ -2039,7 +2039,7 @@
       "verb": "produces",
       "to": "interview_scorecards",
       "cardinality": "one_to_many",
-      "required": false
+      "required": true
     },
     {
       "from": "interviewer_availability_slots",
@@ -2074,14 +2074,14 @@
       "verb": "disposed_via",
       "to": "application_dispositions",
       "cardinality": "one_to_many",
-      "required": false
+      "required": true
     },
     {
       "from": "job_applications",
       "verb": "answers_via",
       "to": "application_screening_answers",
       "cardinality": "one_to_many",
-      "required": false
+      "required": true
     },
     {
       "from": "job_applications",
@@ -2123,7 +2123,7 @@
       "verb": "gated_by",
       "to": "offer_approvals",
       "cardinality": "one_to_many",
-      "required": false
+      "required": true
     },
     {
       "from": "job_offers",
@@ -2144,7 +2144,7 @@
       "verb": "asks",
       "to": "application_screening_questions",
       "cardinality": "one_to_many",
-      "required": false
+      "required": true
     },
     {
       "from": "job_postings",
@@ -2158,7 +2158,7 @@
       "verb": "syndicates_via",
       "to": "job_posting_distributions",
       "cardinality": "one_to_many",
-      "required": false
+      "required": true
     },
     {
       "from": "job_profiles",

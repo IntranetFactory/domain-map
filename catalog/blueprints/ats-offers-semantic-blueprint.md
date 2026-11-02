@@ -94,10 +94,10 @@ _`field_required` applies only when both entities are installed. It never makes 
 
 | from | verb | to | cardinality | kind | field_required | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `candidates` | submits | `job_applications` | one_to_many | reference | yes | target | restrict | reference | - |
+| `candidates` | submits | `job_applications` | one_to_many | reference | yes | source | restrict | reference | - |
 | `job_applications` | results in | `job_offers` | one_to_many | reference | yes | source | restrict | reference | - |
 | `job_offers` | evolves_through | `offer_versions` | one_to_many | composition | yes | source | cascade | parent | - |
-| `job_offers` | gated_by | `offer_approvals` | one_to_many | composition | no | source | cascade | parent | - |
+| `job_offers` | gated_by | `offer_approvals` | one_to_many | composition | yes | source | cascade | parent | - |
 | `offer_versions` | renders_as | `offer_letter_documents` | one_to_one | composition | yes | source | cascade | parent | - |
 | `offer_letter_templates` | rendered_as | `offer_letter_documents` | one_to_many | reference | no | source | clear | reference | - |
 
@@ -125,8 +125,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `skill_profiles` | feeds | `candidates` | one_to_many | no | - |
 | `job_requisitions` | receives | `job_applications` | one_to_many | yes | - |
 | `job_postings` | is applied to via | `job_applications` | one_to_many | yes | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | yes | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | yes | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | no | - |
 | `recruitment_agencies` | sources | `candidates` | one_to_many | yes | - |
 | `recruitment_events` | attracts | `candidates` | one_to_many | yes | - |
 | `talent_pools` | groups | `candidates` | many_to_many | - | - |
@@ -136,6 +135,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
+| `candidates` | is referred through | `candidate_referrals` | one_to_many | yes | - |
 | `job_applications` | schedules | `interviews` | one_to_many | yes | - |
 | `job_applications` | requires | `candidate_assessments` | one_to_many | yes | - |
 | `job_offers` | is contingent on | `background_checks` | one_to_many | yes | - |
@@ -152,16 +152,16 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | yes | - |
 | `candidates` | discloses_via | `fcra_disclosures` | one_to_many | yes | - |
 | `job_applications` | transitions_via | `application_stage_transitions` | one_to_many | yes | - |
-| `job_applications` | answers_via | `application_screening_answers` | one_to_many | no | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | no | - |
+| `job_applications` | answers_via | `application_screening_answers` | one_to_many | yes | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | yes | - |
 | `offer_versions` | proposes | `equity_grants` | one_to_many | no | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | no | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | no | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | no | - |
-| `job_applications` | disposed_via | `application_dispositions` | one_to_many | no | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | yes | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | yes | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | yes | - |
+| `job_applications` | disposed_via | `application_dispositions` | one_to_many | yes | - |
 | `job_applications` | logged_via | `applicant_flow_records` | one_to_one | yes | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | no | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | no | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | yes | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | yes | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | no | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | no | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | no | - |
@@ -189,7 +189,7 @@ _`role` and `install_optional` here belong to the other module named in that row
 | ATS-OFFERS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
 | ATS-OFFERS | HCM | HCM-LIFECYCLE-WORKFLOWS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | medium | Offer acceptance signals firm hiring intent; HCM creates pending-employee record. |
 | ATS-OFFERS | ATS | ATS-TALENT-POOLS | `job_application.rejected` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
-| ATS-OFFERS | COMP-MGMT | COMP-STATEMENTS | `job_offer.signed` | `signed` _(lifecycle)_ | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
+| ATS-OFFERS | COMP-MGMT | COMP-STATEMENTS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
 | ATS-OFFERS | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
 | ATS-OFFERS | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
 
@@ -198,7 +198,7 @@ _`role` and `install_optional` here belong to the other module named in that row
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ATS-OFFERS | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
-| ATS-OFFERS | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
+| ATS-OFFERS | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | `hot` _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-OFFERS | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 | ATS-OFFERS | ATS | ATS-INTERVIEWS | `candidate_assessment.failed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-OFFERS | ATS | ATS-INTERVIEWS | `candidate_assessment.passed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |

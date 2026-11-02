@@ -196,20 +196,6 @@ b2:
       Pattern flags govern PII access control. Rule #12 requires positive re-evaluation, not false-by-default. Flipping
       a non-empty flag value is a write the user owns.
 
-  - id: B2-S3
-    summary: Signal-1 attribution on event 62 headcount.approved
-    question: |
-      Handoff 14 (SWP-DEMAND-FORECAST -> ATS) and 1149 (SWP-DEMAND-FORECAST -> SWP-COST-PROJECTIONS) both carry
-      source_domain_module_id=94 (SWP) on trigger_event 62 whose payload data_object_id=1 (job_requisitions) is
-      ATS-mastered. Strict B10b derivation says source should be the master's module (ATS-RECRUITMENT-PIPELINE).
-      Signal-1 co-mastering arguably licenses SWP to publish requisition-creation events from its planning side.
-    options:
-      - keep as-is, formalize Signal-1 exception in audit notes
-      - re-anchor source_domain_module_id on handoffs 14 + 1149 to ATS-RECRUITMENT-PIPELINE (id=4)
-    why: |
-      Architectural intent on the Signal-1 contract; user owns the call. Mechanical PATCH either way (re-anchor would
-      overwrite a non-empty FK).
-
   - id: B2-S4
     summary: Role count drift, fifth role ORG-DESIGN-PRACTITIONER absent
     question: |

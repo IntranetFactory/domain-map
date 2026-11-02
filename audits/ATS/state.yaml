@@ -51,52 +51,11 @@ b2:
       - {rel: 1329, edge: "job_offers evolves_through offer_versions", owner: ATS-OFFERS}
       - {rel: 1337, edge: "job_applications logged_via applicant_flow_records", owner: ATS-RECRUITMENT-PIPELINE}
 
-  - id: B2-B6B-OWNER-SIDE
-    summary: "10 one_to_many edges name the child as owner_side; fix each (8 flips, 1 flip plus verb rewrite, 1 re-orientation)"
-    question: >
-      Apply the drafted owner_side fixes: flip owner_side to source on 810, 812, 813, 814, 1295, 1297,
-      1299, 1303; flip and rewrite the forward verb on 1316; re-orient 811 (candidates is the parent:
-      candidates is referred through candidate_referrals)?
-    options: ["yes, apply as drafted", "no, keep them"]
-    why: >
-      B6b: owner_side names the parent (the cascade root). Each edge was checked one by one, never a
-      blanket flip; 811 already names the true parent but is stored the wrong way round.
-
   - id: B2-M5-STATE-221
     summary: "job_applications.hired (state 221) is realized on ATS-PRE-EMPLOYEE-RECORD, a module that does not carry job_applications"
     question: "Move the realizer of job_applications.hired to ATS-RECRUITMENT-PIPELINE (the module that masters applications), so the gate becomes ats-recruitment-pipeline:hire_candidate?"
     options: ["yes, set domain_module_id 8 -> 4", "no, keep module 8 and add a job_applications row to it instead"]
     why: "M5 fail: a realizer that does not carry the entity mints a wrong-prefixed permission; it is also the one data failure the architect checker reports on the ats-recruitment-pipeline blueprint."
-
-  - id: B2-E4D-SUBMIT-SCORECARD
-    summary: "submit_scorecard gates the interviewer's own action on the Recruiting Manager; remodel as an owner rule"
-    question: >
-      Stop gating scorecard submission (requires_permission false on interview_scorecards.submitted),
-      so each interviewer submits their own scorecard and the scorecard locks once submitted (an owner
-      rule the analyst authors at spec time)?
-    options: ["yes, drop the gate", "no, keep it gated"]
-    why: "E4d: today only the process's Accountable (Recruiting Manager) and admins could submit, so interviewers could not submit their own feedback."
-
-  - id: B2-B9C-EVENT-REPOINTS
-    summary: "Four events point at states or entities that do not fit (re-points, destructive)"
-    question: >
-      Apply the four event fixes: 62 headcount.approved to_state approved -> open (from
-      pending_approval); 81 job_offer.signed to_state signed -> accepted, then move handoffs 121 and
-      398 onto 80 job_offer.accepted and delete 81; 365 recruitment_source.attributed category
-      lifecycle -> signal; 368 / 369 talent_pool.candidate_added / candidate_activated onto
-      talent_pool_memberships (to_state cold / hot)?
-    options: ["yes, all four", "only 62 and 81", "no"]
-    why: >
-      B9c / E6 R6: job_requisitions has no approved state (open is the approved, recruiting state);
-      job_offers has no signed state and offer_letter_documents.signed already records the signature,
-      so a second signed state would duplicate it; recruitment_sources has no lifecycle; the pool's own
-      state does not change when a member is added or activated.
-
-  - id: B2-HS-SOURCE-EDGE
-    summary: "recruitment_sources attributes candidates is required, so every candidate must have a source once sources are installed"
-    question: "Make the edge recruitment_sources attributes candidates (rel 810) not required, so a candidate can be saved without a known source?"
-    options: ["yes, is_required false", "no, keep it required"]
-    why: "Inbound and walk-in candidates often have no attributed source at capture. The other flagged pair (interviews is scored via interview_scorecards) is correct as is: a scorecard must belong to an interview."
 
   - id: B2-B4-PERSONAL-CONTENT
     summary: "Three masters hold owner-scoped personal data but are not flagged has_personal_content"

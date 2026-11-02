@@ -93,7 +93,7 @@ _`field_required` applies only when both entities are installed. It never makes 
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `talent_pools` | groups | `candidates` | many_to_many | reference | - | target | cascade | parent | - |
 | `talent_pools` | has_member | `talent_pool_memberships` | one_to_many | composition | yes | source | cascade | parent | - |
-| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | reference | yes | target | restrict | reference | - |
+| `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | reference | yes | source | restrict | reference | - |
 | `talent_segments` | materializes_into | `talent_pools` | one_to_many | reference | no | source | clear | reference | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | reference | no | source | clear | reference | - |
 | `candidate_tags` | applied_via | `candidate_tag_assignments` | one_to_many | reference | yes | source | restrict | reference | - |
@@ -116,8 +116,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
 | `skill_profiles` | feeds | `candidates` | one_to_many | no | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | yes | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | yes | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | no | - |
 | `recruitment_agencies` | sources | `candidates` | one_to_many | yes | - |
 | `recruitment_events` | attracts | `candidates` | one_to_many | yes | - |
 | `talent_pools` | targets | `candidate_nurture_campaigns` | many_to_many | - | - |
@@ -128,6 +127,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | from | verb | to | cardinality | field_required | notes |
 | --- | --- | --- | --- | --- | --- |
 | `candidates` | submits | `job_applications` | one_to_many | yes | - |
+| `candidates` | is referred through | `candidate_referrals` | one_to_many | yes | - |
 | `candidates` | becomes | `employees` | one_to_one | yes | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | yes | - |
 | `candidates` | engaged_via | `candidate_engagements` | one_to_many | no | - |
@@ -135,12 +135,12 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `candidates` | noted_via | `recruiter_interactions` | one_to_many | no | - |
 | `candidates` | consents_via | `candidate_consents` | one_to_many | yes | - |
 | `candidates` | discloses_via | `fcra_disclosures` | one_to_many | yes | - |
-| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | no | - |
-| `candidates` | submits_via | `data_subject_requests` | one_to_many | no | - |
-| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | no | - |
-| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | no | - |
-| `candidates` | documented_via | `candidate_documents` | one_to_many | no | - |
-| `candidates` | annotated_via | `candidate_notes` | one_to_many | no | - |
+| `candidates` | self_identifies_via | `eeo_responses` | one_to_many | yes | - |
+| `candidates` | submits_via | `data_subject_requests` | one_to_many | yes | - |
+| `candidates` | self_ids_via | `voluntary_self_identifications` | one_to_many | yes | - |
+| `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | yes | - |
+| `candidates` | documented_via | `candidate_documents` | one_to_many | yes | - |
+| `candidates` | annotated_via | `candidate_notes` | one_to_many | yes | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | no | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | no | - |
 | `candidates` | verified_via | `right_to_work_verifications` | one_to_many | no | - |

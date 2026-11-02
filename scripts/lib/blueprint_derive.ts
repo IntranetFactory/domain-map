@@ -500,9 +500,10 @@ export function derivePermissionHierarchy(slug: string, permissions: Permission[
 // contract (gate-permission-model-plan.md section 5, architect template §9.1):
 //   - Accountable (exactly one per process) holds the process's gates: the gates this module mints
 //     in §8.1 (`gates`) whose states are wired to the process, each listed once. A gate realized
-//     by an out-of-scope module is not minted here, so it is not granted here either.
+//     by an out-of-scope module is not minted here, so it is not granted here either. A process
+//     with no gated state has no gate to hold, so its Accountable row gets the write tier alone.
 //   - Responsible holds the gated entities' write tier, never a gate.
-//   - Informed is notified through the trigger_events that fire on the process's gated transitions.
+//   - Informed is notified through the trigger_events that fire on the process's wired transitions.
 export function deriveRaciRealization(ctx: DeriveCtx, moduleLifecycle: any[], gates: GateModel[]): RaciGrant[] {
   const arel = ctx.all;
   const grants: RaciGrant[] = [];
@@ -513,14 +514,15 @@ export function deriveRaciRealization(ctx: DeriveCtx, moduleLifecycle: any[], ga
     // RACI table references the process by its unique process_key (process_name is not unique).
     const procKey = proc?.process_key ?? `process#${pid}`;
     const gateCodes = gates.filter((g) => g.processIds.includes(pid)).map((g) => g.code);
-    // The process's gated transitions: the requires_permission states wired to it. Informed hears
-    // about exactly those transitions, so an event counts only when it fires on one of them
-    // (matched on to_state or the name suffix, the same rule as the B9 health check).
-    const gatedStates = moduleLifecycle.filter((ls: any) => ls.process_id === pid && ls.requires_permission);
+    // The process's transitions: the states wired to it, gated or not. Informed hears about exactly
+    // those transitions, so an event counts only when it fires on one of them (matched on to_state
+    // or the name suffix, the same rule as the B9 health check).
+    const wiredStates = moduleLifecycle.filter((ls: any) => ls.process_id === pid);
+    const hasGatedState = wiredStates.some((ls: any) => ls.requires_permission);
     const eventNames = new Set<string>();
-    for (const did of new Set(gatedStates.map((ls: any) => ls.data_object_id as number))) {
+    for (const did of new Set(wiredStates.map((ls: any) => ls.data_object_id as number))) {
       for (const te of arel.triggerEventsByDataObjectId.get(did) ?? []) {
-        if (te.event_name && gatedStates.some((ls: any) => eventMatchesState(te, ls))) eventNames.add(String(te.event_name));
+        if (te.event_name && wiredStates.some((ls: any) => eventMatchesState(te, ls))) eventNames.add(String(te.event_name));
       }
     }
     const events = [...eventNames].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
@@ -541,7 +543,7 @@ export function deriveRaciRealization(ctx: DeriveCtx, moduleLifecycle: any[], ga
           // R/A are polymorphic (a skill can be Accountable); the Accountable row holds the gates.
           realization = gateCodes.length > 0
             ? `grant gates [${gateCodes.join(", ")}] + the gated entities' write tier`
-            : "⚠ no gate wired";
+            : hasGatedState ? "⚠ no gate wired" : "the gated entities' write tier";
           break;
         case "consulted":
           realization = row.consultation_blocking ? "blocking consultation state" : "advisory read grant";
