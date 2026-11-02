@@ -68,11 +68,11 @@ checks:  # written ONLY by `domain_health.ts --record`; never hand-edited
     - {id: <check id>, result: pass | fail | warn | agent | delegated | skipped, rows: [<row ids>]}
 ```
 
-`next_action_by` derives by priority: agent (b1a non-empty) > user (b2) > research (b3) > blocked (only b1b) > done.
+`next_action_by` derives by priority: agent (an approved `b1a` not yet executed) > user (any `b1a` awaiting approval, or any `b2`) > research (b3) > blocked (only b1b) > done.
 
 **The `checks:` block** records what the last Validate run actually verified: one entry per checklist ID, with the mechanical result and the offending row ids. `agent` means the check (or its judgment half) is the agent's to work in that run, `delegated` names a check run by another script (B9d, B9e), `skipped` a retired or reserved ID. `domain_health.ts --record` splices it in as text, replacing only the region from `checks:` to the next top-level key, so comments and every other key survive; a "report" or "check only" run does not record. `bun run scripts/analytics/domain_health.ts --stale` lists domains whose recorded `checklist_version` is older than the script's, or missing. The block is a run record, not an open-items list, so the hygiene rule below does not apply to it.
 
-**Execution contract (SKILL.md Rule #21).** A *review / audit / validate / finish* run EXECUTES all additive/corrective `b1a` inline (`record_status='new'`), so a properly-run review leaves `b1a` empty and the domain ends `next_action_by: user` (an open `b2` or a destructive step needs approval), `blocked` (only `b1b` remains), or `done`. `b3` is non-blocking and never sets `next_action_by` on its own; it parks in the ideas backlog. Only a *report / check* run is read-only and may leave `b1a` populated.
+**Approval contract (SKILL.md Rule #21).** A *review / audit / validate / check* run is read-only on the catalog. It writes the report: `history.md`, `state.yaml` (every agent-doable fix as a `b1a` item with the exact rows it would write, decisions and destructive changes as `b2`, ideas as `b3`) and the `q-` file of approval questions. A `b1a` item is executed only after the user approves it (the answered `a-` file, or an explicit request naming it), at `record_status='new'`. `b3` is non-blocking and never sets `next_action_by` on its own; it parks in the ideas backlog.
 
 ### Human-readable decision files (`q-` / `a-`)
 
@@ -81,7 +81,7 @@ checks:  # written ONLY by `domain_health.ts --record`; never hand-edited
 - A domain at `status: feedback_needed` (i.e. `next_action_by: user`) MUST have a `q-<CODE>.md` in its audit directory, listing every open `b2` decision, pending destructive approval, and `record_status` approval gate as yes/no or pick-one questions, each with a recommendation. Open `b3` ideas go in an "Optional" section. A `feedback_needed` state with no current `q-` file is an incomplete audit.
 - Every market-shape `b2` carries a required `evidence` field (named-vendor grounding); the q-file's `Recommended:` reason is rendered by copying it, never re-derived (SKILL.md Rule #22). Writing or refreshing a q-file ends with `bun run scripts/analytics/qfile_grounding_lint.ts <CODE>` exiting clean.
 - The user answers in the `a#:` lines and renames the file to `a-<CODE>.md`. That rename flips the domain to `next_action_by: agent`.
-- On seeing an `a-` file the agent reads and processes the answers (decisions applied under Rule #21; a question/request in an `a#:` keeps that item open), updates `state.yaml`, **deletes both the `a-` and the stale `q-` file**, then either regenerates a fresh `q-` file (if anything is still open) or continues the build.
+- On seeing an `a-` file the agent reads and processes the answers (approved items applied under Rule #21; a question/request in an `a#:` keeps that item open), updates `state.yaml`, **deletes both the `a-` and the stale `q-` file**, then either regenerates a fresh `q-` file (if anything is still open) or continues the build.
 
 ### Standard optional fields (use these exact names; no invented variants)
 

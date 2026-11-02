@@ -18,14 +18,17 @@
 //   bun run scripts/analytics/audit_backlog.ts --section audited
 //   bun run scripts/analytics/audit_backlog.ts --section unaudited
 //
-// Checks (each = 1 point toward priority score):
-//   A1  domains business metadata zeroed (crud_pct/min_org_size/cost_band/tam)
-//   A2  capability_domains count < 3
-//   B1  zero master data_objects (skipped for leadership-tier)
-//   C1  zero business_function_domains
-//   M1  zero domain_modules
-//   F2  any full module (module_kind != 'starter') without domain_module_tools
-//   H1  cross-domain handoffs with no handoff_processes rows
+// Checks (each = 1 point toward priority score). The pass rules are the shared health logic in
+// scripts/lib/health/ (logic_sam.ts, logic_b.ts, logic_cefh.ts), so this backlog and
+// domain_health.ts cannot drift; SKILL.md's carve-outs (bundles, owner rows, full modules) apply:
+//   A1  domains business metadata incomplete (domainMetadataGaps; bundle carve-out)
+//   A2  capability_domains count < 3 (checkCapabilityFloor; bundles exempt)
+//   B1  zero master data_objects (checkMasterFloor; bundles exempt; skipped for leadership-tier)
+//   C1  no business_function_domains owner row (checkFunctionOwnership; bundles exempt)
+//   M1  zero domain_modules, or no full module on a non-bundle domain (checkModulePresence)
+//   F2  SKILL.md F3 per module (checkModuleTools): every module when the domain has zero
+//       domain_module_tools, else any full module (module_kind != 'starter') without one
+//   H1  cross-domain handoffs with no handoff_processes rows (checkHandoffTags)
 //   AUD audits/<DOMAIN_CODE>/state.yaml does not exist
 //
 // Entity count = master data_objects + capabilities + modules + outbound handoffs
@@ -39,6 +42,9 @@ import { spawn } from "bun";
 import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
 import yaml from "js-yaml";
+import { checkMasterFloor } from "../lib/health/logic_b.ts";
+import { checkFunctionOwnership, checkHandoffTags, checkModuleTools, crossDomainHandoffs, handoffTagCoverage } from "../lib/health/logic_cefh.ts";
+import { checkCapabilityFloor, checkModulePresence, domainMetadataGaps } from "../lib/health/logic_sam.ts";
 
 const args = process.argv.slice(2);
 const JSON_OUT = args.includes("--json");
@@ -71,16 +77,18 @@ async function get(path: string): Promise<any[]> {
   return JSON.parse(stdout);
 }
 
-const [domains, modules, capDomains, dmdoMasters, bfd, dmTools, handoffs, handoffProc, solDomains] = await Promise.all([
-  get(`/domains?select=id,domain_code,domain_name,crud_percentage,business_logic,min_org_size,cost_band,usa_market_size_usd_m,market_size_source_year&limit=10000`),
+const [domains, modules, capDomains, dmdoMasters, dmdoOverlay, bfd, dmTools, handoffs, handoffProc, solDomains] = await Promise.all([
+  get(`/domains?select=id,domain_code,domain_name,domain_kind,crud_percentage,business_logic,min_org_size,cost_band,certification_required,usa_market_size_usd_m,market_size_source_year&limit=10000`),
   get(`/domain_modules?select=id,domain_id,domain_module_code,module_kind&limit=10000`),
   get(`/capability_domains?select=domain_id,capability_id&limit=10000`),
   // Masters come from the module junction (domain_data_objects retired 2026-06-02); rolled up
   // to domain via the module->domain map below. Un-modularized domains report zero masters (an
   // M1 failure, surfaced as no modules), which is the correct post-retirement signal.
   get(`/domain_module_data_objects?role=eq.master&select=domain_module_id,data_object_id&limit=10000`),
-  get(`/business_function_domains?select=domain_id&limit=10000`),
-  get(`/domain_module_tools?select=domain_module_id&limit=30000`),
+  // B1's overlay substrate (checkMasterFloor): the consumer / derived / embedded_master rows.
+  get(`/domain_module_data_objects?role=in.(consumer,derived,embedded_master)&select=domain_module_id&limit=10000`),
+  get(`/business_function_domains?select=domain_id,business_function_id,responsibility_type&limit=10000`),
+  get(`/domain_module_tools?select=domain_module_id,tool_id&limit=30000`),
   get(`/handoffs?select=id,source_domain_id,target_domain_id&limit=20000`),
   get(`/handoff_processes?select=handoff_id&limit=20000`),
   get(`/solution_domains?select=domain_id&limit=20000`),
@@ -108,28 +116,38 @@ for (const d of dmdoMasters) {
   masterCountByDomain.set(domId, (masterCountByDomain.get(domId) ?? 0) + 1);
 }
 
-const bfCountByDomain = new Map<number, number>();
+const overlayCountByDomain = new Map<number, number>();
+for (const d of dmdoOverlay) {
+  const domId = moduleToDomain.get(d.domain_module_id);
+  if (domId == null) continue;
+  overlayCountByDomain.set(domId, (overlayCountByDomain.get(domId) ?? 0) + 1);
+}
+
+const bfRowsByDomain = new Map<number, any[]>();
 for (const r of bfd) {
-  bfCountByDomain.set(r.domain_id, (bfCountByDomain.get(r.domain_id) ?? 0) + 1);
+  const arr = bfRowsByDomain.get(r.domain_id) ?? [];
+  arr.push(r);
+  bfRowsByDomain.set(r.domain_id, arr);
 }
 
 // Post per-domain-skill migration: tool requirements live on modules (`domain_module_tools`);
 // the domain's single `system` skill derives from them. F2 now checks module tool presence.
-const modulesWithTools = new Set<number>();
-for (const r of dmTools) modulesWithTools.add(r.domain_module_id);
+const toolRowsByModule = new Map<number, any[]>();
+for (const r of dmTools) {
+  const arr = toolRowsByModule.get(r.domain_module_id) ?? [];
+  arr.push(r);
+  toolRowsByModule.set(r.domain_module_id, arr);
+}
 
-const taggedHandoffs = new Set<number>(handoffProc.map((r: any) => r.handoff_id));
-const crossDomainByDomain = new Map<number, { total: number; tagged: number }>();
+const tagsByHandoff = new Map<number, any[]>();
+for (const r of handoffProc) {
+  const arr = tagsByHandoff.get(r.handoff_id) ?? [];
+  arr.push(r);
+  tagsByHandoff.set(r.handoff_id, arr);
+}
 const outboundHandoffsByDomain = new Map<number, number>();
 for (const h of handoffs) {
   outboundHandoffsByDomain.set(h.source_domain_id, (outboundHandoffsByDomain.get(h.source_domain_id) ?? 0) + 1);
-  if (h.source_domain_id === h.target_domain_id) continue;
-  for (const did of [h.source_domain_id, h.target_domain_id]) {
-    const r = crossDomainByDomain.get(did) ?? { total: 0, tagged: 0 };
-    r.total += 1;
-    if (taggedHandoffs.has(h.id)) r.tagged += 1;
-    crossDomainByDomain.set(did, r);
-  }
 }
 
 const solCountByDomain = new Map<number, number>();
@@ -209,36 +227,40 @@ for (const d of domains) {
   const hasAuditFile = existsSync(statePath(code));
   const findings: Finding[] = [];
 
-  // A1 — metadata zeroed
-  const a1Fail =
-    (d.crud_percentage ?? 0) === 0 ||
-    !d.min_org_size ||
-    !d.cost_band ||
-    (d.usa_market_size_usd_m ?? 0) === 0 ||
-    (d.market_size_source_year ?? 0) === 0 ||
-    ((d.crud_percentage ?? 0) < 95 && !d.business_logic);
-  if (a1Fail) findings.push({ id: "A1", detail: "domain metadata incomplete (crud_pct/min_org_size/cost_band/tam/business_logic)" });
-
-  // A2 — capability count
-  const capCount = capCountByDomain.get(d.id) ?? 0;
-  if (capCount < 3) findings.push({ id: "A2", detail: `${capCount} capabilities (need >= 3)` });
-
-  // B1 — master count, skip leadership
-  const masterCount = masterCountByDomain.get(d.id) ?? 0;
-  if (!isLeadership && masterCount === 0) findings.push({ id: "B1", detail: "zero master data_objects" });
-
-  // C1 — function ownership
-  const bfCount = bfCountByDomain.get(d.id) ?? 0;
-  if (bfCount === 0) findings.push({ id: "C1", detail: "zero business_function_domains rows" });
-
-  // M1 — modules
+  const notPass = (rs: { result: string }[]) => rs.some(r => r.result !== "pass");
   const mods = modulesByDomain.get(d.id) ?? [];
-  if (mods.length === 0) findings.push({ id: "M1", detail: "zero domain_modules" });
 
-  // F2 — every full module needs >=1 domain_module_tools (starters exempt). The domain's single
-  // domain-grain system skill derives its toolset from these; a full module with none is incomplete.
+  // A1: business metadata (logic_sam.ts domainMetadataGaps, with the bundle carve-out)
+  if (domainMetadataGaps(d).length > 0) findings.push({ id: "A1", detail: "domain metadata incomplete (crud_pct/min_org_size/cost_band/tam/business_logic)" });
+
+  // A2: capability count (logic_sam.ts checkCapabilityFloor; a 1-2 warn counts, bundles exempt)
+  const capCount = capCountByDomain.get(d.id) ?? 0;
+  if (notPass(checkCapabilityFloor(capCount, d.domain_kind))) findings.push({ id: "A2", detail: `${capCount} capabilities (need >= 3)` });
+
+  // B1: master floor (logic_b.ts checkMasterFloor, bundles exempt). Its `agent` result (a possible
+  // derive/overlay domain) counts as a gap unless the domain is on the leadership-tier list.
+  const masterCount = masterCountByDomain.get(d.id) ?? 0;
+  const b1 = checkMasterFloor({ domainKind: d.domain_kind, moduleCount: mods.length, masterCount, overlayRowCount: overlayCountByDomain.get(d.id) ?? 0 });
+  if (!isLeadership && notPass(b1)) findings.push({ id: "B1", detail: "zero master data_objects" });
+
+  // C1: function ownership (logic_cefh.ts checkFunctionOwnership: an owner row, bundles exempt)
+  const bfRows = bfRowsByDomain.get(d.id) ?? [];
+  const bfCount = bfRows.length;
+  if (checkFunctionOwnership(d.domain_kind, bfRows).result !== "pass") {
+    findings.push({ id: "C1", detail: bfCount === 0 ? "zero business_function_domains rows" : "no business_function_domains owner row" });
+  }
+
+  // M1: modules (logic_sam.ts checkModulePresence: >= 1 full module unless a bundle)
+  if (notPass(checkModulePresence(mods, d.domain_kind))) findings.push({ id: "M1", detail: mods.length === 0 ? "zero domain_modules" : "no module_kind='full' module" });
+
+  // F2: SKILL.md F3 per module (logic_cefh.ts checkModuleTools). The domain's single domain-grain
+  // system skill derives its toolset from these. Its row-carrying non-pass verdicts name the bare
+  // modules (every module when the domain has zero rows, else each full module without one); the
+  // required-floor warn carries no rows, so the tools map it reads is left empty here.
   if (mods.length > 0) {
-    const orphans = mods.filter(m => m.module_kind !== "starter" && !modulesWithTools.has(m.id));
+    const f3 = checkModuleTools(mods, mods.flatMap(m => toolRowsByModule.get(m.id) ?? []), new Map());
+    const bare = new Set(f3.filter(v => v.result !== "pass").flatMap(v => v.rows));
+    const orphans = mods.filter(m => bare.has(m.id));
     if (orphans.length > 0) {
       findings.push({
         id: "F2",
@@ -247,16 +269,18 @@ for (const d of domains) {
     }
   }
 
-  // H1 — APQC tagging coverage on cross-domain handoffs
-  const cdh = crossDomainByDomain.get(d.id) ?? { total: 0, tagged: 0 };
-  if (cdh.total > 0 && cdh.tagged < cdh.total) {
+  // H1: APQC tagging coverage on cross-domain handoffs (logic_cefh.ts crossDomainHandoffs,
+  // handoffTagCoverage, checkHandoffTags)
+  const cross = crossDomainHandoffs(handoffs, d.id);
+  const cdh = handoffTagCoverage(cross, cross.flatMap(h => tagsByHandoff.get(h.id) ?? []), d.id);
+  if (checkHandoffTags(cdh).result === "fail") {
     findings.push({
       id: "H1",
-      detail: `${cdh.tagged}/${cdh.total} cross-domain handoffs APQC-tagged`,
+      detail: `${cdh.tagged.length}/${cdh.total} cross-domain handoffs APQC-tagged`,
     });
   }
 
-  // AUD — audit file presence
+  // AUD: audit file presence
   if (!hasAuditFile) findings.push({ id: "AUD", detail: "no audits/<code>/state.yaml" });
 
   const solCount = solCountByDomain.get(d.id) ?? 0;
@@ -293,7 +317,7 @@ for (const d of domains) {
       solutions: solCount,
       outbound_handoffs: outboundCount,
       cross_domain_handoffs: cdh.total,
-      apqc_tagged_handoffs: cdh.tagged,
+      apqc_tagged_handoffs: cdh.tagged.length,
       bucket2: pending ? pending.b2 : null,
       bucket3: pending ? pending.b3 : null,
     },

@@ -24,7 +24,13 @@
 //   --diagnostic   Print only units whose semantius_agent_first is <100% (or incomplete).
 //   --domain CODE  Restrict to one domain_code (ignored with --process).
 //   --csv          Machine-readable CSV instead of the human table.
+//
+// The scoring (the SCORES tiers, the tool_id dedup, the per-score counts) is the shared F5 logic in
+// scripts/lib/health/logic_cefh.ts (semantiusScores), so this rollup and domain_health.ts F5
+// cannot drift; this script only scopes, orders and prints.
 export {};
+
+import { AGENT_TIERS, SCORE_KEYS, semantiusScores, type ScoreTool } from "../lib/health/logic_cefh.ts";
 
 const args = process.argv.slice(2);
 const DIAGNOSTIC = args.includes("--diagnostic");
@@ -33,15 +39,9 @@ const PROCESS = args.includes("--process");
 const domainIdx = args.indexOf("--domain");
 const DOMAIN_FILTER = domainIdx >= 0 ? args[domainIdx + 1] : null;
 
-// Every semantius* tier (semantius_crud / _workflow / _platform) counts in all three scores.
-const isSemantius = (tier: string) => tier.startsWith("semantius");
-const SCORES = [
-  { key: "semantius_score", agentTiers: new Set<string>() },
-  { key: "semantius_agent_core", agentTiers: new Set(["agent_native", "agent_common"]) },
-  { key: "semantius_agent_first", agentTiers: new Set(["agent_native", "agent_common", "agent_first"]) },
-];
-const covers = (s: (typeof SCORES)[number], tier: string) => isSemantius(tier) || s.agentTiers.has(tier);
-const WIDEST = SCORES[SCORES.length - 1];
+// Every semantius* tier (semantius_crud / _workflow / _platform) counts in all three scores; each
+// score adds AGENT_TIERS[key] (logic_cefh.ts).
+const SCORES = SCORE_KEYS.map(key => ({ key, agentTiers: AGENT_TIERS[key] }));
 
 type Tool = { id: number; tool_name: string; coverage_tier: string };
 type TR = { tool_id: number; requirement_level: string };
@@ -70,33 +70,29 @@ type Row = {
   gaps: ToolRef[]; // vendor_platform / external: uncovered in every score
 };
 
-// Reduce a set of (tool_id, requirement_level) into the coverage row, deduped by tool_id with
-// `required` winning over `optional` (the level is reported on tool lists; both levels count in the score).
-function rollup(unit: string, label: string, trs: TR[], toolTier: Map<number, string>, toolName: Map<number, string>): Row {
-  const level = new Map<number, string>();
-  for (const r of trs) {
-    const prev = level.get(r.tool_id);
-    if (prev !== "required") level.set(r.tool_id, r.requirement_level);
-  }
-  const all = [...level.keys()];
-  const tierOf = (tid: number) => toolTier.get(tid) ?? "?";
-  const ref = (tid: number): ToolRef => ({ name: toolName.get(tid) ?? `?#${tid}`, tier: tierOf(tid), level: level.get(tid)! });
-  const counts = SCORES.map(s => all.filter(tid => covers(s, tierOf(tid))).length);
+// Reduce a set of (tool_id, requirement_level) into the coverage row via semantiusScores: deduped by
+// tool_id with `required` winning over `optional` (the level is reported on tool lists; both levels
+// count in the score). The tool lists keep the unit's first-seen order (the fetch order).
+function rollup(unit: string, label: string, trs: TR[], toolsById: Map<number, Tool>): Row {
+  const s = semantiusScores(trs, toolsById);
+  const firstSeen = new Map<number, number>();
+  trs.forEach((r, i) => { if (!firstSeen.has(r.tool_id)) firstSeen.set(r.tool_id, i); });
+  const inFetchOrder = (ts: ScoreTool[]) => [...ts].sort((a, b) => firstSeen.get(a.id)! - firstSeen.get(b.id)!);
   return {
     unit,
     label,
-    pcts: counts.map(n => (all.length ? Math.round((n / all.length) * 100) : null)),
-    counts,
-    total: all.length,
-    agentTools: all.filter(tid => tierOf(tid).startsWith("agent_")).map(ref),
-    gaps: all.filter(tid => !covers(WIDEST, tierOf(tid))).map(ref),
+    pcts: SCORE_KEYS.map(k => { const f = s.scores[k]; return f == null ? null : Math.round(f * 100); }),
+    counts: SCORE_KEYS.map(k => s.counts[k]),
+    total: s.total,
+    // agent_* tools: below every semantius* tier, covered by the agent scores only
+    agentTools: inFetchOrder(s.belowSemantius.filter(t => t.tier.startsWith("agent_"))),
+    gaps: inFetchOrder(s.gaps),
   };
 }
 
 async function main() {
   const tools = (await get(`/tools?select=id,tool_name,coverage_tier&limit=${LIMIT}`)) as Tool[];
-  const toolTier = new Map(tools.map(t => [t.id, t.coverage_tier]));
-  const toolName = new Map(tools.map(t => [t.id, t.tool_name]));
+  const toolsById = new Map(tools.map(t => [t.id, t]));
 
   const rows: Row[] = [];
 
@@ -109,7 +105,7 @@ async function main() {
     for (const r of pt) { const a = byProc.get(r.process_id) ?? []; a.push(r); byProc.set(r.process_id, a); }
     for (const p of processes) {
       if (!byProc.has(p.id)) continue; // only value-stream processes that carry tools
-      rows.push(rollup(p.process_key, p.process_name, byProc.get(p.id)!, toolTier, toolName));
+      rows.push(rollup(p.process_key, p.process_name, byProc.get(p.id)!, toolsById));
     }
   } else {
     const [domains, modules, dmt] = await Promise.all([
@@ -141,7 +137,7 @@ async function main() {
       if (bundleDomainIds.has(did)) continue; // exclude bundle-domains (plan §4)
       const code = domainCode.get(did) ?? `?#${did}`;
       if (DOMAIN_FILTER && code !== DOMAIN_FILTER) continue;
-      rows.push(rollup(code, code, trByDomain.get(did) ?? [], toolTier, toolName));
+      rows.push(rollup(code, code, trByDomain.get(did) ?? [], toolsById));
     }
   }
 

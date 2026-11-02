@@ -185,7 +185,7 @@ describe("rule 5: realization text", () => {
     expect(raciOf(model, "accountable")).toEqual(["SUPPORT-LEAD: ⚠ no gate wired"]);
   });
 
-  test("an Informed row lists the trigger_events on the process's gated entities", () => {
+  test("an Informed row lists only the trigger_events that fire on the process's gated transitions", () => {
     const model = helpDesk({
       lifecycle: [open, gated(2, "resolved", 2, { process_id: 500 }), closed],
       processes: [processRow(500, "resolve_tickets")],
@@ -194,9 +194,12 @@ describe("rule 5: realization text", () => {
         triggerEvent({ id: 2, event_name: "ticket.resolved", data_object_id: TICKETS, to_state: "resolved" }),
         triggerEvent({ id: 1, event_name: "ticket.created", data_object_id: TICKETS, event_category: "entity_event" }),
         triggerEvent({ id: 3, event_name: "category.retired", data_object_id: CATEGORIES }),
+        // blank to_state: matched on the name suffix, as the B9 health check does
+        triggerEvent({ id: 4, event_name: "ticket.reopened", data_object_id: TICKETS }),
       ],
     });
-    expect(raciOf(model, "informed")).toEqual(["SUPPORT-WATCHER: notify on trigger_events [ticket.created, ticket.resolved]"]);
+    // ticket.created and ticket.reopened fire on the gated entity but not on its gated transition.
+    expect(raciOf(model, "informed")).toEqual(["SUPPORT-WATCHER: notify on trigger_events [ticket.resolved]"]);
   });
 
   test("an Informed row with no event on the gated entities says ⚠ no event wired", () => {

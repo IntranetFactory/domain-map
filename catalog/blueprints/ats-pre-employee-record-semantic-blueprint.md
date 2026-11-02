@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: Pre-Employee Record
 tagline: "Hold the new hire's record between offer acceptance and day one."
@@ -12,7 +12,7 @@ domain_code: ATS
 icon_name: user-plus
 related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, bgv-continuous-identity, comp-statements, hcm-core-worker, hcm-lifecycle-workflows, onb-journey-mgmt]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-MANAGER, RECRUITING-RECRUITER]
-created_at: 2026-06-27
+created_at: 2026-11-01
 ---
 
 # Pre-Employee Record
@@ -35,21 +35,21 @@ flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
-  pre_employees["Pre-Employees"]
   candidates["Candidates"]
   job_offers["Offers"]
+  pre_employees["Pre-Employees"]
   right_to_work_verifications["Right to Work Verifications"]
   users["Users"]
-  candidates -->|"verified_via"| right_to_work_verifications
   job_offers -->|"spawns pre-employee record"| pre_employees
   candidates -->|"becomes pre-employee"| pre_employees
-  candidates -->|"has owning recruiter"| users
+  candidates -->|"verified_via"| right_to_work_verifications
   job_offers -->|"has approver"| users
   pre_employees -->|"has owning hr_coordinator"| users
+  candidates -->|"has owning recruiter"| users
   right_to_work_verifications -->|"has verifier"| users
-  class pre_employees master;
   class candidates embedded_master;
   class job_offers embedded_master;
+  class pre_employees master;
   class right_to_work_verifications embedded_master;
   class users platform_builtin;
   style right_to_work_verifications stroke-dasharray:5 5;
@@ -74,17 +74,17 @@ _(none: no industry-scoped aliases for this scope)_
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `candidates` | verified_via | `right_to_work_verifications` | one_to_many | reference | optional | source | clear | reference | - |
 | `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | reference | required | source | restrict | reference | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | reference | required | source | restrict | reference | - |
+| `candidates` | verified_via | `right_to_work_verifications` | one_to_many | reference | optional | source | clear | reference | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
 | from | verb | to | cardinality | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `candidates` | has owning recruiter | `users` | many_to_many | optional | source | clear | reference | - |
 | `job_offers` | has approver | `users` | many_to_many | required | source | restrict | reference | - |
 | `pre_employees` | has owning hr_coordinator | `users` | one_to_many | required | source | restrict | reference | - |
+| `candidates` | has owning recruiter | `users` | many_to_many | optional | source | clear | reference | - |
 | `right_to_work_verifications` | has verifier | `users` | many_to_many | optional | source | clear | reference | - |
 
 ### 5.3 Cross-scope edges
@@ -103,6 +103,19 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| `skill_profiles` | feeds | `candidates` | one_to_many | optional | none | n/a | - |
+| `candidates` | submits | `job_applications` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidate_referrals` | introduces | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `recruitment_agencies` | sources | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `recruitment_events` | attracts | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `talent_pools` | groups | `candidates` | many_to_many | required | none (required-if-present) | n/a | - |
+| `job_applications` | results in | `job_offers` | one_to_many | required | none (required-if-present) | n/a | - |
+| `job_offers` | is contingent on | `background_checks` | one_to_many | required | none (required-if-present) | n/a | - |
+| `job_offers` | spawns | `onboarding_journeys` | one_to_one | required | none (required-if-present) | n/a | - |
+| `job_offers` | triggers | `benefit_enrollments` | one_to_one | required | none (required-if-present) | n/a | - |
+| `job_offers` | seeds | `compensation_statements` | one_to_one | required | none (required-if-present) | n/a | - |
+| `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | none | n/a | - |
 | `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | none (required-if-present) | n/a | - |
 | `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | none | n/a | - |
@@ -118,19 +131,6 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `candidates` | documented_via | `candidate_documents` | one_to_many | optional | none | n/a | - |
 | `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | none | n/a | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | none | n/a | - |
-| `skill_profiles` | feeds | `candidates` | one_to_many | optional | none | n/a | - |
-| `candidates` | submits | `job_applications` | one_to_many | required | none (required-if-present) | n/a | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
-| `recruitment_agencies` | sources | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
-| `recruitment_events` | attracts | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
-| `talent_pools` | groups | `candidates` | many_to_many | required | none (required-if-present) | n/a | - |
-| `job_applications` | results in | `job_offers` | one_to_many | required | none (required-if-present) | n/a | - |
-| `job_offers` | is contingent on | `background_checks` | one_to_many | required | none (required-if-present) | n/a | - |
-| `job_offers` | spawns | `onboarding_journeys` | one_to_one | required | none (required-if-present) | n/a | - |
-| `job_offers` | triggers | `benefit_enrollments` | one_to_one | required | none (required-if-present) | n/a | - |
-| `job_offers` | seeds | `compensation_statements` | one_to_one | required | none (required-if-present) | n/a | - |
-| `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `employees` | applies_as | `candidates` | one_to_many | optional | none | n/a | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | optional | none | n/a | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | optional | none | n/a | - |
@@ -148,23 +148,21 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-CANDIDATE-CRM | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
-| ATS-OFFERS | HCM | HCM-LIFECYCLE-WORKFLOWS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | medium | Offer acceptance signals firm hiring intent; HCM creates pending-employee record. |
+| ATS-PRE-EMPLOYEE-RECORD | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
+| ATS-PRE-EMPLOYEE-RECORD | HCM | HCM-LIFECYCLE-WORKFLOWS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | medium | Offer acceptance signals firm hiring intent; HCM creates pending-employee record. |
 | ATS-PRE-EMPLOYEE-RECORD | HCM | HCM-LIFECYCLE-WORKFLOWS | `pre_employee.activated` | `in_progress` → `activated` _(state_change)_ | `pre_employees` | event_stream | medium | Pre-employee activation hands the canonical reconciliation to HCM-mastered `employees`. ATS owns the pre-employee lifecycle stage (paperwork, background check, pre-boarding); at start-date the pre_employee row is reconciled into the HCM employee record. Identifier mapping (pre_employee_id → employee_id) is the canonical reconciliation gap. Replaces / complements the older candidate.hired and job_offer.accepted handoffs by carrying the proper post-acceptance reconciliation milestone. |
-| ATS-OFFERS | COMP-MGMT | COMP-STATEMENTS | `job_offer.signed` | `signed` _(lifecycle)_ | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
-| ATS-CANDIDATE-CRM | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
-| ATS-CANDIDATE-CRM | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
+| ATS-PRE-EMPLOYEE-RECORD | COMP-MGMT | COMP-STATEMENTS | `job_offer.signed` | `signed` _(lifecycle)_ | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
+| ATS-PRE-EMPLOYEE-RECORD | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
+| ATS-PRE-EMPLOYEE-RECORD | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-CANDIDATE-CRM | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
-| ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
-| ATS-OFFERS | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | _(state_change)_ | `job_offers` | lifecycle_progression | low | - |
-| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.accepted` | `accepted` _(state_change)_ | `pre_employees` | lifecycle_progression | low | - |
-| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-OFFERS | `job_offer.rescinded` | _(state_change)_ | `pre_employees` | lifecycle_progression | high | - |
-| ATS-OFFERS | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | _(lifecycle)_ | `job_offers` | lifecycle_progression | medium | - |
+| ATS-PRE-EMPLOYEE-RECORD | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
+| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
+| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | _(state_change)_ | `job_offers` | lifecycle_progression | low | - |
+| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | _(lifecycle)_ | `job_offers` | lifecycle_progression | medium | - |
 | ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-BACKGROUND-CHECKS | `background_check.cleared` | _(lifecycle)_ | `pre_employees` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
@@ -181,50 +179,50 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 _This scope holds `candidates` as **embedded_master**; the canonical state machine is owned by `ATS-CANDIDATE-CRM`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `prospect` | ✓ | - | - | - | Person known to the recruiting org with no active application. |
-| 2 | `active` | - | - | - | - | Candidate has at least one open application or is actively engaged. |
-| 3 | `hired` | - | ✓ | ✓ | `ats-pre-employee-record:hire_candidate` | Candidate accepted an offer and converted to employee. |
-| 4 | `do_not_hire` | - | ✓ | ✓ | `ats-pre-employee-record:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
-| 5 | `archived` | - | ✓ | - | - | Candidate kept in the database but not active in any pipeline. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `prospect` | ✓ | - | - | - | - | Person known to the recruiting org with no active application. |
+| 2 | `active` | - | - | - | - | - | Candidate has at least one open application or is actively engaged. |
+| 3 | `hired` | - | ✓ | ✓ | - | `ats-pre-employee-record:hire_candidate` | Candidate accepted an offer and converted to employee. |
+| 4 | `do_not_hire` | - | ✓ | ✓ | - | `ats-pre-employee-record:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
+| 5 | `archived` | - | ✓ | - | - | - | Candidate kept in the database but not active in any pipeline. |
 
 ### `job_offers` (Offer)
 
 _This scope holds `job_offers` as **embedded_master**; the canonical state machine is owned by `ATS-OFFERS`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | Recruiter is composing offer terms and compensation components. |
-| 2 | `pending_approval` | - | - | - | - | Offer routed to the designated approver for sign-off. |
-| 3 | `approved` | - | - | ✓ | `ats-pre-employee-record:approve_offer` | Approver signed off; offer is ready to send. |
-| 4 | `sent` | - | - | - | - | Offer delivered to the candidate. |
-| 5 | `accepted` | - | ✓ | - | - | Candidate accepted the offer. |
-| 6 | `declined` | - | ✓ | - | - | Candidate declined the offer. |
-| 7 | `rescinded` | - | ✓ | ✓ | `ats-pre-employee-record:rescind_offer` | Offer withdrawn by the employer after being sent; gated action. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | - | - | - | Recruiter is composing offer terms and compensation components. |
+| 2 | `pending_approval` | - | - | - | - | - | Offer routed to the designated approver for sign-off. |
+| 3 | `approved` | - | - | ✓ | - | `ats-pre-employee-record:approve_offer` | Approver signed off; offer is ready to send. |
+| 4 | `sent` | - | - | - | - | - | Offer delivered to the candidate. |
+| 5 | `accepted` | - | ✓ | - | - | - | Candidate accepted the offer. |
+| 6 | `declined` | - | ✓ | - | - | - | Candidate declined the offer. |
+| 7 | `rescinded` | - | ✓ | ✓ | - | `ats-pre-employee-record:rescind_offer` | Offer withdrawn by the employer after being sent; gated action. |
 
 ### `pre_employees` (Pre-Employee)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `created` | ✓ | - | - | - | Record created when an offer is accepted. Paperwork packet not yet generated. |
-| 2 | `paperwork_in_flight` | - | - | - | - | I-9 / W-4 / direct-deposit / banking forms issued; awaiting candidate completion. Background check may run in parallel. |
-| 3 | `cleared` | - | - | - | - | All paperwork received and background check completed clear. Ready for HCM activation. |
-| 4 | `activated` | - | ✓ | ✓ | `ats-pre-employee-record:activate_pre_employee` | Reconciliation handoff fired to HCM (pre_employee.activated event). Canonical employees row created downstream; ATS record becomes read-only. |
-| 5 | `canceled` | - | ✓ | - | - | Offer rescinded or candidate withdrew before activation. Record retained for audit. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `created` | ✓ | - | - | - | - | Record created when an offer is accepted. Paperwork packet not yet generated. |
+| 2 | `paperwork_in_flight` | - | - | - | - | - | I-9 / W-4 / direct-deposit / banking forms issued; awaiting candidate completion. Background check may run in parallel. |
+| 3 | `cleared` | - | - | - | - | - | All paperwork received and background check completed clear. Ready for HCM activation. |
+| 4 | `activated` | - | ✓ | ✓ | - | `ats-pre-employee-record:activate_pre_employee` | Reconciliation handoff fired to HCM (pre_employee.activated event). Canonical employees row created downstream; ATS record becomes read-only. |
+| 5 | `canceled` | - | ✓ | - | - | - | Offer rescinded or candidate withdrew before activation. Record retained for audit. |
 
 ### `right_to_work_verifications` (Right to Work Verification)
 
 _This scope holds `right_to_work_verifications` as **embedded_master**; the canonical state machine is owned by `BGV-CONTINUOUS-IDENTITY`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `pending` | ✓ | - | - | - | - |
-| 2 | `in_progress` | - | - | - | - | - |
-| 3 | `verified` | - | ✓ | ✓ | `ats-pre-employee-record:verify_right_to_work` | - |
-| 4 | `tentative_nonconfirmation` | - | - | - | - | - |
-| 5 | `final_nonconfirmation` | - | ✓ | - | - | - |
-| 6 | `closed` | - | ✓ | - | - | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `pending` | ✓ | - | - | - | - | - |
+| 2 | `in_progress` | - | - | - | - | - | - |
+| 3 | `verified` | - | ✓ | ✓ | - | `ats-pre-employee-record:verify_right_to_work` | - |
+| 4 | `tentative_nonconfirmation` | - | - | - | - | - | - |
+| 5 | `final_nonconfirmation` | - | ✓ | - | - | - | - |
+| 6 | `closed` | - | ✓ | - | - | - | - |
 
 ## 8. Permissions and business rules (derived)
 
@@ -236,17 +234,17 @@ _This scope holds `right_to_work_verifications` as **embedded_master**; the cano
 | `ats-pre-employee-record:manage` | baseline-manage | Edit operational records | ✓ |
 | `ats-pre-employee-record:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
 | `ats-pre-employee-record:hire_candidate` | workflow-gate (lifecycle) | Transition `candidates` into state `hired` | ✓ |
-| `ats-pre-employee-record:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` | ✓ |
+| `ats-pre-employee-record:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` (⚠ no process) | ✓ |
 | `ats-pre-employee-record:approve_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `approved` | ✓ |
-| `ats-pre-employee-record:rescind_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `rescinded` | ✓ |
-| `ats-pre-employee-record:activate_pre_employee` | workflow-gate (lifecycle) | Transition `pre_employees` into state `activated` | ✓ |
-| `ats-pre-employee-record:verify_right_to_work` | workflow-gate (lifecycle) | Transition `right_to_work_verifications` into state `verified` | ✓ |
-| `ats-pre-employee-record:view_all_pre-employees` | override (personal_content) | View all `pre_employees` rows beyond row-scope | ✓ |
-| `ats-pre-employee-record:manage_all_pre-employees` | override (personal_content) | Manage all `pre_employees` rows beyond row-scope | ✓ |
+| `ats-pre-employee-record:rescind_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `rescinded` (⚠ no process) | ✓ |
+| `ats-pre-employee-record:activate_pre_employee` | workflow-gate (lifecycle) | Transition `pre_employees` into state `activated` (⚠ no process) | ✓ |
+| `ats-pre-employee-record:verify_right_to_work` | workflow-gate (lifecycle) | Transition `right_to_work_verifications` into state `verified` (⚠ no process) | ✓ |
 | `ats-pre-employee-record:view_all_candidates` | override (personal_content) | View all `candidates` rows beyond row-scope | ✓ |
 | `ats-pre-employee-record:manage_all_candidates` | override (personal_content) | Manage all `candidates` rows beyond row-scope | ✓ |
 | `ats-pre-employee-record:view_all_offers` | override (personal_content) | View all `job_offers` rows beyond row-scope | ✓ |
 | `ats-pre-employee-record:manage_all_offers` | override (personal_content) | Manage all `job_offers` rows beyond row-scope | ✓ |
+| `ats-pre-employee-record:view_all_pre_employees` | override (personal_content) | View all `pre_employees` rows beyond row-scope | ✓ |
+| `ats-pre-employee-record:manage_all_pre_employees` | override (personal_content) | Manage all `pre_employees` rows beyond row-scope | ✓ |
 | `ats-pre-employee-record:view_all_right_to_work_verifications` | override (personal_content) | View all `right_to_work_verifications` rows beyond row-scope | ✓ |
 | `ats-pre-employee-record:manage_all_right_to_work_verifications` | override (personal_content) | Manage all `right_to_work_verifications` rows beyond row-scope | ✓ |
 
@@ -254,9 +252,9 @@ _This scope holds `right_to_work_verifications` as **embedded_master**; the cano
 
 | rule_name | data_object | source flag | intent |
 | --- | --- | --- | --- |
-| `pre-employee_edit_scope` | `pre_employees` | has_personal_content | Row-scope by default; override via `ats-pre-employee-record:view_all_pre-employees` / `ats-pre-employee-record:manage_all_pre-employees` |
 | `candidate_edit_scope` | `candidates` | has_personal_content | Row-scope by default; override via `ats-pre-employee-record:view_all_candidates` / `ats-pre-employee-record:manage_all_candidates` |
 | `offer_edit_scope` | `job_offers` | has_personal_content | Row-scope by default; override via `ats-pre-employee-record:view_all_offers` / `ats-pre-employee-record:manage_all_offers` |
+| `pre_employee_edit_scope` | `pre_employees` | has_personal_content | Row-scope by default; override via `ats-pre-employee-record:view_all_pre_employees` / `ats-pre-employee-record:manage_all_pre_employees` |
 | `right_to_work_verification_edit_scope` | `right_to_work_verifications` | has_personal_content | Row-scope by default; override via `ats-pre-employee-record:view_all_right_to_work_verifications` / `ats-pre-employee-record:manage_all_right_to_work_verifications` |
 
 ## 9. Roles, RACI, and responsibilities (derived)
@@ -271,6 +269,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- |
 | `ats-pre-employee-record_viewer` | `ats-pre-employee-record:read` |
 | `ats-pre-employee-record_manager` | `ats-pre-employee-record:manage` |
+| `ats-pre-employee-record_admin` | `ats-pre-employee-record:admin` |
 
 **Permission hierarchy:**
 
@@ -284,12 +283,12 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:rescind_offer` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:activate_pre_employee` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:verify_right_to_work` |
-| `ats-pre-employee-record:admin` | `ats-pre-employee-record:view_all_pre-employees` |
-| `ats-pre-employee-record:admin` | `ats-pre-employee-record:manage_all_pre-employees` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:view_all_candidates` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:manage_all_candidates` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:view_all_offers` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:manage_all_offers` |
+| `ats-pre-employee-record:admin` | `ats-pre-employee-record:view_all_pre_employees` |
+| `ats-pre-employee-record:admin` | `ats-pre-employee-record:manage_all_pre_employees` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:view_all_right_to_work_verifications` |
 | `ats-pre-employee-record:admin` | `ats-pre-employee-record:manage_all_right_to_work_verifications` |
 
@@ -304,11 +303,11 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 | actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `RECRUITING-RECRUITER` | persona | responsible | `hire_candidate` | grant gates [ats-pre-employee-record:hire_candidate] + the gated entities' write tier |
-| `HIRING-MANAGER` | persona | accountable | `hire_candidate` | approval gate |
-| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notification side effect (trigger_event / webhook_receiver) |
-| `RECRUITING-RECRUITER` | persona | responsible | `draw_up_make_offer` | grant gates [ats-pre-employee-record:approve_offer] + the gated entities' write tier |
-| `HIRING-MANAGER` | persona | accountable | `draw_up_make_offer` | approval gate |
+| `RECRUITING-RECRUITER` | persona | responsible | `hire_candidate` | the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | `hire_candidate` | grant gates [ats-pre-employee-record:hire_candidate] + the gated entities' write tier |
+| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notify on trigger_events [candidate.hired] |
+| `RECRUITING-RECRUITER` | persona | responsible | `draw_up_make_offer` | the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | `draw_up_make_offer` | grant gates [ats-pre-employee-record:approve_offer] + the gated entities' write tier |
 | `RECRUITING-MANAGER` | persona | consulted | `draw_up_make_offer` | advisory read grant |
 
 ### 9.2 Functional ownership and default grants

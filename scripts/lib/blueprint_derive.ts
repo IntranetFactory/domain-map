@@ -24,6 +24,7 @@ import {
   type ModuleRow,
   type ScopeRow,
 } from "./catalog";
+import { eventMatchesState } from "./health/logic_b";
 
 // ---------- context ----------
 
@@ -508,7 +509,7 @@ export function derivePermissionHierarchy(slug: string, permissions: Permission[
 //     in §8.1 (`gates`) whose states are wired to the process, each listed once. A gate realized
 //     by an out-of-scope module is not minted here, so it is not granted here either.
 //   - Responsible holds the gated entities' write tier, never a gate.
-//   - Informed is notified through the trigger_events on the process's gated entities.
+//   - Informed is notified through the trigger_events that fire on the process's gated transitions.
 export function deriveRaciRealization(ctx: DeriveCtx, moduleLifecycle: any[], gates: GateModel[]): RaciGrant[] {
   const arel = ctx.all;
   const grants: RaciGrant[] = [];
@@ -519,14 +520,15 @@ export function deriveRaciRealization(ctx: DeriveCtx, moduleLifecycle: any[], ga
     // RACI table references the process by its unique process_key (process_name is not unique).
     const procKey = proc?.process_key ?? `process#${pid}`;
     const gateCodes = gates.filter((g) => g.processIds.includes(pid)).map((g) => g.code);
-    // The process's gated entities: entities with a requires_permission state wired to it.
-    const gatedEntityIds = new Set<number>();
-    for (const ls of moduleLifecycle) {
-      if (ls.process_id === pid && ls.requires_permission) gatedEntityIds.add(ls.data_object_id as number);
-    }
+    // The process's gated transitions: the requires_permission states wired to it. Informed hears
+    // about exactly those transitions, so an event counts only when it fires on one of them
+    // (matched on to_state or the name suffix, the same rule as the B9 health check).
+    const gatedStates = moduleLifecycle.filter((ls: any) => ls.process_id === pid && ls.requires_permission);
     const eventNames = new Set<string>();
-    for (const did of gatedEntityIds) {
-      for (const te of arel.triggerEventsByDataObjectId.get(did) ?? []) if (te.event_name) eventNames.add(String(te.event_name));
+    for (const did of new Set(gatedStates.map((ls: any) => ls.data_object_id as number))) {
+      for (const te of arel.triggerEventsByDataObjectId.get(did) ?? []) {
+        if (te.event_name && gatedStates.some((ls: any) => eventMatchesState(te, ls))) eventNames.add(String(te.event_name));
+      }
     }
     const events = [...eventNames].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
     for (const row of arel.processRaciByProcessId.get(pid) ?? []) {

@@ -1183,3 +1183,11 @@ Wording changes in the checklist (readings of existing rules, each now naming it
 **Scope.** SKILL.md "Per-domain completeness checklist" and Rule #8 only. No catalog data changed.
 
 **Status.** Active.
+
+## 2026-11-01 - Review / audit / validate are read-only; catalog writes need approval (Rule #21 reversed)
+
+**Context.** The 2026-06-06 Rule #21 made "review / audit / validate / finish" execute every additive fix in the same pass. On 2026-11-01 the user asked for a review of the Hiring Starter blueprint and then said "validate ATS"; under the old rule the agent and its subagents wrote about 180 rows across all nine ATS modules (39 trigger_events, 24 handoffs, 12 handoff_processes tags, 26 lifecycle field fills, 4 process_raci rows, 3 relationships, 53 aliases, 3 module data_object rows), most of it unrelated to the user's findings and none of it approved. The user called it out: an audit or a validate changing data contradicts the meaning of the words. Every row was reverted the same day (`.tmp_deploy/ats_validate_revert_2026_11_01.ts`, verified row by row, nothing left).
+
+**Decision.** Rule #21 now reads: review / audit / validate / check never insert, update or delete a catalog row. They produce an actionable report: `domain_health.ts --record`, a dated `history.md` section, `state.yaml` with every agent-doable fix as a `b1a` item carrying the exact rows it would write, and the `q-` file with every proposed change as an approval question (additive fixes grouped into yes/no batches; each destructive change and decision on its own). Catalog writes happen only after approval (the answered `a-` file or an explicit request naming the scope), and only for what was approved; a request about one module or one finding is never widened to the whole domain. CLAUDE.md, Rule #20 (catalog copy is drafted, not written), Rule #22 (the q-file now carries the `b1a` batches), A4 / M8 / F8, README.md and audits/README.md follow.
+
+**Reasoning.** The original defect (audits produced to-do lists nobody ran) is solved by making the to-do list approvable in the q-file, not by letting the audit write. Approval keeps the user in control of a master module other modules build on.

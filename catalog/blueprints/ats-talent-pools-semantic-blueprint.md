@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: Candidate Talent Pools
 tagline: Group and segment candidates so the right shortlist is one search away.
@@ -12,7 +12,7 @@ domain_code: ATS
 icon_name: user-plus
 related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ben-enrollment, hcm-core-worker, hcm-lifecycle-workflows, onb-journey-mgmt]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-RECRUITER]
-created_at: 2026-06-27
+created_at: 2026-11-01
 ---
 
 # Candidate Talent Pools
@@ -38,26 +38,26 @@ flowchart TD
   classDef master fill:#d4f4dd,stroke:#27ae60,color:#0b3d20;
   classDef embedded_master fill:#fff4cc,stroke:#c79100,color:#5b4500;
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
-  talent_pools["Talent Pools"]
   candidates["Candidates"]
+  talent_pools["Talent Pools"]
   talent_pool_memberships["Talent Pool Memberships"]
   talent_segments["Talent Segments"]
   recruiter_saved_searches["Recruiter Saved Searches"]
   candidate_tags["Candidate Tags"]
   candidate_tag_assignments["Candidate Tag Assignments"]
   users["Users"]
+  talent_pools -->|"groups"| candidates
   talent_pools -->|"has_member"| talent_pool_memberships
   candidates -->|"member_of_via"| talent_pool_memberships
   talent_segments -->|"materializes_into"| talent_pools
   candidates -->|"tagged_via"| candidate_tag_assignments
   candidate_tags -->|"applied_via"| candidate_tag_assignments
-  talent_pools -->|"groups"| candidates
   candidates -->|"has owning recruiter"| users
   talent_pools -->|"has owner"| users
   users -->|"assigned tags"| candidate_tag_assignments
   recruiter_saved_searches -->|"has owner"| users
-  class talent_pools master;
   class candidates embedded_master;
+  class talent_pools master;
   class talent_pool_memberships master;
   class talent_segments master;
   class recruiter_saved_searches master;
@@ -89,12 +89,12 @@ _(none: no industry-scoped aliases for this scope)_
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `talent_pools` | groups | `candidates` | many_to_many | reference | required | target | restrict | reference | - |
 | `talent_pools` | has_member | `talent_pool_memberships` | one_to_many | composition | required | source | cascade | parent | - |
 | `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | reference | required | target | restrict | reference | - |
 | `talent_segments` | materializes_into | `talent_pools` | one_to_many | reference | optional | source | clear | reference | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | reference | optional | source | clear | reference | - |
 | `candidate_tags` | applied_via | `candidate_tag_assignments` | one_to_many | reference | required | source | restrict | reference | - |
-| `talent_pools` | groups | `candidates` | many_to_many | reference | required | target | restrict | reference | - |
 
 ### 5.2 Built-in edges (`users` and other platform built-ins)
 
@@ -121,7 +121,14 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `candidates` | verified_via | `right_to_work_verifications` | one_to_many | optional | none | n/a | - |
+| `skill_profiles` | feeds | `candidates` | one_to_many | optional | none | n/a | - |
+| `candidates` | submits | `job_applications` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidate_referrals` | introduces | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `recruitment_agencies` | sources | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `recruitment_events` | attracts | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
+| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `candidates` | engaged_via | `candidate_engagements` | one_to_many | optional | none | n/a | - |
 | `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | required | none (required-if-present) | n/a | - |
 | `candidates` | noted_via | `recruiter_interactions` | one_to_many | optional | none | n/a | - |
@@ -133,17 +140,10 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | none | n/a | - |
 | `candidates` | documented_via | `candidate_documents` | one_to_many | optional | none | n/a | - |
 | `candidates` | annotated_via | `candidate_notes` | one_to_many | optional | none | n/a | - |
-| `skill_profiles` | feeds | `candidates` | one_to_many | optional | none | n/a | - |
-| `candidates` | submits | `job_applications` | one_to_many | required | none (required-if-present) | n/a | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
-| `recruitment_agencies` | sources | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
-| `recruitment_events` | attracts | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
-| `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
-| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `employees` | applies_as | `candidates` | one_to_many | optional | none | n/a | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | optional | none | n/a | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | optional | none | n/a | - |
+| `candidates` | verified_via | `right_to_work_verifications` | one_to_many | optional | none | n/a | - |
 | `candidates` | submitted_via | `agency_submissions` | one_to_many | optional | none | n/a | - |
 
 ## 6. Cross-domain context
@@ -158,17 +158,16 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-CANDIDATE-CRM | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
-| ATS-TALENT-POOLS | ATS | ATS-CANDIDATE-CRM | `talent_pool.candidate_added` | _(lifecycle)_ | `talent_pools` | lifecycle_progression | low | - |
-| ATS-CANDIDATE-CRM | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
-| ATS-CANDIDATE-CRM | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
+| ATS-TALENT-POOLS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
+| ATS-TALENT-POOLS | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
+| ATS-TALENT-POOLS | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ATS-CANDIDATE-CRM | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
-| ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
+| ATS-TALENT-POOLS | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
+| ATS-TALENT-POOLS | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
@@ -182,38 +181,38 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 _This scope holds `candidates` as **embedded_master**; the canonical state machine is owned by `ATS-CANDIDATE-CRM`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `prospect` | ✓ | - | - | - | Person known to the recruiting org with no active application. |
-| 2 | `active` | - | - | - | - | Candidate has at least one open application or is actively engaged. |
-| 3 | `hired` | - | ✓ | ✓ | `ats-talent-pools:hire_candidate` | Candidate accepted an offer and converted to employee. |
-| 4 | `do_not_hire` | - | ✓ | ✓ | `ats-talent-pools:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
-| 5 | `archived` | - | ✓ | - | - | Candidate kept in the database but not active in any pipeline. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `prospect` | ✓ | - | - | - | - | Person known to the recruiting org with no active application. |
+| 2 | `active` | - | - | - | - | - | Candidate has at least one open application or is actively engaged. |
+| 3 | `hired` | - | ✓ | ✓ | - | `ats-talent-pools:hire_candidate` | Candidate accepted an offer and converted to employee. |
+| 4 | `do_not_hire` | - | ✓ | ✓ | - | `ats-talent-pools:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
+| 5 | `archived` | - | ✓ | - | - | - | Candidate kept in the database but not active in any pipeline. |
 
 ### `talent_pool_memberships` (Talent Pool Membership)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `cold` | ✓ | - | - | - | In pool, no recent engagement. |
-| 2 | `warm` | - | - | - | - | Recent positive engagement (replied, attended event). |
-| 3 | `hot` | - | - | - | - | Actively engaged; recruiter is in conversation about a specific role. |
-| 4 | `removed` | - | ✓ | - | - | Candidate removed from pool (opt-out, archive, do-not-contact). |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `cold` | ✓ | - | - | - | - | In pool, no recent engagement. |
+| 2 | `warm` | - | - | - | - | - | Recent positive engagement (replied, attended event). |
+| 3 | `hot` | - | - | - | - | - | Actively engaged; recruiter is in conversation about a specific role. |
+| 4 | `removed` | - | ✓ | - | - | - | Candidate removed from pool (opt-out, archive, do-not-contact). |
 
 ### `talent_pools` (Talent Pool)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `active` | ✓ | - | - | - | Pool is open for additions and nurture campaigns. |
-| 2 | `paused` | - | - | - | - | Pool nurture is temporarily halted (off-season, budget freeze) but membership is retained. |
-| 3 | `archived` | - | ✓ | - | - | Pool is closed; membership is retained for historical attribution but no further outreach occurs. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `active` | ✓ | - | - | - | - | Pool is open for additions and nurture campaigns. |
+| 2 | `paused` | - | - | - | - | - | Pool nurture is temporarily halted (off-season, budget freeze) but membership is retained. |
+| 3 | `archived` | - | ✓ | - | - | - | Pool is closed; membership is retained for historical attribution but no further outreach occurs. |
 
 ### `talent_segments` (Talent Segment)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | Segment rule being authored. |
-| 2 | `active` | - | - | - | - | Segment live; membership materializes from rule. |
-| 3 | `archived` | - | ✓ | - | - | Segment retired; rule no longer evaluated. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | - | - | - | Segment rule being authored. |
+| 2 | `active` | - | - | - | - | - | Segment live; membership materializes from rule. |
+| 3 | `archived` | - | ✓ | - | - | - | Segment retired; rule no longer evaluated. |
 
 ## 8. Permissions and business rules (derived)
 
@@ -225,7 +224,7 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 | `ats-talent-pools:manage` | baseline-manage | Edit operational records | ✓ |
 | `ats-talent-pools:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
 | `ats-talent-pools:hire_candidate` | workflow-gate (lifecycle) | Transition `candidates` into state `hired` | ✓ |
-| `ats-talent-pools:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` | ✓ |
+| `ats-talent-pools:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` (⚠ no process) | ✓ |
 | `ats-talent-pools:view_all_candidates` | override (personal_content) | View all `candidates` rows beyond row-scope | ✓ |
 | `ats-talent-pools:manage_all_candidates` | override (personal_content) | Manage all `candidates` rows beyond row-scope | ✓ |
 
@@ -270,9 +269,9 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 | actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `RECRUITING-RECRUITER` | persona | responsible | `hire_candidate` | grant gates [ats-talent-pools:hire_candidate] + the gated entities' write tier |
-| `HIRING-MANAGER` | persona | accountable | `hire_candidate` | approval gate |
-| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notification side effect (trigger_event / webhook_receiver) |
+| `RECRUITING-RECRUITER` | persona | responsible | `hire_candidate` | the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | `hire_candidate` | grant gates [ats-talent-pools:hire_candidate] + the gated entities' write tier |
+| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notify on trigger_events [candidate.hired] |
 
 ### 9.2 Functional ownership and default grants
 

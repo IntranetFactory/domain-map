@@ -15,6 +15,8 @@
 // Pass criteria and severities follow SKILL.md "Per-domain completeness checklist" (the source of
 // truth): hard blockers are `fail`, soft checks are `warn`.
 
+import { isUnclassified } from "./logic_b.ts";
+
 export type RowId = number | string;
 
 export type Verdict = {
@@ -182,10 +184,9 @@ export function checkInteractionLevels(personaIds: number[], roleModules: RoleMo
 
 // ============================================================================ E6 (mechanical half) / B13
 
-// The B13 predicate, as phase_p_triage.ts reads it: entity_type null, blank or 'unclassified'.
-export function isUnclassified(entityType: string | null | undefined): boolean {
-  return blank(entityType) || entityType === "unclassified";
-}
+// The B13 predicate (entity_type null, blank or 'unclassified'). One definition, in logic_b.ts next
+// to B13, re-exported here so E6 and B13 cannot drift.
+export { isUnclassified };
 
 export function checkMastersClassified(
   masters: number[],
@@ -342,7 +343,7 @@ export function checkToolPairing(toolIds: Iterable<number>, toolsById: Map<numbe
 // semantius* tier counts in all three.
 export const SCORE_KEYS = ["semantius_score", "semantius_agent_core", "semantius_agent_first"] as const;
 export type ScoreKey = (typeof SCORE_KEYS)[number];
-const AGENT_TIERS: Record<ScoreKey, Set<string>> = {
+export const AGENT_TIERS: Record<ScoreKey, Set<string>> = {
   semantius_score: new Set(),
   semantius_agent_core: new Set(["agent_native", "agent_common"]),
   semantius_agent_first: new Set(["agent_native", "agent_common", "agent_first"]),

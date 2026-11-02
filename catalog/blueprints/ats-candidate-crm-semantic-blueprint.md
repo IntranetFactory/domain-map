@@ -1,6 +1,6 @@
 ---
 artifact: semantic-blueprint
-blueprint_version: "3.0"
+version: "3.1"
 license: MIT
 system_name: Candidate CRM
 tagline: Build and nurture a pipeline of candidates long before a role opens.
@@ -15,7 +15,7 @@ domain_code: ATS
 icon_name: user-plus
 related_modules: [abm-intent, ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, cwm-worker-sourcing, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hiring-starter, lms-compliance-training, lms-ct-gdpr, onb-journey-mgmt, pa-workforce-metrics, tlnt-intel-marketplace, tlnt-intel-mobility]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-RECRUITER]
-created_at: 2026-06-27
+created_at: 2026-11-01
 ---
 
 # Candidate CRM
@@ -54,23 +54,27 @@ flowchart TD
   classDef platform_builtin fill:#e0e0e0,stroke:#424242,color:#1a1a1a;
   candidates["Candidates"]
   recruitment_sources["Recruitment Sources"]
+  talent_pools["Talent Pools"]
   recruitment_agencies["Recruitment Agencies"]
   recruitment_events["Recruitment Events"]
+  internal_opportunities["Opportunities"]
   candidate_engagements["Candidate Engagements"]
   candidate_nurture_campaigns["Candidate Nurture Campaigns"]
   recruiting_event_attendances["Recruiting Event Attendances"]
   recruiter_interactions["Recruiter Interactions"]
   candidate_consents["Candidate Consents"]
-  talent_pools["Talent Pools"]
-  internal_opportunities["Opportunities"]
+  data_subject_requests["Data Subject Requests"]
   candidate_documents["Candidate Documents"]
   candidate_notes["Candidate Notes"]
-  data_subject_requests["Data Subject Requests"]
   candidate_emails["Candidate Emails"]
   agency_submissions["Agency Submissions"]
   outreach_sequences["Outreach Sequences"]
   outreach_sequence_steps["Outreach Sequence Steps"]
   users["Users"]
+  recruitment_sources -->|"attributes"| candidates
+  recruitment_agencies -->|"sources"| candidates
+  recruitment_events -->|"attracts"| candidates
+  talent_pools -->|"groups"| candidates
   candidates -->|"engaged_via"| candidate_engagements
   candidate_nurture_campaigns -->|"generates"| candidate_engagements
   candidates -->|"attends_via"| recruiting_event_attendances
@@ -81,10 +85,6 @@ flowchart TD
   candidates -->|"submits_via"| data_subject_requests
   candidates -->|"documented_via"| candidate_documents
   candidates -->|"annotated_via"| candidate_notes
-  recruitment_sources -->|"attributes"| candidates
-  recruitment_agencies -->|"sources"| candidates
-  recruitment_events -->|"attracts"| candidates
-  talent_pools -->|"groups"| candidates
   candidates -->|"corresponds_via"| candidate_emails
   recruitment_agencies -->|"submits_via"| agency_submissions
   candidates -->|"submitted_via"| agency_submissions
@@ -106,26 +106,26 @@ flowchart TD
   outreach_sequences -->|"has owner"| users
   class candidates master;
   class recruitment_sources master;
+  class talent_pools embedded_master;
   class recruitment_agencies master;
   class recruitment_events master;
+  class internal_opportunities embedded_master;
   class candidate_engagements master;
   class candidate_nurture_campaigns master;
   class recruiting_event_attendances master;
   class recruiter_interactions master;
   class candidate_consents master;
-  class talent_pools embedded_master;
-  class internal_opportunities embedded_master;
+  class data_subject_requests master;
   class candidate_documents master;
   class candidate_notes master;
-  class data_subject_requests master;
   class candidate_emails master;
   class agency_submissions master;
   class outreach_sequences master;
   class outreach_sequence_steps master;
   class users platform_builtin;
-  style candidate_consents stroke-dasharray:5 5;
   style talent_pools stroke-dasharray:5 5;
   style internal_opportunities stroke-dasharray:5 5;
+  style candidate_consents stroke-dasharray:5 5;
   style data_subject_requests stroke-dasharray:5 5;
 ```
 
@@ -162,6 +162,10 @@ _(none: no industry-scoped aliases for this scope)_
 
 | from | verb | to | cardinality | kind | necessity | owner_side | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | reference | required | target | restrict | reference | - |
+| `recruitment_agencies` | sources | `candidates` | one_to_many | reference | required | target | restrict | reference | - |
+| `recruitment_events` | attracts | `candidates` | one_to_many | reference | required | target | restrict | reference | - |
+| `talent_pools` | groups | `candidates` | many_to_many | reference | required | target | restrict | reference | - |
 | `candidates` | engaged_via | `candidate_engagements` | one_to_many | reference | optional | target | clear | reference | - |
 | `candidate_nurture_campaigns` | generates | `candidate_engagements` | one_to_many | composition | optional | source | cascade | parent | - |
 | `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | reference | required | target | restrict | reference | - |
@@ -172,10 +176,6 @@ _(none: no industry-scoped aliases for this scope)_
 | `candidates` | submits_via | `data_subject_requests` | one_to_many | composition | optional | source | cascade | parent | - |
 | `candidates` | documented_via | `candidate_documents` | one_to_many | composition | optional | source | cascade | parent | - |
 | `candidates` | annotated_via | `candidate_notes` | one_to_many | composition | optional | source | cascade | parent | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | reference | required | target | restrict | reference | - |
-| `recruitment_agencies` | sources | `candidates` | one_to_many | reference | required | target | restrict | reference | - |
-| `recruitment_events` | attracts | `candidates` | one_to_many | reference | required | target | restrict | reference | - |
-| `talent_pools` | groups | `candidates` | many_to_many | reference | required | target | restrict | reference | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | reference | optional | source | clear | reference | - |
 | `recruitment_agencies` | submits_via | `agency_submissions` | one_to_many | reference | optional | source | clear | reference | - |
 | `candidates` | submitted_via | `agency_submissions` | one_to_many | reference | optional | source | clear | reference | - |
@@ -209,7 +209,11 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 
 | from | verb | to | cardinality | necessity | delete_mode | fk_format | notes |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `candidates` | verified_via | `right_to_work_verifications` | one_to_many | optional | none | n/a | - |
+| `skill_profiles` | feeds | `candidates` | one_to_many | optional | none | n/a | - |
+| `candidates` | submits | `job_applications` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidate_referrals` | introduces | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
+| `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
+| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | required | none (required-if-present) | n/a | - |
 | `candidates` | discloses_via | `fcra_disclosures` | one_to_many | required | ⚠ audit: required composed child out of scope | n/a | - |
 | `candidates` | self_identifies_via | `eeo_responses` | one_to_many | optional | none | n/a | - |
@@ -217,13 +221,9 @@ _Edges this scope drives: the in-scope endpoint has `role` of `master` or `contr
 | `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | optional | none | n/a | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | optional | none | n/a | - |
 | `dlp_incidents` | triggers_privacy_review | `data_subject_requests` | one_to_many | optional | none | n/a | - |
-| `skill_profiles` | feeds | `candidates` | one_to_many | optional | none | n/a | - |
-| `candidates` | submits | `job_applications` | one_to_many | required | none (required-if-present) | n/a | - |
-| `candidate_referrals` | introduces | `candidates` | one_to_many | required | none (required-if-present) | n/a | - |
-| `candidates` | becomes | `employees` | one_to_one | required | none (required-if-present) | n/a | - |
-| `candidates` | becomes pre-employee | `pre_employees` | one_to_one | required | none (required-if-present) | n/a | - |
 | `employees` | applies_as | `candidates` | one_to_many | optional | none | n/a | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | optional | none | n/a | - |
+| `candidates` | verified_via | `right_to_work_verifications` | one_to_many | optional | none | n/a | - |
 
 #### 5.3b Context edges on embedded shells and consumed entities
 
@@ -261,18 +261,16 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ATS-CANDIDATE-CRM | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
-| ATS-CANDIDATE-CRM | ATS | ATS-TALENT-POOLS | `recruitment_event.held` | _(lifecycle)_ | `recruitment_events` | lifecycle_progression | low | - |
 | ATS-CANDIDATE-CRM | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
 | ATS-CANDIDATE-CRM | PA | PA-WORKFORCE-METRICS | `recruitment_source.attributed` | _(lifecycle)_ | `recruitment_sources` | batch_sync | low | Source attribution feeds people-analytics quality-of-hire and cost-per-hire models. |
 | ATS-CANDIDATE-CRM | ONBOARDING | ONB-JOURNEY-MGMT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | medium | Hired candidate drives onboarding-plan kickoff with role/location/manager context from ATS payload. |
-| TLNT-INTEL-MARKETPLACE | TLNT-INTEL | TLNT-INTEL-MOBILITY | `opportunity.opened` | `open` _(state_change)_ | `internal_opportunities` | lifecycle_progression | low | A newly opened opportunity triggers MOBILITY to recompute match inferences and fit scores for eligible employees. |
+| ATS-CANDIDATE-CRM | TLNT-INTEL | TLNT-INTEL-MOBILITY | `opportunity.opened` | `open` _(state_change)_ | `internal_opportunities` | lifecycle_progression | low | A newly opened opportunity triggers MOBILITY to recompute match inferences and fit scores for eligible employees. |
 
 ### 6.3 Inbound handoffs (events this scope reacts to)
 
 | target module | source domain | source module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ATS-CANDIDATE-CRM | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
-| ATS-CANDIDATE-CRM | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_added` | _(lifecycle)_ | `talent_pools` | lifecycle_progression | low | - |
 | ATS-CANDIDATE-CRM | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
@@ -286,110 +284,110 @@ _Edges the canonical owner drives, shown for context: the in-scope endpoint has 
 
 ### `candidate_consents` (Candidate Consent)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `granted` | ✓ | - | - | - | Candidate has granted consent. |
-| 2 | `withdrawn` | - | ✓ | ✓ | `ats-candidate-crm:withdraw_consent` | Candidate revoked consent; data must be anonymized per policy. |
-| 3 | `expired` | - | ✓ | - | - | Retention window elapsed without renewal. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `granted` | ✓ | - | - | - | - | Candidate has granted consent. |
+| 2 | `withdrawn` | - | ✓ | ✓ | - | `ats-candidate-crm:withdraw_consent` | Candidate revoked consent; data must be anonymized per policy. |
+| 3 | `expired` | - | ✓ | - | - | - | Retention window elapsed without renewal. |
 
 ### `candidate_engagements` (Candidate Engagement)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `planned` | ✓ | - | - | - | Engagement queued, not yet sent. |
-| 2 | `sent` | - | - | - | - | Outbound dispatched to candidate. |
-| 3 | `delivered` | - | - | - | - | Channel confirmed delivery. |
-| 4 | `responded` | - | ✓ | - | - | Candidate replied or engaged with content. |
-| 5 | `bounced` | - | ✓ | - | - | Delivery failed (bad address, blocked, unsubscribed). |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `planned` | ✓ | - | - | - | - | Engagement queued, not yet sent. |
+| 2 | `sent` | - | - | - | - | - | Outbound dispatched to candidate. |
+| 3 | `delivered` | - | - | - | - | - | Channel confirmed delivery. |
+| 4 | `responded` | - | ✓ | - | - | - | Candidate replied or engaged with content. |
+| 5 | `bounced` | - | ✓ | - | - | - | Delivery failed (bad address, blocked, unsubscribed). |
 
 ### `candidate_nurture_campaigns` (Candidate Nurture Campaign)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | Campaign being authored. |
-| 2 | `active` | - | - | - | - | Campaign live and sending to audience. |
-| 3 | `paused` | - | - | - | - | Campaign halted; can resume. |
-| 4 | `completed` | - | ✓ | - | - | Campaign reached scheduled end. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | - | - | - | Campaign being authored. |
+| 2 | `active` | - | - | - | - | - | Campaign live and sending to audience. |
+| 3 | `paused` | - | - | - | - | - | Campaign halted; can resume. |
+| 4 | `completed` | - | ✓ | - | - | - | Campaign reached scheduled end. |
 
 ### `candidates` (Candidate)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `prospect` | ✓ | - | - | - | Person known to the recruiting org with no active application. |
-| 2 | `active` | - | - | - | - | Candidate has at least one open application or is actively engaged. |
-| 3 | `hired` | - | ✓ | ✓ | `ats-candidate-crm:hire_candidate` | Candidate accepted an offer and converted to employee. |
-| 4 | `do_not_hire` | - | ✓ | ✓ | `ats-candidate-crm:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
-| 5 | `archived` | - | ✓ | - | - | Candidate kept in the database but not active in any pipeline. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `prospect` | ✓ | - | - | - | - | Person known to the recruiting org with no active application. |
+| 2 | `active` | - | - | - | - | - | Candidate has at least one open application or is actively engaged. |
+| 3 | `hired` | - | ✓ | ✓ | - | `ats-candidate-crm:hire_candidate` | Candidate accepted an offer and converted to employee. |
+| 4 | `do_not_hire` | - | ✓ | ✓ | - | `ats-candidate-crm:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
+| 5 | `archived` | - | ✓ | - | - | - | Candidate kept in the database but not active in any pipeline. |
 
 ### `data_subject_requests` (Data Subject Request)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `received` | ✓ | - | - | - | Data subject request received. The GDPR 30-day response clock starts; extension to 60 days requires a separate notification to the subject. |
-| 2 | `verified` | - | - | ✓ | `ats-candidate-crm:verify_dsr_identity` | Identity of the data subject confirmed by the DPO or designated handler. Required before any data is disclosed or modified. |
-| 3 | `in_progress` | - | - | - | - | Auto-progressed once identity is verified. Collection and review of subject data underway. |
-| 4 | `fulfilled` | - | ✓ | ✓ | `ats-candidate-crm:fulfill_dsr` | Full response delivered to the data subject within the regulatory window. All requested data provided or the requested action completed. |
-| 5 | `partially_fulfilled` | - | ✓ | ✓ | `ats-candidate-crm:fulfill_dsr_partially` | Partial response delivered. Some data categories were unavailable or out of scope; the rationale is documented on the request record. |
-| 6 | `rejected` | - | ✓ | ✓ | `ats-candidate-crm:reject_dsr` | Request rejected (unverifiable identity, manifestly unfounded, repetitive, or out of scope). Rejection rationale documented on the request record. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `received` | ✓ | - | - | - | - | Data subject request received. The GDPR 30-day response clock starts; extension to 60 days requires a separate notification to the subject. |
+| 2 | `verified` | - | - | ✓ | - | `ats-candidate-crm:verify_dsr_identity` | Identity of the data subject confirmed by the DPO or designated handler. Required before any data is disclosed or modified. |
+| 3 | `in_progress` | - | - | - | - | - | Auto-progressed once identity is verified. Collection and review of subject data underway. |
+| 4 | `fulfilled` | - | ✓ | ✓ | - | `ats-candidate-crm:fulfill_dsr` | Full response delivered to the data subject within the regulatory window. All requested data provided or the requested action completed. |
+| 5 | `partially_fulfilled` | - | ✓ | ✓ | - | `ats-candidate-crm:fulfill_dsr_partially` | Partial response delivered. Some data categories were unavailable or out of scope; the rationale is documented on the request record. |
+| 6 | `rejected` | - | ✓ | ✓ | - | `ats-candidate-crm:reject_dsr` | Request rejected (unverifiable identity, manifestly unfounded, repetitive, or out of scope). Rejection rationale documented on the request record. |
 
 ### `internal_opportunities` (Opportunity)
 
 _This scope holds `internal_opportunities` as **embedded_master**; the canonical state machine is owned by `TLNT-INTEL-MARKETPLACE`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | - |
-| 2 | `open` | - | - | ✓ | `ats-candidate-crm:publish_opportunity` | - |
-| 3 | `closed` | - | - | ✓ | `ats-candidate-crm:close_opportunity` | - |
-| 4 | `filled` | - | ✓ | - | - | - |
-| 5 | `canceled` | - | ✓ | ✓ | `ats-candidate-crm:cancel_opportunity` | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | - | - | - | - |
+| 2 | `open` | - | - | ✓ | - | `ats-candidate-crm:publish_opportunity` | - |
+| 3 | `closed` | - | - | ✓ | - | `ats-candidate-crm:close_opportunity` | - |
+| 4 | `filled` | - | ✓ | - | - | - | - |
+| 5 | `canceled` | - | ✓ | ✓ | - | `ats-candidate-crm:cancel_opportunity` | - |
 
 ### `outreach_sequences` (Outreach Sequence)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | - |
-| 2 | `active` | - | - | ✓ | `ats-candidate-crm:activate_outreach_sequence` | - |
-| 3 | `paused` | - | - | - | - | - |
-| 4 | `archived` | - | ✓ | - | - | - |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `draft` | ✓ | - | - | - | - | - |
+| 2 | `active` | - | - | ✓ | - | `ats-candidate-crm:activate_outreach_sequence` | - |
+| 3 | `paused` | - | - | - | - | - | - |
+| 4 | `archived` | - | ✓ | - | - | - | - |
 
 ### `recruiting_event_attendances` (Recruiting Event Attendance)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `registered` | ✓ | - | - | - | Candidate RSVP'd or was pre-registered. |
-| 2 | `checked_in` | - | - | - | - | Candidate arrived at the event. |
-| 3 | `attended` | - | ✓ | - | - | Engaged at the event; eligible for follow-up. |
-| 4 | `no_show` | - | ✓ | - | - | Registered but did not attend. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `registered` | ✓ | - | - | - | - | Candidate RSVP'd or was pre-registered. |
+| 2 | `checked_in` | - | - | - | - | - | Candidate arrived at the event. |
+| 3 | `attended` | - | ✓ | - | - | - | Engaged at the event; eligible for follow-up. |
+| 4 | `no_show` | - | ✓ | - | - | - | Registered but did not attend. |
 
 ### `recruitment_agencies` (Recruitment Agency)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `prospective` | ✓ | - | - | - | Agency under evaluation; contract not yet executed. |
-| 2 | `active` | - | - | - | - | Agency has executed agreement and is engaged on one or more requisitions. |
-| 3 | `on_hold` | - | - | - | - | Engagement paused (performance review, contractual dispute, hiring freeze). |
-| 4 | `terminated` | - | ✓ | - | - | Relationship ended; no further requisitions are routed to this agency. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `prospective` | ✓ | - | - | - | - | Agency under evaluation; contract not yet executed. |
+| 2 | `active` | - | - | - | - | - | Agency has executed agreement and is engaged on one or more requisitions. |
+| 3 | `on_hold` | - | - | - | - | - | Engagement paused (performance review, contractual dispute, hiring freeze). |
+| 4 | `terminated` | - | ✓ | - | - | - | Relationship ended; no further requisitions are routed to this agency. |
 
 ### `recruitment_events` (Recruitment Event)
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `planned` | ✓ | - | - | - | Event scoped and budgeted; date, venue, target audience set; registration not yet open. |
-| 2 | `open_for_registration` | - | - | - | - | Registration is accepting attendees; promotion campaigns active. |
-| 3 | `held` | - | - | - | - | Event has been executed; attendee lists captured, leads ingested into talent pool. |
-| 4 | `closed` | - | ✓ | - | - | Post-event activities complete; cost accounting and source-attribution finalized. |
-| 5 | `canceled` | - | ✓ | - | - | Event called off before it happens; sunk costs recognized, attendees notified. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `planned` | ✓ | - | - | - | - | Event scoped and budgeted; date, venue, target audience set; registration not yet open. |
+| 2 | `open_for_registration` | - | - | - | - | - | Registration is accepting attendees; promotion campaigns active. |
+| 3 | `held` | - | - | - | - | - | Event has been executed; attendee lists captured, leads ingested into talent pool. |
+| 4 | `closed` | - | ✓ | - | - | - | Post-event activities complete; cost accounting and source-attribution finalized. |
+| 5 | `canceled` | - | ✓ | - | - | - | Event called off before it happens; sunk costs recognized, attendees notified. |
 
 ### `talent_pools` (Talent Pool)
 
 _This scope holds `talent_pools` as **embedded_master**; the canonical state machine is owned by `ATS-TALENT-POOLS`._
 
-| order | state_name | initial? | terminal? | requires_permission? | derived gate | description |
-| --- | --- | --- | --- | --- | --- | --- |
-| 1 | `active` | ✓ | - | - | - | Pool is open for additions and nurture campaigns. |
-| 2 | `paused` | - | - | - | - | Pool nurture is temporarily halted (off-season, budget freeze) but membership is retained. |
-| 3 | `archived` | - | ✓ | - | - | Pool is closed; membership is retained for historical attribution but no further outreach occurs. |
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `active` | ✓ | - | - | - | - | Pool is open for additions and nurture campaigns. |
+| 2 | `paused` | - | - | - | - | - | Pool nurture is temporarily halted (off-season, budget freeze) but membership is retained. |
+| 3 | `archived` | - | ✓ | - | - | - | Pool is closed; membership is retained for historical attribution but no further outreach occurs. |
 
 ## 8. Permissions and business rules (derived)
 
@@ -401,16 +399,16 @@ _This scope holds `talent_pools` as **embedded_master**; the canonical state mac
 | `ats-candidate-crm:manage` | baseline-manage | Edit operational records | ✓ |
 | `ats-candidate-crm:admin` | baseline-admin | Edit reference data and inherit every workflow gate below | - |
 | `ats-candidate-crm:hire_candidate` | workflow-gate (lifecycle) | Transition `candidates` into state `hired` | ✓ |
-| `ats-candidate-crm:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` | ✓ |
-| `ats-candidate-crm:publish_opportunity` | workflow-gate (lifecycle) | Transition `internal_opportunities` into state `open` | ✓ |
-| `ats-candidate-crm:close_opportunity` | workflow-gate (lifecycle) | Transition `internal_opportunities` into state `closed` | ✓ |
-| `ats-candidate-crm:cancel_opportunity` | workflow-gate (lifecycle) | Transition `internal_opportunities` into state `canceled` | ✓ |
-| `ats-candidate-crm:withdraw_consent` | workflow-gate (lifecycle) | Transition `candidate_consents` into state `withdrawn` | ✓ |
-| `ats-candidate-crm:verify_dsr_identity` | workflow-gate (lifecycle) | Transition `data_subject_requests` into state `verified` | ✓ |
-| `ats-candidate-crm:fulfill_dsr` | workflow-gate (lifecycle) | Transition `data_subject_requests` into state `fulfilled` | ✓ |
-| `ats-candidate-crm:fulfill_dsr_partially` | workflow-gate (lifecycle) | Transition `data_subject_requests` into state `partially_fulfilled` | ✓ |
-| `ats-candidate-crm:reject_dsr` | workflow-gate (lifecycle) | Transition `data_subject_requests` into state `rejected` | ✓ |
-| `ats-candidate-crm:activate_outreach_sequence` | workflow-gate (lifecycle) | Transition `outreach_sequences` into state `active` | ✓ |
+| `ats-candidate-crm:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` (⚠ no process) | ✓ |
+| `ats-candidate-crm:publish_opportunity` | workflow-gate (lifecycle) | Transition `internal_opportunities` into state `open` (⚠ no process) | ✓ |
+| `ats-candidate-crm:close_opportunity` | workflow-gate (lifecycle) | Transition `internal_opportunities` into state `closed` (⚠ no process) | ✓ |
+| `ats-candidate-crm:cancel_opportunity` | workflow-gate (lifecycle) | Transition `internal_opportunities` into state `canceled` (⚠ no process) | ✓ |
+| `ats-candidate-crm:withdraw_consent` | workflow-gate (lifecycle) | Transition `candidate_consents` into state `withdrawn` (⚠ no process) | ✓ |
+| `ats-candidate-crm:verify_dsr_identity` | workflow-gate (lifecycle) | Transition `data_subject_requests` into state `verified` (⚠ no process) | ✓ |
+| `ats-candidate-crm:fulfill_dsr` | workflow-gate (lifecycle) | Transition `data_subject_requests` into state `fulfilled` (⚠ no process) | ✓ |
+| `ats-candidate-crm:fulfill_dsr_partially` | workflow-gate (lifecycle) | Transition `data_subject_requests` into state `partially_fulfilled` (⚠ no process) | ✓ |
+| `ats-candidate-crm:reject_dsr` | workflow-gate (lifecycle) | Transition `data_subject_requests` into state `rejected` (⚠ no process) | ✓ |
+| `ats-candidate-crm:activate_outreach_sequence` | workflow-gate (lifecycle) | Transition `outreach_sequences` into state `active` (⚠ no process) | ✓ |
 | `ats-candidate-crm:view_all_candidates` | override (personal_content) | View all `candidates` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:manage_all_candidates` | override (personal_content) | Manage all `candidates` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:view_all_candidate_engagements` | override (personal_content) | View all `candidate_engagements` rows beyond row-scope | ✓ |
@@ -419,12 +417,12 @@ _This scope holds `talent_pools` as **embedded_master**; the canonical state mac
 | `ats-candidate-crm:manage_all_recruiter_interactions` | override (personal_content) | Manage all `recruiter_interactions` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:view_all_candidate_consents` | override (personal_content) | View all `candidate_consents` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:manage_all_candidate_consents` | override (personal_content) | Manage all `candidate_consents` rows beyond row-scope | ✓ |
+| `ats-candidate-crm:view_all_data_subject_requests` | override (personal_content) | View all `data_subject_requests` rows beyond row-scope | ✓ |
+| `ats-candidate-crm:manage_all_data_subject_requests` | override (personal_content) | Manage all `data_subject_requests` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:view_all_candidate_documents` | override (personal_content) | View all `candidate_documents` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:manage_all_candidate_documents` | override (personal_content) | Manage all `candidate_documents` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:view_all_candidate_notes` | override (personal_content) | View all `candidate_notes` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:manage_all_candidate_notes` | override (personal_content) | Manage all `candidate_notes` rows beyond row-scope | ✓ |
-| `ats-candidate-crm:view_all_data_subject_requests` | override (personal_content) | View all `data_subject_requests` rows beyond row-scope | ✓ |
-| `ats-candidate-crm:manage_all_data_subject_requests` | override (personal_content) | Manage all `data_subject_requests` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:view_all_candidate_emails` | override (personal_content) | View all `candidate_emails` rows beyond row-scope | ✓ |
 | `ats-candidate-crm:manage_all_candidate_emails` | override (personal_content) | Manage all `candidate_emails` rows beyond row-scope | ✓ |
 
@@ -436,9 +434,9 @@ _This scope holds `talent_pools` as **embedded_master**; the canonical state mac
 | `candidate_engagement_edit_scope` | `candidate_engagements` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_engagements` / `ats-candidate-crm:manage_all_candidate_engagements` |
 | `recruiter_interaction_edit_scope` | `recruiter_interactions` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_recruiter_interactions` / `ats-candidate-crm:manage_all_recruiter_interactions` |
 | `candidate_consent_edit_scope` | `candidate_consents` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_consents` / `ats-candidate-crm:manage_all_candidate_consents` |
+| `data_subject_request_edit_scope` | `data_subject_requests` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_data_subject_requests` / `ats-candidate-crm:manage_all_data_subject_requests` |
 | `candidate_document_edit_scope` | `candidate_documents` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_documents` / `ats-candidate-crm:manage_all_candidate_documents` |
 | `candidate_note_edit_scope` | `candidate_notes` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_notes` / `ats-candidate-crm:manage_all_candidate_notes` |
-| `data_subject_request_edit_scope` | `data_subject_requests` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_data_subject_requests` / `ats-candidate-crm:manage_all_data_subject_requests` |
 | `candidate_email_edit_scope` | `candidate_emails` | has_personal_content | Row-scope by default; override via `ats-candidate-crm:view_all_candidate_emails` / `ats-candidate-crm:manage_all_candidate_emails` |
 
 ## 9. Roles, RACI, and responsibilities (derived)
@@ -480,12 +478,12 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_recruiter_interactions` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_candidate_consents` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_candidate_consents` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_data_subject_requests` |
+| `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_data_subject_requests` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_candidate_documents` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_candidate_documents` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_candidate_notes` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_candidate_notes` |
-| `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_data_subject_requests` |
-| `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_data_subject_requests` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:view_all_candidate_emails` |
 | `ats-candidate-crm:admin` | `ats-candidate-crm:manage_all_candidate_emails` |
 
@@ -499,9 +497,9 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 
 | actor | kind | raci | process_key | realization |
 | --- | --- | --- | --- | --- |
-| `RECRUITING-RECRUITER` | persona | responsible | `hire_candidate` | grant gates [ats-candidate-crm:hire_candidate] + the gated entities' write tier |
-| `HIRING-MANAGER` | persona | accountable | `hire_candidate` | approval gate |
-| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notification side effect (trigger_event / webhook_receiver) |
+| `RECRUITING-RECRUITER` | persona | responsible | `hire_candidate` | the gated entities' write tier |
+| `HIRING-MANAGER` | persona | accountable | `hire_candidate` | grant gates [ats-candidate-crm:hire_candidate] + the gated entities' write tier |
+| `LEGAL-COMPLIANCE-SPECIALIST` | persona | informed | `hire_candidate` | notify on trigger_events [candidate.hired] |
 
 ### 9.2 Functional ownership and default grants
 

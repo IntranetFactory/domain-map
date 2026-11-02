@@ -17,10 +17,14 @@
  * It WRITES NOTHING. The figures are the run-time signal for the band; do not assume the
  * prior 531 / 143 / 19 scan (Policy 4: re-derive against live).
  *
+ * The classification is the shared health logic (scripts/lib/health/logic_sam.ts
+ * classifyRequiredEdgeTargets); this probe only fetches and prints.
+ *
  * Usage (from project root): bun run scripts/analytics/required_edge_presence_probe.ts [--samples]
  */
 export {};
 import { argv } from "node:process";
+import { classifyRequiredEdgeTargets } from "../lib/health/logic_sam.ts";
 
 const SAMPLES = argv.includes("--samples");
 
@@ -46,45 +50,22 @@ const nameById = new Map<number, string>();
 const kindById = new Map<number, string>();
 for (const o of dataObjects) { nameById.set(Number(o.id), o.data_object_name); kindById.set(Number(o.id), o.kind); }
 
-// Per target entity: the set of necessity values across the DMDO rows it appears in.
-const necessityByDO = new Map<number, Set<string>>();
-for (const r of dmdo) {
-  const id = Number(r.data_object_id);
-  const s = necessityByDO.get(id) ?? new Set<string>();
-  if (r.necessity != null) s.add(String(r.necessity));
-  necessityByDO.set(id, s);
-}
-const optionalSomewhere = (id: number): boolean => necessityByDO.get(id)?.has("optional") ?? false;
-const optionalEverywhere = (id: number): boolean => {
-  const s = necessityByDO.get(id);
-  return !!s && s.size > 0 && [...s].every((v) => v === "optional");
-};
-
-let total = 0, someCount = 0, everyCount = 0, builtinTarget = 0;
-const everyList: string[] = [];
-const everyByKind = new Map<string, number>();
-
-for (const e of requiredEdges) {
-  total++;
+// Per target entity, the necessity values across the DMDO rows it appears in decide the class.
+const summary = classifyRequiredEdgeTargets(requiredEdges, dmdo, kindById);
+const everyList = summary.everyEdges.map((e) => {
+  const src = nameById.get(Number(e.data_object_id)) ?? `#${e.data_object_id}`;
   const target = Number(e.related_data_object_id);
-  if (kindById.get(target) === "platform_builtin") { builtinTarget++; continue; }
-  if (optionalSomewhere(target)) someCount++;
-  if (optionalEverywhere(target)) {
-    everyCount++;
-    everyByKind.set(e.relationship_kind, (everyByKind.get(e.relationship_kind) ?? 0) + 1);
-    const src = nameById.get(Number(e.data_object_id)) ?? `#${e.data_object_id}`;
-    const tgt = nameById.get(target) ?? `#${target}`;
-    everyList.push(`${src} --${e.relationship_verb ?? "?"}[${e.relationship_kind}]--> ${tgt}`);
-  }
-}
+  const tgt = nameById.get(target) ?? `#${target}`;
+  return `${src} --${e.relationship_verb ?? "?"}[${e.relationship_kind}]--> ${tgt}`;
+});
 
 console.log(`required-edge presence probe (READ-ONLY, no writes)`);
-console.log(`  is_required=true edges: ${total}`);
-console.log(`  ... target is platform_builtin (always present, excluded): ${builtinTarget}`);
-console.log(`  ... target is necessity=optional in at least one module (ambiguous): ${someCount}`);
-console.log(`  ... target is necessity=optional in EVERY module it appears (unambiguous): ${everyCount}`);
+console.log(`  is_required=true edges: ${summary.total}`);
+console.log(`  ... target is platform_builtin (always present, excluded): ${summary.builtinTarget}`);
+console.log(`  ... target is necessity=optional in at least one module (ambiguous): ${summary.optionalSomewhere}`);
+console.log(`  ... target is necessity=optional in EVERY module it appears (unambiguous): ${summary.optionalEverywhere}`);
 console.log(`\n  unambiguous breakdown by relationship_kind:`);
-for (const [kind, n] of [...everyByKind.entries()].sort((a, b) => b[1] - a[1])) {
+for (const [kind, n] of [...summary.everyByKind.entries()].sort((a, b) => b[1] - a[1])) {
   const tag = kind === "composition" ? "  (composition => M9 audit finding, embed or relax)" : "";
   console.log(`    ${kind}: ${n}${tag}`);
 }

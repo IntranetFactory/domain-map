@@ -815,6 +815,7 @@ export function checkLifecycleCoverage(masters: MasterRow[], states: StateRow[],
 // B13. entity_type classified (ported from phase_p_triage.ts)
 // =====================================================================================
 
+// The single B13 predicate: logic_cefh.ts re-exports it for E6, phase_p_triage.ts imports it.
 export const isUnclassified = (entityType: string | null | undefined): boolean => {
   const t = norm(entityType);
   return t === "" || t === "unclassified";

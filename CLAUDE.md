@@ -50,8 +50,13 @@ The `semantius` CLI reads `.env` from the **current working directory**. Always 
 
 **Equally important: do not `cd` *into* the project root either.** Your shell's cwd is **already** `c:/dev/domain-map`. Never prefix Bash commands with `cd c:/dev/domain-map &&`, `cd C:/dev/domain-map &&`, `cd "c:/dev/domain-map" &&`, `cd /c/dev/domain-map &&`, or any case/quoting/slash variant. This prefix is ceremony, adds nothing, and forces a permission prompt for the user. Call `semantius`, `bun`, `yq`, `git`, `grep`, etc. directly with no `cd` prefix. The same applies inside any subagent you dispatch.
 
-## Review/audit means fix it (not just report)
+## Review, audit and validate never change catalog data
 
-A request to **review / audit / validate / finish** a domain (or the catalog) means diagnose **and execute every fix the agent can do** in the same pass, leaving each domain either **agent-finished** (all changes at `record_status='new'`, awaiting only your approval) or **waiting on you** (a decision, or a destructive step needing sign-off). It never ends with a `b1a` to-do list or a plan. Only **report / check / "check only"** is read-only.
+A request to **review / audit / validate / check / report on** a domain (or the catalog) is **read-only on the catalog**: no row is inserted, updated or deleted. It diagnoses and produces an **actionable report** for your approval:
 
-Additive/corrective work (insert rows, fill empty fields, classify, tag, author `record_status='new'` content) runs without asking. **Destructive work (DELETE, overwrite a non-empty value, replace/restructure) on ANY table is never done unapproved** (Rule #1 still holds: never stamp `approved`). `b3` (discretionary additive entities) and new-domain candidates are non-blocking ideas, never gate "finished", and are never a split (a split is a `b2` decision). Full contract: [domain-map-analyst SKILL.md](.claude/skills/domain-map-analyst/SKILL.md) Rule #21.
+- `domain_health.ts --domain <CODE> --record` (it writes only the `checks:` block of `audits/<CODE>/state.yaml`);
+- a dated section in `audits/<CODE>/history.md`;
+- `audits/<CODE>/state.yaml` with every agent-doable fix as a `b1a` item carrying the exact rows it would write, every decision as a `b2`, and research ideas as `b3`;
+- `audits/<CODE>/q-<CODE>.md` listing every proposed change as a question you can approve: additive fixes grouped into yes/no batches, each destructive change and each decision on its own.
+
+**Catalog writes happen only after approval**, and only for the items approved: an answered `a-` file (SKILL.md Rule #22), or an explicit request that names what to apply ("apply the approved ATS fixes", "fix X"). Approved additive work lands at `record_status='new'`; destructive work (DELETE, overwrite a non-empty value, replace/restructure) needs its own explicit approval per item; nothing is ever stamped `approved` (Rule #1). A request about one module or one finding is scoped to that module or finding, never widened to the whole domain. Full contract: [domain-map-analyst SKILL.md](.claude/skills/domain-map-analyst/SKILL.md) Rule #21.

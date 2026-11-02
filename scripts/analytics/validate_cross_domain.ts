@@ -21,8 +21,13 @@
 //             (source must have role in {master, embedded_master, contributor, derived})
 //   B8-rev  — payload NOT touched by target (any role including derived)
 //   Orphan  — trigger_event has no handoff AND data_object has no lifecycle_state
+//
+// B10b.1 / B10b.2 / B9 / Orphan run the shared health rules (scripts/lib/health/logic_b.ts:
+// checkHandoffModuleAttribution, isPublishableBy, checkOutboundEvents), so this catalog-wide pass
+// and domain_health.ts cannot drift. B8-rev keeps its own query here.
 
 import { spawn } from "bun";
+import { checkHandoffModuleAttribution, checkOutboundEvents, isPublishableBy } from "../lib/health/logic_b.ts";
 
 async function get(path: string): Promise<any[]> {
   const proc = spawn(["semantius", "call", "crud", "postgrestRequest"], {
@@ -74,10 +79,28 @@ const crossHandoffs = allHandoffsForAudit.filter(
 );
 console.log(`(${crossHandoffs.length} cross-domain handoffs of ${allHandoffsForAudit.length} total)`);
 
+// B10b per domain (logic_b.ts checkHandoffModuleAttribution), fed one direction at a time: each
+// domain's outbound cross handoffs (q1) or its inbound ones (q2). Every fail it returns is then that
+// direction's NULL module FK (a domain without modules is not applicable). Returns handoff ids.
+function b10bNullModuleIds(side: "source" | "target"): Set<number> {
+  const byDomain = new Map<number, any[]>();
+  for (const h of crossHandoffs) {
+    const dom = side === "source" ? h.source_domain_id : h.target_domain_id;
+    if (!byDomain.has(dom)) byDomain.set(dom, []);
+    byDomain.get(dom)!.push(h);
+  }
+  const ids = new Set<number>();
+  for (const [domainId, handoffs] of byDomain) {
+    for (const f of checkHandoffModuleAttribution({ domainId, hasModules: modulesByDomain.has(domainId), handoffs })) {
+      if (f.result === "fail") for (const id of f.rows ?? []) ids.add(Number(id));
+    }
+  }
+  return ids;
+}
+
 // Query 1: NULL source_domain_module_id, source domain has modules
-const q1 = crossHandoffs.filter(
-  (h: any) => h.source_domain_module_id == null && modulesByDomain.has(h.source_domain_id)
-);
+const q1Ids = b10bNullModuleIds("source");
+const q1 = crossHandoffs.filter((h: any) => q1Ids.has(h.id));
 console.log(`\nB10b.1 — NULL source_domain_module_id (source domain has modules): ${q1.length} defects`);
 if (q1.length > 0) {
   const byDom = new Map<string, number>();
@@ -86,9 +109,8 @@ if (q1.length > 0) {
 }
 
 // Query 2: NULL target_domain_module_id, target domain has modules
-const q2 = crossHandoffs.filter(
-  (h: any) => h.target_domain_module_id == null && modulesByDomain.has(h.target_domain_id)
-);
+const q2Ids = b10bNullModuleIds("target");
+const q2 = crossHandoffs.filter((h: any) => q2Ids.has(h.id));
 console.log(`\nB10b.2 — NULL target_domain_module_id (target domain has modules): ${q2.length} defects`);
 if (q2.length > 0) {
   const byDom = new Map<string, number>();
@@ -96,21 +118,18 @@ if (q2.length > 0) {
   for (const [d, n] of [...byDom.entries()].sort((a, b) => b[1] - a[1])) console.log(`  ${d}: ${n}`);
 }
 
-// Pull DMDO rows once; build per-domain, per-role sets.
+// Pull DMDO rows once; build per-domain row lists (q3) and per-domain consume sets (q4).
 const dmdoAll = await get(
   "/domain_module_data_objects?select=data_object_id,role,domain_module:domain_modules(domain_id)"
 );
-const PUBLISH_ROLES = new Set(["master", "embedded_master", "contributor", "derived"]);
 const CONSUME_ROLES = new Set(["master", "embedded_master", "contributor", "consumer", "derived"]);
-const publishingByDomain = new Map<number, Set<number>>();  // who can publish events on a data_object
+const dmdoByDomain = new Map<number, any[]>();              // a domain's rows: who can publish events on a data_object
 const consumingByDomain = new Map<number, Set<number>>();   // who can consume a data_object as handoff target
 for (const r of dmdoAll) {
   const dom = r.domain_module?.domain_id;
   if (dom == null) continue;
-  if (PUBLISH_ROLES.has(r.role)) {
-    if (!publishingByDomain.has(dom)) publishingByDomain.set(dom, new Set());
-    publishingByDomain.get(dom)!.add(r.data_object_id);
-  }
+  if (!dmdoByDomain.has(dom)) dmdoByDomain.set(dom, []);
+  dmdoByDomain.get(dom)!.push(r);
   if (CONSUME_ROLES.has(r.role)) {
     if (!consumingByDomain.has(dom)) consumingByDomain.set(dom, new Set());
     consumingByDomain.get(dom)!.add(r.data_object_id);
@@ -121,13 +140,13 @@ const builtins = await get("/data_objects?kind=eq.platform_builtin&select=id");
 const builtinSet = new Set<number>(builtins.map((d: any) => d.id));
 
 // Query 3 (REFINED): trigger_event.data_object_id must have role IN (master, embedded_master, contributor, derived) on source.
-// Consumer-only is excluded: you don't publish events about something you only read.
+// Consumer-only is excluded: you don't publish events about something you only read
+// (logic_b.ts PUBLISH_ROLES / isPublishableBy, the B9 event_not_publishable rule).
 const q3 = crossHandoffs.filter((h: any) => {
   const tev = h.trigger_event;
   if (!tev?.data_object_id) return false;
   if (builtinSet.has(tev.data_object_id)) return false;
-  const srcPublishables = publishingByDomain.get(h.source_domain_id);
-  return !(srcPublishables && srcPublishables.has(tev.data_object_id));
+  return !isPublishableBy(dmdoByDomain.get(h.source_domain_id) ?? [], tev.data_object_id);
 });
 console.log(`\nB9 (refined) — trigger_event data_object NOT publishable from source (role in master/embedded_master/contributor/derived): ${q3.length} defects`);
 if (q3.length > 0) {
@@ -152,17 +171,35 @@ if (q4.length > 0) {
   if (byDom.size > 15) console.log(`  ... and ${byDom.size - 15} more domains`);
 }
 
-// Query 5 (REFINED): orphaned = no handoff AND no lifecycle_state on the data_object.
+// Query 5 (REFINED): orphaned = no handoff AND no lifecycle_state on the data_object. This is the
+// orphan half of logic_b.ts's B9 "event with no handoff anywhere" rule (checkOutboundEvents), run
+// catalog-wide: every event's entity is in scope, the publishability sub-rule is off
+// (hasModules=false; q3 above covers it), and the finding tagged Q5_TAG is this list.
 const allTrigEvents = await get("/trigger_events?select=id,event_name,data_object_id");
-const referencedTrigIds = new Set<number>();
 const allHandoffsLite = await get("/handoffs?select=trigger_event_id");
-for (const h of allHandoffsLite) if (h.trigger_event_id != null) referencedTrigIds.add(h.trigger_event_id);
 const lifecycleDOs = await get("/data_object_lifecycle_states?select=data_object_id");
-const lifecycleDOSet = new Set<number>(lifecycleDOs.map((s: any) => s.data_object_id));
-const q5 = allTrigEvents.filter((t: any) => {
-  if (referencedTrigIds.has(t.id)) return false;
-  return !lifecycleDOSet.has(t.data_object_id);
+const Q5_TAG = "validate_cross_domain q5";
+const b9 = checkOutboundEvents({
+  domainId: -1,
+  masterIds: [...new Set<number>(allTrigEvents.map((t: any) => t.data_object_id))],
+  events: allTrigEvents,
+  states: lifecycleDOs,
+  handoffs: allHandoffsLite,
+  domainDmdo: [],
+  hasModules: false,
+  eventEntity: () => undefined,
+  isBuiltin: () => false,
 });
+const eventRowIds = (f: { rows?: (number | string)[] }) =>
+  (f.rows ?? []).map(String).filter((r) => r.startsWith("event:")).map((r) => Number(r.slice("event:".length)));
+const orphanIds = new Set<number>(b9.filter((f) => f.result === "fail" && f.detail.includes(Q5_TAG)).flatMap(eventRowIds));
+// Guard the tag: every unhanded event outside the tagged finding (the leaf half) has a lifecycle.
+const lifecycleDOSet = new Set<number>(lifecycleDOs.map((s: any) => s.data_object_id));
+const entityOfEvent = new Map<number, number>(allTrigEvents.map((t: any) => [t.id, t.data_object_id]));
+if (b9.some((f) => f.result === "fail" && !f.detail.includes(Q5_TAG) && eventRowIds(f).some((id) => !lifecycleDOSet.has(entityOfEvent.get(id)!)))) {
+  throw new Error(`logic_b.ts checkOutboundEvents: the orphan finding no longer carries "${Q5_TAG}"; update q5`);
+}
+const q5 = allTrigEvents.filter((t: any) => orphanIds.has(t.id));
 console.log(`\nOrphaned trigger_events (refined: no handoff AND no lifecycle_state on data_object): ${q5.length} defects`);
 if (q5.length > 0) {
   const sample = q5.slice(0, 10);
