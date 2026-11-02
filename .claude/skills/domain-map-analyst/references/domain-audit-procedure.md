@@ -32,10 +32,10 @@ For the target domain `<CODE>`:
    - `/domain_modules?domain_id=eq.<id>&select=id,domain_module_code,domain_module_name,module_kind`
 
 3. Pull the full DMDO footprint across all those modules:
-   `/domain_module_data_objects?domain_module_id=in.(<modIds>)&select=domain_module_id,role,necessity,data_objects(data_object_name,kind),domain_modules(domain_module_code)`
+   `/domain_module_data_objects?domain_module_id=in.(<modIds>)&select=domain_module_id,role,is_install_optional,data_objects(data_object_name,kind),domain_modules(domain_module_code)`
 
 4. (Optional, deprecated source) Pull the legacy `domain_data_objects` rollup for cross-check ONLY:
-   `/domain_data_objects?domain_id=eq.<id>&select=role,necessity,data_objects(data_object_name)`
+   `/domain_data_objects?domain_id=eq.<id>&select=role,is_install_optional,data_objects(data_object_name)`
    The masters set is the per-module junction from step 3, never this rollup: `domain_data_objects` is a derived rollup that was never regenerated after domains modularized and under-counts (deprecated as a masters source 2026-06-16). A delta between the two is expected drift, not a finding.
 
 5. **Pull the domain's cross-domain handoffs and their APQC coverage** (for the APQC tagging pass in Step 3):
@@ -245,7 +245,7 @@ Current state (read these first; live PostgREST queries, NOT deploy scripts):
 
   semantius call crud postgrestRequest '{"method":"GET","path":"/domain_modules?domain_id=eq.<id>&select=id,domain_module_code,domain_module_name,module_kind"}'
 
-  semantius call crud postgrestRequest '{"method":"GET","path":"/domain_module_data_objects?domain_module_id=in.(<modIds>)&select=domain_module_id,role,necessity,data_objects(data_object_name,kind),domain_modules(domain_module_code)"}'
+  semantius call crud postgrestRequest '{"method":"GET","path":"/domain_module_data_objects?domain_module_id=in.(<modIds>)&select=domain_module_id,role,is_install_optional,data_objects(data_object_name,kind),domain_modules(domain_module_code)"}'
 
 Task:
 

@@ -48,7 +48,7 @@ type Module = { id: number; domain_module_code: string; domain_id: number | null
 type CapDom = { domain_id: number };
 type DomainRole = { id: number; business_function_id: number | null; record_status: string | null };
 type RoleModule = { role_id: number; domain_module_id: number };
-type Dmdo = { domain_module_id: number; data_object_id: number; role: string; necessity: string | null };
+type Dmdo = { domain_module_id: number; data_object_id: number; role: string; is_install_optional: boolean | null };
 type DataObject = { id: number; data_object_name: string; kind: string; entity_type: string | null };
 
 // Fetch sequentially: each pg() spawns a fresh `semantius` CLI process with its own MCP
@@ -59,7 +59,7 @@ const modules = (await pg("GET", "/domain_modules?select=id,domain_module_code,d
 const capDoms = (await pg("GET", "/capability_domains?select=domain_id&limit=20000")) as CapDom[];
 const domainRoles = (await pg("GET", "/domain_roles?select=id,business_function_id,record_status&limit=20000")) as DomainRole[];
 const roleModules = (await pg("GET", "/role_modules?select=role_id,domain_module_id&limit=20000")) as RoleModule[];
-const dmdo = (await pg("GET", "/domain_module_data_objects?select=domain_module_id,data_object_id,role,necessity&limit=30000")) as Dmdo[];
+const dmdo = (await pg("GET", "/domain_module_data_objects?select=domain_module_id,data_object_id,role,is_install_optional&limit=30000")) as Dmdo[];
 const dataObjects = (await pg("GET", "/data_objects?select=id,data_object_name,kind,entity_type&limit=20000")) as DataObject[];
 
 // ---- indices ----
@@ -122,7 +122,7 @@ type Record = {
   unclassified_master_names: string[];
   m9_shapes: number;
   m9_shared_excluded: number;
-  m9_details: { entity: string; module: string; role: string; necessity: string | null; master_domains: string[] }[];
+  m9_details: { entity: string; module: string; role: string; is_install_optional: boolean | null; master_domains: string[] }[];
   verdict: Verdict;
   b1a_codes: string[];
 };
@@ -156,11 +156,11 @@ for (const d of domains) {
   // by >= 2 domains; counted in sharedExcluded for transparency).
   const m9 = entitySelfContainment(rows, selfContainmentCatalog, { embeddedScope: "domain", crossDomainOnly: true });
   const m9_shared_excluded = m9.sharedExcluded;
-  const m9_details: { entity: string; module: string; role: string; necessity: string | null; master_domains: string[] }[] = m9.violations.map((v) => ({
+  const m9_details: { entity: string; module: string; role: string; is_install_optional: boolean | null; master_domains: string[] }[] = m9.violations.map((v) => ({
     entity: doById.get(v.row.data_object_id)?.data_object_name ?? `#${v.row.data_object_id}`,
     module: moduleCodeById.get(v.row.domain_module_id) ?? `#${v.row.domain_module_id}`,
     role: v.row.role,
-    necessity: v.row.necessity ?? null,
+    is_install_optional: v.row.is_install_optional ?? null,
     // not a shared master, so the owning domain is the entity's only master domain
     master_domains: v.ownerDomainIds.map((md) => domainCodeById.get(md) ?? `#${md}`).sort(),
   }));

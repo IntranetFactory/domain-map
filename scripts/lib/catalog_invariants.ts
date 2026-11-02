@@ -46,6 +46,7 @@ export type RelationshipRow = {
   relationship_verb: string;
   inverse_verb?: string | null;
   owner_side: string; // source | target
+  is_required?: boolean | null;
 };
 
 export type TriggerEventRow = {
@@ -97,6 +98,9 @@ export type RelationshipShapeOptions = {
   nameOf?: NameOf;
   // data_object_id -> domain ids that master it. Enables the composition-coherence sub-rule (M7).
   masterDomainsByDataObject?: Map<number, Set<number>>;
+  // Every relationship in the catalog, so the optional-composition sub-rule can see a child's other
+  // parents when `rels` is only a subset. Defaults to `rels`.
+  allRelationships?: RelationshipRow[];
 };
 
 function edgeText(r: RelationshipRow, nameOf: NameOf): string {
@@ -111,9 +115,21 @@ export function oneSide(relationshipType: string): "source" | "target" | null {
   return null;
 }
 
+// The child of a composition: the end opposite the parent, which cardinality decides, then owner_side.
+function compositionChild(r: RelationshipRow): number {
+  const side = oneSide(r.relationship_type) ?? (r.owner_side === "target" ? "target" : "source");
+  return side === "source" ? r.related_data_object_id : r.data_object_id;
+}
+
 export function checkRelationshipShape(rels: RelationshipRow[], opts: RelationshipShapeOptions = {}): InvariantFinding[] {
   const nameOf = opts.nameOf ?? defaultName;
   const out: InvariantFinding[] = [];
+  const compositionsByChild = new Map<number, number>();
+  for (const r of opts.allRelationships ?? rels) {
+    if (r.relationship_kind !== "composition") continue;
+    const child = compositionChild(r);
+    compositionsByChild.set(child, (compositionsByChild.get(child) ?? 0) + 1);
+  }
   rels.forEach((r, i) => {
     const id = rowId(r, i);
     if (blank(r.inverse_verb)) {
@@ -128,6 +144,15 @@ export function checkRelationshipShape(rels: RelationshipRow[], opts: Relationsh
         rule: "owner_side_not_parent",
         rows: [id],
         detail: `${tag} '${edgeText(r, nameOf)}' has owner_side=${r.owner_side}; the "one" (parent) side is ${parentSide}. Review, never a blanket flip: if the verb reads child-to-parent, swap the verbs instead`,
+      });
+    }
+    if (r.relationship_kind === "composition" && r.is_required === false && compositionsByChild.get(compositionChild(r)) === 1) {
+      out.push({
+        id: "B6b",
+        severity: "warn",
+        rule: "optional_composition_single_parent",
+        rows: [id],
+        detail: `composition '${edgeText(r, nameOf)}' is optional, but ${nameOf(compositionChild(r))} has no other parent. A composed child cannot exist without its parent, and a \`parent\` field cannot be empty, so is_required should be true`,
       });
     }
     if (r.relationship_kind === "composition" && opts.masterDomainsByDataObject) {

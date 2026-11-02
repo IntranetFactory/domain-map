@@ -58,7 +58,7 @@ const NON_MARKET: RegExp[] = [
   /\bpersona\b|\bRACI\b|author (the )?roles?|role-?set|which roles|role authoring/i,
   /\bregulation|\bFCRA\b|\bHIPAA\b|\bGDPR\b|\bOSHA\b|\bFERPA\b|\bFINRA\b|\bCCPA\b|\bSOX\b|compliance framework|statutory|landlord-?tenant/i,
   /\bentity_?type\b|lifecycle (state|exemption|modeling)|config-?shape|classif(y|ication)/i,
-  /self-?contain|embedded[- ]?master|\bnecessity\b|deployab|required-?vs-?optional/i,
+  /self-?contain|embedded[- ]?master|\bnecessity\b|install[_ -]optional|deployab|required-?vs-?optional/i,
   /process tag|\bAPQC\b|\bPCF\b|process-?label|process-?mapping/i,
   /research and add|additive (entit|master)|discretionary|will not hold up/i,
 ];

@@ -51,20 +51,6 @@ b2:
       - {rel: 1329, edge: "job_offers evolves_through offer_versions", owner: ATS-OFFERS}
       - {rel: 1337, edge: "job_applications logged_via applicant_flow_records", owner: ATS-RECRUITMENT-PIPELINE}
 
-  - id: B2-B7B-USER-EDGES
-    summary: "33 users edges are many_to_many references and 2 name two roles in one edge; restructure them into single-person edges (destructive)"
-    question: >
-      Restructure the users edges as drafted: each many_to_many reference becomes a one_to_many edge
-      from users (one person per role, verbs swapped, owner_side source, is_required kept); edge 821
-      splits into recruiter and hiring-manager edges; edge 823 keeps one coordinator edge and moves
-      panelists to interview_panels (edge 2003 re-verbed "sits on"); edge 900 re-orients so users owns
-      the pre-employee record?
-    options: ["yes, apply as drafted", "no, keep the edges as they are"]
-    why: >
-      B7b: a reference to users is one person per foreign key, and a row-scope rule (E6 R8, 40
-      findings) needs that single owner. Rows: 821-826, 900, 1339, 1343-1346, 1348, 1349, 1984,
-      1985, 1990-1997, 1999-2005, 2269, 2660, 2662 (exact replacements in history.md 2026-11-01).
-
   - id: B2-B6B-OWNER-SIDE
     summary: "10 one_to_many edges name the child as owner_side; fix each (8 flips, 1 flip plus verb rewrite, 1 re-orientation)"
     question: >
@@ -105,12 +91,6 @@ b2:
       job_offers has no signed state and offer_letter_documents.signed already records the signature,
       so a second signed state would duplicate it; recruitment_sources has no lifecycle; the pool's own
       state does not change when a member is added or activated.
-
-  - id: B2-R7-HIRING-STARTER-DESCRIPTION
-    summary: "The HIRING-STARTER module description contradicts what the module derives (gates, skill, background checks, pre-employee)"
-    question: "Replace the HIRING-STARTER description with the drafted text (q-ATS.md q8)?"
-    options: ["yes, use the drafted text", "no, keep the current text"]
-    why: "E6 R7 plus review: the current text says no workflow gates (8.1 mints 6), one system skill (skills are domain-grain), no background-check orchestration (it reacts to flagged checks), and no pre-employee reconciliation (an accepted offer hands off to HCM)."
 
   - id: B2-HS-SOURCE-EDGE
     summary: "recruitment_sources attributes candidates is required, so every candidate must have a source once sources are installed"

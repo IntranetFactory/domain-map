@@ -129,7 +129,7 @@ export function usersObject(id: number): DataObject {
 // ---------- raw relationship row factories ----------
 
 export function dmdoRow(domain_module_id: number, data_object_id: number, role: string, p: Record<string, unknown> = {}): any {
-  return { domain_module_id, data_object_id, role, necessity: "required", notes: "", ...p };
+  return { domain_module_id, data_object_id, role, is_install_optional: false, notes: "", ...p };
 }
 
 export function relationshipRow(

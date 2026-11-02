@@ -274,17 +274,17 @@ describe("M9 part 1: entity-layer self-containment", () => {
   // 100 mastered in sibling module 1; 200 in domain 2; 300 in domains 2 and 3 (shared); 500 nowhere.
   const masterModulesByDataObject = new Map<number, number[]>([[100, [1]], [200, [50]], [300, [50, 60]]]);
   const catalog = { masterModulesByDataObject, moduleDomain, kindById };
-  const r = (id: number, domain_module_id: number, data_object_id: number, role: string, necessity: string | null = "required"): DmdoRow => ({ id, domain_module_id, data_object_id, role, necessity });
+  const r = (id: number, domain_module_id: number, data_object_id: number, role: string, is_install_optional = false): DmdoRow => ({ id, domain_module_id, data_object_id, role, is_install_optional });
 
   test("contributor / required consumer on another module's master is a violation", () => {
-    const rows = [r(1, 1, 100, "master"), r(2, 2, 100, "consumer"), r(3, 2, 200, "contributor", "optional")];
+    const rows = [r(1, 1, 100, "master"), r(2, 2, 100, "consumer"), r(3, 2, 200, "contributor", true)];
     const res = entitySelfContainment(rows, catalog);
     expect(res.violations.map((v) => v.row.id)).toEqual([2, 3]);
     expect(res.violations[1].ownerDomainIds).toEqual([2]);
   });
   test("optional consumer, built-ins, embedded shells and unmastered entities pass; shared masters are counted", () => {
     const rows = [
-      r(1, 2, 200, "consumer", "optional"),
+      r(1, 2, 200, "consumer", true),
       r(2, 2, 400, "consumer"),
       r(3, 2, 500, "consumer"),
       r(4, 2, 300, "consumer"),
@@ -314,10 +314,10 @@ describe("M9 part 2: relationship-layer self-containment", () => {
     ...over,
   });
   const scope = new Map<number, Set<number>>([[10, new Set([1, 2])]]);
-  const sides = (vs: ReturnType<typeof relationshipSelfContainment>) => vs.map((x) => `${x.edge.id}:${x.outOfScopeId}:${x.composition}:${x.inScopeSide}`);
+  const sides = (vs: ReturnType<typeof relationshipSelfContainment>) => vs.map((x) => `${x.edge.id}:${x.outOfScopeId}:${x.inScopeSide}`);
   test("required edges with one endpoint out of scope are flagged, either direction", () => {
     const rels = [e(1, 1, 3, "composition"), e(2, 3, 2, "reference"), e(3, 1, 2, "composition"), e(4, 1, 3, "reference", { is_required: false }), e(5, 1, 9, "reference")];
-    expect(sides(relationshipSelfContainment(scope, rels, { kindById }))).toEqual(["1:3:true:parent", "2:3:false:holds_fk"]);
+    expect(sides(relationshipSelfContainment(scope, rels, { kindById }))).toEqual(["1:3:parent", "2:3:holds_fk"]);
   });
   test("the FK side follows cardinality, then owner_side for one_to_one; many_to_many has none", () => {
     const rels = [
@@ -325,16 +325,22 @@ describe("M9 part 2: relationship-layer self-containment", () => {
       e(2, 1, 3, "reference", { relationship_type: "one_to_one", owner_side: "target" }),
       e(3, 1, 3, "reference", { relationship_type: "many_to_many" }),
     ];
-    expect(sides(relationshipSelfContainment(scope, rels, { kindById }))).toEqual(["1:3:false:holds_fk", "2:3:false:holds_fk", "3:3:false:many_to_many"]);
+    expect(sides(relationshipSelfContainment(scope, rels, { kindById }))).toEqual(["1:3:holds_fk", "2:3:holds_fk", "3:3:many_to_many"]);
   });
   test("shared masters are excluded", () => {
     expect(relationshipSelfContainment(scope, [e(1, 1, 3, "composition")], { kindById, excluded: new Set([3]) })).toEqual([]);
   });
-  test("findings: part 1 and composition fail; FK-holding references warn; inbound references are not reported; rows are prefixed by table", () => {
+  test("findings: part 1 fails; links whose field sits in scope warn; inbound links are not reported; rows are prefixed by table", () => {
     const part2 = relationshipSelfContainment(scope, [e(1, 1, 3, "composition"), e(2, 3, 2, "reference"), e(3, 1, 3, "reference")], { kindById });
     const part1 = [{ row: { id: 77, domain_module_id: 10, data_object_id: 3, role: "contributor" }, ownerModuleIds: [11], ownerDomainIds: [5] }];
-    expect(shape(checkSelfContainment(part1, part2))).toEqual(["fail:dmdo:77", "fail:rel:1", "warn:rel:2"]);
+    expect(shape(checkSelfContainment(part1, part2))).toEqual(["fail:dmdo:77", "warn:rel:2"]);
     expect(shape(checkSelfContainment([], []))).toEqual(["pass:"]);
+  });
+  test("composition is treated like any other link: a missing child passes, a missing parent warns", () => {
+    const missingChild = relationshipSelfContainment(scope, [e(1, 1, 3, "composition")], { kindById });
+    expect(shape(checkSelfContainment([], missingChild))).toEqual(["pass:"]);
+    const missingParent = relationshipSelfContainment(scope, [e(4, 3, 2, "composition")], { kindById });
+    expect(shape(checkSelfContainment([], missingParent))).toEqual(["warn:rel:4"]);
   });
 });
 
@@ -342,9 +348,9 @@ describe("required-edge target classification (required_edge_presence_probe.ts)"
   test("built-in targets excluded; optional somewhere vs everywhere", () => {
     const kindById = new Map<number, string>([[2, "domain_owned"], [3, "domain_owned"], [9, "platform_builtin"]]);
     const dmdo = [
-      { data_object_id: 2, necessity: "optional" },
-      { data_object_id: 2, necessity: "required" },
-      { data_object_id: 3, necessity: "optional" },
+      { data_object_id: 2, is_install_optional: true },
+      { data_object_id: 2, is_install_optional: false },
+      { data_object_id: 3, is_install_optional: true },
     ];
     const edges: RelationshipLite[] = [
       { id: 1, data_object_id: 1, related_data_object_id: 2, relationship_kind: "reference", is_required: true },

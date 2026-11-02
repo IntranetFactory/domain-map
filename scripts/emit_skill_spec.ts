@@ -224,7 +224,6 @@ const ENUM_SPEC: { key: string; table: string; field: string }[] = [
   { key: "integration_pattern", table: "handoffs", field: "integration_pattern" },
   { key: "friction_level", table: "handoffs", field: "friction_level" },
   { key: "role_dmdo", table: "domain_module_data_objects", field: "role" },
-  { key: "necessity", table: "domain_module_data_objects", field: "necessity" },
   { key: "record_status", table: "handoffs", field: "record_status" },
 ];
 
@@ -306,7 +305,7 @@ async function loadBulk(): Promise<Bulk> {
     get(`/capabilities?select=id,capability_code,capability_name&limit=${L}`),
     get(`/capability_domains?select=capability_id,domain_id&limit=${L}`),
     get(`/domain_module_capabilities?select=domain_module_id,capability_id&limit=${L}`),
-    get(`/domain_module_data_objects?select=domain_module_id,data_object_id,role,necessity&order=domain_module_id.asc,data_object_id.asc&limit=${L}`),
+    get(`/domain_module_data_objects?select=domain_module_id,data_object_id,role,is_install_optional&order=domain_module_id.asc,data_object_id.asc&limit=${L}`),
     get(`/handoffs?select=id,source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,integration_pattern,friction_level,data_objects(data_object_name),trigger_events(event_name,event_category),handoff_processes(processes:business_processes(external_id,process_name))&order=id.asc&limit=${L}`),
     get(`/skills?skill_type=eq.domain&select=id,skill_name,description,trigger_keywords,domain_id&order=id.asc&limit=${L}`),
     get(`/domain_module_tools?select=domain_module_id,tool_id,requirement_level&limit=${L}`),

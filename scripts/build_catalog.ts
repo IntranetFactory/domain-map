@@ -96,15 +96,17 @@ if (releasedDomains.length === 0) {
 }
 
 // ---- regenerate all three, released-scoped, in order -------------------------------------------
-await run("1/3 JSON snapshots", ["bun", "run", "scripts/emit_domain_map.ts", "--released-any"]);
-await run("2/3 blueprints", [
+await run("1/4 JSON snapshots", ["bun", "run", "scripts/emit_domain_map.ts", "--released-any"]);
+await run("2/4 blueprints", [
   "bun",
   "run",
   "scripts/generate_blueprints.ts",
   "--released",
   ...(NO_CACHE ? ["--no-cache"] : []),
 ]);
-await run("3/3 skills", ["bun", "run", "scripts/emit_skill_spec.ts", "--released", "--yes"]);
+// Like every step, the lint does not stop the others, but it fails the build at the end.
+await run("3/4 lint", ["bun", "run", "scripts/generate_blueprints.ts", "--released", "--lint"]);
+await run("4/4 skills", ["bun", "run", "scripts/emit_skill_spec.ts", "--released", "--yes"]);
 
 // ---- summary -----------------------------------------------------------------------------------
 const failed = steps.filter((s) => s.code !== 0);

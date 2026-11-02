@@ -119,7 +119,7 @@ export type CatalogIndex = {
 export type ScopeRow = {
   data_object_id: number;
   role: string;
-  necessity: string | null;
+  is_install_optional: boolean;
   notes: string | null;
   data_object: DataObject;
   modules: ModuleRow[];
@@ -130,7 +130,7 @@ export type CoMasterRow = {
   owner_module: ModuleRow | null;
   owner_domain: Domain | null;
   role: string;
-  necessity: string | null;
+  is_install_optional: boolean;
   notes: string | null;
 };
 
@@ -140,8 +140,6 @@ export type RelationshipBuckets = {
   intra: any[];
   userRels: any[];
   cross: any[];
-  crossOutbound: any[];
-  crossContext: any[];
   all: any[];
 };
 
@@ -149,7 +147,7 @@ export type ModuleCatalog = {
   modules: ModuleRow[];
   scopeRows: ScopeRow[];
   scopeRolesById: Map<number, string>;
-  scopeNecessityById: Map<number, string | null>;
+  scopeInstallOptionalById: Map<number, boolean>;
   aliasRows: any[];
   relationships: RelationshipBuckets;
   coMasters: CoMasterRow[];
@@ -434,7 +432,7 @@ export function deriveHostDomains(
 
 export async function loadAllRelationships(): Promise<AllRelationships> {
   const [dmdo, ddo, aliases, relationships, lifecycle, handoffs, modulesForHost, domainRoles, roleModules, processRaci, businessFunctions, businessFunctionDomains, processes, handoffProcesses, processTools, triggerEvents] = await Promise.all([
-    pg("GET", "/domain_module_data_objects?select=domain_module_id,data_object_id,role,necessity,notes&limit=20000"),
+    pg("GET", "/domain_module_data_objects?select=domain_module_id,data_object_id,role,is_install_optional,notes&limit=20000"),
     // domain_data_objects (the legacy domain-grain rollup) is RETIRED: masters derive from
     // domain_module_data_objects. The source is kept empty (not a GET) so the entity can be
     // deleted without this read 404-ing; all.ddo is [] everywhere downstream and the
@@ -603,7 +601,8 @@ export async function loadCachedCatalog(
       // Cache file might predate the index extension or the trigger_events load: require the
       // index and raw sections and raw.triggerEvents to consider it valid. Otherwise fall through
       // to a fresh fetch (an old cache would otherwise read as "no events" for its whole TTL).
-      if (parsed.index && parsed.raw && Array.isArray(parsed.raw.triggerEvents)) {
+      // A cache from before is_install_optional would read every entity as always installed.
+      if (parsed.index && parsed.raw && Array.isArray(parsed.raw.triggerEvents) && parsed.raw.dmdo?.[0]?.is_install_optional !== undefined) {
         const generatedAt = new Date(parsed._meta.generated_at).getTime();
         const ageMs = Date.now() - generatedAt;
         if (ageMs < ttlMs) {
@@ -657,7 +656,7 @@ export function loadModuleCatalog(
 
   // Aggregate scope across modules: strongest role per data_object, plus which modules
   // contributed and the per-module notes joined together.
-  const byDOId = new Map<number, { role: string; necessity: string | null; modules: ModuleRow[]; notes: string[] }>();
+  const byDOId = new Map<number, { role: string; is_install_optional: boolean; modules: ModuleRow[]; notes: string[] }>();
   for (const mid of moduleIds) {
     const rows = all.dmdoByModuleId.get(mid) ?? [];
     for (const r of rows) {
@@ -668,14 +667,14 @@ export function loadModuleCatalog(
       if (!existing) {
         byDOId.set(did, {
           role: r.role,
-          necessity: (r.necessity as string | null) ?? null,
+          is_install_optional: Boolean(r.is_install_optional),
           modules: [m],
           notes: r.notes ? [r.notes] : [],
         });
       } else {
         if ((ROLE_RANK[r.role] ?? 99) < (ROLE_RANK[existing.role] ?? 99)) {
           existing.role = r.role;
-          existing.necessity = (r.necessity as string | null) ?? existing.necessity;
+          existing.is_install_optional = Boolean(r.is_install_optional);
         }
         if (!existing.modules.includes(m)) existing.modules.push(m);
         if (r.notes) existing.notes.push(r.notes);
@@ -689,7 +688,7 @@ export function loadModuleCatalog(
       return {
         data_object_id: did,
         role: info.role,
-        necessity: info.necessity,
+        is_install_optional: info.is_install_optional,
         notes: info.notes.join("; ") || null,
         data_object: obj,
         modules: info.modules,
@@ -699,7 +698,7 @@ export function loadModuleCatalog(
   const scopeObjectIds = scopeRows.map((r) => r.data_object_id);
   const scopeObjectIdSet = new Set(scopeObjectIds);
   const scopeRolesById = new Map<number, string>(scopeRows.map((r) => [r.data_object_id, r.role]));
-  const scopeNecessityById = new Map<number, string | null>(scopeRows.map((r) => [r.data_object_id, r.necessity]));
+  const scopeInstallOptionalById = new Map<number, boolean>(scopeRows.map((r) => [r.data_object_id, r.is_install_optional]));
   const masterIds = new Set(scopeRows.filter((r) => r.role === "master").map((r) => r.data_object_id));
 
   // Per-section derivation iterates the bulk arrays directly (not the per-scope index
@@ -720,9 +719,6 @@ export function loadModuleCatalog(
   const relIntra: any[] = [];
   const relUsers: any[] = [];
   const relCross: any[] = [];
-  const relCrossOutbound: any[] = [];
-  const relCrossContext: any[] = [];
-  const DRIVING_ROLES = new Set(["master", "contributor"]);
   for (const r of all.relationships) {
     const a = r.data_object_id as number;
     const b = r.related_data_object_id as number;
@@ -741,13 +737,6 @@ export function loadModuleCatalog(
         relIntra.push(r);
       } else if (scopeObjectIdSet.has(a) !== scopeObjectIdSet.has(b)) {
         relCross.push(r);
-        const inScopeId = scopeObjectIdSet.has(a) ? a : b;
-        const inScopeRole = scopeRolesById.get(inScopeId) || "";
-        if (DRIVING_ROLES.has(inScopeRole)) {
-          relCrossOutbound.push(r);
-        } else {
-          relCrossContext.push(r);
-        }
       }
     }
   }
@@ -755,8 +744,6 @@ export function loadModuleCatalog(
     intra: relIntra,
     userRels: relUsers,
     cross: relCross,
-    crossOutbound: relCrossOutbound,
-    crossContext: relCrossContext,
     all: relAll,
   };
 
@@ -781,7 +768,7 @@ export function loadModuleCatalog(
       owner_module: m,
       owner_domain: m.domain_id !== null ? index.domainsById.get(m.domain_id) ?? null : null,
       role: r.role as string,
-      necessity: (r.necessity as string | null) ?? null,
+      is_install_optional: Boolean(r.is_install_optional),
       notes: (r.notes as string | null) ?? null,
     });
   }
@@ -803,7 +790,7 @@ export function loadModuleCatalog(
       owner_module: null,
       owner_domain: d,
       role: r.role as string,
-      necessity: (r.necessity as string | null) ?? null,
+      is_install_optional: Boolean(r.is_install_optional),
       notes: (r.notes as string | null) ?? null,
     });
   }
@@ -958,7 +945,7 @@ export function loadModuleCatalog(
     modules,
     scopeRows,
     scopeRolesById,
-    scopeNecessityById,
+    scopeInstallOptionalById,
     aliasRows,
     relationships,
     coMasters,

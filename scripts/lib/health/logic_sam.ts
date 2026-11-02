@@ -33,7 +33,7 @@ export const DOMAIN_MODULE_CAPABILITIES_PATH = "/domain_module_capabilities?sele
 export const SOLUTION_DOMAINS_PATH = "/solution_domains?select=id,domain_id,coverage_level,solutions(solution_name)&order=id.asc&limit=100000";
 export const SKILLS_PATH = "/skills?select=id,skill_name,skill_type,domain_id&order=id.asc&limit=100000";
 // all.dmdo (the catalog loader) carries no `id`; M7 / M9 name their rows, so they fetch it here.
-export const DMDO_WITH_ID_PATH = "/domain_module_data_objects?select=id,domain_module_id,data_object_id,role,necessity&order=id.asc&limit=100000";
+export const DMDO_WITH_ID_PATH = "/domain_module_data_objects?select=id,domain_module_id,data_object_id,role,is_install_optional&order=id.asc&limit=100000";
 export const TRIGGER_EVENTS_PATH = "/trigger_events?select=id,event_name,data_object_id,event_category,from_state,to_state&order=id.asc&limit=100000";
 
 // ---------- shared helpers ----------
@@ -68,7 +68,7 @@ export type DmdoRow = {
   domain_module_id: number;
   data_object_id: number;
   role: string; // master | embedded_master | contributor | consumer | derived
-  necessity?: string | null; // required | optional
+  is_install_optional?: boolean | null;
 };
 
 export type RelationshipLite = {
@@ -214,7 +214,7 @@ export function checkMasterCoverage(rows: MasterCoverageRow[], labels: Labels = 
   const withStates = rows.filter((r) => r.states > 0).length;
   const withEvents = rows.filter((r) => r.events > 0).length;
   const withAliases = rows.filter((r) => r.aliases > 0).length;
-  out.push(finding("S3", "pass", `coverage over ${rows.length} master + required data_objects (rows = data_object ids): ${withStates} with states, ${withEvents} with events, ${withAliases} with aliases (zero aliases is the B11 judgment)`));
+  out.push(finding("S3", "pass", `coverage over ${rows.length} master + always installed data_objects (rows = data_object ids): ${withStates} with states, ${withEvents} with events, ${withAliases} with aliases (zero aliases is the B11 judgment)`));
   return out;
 }
 
@@ -524,7 +524,7 @@ export type SelfContainmentViolation = {
   ownerDomainIds: number[]; // their domains, sorted
 };
 
-// A contributor row, or a consumer + required row, on an entity mastered by another module, that
+// A contributor row, or an always-installed consumer row, on an entity mastered by another module, that
 // is not a platform built-in, not a shared master (mastered by >= 2 domains: the master-data
 // exclusion of phase_p_triage.ts, counted in `sharedExcluded`), and not carried as
 // embedded_master in scope. Self-mastered or unmastered entities are not an M9 dependency.
@@ -544,7 +544,7 @@ export function entitySelfContainment(
   let sharedExcluded = 0;
   for (const r of rows) {
     const isContributor = r.role === "contributor";
-    const isRequiredConsumer = r.role === "consumer" && r.necessity === "required";
+    const isRequiredConsumer = r.role === "consumer" && !r.is_install_optional;
     if (!isContributor && !isRequiredConsumer) continue;
     const kind = catalog.kindById.get(r.data_object_id);
     if (kind === undefined || kind === "platform_builtin") continue;
@@ -572,9 +572,8 @@ export type ScopeEdgeViolation = {
   edge: RelationshipLite;
   moduleId: number;
   outOfScopeId: number; // the endpoint the module does not carry
-  composition: boolean;
-  // The in-scope endpoint's side of the FK: "holds_fk" (it carries the FK column, so the FK to
-  // the absent entity is required-if-present), "parent" (the absent entity holds the FK), or
+  // The in-scope endpoint's side of the FK: "holds_fk" (it carries the FK column, so the field is
+  // mandatory only once the absent entity exists), "parent" (the absent entity holds the FK), or
   // "many_to_many" / "unknown" (no single FK side).
   inScopeSide: "holds_fk" | "parent" | "many_to_many" | "unknown";
 };
@@ -609,7 +608,7 @@ export function relationshipSelfContainment(
       if (opts.excluded?.has(other)) continue;
       const holder = fkHolderSide(e);
       const inScopeSide = e.relationship_type === "many_to_many" ? "many_to_many" : holder == null ? "unknown" : (holder === "source") === a ? "holds_fk" : "parent";
-      out.push({ edge: e, moduleId, outOfScopeId: other, composition: e.relationship_kind === "composition", inScopeSide });
+      out.push({ edge: e, moduleId, outOfScopeId: other, inScopeSide });
     }
   }
   return out;
@@ -618,15 +617,11 @@ export function relationshipSelfContainment(
 // Both layers as health findings. Row ids are prefixed strings, because the layers name rows of
 // two tables: `dmdo:<domain_module_data_objects.id>` and `rel:<data_object_relationships.id>`.
 //   part 1 violation                      fail (the module cannot deploy without another module)
-//   part 2 required composition edge       fail (the emitter renders it "⚠ audit: required composed
-//                                          child out of scope"), either direction
-//   part 2 reference / association, the    warn (rendered "none (required-if-present)": no
-//     in-scope entity holds the FK               constraint, surfaced so the author picks embed /
-//                                                optional / target-required)
-//   part 2 reference / association,        warn, its own finding: the absent entity holds the FK
-//     inbound or many_to_many                    (or there is none), so the module carries no
-//                                                constraint. SKILL.md's either-endpoint rule flags
-//                                                it; kept apart because hub entities attract many
+//   part 2 required link, the in-scope     warn, any relationship_kind: no constraint until the
+//     entity holds the FK                  absent entity exists, surfaced so the author picks embed
+//                                          / not required / install-required
+//   part 2 required link, the absent       not reported: the module carries no field and no
+//     entity holds the FK, or many_to_many constraint. A required link never requires an entity
 export function checkSelfContainment(
   part1: SelfContainmentViolation[],
   part2: ScopeEdgeViolation[],
@@ -637,19 +632,17 @@ export function checkSelfContainment(
   const domainCode = labels.domainCode ?? ((id: number) => `domain ${id}`);
   const out: Finding[] = [];
   if (part1.length) {
-    const items = part1.map((v) => `${moduleCode(v.row.domain_module_id)}: ${v.row.role}${v.row.role === "consumer" ? " + required" : ""} on ${nameOf(v.row.data_object_id)} mastered by ${v.ownerModuleIds.map(moduleCode).join(", ")} [${v.ownerDomainIds.map(domainCode).join(", ")}]`);
+    const items = part1.map((v) => `${moduleCode(v.row.domain_module_id)}: ${v.row.role}${v.row.role === "consumer" ? " + always installed" : ""} on ${nameOf(v.row.data_object_id)} mastered by ${v.ownerModuleIds.map(moduleCode).join(", ")} [${v.ownerDomainIds.map(domainCode).join(", ")}]`);
     out.push(finding("M9", "fail", `part 1 (entity layer): rows needing another module to deploy, recommend embed (${part1.length}): ${listItems(items)}`, part1.map((v) => `dmdo:${v.row.id ?? "?"}`)));
   }
   const edgeText = (v: ScopeEdgeViolation) =>
     `${moduleCode(v.moduleId)}: ${nameOf(v.edge.data_object_id)} ${v.edge.relationship_verb ?? "?"} ${nameOf(v.edge.related_data_object_id)} [${v.edge.relationship_kind}] (out of scope: ${nameOf(v.outOfScopeId)})`;
-  const comp = part2.filter((v) => v.composition);
-  const holds = part2.filter((v) => !v.composition && v.inScopeSide === "holds_fk");
+  const holds = part2.filter((v) => v.inScopeSide === "holds_fk");
   // Inbound edges (the out-of-scope endpoint holds the FK, or many_to_many) put no constraint on
   // the module, so they are not reported: hub entities attract hundreds of them from other domains.
   const relRows = (vs: ScopeEdgeViolation[]) => [...new Set(vs.map((v) => `rel:${v.edge.id ?? "?"}`))];
-  if (comp.length) out.push(finding("M9", "fail", `part 2 (relationship layer): required composition edges to an out-of-scope entity, embed or relax (${comp.length}): ${listItems(comp.map(edgeText))}`, relRows(comp)));
   if (holds.length) {
-    out.push(finding("M9", "warn", `part 2 (relationship layer): an in-scope entity holds a required FK to an out-of-scope entity, required-if-present; pick embed / optional / target-required (${holds.length}): ${listItems(holds.map(edgeText))}`, relRows(holds)));
+    out.push(finding("M9", "warn", `part 2 (relationship layer): an in-scope entity holds a mandatory field to an out-of-scope entity, which applies only once that entity exists; pick embed / not required / install-required (${holds.length}): ${listItems(holds.map(edgeText))}`, relRows(holds)));
   }
   if (out.length) return out;
   const c = labels.counts;
@@ -664,23 +657,23 @@ export function checkSelfContainment(
 export type RequiredEdgeTargetSummary = {
   total: number;
   builtinTarget: number; // target is platform_builtin (always present, excluded)
-  optionalSomewhere: number; // target is necessity=optional in at least one module
-  optionalEverywhere: number; // target is necessity=optional in every module it appears in
+  optionalSomewhere: number; // target is is_install_optional=true in at least one module
+  optionalEverywhere: number; // target is is_install_optional=true in every module it appears in
   everyByKind: Map<string, number>; // optionalEverywhere broken down by relationship_kind
   everyEdges: RelationshipLite[]; // the optionalEverywhere edges, in input order
 };
 
 export function classifyRequiredEdgeTargets(
   requiredEdges: RelationshipLite[],
-  dmdo: { data_object_id: number; necessity?: string | null }[],
+  dmdo: { data_object_id: number; is_install_optional?: boolean | null }[],
   kindById: Map<number, string>,
 ): RequiredEdgeTargetSummary {
-  const necessityByDO = new Map<number, Set<string>>();
+  const installOptionalByDO = new Map<number, Set<boolean>>();
   for (const r of dmdo) {
     const id = Number(r.data_object_id);
-    const s = necessityByDO.get(id) ?? new Set<string>();
-    if (r.necessity != null) s.add(String(r.necessity));
-    necessityByDO.set(id, s);
+    const s = installOptionalByDO.get(id) ?? new Set<boolean>();
+    if (r.is_install_optional != null) s.add(r.is_install_optional);
+    installOptionalByDO.set(id, s);
   }
   const summary: RequiredEdgeTargetSummary = { total: 0, builtinTarget: 0, optionalSomewhere: 0, optionalEverywhere: 0, everyByKind: new Map(), everyEdges: [] };
   for (const e of requiredEdges) {
@@ -690,9 +683,9 @@ export function classifyRequiredEdgeTargets(
       summary.builtinTarget++;
       continue;
     }
-    const s = necessityByDO.get(target);
-    if (s?.has("optional")) summary.optionalSomewhere++;
-    if (s && s.size > 0 && [...s].every((v) => v === "optional")) {
+    const s = installOptionalByDO.get(target);
+    if (s?.has(true)) summary.optionalSomewhere++;
+    if (s && s.size > 0 && [...s].every((v) => v)) {
       summary.optionalEverywhere++;
       summary.everyByKind.set(e.relationship_kind, (summary.everyByKind.get(e.relationship_kind) ?? 0) + 1);
       summary.everyEdges.push(e);

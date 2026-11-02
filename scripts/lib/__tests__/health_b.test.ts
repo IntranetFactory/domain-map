@@ -121,9 +121,9 @@ describe("B5 dependency owners", () => {
   test("embedded_master with an owner, and a built-in, pass", () => {
     const fs = checkDependencyOwners(
       [
-        { domain_module_id: 1, data_object_id: 32, role: "embedded_master", necessity: "required" },
-        { domain_module_id: 1, data_object_id: USERS, role: "embedded_master", necessity: "required" },
-        { domain_module_id: 1, data_object_id: 99, role: "master", necessity: "required" },
+        { domain_module_id: 1, data_object_id: 32, role: "embedded_master", is_install_optional: false },
+        { domain_module_id: 1, data_object_id: USERS, role: "embedded_master", is_install_optional: false },
+        { domain_module_id: 1, data_object_id: 99, role: "master", is_install_optional: false },
       ],
       opts,
     );
@@ -132,9 +132,9 @@ describe("B5 dependency owners", () => {
   test("an orphan embedded_master fails; an unowned consumer fails separately (B10 routes it to B5)", () => {
     const fs = checkDependencyOwners(
       [
-        { domain_module_id: 1, data_object_id: 40, role: "embedded_master", necessity: "required" },
-        { domain_module_id: 2, data_object_id: 41, role: "consumer", necessity: "optional" },
-        { domain_module_id: 2, data_object_id: 42, role: "derived", necessity: "optional" }, // derived is not a dependency
+        { domain_module_id: 1, data_object_id: 40, role: "embedded_master", is_install_optional: false },
+        { domain_module_id: 2, data_object_id: 41, role: "consumer", is_install_optional: true },
+        { domain_module_id: 2, data_object_id: 42, role: "derived", is_install_optional: true }, // derived is not a dependency
       ],
       opts,
     );
@@ -321,9 +321,9 @@ describe("B9b intra-domain handoffs", () => {
 describe("B10 inbound coverage (report-only)", () => {
   const masterDomains = (id: number) => ({ 32: new Set([HCM]), 33: new Set([HCM, DOM]), 34: new Set<number>() } as Record<number, Set<number>>)[id];
   const deps = [
-    { domain_module_id: 1, data_object_id: 32, role: "embedded_master", necessity: "required" },
-    { domain_module_id: 1, data_object_id: 34, role: "consumer", necessity: "optional" },
-    { domain_module_id: 1, data_object_id: USERS, role: "embedded_master", necessity: "required" }, // built-in: no owner, owes nothing
+    { domain_module_id: 1, data_object_id: 32, role: "embedded_master", is_install_optional: false },
+    { domain_module_id: 1, data_object_id: 34, role: "consumer", is_install_optional: true },
+    { domain_module_id: 1, data_object_id: USERS, role: "embedded_master", is_install_optional: false }, // built-in: no owner, owes nothing
   ];
   const isBuiltin = (id: number) => id === USERS;
   test("a covered dependency passes, and the result is never worse than warn", () => {
@@ -347,7 +347,7 @@ describe("B10 inbound coverage (report-only)", () => {
   test("an entity this domain masters is not an inbound dependency", () => {
     const fs = checkInboundCoverage({
       domainId: DOM,
-      deps: [{ domain_module_id: 2, data_object_id: 33, role: "consumer", necessity: "required" }],
+      deps: [{ domain_module_id: 2, data_object_id: 33, role: "consumer", is_install_optional: false }],
       masterIds: new Set([33]),
       masterDomains,
       isBuiltin,
@@ -414,10 +414,10 @@ describe("B14 statute-named masters", () => {
   test("master + required rows named for a statute warn; optional ones pass", () => {
     const fs = checkConditionalMasters(
       [
-        { domain_module_id: 1, data_object_id: 1, role: "master", necessity: "required" },
-        { domain_module_id: 1, data_object_id: 2, role: "master", necessity: "required" },
-        { domain_module_id: 1, data_object_id: 3, role: "master", necessity: "required" },
-        { domain_module_id: 1, data_object_id: 4, role: "master", necessity: "optional" },
+        { domain_module_id: 1, data_object_id: 1, role: "master", is_install_optional: false },
+        { domain_module_id: 1, data_object_id: 2, role: "master", is_install_optional: false },
+        { domain_module_id: 1, data_object_id: 3, role: "master", is_install_optional: false },
+        { domain_module_id: 1, data_object_id: 4, role: "master", is_install_optional: true },
       ],
       { nameOf: (id) => names[id] },
     );

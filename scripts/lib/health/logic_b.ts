@@ -46,7 +46,7 @@ export type DmdoRow = {
   domain_module_id: number;
   data_object_id: number;
   role: string; // master | embedded_master | contributor | consumer | derived
-  necessity?: string | null;
+  is_install_optional?: boolean | null;
 };
 
 export type RelRow = {
@@ -220,7 +220,7 @@ export function checkDependencyOwners(rows: DmdoRow[], opts: DependencyOwnerOpti
       rows: [...byDo.keys()].sort(byNum),
       items: [...byDo.entries()]
         .sort((a, b) => a[0] - b[0])
-        .map(([id, rs]) => `${nameOf(id)} (${rs.map((r) => `${r.role}${r.necessity ? `/${r.necessity}` : ""} @ ${mod(r.domain_module_id)}`).join(", ")})`),
+        .map(([id, rs]) => `${nameOf(id)} (${rs.map((r) => `${r.role}${r.is_install_optional ? "/install optional" : ""} @ ${mod(r.domain_module_id)}`).join(", ")})`),
     };
   };
   const emb = orphan.filter((r) => r.role === "embedded_master");
@@ -661,7 +661,7 @@ export function checkInboundCoverage(x: InboundCoverageInput): Finding[] {
     x.deps.filter((r) => DEPENDENCY_ROLES.has(r.role) && !x.masterIds.has(r.data_object_id) && !x.isBuiltin(r.data_object_id)),
     (r) => r.data_object_id,
   );
-  type Owed = { owner: number; doId: number; role: string; necessity: string };
+  type Owed = { owner: number; doId: number; role: string; install: string };
   const owed: Owed[] = [];
   let unowned = 0;
   for (const [doId, rs] of [...deps.entries()].sort((a, b) => a[0] - b[0])) {
@@ -671,10 +671,10 @@ export function checkInboundCoverage(x: InboundCoverageInput): Finding[] {
       continue;
     }
     const strongest = [...rs].sort((a, b) => ROLE_STRENGTH.indexOf(a.role) - ROLE_STRENGTH.indexOf(b.role))[0];
-    const necessity = rs.some((r) => r.necessity === "required") ? "required" : strongest.necessity ?? "unspecified";
+    const install = rs.some((r) => !r.is_install_optional) ? "always installed" : "install optional";
     for (const owner of owners) {
       const hit = inbound.some((h) => h.source_domain_id === owner && h.data_object_id === doId);
-      if (!hit) owed.push({ owner, doId, role: strongest.role, necessity });
+      if (!hit) owed.push({ owner, doId, role: strongest.role, install });
     }
   }
   const out: Finding[] = [
@@ -688,7 +688,7 @@ export function checkInboundCoverage(x: InboundCoverageInput): Finding[] {
       id: "B10",
       result: "warn",
       rows: os.map((o) => o.doId),
-      detail: `report-only: ${code(owner)} B9 owes outbound on ${os.length} dependenc(ies) (rows = data_object ids): ${listOf(os.map((o) => `${nameOf(o.doId)} (${o.role} + ${o.necessity})`))}`,
+      detail: `report-only: ${code(owner)} B9 owes outbound on ${os.length} dependenc(ies) (rows = data_object ids): ${listOf(os.map((o) => `${nameOf(o.doId)} (${o.role} + ${o.install})`))}`,
     });
   }
   return out;
@@ -855,16 +855,16 @@ export function conditionalToken(name: string): string | null {
 // user-recorded kept-required decision, neither of which the catalog stores.
 export function checkConditionalMasters(rows: DmdoRow[], opts: { nameOf: NameOf; moduleLabel?: Label }): Finding[] {
   const mod = opts.moduleLabel ?? defaultModule;
-  const req = rows.filter((r) => r.role === "master" && r.necessity === "required");
+  const req = rows.filter((r) => r.role === "master" && !r.is_install_optional);
   const hits = req.filter((r) => conditionalToken(opts.nameOf(r.data_object_id)) != null);
-  if (hits.length === 0) return [pass("B14", `${req.length} master + required row(s), none matching a statute token (rows = data_object ids)`)];
+  if (hits.length === 0) return [pass("B14", `${req.length} master + always installed row(s), none matching a statute token (rows = data_object ids)`)];
   const ids = [...new Set(hits.map((r) => r.data_object_id))].sort(byNum);
   return [
     {
       id: "B14",
       result: "warn",
       rows: ids,
-      detail: `${hits.length} master + required row(s) named for a statute (rows = data_object ids; make necessity=optional unless universal here or kept-required by the user): ${listOf(hits.map((r) => `${opts.nameOf(r.data_object_id)} [${conditionalToken(opts.nameOf(r.data_object_id))}] @ ${mod(r.domain_module_id)}`))}`,
+      detail: `${hits.length} master + always installed row(s) named for a statute (rows = data_object ids; set is_install_optional=true unless universal here or kept-required by the user): ${listOf(hits.map((r) => `${opts.nameOf(r.data_object_id)} [${conditionalToken(opts.nameOf(r.data_object_id))}] @ ${mod(r.domain_module_id)}`))}`,
     },
   ];
 }

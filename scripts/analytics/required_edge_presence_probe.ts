@@ -9,7 +9,7 @@
  * deployments unbuildable.
  *
  * This probe quantifies the catalog-wide exposure. For every `is_required=true` edge it inspects
- * the TARGET (`related_data_object_id`) and classifies it by the target's `necessity` across the
+ * the TARGET (`related_data_object_id`) and classifies it by the target's `is_install_optional` across the
  * `domain_module_data_objects` rows it appears in:
  *   - optional-in-at-least-one-module  (ambiguous: some deployment treats it as optional)
  *   - optional-in-every-module         (unambiguous: never guaranteed present anywhere)
@@ -42,7 +42,7 @@ async function pg(path: string): Promise<any[]> {
 
 const [requiredEdges, dmdo, dataObjects] = await Promise.all([
   pg("/data_object_relationships?is_required=eq.true&select=id,data_object_id,related_data_object_id,relationship_verb,relationship_kind&limit=20000"),
-  pg("/domain_module_data_objects?select=data_object_id,necessity&limit=20000"),
+  pg("/domain_module_data_objects?select=data_object_id,is_install_optional&limit=20000"),
   pg("/data_objects?select=id,data_object_name,kind&limit=20000"),
 ]);
 
@@ -50,7 +50,7 @@ const nameById = new Map<number, string>();
 const kindById = new Map<number, string>();
 for (const o of dataObjects) { nameById.set(Number(o.id), o.data_object_name); kindById.set(Number(o.id), o.kind); }
 
-// Per target entity, the necessity values across the DMDO rows it appears in decide the class.
+// Per target entity, the is_install_optional values across the DMDO rows it appears in decide the class.
 const summary = classifyRequiredEdgeTargets(requiredEdges, dmdo, kindById);
 const everyList = summary.everyEdges.map((e) => {
   const src = nameById.get(Number(e.data_object_id)) ?? `#${e.data_object_id}`;
@@ -62,8 +62,8 @@ const everyList = summary.everyEdges.map((e) => {
 console.log(`required-edge presence probe (READ-ONLY, no writes)`);
 console.log(`  is_required=true edges: ${summary.total}`);
 console.log(`  ... target is platform_builtin (always present, excluded): ${summary.builtinTarget}`);
-console.log(`  ... target is necessity=optional in at least one module (ambiguous): ${summary.optionalSomewhere}`);
-console.log(`  ... target is necessity=optional in EVERY module it appears (unambiguous): ${summary.optionalEverywhere}`);
+console.log(`  ... target is is_install_optional=true in at least one module (ambiguous): ${summary.optionalSomewhere}`);
+console.log(`  ... target is is_install_optional=true in EVERY module it appears (unambiguous): ${summary.optionalEverywhere}`);
 console.log(`\n  unambiguous breakdown by relationship_kind:`);
 for (const [kind, n] of [...summary.everyByKind.entries()].sort((a, b) => b[1] - a[1])) {
   const tag = kind === "composition" ? "  (composition => M9 audit finding, embed or relax)" : "";

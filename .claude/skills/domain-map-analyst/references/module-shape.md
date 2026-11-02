@@ -201,7 +201,7 @@ The data-silo map: rows here with the same `data_object_id` across multiple `sol
 | `domain_id` | parent → `domains` | yes | |
 | `data_object_id` | parent → `data_objects` | yes | |
 | `role` | enum | yes | `master` / `embedded_master` / `contributor` / `consumer` / `derived`. Default `master`. Multi-master rows are expected — different domains master different slices of shared objects. Multi-master count = Signal 1; embedded_master count = Signal 1b of the platform-vs-silos analysis. |
-| `necessity` | enum | yes | `required` / `optional`. Default `required`. `master` rows always required. `embedded_master`/`contributor`/`consumer` rows are optional when the workflow tolerates absence in some deployments. |
+| `is_install_optional` | boolean | no | True when the domain can be installed without this entity. False, the default, means every install of the domain includes it. Not related to `data_object_relationships.is_required`, which says whether a link's field must be filled in. See SKILL.md Rule #16. |
 | `notes` | multiline | yes | Empty by default - see SKILL.md Rule #15. |
 | `record_status` | enum | yes | Default `new` |
 
@@ -305,7 +305,7 @@ Composed unique key: `(handoff_id, process_id)`.
 | `relationship_kind` | enum | yes | `composition` / `reference` / `association` / `inheritance`. Default `reference` |
 | `relationship_verb` | string | yes | Forward verb phrase (e.g. "owns", "places", "is a") |
 | `inverse_verb` | string | yes | Reverse phrase (e.g. "is owned by", "is placed by", "is supertype of") |
-| `is_required` | boolean | yes | PRESENCE-CONDITIONAL (plan-4): a mandatory FK only WHEN the target entity is installed in the deploying unit; it never forces the target to install. "This entity must always be present" is expressed by the TARGET's own `necessity=required` (Rule #16), not by this flag. Default `false` |
+| `is_required` | boolean | yes | Whether the link's field must be filled in once both entities exist. It never forces an entity to install: "this entity must always be present" is expressed by the entity's own `is_install_optional=false` (Rule #16), not by this flag, and neither value can be derived from the other. Blueprints show it as `field_required`. Default `false` |
 | `owner_side` | enum | yes | `source` / `target`. Default `source`. NOT NULL. **Names the PARENT (lifecycle owner / cascade root) of the edge**, a domain-map catalog concept, not a Semantius platform primitive: `source` = `data_object_id` is the parent (cascades into the related object on delete); `target` = the related object is the parent. Drives the architect's delete-mode derivation downstream (composition / parent gives the Semantius `parent` FK + cascade; reference gives `reference`). Canonical invariant: for `composition` and `one_to_many` edges, `owner_side` names the parent and the forward `relationship_verb` should read parent-to-child (M7, m5). Do NOT blindly set `owner_side=source`: pick whichever side is actually the parent. For a child-first edge (`child belongs_to parent`) the parent is the `target`, so `owner_side=target` is correct. |
 | `notes` | multiline | yes | |
 | `record_status` | enum | yes | Default `new` |
@@ -314,12 +314,11 @@ Self-references allowed (`User` directly manages `User`).
 
 ### Delete-mode derivation (B4)
 
-The delete mode is NOT stored per edge; it is DERIVED from the stored inputs by `deriveDeleteMode` in `scripts/generate_blueprints.ts` and emitted as the section-5 `delete_mode` / `fk_format` columns. Plan 4 added a presence-conditional dimension: whether the edge's OTHER endpoint is in the deploying unit. An intra-scope (§5.1) or built-in (§5.2) edge has its target present; a cross-scope (§5.3) edge has its target absent, so no FK can be emitted in this unit. The applied `ON DELETE` lands in the tenant DB at deploy.
-
-Target present (intra-scope / built-in edge), over every `relationship_kind`:
+The delete mode is NOT stored per edge; it is DERIVED from the stored inputs by `deriveDeleteMode` in `scripts/lib/blueprint_derive.ts` and emitted as the `delete_mode` / `fk_format` columns of "5.1 Links between entities in this blueprint" and "5.2 Links to platform built-ins". The applied `ON DELETE` lands in the tenant DB at deploy.
 
 | `relationship_kind` | `is_required` | `delete_mode` | `fk_format` |
 |---|---|---|---|
+| any, when `relationship_type` is `many_to_many` (the junction legs) | any | `cascade` | `parent` |
 | `composition` | any | `cascade` | `parent` |
 | `reference` | required | `restrict` | `reference` |
 | `reference` | optional | `clear` | `reference` |
@@ -327,16 +326,11 @@ Target present (intra-scope / built-in edge), over every `relationship_kind`:
 | `association` | optional | `clear` | `reference` |
 | `inheritance` | any | `restrict` | `reference` |
 
-Target absent (cross-scope edge: the referenced table is not installed in this unit):
+A `many_to_many` link has no field on either entity, so `field_required` shows `-` and the two columns describe the legs of its junction table.
 
-| `relationship_kind` | `is_required` | `delete_mode` | `fk_format` |
-|---|---|---|---|
-| `reference` / `association` | optional | `none` | `n/a` |
-| `reference` / `association` | required | `none (required-if-present)` | `n/a` |
-| `composition` | required | `⚠ audit: required composed child out of scope` | `n/a` |
-| `composition` | optional | `none` | `n/a` |
+"5.3 Links to entities outside this blueprint" has neither column, because the field is only proposed at deploy. It shows `field_required`, which applies only once both entities exist and never makes the external entity required. "5.3b Incoming links: the external entity points to this blueprint's entity" holds a row only when the field sits on the external entity, meaning the entity holding the field is not listed in this blueprint's §3. "5.3a Outgoing links: this blueprint's entity points to the external entity" holds everything else, including `many_to_many` and a field on a §3 entity with role `consumer` or `contributor`. Direction means where the link's field sits and which way it points, not the `from` / `to` columns and not `owner_side`.
 
-A required reference / association edge to an absent target is "required-if-present": the FK materializes only when the tenant also installs the target, never forcing it (the plan-4 keystone). A required COMPOSITION edge to an absent child is a self-containment violation surfaced as the M9 relationship-layer audit finding (resolve by embedding the child or relaxing, never silently dropped).
+M9 part 2 treats composition like every other link: a required link whose field sits on the in-scope entity warns, whatever its kind. A required link whose field sits on the out-of-scope entity, or a `many_to_many`, is not reported, including when the missing entity is the child of a composition.
 
 `owner_side` names the **parent** endpoint (the lifecycle owner and cascade root, the "one" side of a `one_to_many`); the FK column lives on the other endpoint, the child. It does not change the mode or format and is surfaced in its own column (SKILL.md B6b). `clear` is the Semantius term for SET NULL (the platform `reference_delete_mode` enum is `restrict` / `clear` / `cascade`). `inheritance` is defensive (0 live edges as of 2026-06-01).
 
@@ -472,7 +466,7 @@ See [SKILL.md § Agent tooling layer](../SKILL.md#agent-tooling-layer-4-entities
 | `domain_module_name` | text | yes | Human-friendly label (`Candidate CRM`, `Incident Management`) |
 | `domain_id` | reference → `domains` | no | The module's one and only home domain. Nullable only for cross-cutting full modules with no obvious home (`APPROVAL-WORKFLOW`) and for persona-shaped starter kits (`REAL-ESTATE-AGENT`), which home on their own `domain_kind='bundle'` domain. There is no additional-hosts table: a starter's touched markets are DERIVED from its `embedded_master` rows. Validation rule `full_module_requires_domain` rejects NULL when `module_kind='full'`. |
 | `module_kind` | enum | yes | `full` / `starter`. Default `full`. Starters never master data_objects (platform-side rule `starter_no_master` on `domain_module_data_objects` enforces this). See Rule #19. |
-| `description` | multiline | yes | Analyst voice. What this module does, what it masters, when it's used standalone vs alongside others. Read by the blueprint emitter, audit tooling, deployer. NOT marketing copy. |
+| `description` | multiline | yes | Analyst voice. What this module does, what it masters, when it's used standalone vs alongside others. Read by the blueprint emitter, audit tooling, deployer. NOT marketing copy. Does not restate facts the generator derives, such as gates, counts and skills (SKILL.md Rule #20). |
 | `catalog_tagline` | string | yes | Buyer voice. One sentence for module-grain catalog list cards. Workflow + value framing. Default empty; backfill per Rule #20 with user review BEFORE writing. |
 | `catalog_description` | text | yes | Buyer voice. 1-3 paragraphs for the module catalog detail page. Default empty; backfill per Rule #20 with user review BEFORE writing. Never overwrite a non-empty value without explicit per-row approval. |
 | `record_status` | enum | yes | Default `new` |
@@ -495,7 +489,7 @@ Same capability can realize in multiple modules; same module can realize multipl
 | `domain_module_id` | parent → `domain_modules` | yes | |
 | `data_object_id` | parent → `data_objects` | yes | |
 | `role` | enum | yes | Same 5-value enum as `domain_data_objects`: `master` / `embedded_master` / `contributor` / `consumer` / `derived`. Default `master`. |
-| `necessity` | enum | yes | `required` / `optional`. Default `required`. Narrower than the domain-layer column — only meaningful on `consumer`/`embedded_master` rows that gracefully degrade. |
+| `is_install_optional` | boolean | no | True when the module can be installed without this entity. False, the default, means every install of the module includes it. Not related to `data_object_relationships.is_required`, which says whether a link's field must be filled in. See SKILL.md Rule #16. |
 | `notes` | multiline | yes | |
 | `record_status` | enum | yes | Default `new` |
 

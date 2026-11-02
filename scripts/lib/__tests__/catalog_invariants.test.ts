@@ -56,6 +56,21 @@ describe("B6b relationship shape", () => {
     expect(checkRelationshipShape([comp(8, 3)], { masterDomainsByDataObject: masters })).toEqual([]); // same domain
     expect(checkRelationshipShape([comp(9, 99)], { masterDomainsByDataObject: masters })).toEqual([]); // unmastered dependent
   });
+  test("optional composition whose child has no other parent warns", () => {
+    const comp = (id: number, parent: number, is_required: boolean) => rel({ id, data_object_id: parent, relationship_kind: "composition", is_required });
+    expect(rules(checkRelationshipShape([comp(10, 1, false)]))).toEqual(["B6b:optional_composition_single_parent:warn:10"]);
+    expect(checkRelationshipShape([comp(11, 1, true)])).toEqual([]); // required
+    expect(checkRelationshipShape([rel({ id: 12, is_required: false })])).toEqual([]); // not a composition
+  });
+  test("optional composition is fine when the child has another parent, even outside the checked rows", () => {
+    const comp = (id: number, parent: number) => rel({ id, data_object_id: parent, relationship_kind: "composition", is_required: false });
+    expect(checkRelationshipShape([comp(13, 1)], { allRelationships: [comp(13, 1), comp(14, 3)] })).toEqual([]);
+    expect(checkRelationshipShape([comp(13, 1), comp(14, 3)])).toEqual([]);
+  });
+  test("a composition stored with the child as source finds the same child", () => {
+    const row = rel({ id: 15, data_object_id: 2, related_data_object_id: 1, relationship_type: "many_to_one", owner_side: "target", relationship_kind: "composition", is_required: false });
+    expect(rules(checkRelationshipShape([row]))).toEqual(["B6b:optional_composition_single_parent:warn:15"]);
+  });
 });
 
 describe("B7b users edges", () => {

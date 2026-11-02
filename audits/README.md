@@ -145,3 +145,7 @@ End every audit by re-reading `state.yaml`: if a row is not genuinely open, it b
 - The first fresh audit under schema v2 populates state.yaml properly.
 
 The legacy `audits/<DOMAIN>.md` files were removed; restore with `git checkout` if needed.
+
+## Older audit text that names `necessity`
+
+`domain_module_data_objects.necessity` and `domain_data_objects.necessity` are replaced by the boolean `is_install_optional`. Audit files written before 2026-11-02 still use the old name, including open write instructions in `state.yaml` and q-files. When applying one, translate it: `necessity=required` is `is_install_optional=false` (the default), and `necessity=optional` is `is_install_optional=true`. `data_object_relationships.is_required` is a separate fact about a link's field and does not change.

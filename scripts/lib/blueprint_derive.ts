@@ -25,6 +25,7 @@ import {
   type ScopeRow,
 } from "./catalog";
 import { eventMatchesState } from "./health/logic_b";
+import { fkHolderSide } from "./health/logic_sam";
 
 // ---------- context ----------
 
@@ -80,18 +81,14 @@ export type BusinessRule = { name: string; dataObject: string; sourceFlag: strin
 // The graceful default is kept so non-emit callers (e.g. audits) can derive a tier without crashing.
 export type WriteTier = { read: string; write: string | null; pending: boolean };
 
-// B4 (plan-2-entity-type-tiers.md) + Plan 4 step C: the resolved ON DELETE mode + Semantius FK
-// format per edge, derived from (relationship_kind, is_required, targetInScope). `targetInScope`
-// is the Plan 4 presence-conditional dimension: when the edge's other endpoint is NOT in the
-// emitted scope (a cross-scope §5.3 edge), the referenced table is absent from this deployable
-// unit, so no FK / no constraint can be emitted here regardless of is_required. A required
-// reference / association edge to an absent target is "required-if-present" (the FK materializes
-// only when the tenant also installs the target, never forcing it to install, the keystone of
-// plan-4). A required COMPOSITION edge to an absent child is a self-containment violation surfaced
-// as a step-B audit finding, never silently dropped. `owner_side` names the PARENT endpoint (the
-// lifecycle owner, the cascade root, the "one" side of a one_to_many); the FK column lives on the
-// other endpoint, the child. It does not change the mode/format. The applied ON DELETE lands in
-// the tenant DB at deploy. M7 (Plan 1) already normalized owner_side.
+// B4 (plan-2-entity-type-tiers.md): the resolved ON DELETE mode + Semantius FK format for a link
+// with both entities in the emitted scope (§5.1 / §5.2), derived from (relationship_kind,
+// is_required, relationship_type). A many_to_many link has no field on either entity, so its
+// values describe the two legs of its junction table, always `parent` + `cascade`. A link to an
+// entity outside the scope (§5.3) has neither value: its field is only proposed at deploy.
+// `owner_side` names the PARENT endpoint (the lifecycle owner, the cascade root, the "one" side of
+// a one_to_many); the FK column lives on the other endpoint, the child. It does not change the
+// mode/format. The applied ON DELETE lands in the tenant DB at deploy.
 export type DeleteMode = { mode: string; fkFormat: string };
 
 // One lifecycle state's gate, as resolved by deriveGate. `gateModule` is the canonical realizing
@@ -125,16 +122,15 @@ export type WiredProcess = { name: string; key: string; code: string; pcfId: str
 // section applies its own display sort.
 export type EntityModel = ScopeRow & { writeTier: WriteTier };
 
-// §5: one relationship row plus its resolved ON DELETE mode. `targetInScope` is true for the
-// intra-scope and built-in buckets, false for the cross-scope buckets.
-export type RelationshipModel = { edge: any; targetInScope: boolean; deleteMode: DeleteMode };
+// §5.1 / §5.2: one relationship row plus its resolved ON DELETE mode.
+export type RelationshipModel = { edge: any; deleteMode: DeleteMode };
 
 export type RelationshipsModel = {
   all: any[]; // every edge touching the scope (the §2 mermaid input)
   intra: RelationshipModel[]; // §5.1
   userRels: RelationshipModel[]; // §5.2
-  crossOutbound: RelationshipModel[]; // §5.3a
-  crossContext: RelationshipModel[]; // §5.3b
+  outgoing: any[]; // §5.3a: this blueprint's entity points to the external entity
+  incoming: any[]; // §5.3b: the external entity points to this blueprint's entity
 };
 
 // §6.2 / §6.3: one handoff row (trigger_events + data_objects joined) with its endpoints resolved.
@@ -268,20 +264,8 @@ export function deriveWriteTier(entityType: string | null | undefined, endpointE
   }
 }
 
-export function deriveDeleteMode(
-  relationshipKind: string,
-  ownerSide: string | null | undefined,
-  isRequired: boolean,
-  targetInScope = true,
-): DeleteMode {
-  void ownerSide; // names the parent endpoint (the FK sits on the child); mode/format are owner_side-independent
-  if (!targetInScope) {
-    // Plan 4 step C: the referenced entity is absent from this deployable unit; no FK to emit.
-    if (relationshipKind === "composition" && isRequired) {
-      return { mode: "⚠ audit: required composed child out of scope", fkFormat: "n/a" };
-    }
-    return { mode: isRequired ? "none (required-if-present)" : "none", fkFormat: "n/a" };
-  }
+export function deriveDeleteMode(relationshipKind: string, isRequired: boolean, relationshipType?: string | null): DeleteMode {
+  if (relationshipType === "many_to_many") return { mode: "cascade", fkFormat: "parent" };
   switch (relationshipKind) {
     case "composition":
       return { mode: "cascade", fkFormat: "parent" };
@@ -293,6 +277,15 @@ export function deriveDeleteMode(
     default:
       return { mode: "restrict", fkFormat: "reference" }; // defensive: unknown kind
   }
+}
+
+// §5.3 direction: where the link's field sits and which way it points, not the from / to columns.
+// A link is incoming when the field sits on the external entity. Every other link is outgoing,
+// including a many_to_many link, whose new junction table points out to the external entity.
+export function isIncomingLink(edge: any, scopeRolesById: Map<number, string>): boolean {
+  const holder = fkHolderSide(edge);
+  if (holder === null) return false;
+  return !scopeRolesById.has(holder === "source" ? edge.data_object_id : edge.related_data_object_id);
 }
 
 // B2: entity_types of a data_object's relationship neighbors. Used to resolve a junction's
@@ -774,12 +767,8 @@ export function deriveBlueprintModel(modules: ModuleRow[], ctx: DeriveCtx): Blue
     .filter((m): m is ModuleRow => Boolean(m));
   relatedModules.sort((a, b) => a.domain_module_code.localeCompare(b.domain_module_code));
 
-  const withDeleteMode = (rows: any[], targetInScope: boolean): RelationshipModel[] =>
-    rows.map((r) => ({
-      edge: r,
-      targetInScope,
-      deleteMode: deriveDeleteMode(r.relationship_kind, r.owner_side, Boolean(r.is_required), targetInScope),
-    }));
+  const withDeleteMode = (rows: any[]): RelationshipModel[] =>
+    rows.map((r) => ({ edge: r, deleteMode: deriveDeleteMode(r.relationship_kind, Boolean(r.is_required), r.relationship_type) }));
 
   const perModule = modules.map((m) => deriveModuleAccess(ctx, m, cat, moduleIdSet));
 
@@ -798,10 +787,10 @@ export function deriveBlueprintModel(modules: ModuleRow[], ctx: DeriveCtx): Blue
     entities: cat.scopeRows.map((r) => ({ ...r, writeTier: entityWriteTier(ctx, r, rels) })),
     relationships: {
       all: rels.all,
-      intra: withDeleteMode(rels.intra, true),
-      userRels: withDeleteMode(rels.userRels, true),
-      crossOutbound: withDeleteMode(rels.crossOutbound, false),
-      crossContext: withDeleteMode(rels.crossContext, false),
+      intra: withDeleteMode(rels.intra),
+      userRels: withDeleteMode(rels.userRels),
+      outgoing: rels.cross.filter((r) => !isIncomingLink(r, cat.scopeRolesById)),
+      incoming: rels.cross.filter((r) => isIncomingLink(r, cat.scopeRolesById)),
     },
     handoffs: deriveHandoffs(ctx, cat, moduleIdSet),
     lifecycle: deriveLifecycleEntities(ctx, cat, moduleIdSet),

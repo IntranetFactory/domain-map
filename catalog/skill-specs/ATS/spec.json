@@ -1,7 +1,7 @@
 {
   "facts_major": 1,
-  "emitted": "2026-06-26",
-  "catalog_snapshot": "catalog-2026-06-26",
+  "emitted": "2026-11-02",
+  "catalog_snapshot": "catalog-2026-11-02",
   "domain": {
     "code": "ATS",
     "name": "Applicant Tracking and Recruiting",
@@ -1825,13 +1825,6 @@
   ],
   "relationships": [
     {
-      "from": "agency_submissions",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
       "from": "applicant_flow_records",
       "verb": "audited_via",
       "to": "ofccp_audit_trails",
@@ -1839,25 +1832,11 @@
       "required": true
     },
     {
-      "from": "applicant_flow_records",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
       "from": "application_screening_questions",
       "verb": "answered_by",
       "to": "application_screening_answers",
       "cardinality": "one_to_many",
       "required": true
-    },
-    {
-      "from": "application_stage_transitions",
-      "verb": "has author",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
     },
     {
       "from": "application_stages",
@@ -1874,38 +1853,10 @@
       "required": false
     },
     {
-      "from": "candidate_assessments",
-      "verb": "has invitation author",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "candidate_emails",
-      "verb": "has sender",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "candidate_engagements",
-      "verb": "has recruiter",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
       "from": "candidate_nurture_campaigns",
       "verb": "generates",
       "to": "candidate_engagements",
       "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "candidate_nurture_campaigns",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
       "required": false
     },
     {
@@ -1921,13 +1872,6 @@
       "to": "referral_payouts",
       "cardinality": "one_to_one",
       "required": false
-    },
-    {
-      "from": "candidate_referrals",
-      "verb": "has referring employee",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
     },
     {
       "from": "candidate_tags",
@@ -2064,23 +2008,9 @@
     },
     {
       "from": "candidates",
-      "verb": "has owning recruiter",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "candidates",
       "verb": "self_ids_via",
       "to": "voluntary_self_identifications",
       "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "data_subject_requests",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
       "required": false
     },
     {
@@ -2089,13 +2019,6 @@
       "to": "job_requisitions",
       "cardinality": "one_to_many",
       "required": false
-    },
-    {
-      "from": "hiring_team_assignments",
-      "verb": "assigns",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
     },
     {
       "from": "interview_kits",
@@ -2119,32 +2042,11 @@
       "required": false
     },
     {
-      "from": "interview_panels",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "interview_scorecards",
-      "verb": "has interviewer as author",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
       "from": "interviewer_availability_slots",
       "verb": "booked_for",
       "to": "interviews",
       "cardinality": "one_to_one",
       "required": false
-    },
-    {
-      "from": "interviewer_availability_slots",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
     },
     {
       "from": "interviews",
@@ -2158,13 +2060,6 @@
       "verb": "is scored via",
       "to": "interview_scorecards",
       "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "interviews",
-      "verb": "has coordinator and panelists",
-      "to": "users",
-      "cardinality": "many_to_many",
       "required": true
     },
     {
@@ -2217,13 +2112,6 @@
       "required": true
     },
     {
-      "from": "job_applications",
-      "verb": "has owning recruiter",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
       "from": "job_offers",
       "verb": "is contingent on",
       "to": "background_checks",
@@ -2252,13 +2140,6 @@
       "required": true
     },
     {
-      "from": "job_offers",
-      "verb": "has approver",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
       "from": "job_postings",
       "verb": "asks",
       "to": "application_screening_questions",
@@ -2278,13 +2159,6 @@
       "to": "job_posting_distributions",
       "cardinality": "one_to_many",
       "required": false
-    },
-    {
-      "from": "job_postings",
-      "verb": "has publisher",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
     },
     {
       "from": "job_profiles",
@@ -2329,34 +2203,6 @@
       "required": true
     },
     {
-      "from": "job_requisitions",
-      "verb": "has recruiter and hiring manager",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "ofccp_audit_trails",
-      "verb": "has author",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "offer_approvals",
-      "verb": "has approver",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "offer_letter_documents",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
       "from": "offer_letter_templates",
       "verb": "rendered_as",
       "to": "offer_letter_documents",
@@ -2371,53 +2217,11 @@
       "required": true
     },
     {
-      "from": "offer_versions",
-      "verb": "has author",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
       "from": "outreach_sequences",
       "verb": "contains",
       "to": "outreach_sequence_steps",
       "cardinality": "one_to_many",
       "required": true
-    },
-    {
-      "from": "outreach_sequences",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "pre_employees",
-      "verb": "has owning hr_coordinator",
-      "to": "users",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "recruiter_interactions",
-      "verb": "has author",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "recruiter_saved_searches",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
-      "from": "recruiting_event_attendances",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
     },
     {
       "from": "recruitment_agencies",
@@ -2431,13 +2235,6 @@
       "verb": "sources",
       "to": "candidates",
       "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "recruitment_agencies",
-      "verb": "has relationship owner",
-      "to": "users",
-      "cardinality": "many_to_many",
       "required": true
     },
     {
@@ -2455,13 +2252,6 @@
       "required": true
     },
     {
-      "from": "recruitment_events",
-      "verb": "has coordinator",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
       "from": "recruitment_sources",
       "verb": "attributes",
       "to": "candidates",
@@ -2476,31 +2266,10 @@
       "required": false
     },
     {
-      "from": "referral_campaigns",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
-      "from": "referral_payouts",
-      "verb": "has approver",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": false
-    },
-    {
       "from": "referral_rewards",
       "verb": "governs",
       "to": "referral_payouts",
       "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "requisition_approvals",
-      "verb": "has approver",
-      "to": "users",
-      "cardinality": "many_to_many",
       "required": true
     },
     {
@@ -2525,18 +2294,39 @@
       "required": true
     },
     {
-      "from": "talent_pools",
-      "verb": "has owner",
-      "to": "users",
-      "cardinality": "many_to_many",
-      "required": true
-    },
-    {
       "from": "talent_segments",
       "verb": "materializes_into",
       "to": "talent_pools",
       "cardinality": "one_to_many",
       "required": false
+    },
+    {
+      "from": "users",
+      "verb": "owns",
+      "to": "agency_submissions",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "users",
+      "verb": "owns",
+      "to": "applicant_flow_records",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "users",
+      "verb": "authors",
+      "to": "application_stage_transitions",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "users",
+      "verb": "invites",
+      "to": "candidate_assessments",
+      "cardinality": "one_to_many",
+      "required": true
     },
     {
       "from": "users",
@@ -2547,6 +2337,20 @@
     },
     {
       "from": "users",
+      "verb": "sends",
+      "to": "candidate_emails",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "users",
+      "verb": "engages",
+      "to": "candidate_engagements",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
       "verb": "authored notes",
       "to": "candidate_notes",
       "cardinality": "one_to_many",
@@ -2554,8 +2358,127 @@
     },
     {
       "from": "users",
+      "verb": "owns",
+      "to": "candidate_nurture_campaigns",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "users",
+      "verb": "submits",
+      "to": "candidate_referrals",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
       "verb": "assigned tags",
       "to": "candidate_tag_assignments",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "users",
+      "verb": "owns as recruiter",
+      "to": "candidates",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "users",
+      "verb": "owns",
+      "to": "data_subject_requests",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "users",
+      "verb": "is assigned to",
+      "to": "hiring_team_assignments",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "sits on",
+      "to": "interview_panels",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "users",
+      "verb": "authors",
+      "to": "interview_scorecards",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "owns",
+      "to": "interviewer_availability_slots",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "coordinates",
+      "to": "interviews",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "owns as recruiter",
+      "to": "job_applications",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "approves",
+      "to": "job_offers",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "publishes",
+      "to": "job_postings",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "is hiring manager for",
+      "to": "job_requisitions",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "is recruiter for",
+      "to": "job_requisitions",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "authors",
+      "to": "ofccp_audit_trails",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "users",
+      "verb": "approves",
+      "to": "offer_approvals",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "owns",
+      "to": "offer_letter_documents",
       "cardinality": "one_to_many",
       "required": false
     },
@@ -2572,6 +2495,90 @@
       "to": "offer_letter_templates",
       "cardinality": "one_to_many",
       "required": false
+    },
+    {
+      "from": "users",
+      "verb": "authors",
+      "to": "offer_versions",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "owns",
+      "to": "outreach_sequences",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "users",
+      "verb": "owns pre-employee record",
+      "to": "pre_employees",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "authors",
+      "to": "recruiter_interactions",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "owns",
+      "to": "recruiter_saved_searches",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "records",
+      "to": "recruiting_event_attendances",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "users",
+      "verb": "owns relationship",
+      "to": "recruitment_agencies",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "coordinates",
+      "to": "recruitment_events",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "owns",
+      "to": "referral_campaigns",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "users",
+      "verb": "approves",
+      "to": "referral_payouts",
+      "cardinality": "one_to_many",
+      "required": false
+    },
+    {
+      "from": "users",
+      "verb": "approves",
+      "to": "requisition_approvals",
+      "cardinality": "one_to_many",
+      "required": true
+    },
+    {
+      "from": "users",
+      "verb": "owns",
+      "to": "talent_pools",
+      "cardinality": "one_to_many",
+      "required": true
     }
   ],
   "apqc_processes_touched": [
@@ -3003,10 +3010,6 @@
       "contributor",
       "consumer",
       "derived"
-    ],
-    "necessity": [
-      "required",
-      "optional"
     ],
     "record_status": [
       "new",

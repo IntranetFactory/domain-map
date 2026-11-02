@@ -140,11 +140,13 @@ The catalog (`domain_data_objects`, `domain_module_data_objects`) records *that*
 
 `embedded_master` is the mechanism that makes a module **independently deployable**, so the invariant follows: **every module deploys standalone, with no hard prerequisite on another module.** Every data_object a module touches is one of:
 - `master` (it owns), or
-- `embedded_master` (it carries a local shell; the canonical owner is OPTIONAL, deferred to only if installed), or
-- `necessity=optional` (presence-conditional, Rule #16: a required edge to an un-installed target carries no constraint), or
+- `embedded_master` (it carries a local shell; the canonical owner need not be installed, deferred to only if installed), or
+- `is_install_optional=true` (the module can be installed without it, Rule #16), or
 - a `consumer` of a platform built-in / shared master that is always present (`users`, master-data).
 
-A `contributor`, or a `consumer` with `necessity=required`, pointing at **another domain module's** entity that is **not** also embedded here, is a **self-containment VIOLATION** (the module can't deploy without co-installing that module). The fix is to embed the entity (`embedded_master`) or make it optional, NOT to document a dependency. This is enforced by audit check M9; there is deliberately no "deployable closure / required modules" output, because a correct module has none. Modules that are merely *related* (data coupling, handoffs, shared personas) are surfaced as the informational `related_modules` front-matter hint in the blueprint, never as a requirement.
+A `contributor`, or a `consumer` with `is_install_optional=false`, pointing at **another domain module's** entity that is **not** also embedded here, is a **self-containment VIOLATION** (the module can't deploy without co-installing that module). The fix is to embed the entity (`embedded_master`) or set `is_install_optional=true`, NOT to document a dependency. This is enforced by audit check M9; there is deliberately no "deployable closure / required modules" output, because a correct module has none. Modules that are merely *related* (data coupling, handoffs, shared personas) are surfaced as the informational `related_modules` front-matter hint in the blueprint, never as a requirement.
+
+Links do not change this, because a required link never forces an install (Rule #16). M9 part 2 treats composition like every other link: a required link whose field sits on the in-scope entity warns, whatever its kind, and a required link whose field sits on the out-of-scope entity, or a `many_to_many`, is not reported.
 
 ---
 

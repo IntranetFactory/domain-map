@@ -20,7 +20,7 @@ import { M_CHECKS } from "./checks_m.ts";
 import { S_CHECKS } from "./checks_s.ts";
 import type { Check } from "./types.ts";
 
-export const CHECKLIST_VERSION = 1;
+export const CHECKLIST_VERSION = 2;
 
 // The 57 IDs of SKILL.md "Per-domain completeness checklist" (there is no M3).
 export const SKILL_CHECKLIST_IDS = [

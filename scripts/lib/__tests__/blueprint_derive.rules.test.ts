@@ -4,7 +4,7 @@
 // scenario that combines them lives in blueprint_derive.starter.test.ts.
 
 import { describe, expect, test } from "bun:test";
-import { deriveModuleModel, entityPluralToken, entitySingularToken, type BlueprintModel } from "../blueprint_derive";
+import { deriveDeleteMode, deriveModuleModel, entityPluralToken, entitySingularToken, isIncomingLink, type BlueprintModel } from "../blueprint_derive";
 import {
   buildFixture,
   dataObject,
@@ -388,5 +388,42 @@ describe("rule 12: §7 is per master", () => {
     const fx = fixture("consumer", U);
     const model = deriveModuleModel(fx.index.modulesById.get(OWNER)!, fx.ctx);
     expect(model.lifecycle[0].states.map((s) => s.state.state_name)).toEqual(["draft", "approved", "signed"]);
+  });
+});
+
+describe("§5: link values and §5.3 grouping", () => {
+  const edge = (over: Record<string, unknown>) => ({ data_object_id: 1, related_data_object_id: 2, relationship_type: "one_to_many", owner_side: "source", ...over });
+  const scope = (entries: [number, string][]) => new Map<number, string>(entries);
+
+  test("a one_to_many or one_to_one link resolves from kind and is_required", () => {
+    expect(deriveDeleteMode("reference", true, "one_to_many")).toEqual({ mode: "restrict", fkFormat: "reference" });
+    expect(deriveDeleteMode("reference", false, "one_to_many")).toEqual({ mode: "clear", fkFormat: "reference" });
+    expect(deriveDeleteMode("composition", false, "one_to_one")).toEqual({ mode: "cascade", fkFormat: "parent" });
+  });
+  test("a many_to_many link describes its junction legs, whatever the kind", () => {
+    expect(deriveDeleteMode("reference", true, "many_to_many")).toEqual({ mode: "cascade", fkFormat: "parent" });
+    expect(deriveDeleteMode("association", false, "many_to_many")).toEqual({ mode: "cascade", fkFormat: "parent" });
+  });
+  test("a field on the external entity is incoming", () => {
+    // one_to_many from 1 to 2: the field sits on 2, which is outside the blueprint.
+    expect(isIncomingLink(edge({}), scope([[1, "embedded_master"]]))).toBe(true);
+  });
+  test("a field on any entity listed in the blueprint is outgoing, whatever its role", () => {
+    for (const role of ["master", "embedded_master", "consumer", "contributor", "derived"]) {
+      expect(isIncomingLink(edge({}), scope([[2, role]]))).toBe(false);
+    }
+  });
+  test("a many_to_many link is outgoing, because its new junction table points out", () => {
+    expect(isIncomingLink(edge({ relationship_type: "many_to_many" }), scope([[1, "embedded_master"]]))).toBe(false);
+    expect(isIncomingLink(edge({ relationship_type: "many_to_many" }), scope([[2, "embedded_master"]]))).toBe(false);
+  });
+  test("direction follows the field, not the from and to columns", () => {
+    // many_to_one from 1 to 2: the field sits on 1, the from column, so it is outgoing when 1 is listed.
+    expect(isIncomingLink(edge({ relationship_type: "many_to_one", owner_side: "target" }), scope([[1, "embedded_master"]]))).toBe(false);
+    expect(isIncomingLink(edge({ relationship_type: "many_to_one", owner_side: "target" }), scope([[2, "embedded_master"]]))).toBe(true);
+  });
+  test("a one_to_one field sits opposite the owner_side", () => {
+    expect(isIncomingLink(edge({ relationship_type: "one_to_one", owner_side: "source" }), scope([[1, "embedded_master"]]))).toBe(true);
+    expect(isIncomingLink(edge({ relationship_type: "one_to_one", owner_side: "target" }), scope([[1, "embedded_master"]]))).toBe(false);
   });
 });

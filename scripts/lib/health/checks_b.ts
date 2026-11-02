@@ -206,7 +206,7 @@ export const B_CHECKS: Check[] = [
     title: "relationship shape invariants (owner_side, verbs)",
     run: async (ctx) => {
       const rels = masterSourcedRelationships(ctx);
-      const found = checkRelationshipShape(rels, { nameOf: ctx.doName, masterDomainsByDataObject: ctx.masterDomainsByDataObject });
+      const found = checkRelationshipShape(rels, { nameOf: ctx.doName, masterDomainsByDataObject: ctx.masterDomainsByDataObject, allRelationships: ctx.all.relationships });
       if (found.length === 0) return [{ id: "B6b", result: "pass", detail: `${rels.length} master-sourced relationships checked (rows = relationship ids)` }];
       return fromInvariants("B6b", found);
     },
@@ -398,7 +398,7 @@ export const B_CHECKS: Check[] = [
       ...checkConditionalMasters(ctx.dmdo, { nameOf: ctx.doName, moduleLabel: ctx.moduleCode }),
       judgment(
         "B14",
-        "vendor-shape scan: which master + required rows are sector- or vendor-conditional (a flagship vendor lacks the entity) and should be necessity=optional, unless the user recorded a kept-required decision",
+        "vendor-shape scan: which master + always installed rows are sector- or vendor-conditional (a flagship vendor lacks the entity) and should be is_install_optional=true, unless the user recorded a kept-required decision",
       ),
     ],
   },

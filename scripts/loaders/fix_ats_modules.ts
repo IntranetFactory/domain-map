@@ -69,7 +69,7 @@ async function upsertDataObjects(rows: DataObjectSpec[]): Promise<Map<string, nu
 type DMDOSpec = {
   data_object_id: number;
   role: string;
-  necessity: string;
+  is_install_optional: boolean;
 };
 
 async function upsertDMDO(moduleId: number, rows: DMDOSpec[]): Promise<void> {
@@ -201,11 +201,11 @@ async function fixCandidateCRM() {
   ]);
 
   await upsertDMDO(moduleId, [
-    { data_object_id: idMap.get("candidate_engagements")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("candidate_nurture_campaigns")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("recruiting_event_attendances")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("recruiter_interactions")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("candidate_consents")!, role: "master", necessity: "required" },
+    { data_object_id: idMap.get("candidate_engagements")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("candidate_nurture_campaigns")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("recruiting_event_attendances")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("recruiter_interactions")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("candidate_consents")!, role: "master", is_install_optional: false },
   ]);
 
   await upsertLifecycleStates([
@@ -276,9 +276,9 @@ async function fixTalentPools() {
   ]);
 
   await upsertDMDO(moduleId, [
-    { data_object_id: idMap.get("talent_pool_memberships")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("talent_segments")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("recruiter_saved_searches")!, role: "master", necessity: "optional" },
+    { data_object_id: idMap.get("talent_pool_memberships")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("talent_segments")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("recruiter_saved_searches")!, role: "master", is_install_optional: true },
   ]);
 
   await upsertLifecycleStates([
@@ -332,9 +332,9 @@ async function fixReferrals() {
   ]);
 
   await upsertDMDO(moduleId, [
-    { data_object_id: idMap.get("referral_rewards")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("referral_payouts")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("referral_campaigns")!, role: "master", necessity: "optional" },
+    { data_object_id: idMap.get("referral_rewards")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("referral_payouts")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("referral_campaigns")!, role: "master", is_install_optional: true },
   ]);
 
   await upsertLifecycleStates([
@@ -411,12 +411,12 @@ async function fixBackgroundChecks() {
   ]);
 
   await upsertDMDO(moduleId, [
-    { data_object_id: idMap.get("background_check_packages")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("background_check_components")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("fcra_disclosures")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("background_check_adjudications")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("adverse_action_notices")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("background_check_disputes")!, role: "master", necessity: "required" },
+    { data_object_id: idMap.get("background_check_packages")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("background_check_components")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("fcra_disclosures")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("background_check_adjudications")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("adverse_action_notices")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("background_check_disputes")!, role: "master", is_install_optional: false },
   ]);
 
   await upsertLifecycleStates([
@@ -517,13 +517,13 @@ async function fixRecruitmentPipeline() {
   ]);
 
   await upsertDMDO(moduleId, [
-    { data_object_id: idMap.get("application_stages")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("application_stage_transitions")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("requisition_approvals")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("job_posting_distributions")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("application_screening_questions")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("application_screening_answers")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("eeo_responses")!, role: "master", necessity: "optional" },
+    { data_object_id: idMap.get("application_stages")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("application_stage_transitions")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("requisition_approvals")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("job_posting_distributions")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("application_screening_questions")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("application_screening_answers")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("eeo_responses")!, role: "master", is_install_optional: true },
   ]);
 
   await upsertLifecycleStates([
@@ -616,11 +616,11 @@ async function fixInterviews() {
   ]);
 
   await upsertDMDO(moduleId, [
-    { data_object_id: idMap.get("interview_kits")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("interview_panels")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("candidate_assessment_templates")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("interview_questions")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("interviewer_availability_slots")!, role: "master", necessity: "optional" },
+    { data_object_id: idMap.get("interview_kits")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("interview_panels")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("candidate_assessment_templates")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("interview_questions")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("interviewer_availability_slots")!, role: "master", is_install_optional: true },
   ]);
 
   await upsertLifecycleStates([
@@ -689,11 +689,11 @@ async function fixOffers() {
   ]);
 
   await upsertDMDO(moduleId, [
-    { data_object_id: idMap.get("offer_versions")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("offer_approvals")!, role: "master", necessity: "required" },
-    { data_object_id: idMap.get("offer_letter_documents")!, role: "master", necessity: "required" },
+    { data_object_id: idMap.get("offer_versions")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("offer_approvals")!, role: "master", is_install_optional: false },
+    { data_object_id: idMap.get("offer_letter_documents")!, role: "master", is_install_optional: false },
     // Link existing equity_grants as embedded_master (canonical lives in COMP-INCENTIVES / CAP-TABLE-GRANTS)
-    { data_object_id: await getDataObjectId("equity_grants"), role: "embedded_master", necessity: "optional" },
+    { data_object_id: await getDataObjectId("equity_grants"), role: "embedded_master", is_install_optional: true },
   ]);
 
   await upsertLifecycleStates([

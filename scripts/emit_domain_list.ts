@@ -130,12 +130,12 @@ const [
     ),
     pg(
       "GET",
-      "/domain_data_objects?select=domain_id,data_object_id,role,necessity&record_status=neq.rejected&limit=50000",
+      "/domain_data_objects?select=domain_id,data_object_id,role,is_install_optional&record_status=neq.rejected&limit=50000",
     ),
     pg("GET", "/domain_modules?select=id,domain_id&module_kind=eq.full&record_status=neq.rejected&limit=10000"),
     pg(
       "GET",
-      "/domain_module_data_objects?select=domain_module_id,data_object_id,role,necessity&limit=50000",
+      "/domain_module_data_objects?select=domain_module_id,data_object_id,role,is_install_optional&limit=50000",
     ),
     pg("GET", "/data_objects?select=id,singular_label,plural_label,kind&limit=10000"),
     pg("GET", "/data_object_relationships?select=data_object_id,related_data_object_id&limit=50000"),
@@ -192,17 +192,17 @@ for (const r of relRows) {
   for (const id of [r.data_object_id, r.related_data_object_id]) degree.set(id, (degree.get(id) ?? 0) + 1);
 }
 
-// Per domain: data_object_id -> strongest { role, necessity } across the rollup and its full modules.
+// Per domain: data_object_id -> strongest { role, is_install_optional } across the rollup and its full modules.
 const moduleDomain = new Map<number, number>(modules.filter((m: any) => m.domain_id != null).map((m: any) => [m.id, m.domain_id]));
-const scopeByDomain = new Map<number, Map<number, { role: string; necessity: string }>>();
+const scopeByDomain = new Map<number, Map<number, { role: string; is_install_optional: boolean }>>();
 function addScope(domainId: number | undefined, r: any) {
   if (domainId == null) return;
   if (!scopeByDomain.has(domainId)) scopeByDomain.set(domainId, new Map());
   const scope = scopeByDomain.get(domainId)!;
   const prev = scope.get(r.data_object_id);
-  const rank = (x: { role: string; necessity: string }) =>
-    (ENTITY_ROLE_RANK[x.role] ?? 9) * 2 + Number(x.necessity === "optional");
-  if (!prev || rank(r) < rank(prev)) scope.set(r.data_object_id, { role: r.role, necessity: r.necessity });
+  const rank = (x: { role: string; is_install_optional: boolean }) =>
+    (ENTITY_ROLE_RANK[x.role] ?? 9) * 2 + Number(x.is_install_optional);
+  if (!prev || rank(r) < rank(prev)) scope.set(r.data_object_id, { role: r.role, is_install_optional: r.is_install_optional });
 }
 for (const r of ddoRows) addScope(r.domain_id, r);
 for (const r of dmdoRows) addScope(moduleDomain.get(r.domain_module_id), r);
@@ -306,7 +306,7 @@ for (const d of domains) {
     .sort(
       (a, b) =>
         ENTITY_ROLE_RANK[a.r.role] - ENTITY_ROLE_RANK[b.r.role] ||
-        Number(a.r.necessity === "optional") - Number(b.r.necessity === "optional") ||
+        Number(a.r.is_install_optional) - Number(b.r.is_install_optional) ||
         (degree.get(b.o.id) ?? 0) - (degree.get(a.o.id) ?? 0) ||
         a.o.singular_label.localeCompare(b.o.singular_label),
     )

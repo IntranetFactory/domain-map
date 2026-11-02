@@ -41,7 +41,7 @@ q3: (Hiring Starter) 33 links between records and people (owning recruiter, publ
 
 Recommended: yes. A role on a record is one person; with many-to-many links the "only the owner can see this" rules on candidates, applications, scorecards and offers have no owner to check, which is why the blueprint's row-scope rules can't work.
 
-a3:
+a3: yes, applied 2026-11-02
 
 ---
 
@@ -67,7 +67,7 @@ q6: (Hiring Starter) The Hiring Starter description contradicts what the package
 
 Recommended: yes. The current text is wrong in the four places listed above; the new text matches what the blueprint shows and names no counts.
 
-a6:
+a6: yes, applied 2026-11-02
 
 ---
 

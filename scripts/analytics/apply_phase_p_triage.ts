@@ -51,7 +51,7 @@ type Rec = {
   unclassified_masters: number;
   unclassified_master_names: string[];
   m9_shapes: number;
-  m9_details: { entity: string; module: string; role: string; necessity: string | null; master_domains: string[] }[];
+  m9_details: { entity: string; module: string; role: string; is_install_optional: boolean | null; master_domains: string[] }[];
   verdict: string;
   b1a_codes: string[];
 };
@@ -123,8 +123,8 @@ function buildItems(r: Rec): Item[] {
       items.push({
         id: code,
         summary: `${r.m9_shapes} contributor/required-consumer rows break module self-containment (M9): embed or relax each.`,
-        finding: `Live triage ${TRIAGE_DATE}: ${r.m9_shapes} domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with necessity=required, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation.`,
-        action: `Per row, convert to embedded_master (carry a local shell) or set necessity=optional (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency.`,
+        finding: `Live triage ${TRIAGE_DATE}: ${r.m9_shapes} domain_module_data_objects rows on this domain's modules are role=contributor or role=consumer with is_install_optional=false, pointing at an entity mastered by another domain and not embedded_master here (enumerated in extra_m9_shapes). Each is an M9 self-containment violation.`,
+        action: `Per row, convert to embedded_master (carry a local shell) or set is_install_optional=true (presence-conditional), per references/modules.md section 5 and SKILL.md M9. Do not document the dependency.`,
         afterAction: ["    extra_m9_shapes:", ...shapeLines],
       });
     }

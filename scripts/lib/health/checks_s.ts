@@ -93,8 +93,8 @@ export const S_CHECKS: Check[] = [
     kind: "mechanical",
     title: "per-master indirect-table coverage",
     run: async (ctx) => {
-      // master + required: the domain's role='master' rows with necessity='required'.
-      const ids = [...new Set(ctx.dmdo.filter((r: any) => r.role === "master" && r.necessity === "required").map((r: any) => r.data_object_id as number))].sort((a, b) => a - b);
+      // master + always installed: the domain's role='master' rows with is_install_optional=false.
+      const ids = [...new Set(ctx.dmdo.filter((r: any) => r.role === "master" && !r.is_install_optional).map((r: any) => r.data_object_id as number))].sort((a, b) => a - b);
       const events = await ctx.query(TRIGGER_EVENTS_PATH);
       const eventCount = new Map<number, number>();
       for (const e of events) eventCount.set(e.data_object_id, (eventCount.get(e.data_object_id) ?? 0) + 1);

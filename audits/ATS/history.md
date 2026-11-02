@@ -690,3 +690,22 @@ UI spot-checks:
 ## 2026-11-02: b1a proposals removed
 
 All 11 `b1a` batches were deleted from `state.yaml` at the user's request, and q10-q20 from `q-ATS.md` (the remaining questions keep their numbers). A row-by-row review had found 75 of their 165 rows not safe to execute as written (5 wrong, 67 judgment, 2 invalid, 1 unverified), and the loaders contradicted the report in two places (the Payroll handoffs and the process on handoff 1431). No catalog change. The gaps those batches addressed stay recorded by the health checks in the `checks:` block.
+
+## 2026-11-02: q3 and q6 applied; `necessity` replaced by `is_install_optional`
+
+Part of `plans/blueprint-external-links-plan.md`, approved by the user. Script: `.tmp_deploy/necessity_step1_2026_11_02.ts`. Rows were backed up first to `backups/necessity-step1-2026-11-02.json`. `record_status` was not changed.
+
+- **q3 (`B2-B7B-USER-EDGES`), answered yes, applied as drafted.** 34 `users` links restructured, and one new link added: `users [is hiring manager for / has hiring manager] job_requisitions`. Check B7b now passes for ATS.
+- **q6 (`B2-R7-HIRING-STARTER-DESCRIPTION`), answered yes, applied.** `domain_modules.description` of HIRING-STARTER replaced with the drafted text.
+- **ATS-BACKGROUND-CHECKS description reworded by the user's decision.** "Screening is necessity-scoped" became "Screening is scoped by jurisdiction" in `catalog_description`.
+- **New catalog column.** `is_install_optional` (boolean, default false) added to `domain_module_data_objects` and `domain_data_objects`, set true on the 623 and 94 rows where `necessity` is `optional`. `necessity` stays until the user confirms deleting it. The `data_object_relationships.is_required` field description was rewritten because it named `necessity`.
+- **M9 changed, `CHECKLIST_VERSION` 2.** A required composition link no longer fails. A link whose field sits on the absent entity is not reported, and one whose field sits on an in-scope entity warns, like every other link. The six links in q2 no longer appear in M9, so q2's warning is gone. q2 stays in `q-ATS.md` until the next ATS audit; leave `a2:` blank.
+
+## 2026-11-02: `job_requisitions` added to HIRING-STARTER as install optional
+
+Requested by the user in the moment. `record_status` is not on this junction and was not touched on any other row.
+
+- **New row.** `domain_module_data_objects` id 2204: HIRING-STARTER (154) / `job_requisitions` (1), `role=embedded_master`, `necessity=optional`, `is_install_optional=true`. Rule #19 invariants 1 and 2 hold (domain-owned; canonical master is row 9 on ATS-RECRUITMENT-PIPELINE).
+- **Description reworded, by the user's approval.** In `domain_modules.description` of HIRING-STARTER, "Leaves out requisitions and their approvals" became "Leaves out the requisition approval chain". This supersedes that sentence in the q6 text. `requisition_approvals` stays out of the starter, while the `approve_requisition` gate comes with the entity as `hiring-starter:approve_requisition`, so "approvals" alone would be wrong.
+- **Do not re-run `.tmp_deploy/necessity_step1_2026_11_02.ts --apply`.** It compares the description with the original q6 text and would overwrite this rewording.
+- **Not done, awaiting the user.** Rule #19 invariant 6 asks for `query_<entity>` on each embedded master, and `query_job_requisitions` (tool 15) is not yet in the starter's `domain_module_tools`. `create_requisition` (859) and `approve_requisition` (860) are also unlinked, and no tool exists for `close_requisition`. These links would change no generated output: the domain skill's toolset is the union of the domain's full modules only (`scripts/emit_skill_spec.ts`), although Rule #19 invariant 6 says a starter's tools roll up into it. The ATS-RECRUITMENT-PIPELINE blueprint is stale and was not regenerated. The ATS skill spec is not affected (a `--stdout` preview matches the file).

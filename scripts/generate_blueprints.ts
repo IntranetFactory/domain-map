@@ -62,6 +62,7 @@ import {
   type RelationshipModel,
 } from "./lib/blueprint_derive";
 import { checkModel, RULE_IDS, RULES, type ModelFinding } from "./lib/blueprint_invariants";
+import { checkRelationshipShape, checkUserEdges } from "./lib/catalog_invariants";
 
 // ---------- CLI flags (set by main) ----------
 // Only the IO driver reads these; the renderers below never do.
@@ -74,7 +75,7 @@ const TODAY = new Date().toISOString().slice(0, 10);
 // Blueprint file format version (front-matter `version`): the architect's semantic-blueprint format
 // the catalog blueprints follow (semantius-architect references/semantic-blueprint-template.md). The
 // format owns this value; it changes only when the architect's format version changes. 3.1 carries
-// the 3.0 Section 3 columns (`canonical code` beside `data_object`, `entity_type` immediately before
+// the 3.0 Section 3 columns (`catalog code` beside `data_object`, `entity_type` immediately before
 // `write tier`) plus the §7 `high risk?` column. Emit exactly this one version key, never a
 // consumer/authoring-tool version.
 const BLUEPRINT_VERSION = "3.1";
@@ -182,7 +183,7 @@ const ROLE_INFO: Record<string, { classDef: string }> = {
 // cross-scope edges in textual form.
 function renderMermaid(
   scopeRoles: Map<number, string>,
-  scopeNecessity: Map<number, string | null>,
+  scopeInstallOptional: Map<number, boolean>,
   edges: any[],
 ): string[] {
   const lines: string[] = [];
@@ -227,7 +228,7 @@ function renderMermaid(
     if (!a || !b) continue;
     // Rule 5 (edge-verb consistency): the diagram edge label must equal the §5.1 / §5.2 verb
     // column byte-for-byte. The verb column is the bare `relationship_verb`; edge optionality is
-    // conveyed by the §5 `necessity` column (and the per-node dashed-stroke overlay below), NOT by
+    // conveyed by the §5 `field_required` column (and the per-node dashed-stroke overlay below), NOT by
     // an `(opt)` suffix on the label, so we emit the bare verb here too.
     const verb = (r.relationship_verb || "→").replace(/"/g, '\\"');
     lines.push(`  ${a.data_object_name} -->|"${verb}"| ${b.data_object_name}`);
@@ -239,12 +240,12 @@ function renderMermaid(
     const cls = scopeRoles.has(id) ? scopeRoles.get(id)! : "platform_builtin";
     lines.push(`  class ${obj.data_object_name} ${cls};`);
   }
-  // Per-node optional-necessity overlay: dashed stroke on top of the role classDef.
+  // Per-node install-optional overlay: dashed stroke on top of the role classDef.
   // Mermaid honors per-node `style` directives even when a class is already applied.
   for (const id of nodeIds) {
     const obj = dataObjectsById.get(id);
     if (!obj) continue;
-    if (scopeNecessity.get(id) === "optional") {
+    if (scopeInstallOptional.get(id)) {
       lines.push(`  style ${obj.data_object_name} stroke-dasharray:5 5;`);
     }
   }
@@ -314,7 +315,7 @@ function renderRelationshipTable(rows: RelationshipModel[], opts: { includeOwner
   if (rows.length === 0) return out;
   const headers: string[] = ["from", "verb", "to", "cardinality"];
   if (opts.includeKind) headers.push("kind");
-  headers.push("necessity");
+  headers.push("field_required");
   if (opts.includeOwnerSide) headers.push("owner_side");
   headers.push("delete_mode", "fk_format", "notes");
   out.push(tableHeader(headers));
@@ -329,10 +330,9 @@ function renderRelationshipTable(rows: RelationshipModel[], opts: { includeOwner
       r.relationship_type || "",
     ];
     if (opts.includeKind) cells.push(r.relationship_kind || "");
-    cells.push(r.is_required ? "required" : "optional");
+    cells.push(fieldRequiredCell(r));
     if (opts.includeOwnerSide) cells.push(r.owner_side || "");
-    // B4 + Plan 4 step C: resolved ON DELETE mode + Semantius FK format per edge, presence-
-    // conditional on whether the other endpoint is in the emitted scope (derived in the model).
+    // B4: resolved ON DELETE mode + Semantius FK format per link (derived in the model).
     cells.push(dm.mode, dm.fkFormat);
     cells.push(r.notes || "");
     out.push(tableRow(cells));
@@ -340,10 +340,37 @@ function renderRelationshipTable(rows: RelationshipModel[], opts: { includeOwner
   return out;
 }
 
+// A many_to_many link has no field on either entity, only a junction table, so nothing to require.
+function fieldRequiredCell(r: any): string {
+  if (r.relationship_type === "many_to_many") return "-";
+  return r.is_required ? "yes" : "no";
+}
+
+// §5.3: no delete_mode or fk_format, because the field is only proposed at deploy.
+function renderExternalLinkTable(rows: any[]): string[] {
+  const out: string[] = [];
+  if (rows.length === 0) return out;
+  out.push(tableHeader(["from", "verb", "to", "cardinality", "field_required", "notes"]));
+  for (const r of rows) {
+    const a = dataObjectsById.get(r.data_object_id as number);
+    const b = dataObjectsById.get(r.related_data_object_id as number);
+    if (!a || !b) continue;
+    out.push(tableRow([
+      `\`${a.data_object_name}\``,
+      r.relationship_verb || "",
+      `\`${b.data_object_name}\``,
+      r.relationship_type || "",
+      fieldRequiredCell(r),
+      r.notes || "",
+    ]));
+  }
+  return out;
+}
+
 function renderCoMasters(rows: CoMasterRow[]): string[] {
   const out: string[] = [];
   if (rows.length === 0) return out;
-  out.push(tableHeader(["data_object", "other module / domain", "role", "necessity", "notes"]));
+  out.push(tableHeader(["data_object", "other module / domain", "role", "install_optional", "notes"]));
   const sorted = [...rows].sort((a, b) => {
     const an = dataObjectsById.get(a.data_object_id)?.data_object_name ?? "";
     const bn = dataObjectsById.get(b.data_object_id)?.data_object_name ?? "";
@@ -364,7 +391,7 @@ function renderCoMasters(rows: CoMasterRow[]): string[] {
       `\`${obj.data_object_name}\``,
       owner,
       r.role,
-      r.necessity || "-",
+      r.is_install_optional ? "yes" : "-",
       r.notes || "",
     ]));
   }
@@ -411,7 +438,7 @@ function renderDependencies(scopeRows: ScopeRow[], owners: Map<number, OwnerInfo
   const out: string[] = [];
   const deps = scopeRows.filter((r) => r.role !== "master");
   if (deps.length === 0) return out;
-  out.push(tableHeader(["data_object", "role here", "necessity", "canonical owner(s)", "slice notes"]));
+  out.push(tableHeader(["data_object", "role here", "install_optional", "catalog owner(s)", "slice notes"]));
   const sorted = [...deps].sort((a, b) => {
     const ra = ROLE_RANK[a.role] ?? 99;
     const rb = ROLE_RANK[b.role] ?? 99;
@@ -432,11 +459,11 @@ function renderDependencies(scopeRows: ScopeRow[], owners: Map<number, OwnerInfo
       ? ownerLabels.join(", ")
       : r.data_object.kind === "platform_builtin"
         ? "_(platform built-in)_"
-        : "_(no canonical owner recorded)_";
+        : "_(no catalog owner recorded)_";
     out.push(tableRow([
       `\`${r.data_object.data_object_name}\``,
       r.role,
-      r.necessity || "-",
+      r.is_install_optional ? "yes" : "-",
       ownerCell,
       r.notes || "",
     ]));
@@ -471,7 +498,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
   const {
     scopeRows,
     scopeRolesById,
-    scopeNecessityById,
+    scopeInstallOptionalById,
     aliasRows,
     relationships: rels,
     coMasters,
@@ -614,7 +641,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
   } else {
     out.push(...renderEntitySummary(scopeRows));
     out.push("");
-    out.push(...renderMermaid(scopeRolesById, scopeNecessityById, rels.all));
+    out.push(...renderMermaid(scopeRolesById, scopeInstallOptionalById, rels.all));
     out.push("");
   }
 
@@ -658,11 +685,11 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
   if (scopeRows.length === 0) {
     out.push(noneSection("no data_objects in scope"));
   } else {
-    // 3.0 Section 3 header (13 canonical columns). `canonical code` sits immediately after
+    // 3.0 Section 3 header (13 canonical columns). `catalog code` sits immediately after
     // `data_object`; `entity_type` sits immediately before `write tier`. Downstream parses by
     // header name, not column position, but this is the canonical order. (`modules` is an
     // extra multi-module-bundle column inserted before `notes`; single-module blueprints omit it.)
-    const headers = ["#", "data_object", "canonical code", "singular", "plural", "role", "mastered in", "mastered label", "necessity", "personal_content", "entity_type", "write tier"];
+    const headers = ["#", "data_object", "catalog code", "singular", "plural", "role", "mastered in", "mastered label", "install_optional", "personal_content", "entity_type", "write tier"];
     if (showModulesCol) headers.push("modules");
     headers.push("notes");
     out.push(tableHeader(headers, ["right"]));
@@ -680,11 +707,11 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
       // B2: per-entity write tier from entity_type (junctions consult their neighbors), derived in the model.
       const wt = r.writeTier;
       const wtCell = wt.write === null ? "read-only" : `\`${wt.write}\`${wt.pending ? " _(pending)_" : ""}`;
-      // `canonical code`: the stable uber-model identity (3.0). The domain map IS the uber-model
-      // and uses canonical, agent-optimized naming, so canonical code == data_object here (spec
+      // `catalog code`: the stable uber-model identity (3.0). The domain map IS the uber-model
+      // and uses canonical, agent-optimized naming, so catalog code == data_object here (spec
       // population rule #1: self-describing naming). It is the value that feeds the downstream
       // platform `entities.catalog_entity_code` once deployed; `data_object` is the deployed name
-      // and may drift (dialect / silo) at deploy time, the canonical code does not.
+      // and may drift (dialect / silo) at deploy time, the catalog code does not.
       const canonicalCode = `\`${o.data_object_name}\``;
       const cells: (string | number)[] = [
         i++,
@@ -695,7 +722,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
         r.role,
         owner.code,
         owner.label,
-        r.necessity || "-",
+        r.is_install_optional ? "yes" : "-",
         o.has_personal_content ? "yes" : "",
         o.entity_type || "unclassified",
         wtCell,
@@ -716,43 +743,43 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
   // §5 Relationships
   out.push("## 5. Relationships");
   out.push("");
-  out.push("### 5.1 Intra-scope edges");
+  out.push("_`field_required` applies only when both entities are installed. It never makes an entity required._");
+  out.push("");
+  out.push("### 5.1 Links between entities in this blueprint");
   out.push("");
   if (model.relationships.intra.length === 0) {
-    out.push(noneSection("no relationships with both endpoints inside the scope"));
+    out.push(noneSection("no links with both entities in this blueprint"));
   } else {
     out.push(...renderRelationshipTable(model.relationships.intra, { includeOwnerSide: true, includeKind: true }));
   }
   out.push("");
-  out.push("### 5.2 Built-in edges (`users` and other platform built-ins)");
+  out.push("### 5.2 Links to platform built-ins (`users`)");
   out.push("");
   if (model.relationships.userRels.length === 0) {
-    out.push(noneSection("no relationships against platform built-ins"));
+    out.push(noneSection("no links to platform built-ins"));
   } else {
     out.push(...renderRelationshipTable(model.relationships.userRels, { includeOwnerSide: true, includeKind: false }));
   }
   out.push("");
-  out.push("### 5.3 Cross-scope edges");
+  out.push("### 5.3 Links to entities outside this blueprint");
   out.push("");
-  out.push("#### 5.3a Outbound from this scope's masters and contributors");
+  out.push("_External entities are optional: this blueprint never installs them. If one exists at install, the link is proposed. A many-to-many link is listed under outgoing and proposed as a new junction table._");
   out.push("");
-  out.push("_Edges this scope drives: the in-scope endpoint has `role` of `master` or `contributor`._");
+  out.push("#### 5.3a Outgoing links: this blueprint's entity points to the external entity");
   out.push("");
-  if (model.relationships.crossOutbound.length === 0) {
-    out.push(noneSection("no outbound cross-scope edges from this scope's masters or contributors"));
-  } else {
-    out.push(...renderRelationshipTable(model.relationships.crossOutbound, { includeOwnerSide: false, includeKind: false }));
-  }
-  out.push("");
-  out.push("#### 5.3b Context edges on embedded shells and consumed entities");
-  out.push("");
-  out.push("_Edges the canonical owner drives, shown for context: the in-scope endpoint has `role` of `embedded_master`, `consumer`, or `derived`._");
-  out.push("");
-  if (model.relationships.crossContext.length === 0) {
-    out.push(noneSection("no context cross-scope edges on this scope's embedded shells or consumed entities"));
+  if (model.relationships.outgoing.length === 0) {
+    out.push(noneSection("no outgoing links to external entities"));
   } else {
     // Rule 4 (no raw HTML): plain markdown table, never a `<details>` / `<summary>` collapsible.
-    out.push(...renderRelationshipTable(model.relationships.crossContext, { includeOwnerSide: false, includeKind: false }));
+    out.push(...renderExternalLinkTable(model.relationships.outgoing));
+  }
+  out.push("");
+  out.push("#### 5.3b Incoming links: the external entity points to this blueprint's entity");
+  out.push("");
+  if (model.relationships.incoming.length === 0) {
+    out.push(noneSection("no incoming links from external entities"));
+  } else {
+    out.push(...renderExternalLinkTable(model.relationships.incoming));
   }
   out.push("");
 
@@ -764,6 +791,8 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
   if (coMasters.length === 0) {
     out.push(noneSection("no other module embeds this scope's masters; the canonical owners do."));
   } else {
+    out.push("_`role` and `install_optional` here belong to the other module named in that row, not to this blueprint._");
+    out.push("");
     out.push(...renderCoMasters(coMasters));
   }
   out.push("");
@@ -973,7 +1002,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
 
   // NOTE: a former "§10 Deployable closure" section was removed (Plan 3 review, 2026-06-02).
   // A correctly-modeled module is SELF-CONTAINED: everything it touches is master,
-  // embedded_master (a local shell), or necessity=optional, so it has no hard prerequisites.
+  // embedded_master (a local shell), or is_install_optional=true, so it has no hard prerequisites.
   // "Related modules" (data coupling + handoffs + persona reach) are emitted in the front
   // matter `related_modules`, not duplicated here; the self-containment invariant is enforced
   // in the audit/review band (a contributor or required non-embedded consumer is a finding),
@@ -1149,7 +1178,10 @@ async function emitModuleList(modules: ModuleRow[], label: string): Promise<void
 
 // --lint: the derived-result invariants R1-R8 over a module list. Writes no file. Each module is
 // also rendered in memory, so an emit failure (e.g. the B13 entity_type gate) counts as a failure.
-// Exits non-zero on any `fail` finding or emit failure; `warn` findings never fail the run.
+// Exits non-zero on any `fail` finding, emit failure, R7 finding or catalog data defect; other `warn`
+// findings never fail the run. The data defects are checked over every relationship, not per module,
+// because a wrong link reaches the blueprint of every module that touches either entity.
+const LINT_BLOCKING_DATA_RULES = new Set(["many_to_many_reference", "owner_side_not_parent", "optional_composition_single_parent"]);
 function lintModuleList(modules: ModuleRow[], label: string): void {
   const byRule = new Map<string, { fail: number; warn: number; modules: Set<string> }>();
   const byModule = new Map<string, { fail: number; warn: number }>();
@@ -1178,8 +1210,13 @@ function lintModuleList(modules: ModuleRow[], label: string): void {
   }
   const fails = [...byRule.values()].reduce((n, r) => n + r.fail, 0);
   const warns = [...byRule.values()].reduce((n, r) => n + r.warn, 0);
+  const r7 = byRule.get("R7")?.warn ?? 0;
+  const nameOf = (id: number) => dataObjectsById.get(id)?.data_object_name ?? `#${id}`;
+  const relationships = deriveCtx.all.relationships;
+  const dataDefects = [...checkRelationshipShape(relationships, { nameOf }), ...checkUserEdges(relationships, USERS_ID, { nameOf })].filter((f) => LINT_BLOCKING_DATA_RULES.has(f.rule));
+  for (const f of dataDefects) console.log(`fail  ${f.id}  ${f.rule}  ${f.detail}`);
   console.log("");
-  console.log(`lint summary (${label}): ${modules.length} module(s), ${fails} fail, ${warns} warn, ${failures.length} emit failure(s)`);
+  console.log(`lint summary (${label}): ${modules.length} module(s), ${fails} fail, ${warns} warn (${r7} blocking R7), ${dataDefects.length} catalog data defect(s), ${failures.length} emit failure(s)`);
   for (const id of RULE_IDS) {
     const r = byRule.get(id);
     console.log(`  ${id}  ${RULES[id].severity.padEnd(4)}  ${String(r ? r[RULES[id].severity] : 0).padStart(4)} finding(s) in ${String(r?.modules.size ?? 0).padStart(3)} module(s)  ${RULES[id].title}`);
@@ -1192,7 +1229,7 @@ function lintModuleList(modules: ModuleRow[], label: string): void {
     for (const [code, c] of top) console.log(`    ${code.padEnd(32)} ${c.fail} fail, ${c.warn} warn`);
   }
   for (const f of failures) console.error(`  emit failure ${f.code}: ${f.message}`);
-  if (fails > 0 || failures.length > 0) exit(1);
+  if (fails > 0 || failures.length > 0 || r7 > 0 || dataDefects.length > 0) exit(1);
 }
 
 async function main(): Promise<void> {
