@@ -13,7 +13,7 @@ domain_modules:
   - ats-candidate-crm
 domain_code: ATS
 icon_name: user-plus
-related_modules: [abm-intent, ats-background-checks, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, cwm-worker-sourcing, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hiring-starter, lms-compliance-training, lms-ct-gdpr, onb-journey-mgmt, pa-workforce-metrics, tlnt-intel-marketplace, tlnt-intel-mobility]
+related_modules: [abm-intent, ats-interviews, ats-offers, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, cwm-worker-sourcing, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hiring-starter, lms-compliance-training, lms-ct-gdpr, onb-journey-mgmt, pa-workforce-metrics, tlnt-intel-marketplace, tlnt-intel-mobility]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-RECRUITER]
 created_at: 2026-11-02
 ---
@@ -244,7 +244,6 @@ _`role` and `install_optional` here belong to the other module named in that row
 
 | data_object | other module / domain | role | install_optional | notes |
 | --- | --- | --- | --- | --- |
-| `candidates` | ATS-BACKGROUND-CHECKS (Background Checks) - ATS | embedded_master | - | - |
 | `candidates` | ATS-INTERVIEWS (Candidate Interviews) - ATS | embedded_master | - | - |
 | `candidates` | ATS-OFFERS (Job Offers) - ATS | embedded_master | - | - |
 | `candidates` | ATS-PRE-EMPLOYEE-RECORD (Pre-Employee Record) - ATS | embedded_master | - | - |

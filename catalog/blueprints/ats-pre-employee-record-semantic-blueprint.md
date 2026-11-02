@@ -10,7 +10,7 @@ domain_modules:
   - ats-pre-employee-record
 domain_code: ATS
 icon_name: user-plus
-related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, bgv-continuous-identity, comp-statements, hcm-core-worker, hcm-lifecycle-workflows, onb-journey-mgmt]
+related_modules: [ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, bgv-continuous-identity, bgv-screening-orders, comp-statements, hcm-core-worker, hcm-lifecycle-workflows, onb-journey-mgmt]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-MANAGER, RECRUITING-RECRUITER]
 created_at: 2026-11-02
 ---
@@ -164,8 +164,8 @@ _`role` and `install_optional` here belong to the other module named in that row
 | ATS-PRE-EMPLOYEE-RECORD | HCM | HCM-CORE-WORKER | `employee.applied_internally` | `active` → `active` _(signal)_ | `candidates` | api_call | medium | When an employee applies internally, HCM hands the worker context to the applicant tracker, which materializes an internal candidate record from the worker profile. Friction: reconciling the worker identity against the candidate identity space. |
 | ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
 | ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-RECRUITMENT-PIPELINE | `job_application.advanced` | _(state_change)_ | `job_offers` | lifecycle_progression | low | - |
-| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | _(lifecycle)_ | `job_offers` | lifecycle_progression | medium | - |
-| ATS-PRE-EMPLOYEE-RECORD | ATS | ATS-BACKGROUND-CHECKS | `background_check.cleared` | _(lifecycle)_ | `pre_employees` | lifecycle_progression | low | - |
+| ATS-PRE-EMPLOYEE-RECORD | BGV | BGV-SCREENING-ORDERS | `background_check.flagged` | `completed_consider` _(lifecycle)_ | `job_offers` | api_call | medium | Flagged background check may force offer rescission; HR/Legal review path. |
+| ATS-PRE-EMPLOYEE-RECORD | BGV | BGV-SCREENING-ORDERS | `background_check.cleared` | `completed_clear` _(lifecycle)_ | `pre_employees` | api_call | low | Background-check clearance unblocks pre-employee activation. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 

@@ -67,3 +67,9 @@ handoff module-FK backfill.
 ## 2026-06-19 - M7 fix (gdpr_consent_records)
 
 The build "co-mastered" gdpr_consent_records (950), an M7 violation: 2 module-grain masters (LMS-CT-GDPR mod 180 + BGV-CONTINUOUS-IDENTITY mod 410), and the emitter throws on >1. Fixed per Rule #9 (collision -> scope-qualify to a distinct name): created screening_gdpr_consents (id 1317, operational_record), re-pointed BGV's DMDO master row off 950 onto 1317, left LMS's master on 950 untouched. Verified live: 950 has 1 master (LMS), 1317 has 1 master (BGV), BGV still 33 masters. The query/grant/withdraw_gdpr_consent_record tools are LMS-only (mod 180, point at 950) and correctly left alone. So the "22 new masters" reads as 22 net-new data_objects (screening_gdpr_consents replaces the bad co-master row). Loader: .tmp_deploy/fix_bgv_gdpr_m7_2026_06_19.ts.
+
+## 2026-11-02: ATS-BACKGROUND-CHECKS dissolved; BGV is now the only home of the screening chain
+
+Applied from the ATS audit, on the user's decision; details in `audits/ATS/history.md`. States 190, 191 and 2060 now sit on BGV-SCREENING-ORDERS and 1501-1506 on BGV-ADJUDICATION-COMPLIANCE, so their gates carry BGV prefixes. Events 373-375 have states and a module. Handoffs 401, 402, 1070 and 1071 are published from BGV-SCREENING-ORDERS; 1068 and 1072 arrive there. ATS-OFFERS holds `background_checks` as an install-optional `embedded_master`; no other ATS module holds a screening record.
+
+Still open on BGV: zero personas reach its modules (E1 fails), 13 `operational_workflow` masters have no lifecycle states, and it is unreleased with no blueprint file.

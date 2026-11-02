@@ -13,7 +13,7 @@ This audit changed nothing in the catalog. Every change below is only a proposal
 
 ---
 
-q1: One ATS-to-HRSD handoff carries the wrong process code, and fixing it overwrites an existing tag. Handoff #402 (a flagged background check sent to HRSD) is tagged 7.4 "Manage employee relations", but a flagged pre-hire check is screening work, handled under 7.2.5.1 "Obtain candidate background information". What should happen to the 7.4 tag?
+q1: One handoff to HRSD carries the wrong process code, and fixing it overwrites an existing tag. Handoff #402 (a flagged background check sent to HRSD) is tagged 7.4 "Manage employee relations", but a flagged pre-hire check is screening work, handled under 7.2.5.1 "Obtain candidate background information". What should happen to the 7.4 tag?
 
 - a) Re-point it to 7.2.5.1 "Obtain candidate background information".
 - b) Delete the tag.
@@ -27,7 +27,7 @@ a1:
 
 q2: (Hiring Starter) Six detail records (consents, FCRA disclosures, stage history, interview panels, offer versions, applicant-flow logs) are marked as required parts of records that most ATS modules carry without them, so those modules (and Hiring Starter) can't stand on their own. How should this be fixed?
 
-- a) Mark the four that many organizations don't keep (consents, FCRA disclosures, interview panels, applicant-flow logs) as not required, and give the modules that lack them their own copy of the two core ones (stage history in Interviews, Offers and Hiring Starter; offer versions in Background Checks, Pre-Employee Record and Hiring Starter).
+- a) Mark the four that many organizations don't keep (consents, FCRA disclosures, interview panels, applicant-flow logs) as not required, and give the modules that lack them their own copy of the two core ones (stage history in Interviews, Offers and Hiring Starter; offer versions in Pre-Employee Record and Hiring Starter).
 - b) Give every module its own copy of all six, with the four as optional.
 - c) Mark all six as not required and copy nothing.
 
@@ -143,7 +143,7 @@ q24: The Background Checks module no longer owns any record, since Background Ve
 
 Recommended: a. Greenhouse, Lever, Ashby, SmartRecruiters and iCIMS all run screening through a partner integration and keep no screening record of their own; this module is exactly that integration point. Folding it would move two restricted steps and the processes that depend on them.
 
-a24:
+a24: c, applied 2026-11-02
 
 ---
 
@@ -154,7 +154,7 @@ q25: Two handoffs about background checks are still published by ATS, though Bac
 
 Recommended: b while the Background Checks module stays the standalone screening module (q24 a); a if it is folded or removed.
 
-a25:
+a25: a, applied 2026-11-02
 
 ---
 

@@ -735,3 +735,27 @@ Answered by the user in the moment (q5 yes, q8 a), plus the user's "fix 1.4" fro
 ## 2026-11-02: q32 applied; a process no longer needs a restricted step in the blueprint
 
 Answered by the user in the moment (the generator change). `deriveRaciRealization` in `scripts/lib/blueprint_derive.ts` now follows the architect template: an Accountable row on a process with no gated state gets the write tier alone, and `⚠ no gate wired` stays only where a gated state is wired but the module mints no gate for it. Informed rows match events on every wired state, so `RECRUITING-COORDINATOR` is notified on `interview_scorecard.submitted`. Tests, `roles.md`, `module-shape.md`, the E6 wording in `SKILL.md` and the `data_object_lifecycle_states.process_id` field description were updated. No catalog row changed. HIRING-STARTER and ATS-INTERVIEWS regenerated.
+
+## 2026-11-02: ATS-BACKGROUND-CHECKS dissolved; q24 and q25 applied
+
+Decided by the user in the moment (option B, then "apply the fix"). The module owned nothing since the 2026-06-19 BGV build, which moved ownership of the screening records but left states, handoffs and events pointing at it. Script: `.tmp_deploy/ats_dissolve_background_checks_2026_11_02.ts`. Backups: `backups/ats-dissolve-background-checks-2026-11-02.json` and `backups/ats-background-checks-semantic-blueprint-2026-11-02.md`. `record_status` was not changed; new rows landed at `new`.
+
+- **q24 (`B2-MO1-BACKGROUND-CHECKS-MODULE`), c.** Module 7 and its 12 entity rows deleted. ATS-OFFERS now holds `background_checks` as `embedded_master`, install optional. The module's other 9 embedded records live only in BGV.
+- **q25 (`B2-X4-BGV-PUBLISHER`), a.** Handoffs 401, 402, 1070 and 1071 are now sent from BGV-SCREENING-ORDERS; 1068 and 1072 are sent to it. 1068, 1070 and 1071 became `api_call` and 1072 `event_stream`, because they now cross domains. Tag 7.2.5.1 added to the four that had none.
+- **States.** 190, 191 and 2060 moved to BGV-SCREENING-ORDERS; 1501-1506 to BGV-ADJUDICATION-COMPLIANCE.
+- **Events.** 373 `requested`, 374 `completed_clear`, 375 `completed_consider`, all on BGV-SCREENING-ORDERS.
+- **Notes (Rule #15), approved by the user.** Cleared on 401, 1068, 1070, 1071 and 1072. The text on the last four became their empty `description`.
+- **Moved to ATS-OFFERS.** Tool links 354, 355, 356, 586; capability link 47; Legal's persona link 437, now secondary. Deleted as duplicates: tool links 358, 359; persona links 412, 429.
+- **Generated files.** The module's blueprint removed; the 8 remaining ATS blueprints and the ATS skill spec regenerated.
+- **Corrections to the 2026-11-01 report.** q24 said the module holds two restricted steps; it held six. Its "orders and tracks screening" understated the full adjudication and adverse-action chain it carried. The recommendations on q24 and q25 assumed owning nothing was the problem; the generator already stands in for an absent owner.
+
+**Left as is, not covered by this approval.**
+
+- q26 is answered (merge) but not applied.
+- q2 lost only its reference to the deleted module. Its option a still conflicts with step 6, so it needs rewriting before anyone answers it.
+- `hcm-lifecycle-workflows`, `hrsd-case-mgmt`, `lms-compliance-training`, `lms-ct-gdpr` and `catalog/domain-map/domain-map.json` still name the module until they are regenerated.
+- Capability 519's description still mentions adverse-action workflows and "linked to ATS only".
+- `domain_data_objects` row 12 still says ATS masters `background_checks` (the retired rollup).
+- Event 1208 `job_offer.rescinded` still has a blank `to_state`.
+- ATS customers have no adverse-action flow until BGV is released. BGV has zero personas (E1 fails) and 13 workflow masters without lifecycle states.
+- `checks:` in `state.yaml` was not re-recorded.

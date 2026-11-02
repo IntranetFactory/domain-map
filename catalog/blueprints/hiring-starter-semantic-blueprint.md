@@ -10,7 +10,7 @@ domain_modules:
   - hiring-starter
 domain_code: ATS
 icon_name: user-plus
-related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, comp-statements, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, onb-journey-mgmt, pa-workforce-metrics, swp-demand-forecast]
+related_modules: [ats-candidate-crm, ats-interviews, ats-offers, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, bgv-screening-orders, comp-statements, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, onb-journey-mgmt, pa-workforce-metrics, swp-demand-forecast]
 persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-COORDINATOR, RECRUITING-MANAGER, RECRUITING-RECRUITER, RECRUITING-SOURCER]
 created_at: 2026-11-02
 ---
@@ -222,8 +222,8 @@ _(none: no other module embeds this scope's masters; the canonical owners do.)_
 | HIRING-STARTER | HCM | HCM-CORE-WORKER | `employee.terminated` | `terminated` _(lifecycle)_ | `job_requisitions` | api_call | low | Employee termination in HCM optionally triggers backfill requisition consideration in ATS. Low friction when SWP-driven; some orgs auto-open a backfill req on regrettable losses, others route through SWP for approval first. |
 | HIRING-STARTER | ATS | ATS-TALENT-POOLS | `talent_pool.candidate_activated` | `hot` _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
 | HIRING-STARTER | ATS | ATS-REFERRALS | `candidate_referral.submitted` | _(lifecycle)_ | `candidates` | lifecycle_progression | low | - |
-| HIRING-STARTER | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | _(lifecycle)_ | `job_offers` | lifecycle_progression | medium | - |
 | HIRING-STARTER | SWP | SWP-DEMAND-FORECAST | `headcount_plan.approved` | `draft` → `approved` _(state_change)_ | `job_requisitions` | api_call | high | Approved headcount in SWP authorizes requisition creation in ATS. THIS IS THE CO-MASTER BRIDGE: SWP masters the intent slice (approved position, budget, time window) and ATS masters the execution slice (pipeline, candidates, interviews, offer). High friction because SWP's plan structure (org × geo × level × time) rarely matches ATS's requisition template structure (job code × location × hiring manager × pay range), requiring mapping rules that drift as either side evolves. |
+| HIRING-STARTER | BGV | BGV-SCREENING-ORDERS | `background_check.flagged` | `completed_consider` _(lifecycle)_ | `job_offers` | api_call | medium | Flagged background check may force offer rescission; HR/Legal review path. |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 

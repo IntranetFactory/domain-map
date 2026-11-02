@@ -13,8 +13,8 @@ b1b:
       Handoff #402 (background_check.flagged -> HRSD) tags 7.4 "Manage employee relations", which
       contradicts the carried entity: a flagged pre-hire check is screening work, realized under
       7.2.5.1 "Obtain candidate background information" (process 1020, gated + process_raci).
-      background_checks is now mastered by BGV (BGV-SCREENING-ORDERS, 2026-06-19 build); ATS
-      publishes the event from its embedded copy. The re-point target still fits.
+      background_checks is mastered by BGV-SCREENING-ORDERS, which publishes this handoff since
+      ATS-BACKGROUND-CHECKS was dissolved on 2026-11-02. The re-point target still fits.
       Live: handoff_processes id=226, process_id 42 (7.4), record_status='new'.
     action: "On sign-off: PATCH handoff_processes #226 process_id 42 -> 1020 (7.4 -> 7.2.5.1), or DELETE the 7.4 tag. record_status stays new."
     blocked_by:
@@ -27,8 +27,7 @@ b2:
       Make the four sector- or deployment-optional children not required (candidate_consents,
       fcra_disclosures, interview_panels, applicant_flow_records), and embed the two core children
       where their parent is carried without them (application_stage_transitions in ATS-INTERVIEWS,
-      ATS-OFFERS, HIRING-STARTER; offer_versions in ATS-BACKGROUND-CHECKS, ATS-PRE-EMPLOYEE-RECORD,
-      HIRING-STARTER)?
+      ATS-OFFERS, HIRING-STARTER; offer_versions in ATS-PRE-EMPLOYEE-RECORD, HIRING-STARTER)?
     options:
       - "relax 4 + embed 2: set is_required=false on rel 1300, 1310, 1325, 1337; add embedded_master (necessity required) rows for application_stage_transitions and offer_versions on the listed modules"
       - "embed all six on every module that carries the parent (up to 8 modules each), with necessity optional for the four sector children"
@@ -40,7 +39,7 @@ b2:
       the edge fixes every module at once. Stage history and offer versions are part of every
       application and offer, so they are embedded. Lacking modules per edge (2026-11-01): 1300 and
       1310 lack in 8 modules; 1315 in ATS-INTERVIEWS, ATS-OFFERS, HIRING-STARTER; 1325 in
-      HIRING-STARTER; 1329 in ATS-BACKGROUND-CHECKS, ATS-PRE-EMPLOYEE-RECORD, HIRING-STARTER;
+      HIRING-STARTER; 1329 in ATS-PRE-EMPLOYEE-RECORD, HIRING-STARTER;
       1337 in ATS-INTERVIEWS, ATS-OFFERS, HIRING-STARTER. Recorded by domain_health.ts (checks: M9).
     affected_entities: [candidate_consents, fcra_disclosures, application_stage_transitions, interview_panels, offer_versions, applicant_flow_records]
     extra_edges:
@@ -74,22 +73,6 @@ b2:
     question: "Replace the descriptions of job_posting_distributions (886), interview_kits (890) and interviewer_availability_slots (894) with the drafted vendor-free text (q-ATS.md q12)?"
     options: ["yes", "no"]
     why: "Rule #18: vendor and product names belong only on commerce-shaped entities."
-
-  - id: B2-MO1-BACKGROUND-CHECKS-MODULE
-    summary: "ATS-BACKGROUND-CHECKS masters nothing since BGV took the screening entities; keep, rename or fold"
-    question: "What should ATS-BACKGROUND-CHECKS be, now that BGV masters every screening entity?"
-    options:
-      - "keep it as the standalone screening shell (orders and tracks screening, defers to BGV when installed)"
-      - "keep it and rename it to say it orders and tracks screening"
-      - "fold it into ATS-OFFERS (screening is ordered when an offer is accepted)"
-    evidence: >
-      Greenhouse, Lever, Ashby, SmartRecruiters and iCIMS all run background screening through a
-      partner integration and master no screening record of their own (verified 2026-11-01 from their
-      API object lists; iCIMS product-level). The 2026-06-19 BGV build moved the 11 screening entities
-      to BGV, leaving ATS-BACKGROUND-CHECKS with 0 masters and 12 embedded copies; it still holds
-      gates 190 (7.2.5.1) and 191 (7.2.4), which several ATS boundary payloads resolve through.
-      No ATS -> BGV handoff exists.
-    why: "A full module with no masters is a modularization smell, but the embedded copies are exactly the integration point the vendors show; folding would move gates 190 / 191 and their RACI realizations."
 
   - id: B2-S1-RECRUITER-INTERACTIONS
     summary: "recruiter_interactions (869) duplicates candidate_notes (1001)"
@@ -134,12 +117,6 @@ b2:
     question: "Re-point handoff 395's payload from candidates to benefit_enrollments (147), keeping its 7.5.2.2 tag?"
     options: ["yes", "no"]
     why: "Phase 1 consumer leg fails: the benefits side reads the enrollment it opens, not the candidate record."
-
-  - id: B2-X4-BGV-PUBLISHER
-    summary: "Handoffs 401 / 402 publish background_check events from ATS, but BGV now masters background_checks"
-    question: "Move the publisher of handoffs 401 and 402 to BGV (source domain 191, module BGV-SCREENING-ORDERS / BGV-ADJUDICATION-COMPLIANCE), or keep ATS publishing from its embedded copy?"
-    options: ["move to BGV", "keep ATS as the publisher"]
-    why: "Pairwise Phase 1, leg 1: the event's entity is mastered on the target side of the 2026-06-19 BGV build. Keeping ATS is valid only while ATS-BACKGROUND-CHECKS stays the standalone shell (see B2-MO1)."
 
 b3:
   - id: B3-M4-AI-SCREENING-COMPLIANCE

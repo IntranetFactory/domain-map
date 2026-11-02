@@ -33,9 +33,9 @@ depends_on_skills:
   - use-semantius
 related_skills:
   - use-ben-admin
+  - use-bgv
   - use-comp-mgmt
   - use-hcm
-  - use-hrsd
   - use-onboarding
   - use-pa
   - use-payroll

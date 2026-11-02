@@ -63,31 +63,6 @@
   ],
   "modules": [
     {
-      "code": "ATS-BACKGROUND-CHECKS",
-      "name": "Background Checks",
-      "kind": "full",
-      "realizes_capabilities": [
-        "BACKGROUND-SCREENING"
-      ],
-      "masters": [],
-      "embedded_masters": [
-        "adverse_action_notices",
-        "background_check_adjudications",
-        "background_check_components",
-        "background_check_disputes",
-        "background_check_packages",
-        "background_checks",
-        "candidates",
-        "drug_health_screenings",
-        "fcra_disclosures",
-        "fcra_summary_of_rights_acknowledgements",
-        "job_offers",
-        "pre_adverse_action_notices"
-      ],
-      "consumers": [],
-      "description": "Pre-employment background-check orchestration with adverse-action workflow. Coordinates external vendor handoffs and gates offer-to-firm conversion on clearance. Requires an external `send_email` tool for FCRA adverse-action notices."
-    },
-    {
       "code": "ATS-CANDIDATE-CRM",
       "name": "Candidate CRM",
       "kind": "full",
@@ -150,6 +125,7 @@
       "name": "Job Offers",
       "kind": "full",
       "realizes_capabilities": [
+        "BACKGROUND-SCREENING",
         "OFFER-MGMT"
       ],
       "masters": [
@@ -160,6 +136,7 @@
         "offer_versions"
       ],
       "embedded_masters": [
+        "background_checks",
         "candidates",
         "job_applications"
       ],
@@ -874,7 +851,6 @@
           "name": "submitted",
           "order": 2,
           "is_terminal": true,
-          "requires_permission": true,
           "permission_verb_override": "submit_scorecard"
         }
       ]
@@ -1938,29 +1914,8 @@
     },
     {
       "from": "candidates",
-      "verb": "screened_via",
-      "to": "drug_health_screenings",
-      "cardinality": "one_to_many",
-      "required": false
-    },
-    {
-      "from": "candidates",
       "verb": "self_identifies_via",
       "to": "eeo_responses",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "candidates",
-      "verb": "discloses_via",
-      "to": "fcra_disclosures",
-      "cardinality": "one_to_many",
-      "required": true
-    },
-    {
-      "from": "candidates",
-      "verb": "acknowledges_via",
-      "to": "fcra_summary_of_rights_acknowledgements",
       "cardinality": "one_to_many",
       "required": true
     },
@@ -2256,7 +2211,7 @@
       "verb": "attributes",
       "to": "candidates",
       "cardinality": "one_to_many",
-      "required": true
+      "required": false
     },
     {
       "from": "referral_campaigns",
@@ -2615,10 +2570,6 @@
       "name": "Manage employee referral programs"
     },
     {
-      "external_id": "17052",
-      "name": "Manage employee relations"
-    },
-    {
       "external_id": "21698",
       "name": "Manage employee requisitions"
     }
@@ -2846,11 +2797,11 @@
       "business_function": "Legal",
       "modules": [
         {
-          "code": "ATS-BACKGROUND-CHECKS",
-          "interaction": "primary"
+          "code": "ATS-CANDIDATE-CRM",
+          "interaction": "secondary"
         },
         {
-          "code": "ATS-CANDIDATE-CRM",
+          "code": "ATS-OFFERS",
           "interaction": "secondary"
         },
         {
@@ -2890,10 +2841,6 @@
       "business_function": "Recruiting",
       "modules": [
         {
-          "code": "ATS-BACKGROUND-CHECKS",
-          "interaction": "secondary"
-        },
-        {
           "code": "ATS-CANDIDATE-CRM",
           "interaction": "secondary"
         },
@@ -2927,10 +2874,6 @@
       "code": "RECRUITING-RECRUITER",
       "business_function": "Recruiting",
       "modules": [
-        {
-          "code": "ATS-BACKGROUND-CHECKS",
-          "interaction": "secondary"
-        },
         {
           "code": "ATS-CANDIDATE-CRM",
           "interaction": "primary"

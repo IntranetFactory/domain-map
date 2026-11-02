@@ -10,8 +10,8 @@ domain_modules:
   - ats-offers
 domain_code: ATS
 icon_name: user-plus
-related_modules: [ats-background-checks, ats-candidate-crm, ats-interviews, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, comp-statements, cwm-worker-sourcing, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hiring-starter, onb-journey-mgmt]
-persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-MANAGER, RECRUITING-RECRUITER]
+related_modules: [ats-candidate-crm, ats-interviews, ats-pre-employee-record, ats-recruitment-pipeline, ats-referrals, ats-talent-pools, ben-enrollment, bgv-screening-orders, comp-statements, cwm-worker-sourcing, hcm-core-worker, hcm-lifecycle-workflows, hcm-org-positions, hiring-starter, hrsd-case-mgmt, lms-compliance-training, lms-ct-gdpr, onb-journey-mgmt, payroll-run]
+persona: [HIRING-MANAGER, LEGAL-COMPLIANCE-SPECIALIST, RECRUITING-COORDINATOR, RECRUITING-MANAGER, RECRUITING-RECRUITER]
 created_at: 2026-11-02
 ---
 
@@ -31,6 +31,7 @@ Offer drafting, approval, extension, signature, and acceptance. Realizes OFFER-M
 | Offer Versions | `offer_versions` | Versioned snapshots of a job offer during negotiation, each holding the structured terms and the author of the change, from initial through accepted. |
 | Offers | `job_offers` | Formal employment offers extended to candidates, with compensation, start date, terms, approval chain, and status. |
 | Applications | `job_applications` | Candidate submissions against a specific requisition, with pipeline stage, status, source, and full evaluation history. |
+| Background Checks | `background_checks` | External verification results for a candidate (criminal, employment, education, credit, identity), with status and findings from a screening provider. |
 | Candidates | `candidates` | People known to the recruiting organization, with or without an active application, carrying contact details, resume, tags, consent, and source. |
 
 ```mermaid
@@ -41,6 +42,7 @@ flowchart TD
   candidates["Candidates"]
   job_applications["Applications"]
   job_offers["Offers"]
+  background_checks["Background Checks"]
   offer_versions["Offer Versions"]
   offer_approvals["Offer Approvals"]
   offer_letter_documents["Offer Letter Documents"]
@@ -48,6 +50,7 @@ flowchart TD
   users["Users"]
   candidates -->|"submits"| job_applications
   job_applications -->|"results in"| job_offers
+  job_offers -->|"is contingent on"| background_checks
   job_offers -->|"evolves_through"| offer_versions
   job_offers -->|"gated_by"| offer_approvals
   offer_versions -->|"renders_as"| offer_letter_documents
@@ -55,6 +58,7 @@ flowchart TD
   users -->|"owns as recruiter"| job_applications
   users -->|"approves"| job_offers
   users -->|"owns as recruiter"| candidates
+  users -->|"requests"| background_checks
   users -->|"authored templates"| offer_letter_templates
   users -->|"approved templates"| offer_letter_templates
   users -->|"authors"| offer_versions
@@ -63,11 +67,13 @@ flowchart TD
   class candidates embedded_master;
   class job_applications embedded_master;
   class job_offers master;
+  class background_checks embedded_master;
   class offer_versions master;
   class offer_approvals master;
   class offer_letter_documents master;
   class offer_letter_templates master;
   class users platform_builtin;
+  style background_checks stroke-dasharray:5 5;
 ```
 
 ## 3. Entities catalog
@@ -80,7 +86,8 @@ flowchart TD
 | 4 | `offer_versions` | `offer_versions` | Offer Version | Offer Versions | master | - | - | - | yes | operational_workflow | `:manage` | - |
 | 5 | `job_offers` | `job_offers` | Offer | Offers | master | - | - | - | yes | operational_workflow | `:manage` | - |
 | 6 | `job_applications` | `job_applications` | Application | Applications | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | - | yes | operational_workflow | `:manage` | - |
-| 7 | `candidates` | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | - | yes | operational_workflow | `:manage` | - |
+| 7 | `background_checks` | `background_checks` | Background Check | Background Checks | embedded_master | `bgv-screening-orders` | Screening Orders and Packages | yes | yes | operational_workflow | `:manage` | - |
+| 8 | `candidates` | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | - | yes | operational_workflow | `:manage` | - |
 
 ## 4. Aliases and industry synonyms
 
@@ -96,6 +103,7 @@ _`field_required` applies only when both entities are installed. It never makes 
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `candidates` | submits | `job_applications` | one_to_many | reference | yes | source | restrict | reference | - |
 | `job_applications` | results in | `job_offers` | one_to_many | reference | yes | source | restrict | reference | - |
+| `job_offers` | is contingent on | `background_checks` | one_to_many | reference | yes | source | restrict | reference | - |
 | `job_offers` | evolves_through | `offer_versions` | one_to_many | composition | yes | source | cascade | parent | - |
 | `job_offers` | gated_by | `offer_approvals` | one_to_many | composition | yes | source | cascade | parent | - |
 | `offer_versions` | renders_as | `offer_letter_documents` | one_to_one | composition | yes | source | cascade | parent | - |
@@ -108,6 +116,7 @@ _`field_required` applies only when both entities are installed. It never makes 
 | `users` | owns as recruiter | `job_applications` | one_to_many | yes | source | restrict | reference | - |
 | `users` | approves | `job_offers` | one_to_many | yes | source | restrict | reference | - |
 | `users` | owns as recruiter | `candidates` | one_to_many | no | source | clear | reference | - |
+| `users` | requests | `background_checks` | one_to_many | yes | source | restrict | reference | - |
 | `users` | authored templates | `offer_letter_templates` | one_to_many | no | source | clear | reference | - |
 | `users` | approved templates | `offer_letter_templates` | one_to_many | no | source | clear | reference | - |
 | `users` | authors | `offer_versions` | one_to_many | yes | source | restrict | reference | - |
@@ -129,6 +138,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `recruitment_agencies` | sources | `candidates` | one_to_many | yes | - |
 | `recruitment_events` | attracts | `candidates` | one_to_many | yes | - |
 | `talent_pools` | groups | `candidates` | many_to_many | - | - |
+| `background_check_packages` | shapes | `background_checks` | one_to_many | yes | - |
 | `employees` | applies_as | `candidates` | one_to_many | no | - |
 
 #### 5.3b Incoming links: the external entity points to this blueprint's entity
@@ -138,7 +148,6 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `candidates` | is referred through | `candidate_referrals` | one_to_many | yes | - |
 | `job_applications` | schedules | `interviews` | one_to_many | yes | - |
 | `job_applications` | requires | `candidate_assessments` | one_to_many | yes | - |
-| `job_offers` | is contingent on | `background_checks` | one_to_many | yes | - |
 | `job_offers` | spawns | `onboarding_journeys` | one_to_one | yes | - |
 | `job_offers` | triggers | `benefit_enrollments` | one_to_one | yes | - |
 | `job_offers` | seeds | `compensation_statements` | one_to_one | yes | - |
@@ -150,7 +159,9 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `candidates` | noted_via | `recruiter_interactions` | one_to_many | no | - |
 | `candidates` | consents_via | `candidate_consents` | one_to_many | yes | - |
 | `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | yes | - |
+| `background_checks` | contains | `background_check_components` | one_to_many | yes | - |
 | `candidates` | discloses_via | `fcra_disclosures` | one_to_many | yes | - |
+| `background_checks` | adjudicated_via | `background_check_adjudications` | one_to_one | yes | - |
 | `job_applications` | transitions_via | `application_stage_transitions` | one_to_many | yes | - |
 | `job_applications` | answers_via | `application_screening_answers` | one_to_many | yes | - |
 | `candidates` | self_identifies_via | `eeo_responses` | one_to_many | yes | - |
@@ -160,6 +171,8 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `candidates` | acknowledges_via | `fcra_summary_of_rights_acknowledgements` | one_to_many | yes | - |
 | `job_applications` | disposed_via | `application_dispositions` | one_to_many | yes | - |
 | `job_applications` | logged_via | `applicant_flow_records` | one_to_one | yes | - |
+| `background_checks` | triggers_pre_notice | `pre_adverse_action_notices` | one_to_many | yes | - |
+| `background_checks` | gated_by | `fcra_summary_of_rights_acknowledgements` | one_to_one | yes | - |
 | `candidates` | documented_via | `candidate_documents` | one_to_many | yes | - |
 | `candidates` | annotated_via | `candidate_notes` | one_to_many | yes | - |
 | `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | no | - |
@@ -176,7 +189,6 @@ _`role` and `install_optional` here belong to the other module named in that row
 
 | data_object | other module / domain | role | install_optional | notes |
 | --- | --- | --- | --- | --- |
-| `job_offers` | ATS-BACKGROUND-CHECKS (Background Checks) - ATS | embedded_master | - | - |
 | `job_offers` | ATS-PRE-EMPLOYEE-RECORD (Pre-Employee Record) - ATS | embedded_master | - | - |
 | `job_offers` | COMP-STATEMENTS (Total Rewards Statements) - COMP-MGMT | consumer | - | - |
 | `job_offers` | HCM-LIFECYCLE-WORKFLOWS (Employee Lifecycle Workflows) - HCM | consumer | yes | - |
@@ -186,8 +198,10 @@ _`role` and `install_optional` here belong to the other module named in that row
 
 | source module | target domain | target module | trigger_event | transition | payload | integration | friction | description |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ATS-OFFERS | HRSD | HRSD-CASE-MGMT | `background_check.flagged` | `completed_consider` _(lifecycle)_ | `background_checks` | manual_handoff | high | Adverse-action workflow requires HR-legal review; manual escalation common. Friction shape: alert/escalation without feedback loop. |
 | ATS-OFFERS | HCM | HCM-LIFECYCLE-WORKFLOWS | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | high | Hired-candidate event publishes the hiring outcome to HCM, which must create the employee record. Identifier mapping (candidate_id -> employee_id) is the canonical reconciliation gap. |
 | ATS-OFFERS | HCM | HCM-LIFECYCLE-WORKFLOWS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | medium | Offer acceptance signals firm hiring intent; HCM creates pending-employee record. |
+| ATS-OFFERS | PAYROLL | PAYROLL-RUN | `background_check.cleared` | `completed_clear` _(lifecycle)_ | `background_checks` | api_call | medium | Cleared background check unblocks final pay setup at start date; PAYROLL setup proceeds. |
 | ATS-OFFERS | ATS | ATS-TALENT-POOLS | `job_application.rejected` | _(state_change)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-OFFERS | COMP-MGMT | COMP-STATEMENTS | `job_offer.accepted` | `accepted` _(state_change)_ | `job_offers` | event_stream | low | Signed offer establishes the comp baseline; COMP-MGMT incorporates into cycle history. |
 | ATS-OFFERS | BEN-ADMIN | BEN-ENROLLMENT | `candidate.hired` | `hired` _(lifecycle)_ | `candidates` | event_stream | low | Hired candidate triggers eligibility window in BEN-ADMIN. |
@@ -203,16 +217,28 @@ _`role` and `install_optional` here belong to the other module named in that row
 | ATS-OFFERS | ATS | ATS-INTERVIEWS | `candidate_assessment.failed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-OFFERS | ATS | ATS-INTERVIEWS | `candidate_assessment.passed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
 | ATS-OFFERS | ATS | ATS-INTERVIEWS | `interview.completed` | _(lifecycle)_ | `job_applications` | lifecycle_progression | low | - |
-| ATS-OFFERS | ATS | ATS-BACKGROUND-CHECKS | `background_check.flagged` | _(lifecycle)_ | `job_offers` | lifecycle_progression | medium | - |
 
 ### 6.4 Master providers (modules / domains that own masters this scope embeds)
 
 | data_object | role here | install_optional | catalog owner(s) | slice notes |
 | --- | --- | --- | --- | --- |
+| `background_checks` | embedded_master | yes | BGV-SCREENING-ORDERS (BGV) | - |
 | `candidates` | embedded_master | - | ATS-CANDIDATE-CRM (ATS) | - |
 | `job_applications` | embedded_master | - | ATS-RECRUITMENT-PIPELINE (ATS) | - |
 
 ## 7. Lifecycle states
+
+### `background_checks` (Background Check)
+
+_This scope holds `background_checks` as **embedded_master**; the canonical state machine is owned by `BGV-SCREENING-ORDERS`._
+
+| order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `requested` | ✓ | - | - | - | - | Check ordered from the provider for a candidate. |
+| 2 | `in_progress` | - | - | - | - | - | Provider is running verification (criminal, employment, education, identity). |
+| 3 | `completed_clear` | - | ✓ | ✓ | - | `ats-offers:clear_background_check` | Provider returned a clear result; no adverse findings. |
+| 4 | `completed_consider` | - | ✓ | ✓ | - | `ats-offers:adjudicate_background_check` | Provider returned adverse findings; gated review required before adjudication. |
+| 5 | `canceled` | - | ✓ | - | - | - | Check withdrawn before the provider returned a result. |
 
 ### `candidates` (Candidate)
 
@@ -304,6 +330,8 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | `ats-offers:flag_do_not_hire` | workflow-gate (lifecycle) | Transition `candidates` into state `do_not_hire` (⚠ no process) | ✓ |
 | `ats-offers:approve_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `approved` or `offer_approvals` into state `approved` | ✓ |
 | `ats-offers:rescind_offer` | workflow-gate (lifecycle) | Transition `job_offers` into state `rescinded` (⚠ no process) | ✓ |
+| `ats-offers:clear_background_check` | workflow-gate (lifecycle) | Transition `background_checks` into state `completed_clear` | ✓ |
+| `ats-offers:adjudicate_background_check` | workflow-gate (lifecycle) | Transition `background_checks` into state `completed_consider` | ✓ |
 | `ats-offers:reject_offer` | workflow-gate (lifecycle) | Transition `offer_approvals` into state `rejected` (⚠ no process) | ✓ |
 | `ats-offers:approve_offer_letter_template` | workflow-gate (lifecycle) | Transition `offer_letter_templates` into state `approved` (⚠ no process) | ✓ |
 | `ats-offers:retire_offer_letter_template` | workflow-gate (lifecycle) | Transition `offer_letter_templates` into state `retired` (⚠ no process) | ✓ |
@@ -313,6 +341,8 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | `ats-offers:manage_all_applications` | override (personal_content) | Manage all `job_applications` rows beyond row-scope | ✓ |
 | `ats-offers:view_all_offers` | override (personal_content) | View all `job_offers` rows beyond row-scope | ✓ |
 | `ats-offers:manage_all_offers` | override (personal_content) | Manage all `job_offers` rows beyond row-scope | ✓ |
+| `ats-offers:view_all_background_checks` | override (personal_content) | View all `background_checks` rows beyond row-scope | ✓ |
+| `ats-offers:manage_all_background_checks` | override (personal_content) | Manage all `background_checks` rows beyond row-scope | ✓ |
 | `ats-offers:view_all_offer_versions` | override (personal_content) | View all `offer_versions` rows beyond row-scope | ✓ |
 | `ats-offers:manage_all_offer_versions` | override (personal_content) | Manage all `offer_versions` rows beyond row-scope | ✓ |
 | `ats-offers:view_all_offer_letter_documents` | override (personal_content) | View all `offer_letter_documents` rows beyond row-scope | ✓ |
@@ -325,6 +355,7 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 | `candidate_edit_scope` | `candidates` | has_personal_content | Row-scope by default; override via `ats-offers:view_all_candidates` / `ats-offers:manage_all_candidates` |
 | `application_edit_scope` | `job_applications` | has_personal_content | Row-scope by default; override via `ats-offers:view_all_applications` / `ats-offers:manage_all_applications` |
 | `offer_edit_scope` | `job_offers` | has_personal_content | Row-scope by default; override via `ats-offers:view_all_offers` / `ats-offers:manage_all_offers` |
+| `background_check_edit_scope` | `background_checks` | has_personal_content | Row-scope by default; override via `ats-offers:view_all_background_checks` / `ats-offers:manage_all_background_checks` |
 | `offer_version_edit_scope` | `offer_versions` | has_personal_content | Row-scope by default; override via `ats-offers:view_all_offer_versions` / `ats-offers:manage_all_offer_versions` |
 | `offer_letter_document_edit_scope` | `offer_letter_documents` | has_personal_content | Row-scope by default; override via `ats-offers:view_all_offer_letter_documents` / `ats-offers:manage_all_offer_letter_documents` |
 
@@ -352,6 +383,8 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `ats-offers:admin` | `ats-offers:flag_do_not_hire` |
 | `ats-offers:admin` | `ats-offers:approve_offer` |
 | `ats-offers:admin` | `ats-offers:rescind_offer` |
+| `ats-offers:admin` | `ats-offers:clear_background_check` |
+| `ats-offers:admin` | `ats-offers:adjudicate_background_check` |
 | `ats-offers:admin` | `ats-offers:reject_offer` |
 | `ats-offers:admin` | `ats-offers:approve_offer_letter_template` |
 | `ats-offers:admin` | `ats-offers:retire_offer_letter_template` |
@@ -361,6 +394,8 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `ats-offers:admin` | `ats-offers:manage_all_applications` |
 | `ats-offers:admin` | `ats-offers:view_all_offers` |
 | `ats-offers:admin` | `ats-offers:manage_all_offers` |
+| `ats-offers:admin` | `ats-offers:view_all_background_checks` |
+| `ats-offers:admin` | `ats-offers:manage_all_background_checks` |
 | `ats-offers:admin` | `ats-offers:view_all_offer_versions` |
 | `ats-offers:admin` | `ats-offers:manage_all_offer_versions` |
 | `ats-offers:admin` | `ats-offers:view_all_offer_letter_documents` |
@@ -372,6 +407,8 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | --- | --- | --- | --- | --- | --- |
 | `hire_candidate` | Hire candidate | 7.2.4.3 | 10465 | 4 | Wrapping up the process for hiring candidates. Agree to all hiring terms and conditions. Have the candidate accept and sign the job offer. |
 | `draw_up_make_offer` | Draw up and make offer | 7.2.4.1 | 10463 | 4 | Compiling job-related information for the selected candidates in order to make up a job. Include information about the job description, reporting relationship, salary, bonus potential, benefits, and vacation allotment. |
+| `obtain_candidate_background` | Obtain candidate background information | 7.2.5.1 | 10460 | 4 | Conducting a background investigation on the candidates with the objective of gathering and compiling criminal, commercial, medical, and financial information. |
+| `manage_new_hire_re_hire` | Manage new hire/re-hire | 7.2.4 | 10443 | 3 | Creating and making job offers to the selected candidates. Fairly negotiate the job offers. Agree on terms with the candidate to complete the hiring process. |
 
 **RACI realization:**
 
@@ -383,6 +420,11 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `RECRUITING-RECRUITER` | persona | responsible | `draw_up_make_offer` | the gated entities' write tier |
 | `HIRING-MANAGER` | persona | accountable | `draw_up_make_offer` | grant gates [ats-offers:approve_offer] + the gated entities' write tier |
 | `RECRUITING-MANAGER` | persona | consulted | `draw_up_make_offer` | advisory read grant |
+| `RECRUITING-RECRUITER` | persona | responsible | `obtain_candidate_background` | the gated entities' write tier |
+| `RECRUITING-MANAGER` | persona | accountable | `obtain_candidate_background` | grant gates [ats-offers:clear_background_check] + the gated entities' write tier |
+| `LEGAL-COMPLIANCE-SPECIALIST` | persona | responsible | `manage_new_hire_re_hire` | the gated entities' write tier |
+| `RECRUITING-MANAGER` | persona | accountable | `manage_new_hire_re_hire` | grant gates [ats-offers:adjudicate_background_check] + the gated entities' write tier |
+| `RECRUITING-COORDINATOR` | persona | consulted | `manage_new_hire_re_hire` | blocking consultation state |
 
 ### 9.2 Functional ownership and default grants
 
