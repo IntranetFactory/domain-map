@@ -1,3 +1,15 @@
+### 2026-11-03: R9 flags a persona that is only Informed
+
+**Context.** Bug-73 in the Hiring Starter review: `RECRUITING-COORDINATOR` schedules interviews, but its only row in the module is Informed, which grants nothing at deploy. E4 passes at one Responsible and one Accountable per gated process, and R5 only asks that an Informed row has an event, so nothing noticed.
+
+**Decision.** R9 (`scripts/lib/blueprint_invariants.ts`, warn) reports a persona whose only rows in a module's RACI table are Informed. It is a warning because a persona can rightly be told about work it does not do.
+
+### 2026-11-03 — `from` is the parent; `owner_side` removed
+
+**Context.** "from" meant the parent in a blueprint and the table holding the field in a spec, and `owner_side` restated what the two endpoint columns already say. A flip of about 2,356 rows to holder-first was planned and dropped: nothing was wrong in the deployed result, and only a few rows were stored the wrong way round.
+
+**Decision.** `data_object_id` is the parent and `related_data_object_id` is the child, which holds the field. `one_to_many` stays. Blueprint §5 loses the `owner_side` column, and the rule `owner_side_not_parent` is gone. Spec §4 and §6 keep their row order and use FK headings (`FK table`, `FK field`, `References`, `Label`). The owner approved the row fixes per row; `backups/relationship-parent-first-2026-11-03.json` holds the state before them. Plan: `plans/relationship-parent-first-plan.md`.
+
 # Skill changelog — decisions and incidents
 
 Append-only log of catalog-shape decisions and rule-violation incidents that produced (or should produce) a SKILL.md edit. Two sections, one file, one lazy-load contract.
@@ -1290,5 +1302,22 @@ The owner's decision: American English only, and they mean all of it, including 
 **Reasoning.** A sweep of the live catalog found 192 cells the old check could not see: 54 in columns neither list covered, and 16 identifiers `\b` could not match.
 
 **What it cannot stop.** A one-off script that calls no preflight. That write is caught afterward by B16 and the sweep, not prevented.
+
+**Status.** Active.
+
+## 2026-11-03 - `is_required` and `one_to_one` get a test
+
+**Context.** The Hiring Starter review found 9 too-strong values, and reading the cross-domain required relationships found 8 more, such as every journal entry needing an expense report. The first definition (2026-05-19) was "Whether the relationship is mandatory". The meaning narrowed on 2026-06-02 and 2026-11-02, but it never gave a test, and the stored values were not re-read.
+
+**Decision (user-approved).**
+
+- **`is_required`** (`module-shape.md`) and **`field_required`** (architect `semantic-blueprint-template.md`) are a claim about the child: true only if every `to` row has a `from`, in every organization and however the row was created. Being common or important in the process is not a reason for true.
+- **`one_to_one`** is used only if a parent can never have a second child.
+- **The worked example** in SKILL.md is now `job_offers →seeds→ compensation_statements`, `is_required=false`, in place of `candidates →becomes→ employees`, which was itself one of the wrong values.
+- What the columns mean is unchanged. The 17 rows were fixed per the owner's approval: `backups/too-strong-required-fixes-2026-11-03.json` and `backups/too-strong-required-fixes-2-2026-11-03.json`.
+
+**Reasoning.** A relationship row reads from the parent, but the value constrains the child, so a sentence true of offers was taken as a rule on every onboarding journey. Section 5.3 only prompts for the value, so a wrong one failed nowhere.
+
+**What it cannot stop.** Text does not re-read old rows, and no check tests whether a value is true: M9 reads the value but asks a scope question. The 186 same-domain required references have not been read.
 
 **Status.** Active.

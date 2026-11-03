@@ -244,7 +244,7 @@ export const B_CHECKS: Check[] = [
     id: "B6b",
     band: "B",
     kind: "mechanical",
-    title: "relationship shape invariants (owner_side, verbs)",
+    title: "relationship shape invariants (verbs, composition)",
     run: async (ctx) => {
       const rels = masterSourcedRelationships(ctx);
       const found = checkRelationshipShape(rels, { nameOf: ctx.doName, masterDomainsByDataObject: ctx.masterDomainsByDataObject, allRelationships: ctx.all.relationships });

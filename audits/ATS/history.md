@@ -789,3 +789,138 @@ Answered by the user in the moment. This supersedes the "left as is" items above
 ## 2026-11-03: fixes for bugs 3 and 50 confirmed; finding 1.7 closed
 
 Answered by the user in the moment, after the problem and the options were explained. Relationship 809 stays optional, accepting that without requisitions an application can be saved with no job relationship. Relationship 2740 stays, rather than a wording-only fix, which closes finding 1.7. No catalog row changed in this step. Bugs 3 and 50 were removed from the review and its counts updated.
+
+## 2026-11-03: Hiring Starter review bugs 21, 38, 41 and 74 fixed in the catalog; bug 29 kept as is
+
+Requested by the user in the moment, naming the five one-off bugs of [the review](hiring-starter-blueprint-review-2026-11-03.md). Script: `.tmp_deploy/2026-11-03_hiring_starter_oneoff_fixes.ts`; backup: `backups/hiring-starter-oneoff-fixes-2026-11-03.json`. `record_status` was not changed.
+
+- **Bug-21.** Relationship 1497 `candidates tagged_via candidate_tag_assignments`: `is_required` false -> true, matching the junction's other leg (1498).
+- **Bug-38.** Relationship 832 `job_requisitions feeds people_kpis`: many_to_many -> one_to_many, matching the other `feeds` relationships on `people_kpis`. The review's alternative, dropping the row, was not taken.
+- **Bug-74.** Relationship 1325 `interviews convenes interview_panels`: one_to_one -> one_to_many, so an interview can hold several panel rows. The panel option for bug-12 is no longer blocked; bug-12 itself stays open.
+- **Bug-41, q26 (merge).** `recruiter_interactions` (869) deleted, with relationships 1299 and 2004 and module row 954. `candidate_notes` (1001) already has its own relationships to candidates (1496) and users (1501), so nothing was moved. No alias, state, event, tool or handoff pointed at 869. B2-S1-RECRUITER-INTERACTIONS closed.
+- **Bug-29.** No row changed: `interviews.has_personal_content` stays false. This is the agent's call on the user's request, and the user can overrule it. The flag means owner-scoped rows, and the only relationship to `users` on an interview is `coordinates` (823), so a row-scope rule would limit each interview to its coordinator, hiding it from the interviewers and the hiring manager.
+
+**Left as is, not covered by this request.**
+
+- No blueprint was regenerated, so they all still show the old values. Hiring Starter's `--check` now reports it would change. The review still lists these five bugs, because it describes blob `850cb92`.
+- 9 blueprints, `catalog/skill-specs/ATS/spec.json` and `catalog/skills/use-ats/spec.json` still name `recruiter_interactions` until regenerated.
+- The author was required on `recruiter_interactions` (2004) and is optional on `candidate_notes` (1501). The value on 1501 was not overwritten.
+- The description of `recruiter_interactions` said a note could attach to an application or a talent pool, but its only subject relationship was to candidates. `candidate_notes` also relates only to candidates, so no relationship was lost.
+- `scripts/loaders/fix_ats_modules.ts` still creates `recruiter_interactions` if it is run again.
+- `checks:` in `state.yaml` was not re-recorded, so its rows still name 869. An unrecorded `domain_health.ts --domain ATS --refresh` run reports 32 pass, 13 warn, 4 fail (M5, B9, B9b, H1), 10 agent, 2 delegated, 2 skipped, and no check lists 869.
+
+## 2026-11-03: bug 29 reversed; author required on `candidate_notes`
+
+Answered by the user in the moment. This supersedes the bug-29 entry and the `candidate_notes` author item above. Script: `.tmp_deploy/2026-11-03_hiring_starter_oneoff_followups.ts`; backup: `backups/hiring-starter-oneoff-followups-2026-11-03.json`. `record_status` was not changed.
+
+- **Bug-29.** `interviews` (8): `has_personal_content` false -> true. Asked whether it should stay false, the user answered no. Until bug-12 is fixed, the coordinator (823) is the only person relationship on an interview, so a default row-scope rule would limit each interview to its coordinator.
+- **Relationship 1501** `users authored notes candidate_notes`: `is_required` false -> true, carrying over the requirement the merged `recruiter_interactions` had on 2004.
+
+**Left as is.**
+
+- No blueprint was regenerated. Asked whether to rebuild only Hiring Starter, the user answered no, noting that sections 6.1 to 6.3 are already empty. That holds for Hiring Starter; the other 8 blueprints naming `recruiter_interactions` still have rows in those sections on disk, so rebuilding them would blank those rows while `POSTPONE_SECTIONS_6_1_TO_6_3` is on. Whether to rebuild is open.
+- `checks:` in `state.yaml` was not re-recorded.
+
+## 2026-11-03: Hiring Starter review bugs 4, 5, 6, 7, 8, 9, 11, 20 and 75 fixed in the catalog
+
+Approved by the user in the moment ("ok to flip all"), after the nine rows and the recommendations for 830 and 1326 were explained. Script: `.tmp_deploy/2026-11-03_too_strong_required_fixes.ts`; backup: `backups/too-strong-required-fixes-2026-11-03.json`. `record_status` was not changed.
+
+- **`is_required` true -> false:** 813 (bug-4), 814 (bug-5), 1022 (bug-6), 830 (bug-9), 1314 (bug-75). On 830 this overrides the earlier decision to keep the value (`plans/blueprint-external-relationships-plan.md:253`).
+- **`is_required` true -> false and one_to_one -> one_to_many:** 828 (bug-7), 829 (bug-8), 827 (bug-20).
+- **Bug-11.** Relationship 1326 `interview_panels produces interview_scorecards`: `is_required` true -> false and composition -> reference. A composition field cannot be empty and panels were the only composition parent of scorecards, so false alone was not possible. A scorecard stays tied to its interview through `interviews is scored via interview_scorecards`. The 2026-11-02 cleanup had set this row to true; it was false before that.
+
+**Where the values came from.** The first definition (2026-05-19) was "Whether the relationship is mandatory", with no test. The meaning narrowed on 2026-06-02 (mandatory only when the other entity is present) and on 2026-11-02 (`field_required`), but the stored values were not re-read either time. Except for 1326, the rows traced were already required in the oldest source found (813, 814, 827, 828, 829, 830 in the pre-plan-1 blueprint baseline, 1314 in `scripts/loaders/fix_ats_modules.ts`). 1022 was not traced further back than today's backup.
+
+**Left as is, not covered by this request.**
+
+- No blueprint was regenerated, so 20 blueprint files and the skill specs still show the old values. The review still lists these nine bugs, because it describes blob `850cb92`.
+- The review's "No check reads these values" and "new rows are no better" are not accurate: M9 reads the values without testing them, and the review compares required rates, not error rates. The review was not edited.
+- Candidates with the same pattern, judged from their labels only and not changed: 728, 729, 820, 894, 1024, 1025, 1027, 1435.
+- Analyst stage 2 still uses `candidates becomes employees` as its example of a too-strong value, though the row is now `no`. No skill text changed.
+- `checks:` in `state.yaml` was not re-recorded. An unrecorded `domain_health.ts --domain ATS --refresh` run reports the same totals as the entry above; M9 warning rows drop from 10 to 6, and no check lists any of the nine.
+
+## 2026-11-03: eight more too-strong values fixed; `is_required` gets a test
+
+Answered by the user in the moment. This supersedes the "left as is" items above on the eight candidates and the skill text. Script: `.tmp_deploy/2026-11-03_too_strong_required_fixes_2.ts`; backup: `backups/too-strong-required-fixes-2-2026-11-03.json`. `record_status` was not changed.
+
+- **`is_required` true -> false, cardinality and kind unchanged:** 728 `expense_reports posts_to journal_entries`, 729 `expense_lines posts_to journal_entries`, 820 `job_offers is contingent on background_checks`, 894 `pre_employees promotes to employees`, 1024 `workforce_scenarios drives hcm_positions`, 1025 `org_designs proposes hcm_positions`, 1027 `workforce_cost_projections feeds financial_plans`, 1435 `saas_applications entitles_to iga_user_entitlements`. No child is a junction.
+- **Skill text.** The test is in `module-shape.md` (`is_required`, `relationship_type`) and the architect `semantic-blueprint-template.md` (`field_required`, `cardinality`). The worked example in `SKILL.md` was replaced. Both changelogs have an entry.
+
+**Left as is, not covered by this request.**
+
+- By the user's decision, no blueprint was regenerated, including Hiring Starter.
+- 1435 is the least certain of the eight: the description makes an entitlement "a user's access to an application", so a tenant that governs only SaaS applications would always fill it in. It is optional because `saas_applications` does not hold every application.
+- Six of the eight (728, 729, 1024, 1025, 1027, 1435) have no ATS endpoint. They are logged here, not in the history of EXPENSE, FIN, SWP, HCM, EPM, SMP or IGA.
+- Same pattern, not changed: 686 `regulatory_fees posts_to journal_entries`, 687 `license_records posts_to journal_entries`.
+- The live `/fields` description of `is_required` has no test, and analyst stage 2 still uses `candidates becomes employees` as its example of a too-strong value.
+
+## 2026-11-03: remaining `is_required` text corrected
+
+Answered by the user in the moment. This supersedes the last "left as is" item above. No relationship row changed in this step.
+
+- **Field metadata.** The live `/fields` description of `data_object_relationships.is_required` now carries the test. It was: "True when a relationship's field must be filled in once both entities exist. It never makes an entity required: whether an entity installs is is_install_optional on domain_module_data_objects (SKILL.md Rule #16). A required relationship to an absent entity carries no constraint."
+- **Analyst stage 2.** The rule no longer cites `candidates becomes employees` as a catalog value. It states what a mandatory value does to the other module's table.
+- **The review.** "No check reads these values" and "new rows are no better" are corrected, and the too-strong row's type is now "Old data" instead of "Recurring". No bug was removed and the counts are unchanged.
+
+**Open, asked by the user and not approved.** How these relate to Hiring Starter:
+
+- 686 and 687 have no end in the starter.
+- Of the 184 same-domain required references, 6 have both ends in the starter (807, 808, 810, 816, 817, 819), 7 have one end (811, 818, 898, 899, 1297, 1303, 1497), and 171 have neither, across 55 domains. Only 4 of those 171 are in ATS.
+- Of the eight rows flipped above, only 820 touches the starter.
+
+## 2026-11-03: rels 807 and 808 made optional
+
+Answered by the user in the moment. Script: `.tmp_deploy/2026-11-03_too_strong_required_fixes_3.ts`; backup: `backups/too-strong-required-fixes-3-2026-11-03.json`. `record_status` was not changed.
+
+- **`is_required` true -> false:** 807 `job_requisitions is advertised through job_postings`, 808 `job_requisitions receives job_applications`. The derived delete mode goes from restrict to clear.
+
+**What this changes.**
+
+- Both rows are shared: 807 applies in ATS-RECRUITMENT-PIPELINE, TLNT-INTEL-MOBILITY and HIRING-STARTER, and 808 in ATS-RECRUITMENT-PIPELINE and HIRING-STARTER.
+- With 809 also optional, an application can be saved with no job relationship even where requisitions are installed. The owner had accepted this only for installs without requisitions (see above).
+- Deleting a requisition is no longer blocked by its postings and applications. It empties their field.
+- The descriptions of `job_postings` and `job_applications` still say a posting or application belongs to a requisition (bug-17).
+
+**Left as is, not covered by this request.**
+
+- No blueprint was regenerated. Rendered in memory, the Hiring Starter diff holds only these two rows.
+- Awaiting the user: keep or restore 728, 729, 894, 1024, 1025, 1027 and 1435; whether to flip 686 and 687.
+- 818 stays required. It is a prompt only in the starter.
+- `checks:` in `state.yaml` was not re-recorded. An unrecorded `--refresh` run reports the same totals; M9 warning rows are 3, and no check lists 807 or 808.
+
+## 2026-11-03: Hiring Starter review bug-73 fixed in the catalog; lint rule R9 added
+
+Approved by the user in the moment, after the rows and a dry run were shown. Script: `.tmp_deploy/2026-11-03_bug73_coordinator_responsible.ts`; backup: `backups/bug73-coordinator-responsible-2026-11-03.json`. `record_status` was not changed.
+
+- **RACI.** `process_raci` row 20, `RECRUITING-COORDINATOR` on `interview_candidates` (1014): informed -> responsible. The row was changed in place, so Responsible is the persona's first row and bug-77 does not affect it.
+- **Process wiring.** `interviews` states 211-216: `process_id` empty -> 1014. Before this, the process's only wired state was scorecard `submitted` (210). This changes no section 9 row.
+- **Detection.** R9 in `scripts/lib/blueprint_invariants.ts` (warn): a persona whose only rows in a module are Informed, which grants nothing at deploy. It flagged the coordinator in ATS-INTERVIEWS and HIRING-STARTER before the write, and no longer does.
+
+**What this changes.**
+
+- The coordinator gets the write tier in ATS-INTERVIEWS and HIRING-STARTER. It is module-wide `:manage`, not interviews only.
+- Section 9 no longer lists the coordinator's notification on `interview_scorecard.submitted`.
+- `interviews.has_personal_content` is true since the bug-29 reversal, so under the default rule the coordinator reaches only the interviews it coordinates (823).
+
+**Left as is, not covered by this request.**
+
+- No blueprint was regenerated, in line with the user's earlier decisions above. The agent had proposed rebuilding Hiring Starter, but that would also carry every fix since blob `850cb92`, so it stopped and asked. Rendered in memory, the diff from this fix holds only the coordinator's row. The review still lists bug-73, because it describes that blob.
+- The coordinator still cannot see a candidate or application that has a recruiter, until the bug-14 decision.
+- "Offer / pre-employee paperwork" in the persona's description is still backed only by a Consulted row on process 222.
+- Awaiting the user: whether every entity with a lifecycle must have a Responsible (523 of 637 have none after this fix), and whether module reach should grant access. `personas.md:63` and `SKILL.md` E6 say reach gives a baseline tier, and neither the emitter nor the modeler does that.
+- `generate_blueprints.ts --lint --all` reports 37 R9 findings in 37 modules, mostly `HR-HRIS-ADMIN` (19) and `LEGAL-COMPLIANCE-SPECIALIST` (10). They are candidates, not confirmed bugs.
+- `checks:` in `state.yaml` was not re-recorded. An unrecorded `--refresh` run reports the same totals; E6 now also lists R9.
+
+## 2026-11-03: Hiring Starter review bugs 18, 19 and 77: skill rules; "demotion path" reworded
+
+Approved by the user in the moment. Script: `.tmp_deploy/2026-11-03_hiring_starter_description_reword.ts`; backup: `backups/hiring-starter-description-2026-11-03.json`. `record_status` was not changed.
+
+- **Catalog (bug-47, one of its two terms).** `domain_modules` 154 (HIRING-STARTER), last sentence of `description`: "Upgrades to the full ATS modules without tenant data migration via the embedded-master demotion path." -> "When the full ATS modules are installed, its entities move to them without data migration."
+- **Catalog (bug-19).** No write. The approved wiring of `interviews.completed` (213) to process 1014 was already live from the bug-73 fix above.
+- **Skills (bugs 18, 19, 77), in `semantius-plugin`, uncommitted.** Analyst Stage 9.5 removes what depends only on a dropped entity and places overrides on a working row. Modeler Stage 4k applies `grant overrides` on every RACI row. `consistency-check.ts` has two new checks and two fixtures. No deploy has tested these rules.
+
+**Left as is, not covered by this request.**
+
+- No blueprint was regenerated, so L22 of the Hiring Starter file still shows the old sentence until the user rebuilds it.
+- Bug-47's other term, `⚠ no process`, is unchanged, and so is its rating in the review. The review still lists these bugs, because it describes blob `850cb92`.
+- The lint warning proposed for bug-19 and the checks proposed for bug-47 were not added.

@@ -31,7 +31,6 @@ const rel = (over: Partial<RelationshipRow> & { id: number | string }): Relation
   relationship_kind: "reference",
   relationship_verb: "has",
   inverse_verb: "belongs to",
-  owner_side: "source",
   ...over,
 });
 
@@ -42,15 +41,8 @@ describe("B6b relationship shape", () => {
   test("empty inverse_verb warns (m4b)", () => {
     expect(rules(checkRelationshipShape([rel({ id: 2, inverse_verb: " " })]))).toEqual(["B6b:inverse_verb_empty:warn:2"]);
   });
-  test("one_to_many with owner_side=target warns (m5), e.g. ATS relationship 810", () => {
-    expect(rules(checkRelationshipShape([rel({ id: 810, owner_side: "target" })]))).toEqual(["B6b:owner_side_not_parent:warn:810"]);
-  });
-  test("many_to_one names the target as parent", () => {
-    expect(checkRelationshipShape([rel({ id: 3, relationship_type: "many_to_one", owner_side: "target" })])).toEqual([]);
-    expect(rules(checkRelationshipShape([rel({ id: 4, relationship_type: "many_to_one", owner_side: "source" })]))).toEqual(["B6b:owner_side_not_parent:warn:4"]);
-  });
-  test("one_to_one and many_to_many are not decided by cardinality", () => {
-    expect(checkRelationshipShape([rel({ id: 5, relationship_type: "one_to_one", owner_side: "target" }), rel({ id: 6, relationship_type: "many_to_many", relationship_kind: "association", owner_side: "target" })])).toEqual([]);
+  test("every cardinality passes", () => {
+    expect(checkRelationshipShape([rel({ id: 3, relationship_type: "many_to_one" }), rel({ id: 5, relationship_type: "one_to_one" }), rel({ id: 6, relationship_type: "many_to_many", relationship_kind: "association" })])).toEqual([]);
   });
   test("composition child mastered in an unrelated domain warns (M7 coherence)", () => {
     const masters = new Map<number, Set<number>>([[1, new Set([56])], [2, new Set([191])], [3, new Set([56])]]);
@@ -71,7 +63,7 @@ describe("B6b relationship shape", () => {
     expect(checkRelationshipShape([comp(13, 1), comp(14, 3)])).toEqual([]);
   });
   test("a composition stored with the child as source finds the same child", () => {
-    const row = rel({ id: 15, data_object_id: 2, related_data_object_id: 1, relationship_type: "many_to_one", owner_side: "target", relationship_kind: "composition", is_required: false });
+    const row = rel({ id: 15, data_object_id: 2, related_data_object_id: 1, relationship_type: "many_to_one", relationship_kind: "composition", is_required: false });
     expect(rules(checkRelationshipShape([row]))).toEqual(["B6b:optional_composition_single_parent:warn:15"]);
   });
 });
@@ -200,13 +192,13 @@ describe("loader pre-flight", () => {
       [
         rel({ id: "a", related_data_object_id: USERS, relationship_type: "many_to_many", relationship_verb: "has panelists" }),
         rel({ id: "b", related_data_object_id: USERS, relationship_verb: "has recruiter and hiring manager" }),
-        rel({ id: "c", owner_side: "target", inverse_verb: "" }),
+        rel({ id: "c", inverse_verb: "" }),
       ],
       { usersId: USERS },
     );
     expect(res.errors.length).toBe(1);
     expect(res.errors[0]).toContain("B7b many_to_many_reference [a]");
-    expect(res.warnings.map((w) => w.split(" [")[0]).sort()).toEqual(["B6b inverse_verb_empty", "B6b owner_side_not_parent", "B7b two_person_verb"]);
+    expect(res.warnings.map((w) => w.split(" [")[0]).sort()).toEqual(["B6b inverse_verb_empty", "B7b two_person_verb"]);
   });
   test("process_raci: a new Accountable on a process that already has one is an error", () => {
     const res = preflightProcessRaci([{ process_id: 1, raci: "accountable", persona_id: 5 }], [{ process_id: 1, raci: "accountable", persona_id: 4 }, { process_id: 1, raci: "responsible", persona_id: 3 }]);

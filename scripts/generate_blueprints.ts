@@ -19,9 +19,9 @@
 //   bun run scripts/generate_blueprints.ts --regenerate --check # CI drift check over existing files
 //   bun run scripts/generate_blueprints.ts --released           # a file for every module hosted on a RELEASED domain
 //   bun run scripts/generate_blueprints.ts --all                # (re)generate a file for EVERY module (rare)
-//   bun run scripts/generate_blueprints.ts --lint               # R1-R8 over the existing blueprints' modules; writes nothing
+//   bun run scripts/generate_blueprints.ts --lint               # R1-R9 over the existing blueprints' modules; writes nothing
 //
-// Every emit also runs the derived-result invariants R1-R8 (./lib/blueprint_invariants.ts) and
+// Every emit also runs the derived-result invariants R1-R9 (./lib/blueprint_invariants.ts) and
 // prints their findings to stderr (Policy 1: warn, never throw). `--lint` writes no file, prints the
 // findings with a per-rule summary, and exits non-zero on any `fail` finding; it lints the existing
 // blueprint files' modules by default, or the --module / --released / --all selection.
@@ -327,13 +327,12 @@ function renderAliases(aliasRows: any[]): string[] {
   return out;
 }
 
-function renderRelationshipTable(rows: RelationshipModel[], opts: { includeOwnerSide: boolean; includeKind: boolean }): string[] {
+function renderRelationshipTable(rows: RelationshipModel[], opts: { includeKind: boolean }): string[] {
   const out: string[] = [];
   if (rows.length === 0) return out;
   const headers: string[] = ["from", "verb", "to", "cardinality"];
   if (opts.includeKind) headers.push("kind");
   headers.push("field_required");
-  if (opts.includeOwnerSide) headers.push("owner_side");
   headers.push("delete_mode", "fk_format", "notes");
   out.push(tableHeader(headers));
   for (const { relationship: r, deleteMode: dm } of rows) {
@@ -348,7 +347,6 @@ function renderRelationshipTable(rows: RelationshipModel[], opts: { includeOwner
     ];
     if (opts.includeKind) cells.push(r.relationship_kind || "");
     cells.push(fieldRequiredCell(r));
-    if (opts.includeOwnerSide) cells.push(r.owner_side || "");
     // B4: resolved ON DELETE mode + Semantius FK format per relationship (derived in the model).
     cells.push(dm.mode, dm.fkFormat);
     cells.push(r.notes || "");
@@ -767,7 +765,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
   if (model.relationships.intra.length === 0) {
     out.push(noneSection("no relationships with both entities in this blueprint"));
   } else {
-    out.push(...renderRelationshipTable(model.relationships.intra, { includeOwnerSide: true, includeKind: true }));
+    out.push(...renderRelationshipTable(model.relationships.intra, { includeKind: true }));
   }
   out.push("");
   out.push("### 5.2 Relationships to platform built-ins (`users`)");
@@ -775,7 +773,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
   if (model.relationships.userRels.length === 0) {
     out.push(noneSection("no relationships to platform built-ins"));
   } else {
-    out.push(...renderRelationshipTable(model.relationships.userRels, { includeOwnerSide: true, includeKind: false }));
+    out.push(...renderRelationshipTable(model.relationships.userRels, { includeKind: false }));
   }
   out.push("");
   out.push("### 5.3 Relationships to entities outside this blueprint");
@@ -1133,7 +1131,7 @@ function blueprintBodyIgnoringDate(s: string): string {
   return s.replace(/\r\n/g, "\n").replace(/^created_at: .*$/m, "created_at:");
 }
 
-// The derived-result invariants R1-R8 for one emitted unit. The model is derived again from the
+// The derived-result invariants R1-R9 for one emitted unit. The model is derived again from the
 // same catalog the render used (derivation is pure and in-memory), so emitBlueprint stays unchanged.
 function modelFindings(modules: ModuleRow[]): ModelFinding[] {
   return checkModel(deriveShownModel(modules), { ctx: deriveCtx });
@@ -1201,12 +1199,12 @@ async function emitModuleList(modules: ModuleRow[], label: string): Promise<void
   if (bad) exit(1);
 }
 
-// --lint: the derived-result invariants R1-R8 over a module list. Writes no file. Each module is
+// --lint: the derived-result invariants R1-R9 over a module list. Writes no file. Each module is
 // also rendered in memory, so an emit failure (e.g. the B13 entity_type gate) counts as a failure.
 // Exits non-zero on any `fail` finding, emit failure, R7 finding or catalog data defect; other `warn`
 // findings never fail the run. The data defects are checked over every relationship, not per module,
 // because a wrong relationship reaches the blueprint of every module that touches either entity.
-const LINT_BLOCKING_DATA_RULES = new Set(["many_to_many_reference", "owner_side_not_parent", "optional_composition_single_parent"]);
+const LINT_BLOCKING_DATA_RULES = new Set(["many_to_many_reference", "optional_composition_single_parent"]);
 function lintModuleList(modules: ModuleRow[], label: string): void {
   const byRule = new Map<string, { fail: number; warn: number; modules: Set<string> }>();
   const byModule = new Map<string, { fail: number; warn: number }>();
@@ -1284,7 +1282,7 @@ async function main(): Promise<void> {
     console.error("  generate_blueprints.ts --regenerate [--check] [--no-cache]   # refresh ONLY existing blueprint files");
     console.error("  generate_blueprints.ts --released [--check] [--no-cache]      # (re)generate a file for every module hosted on a RELEASED domain");
     console.error("  generate_blueprints.ts --all [--check] [--no-cache]          # (re)generate a file for EVERY module");
-    console.error("  generate_blueprints.ts --lint [--module <CODE> | --released | --all] [--no-cache]  # R1-R8 only; writes no file");
+    console.error("  generate_blueprints.ts --lint [--module <CODE> | --released | --all] [--no-cache]  # R1-R9 only; writes no file");
     console.error("  generate_blueprints.ts --clear-cache");
     exit(2);
   }

@@ -1,4 +1,4 @@
-// Tests for scripts/lib/blueprint_invariants.ts: one block per derived-result invariant (R1-R8) on
+// Tests for scripts/lib/blueprint_invariants.ts: one block per derived-result invariant (R1-R9) on
 // tiny fixtures, then the invariants over every module of the starter-shaped scenario
 // (fixtures/hiring_starter_scenario.ts). R1-R3 guard rules the derivation already enforces, so their
 // failing cases mutate a derived model by hand.
@@ -96,7 +96,7 @@ describe("realization parsers", () => {
   });
 
   test("every finding carries its rule's severity", () => {
-    expect(RULE_IDS).toEqual(["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"]);
+    expect(RULE_IDS).toEqual(["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9"]);
     const fx = hiringStarterScenario();
     for (const m of fx.index.modules) {
       for (const f of checkModel(deriveModuleModel(m, fx.ctx), { ctx: fx.ctx })) expect(f.result).toBe(RULES[f.id].severity);
@@ -368,16 +368,46 @@ describe("R8: row-scope rules have a single-person relationship to users", () =>
   });
 });
 
+// ---------- R9 ----------
+
+describe("R9: every persona in the RACI table has a row that grants access", () => {
+  const r9 = (processRaci: any[]) =>
+    of(helpDesk({
+      lifecycle: [open, gated(2, "resolved", 2, { process_id: 500 }), gated(3, "escalated", 3, { process_id: 501 }), closed],
+      processes: [proc, proc2],
+      processRaci,
+    }).findings, "R9");
+
+  test("Responsible, Accountable and Consulted rows pass", () => {
+    expect(r9([raciRow(1, 500, AGENT, "responsible"), raciRow(2, 500, LEAD, "accountable"), raciRow(3, 500, WATCHER, "consulted")])).toEqual([]);
+  });
+
+  test("a persona that is only Informed warns, naming the persona and every process", () => {
+    const found = r9([raciRow(1, 500, WATCHER, "informed"), raciRow(2, 501, WATCHER, "informed")]);
+    expect(shape(found)).toEqual(["R9 warn HELPDESK-CORE [SUPPORT-WATCHER, resolve_tickets, escalate_tickets]"]);
+    expect(found[0].detail).toContain("Informed grants nothing");
+  });
+
+  test("Informed on one process and Responsible on another passes", () => {
+    expect(r9([raciRow(1, 500, WATCHER, "informed"), raciRow(2, 501, WATCHER, "responsible")])).toEqual([]);
+  });
+
+  test("a skill that is only Informed is no finding", () => {
+    expect(r9([raciRow(1, 500, null as any, "informed", { skill_id: 77 })])).toEqual([]);
+  });
+});
+
 // ---------- the invariants over every module of the starter-shaped scenario ----------
 
-describe("R1-R8 over every module of the hiring-starter scenario", () => {
+describe("R1-R9 over every module of the hiring-starter scenario", () => {
   const fx = hiringStarterScenario();
   const run = (id: number) => checkModel(deriveModuleModel(fx.index.modulesById.get(id)!, fx.ctx), { ctx: fx.ctx });
 
-  test("the starter: the Informed row without an event (R5) and candidates without a relationship to users (R8)", () => {
+  test("the starter: the Informed row without an event (R5), candidates without a relationship to users (R8) and the Informed-only persona (R9)", () => {
     expect(shape(run(IDS.STARTER))).toEqual([
       "R5 warn HIRING-STARTER [HIRING-MANAGER, recruit_source_candidates]",
       "R8 warn HIRING-STARTER [candidates, candidate_edit_scope]",
+      "R9 warn HIRING-STARTER [LEGAL-COMPLIANCE-SPECIALIST, hire_candidate]",
     ]);
   });
 
@@ -390,10 +420,14 @@ describe("R1-R8 over every module of the hiring-starter scenario", () => {
   });
 
   test("the full modules", () => {
-    expect(shape(run(IDS.CRM))).toEqual(["R8 warn ATS-CANDIDATE-CRM [candidates, candidate_edit_scope]"]);
+    expect(shape(run(IDS.CRM))).toEqual([
+      "R8 warn ATS-CANDIDATE-CRM [candidates, candidate_edit_scope]",
+      "R9 warn ATS-CANDIDATE-CRM [LEGAL-COMPLIANCE-SPECIALIST, hire_candidate]",
+    ]);
     expect(shape(run(IDS.PIPE))).toEqual([
       "R5 warn ATS-RECRUITMENT-PIPELINE [HIRING-MANAGER, recruit_source_candidates]",
       "R6 warn ATS-RECRUITMENT-PIPELINE [3]",
+      "R9 warn ATS-RECRUITMENT-PIPELINE [LEGAL-COMPLIANCE-SPECIALIST, hire_candidate]",
     ]);
     for (const id of [IDS.OFFERS, IDS.PRE, IDS.HCM_WORKFLOWS, IDS.HCM_CORE]) expect(run(id)).toEqual([]);
   });

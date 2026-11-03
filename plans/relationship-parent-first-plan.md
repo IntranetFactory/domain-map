@@ -1,8 +1,8 @@
 # Make `from` always the parent
 
-**Status:** plan only, except for the four row deletes noted in step c. The owner chose D1 on 2026-11-03. The row lists in step c still need approval. This replaces `relationship-natural-order-plan.md`: no mass flip of rows.
+**Status:** steps a, b, c, e and d are done on 2026-11-03, with the file changes uncommitted in both repos. `owner_side` is gone from the live table; its values are in `backups/relationship-owner-side-drop-2026-11-03.json`. The one open item is the spec proof at the end of step e: the owner stopped it, because an agent cannot generate a spec here. The owner chose D1 and approved the recommendations on the row lists on 2026-11-03. This replaces `relationship-natural-order-plan.md`: no mass flip of rows.
 
-**Written:** 2026-11-03. Counts are from the live catalog that day (2,691 rows after the deletes). The script recomputes them before it writes.
+**Written:** 2026-11-03. Counts are from the live catalog that day. After step c it holds 2,690 relationship rows.
 
 ## The problem
 
@@ -42,10 +42,11 @@ The alternative was to make the spec parent-first. It was rejected: §4 would th
 
 ## Before starting
 
-- The owner answers the row lists in c1, or says to go with the recommendations.
-- The owner commits the current work in `domain-map`, so the code changes in step e can be reviewed and undone on their own. Steps a, b and c do not depend on this, because the script makes its own backup.
-- The owner confirms who created rels 2881 to 2886 today at 15:27. No other session may write relationships during steps c and d.
-- Save the baseline: `bun run scripts/domain_health.ts --domain ATS --json --refresh`.
+All done on 2026-11-03:
+- The owner went with the recommendations on the row lists in c1.
+- The owner committed the current work in `domain-map`.
+- The owner confirmed that rels 2881 to 2886 are theirs. No other session may write relationships during step d.
+- The baseline was saved with `bun run scripts/analytics/domain_health.ts --domain ATS --json --refresh`.
 
 ## Steps
 
@@ -99,7 +100,7 @@ Also list the open audit items that propose `owner_side` flips or verb swaps by 
 - `scripts/lib/catalog_invariants.ts`: type, the rule `owner_side_not_parent`, and the `one_to_one` side, which becomes `source`
 - `scripts/lib/health/logic_sam.ts:81,582,584`, `scripts/lib/health/checks_b.ts`, comment at `scripts/lib/blueprint_derive.ts:89`
 - `scripts/generate_blueprints.ts:336,351,1209`: remove the §5 column and the lint rule
-- `scripts/loaders/load_cluster_drafts.ts`: this is the documented loader path, so stop reading and sending `owner_side`. Its flip of `many_to_one` into `one_to_many` stays correct
+- `scripts/loaders/load_cluster_drafts.ts`: this is the documented loader path, so it stops sending `owner_side`. Drafts keep the column, read only to flip a `one_to_one` that names `to` as the parent. Its flip of `many_to_one` into `one_to_many` stays correct
 - Tests: `blueprint_derive.rules.test.ts`, `health_sam.test.ts`, `catalog_invariants.test.ts`, `fixtures/build.ts`
 - `scripts/loaders/fix_ats_modules.ts` is a one-off and stays as a record. It will now fail if re-run.
 
@@ -119,9 +120,9 @@ Also list the open audit items that propose `owner_side` flips or verb swaps by 
 
 The other columns, and the order of all of them, stay the same. Files that name these headings:
 - `semantius-analyst`: `SKILL.md`, `references/semantic-spec-template.md`, `stage-2-inspect.md`, `stage-3-collisions.md`, `stage-9-governance.md`, `stage-11-write.md`, `modes-audit-extend-rebuild.md`. In `stage-2-inspect.md:209` the direction rule becomes simple: `FK table` is the blueprint's `to`, and `References` is its `from`
-- `semantius-modeler`: `SKILL.md`, `references/stage-1-parse.md`, `stage-2-reconcile.md`, `stage-3-plan.md`, `conflict-resolution.md`. It accepts both the old and new headings, because specs at `3.1` with the old headings exist and the column order is the same
+- `semantius-modeler`: `SKILL.md`, `references/stage-1-parse.md`, `stage-2-reconcile.md`, `stage-3-plan.md`, `stage-4-execute.md`, `conflict-resolution.md`. It accepts both the old and new headings, because specs at `3.1` with the old headings exist and the column order is the same
 - `semantius-optimizer`: `references/spec-extract-lib.ts`, `evals/round-trip/expected-*.md`, `evals/round-trip/check.ts`
-- `semantius-architect`: `evals/consistency-check/fixture-spec-*.md`, `audit-checklist.md`, `stage-7-handoffs.md`, and any heading the checker reads
+- `semantius-architect`: `evals/consistency-check/fixture-spec-*.md`, and comments in `consistency-check.ts`, which reads §4 by position. `audit-checklist.md:158` and `stage-7-handoffs.md` stay as they are: they name a stale five-column form to reject, not the current headings
 
 `version` stays `3.1`. Spec §3, the spec diagram and the deployed field do not change.
 

@@ -78,7 +78,6 @@ export type RelationshipLite = {
   relationship_kind: string;
   relationship_type?: string | null; // one_to_one | one_to_many | many_to_one | many_to_many
   relationship_verb?: string | null;
-  owner_side?: string | null; // source | target: the parent side
   is_required?: boolean | null;
 };
 
@@ -579,9 +578,9 @@ export type ScopeRelationshipViolation = {
 };
 
 // The endpoint that physically holds the FK column: the "many" side when the cardinality decides
-// it (robust to a mislabeled owner_side, see B6b), else the non-owner side of a one_to_one.
+// it, else `to`, because `from` is the parent of a one_to_one.
 export function fkHolderSide(e: RelationshipLite): "source" | "target" | null {
-  const parent = oneSide(e.relationship_type ?? "") ?? (e.relationship_type === "one_to_one" ? (e.owner_side === "target" ? "target" : e.owner_side === "source" ? "source" : null) : null);
+  const parent = oneSide(e.relationship_type ?? "") ?? (e.relationship_type === "one_to_one" ? "source" : null);
   if (parent == null) return null;
   return parent === "source" ? "target" : "source";
 }

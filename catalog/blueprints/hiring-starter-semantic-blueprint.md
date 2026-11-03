@@ -19,7 +19,7 @@ created_at: 2026-11-03
 
 ## 1. Overview
 
-Entry-tier deployable for a basic hiring workflow: post jobs, capture applications, run interviews, and make offers. Embeds the canonical masters from the full ATS modules and inherits their lifecycle states and gated steps, which it governs under its own permission prefix. Leaves out the requisition approval chain, background-check processing (it reacts when a background check is flagged), and the pre-employee record (an accepted offer hands the new hire to HCM). Upgrades to the full ATS modules without tenant data migration via the embedded-master demotion path.
+Entry-tier deployable for a basic hiring workflow: post jobs, capture applications, run interviews, and make offers. Embeds the canonical masters from the full ATS modules and inherits their lifecycle states and gated steps, which it governs under its own permission prefix. Leaves out the requisition approval chain, background-check processing (it reacts when a background check is flagged), and the pre-employee record (an accepted offer hands the new hire to HCM). When the full ATS modules are installed, its entities move to them without data migration.
 
 ## 2. Entity summary
 
@@ -65,6 +65,7 @@ flowchart TD
   users -->|"publishes"| job_postings
   users -->|"is hiring manager for"| job_requisitions
   recruitment_sources -->|"attributes"| job_applications
+  users -->|"owns as recruiter"| job_offers
   class job_requisitions embedded_master;
   class job_postings embedded_master;
   class candidates embedded_master;
@@ -90,7 +91,7 @@ Hiring manager access to candidates. A `candidates` row has no relationship lead
 | 1 | `job_applications` | `job_applications` | Application | Applications | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | - | yes | operational_workflow | `:manage` | - |
 | 2 | `candidates` | `candidates` | Candidate | Candidates | embedded_master | `ats-candidate-crm` | Candidate CRM | - | yes | operational_workflow | `:manage` | - |
 | 3 | `interview_scorecards` | `interview_scorecards` | Interview Scorecard | Interview Scorecards | embedded_master | `ats-interviews` | Candidate Interviews | yes | yes | operational_workflow | `:manage` | - |
-| 4 | `interviews` | `interviews` | Interview | Interviews | embedded_master | `ats-interviews` | Candidate Interviews | - | - | operational_workflow | `:manage` | - |
+| 4 | `interviews` | `interviews` | Interview | Interviews | embedded_master | `ats-interviews` | Candidate Interviews | - | yes | operational_workflow | `:manage` | - |
 | 5 | `job_postings` | `job_postings` | Job Posting | Job Postings | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | - | - | operational_workflow | `:manage` | - |
 | 6 | `job_requisitions` | `job_requisitions` | Job Requisition | Job Requisitions | embedded_master | `ats-recruitment-pipeline` | Recruitment Pipeline | yes | - | operational_workflow | `:manage` | - |
 | 7 | `job_offers` | `job_offers` | Offer | Offers | embedded_master | `ats-offers` | Job Offers | - | yes | operational_workflow | `:manage` | - |
@@ -107,30 +108,31 @@ _`field_required` applies only when both entities are installed. It never makes 
 
 ### 5.1 Relationships between entities in this blueprint
 
-| from | verb | to | cardinality | kind | field_required | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `job_requisitions` | is advertised through | `job_postings` | one_to_many | reference | yes | source | restrict | reference | - |
-| `job_requisitions` | receives | `job_applications` | one_to_many | reference | yes | source | restrict | reference | - |
-| `job_postings` | is applied to via | `job_applications` | one_to_many | reference | no | source | clear | reference | - |
-| `candidates` | submits | `job_applications` | one_to_many | reference | yes | source | restrict | reference | - |
-| `recruitment_sources` | attributes | `candidates` | one_to_many | reference | no | source | clear | reference | - |
-| `job_applications` | schedules | `interviews` | one_to_many | reference | yes | source | restrict | reference | - |
-| `interviews` | is scored via | `interview_scorecards` | one_to_many | reference | yes | source | restrict | reference | - |
-| `job_applications` | results in | `job_offers` | one_to_many | reference | yes | source | restrict | reference | - |
-| `recruitment_sources` | attributes | `job_applications` | one_to_many | reference | no | source | clear | reference | - |
+| from | verb | to | cardinality | kind | field_required | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `job_requisitions` | is advertised through | `job_postings` | one_to_many | reference | no | clear | reference | - |
+| `job_requisitions` | receives | `job_applications` | one_to_many | reference | no | clear | reference | - |
+| `job_postings` | is applied to via | `job_applications` | one_to_many | reference | no | clear | reference | - |
+| `candidates` | submits | `job_applications` | one_to_many | reference | yes | restrict | reference | - |
+| `recruitment_sources` | attributes | `candidates` | one_to_many | reference | no | clear | reference | - |
+| `job_applications` | schedules | `interviews` | one_to_many | reference | yes | restrict | reference | - |
+| `interviews` | is scored via | `interview_scorecards` | one_to_many | reference | yes | restrict | reference | - |
+| `job_applications` | results in | `job_offers` | one_to_many | reference | yes | restrict | reference | - |
+| `recruitment_sources` | attributes | `job_applications` | one_to_many | reference | no | clear | reference | - |
 
 ### 5.2 Relationships to platform built-ins (`users`)
 
-| from | verb | to | cardinality | field_required | owner_side | delete_mode | fk_format | notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `users` | is recruiter for | `job_requisitions` | one_to_many | yes | source | restrict | reference | - |
-| `users` | owns as recruiter | `job_applications` | one_to_many | no | source | clear | reference | - |
-| `users` | coordinates | `interviews` | one_to_many | yes | source | restrict | reference | - |
-| `users` | authors | `interview_scorecards` | one_to_many | yes | source | restrict | reference | - |
-| `users` | approves | `job_offers` | one_to_many | yes | source | restrict | reference | - |
-| `users` | owns as recruiter | `candidates` | one_to_many | no | source | clear | reference | - |
-| `users` | publishes | `job_postings` | one_to_many | yes | source | restrict | reference | - |
-| `users` | is hiring manager for | `job_requisitions` | one_to_many | yes | source | restrict | reference | - |
+| from | verb | to | cardinality | field_required | delete_mode | fk_format | notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `users` | is recruiter for | `job_requisitions` | one_to_many | yes | restrict | reference | - |
+| `users` | owns as recruiter | `job_applications` | one_to_many | no | clear | reference | - |
+| `users` | coordinates | `interviews` | one_to_many | yes | restrict | reference | - |
+| `users` | authors | `interview_scorecards` | one_to_many | yes | restrict | reference | - |
+| `users` | approves | `job_offers` | one_to_many | yes | restrict | reference | - |
+| `users` | owns as recruiter | `candidates` | one_to_many | no | clear | reference | - |
+| `users` | publishes | `job_postings` | one_to_many | yes | restrict | reference | - |
+| `users` | is hiring manager for | `job_requisitions` | one_to_many | yes | restrict | reference | - |
+| `users` | owns as recruiter | `job_offers` | one_to_many | no | clear | reference | - |
 
 ### 5.3 Relationships to entities outside this blueprint
 
@@ -143,15 +145,14 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `hcm_positions` | spawns | `job_requisitions` | one_to_many | no | - |
 | `job_profiles` | feeds | `job_postings` | one_to_many | no | - |
 | `skill_profiles` | feeds | `candidates` | one_to_many | no | - |
-| `recruitment_agencies` | sources | `candidates` | one_to_many | yes | - |
-| `recruitment_events` | attracts | `candidates` | one_to_many | yes | - |
+| `recruitment_agencies` | sources | `candidates` | one_to_many | no | - |
+| `recruitment_events` | attracts | `candidates` | one_to_many | no | - |
 | `talent_pools` | groups | `candidates` | many_to_many | - | - |
 | `job_requisitions` | updates | `position_demand_forecasts` | many_to_many | - | - |
-| `job_requisitions` | feeds | `people_kpis` | many_to_many | - | - |
-| `headcount_plans` | authorizes | `job_requisitions` | one_to_many | yes | - |
+| `headcount_plans` | authorizes | `job_requisitions` | one_to_many | no | - |
 | `position_demand_forecasts` | triggers | `job_requisitions` | one_to_many | no | - |
 | `interview_kits` | shapes | `interviews` | one_to_many | no | - |
-| `interview_panels` | produces | `interview_scorecards` | one_to_many | yes | - |
+| `interview_panels` | produces | `interview_scorecards` | one_to_many | no | - |
 | `employees` | applies_as | `candidates` | one_to_many | no | - |
 
 #### 5.3b Incoming relationships: the external entity points to this blueprint's entity
@@ -160,27 +161,27 @@ _External entities are optional: this blueprint never installs them. If one exis
 | --- | --- | --- | --- | --- | --- |
 | `candidates` | is referred through | `candidate_referrals` | one_to_many | yes | - |
 | `job_applications` | requires | `candidate_assessments` | one_to_many | yes | - |
-| `job_offers` | is contingent on | `background_checks` | one_to_many | yes | - |
-| `job_offers` | spawns | `onboarding_journeys` | one_to_one | yes | - |
-| `job_offers` | triggers | `benefit_enrollments` | one_to_one | yes | - |
-| `job_offers` | seeds | `compensation_statements` | one_to_one | yes | - |
-| `candidates` | becomes | `employees` | one_to_one | yes | - |
+| `job_offers` | is contingent on | `background_checks` | one_to_many | no | - |
+| `job_offers` | spawns | `onboarding_journeys` | one_to_many | no | - |
+| `job_offers` | triggers | `benefit_enrollments` | one_to_many | no | - |
+| `job_offers` | seeds | `compensation_statements` | one_to_many | no | - |
+| `candidates` | becomes | `employees` | one_to_one | no | - |
+| `job_requisitions` | feeds | `people_kpis` | one_to_many | no | - |
 | `job_offers` | spawns pre-employee record | `pre_employees` | one_to_one | yes | - |
 | `candidates` | becomes pre-employee | `pre_employees` | one_to_one | yes | - |
 | `candidates` | engaged_via | `candidate_engagements` | one_to_many | no | - |
 | `candidates` | attends_via | `recruiting_event_attendances` | one_to_many | yes | - |
-| `candidates` | noted_via | `recruiter_interactions` | one_to_many | no | - |
 | `candidates` | consents_via | `candidate_consents` | one_to_many | yes | - |
 | `candidates` | member_of_via | `talent_pool_memberships` | one_to_many | yes | - |
 | `candidates` | discloses_via | `fcra_disclosures` | one_to_many | yes | - |
-| `job_requisitions` | defines_pipeline | `application_stages` | one_to_many | yes | - |
+| `job_requisitions` | defines_pipeline | `application_stages` | one_to_many | no | - |
 | `job_applications` | transitions_via | `application_stage_transitions` | one_to_many | yes | - |
 | `job_requisitions` | gated_by | `requisition_approvals` | one_to_many | yes | - |
 | `job_postings` | syndicates_via | `job_posting_distributions` | one_to_many | yes | - |
 | `job_postings` | asks | `application_screening_questions` | one_to_many | yes | - |
 | `job_applications` | answers_via | `application_screening_answers` | one_to_many | yes | - |
 | `candidates` | self_identifies_via | `eeo_responses` | one_to_many | yes | - |
-| `interviews` | convenes | `interview_panels` | one_to_one | yes | - |
+| `interviews` | convenes | `interview_panels` | one_to_many | yes | - |
 | `interviews` | occupies | `interviewer_availability_slots` | one_to_many | no | - |
 | `job_offers` | evolves_through | `offer_versions` | one_to_many | yes | - |
 | `job_offers` | gated_by | `offer_approvals` | one_to_many | yes | - |
@@ -192,7 +193,7 @@ _External entities are optional: this blueprint never installs them. If one exis
 | `job_requisitions` | staffed_by | `hiring_team_assignments` | one_to_many | yes | - |
 | `candidates` | documented_via | `candidate_documents` | one_to_many | yes | - |
 | `candidates` | annotated_via | `candidate_notes` | one_to_many | yes | - |
-| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | no | - |
+| `candidates` | tagged_via | `candidate_tag_assignments` | one_to_many | yes | - |
 | `candidates` | corresponds_via | `candidate_emails` | one_to_many | no | - |
 | `candidates` | screened_via | `drug_health_screenings` | one_to_many | no | - |
 | `candidates` | verified_via | `right_to_work_verifications` | one_to_many | no | - |
@@ -335,6 +336,8 @@ _This scope holds `job_requisitions` as **embedded_master**; the canonical state
 | `hiring-starter:manage_all_candidates` | override (personal_content) | Manage all `candidates` rows beyond row-scope | ✓ |
 | `hiring-starter:view_all_applications` | override (personal_content) | View all `job_applications` rows beyond row-scope | ✓ |
 | `hiring-starter:manage_all_applications` | override (personal_content) | Manage all `job_applications` rows beyond row-scope | ✓ |
+| `hiring-starter:view_all_interviews` | override (personal_content) | View all `interviews` rows beyond row-scope | ✓ |
+| `hiring-starter:manage_all_interviews` | override (personal_content) | Manage all `interviews` rows beyond row-scope | ✓ |
 | `hiring-starter:view_all_interview_scorecards` | override (personal_content) | View all `interview_scorecards` rows beyond row-scope | ✓ |
 | `hiring-starter:manage_all_interview_scorecards` | override (personal_content) | Manage all `interview_scorecards` rows beyond row-scope | ✓ |
 | `hiring-starter:view_all_offers` | override (personal_content) | View all `job_offers` rows beyond row-scope | ✓ |
@@ -346,6 +349,7 @@ _This scope holds `job_requisitions` as **embedded_master**; the canonical state
 | --- | --- | --- | --- |
 | `candidate_edit_scope` | `candidates` | has_personal_content | Row-scope by default; override via `hiring-starter:view_all_candidates` / `hiring-starter:manage_all_candidates` |
 | `application_edit_scope` | `job_applications` | has_personal_content | Row-scope by default; override via `hiring-starter:view_all_applications` / `hiring-starter:manage_all_applications` |
+| `interview_edit_scope` | `interviews` | has_personal_content | Row-scope by default; override via `hiring-starter:view_all_interviews` / `hiring-starter:manage_all_interviews` |
 | `interview_scorecard_edit_scope` | `interview_scorecards` | has_personal_content | Row-scope by default; override via `hiring-starter:view_all_interview_scorecards` / `hiring-starter:manage_all_interview_scorecards` |
 | `offer_edit_scope` | `job_offers` | has_personal_content | Row-scope by default; override via `hiring-starter:view_all_offers` / `hiring-starter:manage_all_offers` |
 
@@ -380,6 +384,8 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `hiring-starter:admin` | `hiring-starter:manage_all_candidates` |
 | `hiring-starter:admin` | `hiring-starter:view_all_applications` |
 | `hiring-starter:admin` | `hiring-starter:manage_all_applications` |
+| `hiring-starter:admin` | `hiring-starter:view_all_interviews` |
+| `hiring-starter:admin` | `hiring-starter:manage_all_interviews` |
 | `hiring-starter:admin` | `hiring-starter:view_all_interview_scorecards` |
 | `hiring-starter:admin` | `hiring-starter:manage_all_interview_scorecards` |
 | `hiring-starter:admin` | `hiring-starter:view_all_offers` |
@@ -411,7 +417,7 @@ _Baseline roles, the permission hierarchy, and RACI realization are DERIVED from
 | `HIRING-MANAGER` | persona | responsible | `interview_candidates` | the gated entities' write tier |
 | `RECRUITING-MANAGER` | persona | accountable | `interview_candidates` | the gated entities' write tier |
 | `RECRUITING-RECRUITER` | persona | consulted | `interview_candidates` | advisory read grant |
-| `RECRUITING-COORDINATOR` | persona | informed | `interview_candidates` | notify on trigger_events [interview_scorecard.submitted] |
+| `RECRUITING-COORDINATOR` | persona | responsible | `interview_candidates` | the gated entities' write tier |
 | `RECRUITING-RECRUITER` | persona | responsible | `draw_up_make_offer` | the gated entities' write tier |
 | `HIRING-MANAGER` | persona | accountable | `draw_up_make_offer` | grant gates [hiring-starter:approve_offer] + the gated entities' write tier |
 | `RECRUITING-MANAGER` | persona | consulted | `draw_up_make_offer` | advisory read grant |

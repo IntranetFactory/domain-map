@@ -440,7 +440,7 @@ export async function loadAllRelationships(): Promise<AllRelationships> {
     // 2026-06-02 "<masters> audit definition reads the module junction".
     Promise.resolve([] as any[]),
     pg("GET", "/data_object_aliases?select=data_object_id,alias_name,alias_type,is_preferred,industry_id,solution_id,notes&order=alias_name.asc&limit=20000"),
-    pg("GET", "/data_object_relationships?select=id,data_object_id,related_data_object_id,relationship_type,relationship_kind,relationship_verb,inverse_verb,is_required,owner_side,persona_id,notes&limit=20000"),
+    pg("GET", "/data_object_relationships?select=id,data_object_id,related_data_object_id,relationship_type,relationship_kind,relationship_verb,inverse_verb,is_required,persona_id,notes&limit=20000"),
     pg("GET", "/data_object_lifecycle_states?select=id,data_object_id,state_name,state_order,description,is_initial,is_terminal,requires_permission,is_high_risk,permission_verb_override,domain_module_id,process_id&order=data_object_id.asc,state_order.asc&limit=20000"),
     pg("GET", "/handoffs?select=id,trigger_event_id,source_domain_id,target_domain_id,source_domain_module_id,target_domain_module_id,data_object_id,integration_pattern,friction_level,description,notes,data_objects(data_object_name),trigger_events(event_name,description,from_state,to_state,event_category)&order=target_domain_id.asc&limit=20000"),
     // hostDomains is DERIVED, not stored (the `domain_module_host_domains` table was dropped).

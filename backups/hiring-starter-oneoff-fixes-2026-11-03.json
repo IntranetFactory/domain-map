@@ -1,0 +1,128 @@
+{
+  "taken_at": "2026-11-03T20:42:49.435Z",
+  "patched_relationships": [
+    {
+      "id": 1497,
+      "data_object_relationship_label": "candidates tagged_via candidate_tag_assignments",
+      "created_at": "2026-10-23T16:06:31.378824+00:00",
+      "updated_at": "2026-10-23T16:06:31.378824+00:00",
+      "search_vector": "'assignments':6A 'candidate':4A 'candidates':1A 'tag':5A 'tagged':2A 'via':3A",
+      "data_object_id": 3,
+      "related_data_object_id": 1003,
+      "relationship_type": "one_to_many",
+      "relationship_kind": "reference",
+      "relationship_verb": "tagged_via",
+      "inverse_verb": "tags_candidate",
+      "is_required": false,
+      "record_status": "new",
+      "notes": "",
+      "persona_id": null
+    },
+    {
+      "id": 832,
+      "data_object_relationship_label": "job_requisitions feeds people_kpis",
+      "created_at": "2026-10-23T16:06:31.378824+00:00",
+      "updated_at": "2026-10-23T16:06:31.378824+00:00",
+      "search_vector": "'feeds':3A 'job':1A 'kpis':5A 'people':4A 'requisitions':2A",
+      "data_object_id": 1,
+      "related_data_object_id": 43,
+      "relationship_type": "many_to_many",
+      "relationship_kind": "reference",
+      "relationship_verb": "feeds",
+      "inverse_verb": "is fed by",
+      "is_required": false,
+      "record_status": "new",
+      "notes": "",
+      "persona_id": null
+    },
+    {
+      "id": 1325,
+      "data_object_relationship_label": "interviews convenes interview_panels",
+      "created_at": "2026-10-23T16:06:31.378824+00:00",
+      "updated_at": "2026-10-23T16:06:31.378824+00:00",
+      "search_vector": "'convenes':2A 'interview':3A 'interviews':1A 'panels':4A",
+      "data_object_id": 8,
+      "related_data_object_id": 891,
+      "relationship_type": "one_to_one",
+      "relationship_kind": "composition",
+      "relationship_verb": "convenes",
+      "inverse_verb": "for",
+      "is_required": true,
+      "record_status": "new",
+      "notes": "",
+      "persona_id": null
+    }
+  ],
+  "deleted": {
+    "data_object_relationships": [
+      {
+        "id": 1299,
+        "data_object_relationship_label": "candidates noted_via recruiter_interactions",
+        "created_at": "2026-10-23T16:06:31.378824+00:00",
+        "updated_at": "2026-11-02T14:23:30.565249+00:00",
+        "search_vector": "'candidates':1A 'interactions':5A 'noted':2A 'recruiter':4A 'via':3A",
+        "data_object_id": 3,
+        "related_data_object_id": 869,
+        "relationship_type": "one_to_many",
+        "relationship_kind": "reference",
+        "relationship_verb": "noted_via",
+        "inverse_verb": "about",
+        "is_required": false,
+        "record_status": "new",
+        "notes": "",
+        "persona_id": null
+      },
+      {
+        "id": 2004,
+        "data_object_relationship_label": "users authors recruiter_interactions",
+        "created_at": "2026-10-23T16:06:31.378824+00:00",
+        "updated_at": "2026-11-02T13:34:56.554272+00:00",
+        "search_vector": "'authors':2A 'interactions':4A 'recruiter':3A 'users':1A",
+        "data_object_id": 748,
+        "related_data_object_id": 869,
+        "relationship_type": "one_to_many",
+        "relationship_kind": "reference",
+        "relationship_verb": "authors",
+        "inverse_verb": "has author",
+        "is_required": true,
+        "record_status": "new",
+        "notes": "",
+        "persona_id": null
+      }
+    ],
+    "domain_module_data_objects": [
+      {
+        "id": 954,
+        "domain_module_data_object_label": "ATS-CANDIDATE-CRM / recruiter_interactions",
+        "created_at": "2026-10-23T16:06:35.018223+00:00",
+        "updated_at": "2026-10-23T16:06:35.018223+00:00",
+        "search_vector": "'ats':2A 'ats-candidate-crm':1A 'candidate':3A 'crm':4A 'interactions':6A 'recruiter':5A",
+        "domain_module_id": 1,
+        "data_object_id": 869,
+        "held_as": "master",
+        "notes": "",
+        "is_install_optional": false
+      }
+    ],
+    "data_objects": [
+      {
+        "id": 869,
+        "data_object_name": "recruiter_interactions",
+        "created_at": "2026-10-23T16:06:26.814258+00:00",
+        "updated_at": "2026-10-23T16:06:26.814258+00:00",
+        "search_vector": "'interactions':2A 'recruiter':1A",
+        "kind": "domain_owned",
+        "entity_type": "operational_record",
+        "singular_label": "Recruiter Interaction",
+        "plural_label": "Recruiter Interactions",
+        "description": "Free-text recruiter note attached to a candidate, application, or pool, time-stamped and authored by a user.",
+        "catalog_description": "Free-text recruiter notes attached to a candidate, application, or talent pool, time-stamped and authored by a user.",
+        "is_canonical_bare_word": false,
+        "naming_authority_rationale": "",
+        "has_personal_content": true,
+        "record_status": "new",
+        "notes": ""
+      }
+    ]
+  }
+}

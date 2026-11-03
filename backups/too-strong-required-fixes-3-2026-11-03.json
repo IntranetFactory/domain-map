@@ -1,0 +1,39 @@
+{
+  "taken_at": "2026-11-03T21:21:17.616Z",
+  "data_object_relationships": [
+    {
+      "id": 807,
+      "data_object_relationship_label": "job_requisitions is advertised through job_postings",
+      "created_at": "2026-10-23T16:06:31.378824+00:00",
+      "updated_at": "2026-10-23T16:06:31.378824+00:00",
+      "search_vector": "'advertised':4A 'is':3A 'job':1A,6A 'postings':7A 'requisitions':2A 'through':5A",
+      "data_object_id": 1,
+      "related_data_object_id": 2,
+      "relationship_type": "one_to_many",
+      "relationship_kind": "reference",
+      "relationship_verb": "is advertised through",
+      "inverse_verb": "advertises",
+      "is_required": true,
+      "record_status": "new",
+      "notes": "",
+      "persona_id": null
+    },
+    {
+      "id": 808,
+      "data_object_relationship_label": "job_requisitions receives job_applications",
+      "created_at": "2026-10-23T16:06:31.378824+00:00",
+      "updated_at": "2026-10-23T16:06:31.378824+00:00",
+      "search_vector": "'applications':5A 'job':1A,4A 'receives':3A 'requisitions':2A",
+      "data_object_id": 1,
+      "related_data_object_id": 4,
+      "relationship_type": "one_to_many",
+      "relationship_kind": "reference",
+      "relationship_verb": "receives",
+      "inverse_verb": "is received by",
+      "is_required": true,
+      "record_status": "new",
+      "notes": "",
+      "persona_id": null
+    }
+  ]
+}

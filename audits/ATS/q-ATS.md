@@ -166,7 +166,7 @@ q26: Recruiter interactions and candidate notes are two records with the same me
 
 Recommended: a. Greenhouse, Lever, Ashby and SmartRecruiters each keep a single notes record on the candidate; none separates recruiter interactions from notes.
 
-a26:
+a26: a, applied 2026-11-03
 
 ---
 

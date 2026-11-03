@@ -412,7 +412,7 @@ describe("rule 12: §7 is per master", () => {
 });
 
 describe("§5: relationship values and §5.3 grouping", () => {
-  const relationship = (over: Record<string, unknown>) => ({ data_object_id: 1, related_data_object_id: 2, relationship_type: "one_to_many", owner_side: "source", ...over });
+  const relationship = (over: Record<string, unknown>) => ({ data_object_id: 1, related_data_object_id: 2, relationship_type: "one_to_many", ...over });
   const scope = (entries: [number, string][]) => new Map<number, string>(entries);
 
   test("a one_to_many or one_to_one relationship resolves from kind and is_required", () => {
@@ -439,11 +439,11 @@ describe("§5: relationship values and §5.3 grouping", () => {
   });
   test("direction follows the field, not the from and to columns", () => {
     // many_to_one from 1 to 2: the field sits on 1, the from column, so it is outgoing when 1 is listed.
-    expect(isIncomingRelationship(relationship({ relationship_type: "many_to_one", owner_side: "target" }), scope([[1, "embedded_master"]]))).toBe(false);
-    expect(isIncomingRelationship(relationship({ relationship_type: "many_to_one", owner_side: "target" }), scope([[2, "embedded_master"]]))).toBe(true);
+    expect(isIncomingRelationship(relationship({ relationship_type: "many_to_one" }), scope([[1, "embedded_master"]]))).toBe(false);
+    expect(isIncomingRelationship(relationship({ relationship_type: "many_to_one" }), scope([[2, "embedded_master"]]))).toBe(true);
   });
-  test("a one_to_one field sits opposite the owner_side", () => {
-    expect(isIncomingRelationship(relationship({ relationship_type: "one_to_one", owner_side: "source" }), scope([[1, "embedded_master"]]))).toBe(true);
-    expect(isIncomingRelationship(relationship({ relationship_type: "one_to_one", owner_side: "target" }), scope([[1, "embedded_master"]]))).toBe(false);
+  test("a one_to_one field sits on `to`", () => {
+    expect(isIncomingRelationship(relationship({ relationship_type: "one_to_one" }), scope([[1, "embedded_master"]]))).toBe(true);
+    expect(isIncomingRelationship(relationship({ relationship_type: "one_to_one" }), scope([[2, "embedded_master"]]))).toBe(false);
   });
 });

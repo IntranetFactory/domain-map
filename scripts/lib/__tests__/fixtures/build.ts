@@ -141,7 +141,6 @@ export function relationshipRow(
     relationship_verb: "",
     inverse_verb: "",
     is_required: false,
-    owner_side: "source",
     notes: "",
     ...p,
   };

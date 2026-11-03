@@ -1,6 +1,6 @@
 // scripts/lib/blueprint_invariants.ts
 //
-// Derived-result invariants R1-R8 (plans/domain-health-and-blueprint-quality-plan.md Phase 3):
+// Derived-result invariants R1-R9 (plans/domain-health-and-blueprint-quality-plan.md Phase 3):
 // checks on the BlueprintModel that deriveModuleModel / deriveBlueprintModel produce, i.e. on what a
 // blueprint's sections 6-9 SHOW, not on the catalog rows behind them (the data-layer checks live in
 // catalog_invariants.ts and the health bands). Prefix R because the checklist already has a D1.
@@ -17,6 +17,7 @@
 //   R7  the module description does not contradict the derived counts (heuristic): gates,
 //       baseline permissions, system / domain skills                                          warn
 //   R8  every row-scope rule's entity has a single-person ownership relationship to `users`             warn
+//   R9  every persona in the RACI table has a row that grants access (not only Informed)       warn
 //
 // Pure: no catalog fetch, no file IO, no console output. Callers: generate_blueprints.ts (stderr on
 // every emit, and `--lint`), the health check E6 (scripts/lib/health/checks_e.ts), the architect
@@ -38,7 +39,7 @@ import {
 import type { BlueprintModel, DeriveCtx, HandoffModel, ModuleAccessModel } from "./blueprint_derive.ts";
 import type { Finding } from "./health/types.ts";
 
-export type RuleId = "R1" | "R2" | "R3" | "R4" | "R5" | "R6" | "R7" | "R8";
+export type RuleId = "R1" | "R2" | "R3" | "R4" | "R5" | "R6" | "R7" | "R8" | "R9";
 
 export const RULES: Record<RuleId, { severity: "fail" | "warn"; title: string }> = {
   R1: { severity: "fail", title: "every functional-ownership role exists among the baseline roles" },
@@ -49,6 +50,7 @@ export const RULES: Record<RuleId, { severity: "fail" | "warn"; title: string }>
   R6: { severity: "warn", title: "every 6.2 / 6.3 handoff event resolves to_state on its entity's lifecycle" },
   R7: { severity: "warn", title: "the module description agrees with the derived counts (heuristic)" },
   R8: { severity: "warn", title: "every row-scope rule's entity has a single-person relationship to users" },
+  R9: { severity: "warn", title: "every persona in the RACI table has a row that grants access" },
 };
 
 export const RULE_IDS = Object.keys(RULES) as RuleId[];
@@ -101,6 +103,7 @@ export function checkModel(model: BlueprintModel, opts: CheckModelOptions = {}):
     checkInformedRows(pm, (rows, d) => add("R5", code, rows, d));
     checkDescriptionCounts(pm, opts.skills, (rows, d) => add("R7", code, rows, d));
     checkRowScopeOwners(model, pm, (rows, d) => add("R8", code, rows, d));
+    checkPersonasHaveGrant(pm, (rows, d) => add("R9", code, rows, d));
   }
   checkHandoffStates(model, opts.ctx, (rows, d) => add("R6", scopeLabel, rows, d));
 
@@ -357,4 +360,20 @@ function singlePersonProblem(e: any, entityId: number): string | null {
   if (!single) return e.relationship_type === "many_to_many" ? "many users per row" : "users is not the one side";
   if (TWO_PERSON_VERB_RE.test(String(e.relationship_verb ?? ""))) return "the verb names two kinds of person";
   return null;
+}
+
+// ---------- R9: every persona in the RACI table has a row that grants access ----------
+
+// Informed grants nothing at deploy (modeler Stage 4k), so a persona whose only rows in this module
+// are Informed is listed as an actor yet has no read or write here under raci.
+function checkPersonasHaveGrant(pm: ModuleAccessModel, report: (rows: string[], detail: string) => void): void {
+  const personas = pm.raci.filter((g) => g.actorKind === "persona");
+  const granted = new Set(personas.filter((g) => raciLetter(g.raci) !== "I").map((g) => g.actor));
+  const informedOnly = new Map<string, string[]>();
+  for (const g of personas) {
+    if (!granted.has(g.actor)) informedOnly.set(g.actor, [...(informedOnly.get(g.actor) ?? []), g.process]);
+  }
+  for (const [actor, processes] of informedOnly) {
+    report([actor, ...processes], `persona \`${actor}\` is only Informed here (${processes.map((p) => `\`${p}\``).join(", ")}), and Informed grants nothing, so under raci it has no read or write in this module`);
+  }
 }

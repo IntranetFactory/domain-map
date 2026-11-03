@@ -11,8 +11,7 @@
 // rows have no catalog id yet, so a loader passes any stable label as `id`.
 //
 // Checklist IDs (SKILL.md "Per-domain completeness checklist"):
-//   B6b  relationship shape: empty inverse_verb; one_to_many / many_to_one owner_side names the
-//        "one" (parent) side; composition child mastered in the parent's domain           warn
+//   B6b  relationship shape: empty inverse_verb; composition child mastered in the parent's domain   warn
 //   B7b  relationship to users that is many_to_many + reference                                       fail
 //        relationship-to-users verb combining two kinds of person ("has coordinator and panelists")   warn
 //   B9c  lifecycle / state_change event with blank to_state; any non-blank to_state that
@@ -48,7 +47,6 @@ export type RelationshipRow = {
   relationship_kind: string; // composition | reference | association | inheritance
   relationship_verb: string;
   inverse_verb?: string | null;
-  owner_side: string; // source | target
   is_required?: boolean | null;
 };
 
@@ -110,17 +108,17 @@ function relationshipText(r: RelationshipRow, nameOf: NameOf): string {
   return `${nameOf(r.data_object_id)} ${r.relationship_verb} ${nameOf(r.related_data_object_id)}`;
 }
 
-// The cardinality "one" side, i.e. the parent the owner_side must name. null when the cardinality
-// does not decide it (one_to_one, many_to_many).
+// The cardinality "one" side, i.e. the parent. null when the cardinality does not decide it
+// (one_to_one, many_to_many).
 export function oneSide(relationshipType: string): "source" | "target" | null {
   if (relationshipType === "one_to_many") return "source";
   if (relationshipType === "many_to_one") return "target";
   return null;
 }
 
-// The child of a composition: the end opposite the parent, which cardinality decides, then owner_side.
+// The child of a composition: `to`, because `from` is the parent, unless a many_to_one stores the child first.
 function compositionChild(r: RelationshipRow): number {
-  const side = oneSide(r.relationship_type) ?? (r.owner_side === "target" ? "target" : "source");
+  const side = oneSide(r.relationship_type) ?? "source";
   return side === "source" ? r.related_data_object_id : r.data_object_id;
 }
 
@@ -139,16 +137,6 @@ export function checkRelationshipShape(rels: RelationshipRow[], opts: Relationsh
       out.push({ id: "B6b", severity: "warn", rule: "inverse_verb_empty", rows: [id], detail: `empty inverse_verb on '${relationshipText(r, nameOf)}' (m4b)` });
     }
     const parentSide = oneSide(r.relationship_type);
-    if (parentSide && r.owner_side !== parentSide) {
-      const tag = r.relationship_kind === "composition" ? "composition (M7)" : `${r.relationship_type} (m5)`;
-      out.push({
-        id: "B6b",
-        severity: "warn",
-        rule: "owner_side_not_parent",
-        rows: [id],
-        detail: `${tag} '${relationshipText(r, nameOf)}' has owner_side=${r.owner_side}; the "one" (parent) side is ${parentSide}. Review, never a blanket flip: if the verb reads child-to-parent, swap the verbs instead`,
-      });
-    }
     if (r.relationship_kind === "composition" && r.is_required === false && compositionsByChild.get(compositionChild(r)) === 1) {
       out.push({
         id: "B6b",
@@ -159,7 +147,7 @@ export function checkRelationshipShape(rels: RelationshipRow[], opts: Relationsh
       });
     }
     if (r.relationship_kind === "composition" && opts.masterDomainsByDataObject) {
-      const side = parentSide ?? (r.owner_side === "target" ? "target" : "source");
+      const side = parentSide ?? "source";
       const parent = side === "source" ? r.data_object_id : r.related_data_object_id;
       const child = side === "source" ? r.related_data_object_id : r.data_object_id;
       const pd = opts.masterDomainsByDataObject.get(parent);

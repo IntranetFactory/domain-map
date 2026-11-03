@@ -214,10 +214,12 @@ const validKind = new Set(["composition", "reference", "association", "inheritan
 const validOwnerSide = new Set(["source", "target"]);
 const validAliasType = new Set(["synonym", "industry_term", "solution_term"]);
 
-// Auto-flip many_to_one → one_to_many (swap sides, swap verbs, swap owner_side).
+// Make `from` the parent: flip a many_to_one into a one_to_many, and a one_to_one whose draft
+// owner_side names `to` as the parent (swap sides, swap verbs). The draft column is read for this only.
 let autoFlipped = 0;
 for (const e of draftRelationships) {
-  if (e.cardinality !== "many_to_one") continue;
+  if (e.cardinality !== "many_to_one" && !(e.cardinality === "one_to_one" && e.owner_side === "target")) continue;
+  const flippedFrom = e.cardinality;
   const oldFrom = e.from;
   const oldTo = e.to;
   const oldVerb = e.verb;
@@ -226,12 +228,12 @@ for (const e of draftRelationships) {
   e.to = oldFrom;
   e.verb = oldInv || `(inverse of ${oldVerb})`;
   e.inverse_verb = oldVerb;
-  e.owner_side = e.owner_side === "source" ? "target" : "source";
-  e.cardinality = "one_to_many";
-  e.notes = `${e.notes ? e.notes + " | " : ""}auto-flipped from many_to_one`;
+  e.owner_side = "source";
+  if (flippedFrom === "many_to_one") e.cardinality = "one_to_many";
+  e.notes = `${e.notes ? e.notes + " | " : ""}auto-flipped from ${flippedFrom}`;
   autoFlipped++;
 }
-if (autoFlipped > 0) console.log(`auto-flipped ${autoFlipped} many_to_one relationships → one_to_many`);
+if (autoFlipped > 0) console.log(`auto-flipped ${autoFlipped} relationships so from is the parent`);
 
 // Dedupe: keep first occurrence (alphabetical cluster order), drop subsequent duplicates.
 const seenRelationships = new Map<string, string>(); // key → cluster/domain that first claimed it
@@ -280,7 +282,6 @@ const incomingRels: RelationshipRow[] = draftRelationships
     relationship_kind: e.kind,
     relationship_verb: e.verb,
     inverse_verb: e.inverse_verb,
-    owner_side: e.owner_side,
   }));
 const masterDomainsByDataObject = new Map<number, Set<number>>();
 const endpointIds = [...new Set(incomingRels.flatMap((r) => [r.data_object_id, r.related_data_object_id]))];
@@ -381,7 +382,6 @@ for (const e of draftRelationships) {
     inverse_verb: e.inverse_verb || `(inverse of ${e.verb})`,
     relationship_type: e.cardinality,
     relationship_kind: e.kind,
-    owner_side: e.owner_side,
     is_required: e.required === "true",
     notes: `${e.section} | cluster ${e.cluster} | ${e.domain_code}${e.notes ? " | " + e.notes : ""}`,
     record_status: "new",

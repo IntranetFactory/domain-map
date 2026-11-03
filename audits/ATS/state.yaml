@@ -74,13 +74,6 @@ b2:
     options: ["yes", "no"]
     why: "Rule #18: vendor and product names belong only on commerce-shaped entities."
 
-  - id: B2-S1-RECRUITER-INTERACTIONS
-    summary: "recruiter_interactions (869) duplicates candidate_notes (1001)"
-    question: "Merge recruiter_interactions into candidate_notes (move its relationships, delete 869)?"
-    options: ["yes, merge", "no, re-scope recruiter_interactions instead", "no, keep both"]
-    evidence: "Greenhouse, Lever, Ashby and SmartRecruiters each model a single notes object on the candidate; none separates recruiter interactions from notes (API object lists, 2026-11-01)."
-    why: "Two masters with the same definition split one record type across the module."
-
   - id: B2-S2-NURTURE-VS-SEQUENCES
     summary: "candidate_nurture_campaigns (867) duplicates outreach_sequences (1259)"
     question: "Merge candidate_nurture_campaigns into outreach_sequences?"

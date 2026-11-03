@@ -86,9 +86,9 @@ export type WriteTier = { read: string; write: string | null; pending: boolean }
 // is_required, relationship_type). A many_to_many relationship has no field on either entity, so its
 // values describe the two legs of its junction table, always `parent` + `cascade`. A relationship to an
 // entity outside the scope (§5.3) has neither value: its field is only proposed at deploy.
-// `owner_side` names the PARENT endpoint (the lifecycle owner, the cascade root, the "one" side of
-// a one_to_many); the FK column lives on the other endpoint, the child. It does not change the
-// mode/format. The applied ON DELETE lands in the tenant DB at deploy.
+// `from` is the PARENT endpoint (the lifecycle owner, the cascade root, the "one" side of a
+// one_to_many); the FK column lives on `to`, the child. The applied ON DELETE lands in the tenant
+// DB at deploy.
 export type DeleteMode = { mode: string; fkFormat: string };
 
 // One lifecycle state's gate, as resolved by deriveGate. `gateModule` is the canonical realizing

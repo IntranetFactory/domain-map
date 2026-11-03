@@ -309,7 +309,6 @@ describe("M9 part 2: relationship-layer self-containment", () => {
     relationship_kind: kind,
     relationship_type: "one_to_many",
     relationship_verb: "has",
-    owner_side: "source",
     is_required: true,
     ...over,
   });
@@ -319,10 +318,10 @@ describe("M9 part 2: relationship-layer self-containment", () => {
     const rels = [e(1, 1, 3, "composition"), e(2, 3, 2, "reference"), e(3, 1, 2, "composition"), e(4, 1, 3, "reference", { is_required: false }), e(5, 1, 9, "reference")];
     expect(sides(relationshipSelfContainment(scope, rels, { kindById }))).toEqual(["1:3:parent", "2:3:holds_fk"]);
   });
-  test("the FK side follows cardinality, then owner_side for one_to_one; many_to_many has none", () => {
+  test("the FK side follows cardinality, and `to` holds it on a one_to_one; many_to_many has none", () => {
     const rels = [
-      e(1, 1, 3, "reference", { relationship_type: "many_to_one", owner_side: "source" }), // mislabeled owner_side: the "many" source still holds the FK
-      e(2, 1, 3, "reference", { relationship_type: "one_to_one", owner_side: "target" }),
+      e(1, 1, 3, "reference", { relationship_type: "many_to_one" }), // the "many" source holds the FK
+      e(2, 3, 1, "reference", { relationship_type: "one_to_one" }),
       e(3, 1, 3, "reference", { relationship_type: "many_to_many" }),
     ];
     expect(sides(relationshipSelfContainment(scope, rels, { kindById }))).toEqual(["1:3:holds_fk", "2:3:holds_fk", "3:3:many_to_many"]);
