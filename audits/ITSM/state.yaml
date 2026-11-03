@@ -102,6 +102,26 @@ b2:
     why: Pattern flags are workflow-shape judgments the user owns; defaults to false do not establish review. The decision lives only in the audit decisions (Rule #15 forbids recording it in notes). knowledge_articles (id 51) is entity_type=operational_workflow, so flag consideration is in scope.
     affected_masters:
       - {data_object_id: 51, name: knowledge_articles, target_module_id: 43, workflow: knowledge}
+  - id: B2-SUBSET-TEXT-SERVICE-REQUESTS
+    summary: "service_requests text says catalog-driven, but ITSM-STARTER can leave the catalog out and IT-OPS-STARTER does not carry it. Reword (overwrites non-empty values)."
+    question: "Reword the catalog_description, description and state 265 of service_requests so they stay true without a service catalog?"
+    options: ["yes", "no"]
+    why: "Rule #19 entity and state text. The text is shared, so the new wording also reaches the other modules holding the entity, where it stays true and the relationship to service_catalog_items remains."
+    affected_entities: [service_requests, service_catalog_items]
+    extra_shared_with: [ONB-JOURNEY-MGMT, ITSM-SERVICE-REQUEST, HRSD-EMPLOYEE-PORTAL, RMM-MONITORING, IT-OPS-STARTER, ITSM-STARTER]
+    extra_rows:
+      - {table: data_objects, id: 48, column: catalog_description, to: "Planned requests for access, hardware, software, or information, distinct from reactive incidents."}
+      - {table: data_objects, id: 48, column: description, to: "Planned request: access, hardware, software, information. Distinct from incidents: incidents are reactive, service requests are proactive. The fulfillment for many requests crosses domains (provisioning ↔ IGA, asset assignment ↔ ITAM, HR exception ↔ HRSD)."}
+      - {table: data_object_lifecycle_states, id: 265, column: description, to: "Requester has submitted the request."}
+  - id: B2-SUBSET-TEXT-SERVICE-INCIDENTS
+    summary: "service_incidents state closed says SLA clock stopped, but ITSM-STARTER can leave SLAs out and IT-OPS-STARTER does not carry them. Reword (overwrites a non-empty value)."
+    question: "Reword state 258 of service_incidents so it stays true without service-level agreements?"
+    options: ["yes", "no"]
+    why: "Rule #19 entity and state text. The text is shared, so the new wording also reaches the other modules holding the entity."
+    affected_entities: [service_incidents, service_slas]
+    extra_shared_with: [ITSM-INCIDENT-MGMT, MSP-PSA-SVC-DESK, WSC-CHANNELS-CONVERSATIONS, ITOM-INFRA-MON, REMOTE-ACCESS-SESSION, RMM-MONITORING, IT-OPS-STARTER, ITSM-STARTER]
+    extra_rows:
+      - {table: data_object_lifecycle_states, id: 258, column: description, to: "Resolution confirmed; incident archived."}
 
 b3:
   - id: B3-WORKFLOW-SUBSTRATE

@@ -58,6 +58,15 @@ b2:
     options: ["promote_to_embedded_master_where_standalone", "keep_all_5_consumer", "delete_all_5"]
     evidence: "User asked whether embedded_master is better - it is, for any module meant to deploy standalone. Delivery Ops is the clearest case: it is the destination of 4 cross-module handoffs and consumes 4 sibling masters, so an embedded shell lets it ship without CSA-MGMT / WHOLESALE / BUTCHER and demote to consumer when they are co-installed. The domain already has 9 intra-domain handoffs wiring these flows, so the rows are accurate reads, not redundancy - keeping them is also valid if you do NOT need per-module standalone deploy. Promoting / deleting rewrites existing rows (destructive), so it needs sign-off. This sets the deployability shape for every module."
     why: "Architectural deployability decision; the a-file question keeps it open until you confirm which rows become embedded_master."
+  - id: B2-SUBSET-TEXT-CSA-SHARE-PACKS
+    summary: "csa_share_packs state planned says computed from forecast, but CSA-STARTER does not carry harvest_forecasts. Reword (overwrites a non-empty value)."
+    question: "Reword state 726 of csa_share_packs so it stays true without a harvest forecast record?"
+    options: ["yes", "no"]
+    why: "Rule #19 entity and state text. The text is shared, so the new wording also reaches the other modules holding the entity, where it stays true."
+    affected_entities: [csa_share_packs, harvest_forecasts]
+    extra_shared_with: [CRM-ACCT-MGT, FDS-CSA-MGMT, FDS-DELIVERY-OPS, CSA-STARTER]
+    extra_rows:
+      - {table: data_object_lifecycle_states, id: 726, column: description, to: "Share composition planned from the expected harvest and member swaps."}
 
 b3:
   - id: B3-FDS-ENTITIES

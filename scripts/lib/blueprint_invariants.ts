@@ -1,6 +1,6 @@
 // scripts/lib/blueprint_invariants.ts
 //
-// Derived-result invariants R1-R9 (plans/domain-health-and-blueprint-quality-plan.md Phase 3):
+// Derived-result invariants R1-R10 (plans/domain-health-and-blueprint-quality-plan.md Phase 3):
 // checks on the BlueprintModel that deriveModuleModel / deriveBlueprintModel produce, i.e. on what a
 // blueprint's sections 6-9 SHOW, not on the catalog rows behind them (the data-layer checks live in
 // catalog_invariants.ts and the health bands). Prefix R because the checklist already has a D1.
@@ -18,6 +18,7 @@
 //       baseline permissions, system / domain skills                                          warn
 //   R8  every row-scope rule's entity has a single-person ownership relationship to `users`             warn
 //   R9  every persona in the RACI table has a row that grants access (not only Informed)       warn
+//   R10 entity and state text names no related entity the module can lack (heuristic)          warn
 //
 // Pure: no catalog fetch, no file IO, no console output. Callers: generate_blueprints.ts (stderr on
 // every emit, and `--lint`), the health check E6 (scripts/lib/health/checks_e.ts), the architect
@@ -25,8 +26,9 @@
 //
 // Pass `opts.ctx` (the DeriveCtx the model was derived from) whenever you have it: R4's per-process
 // half needs it to resolve process ids to the `process_key` the RACI rows carry, and R6 reads the
-// trigger event's own entity (and that entity's lifecycle when it is out of scope) from it. Without
-// it, R4 runs its per-gate half only and R6 resolves events against the handoff's payload entity.
+// trigger event's own entity (and that entity's lifecycle when it is out of scope) from it, and R10
+// reads the labels of entities outside the scope from it. Without it, R4 runs its per-gate half only,
+// R6 resolves events against the handoff's payload entity, and R10 checks in-scope entities only.
 
 import {
   checkEventStates,
@@ -39,7 +41,7 @@ import {
 import type { BlueprintModel, DeriveCtx, HandoffModel, ModuleAccessModel } from "./blueprint_derive.ts";
 import type { Finding } from "./health/types.ts";
 
-export type RuleId = "R1" | "R2" | "R3" | "R4" | "R5" | "R6" | "R7" | "R8" | "R9";
+export type RuleId = "R1" | "R2" | "R3" | "R4" | "R5" | "R6" | "R7" | "R8" | "R9" | "R10";
 
 export const RULES: Record<RuleId, { severity: "fail" | "warn"; title: string }> = {
   R1: { severity: "fail", title: "every functional-ownership role exists among the baseline roles" },
@@ -51,6 +53,7 @@ export const RULES: Record<RuleId, { severity: "fail" | "warn"; title: string }>
   R7: { severity: "warn", title: "the module description agrees with the derived counts (heuristic)" },
   R8: { severity: "warn", title: "every row-scope rule's entity has a single-person relationship to users" },
   R9: { severity: "warn", title: "every persona in the RACI table has a row that grants access" },
+  R10: { severity: "warn", title: "entity and state text names no related entity the module can lack (heuristic)" },
 };
 
 export const RULE_IDS = Object.keys(RULES) as RuleId[];
@@ -104,6 +107,7 @@ export function checkModel(model: BlueprintModel, opts: CheckModelOptions = {}):
     checkDescriptionCounts(pm, opts.skills, (rows, d) => add("R7", code, rows, d));
     checkRowScopeOwners(model, pm, (rows, d) => add("R8", code, rows, d));
     checkPersonasHaveGrant(pm, (rows, d) => add("R9", code, rows, d));
+    checkSubsetText(model, pm, opts.ctx, (rows, d) => add("R10", code, rows, d));
   }
   checkHandoffStates(model, opts.ctx, (rows, d) => add("R6", scopeLabel, rows, d));
 
@@ -375,5 +379,84 @@ function checkPersonasHaveGrant(pm: ModuleAccessModel, report: (rows: string[], 
   }
   for (const [actor, processes] of informedOnly) {
     report([actor, ...processes], `persona \`${actor}\` is only Informed here (${processes.map((p) => `\`${p}\``).join(", ")}), and Informed grants nothing, so under raci it has no read or write in this module`);
+  }
+}
+
+// ---------- R10: entity and state text names no related entity the module can lack ----------
+
+// An entity has one catalog_description and one set of state descriptions, shared by every module
+// that holds it, so text written for a full module can promise something a subset does not carry
+// (SKILL.md Rule #19). A related entity can be missing when the module holds it as install-optional,
+// or when a starter does not hold it at all. A full module's absent neighbor is not reported: it
+// usually sits in a sibling module, and that text is written for the full market.
+//
+// A heuristic on the other entity's head noun, the last word of its label ("requisition" in "Job
+// Requisition"), so a hit is a candidate: the text may only contrast the entity ("distinct from
+// incidents"). It also misses a claim phrased in other words ("full evaluation history"), so a clean
+// R10 does not clear the text. A hollow head defers to the word before it ("catalog" in "Service Catalog
+// Item"); a generic head says too little to mean one entity, so it gives no word at all.
+const R10_HOLLOW_HEADS = new Set(["entry", "item", "line", "record"]);
+const R10_GENERIC_HEADS = new Set([
+  "activity", "approval", "assignment", "category", "change", "check", "comment", "definition", "detail", "document", "event", "history", "issue",
+  "member", "message", "metric", "notice", "order", "profile", "request", "response", "result", "review", "schedule", "session", "source", "stage",
+  "status", "template", "transition", "version",
+]);
+const R10_MIN_WORD = 5;
+
+function stemWord(word: string): string {
+  return word.replace(/ies$/, "y").replace(/s$/, "");
+}
+
+function labelWords(label: string | undefined): string[] {
+  return (label ?? "").toLowerCase().match(/[a-z0-9]+/g) ?? [];
+}
+
+// The forms of the label's head noun that text can use (singular and plural), or [] when it has none.
+function headNounForms(o: { singular_label?: string; plural_label?: string }): string[] {
+  const singular = labelWords(o.singular_label);
+  const plural = labelWords(o.plural_label);
+  for (let back = 1; back <= singular.length; back++) {
+    const word = singular[singular.length - back];
+    if (R10_HOLLOW_HEADS.has(stemWord(word))) continue;
+    if (R10_GENERIC_HEADS.has(stemWord(word)) || word.length < R10_MIN_WORD) return [];
+    return [...new Set([word, plural[plural.length - back] ?? word])];
+  }
+  return [];
+}
+
+function checkSubsetText(model: BlueprintModel, pm: ModuleAccessModel, ctx: DeriveCtx | undefined, report: (rows: string[], detail: string) => void): void {
+  const starter = pm.module.module_kind === "starter";
+  const inScope = new Map(model.entities.map((e) => [e.data_object_id, e]));
+  for (const row of pm.scopeRows) {
+    const entity = row.data_object;
+    if (entity.kind === "platform_builtin") continue;
+    const states = model.lifecycle.find((l) => l.dataObject.id === entity.id)?.states ?? [];
+    const texts: [string, string][] = [
+      ["catalog_description", entity.catalog_description || entity.description || ""],
+      ...states.map((s): [string, string] => [`state \`${s.state.state_name}\``, s.state.description ?? ""]),
+    ];
+    const own = new Set([...labelWords(entity.singular_label), ...labelWords(entity.plural_label)].map(stemWord));
+    const others = new Set<number>();
+    for (const r of model.relationships.all) {
+      if (r.data_object_id === entity.id) others.add(r.related_data_object_id);
+      else if (r.related_data_object_id === entity.id) others.add(r.data_object_id);
+    }
+    others.delete(entity.id);
+    for (const id of [...others].sort((a, b) => a - b)) {
+      const scoped = inScope.get(id);
+      const other = scoped?.data_object ?? ctx?.index.dataObjectsById.get(id);
+      if (!other || other.kind === "platform_builtin") continue;
+      const why = scoped ? (scoped.is_install_optional ? "is install-optional here, so a deployment can leave it out" : null) : starter ? "is outside this starter" : null;
+      if (!why) continue;
+      const words = headNounForms(other).filter((w) => !own.has(stemWord(w)));
+      if (words.length === 0) continue;
+      const re = new RegExp(`\\b(${words.join("|")})\\b`, "i");
+      const hits = texts.map(([where, text]) => ({ where, word: text.match(re)?.[1] })).filter((h) => h.word);
+      if (hits.length === 0) continue;
+      report(
+        [entity.data_object_name, other.data_object_name],
+        `\`${entity.data_object_name}\` text says "${hits[0].word}" (${hits.map((h) => h.where).join(", ")}), but \`${other.data_object_name}\` ${why}; reword it so it stays true without that entity`,
+      );
+    }
   }
 }

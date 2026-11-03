@@ -184,6 +184,7 @@ export type BlueprintModel = {
   catalog: ModuleCatalog; // the scoped catalog rows (aliases, co-masters, owners, parent domains, raw lifecycle)
   relatedModules: ModuleRow[]; // front matter `related_modules`, sorted by code
   personas: string[]; // front matter `persona`: deduplicated persona actors across every module's RACI, sorted
+  supportsRaci: boolean; // front matter `supports_raci`: see deriveSupportsRaci
   entities: EntityModel[]; // §2 / §3
   relationships: RelationshipsModel; // §5
   handoffs: { outbound: HandoffModel[]; inbound: HandoffModel[] }; // §6.2 / §6.3
@@ -755,6 +756,21 @@ function handoffOrder(a: any, b: any): number {
   );
 }
 
+// Front matter `supports_raci`: the blueprint can run at the `raci` access level as it stands. Every
+// module has at least one gate, every process in its RACI table has exactly one Accountable row, and
+// every gate is in the `grant gates [...]` list of exactly one Accountable row. This is the RACI rule
+// the architect's consistency-check.ts tests on the file. Derived, never stored.
+export function deriveSupportsRaci(perModule: ModuleAccessModel[]): boolean {
+  const granted = (realization: string): string[] =>
+    (realization.match(/grant gates \[([^\]]*)\]/)?.[1] ?? "").split(",").map((c) => c.trim());
+  return perModule.every((pm) => {
+    if (pm.gates.length === 0) return false;
+    const accountable = pm.raci.filter((g) => g.raci === "accountable");
+    const oneEach = [...new Set(pm.raci.map((g) => g.process))].every((p) => accountable.filter((g) => g.process === p).length === 1);
+    return oneEach && pm.gates.every((gate) => accountable.filter((g) => granted(g.realization).includes(gate.code)).length === 1);
+  });
+}
+
 // The whole derived blueprint for a scope of one or more modules. Scope = union of the modules'
 // data_objects, strongest held_as wins per data_object (loadModuleCatalog). Pure: no IO, no output,
 // and every rule reads the catalog only through `ctx`.
@@ -786,6 +802,7 @@ export function deriveBlueprintModel(modules: ModuleRow[], ctx: DeriveCtx): Blue
     catalog: cat,
     relatedModules,
     personas: [...personaSet].sort(),
+    supportsRaci: deriveSupportsRaci(perModule),
     entities: cat.scopeRows.map((r) => ({ ...r, writeTier: entityWriteTier(ctx, r, rels) })),
     relationships: {
       all: rels.all,

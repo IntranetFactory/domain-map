@@ -924,3 +924,89 @@ Approved by the user in the moment. Script: `.tmp_deploy/2026-11-03_hiring_start
 - No blueprint was regenerated, so L22 of the Hiring Starter file still shows the old sentence until the user rebuilds it.
 - Bug-47's other term, `⚠ no process`, is unchanged, and so is its rating in the review. The review still lists these bugs, because it describes blob `850cb92`.
 - The lint warning proposed for bug-19 and the checks proposed for bug-47 were not added.
+
+## 2026-11-03: Hiring Starter review bugs 17, 51 and 52: wording fixed; Rule #19 and R10 added
+
+Approved by the user in the moment. Script: `.tmp_deploy/2026-11-03_hiring_starter_subset_wording.ts`; backup: `backups/hiring-starter-subset-wording-2026-11-03.json`. `record_status` was not changed.
+
+**Catalog, overwrites of shared text.** The new wording also shows in every full module holding these entities.
+
+- `job_applications` (4), bugs 17 and 52: `catalog_description` is now "Candidate submissions for a specific job, with pipeline stage, status, and source."
+- `job_postings` (2), bug 17: `catalog_description` is now "Published, candidate-facing versions of a job on a career site or job board, one job possibly having many postings."
+- `job_offers` (11), bug 51: `catalog_description` is now "Formal employment offers extended to candidates, with compensation, start date, terms, approval, and status."
+- The `description` column of those three rows got the same edit, so the two columns do not disagree.
+- States, bug 17: 217 `applied` is now "Candidate submitted an application for the job."; 231 `draft` is now "Posting being composed for a specific board or region."; 235 `closed` is now "Posting taken down because the job is filled or canceled."
+- State 213 `completed` is now "Interview took place; feedback is being collected." The review missed this one: scorecards are optional in the starter (L93).
+
+**Blueprint.** Regenerated `--module HIRING-STARTER` only: blob `8ff0b9f` to `c6327ab`, 7 lines changed and none added, so the review's L numbers still point at the same lines.
+
+**Skill and lint.** Rule #19 gains "Entity and state text stays true in a subset". R10 in `scripts/lib/blueprint_invariants.ts` warns on text naming the head noun of a related entity the module can lack. It catches the bug-17 shape, but it misses "approval chain" and "full evaluation history", which the rule has to cover. `CHECKLIST_VERSION` is 5. Reasoning: `references/skill-changelog.md`.
+
+**Sweep of the other six starters, read-only.** 12 overwrites proposed as questions in `q-ITSM.md` (2), `q-LMS.md` (2), `q-FARMER-DIRECT-SALES.md` (1), `q-REAL-ESTATE-AGENT.md` (4), `q-HVAC-SVC-MGMT.md` (2) and `q-IT-OPS-STARTER.md` (1). Each domain's history lists what was read and left as is.
+
+**Left as is, not covered by this request.**
+
+- The old wording stays in `ats-interviews`, `ats-offers`, `ats-pre-employee-record`, `ats-recruitment-pipeline` and `hcm-lifecycle-workflows`, and in `catalog/skill-specs/ATS/spec.json` and `catalog/skills/use-ats/spec.json`. The five blueprints already report `WOULD-CHANGE`, and regenerating them while `POSTPONE_SECTIONS_6_1_TO_6_3` is on would empty their sections 6.1 to 6.3 (8 outbound handoffs in `ats-offers` alone).
+- `candidates` "consent" (L29) waits for q2. `interviews` "panel" (L31, L259, L260, L262) waits for the bug-12 decision. R10 warns on both, as it should.
+- The review file still lists bugs 17, 51 and 52 and its counts, and it was not edited.
+- `--released --lint` exits 1 on 4 R4 fails in LMS modules (`LMS-COURSE-DELIVERY`, `LMS-CREDENTIALS`, `LMS-ILT-DELIVERY`, `LMS-PATHS`). R4 and its inputs were not changed here.
+- `checks:` in `state.yaml` was not re-recorded.
+
+## 2026-11-03: Hiring Starter overview: handoff claims removed; review stops using handoffs as evidence
+
+Approved by the user in the moment. Script: `.tmp_deploy/2026-11-03_hiring_starter_overview_handoff_claims.ts`; backup: `backups/hiring-starter-overview-handoff-claims-2026-11-03.json`. `record_status` was not changed.
+
+- **Catalog.** `domain_modules` 154 (HIRING-STARTER), third sentence of `description`: "Leaves out the requisition approval chain, background-check processing (it reacts when a background check is flagged), and the pre-employee record (an accepted offer hands the new hire to HCM)." -> "Leaves out the requisition approval chain, background-check processing, and the pre-employee record." Nothing acts on a handoff, so both parentheticals promised behavior that does not exist.
+- **Review.** `hiring-starter-blueprint-review-2026-11-03.md`: the postponed section is cut to a short note, and handoffs are no longer used as evidence. Bug-1 is retitled and now rests on the terminal flag, q24 (answered c) and Oracle Taleo; its contradiction is gone with the overview claim, and what remains is what breaks once the terminal lock is applied. Its option of removing the overview claim is dropped, as done.
+
+**Left as is, not covered by this request.**
+
+- No blueprint was regenerated, so L22 of the Hiring Starter file still shows the old sentence until the user rebuilds it. `--module HIRING-STARTER --check --no-cache` reports `WOULD-CHANGE`.
+- `related_modules` still draws on handoff data. The user decided that is fine, because it is information only.
+- Bugs 1, 32 and 34 stay open, awaiting the user's decisions on the lifecycle states. The review's counts are unchanged.
+- `checks:` in `state.yaml` was not re-recorded.
+
+## 2026-11-03: Hiring Starter review bugs 1, 32 and 34: terminal states corrected
+
+Approved by the user in the moment, per decision. Script: `.tmp_deploy/2026-11-03_hiring_starter_terminal_states.ts`; backup: `backups/hiring-starter-terminal-states-2026-11-03.json`. `record_status` was not changed, and the new rows are `new`. The lifecycles are shared, so this also shows in every module holding these entities: 5 for `job_offers`, 10 for `candidates`.
+
+- **Bug 1, overwrites.** State 228 `job_offers.accepted`: `is_terminal` true -> false. State 230 `rescinded`: "Offer withdrawn by the employer after being sent; gated action." -> "Offer withdrawn by the employer after being sent or accepted; gated action."
+- **Bug 1, new state.** 2984 `job_offers.completed`, order 8, terminal, ungated: "Candidate was hired and the offer is closed; no further changes." The user chose this over leaving successful offers with no terminal state.
+- **Bug 32, overwrites.** State 208 `candidates.archived`: `is_terminal` true -> false; description "Candidate kept in the database but not active in any pipeline." -> "Candidate kept in the database but not active in any pipeline; a new application moves the candidate back to active."
+- **Bug 34, new state.** 2985 `job_offers.canceled`, order 9, terminal, ungated: "Offer abandoned before it was sent."
+- **Order.** The new states take the next `state_order` values, so no existing row was renumbered and every new offer move runs forward.
+- **Checks.** The script verified that no other column or state row moved and that both state machines keep one initial state, at least one terminal state and a unique order. `--lint --module HIRING-STARTER --no-cache` reports no fails and the same 5 warnings as before the write.
+
+**Left as is, not covered by this request.**
+
+- No blueprint was regenerated, so the file does not show these states until the user rebuilds it.
+- Nothing moves an offer to `completed`: no process is wired, and a person has to set it.
+- `archived` back to `active` runs backward (order 5 to 2), and analyst family F3 proposes an ordering check. Only the state description says the move is allowed, so the analyst has to except it at spec time.
+- `job_offers.description` lists statuses "(draft / approved / sent / accepted / declined / rescinded)", without `pending_approval`, `completed` or `canceled`. An overwrite, so it needs its own approval.
+- Related gaps from the review discussion, not decided: a candidate backing out after accepting, a former employee reapplying (`hired`), and new applications for `do_not_hire` candidates.
+- The review file still lists bugs 1, 32 and 34 and its counts, and it was not edited.
+- `checks:` in `state.yaml` was not re-recorded.
+
+## 2026-11-03: Hiring Starter review: related gaps decided; blueprint rebuilt; review refreshed
+
+Approved by the user in the moment, per decision. Script: `.tmp_deploy/2026-11-03_hiring_starter_related_gaps.ts`; backup: `backups/hiring-starter-related-gaps-2026-11-03.json`. `record_status` was not changed, and the new row is `new`.
+
+- **Backing out, new state.** 2986 `job_offers.reneged`, order 10, terminal, ungated: "Candidate backed out after accepting the offer." The user chose this over reusing `declined`, so reports stay separate.
+- **Reapplying, overwrites.** State 206 `candidates.hired`: `is_terminal` true -> false; description "Candidate accepted an offer and converted to employee." -> "Candidate accepted an offer and converted to employee; a new application moves the person back to active."
+- **Do not hire, overwrite.** `domain_modules` 154 (HIRING-STARTER), `specification_requirements` gains a second paragraph: "Do-not-hire candidates. A new application for a `do_not_hire` candidate is accepted, so the person is not told they are flagged, and the candidate stays `do_not_hire`. The application cannot move to `hired` while the candidate is `do_not_hire`." The user chose this over refusing the application, which can reveal the flag.
+- **Status list, overwrite.** `data_objects` 11 (`job_offers`), `description`: "... and status (draft / approved / sent / accepted / declined / rescinded)." -> "... and status."
+
+**Blueprint.** Regenerated `--module HIRING-STARTER --no-cache` only: blob `c6327ab` to `f4890de`. It now carries every change above and the two earlier entries of today.
+
+**Review.** `hiring-starter-blueprint-review-2026-11-03.md` now points at `f4890de`, with every L number mapped from the old blob by diff. Bugs 1, 17, 32, 34, 51 and 52 moved to a "Fixed on 2026-11-03" section, the counts are 9 open (5 High, 2 Medium, 2 Low), and the section lists what these fixes leave open.
+
+**Checks after the rebuild.** `--check --no-cache` reported `unchanged` right after the rebuild. `--lint` reports no fails and 5 warnings (R9 1, R10 4), the same as before these writes. Architect `consistency-check.ts` is consistent, with the one `access_scope` warning. `domain_health.ts --domain ATS --json --refresh`, not recorded: 32 pass, 13 warn, 4 fail, 10 agent, 2 delegated, 2 skipped, the same totals the review had.
+
+**Left as is, not covered by this request.**
+
+- The do-not-hire rule is on `HIRING-STARTER` only. `ATS-RECRUITMENT-PIPELINE`, `ATS-INTERVIEWS` and `ATS-OFFERS` also hold applications and do not have it.
+- `candidates.do_not_hire` (207) still reads "ineligible for future consideration".
+- `hired` back to `active` runs backward (order 3 to 2), the same as `archived`, so the analyst has to except both from an F3 ordering check at spec time.
+- Prevention of the terminal-state gap (authoring test, health checks, a table of allowed moves) is undecided.
+- `--check` now reports `WOULD-CHANGE`. Seconds after the rebuild, separate uncommitted work edited `generate_blueprints.ts` and `blueprint_derive.ts` to add a `supports_raci` frontmatter line, and no catalog row has changed since. That work and the file were left alone. Once the line is built in, every L number in the review goes up by one.
+- `checks:` in `state.yaml` was not re-recorded.

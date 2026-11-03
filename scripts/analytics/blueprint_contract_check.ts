@@ -124,12 +124,11 @@ function removeLabeledBlock(lines: string[], label: RegExp): void {
 
 export type AccessLevel = "raci" | "gated" | null;
 
-// The level the architect picks when it clones the blueprint: raci when every gate is wired to a
-// process, gated when some gate is unwired, none without gates.
+// The level the architect picks when it clones the blueprint: raci when the blueprint supports it
+// (front matter `supports_raci`), gated when it does not, none without gates.
 export function accessLevelFor(model: BlueprintModel): AccessLevel {
-  const gates = model.perModule.flatMap((pm) => pm.gates);
-  if (gates.length === 0) return null;
-  return gates.every((g) => g.processIds.length > 0) ? "raci" : "gated";
+  if (model.perModule.every((pm) => pm.gates.length === 0)) return null;
+  return model.supportsRaci ? "raci" : "gated";
 }
 
 export function injectAccessScope(md: string, level: AccessLevel): string {
@@ -204,6 +203,9 @@ export function applyGatedConversion(md: string): string {
   if (r) {
     const p = lines.findIndex((l, i) => i > r[0] && i < r[1] && /^persona:/.test(l));
     if (p >= 0) lines.splice(p, 1);
+    // With the RACI trio gone, the file no longer supports `raci`.
+    const s = lines.findIndex((l, i) => i > r[0] && i < r[1] && /^supports_raci:/.test(l));
+    if (s >= 0) lines[s] = "supports_raci: false";
   }
   return lines.join("\n");
 }

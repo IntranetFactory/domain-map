@@ -1,4 +1,4 @@
-// Tests for scripts/lib/blueprint_invariants.ts: one block per derived-result invariant (R1-R9) on
+// Tests for scripts/lib/blueprint_invariants.ts: one block per derived-result invariant (R1-R10) on
 // tiny fixtures, then the invariants over every module of the starter-shaped scenario
 // (fixtures/hiring_starter_scenario.ts). R1-R3 guard rules the derivation already enforces, so their
 // failing cases mutate a derived model by hand.
@@ -96,7 +96,7 @@ describe("realization parsers", () => {
   });
 
   test("every finding carries its rule's severity", () => {
-    expect(RULE_IDS).toEqual(["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9"]);
+    expect(RULE_IDS).toEqual(["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10"]);
     const fx = hiringStarterScenario();
     for (const m of fx.index.modules) {
       for (const f of checkModel(deriveModuleModel(m, fx.ctx), { ctx: fx.ctx })) expect(f.result).toBe(RULES[f.id].severity);
@@ -397,9 +397,102 @@ describe("R9: every persona in the RACI table has a row that grants access", () 
   });
 });
 
+// ---------- R10 ----------
+
+describe("R10: entity and state text names no related entity the module can lack", () => {
+  const POSTINGS = 201, REQS = 202, APPROVALS = 203, ITEMS = 204, INVOICES = 205, FREIGHT = 206;
+  const entity = (id: number, data_object_name: string, label: string, p: Record<string, unknown> = {}) =>
+    dataObject({ id, data_object_name, singular_label: label, plural_label: `${label}s`, ...p });
+  const postings = (catalog_description = "Published versions of a requisition.", p: Record<string, unknown> = {}) => entity(POSTINGS, "job_postings", "Job Posting", { catalog_description, ...p });
+  const reqs = entity(REQS, "job_requisitions", "Job Requisition");
+  const reqsRelationship = relationshipRow({ id: 1, data_object_id: REQS, related_data_object_id: POSTINGS });
+
+  type R10Opts = { kind?: "full" | "starter"; objects?: any[]; dmdo?: any[]; relationships?: any[]; lifecycle?: any[]; noCtx?: boolean };
+  const r10 = (opts: R10Opts = {}) => {
+    const kind = opts.kind ?? "starter";
+    const fx = buildFixture({
+      domains: [domain({ id: D, domain_code: "HIRE" })],
+      modules: [module({ id: M, domain_module_code: "HIRE-KIT", domain_id: D, module_kind: kind }), module({ id: OTHER_M, domain_module_code: "HIRE-FULL", domain_id: D })],
+      dataObjects: [usersObject(USERS), ...(opts.objects ?? [postings(), reqs])],
+      dmdo: opts.dmdo ?? [dmdoRow(M, POSTINGS, kind === "starter" ? "embedded_master" : "master"), dmdoRow(OTHER_M, REQS, "master")],
+      relationships: opts.relationships ?? [reqsRelationship],
+      lifecycle: opts.lifecycle ?? [],
+    });
+    return of(checkModel(deriveModuleModel(fx.index.modulesById.get(M)!, fx.ctx), opts.noCtx ? {} : { ctx: fx.ctx }), "R10");
+  };
+
+  test("a starter's text naming a related entity it does not hold warns", () => {
+    const found = r10();
+    expect(shape(found)).toEqual(["R10 warn HIRE-KIT [job_postings, job_requisitions]"]);
+    expect(found[0].detail).toContain('says "requisition" (catalog_description)');
+    expect(found[0].detail).toContain("outside this starter");
+  });
+
+  test("the same text in a full module passes: the entity usually sits in a sibling module", () => {
+    expect(r10({ kind: "full" })).toEqual([]);
+  });
+
+  test("a full module's text naming an entity it holds as install-optional warns", () => {
+    const found = r10({ kind: "full", dmdo: [dmdoRow(M, POSTINGS, "master"), dmdoRow(M, REQS, "master", { is_install_optional: true })] });
+    expect(shape(found)).toEqual(["R10 warn HIRE-KIT [job_postings, job_requisitions]"]);
+    expect(found[0].detail).toContain("install-optional");
+  });
+
+  test("an install-optional entity with no relationship to it is not reported", () => {
+    expect(r10({ dmdo: [dmdoRow(M, POSTINGS, "embedded_master"), dmdoRow(M, REQS, "embedded_master", { is_install_optional: true })], relationships: [] })).toEqual([]);
+  });
+
+  test("an entity every install carries passes", () => {
+    expect(r10({ dmdo: [dmdoRow(M, POSTINGS, "embedded_master"), dmdoRow(M, REQS, "embedded_master")] })).toEqual([]);
+  });
+
+  test("state text counts, and the finding names every place", () => {
+    const lifecycle = [
+      lifecycleState({ id: 1, data_object_id: POSTINGS, state_name: "draft", state_order: 1, is_initial: true, description: "Composed against a requisition." }),
+      lifecycleState({ id: 2, data_object_id: POSTINGS, state_name: "closed", state_order: 2, is_terminal: true, description: "Taken down." }),
+    ];
+    const found = r10({ objects: [postings(""), reqs], lifecycle });
+    expect(found[0].detail).toContain("(state `draft`)");
+    const both = r10({ lifecycle });
+    expect(both[0].detail).toContain("(catalog_description, state `draft`)");
+  });
+
+  test("a blank catalog_description falls back to description, as section 2 does", () => {
+    expect(shape(r10({ objects: [postings("", { description: "Published version of a requisition." }), reqs] }))).toEqual(["R10 warn HIRE-KIT [job_postings, job_requisitions]"]);
+  });
+
+  test("a generic head gives no word; a hollow head defers to the word before it", () => {
+    const approvals = entity(APPROVALS, "offer_approvals", "Offer Approval");
+    const items = entity(ITEMS, "service_catalog_items", "Service Catalog Item");
+    const text = postings("With an approval chain, catalog-driven.");
+    const found = r10({
+      objects: [text, approvals, items],
+      dmdo: [dmdoRow(M, POSTINGS, "embedded_master"), dmdoRow(OTHER_M, APPROVALS, "master"), dmdoRow(OTHER_M, ITEMS, "master")],
+      relationships: [relationshipRow({ id: 1, data_object_id: POSTINGS, related_data_object_id: APPROVALS }), relationshipRow({ id: 2, data_object_id: ITEMS, related_data_object_id: POSTINGS })],
+    });
+    expect(shape(found)).toEqual(["R10 warn HIRE-KIT [job_postings, service_catalog_items]"]);
+    expect(found[0].detail).toContain('says "catalog"');
+  });
+
+  test("a word from the entity's own label is about the entity itself", () => {
+    const invoices = entity(INVOICES, "customer_invoices", "Customer Invoice", { catalog_description: "Seller-issued invoices." });
+    const freight = entity(FREIGHT, "carrier_freight_invoices", "Carrier Freight Invoice");
+    expect(r10({
+      objects: [invoices, freight],
+      dmdo: [dmdoRow(M, INVOICES, "embedded_master"), dmdoRow(OTHER_M, FREIGHT, "master")],
+      relationships: [relationshipRow({ id: 1, data_object_id: INVOICES, related_data_object_id: FREIGHT })],
+    })).toEqual([]);
+  });
+
+  test("without ctx an outside entity is unreadable, so only install-optional entities are checked", () => {
+    expect(r10({ noCtx: true })).toEqual([]);
+    expect(shape(r10({ noCtx: true, dmdo: [dmdoRow(M, POSTINGS, "embedded_master"), dmdoRow(M, REQS, "embedded_master", { is_install_optional: true })] }))).toEqual(["R10 warn HIRE-KIT [job_postings, job_requisitions]"]);
+  });
+});
+
 // ---------- the invariants over every module of the starter-shaped scenario ----------
 
-describe("R1-R9 over every module of the hiring-starter scenario", () => {
+describe("R1-R10 over every module of the hiring-starter scenario", () => {
   const fx = hiringStarterScenario();
   const run = (id: number) => checkModel(deriveModuleModel(fx.index.modulesById.get(id)!, fx.ctx), { ctx: fx.ctx });
 

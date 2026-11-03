@@ -33,17 +33,47 @@ a2:
 
 ---
 
+q3: Signature records are described as "one contract may have many", and two of their states mention a contract and a negotiation, but the Training Records Starter uses them for training evidence and carries no contracts. Reword this text so it stays true without contracts? (yes/no)
+
+- Catalog description, now: "E-signature envelopes with signing audit trail, IP addresses, provider references, and the signed document, one contract may have many."
+- Catalog description, new: "E-signature envelopes with signing audit trail, IP addresses, provider references, and the signed document, one document may have many."
+- Analyst description, new: "E-signature envelope: signing audit trail, IP addresses, external e-signature provider envelope and document reference IDs, and the signed PDF artifact. One document may have many signature events (counterpart, amendment, renewal)."
+- State `completed`, now: "All required signers have signed. The signed contract document is persisted. Terminal positive outcome."
+- State `completed`, new: "All required signers have signed. The signed document is persisted. Terminal positive outcome."
+- State `declined`, now: "A signer declined to sign. Envelope is terminal; a new envelope can be created if negotiation re-opens."
+- State `declined`, new: "A signer declined to sign. Envelope is terminal; a new envelope can be created if needed."
+
+Recommended: yes. The new wording is also true in CLM-REPOSITORY, where a signed document is a contract, and the relationship from a signature record to its contract stays in the catalog. It needs your sign-off because it overwrites existing text.
+
+a3:
+
+---
+
+q4: Learner certifications are described as driving "recertification campaigns", but the Training Records Starter carries no campaign entity. Reword this text so it stays true without campaigns? (yes/no)
+
+- Catalog description, now: "Credentials issued to a worker (internal, vendor, or regulatory), with issue date, expiry, issuing body, and renewal rules. Drives recertification campaigns."
+- Catalog description, new: "Credentials issued to a worker (internal, vendor, or regulatory), with issue date, expiry, issuing body, and renewal rules."
+- Analyst description, new: "Issued credential against a worker (internal certification, vendor cert, regulatory cert) with issue date, expiry, issuing body, and renewal rules."
+- State `renewing`, now: "Recertification campaign engaged before expiry."
+- State `renewing`, new: "Renewal started before expiry."
+
+Recommended: yes. A credential holds its renewal rules whether or not a campaign runs on them, so the new wording stays true in all seven modules that hold it. It needs your sign-off because it overwrites existing text.
+
+a4:
+
+---
+
 ## Optional (will not hold up the build)
 
-q3: You already approved researching four extra learning entities (learning evaluations and training surveys for satisfaction and effectiveness scoring; self-service training requests with approvals; external or off-platform training records; gamification points and leaderboards). The module-shape decision they were waiting on (Refactor C) is now settled, so they are eligible to load. They are net-new entities, so they load only after you approve them here. Nothing is required of you unless you want to change the list.
+q5: You already approved researching four extra learning entities (learning evaluations and training surveys for satisfaction and effectiveness scoring; self-service training requests with approvals; external or off-platform training records; gamification points and leaderboards). The module-shape decision they were waiting on (Refactor C) is now settled, so they are eligible to load. They are net-new entities, so they load only after you approve them here. Nothing is required of you unless you want to change the list.
 
 - a) Proceed with all four (load them as new entities at `record_status='new'` for your review).
 - b) Drop or change one or more (tell me which).
 
 Recommended: a. All four are anchored to flagship vendors (SAP SuccessFactors Learning, Workday Learning, Cornerstone, Docebo, 360Learning, Litmos) and fit the existing module shape; loading them additively after the module shape settled keeps them low-risk.
 
-a3:
+a5:
 
 ---
 
-<!-- agent map, ignore: q1=B2-SKILLS-MGMT-ATTRIBUTION q2=B2-1121-ROUTING q3=B3-LEARNING-EVALUATIONS+B3-TRAINING-REQUESTS+B3-EXTERNAL-TRAINING-RECORDS+B3-GAMIFICATION | domain_id=57 -->
+<!-- agent map, ignore: q1=B2-SKILLS-MGMT-ATTRIBUTION q2=B2-1121-ROUTING q3=B2-SUBSET-TEXT-SIGNATURE-RECORDS q4=B2-SUBSET-TEXT-LEARNER-CERTIFICATIONS q5=B3-LEARNING-EVALUATIONS+B3-TRAINING-REQUESTS+B3-EXTERNAL-TRAINING-RECORDS+B3-GAMIFICATION | domain_id=57 -->

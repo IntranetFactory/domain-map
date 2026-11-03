@@ -19,9 +19,9 @@
 //   bun run scripts/generate_blueprints.ts --regenerate --check # CI drift check over existing files
 //   bun run scripts/generate_blueprints.ts --released           # a file for every module hosted on a RELEASED domain
 //   bun run scripts/generate_blueprints.ts --all                # (re)generate a file for EVERY module (rare)
-//   bun run scripts/generate_blueprints.ts --lint               # R1-R9 over the existing blueprints' modules; writes nothing
+//   bun run scripts/generate_blueprints.ts --lint               # R1-R10 over the existing blueprints' modules; writes nothing
 //
-// Every emit also runs the derived-result invariants R1-R9 (./lib/blueprint_invariants.ts) and
+// Every emit also runs the derived-result invariants R1-R10 (./lib/blueprint_invariants.ts) and
 // prints their findings to stderr (Policy 1: warn, never throw). `--lint` writes no file, prints the
 // findings with a per-rule summary, and exits non-zero on any `fail` finding; it lints the existing
 // blueprint files' modules by default, or the --module / --released / --all selection.
@@ -599,6 +599,7 @@ function emitBlueprint(modules: ModuleRow[], kindLabel?: string): string {
     out.push(`related_modules: [${relatedModules.map((m) => moduleSlug(m.domain_module_code)).join(", ")}]`);
   }
   out.push(`persona: [${personas.join(", ")}]`);
+  out.push(`supports_raci: ${model.supportsRaci}`);
   out.push(`created_at: ${TODAY}`);
   out.push("---");
   out.push("");
@@ -1131,7 +1132,7 @@ function blueprintBodyIgnoringDate(s: string): string {
   return s.replace(/\r\n/g, "\n").replace(/^created_at: .*$/m, "created_at:");
 }
 
-// The derived-result invariants R1-R9 for one emitted unit. The model is derived again from the
+// The derived-result invariants R1-R10 for one emitted unit. The model is derived again from the
 // same catalog the render used (derivation is pure and in-memory), so emitBlueprint stays unchanged.
 function modelFindings(modules: ModuleRow[]): ModelFinding[] {
   return checkModel(deriveShownModel(modules), { ctx: deriveCtx });
@@ -1199,7 +1200,7 @@ async function emitModuleList(modules: ModuleRow[], label: string): Promise<void
   if (bad) exit(1);
 }
 
-// --lint: the derived-result invariants R1-R9 over a module list. Writes no file. Each module is
+// --lint: the derived-result invariants R1-R10 over a module list. Writes no file. Each module is
 // also rendered in memory, so an emit failure (e.g. the B13 entity_type gate) counts as a failure.
 // Exits non-zero on any `fail` finding, emit failure, R7 finding or catalog data defect; other `warn`
 // findings never fail the run. The data defects are checked over every relationship, not per module,
@@ -1242,7 +1243,7 @@ function lintModuleList(modules: ModuleRow[], label: string): void {
   console.log(`lint summary (${label}): ${modules.length} module(s), ${fails} fail, ${warns} warn (${r7} blocking R7), ${dataDefects.length} catalog data defect(s), ${failures.length} emit failure(s)`);
   for (const id of RULE_IDS) {
     const r = byRule.get(id);
-    console.log(`  ${id}  ${RULES[id].severity.padEnd(4)}  ${String(r ? r[RULES[id].severity] : 0).padStart(4)} finding(s) in ${String(r?.modules.size ?? 0).padStart(3)} module(s)  ${RULES[id].title}`);
+    console.log(`  ${id.padEnd(3)}  ${RULES[id].severity.padEnd(4)}  ${String(r ? r[RULES[id].severity] : 0).padStart(4)} finding(s) in ${String(r?.modules.size ?? 0).padStart(3)} module(s)  ${RULES[id].title}`);
   }
   const top = [...byModule.entries()]
     .sort((a, b) => b[1].fail - a[1].fail || b[1].warn - a[1].warn || (a[0] < b[0] ? -1 : 1))
@@ -1282,7 +1283,7 @@ async function main(): Promise<void> {
     console.error("  generate_blueprints.ts --regenerate [--check] [--no-cache]   # refresh ONLY existing blueprint files");
     console.error("  generate_blueprints.ts --released [--check] [--no-cache]      # (re)generate a file for every module hosted on a RELEASED domain");
     console.error("  generate_blueprints.ts --all [--check] [--no-cache]          # (re)generate a file for EVERY module");
-    console.error("  generate_blueprints.ts --lint [--module <CODE> | --released | --all] [--no-cache]  # R1-R9 only; writes no file");
+    console.error("  generate_blueprints.ts --lint [--module <CODE> | --released | --all] [--no-cache]  # R1-R10 only; writes no file");
     console.error("  generate_blueprints.ts --clear-cache");
     exit(2);
   }

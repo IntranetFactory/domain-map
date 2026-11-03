@@ -1,3 +1,19 @@
+### 2026-11-03: blueprints carry `supports_raci`
+
+**Context.** A catalog blueprint could be offered `raci` while most of its gates had no process, and the architect then invented the missing processes and approvers. Rendered with the new code on 2026-11-03, 21 of the 334 modules that render came out true. The other 97 of the 431 modules do not render, because of a missing `entity_type` (B13).
+
+**Decision.** By the owner. The generator derives `supports_raci` into the blueprint frontmatter (`deriveSupportsRaci` in `scripts/lib/blueprint_derive.ts`), and `raci` is offered only when it is true. Create-Greenfield keeps drafting its own matrix. The file format version stays 3.1. The architect's rules, script and checks are in `semantius-plugin`.
+
+**Why derived.** A stored flag goes stale as soon as someone wires a gate. Salesforce also checks at activation that an approval process has a step, rather than storing a flag.
+
+### 2026-11-03: entity and state text stays true in a subset; R10 warns on it
+
+**Context.** Bugs 17, 51 and 52 in the Hiring Starter review: entity and state text written for the full ATS modules promised a requisition, an approval chain and a full evaluation history that the starter does not always carry. One description per entity is shared by every module that holds it, starters carry a subset by design, and Rule #19's six invariants never read the text. A sweep of the other six starters found the same problem, including state text claiming actions by systems the starter does not have.
+
+**Decision.** Rule #19 gains "Entity and state text stays true in a subset". R10 (`scripts/lib/blueprint_invariants.ts`, warn) flags text naming the head noun of a related entity the module can lack: one it holds as install-optional, or for a starter one it does not hold. `CHECKLIST_VERSION` is 5 because E6 now tests more.
+
+**Why a warning.** Matching any label word gave 52 hits on the starters, most of them noise ("customer" for `customer_cases`), so R10 reads only the head noun, with hollow and generic head lists. Also checking install-optional entities with no relationship took the catalog from 97 findings to 233, and the one case behind it ("tied to a regulation, role, location, or hire event") was an either/or that stays true, so that was dropped. R10 still catches only some cases and over-reports others: it finds "requisition" but misses "approval chain" and "full evaluation history", and it flags harmless contrasts ("distinct from reactive incidents"). The rule does the prevention, and R10 prompts a read. A per-module description was not proposed: `domain_module_data_objects.notes` is a note that does not replace the deployed description (Rule #15), a new field would be a data model decision, and neutral wording fixed every case found.
+
 ### 2026-11-03: R9 flags a persona that is only Informed
 
 **Context.** Bug-73 in the Hiring Starter review: `RECRUITING-COORDINATOR` schedules interviews, but its only row in the module is Informed, which grants nothing at deploy. E4 passes at one Responsible and one Accountable per gated process, and R5 only asks that an Informed row has an event, so nothing noticed.

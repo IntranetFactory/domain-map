@@ -21,4 +21,29 @@ a1:
 
 ---
 
-<!-- agent map, ignore: q1=B2-PATTERN-FLAGS | domain_id=1 -->
+q2: Service requests are described as "catalog-driven", but the IT Service Desk Starter can leave the service catalog out, and the IT Operations Starter does not carry it at all. Reword this text so it stays true without a catalog? (yes/no)
+
+- Catalog description, now: "Planned, catalog-driven requests for access, hardware, software, or information, distinct from reactive incidents."
+- Catalog description, new: "Planned requests for access, hardware, software, or information, distinct from reactive incidents."
+- Analyst description, new: "Planned request: access, hardware, software, information. Distinct from incidents: incidents are reactive, service requests are proactive. The fulfillment for many requests crosses domains (provisioning ↔ IGA, asset assignment ↔ ITAM, HR exception ↔ HRSD)."
+- State `submitted`, now: "Requester has submitted the catalog request."
+- State `submitted`, new: "Requester has submitted the request."
+
+Recommended: yes. The new wording stays true everywhere this text shows, including ONB-JOURNEY-MGMT, ITSM-SERVICE-REQUEST, HRSD-EMPLOYEE-PORTAL and RMM-MONITORING. Those modules lose the word "catalog-driven", but the relationship from a service request to its catalog item stays in the catalog. It needs your sign-off because it overwrites existing text.
+
+a2:
+
+---
+
+q3: A closed incident is described as "SLA clock stopped", but the IT Service Desk Starter can leave service-level agreements out, and the IT Operations Starter does not carry them. Reword this state so it stays true without them? (yes/no)
+
+- State `closed`, now: "Resolution confirmed; incident archived and SLA clock stopped."
+- State `closed`, new: "Resolution confirmed; incident archived."
+
+Recommended: yes. Every module holding incidents gets the shorter text, and the eight modules that do track service levels lose only the mention of the clock, not the relationship to the agreement. It needs your sign-off because it overwrites existing text.
+
+a3:
+
+---
+
+<!-- agent map, ignore: q1=B2-PATTERN-FLAGS q2=B2-SUBSET-TEXT-SERVICE-REQUESTS q3=B2-SUBSET-TEXT-SERVICE-INCIDENTS | domain_id=1 -->

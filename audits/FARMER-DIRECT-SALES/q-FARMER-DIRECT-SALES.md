@@ -21,30 +21,41 @@ a1:
 
 ---
 
-## Optional (will not hold up the build)
+q2: A planned share pack is described as "computed from forecast", but the CSA Starter does not carry harvest forecasts. Reword this state so it stays true without a forecast record? (yes/no)
 
-q2: Flagship vendors model several entities Farmer Direct Sales does not have yet: per-member share swaps and pauses, farmers-market day records, multi-farm producer payout splits, a partner-producer registry, and cottage-food / sales-tax disclosure records. Research and add the ones that hold up? (yes/no)
+- State `planned`, now: "Share composition computed from forecast and member swaps."
+- State `planned`, new: "Share composition planned from the expected harvest and member swaps."
 
-Recommended: yes, additive and after a verification pass. Each is seen across the food-hub and CSA vendor set.
+Recommended: yes. A farm expects a harvest whether or not it records a forecast, so the new wording stays true in every module holding share packs. It needs your sign-off because it overwrites existing text.
 
 a2:
 
 ---
 
-q3: Should I stand up a dedicated Compliance module if the regulatory entities (FSMA produce-safety records, cottage-food disclosures, organic certifications, sales-tax remittance) turn out to be load-bearing? (yes/no)
+## Optional (will not hold up the build)
 
-Recommended: yes if those entities land, an eighth module is cleaner than overloading existing ones. Depends on the entity research above.
+q3: Flagship vendors model several entities Farmer Direct Sales does not have yet: per-member share swaps and pauses, farmers-market day records, multi-farm producer payout splits, a partner-producer registry, and cottage-food / sales-tax disclosure records. Research and add the ones that hold up? (yes/no)
+
+Recommended: yes, additive and after a verification pass. Each is seen across the food-hub and CSA vendor set.
 
 a3:
 
 ---
 
-q4: No regulations are loaded yet. Seed the compliance anchors (FDA FSMA Produce Safety Rule, USDA National Organic Program, US state cottage-food rules, US state sales-tax remittance, GAP/GHP certification, PCI-DSS)? (yes/no)
+q4: Should I stand up a dedicated Compliance module if the regulatory entities (FSMA produce-safety records, cottage-food disclosures, organic certifications, sales-tax remittance) turn out to be load-bearing? (yes/no)
 
-Recommended: yes. These are the real regulatory exposures for small direct-sales farms; seeding them is purely additive.
+Recommended: yes if those entities land, an eighth module is cleaner than overloading existing ones. Depends on the entity research above.
 
 a4:
 
 ---
 
-<!-- agent map, ignore: q1=B2-S1 q2=B3-FDS-ENTITIES q3=B3-FDS-COMPLIANCE-MODULE q4=B3-FDS-REGULATIONS | domain_id=158 -->
+q5: No regulations are loaded yet. Seed the compliance anchors (FDA FSMA Produce Safety Rule, USDA National Organic Program, US state cottage-food rules, US state sales-tax remittance, GAP/GHP certification, PCI-DSS)? (yes/no)
+
+Recommended: yes. These are the real regulatory exposures for small direct-sales farms; seeding them is purely additive.
+
+a5:
+
+---
+
+<!-- agent map, ignore: q1=B2-S1 q2=B2-SUBSET-TEXT-CSA-SHARE-PACKS q3=B3-FDS-ENTITIES q4=B3-FDS-COMPLIANCE-MODULE q5=B3-FDS-REGULATIONS | domain_id=158 -->

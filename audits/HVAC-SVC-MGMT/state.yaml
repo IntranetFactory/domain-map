@@ -2,10 +2,30 @@
 # A bundle masters NOTHING: it embeds/consumes entities from other domains' markets and carries its own
 # module-anchored system skill. Per Rule #2, bundles are EXEMPT from the market-shape audit floors
 # (A1 full market metadata, A2 capabilities, B1 masters, C1 function-owner, A3 solutions, F2 domain-grain
-# skill). This audit validates the Rule #19 STARTER SHAPE only. All six invariants PASS; nothing open.
+# skill). This audit validates the Rule #19 STARTER SHAPE only. All six invariants PASS. The only open
+# items are the b2 wording questions from the 2026-11-03 starter text sweep (history.md).
 # TAM fields reading 0 (usa_market_size_usd_m, market_size_source_year) is EXPECTED for a bundle, not a failure.
 schema_version: 2
 domain: HVAC-SVC-MGMT
-status: passed
-next_action_by: done
+status: feedback_needed
+next_action_by: user
 last_audit: "2026-06-16"
+
+b2:
+  - id: B2-SUBSET-TEXT-SALES-QUOTES
+    summary: "sales_quotes state accepted says it flows to contract draft, but HVAC-SVC-MGMT does not carry legal_contracts or contract drafts. Reword (overwrites a non-empty value)."
+    question: "Reword state 377 of sales_quotes so it stays true without a contract draft?"
+    options: ["yes", "no"]
+    why: "Rule #19 entity and state text. The text is shared, so the new wording also reaches the other modules holding the entity, where the relationship to legal_contracts remains."
+    affected_entities: [sales_quotes, legal_contracts]
+    extra_shared_with: [CRM-PIPELINE-MGT, CPQ-QUOTE-BUILDER, HVAC-SVC-MGMT]
+    extra_rows:
+      - {table: data_object_lifecycle_states, id: 377, column: description, to: "Customer accepted the quote."}
+  - id: B2-SUBSET-TEXT-CUSTOMERS
+    summary: "customers state canceled says the customer ended all subscriptions, but HVAC-SVC-MGMT sells service contracts, not subscriptions. Reword (overwrites a non-empty value that reaches 33 modules)."
+    question: "Reword state 396 of customers so it stays true without subscriptions?"
+    options: ["yes", "no"]
+    why: "Rule #19 entity and state text. customers is held by 33 modules, so this is the widest change in the sweep, though the new wording stays true in each."
+    affected_entities: [customers, customer_subscriptions]
+    extra_rows:
+      - {table: data_object_lifecycle_states, id: 396, column: description, to: "Customer ended all active services; no active billing."}

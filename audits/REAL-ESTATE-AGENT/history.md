@@ -115,3 +115,22 @@ CRUD / starter" instead of trigger-shaped user phrasing).
 F8 now passes. Audit status `passed`, `next_action_by: done`. No open items. Two additive/approved
 catalog writes on skill 220 (`trigger_keywords`, `description`), both at `record_status='new'` awaiting
 the user's normal record review.
+
+## 2026-11-03: Starter text sweep (read-only, no catalog write)
+
+The owner asked for a sweep of the other starters after the Hiring Starter review (bugs 17, 51 and 52). I read every `catalog_description` and state description this bundle carries against what it can lack (SKILL.md Rule #19), with R10 as a prompt. Status moved from `passed` to `feedback_needed` for the questions below; the earlier checks are unchanged.
+
+**Proposed in `q-REAL-ESTATE-AGENT.md`, overwrites that need approval per item.**
+
+- `B2-SUBSET-TEXT-CRM-LEADS`: "the contact and account they would convert into", "a contact, account, and opportunity" (data object 99, state 294).
+- `B2-SUBSET-TEXT-RE-LISTINGS`: "Triggers downstream events to property-management, CRE, and investment systems" (state 984).
+- `B2-SUBSET-TEXT-RE-TRANSACTIONS`: "Commission splits become payable; downstream domains notified" (state 998).
+- `B2-SUBSET-TEXT-LEGAL-CONTRACTS`: "created in CLM-AUTHORING", "from CPQ/sourcing", "Amendment is a separate record" (states 789 and 796).
+
+**Read and left as is.**
+
+- `crm_contacts` "People at customer or prospect organizations": describes the real world, and 15 modules share it.
+- `legal_contracts` "counterparties", "draft", "renewal", "signature": attributes of the row or real-world words, though R10 flags them.
+- `real_estate_transactions` states 996 and 997 "Only realized when BROKERAGE-OPS module is deployed": explicitly conditional, so true. They do name a module, which the new Rule #19 text discourages.
+
+`checks:` was not re-recorded.

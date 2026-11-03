@@ -16,10 +16,10 @@
 // E3 = persona_modules.id. E1-E3 read ctx.all; E1 adds one catalog-wide /capability_domains select for
 // the module-shape rule.
 //
-// E6 also runs the derived-result invariants R1-R9 (scripts/lib/blueprint_invariants.ts, health plan
+// E6 also runs the derived-result invariants R1-R10 (scripts/lib/blueprint_invariants.ts, health plan
 // Phase 3) over each primary module's derived blueprint (deriveModuleModel on ctx.index / ctx.all),
 // one finding per (R id, result). E6 rows: data_objects.id for the B13 predicate, and
-// "<R id>:<identifier>" strings (gate code, role slug, process key, handoff id, entity name) for R1-R9.
+// "<R id>:<identifier>" strings (gate code, role slug, process key, handoff id, entity name) for R1-R10.
 // The R7 skill clause reads one catalog-wide /skills select.
 
 import {
@@ -75,7 +75,7 @@ function stateModuleId(ctx: HealthCtx, s: any): number | null {
 const SKILLS_PATH = "/skills?select=id,skill_name,skill_type,domain_id&order=id.asc&limit=100000";
 const MAX_R_ITEMS = 12;
 
-// E6 derived result: R1-R9 over every primary module's derived blueprint, grouped per (R id, result).
+// E6 derived result: R1-R10 over every primary module's derived blueprint, grouped per (R id, result).
 async function derivedResultFindings(ctx: HealthCtx): Promise<Finding[]> {
   const dctx = makeDeriveCtx(ctx.index, ctx.all);
   const skills = await ctx.query(SKILLS_PATH);
@@ -85,7 +85,7 @@ async function derivedResultFindings(ctx: HealthCtx): Promise<Finding[]> {
     found.push(...checkModel(deriveModuleModel(m, dctx), { ctx: dctx, skills: { system: ofDomain("system"), domain: ofDomain("domain") } }));
   }
   if (found.length === 0) {
-    return [{ id: "E6", result: "pass", detail: `derived result R1-R9: the derived blueprints of all ${ctx.modules.length} modules pass` }];
+    return [{ id: "E6", result: "pass", detail: `derived result R1-R10: the derived blueprints of all ${ctx.modules.length} modules pass` }];
   }
   const out: Finding[] = [];
   for (const id of RULE_IDS as RuleId[]) {
@@ -210,7 +210,7 @@ export const E_CHECKS: Check[] = [
     id: "E6",
     band: "E",
     kind: "mechanical+agent",
-    title: "reach reconciles against derived permissions; entity_type classified; derived result R1-R9",
+    title: "reach reconciles against derived permissions; entity_type classified; derived result R1-R10",
     run: async (ctx) => {
       const v = checkMastersClassified(ctx.masters, (id) => ctx.index.dataObjectsById.get(id)?.entity_type, ctx.doName);
       return [
@@ -218,7 +218,7 @@ export const E_CHECKS: Check[] = [
         ...(await derivedResultFindings(ctx)),
         judgment(
           "E6",
-          "reach: confirm every persona that reaches a module through persona_modules gets a sensible section 9 tier (the derived gate, RACI, handoff and description mechanics are R1-R9 above; R7 is a heuristic, so confirm each R7 hit before acting on it)",
+          "reach: confirm every persona that reaches a module through persona_modules gets a sensible section 9 tier (the derived gate, RACI, handoff and description mechanics are R1-R10 above; R7 and R10 are heuristics, so confirm each R7 or R10 hit before acting on it)",
         ),
       ];
     },

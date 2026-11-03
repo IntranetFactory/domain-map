@@ -66,3 +66,19 @@ well above the >=1 floor. Invariant holds.
 None. This was a read-only validation pass against the live catalog (GET only); nothing was changed.
 Market floors were exempted per Rule #2 (bundle). All six invariants passed, so the domain is recorded
 `status: passed`, `next_action_by: done`, with no open b1a/b1b/b2/b3 items.
+
+## 2026-11-03: Starter text sweep (read-only, no catalog write)
+
+The owner asked for a sweep of the other starters after the Hiring Starter review (bugs 17, 51 and 52). I read every `catalog_description` and state description this bundle carries against what it can lack (SKILL.md Rule #19), with R10 as a prompt. Status moved from `passed` to `feedback_needed` for the questions below; the earlier checks are unchanged.
+
+**Proposed in `q-HVAC-SVC-MGMT.md`, overwrites that need approval per item.**
+
+- `B2-SUBSET-TEXT-SALES-QUOTES`: "flows to contract draft" (state 377).
+- `B2-SUBSET-TEXT-CUSTOMERS`: "ended all subscriptions" (state 396). `customers` is held by 33 modules, so this is the widest change in the sweep.
+
+**Read and left as is.**
+
+- `service_work_orders` "distinct from preventive-maintenance work orders" and `spare_parts_inventory` "not yet deployed as assets": contrasts that stay true.
+- `customers` state `past_due` "an overdue invoice or failed payment": an either/or, and this bundle carries invoices.
+
+`checks:` was not re-recorded.

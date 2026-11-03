@@ -19,19 +19,19 @@ created_at: 2026-11-03
 
 ## 1. Overview
 
-Entry-tier deployable for a basic hiring workflow: post jobs, capture applications, run interviews, and make offers. Embeds the canonical masters from the full ATS modules and inherits their lifecycle states and gated steps, which it governs under its own permission prefix. Leaves out the requisition approval chain, background-check processing (it reacts when a background check is flagged), and the pre-employee record (an accepted offer hands the new hire to HCM). When the full ATS modules are installed, its entities move to them without data migration.
+Entry-tier deployable for a basic hiring workflow: post jobs, capture applications, run interviews, and make offers. Embeds the canonical masters from the full ATS modules and inherits their lifecycle states and gated steps, which it governs under its own permission prefix. Leaves out the requisition approval chain, background-check processing, and the pre-employee record. When the full ATS modules are installed, its entities move to them without data migration.
 
 ## 2. Entity summary
 
 | Name | data_object | Description |
 | --- | --- | --- |
-| Applications | `job_applications` | Candidate submissions against a specific requisition, with pipeline stage, status, source, and full evaluation history. |
+| Applications | `job_applications` | Candidate submissions for a specific job, with pipeline stage, status, and source. |
 | Candidates | `candidates` | People known to the recruiting organization, with or without an active application, carrying contact details, resume, tags, consent, and source. |
 | Interview Scorecards | `interview_scorecards` | Structured interviewer feedback against a rubric: per-competency ratings, written notes, and a hire or no-hire recommendation. |
 | Interviews | `interviews` | Scheduled assessment events between a candidate and one or more interviewers, with time, location, panel, and outcome. |
-| Job Postings | `job_postings` | Published, candidate-facing versions of a requisition on a career site or job board, one requisition possibly having many postings. |
+| Job Postings | `job_postings` | Published, candidate-facing versions of a job on a career site or job board, one job possibly having many postings. |
 | Job Requisitions | `job_requisitions` | Requests to hire for a specific role, carrying headcount, level, location, hiring manager, recruiter, and status. |
-| Offers | `job_offers` | Formal employment offers extended to candidates, with compensation, start date, terms, approval chain, and status. |
+| Offers | `job_offers` | Formal employment offers extended to candidates, with compensation, start date, terms, approval, and status. |
 | Recruitment Sources | `recruitment_sources` | Channels a candidate came from, such as job board, referral, agency, campaign, or inbound, used for source-of-hire and channel analytics. |
 | Users | `users` | Platform users referenced as assignees, authors, approvers, and creators across records. |
 
@@ -83,6 +83,8 @@ flowchart TD
 ## Additional Requirements Specification
 
 Hiring manager access to candidates. A `candidates` row has no relationship leading to its hiring manager, so the row-scope rule cannot admit them. As a workaround, under `access_scope: raci` the `HIRING-MANAGER` persona holds `hiring-starter:view_all_candidates`.
+
+Do-not-hire candidates. A new application for a `do_not_hire` candidate is accepted, so the person is not told they are flagged, and the candidate stays `do_not_hire`. The application cannot move to `hired` while the candidate is `do_not_hire`.
 
 ## 3. Entities catalog
 
@@ -237,9 +239,9 @@ _This scope holds `candidates` as **embedded_master**; the canonical state machi
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `prospect` | ✓ | - | - | - | - | Person known to the recruiting org with no active application. |
 | 2 | `active` | - | - | - | - | - | Candidate has at least one open application or is actively engaged. |
-| 3 | `hired` | - | ✓ | ✓ | - | `hiring-starter:hire_candidate` | Candidate accepted an offer and converted to employee. |
+| 3 | `hired` | - | - | ✓ | - | `hiring-starter:hire_candidate` | Candidate accepted an offer and converted to employee; a new application moves the person back to active. |
 | 4 | `do_not_hire` | - | ✓ | ✓ | - | `hiring-starter:flag_do_not_hire` | Candidate flagged as ineligible for future consideration; gated decision. |
-| 5 | `archived` | - | ✓ | - | - | - | Candidate kept in the database but not active in any pipeline. |
+| 5 | `archived` | - | - | - | - | - | Candidate kept in the database but not active in any pipeline; a new application moves the candidate back to active. |
 
 ### `interview_scorecards` (Interview Scorecard)
 
@@ -258,7 +260,7 @@ _This scope holds `interviews` as **embedded_master**; the canonical state machi
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `scheduled` | ✓ | - | - | - | - | Interview booked with candidate, panel, time, and medium. |
 | 2 | `confirmed` | - | - | - | - | - | Candidate and panel confirmed attendance. |
-| 3 | `completed` | - | ✓ | - | - | - | Interview took place; scorecards are being collected. |
+| 3 | `completed` | - | ✓ | - | - | - | Interview took place; feedback is being collected. |
 | 4 | `no_show` | - | ✓ | - | - | - | Candidate or panel did not attend; interview did not occur. |
 | 5 | `canceled` | - | ✓ | - | - | - | Interview canceled before it took place. |
 | 6 | `rescheduled` | - | ✓ | - | - | - | Original slot abandoned in favor of a new scheduled interview record. |
@@ -269,7 +271,7 @@ _This scope holds `job_applications` as **embedded_master**; the canonical state
 
 | order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `applied` | ✓ | - | - | - | - | Candidate submitted an application against the requisition. |
+| 1 | `applied` | ✓ | - | - | - | - | Candidate submitted an application for the job. |
 | 2 | `screening` | - | - | - | - | - | Recruiter is reviewing resume and qualifications. |
 | 3 | `interviewing` | - | - | - | - | - | Candidate is progressing through interview loops. |
 | 4 | `offer_extended` | - | - | - | - | - | An offer has been generated and is in flight for this application. |
@@ -287,9 +289,12 @@ _This scope holds `job_offers` as **embedded_master**; the canonical state machi
 | 2 | `pending_approval` | - | - | - | - | - | Offer routed to the designated approver for sign-off. |
 | 3 | `approved` | - | - | ✓ | - | `hiring-starter:approve_offer` | Approver signed off; offer is ready to send. |
 | 4 | `sent` | - | - | - | - | - | Offer delivered to the candidate. |
-| 5 | `accepted` | - | ✓ | - | - | - | Candidate accepted the offer. |
+| 5 | `accepted` | - | - | - | - | - | Candidate accepted the offer. |
 | 6 | `declined` | - | ✓ | - | - | - | Candidate declined the offer. |
-| 7 | `rescinded` | - | ✓ | ✓ | - | `hiring-starter:rescind_offer` | Offer withdrawn by the employer after being sent; gated action. |
+| 7 | `rescinded` | - | ✓ | ✓ | - | `hiring-starter:rescind_offer` | Offer withdrawn by the employer after being sent or accepted; gated action. |
+| 8 | `completed` | - | ✓ | - | - | - | Candidate was hired and the offer is closed; no further changes. |
+| 9 | `canceled` | - | ✓ | - | - | - | Offer abandoned before it was sent. |
+| 10 | `reneged` | - | ✓ | - | - | - | Candidate backed out after accepting the offer. |
 
 ### `job_postings` (Job Posting)
 
@@ -297,11 +302,11 @@ _This scope holds `job_postings` as **embedded_master**; the canonical state mac
 
 | order | state_name | initial? | terminal? | requires_permission? | high risk? | derived gate | description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `draft` | ✓ | - | - | - | - | Posting being composed against a requisition for a specific board or region. |
+| 1 | `draft` | ✓ | - | - | - | - | Posting being composed for a specific board or region. |
 | 2 | `published` | - | - | ✓ | - | `hiring-starter:publish_posting` | Posting is live on the target channel; gated publish step. |
 | 3 | `paused` | - | - | - | - | - | Posting temporarily hidden from the channel. |
 | 4 | `expired` | - | ✓ | - | - | - | Posting reached its scheduled end date. |
-| 5 | `closed` | - | ✓ | - | - | - | Posting taken down because the requisition is filled or canceled. |
+| 5 | `closed` | - | ✓ | - | - | - | Posting taken down because the job is filled or canceled. |
 
 ### `job_requisitions` (Job Requisition)
 

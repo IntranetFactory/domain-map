@@ -6,9 +6,51 @@
 # solutions) and uses the A1 partial carve-out (no TAM / crud_percentage / business_logic required).
 # It is NOT exempt from F1/F2/F8: a bundle carries exactly one skill_type='domain' skill anchored to
 # the bundle domain, with non-empty description + trigger_keywords (current rules; skill_type='system'
-# and skills.domain_module_id are retired). All checks pass; nothing open.
+# and skills.domain_module_id are retired). All checks pass. The only open items are the b2 wording
+# questions from the 2026-11-03 starter text sweep (history.md).
 schema_version: 2
 domain: REAL-ESTATE-AGENT
-status: passed
-next_action_by: done
+status: feedback_needed
+next_action_by: user
 last_audit: "2026-06-17"
+
+b2:
+  - id: B2-SUBSET-TEXT-CRM-LEADS
+    summary: "crm_leads text says a lead converts into a contact, account and opportunity, but REAL-ESTATE-AGENT carries no accounts or opportunities. Reword (overwrites non-empty values)."
+    question: "Reword the catalog_description, description and state 294 of crm_leads so they stay true without accounts and opportunities?"
+    options: ["yes", "no"]
+    why: "Rule #19 entity and state text. The text is shared, so the new wording also reaches the other modules holding the entity, where it stays true and the relationships to customers and crm_opportunities remain."
+    affected_entities: [crm_leads, customers, crm_opportunities]
+    extra_shared_with: [CRM-LEAD-MGT, RE-BROK-AGENT-OPS, REAL-ESTATE-AGENT, B2C-COMM-ORDER-CAPTURE, SMM-ENGAGEMENT]
+    extra_rows:
+      - {table: data_objects, id: 99, column: catalog_description, to: "Prospects captured before qualification, tracking source, score, status, assigned rep, and what they would convert into."}
+      - {table: data_objects, id: 99, column: description, to: "Pre-qualification prospect record: source, score, status (new/working/qualified/disqualified/converted), assigned rep, and what it would convert into."}
+      - {table: data_object_lifecycle_states, id: 294, column: description, to: "Lead has been converted."}
+  - id: B2-SUBSET-TEXT-RE-LISTINGS
+    summary: "real_estate_listings state sold says it triggers events to property-management, CRE and investment systems, which REAL-ESTATE-AGENT does not have. Reword (overwrites a non-empty value)."
+    question: "Reword state 984 of real_estate_listings so it does not claim actions by other systems?"
+    options: ["yes", "no"]
+    why: "Rule #19 entity and state text: another system acting belongs in handoffs, not state text."
+    affected_entities: [real_estate_listings]
+    extra_shared_with: [RE-BROK-AGENT-OPS, REAL-ESTATE-AGENT]
+    extra_rows:
+      - {table: data_object_lifecycle_states, id: 984, column: description, to: "Transaction closed; listing terminated as a sale."}
+  - id: B2-SUBSET-TEXT-RE-TRANSACTIONS
+    summary: "real_estate_transactions state closed says commission splits become payable and downstream domains are notified, but REAL-ESTATE-AGENT does not carry commission_splits. Reword (overwrites a non-empty value)."
+    question: "Reword state 998 of real_estate_transactions so it stays true without commission splits?"
+    options: ["yes", "no"]
+    why: "Rule #19 entity and state text. The text is shared, so the new wording also reaches the brokerage modules, where the relationship to commission_splits remains."
+    affected_entities: [real_estate_transactions, commission_splits]
+    extra_shared_with: [RE-BROK-AGENT-OPS, RE-BROK-BROKERAGE-OPS, REAL-ESTATE-AGENT]
+    extra_rows:
+      - {table: data_object_lifecycle_states, id: 998, column: description, to: "Deed recorded, funds disbursed via escrow; transaction complete."}
+  - id: B2-SUBSET-TEXT-LEGAL-CONTRACTS
+    summary: "legal_contracts state draft names CLM-AUTHORING and CPQ, and state amended says an amendment is a separate record, none of which REAL-ESTATE-AGENT carries. Reword (overwrites non-empty values)."
+    question: "Reword states 789 and 796 of legal_contracts so they stay true without those modules and without a separate amendment record?"
+    options: ["yes", "no"]
+    why: "Rule #19 entity and state text. The text is shared, so the new wording also reaches the other modules holding the entity, where it stays true."
+    affected_entities: [legal_contracts, contract_amendments]
+    extra_shared_with: [SMP-RENEWAL-VENDOR, CRM-PIPELINE-MGT, PSA-PROJECT-DELIVERY, CSM-ENTITLEMENTS, CLM-REPOSITORY, REAL-ESTATE-AGENT, AGENCY-MGMT-JOB-TRAFFIC, SAM-ENTITLEMENT-MGMT, SVCS-PROC-ENGAGEMENT]
+    extra_rows:
+      - {table: data_object_lifecycle_states, id: 789, column: description, to: "Initial draft created from a template, or received from another party or system."}
+      - {table: data_object_lifecycle_states, id: 796, column: description, to: "An amendment has been executed against this contract; this row reflects the amended terms going forward."}

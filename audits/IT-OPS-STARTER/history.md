@@ -124,3 +124,21 @@ Bundle-shape audit (Rule #19 starter shape; market floors A1 / A2 / A3 / B1 / C1
 nothing; the embedded shells have canonical owners elsewhere; exactly one module-anchored system skill (474);
 domain_module_tools non-empty. All hold, consistent with the REAL-ESTATE-AGENT and HVAC-SVC-MGMT bundle audits.
 Status stays passed / done. The b3 follow-ups above are unchanged.
+
+## 2026-11-03: Starter text sweep (read-only, no catalog write)
+
+The owner asked for a sweep of the other starters after the Hiring Starter review (bugs 17, 51 and 52). I read every `catalog_description` and state description this bundle carries against what it can lack (SKILL.md Rule #19), with R10 as a prompt. Status moved from `passed` to `feedback_needed` for the question below; the earlier checks are unchanged.
+
+**Proposed in `q-IT-OPS-STARTER.md`, an overwrite that needs approval.**
+
+- `B2-SUBSET-TEXT-SAAS-APPLICATIONS`: "IGA provisioning, FINOPS spend tracking, and ITAM registration activated", "ITSM closes related tickets; IGA revokes access; FINOPS terminates spend" (states 505 and 507).
+
+**Also affects this bundle, asked in `q-ITSM.md` because ITSM masters the rows:** `service_requests` "catalog-driven", where `service_catalog_items` is outside this bundle, and `service_incidents` "SLA clock stopped", where `service_slas` is outside it.
+
+**Read and left as is.**
+
+- `saas_subscriptions` "for SaaS apps" and state `active` "Contract executed": true without those tables. An earlier chat message listed "for SaaS apps" as a candidate; that did not hold up on reading.
+- `asset_contracts` "governing an asset or pool of assets": describes the real world, though all the asset entities are optional here.
+- `saas_applications` "owner": R10 reads this as `smp_app_owners`, but it is an attribute of the row.
+
+`checks:` was not re-recorded.

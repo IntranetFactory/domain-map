@@ -1,7 +1,7 @@
 schema_version: 2
 domain: IT-OPS-STARTER
-status: passed
-next_action_by: done
+status: feedback_needed
+next_action_by: user
 last_audit: "2026-06-16"
 
 # BUILT 2026-06-16 (module id 403, record_status='new' on all rows, awaiting UI review per Rule #1).
@@ -12,7 +12,20 @@ last_audit: "2026-06-16"
 # non-blocking follow-up backlog.
 # PROMOTED 2026-06-16 to a domain_kind='bundle' domain (id 190): module.domain_id null->190; skill 474
 # domain_id 3->190 (module-anchored kept); catalog_release set. Rule #19 starter-shape invariants hold;
-# market floors exempt (Rule #2). Still passed/done. See history.md "Promoted to bundle-domain" section.
+# market floors exempt (Rule #2). See history.md "Promoted to bundle-domain" section. The 2026-11-03 starter
+# text sweep reopened it for the b2 wording question below; nothing else is open for the user.
+
+b2:
+  - id: B2-SUBSET-TEXT-SAAS-APPLICATIONS
+    summary: "saas_applications states sanctioned and deprovisioned say IGA, FINOPS, ITAM and ITSM act, none of which IT-OPS-STARTER requires. Reword (overwrites non-empty values)."
+    question: "Reword states 505 and 507 of saas_applications so they do not claim actions by other systems?"
+    options: ["yes", "no"]
+    why: "Rule #19 entity and state text: another system acting belongs in handoffs, not state text."
+    affected_entities: [saas_applications]
+    extra_shared_with: [SMP-DISCOVERY, SMP-RENEWAL-VENDOR, ITAM-PORTFOLIO-REPORTING, APM-PORTFOLIO-REGISTRY, IGA-ENTITLEMENT-CATALOG, IT-OPS-STARTER]
+    extra_rows:
+      - {table: data_object_lifecycle_states, id: 505, column: description, to: "App is officially supported."}
+      - {table: data_object_lifecycle_states, id: 507, column: description, to: "App removed tenant-wide."}
 
 b3:
   - id: B3-COST-FIELD-FOLLOWUP

@@ -420,3 +420,19 @@ Answers applied (q-FARMER-DIRECT-SALES.md renamed to a-...md; "process them"):
 - **a10 / a11 = a (B2-B9D-OWN-55 / -1356)**: FDS owns the two B9d-surfaced processes (revenue accounting on farmers_market_sales; receive/deposit customer payments on csa_memberships). FDS has 0 personas (Phase-P deferred), so recorded as owned-pending-persona (b1b), not realized.
 
 Looped into the regenerated q-file: **a1 (B2-S1)** "would embed master be better?" - yes for the modules that should be standalone-deployable; re-asked. **a4 (B2-S5)** retarget of the 3 CRM-pipeline handoffs is decided as "retarget once the CRM audit pins the right customer-engagement module" - now a b1b blocked on the CRM audit (it also gates 3 of the 4 B1B-H1 APQC tags). b3 research (a7/a8/a9 = yes: deeper entities, an FDS-COMPLIANCE module, and the regulation seed) greenlit, parked. Loader: .tmp_deploy/process_afiles_mechanical_2026_06_15.ts.
+
+## 2026-11-03: Starter text sweep (read-only, no catalog write)
+
+The owner asked for a sweep of the other starters after the Hiring Starter review (bugs 17, 51 and 52). I read every `catalog_description` and state description that `CSA-STARTER` carries against what it can lack (SKILL.md Rule #19), with R10 as a prompt.
+
+**Proposed in `q-FARMER-DIRECT-SALES.md`, an overwrite that needs approval.**
+
+- `B2-SUBSET-TEXT-CSA-SHARE-PACKS`: "computed from forecast" (state 726). `harvest_forecasts` is outside the starter.
+
+**Read and left as is.**
+
+- `csa_share_packs` state `out_for_delivery` "a delivery route or staged at pickup location": an either/or, and a route exists in the real world without `delivery_routes`.
+- `customers` state `past_due` "an overdue invoice or failed payment": an either/or.
+- `customers` state `canceled` "ended all subscriptions": true here, because memberships are farm-share subscriptions. The question sits in `q-HVAC-SVC-MGMT.md`, where it is not true.
+
+`q-FARMER-DIRECT-SALES.md` was renumbered: the optional questions moved from q2-q4 to q3-q5. `checks:` was not re-recorded.

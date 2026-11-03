@@ -173,6 +173,61 @@ describe("rule 4: admin role", () => {
   });
 });
 
+// ---------- front matter supports_raci: the RACI rule holds and there is a gate ----------
+
+describe("supports_raci", () => {
+  const resolved = gated(2, "resolved", 2, { process_id: 500 });
+  const triaged = lifecycleState({ id: 3, data_object_id: TICKETS, state_name: "triaged", state_order: 3, process_id: 501 });
+  const processes = [processRow(500, "resolve_tickets"), processRow(501, "triage_tickets")];
+
+  test("true when every gate is on a process with one Accountable", () => {
+    const model = helpDesk({ lifecycle: [open, resolved, closed], processes, processRaci: [raciRow(1, 500, AGENT, "responsible"), raciRow(2, 500, LEAD, "accountable")] });
+    expect(model.supportsRaci).toBe(true);
+  });
+
+  test("true with another process that has no gate and one Accountable", () => {
+    const model = helpDesk({
+      lifecycle: [open, resolved, triaged, closed],
+      processes,
+      processRaci: [raciRow(1, 500, LEAD, "accountable"), raciRow(2, 501, AGENT, "accountable")],
+    });
+    expect(model.supportsRaci).toBe(true);
+  });
+
+  test("false when a gate has no process", () => {
+    const model = helpDesk({
+      lifecycle: [open, resolved, gated(4, "escalated", 4), closed],
+      processes,
+      processRaci: [raciRow(1, 500, LEAD, "accountable")],
+    });
+    expect(model.supportsRaci).toBe(false);
+  });
+
+  test("false when a gate's process has no Accountable", () => {
+    const model = helpDesk({ lifecycle: [open, resolved, closed], processes, processRaci: [raciRow(1, 500, AGENT, "responsible")] });
+    expect(model.supportsRaci).toBe(false);
+  });
+
+  test("false when a process has two Accountable rows", () => {
+    const model = helpDesk({ lifecycle: [open, resolved, closed], processes, processRaci: [raciRow(1, 500, AGENT, "accountable"), raciRow(2, 500, LEAD, "accountable")] });
+    expect(model.supportsRaci).toBe(false);
+  });
+
+  test("false when another process in the RACI table has no Accountable", () => {
+    const model = helpDesk({
+      lifecycle: [open, resolved, triaged, closed],
+      processes,
+      processRaci: [raciRow(1, 500, LEAD, "accountable"), raciRow(2, 501, AGENT, "responsible")],
+    });
+    expect(model.supportsRaci).toBe(false);
+  });
+
+  test("false with no gate at all, because `raci` needs one", () => {
+    const model = helpDesk({ lifecycle: [open, triaged, closed], processes, processRaci: [raciRow(1, 501, LEAD, "accountable")] });
+    expect(model.supportsRaci).toBe(false);
+  });
+});
+
 // ---------- rule 5: realization text names the gates and the events ----------
 
 describe("rule 5: realization text", () => {

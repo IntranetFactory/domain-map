@@ -162,6 +162,29 @@ b2:
       mandatory training assignment from HR events. The cross-vendor norm is case-category -> MANDATORY
       compliance training (the harassment-complaint -> harassment-training shape), favoring LMS-COMPLIANCE-
       TRAINING; developmental-path assignment off a case is the minority pattern and lives in the path layer.
+  - id: B2-SUBSET-TEXT-SIGNATURE-RECORDS
+    summary: "signature_records text talks about a contract and a negotiation, but TRAINING-RECORDS-STARTER carries no contracts. Reword (overwrites non-empty values)."
+    question: "Reword the catalog_description, description and states 819 and 820 of signature_records so they stay true without contracts?"
+    options: ["yes", "no"]
+    why: "Rule #19 entity and state text. The text is shared, so the new wording also reaches the other modules holding the entity, where it stays true and the relationship to legal_contracts remains."
+    affected_entities: [signature_records, legal_contracts]
+    extra_shared_with: [CLM-REPOSITORY, LMS-COMPLIANCE-TRAINING, TRAINING-RECORDS-STARTER]
+    extra_rows:
+      - {table: data_objects, id: 70, column: catalog_description, to: "E-signature envelopes with signing audit trail, IP addresses, provider references, and the signed document, one document may have many."}
+      - {table: data_objects, id: 70, column: description, to: "E-signature envelope: signing audit trail, IP addresses, external e-signature provider envelope and document reference IDs, and the signed PDF artifact. One document may have many signature events (counterpart, amendment, renewal)."}
+      - {table: data_object_lifecycle_states, id: 819, column: description, to: "All required signers have signed. The signed document is persisted. Terminal positive outcome."}
+      - {table: data_object_lifecycle_states, id: 820, column: description, to: "A signer declined to sign. Envelope is terminal; a new envelope can be created if needed."}
+  - id: B2-SUBSET-TEXT-LEARNER-CERTIFICATIONS
+    summary: "learner_certifications text says it drives recertification campaigns, but TRAINING-RECORDS-STARTER carries no campaign entity. Reword (overwrites non-empty values)."
+    question: "Reword the catalog_description, description and state 174 of learner_certifications so they stay true without recertification campaigns?"
+    options: ["yes", "no"]
+    why: "Rule #19 entity and state text. The text is shared, so the new wording also reaches the other modules holding the entity."
+    affected_entities: [learner_certifications]
+    extra_shared_with: [LMS-COMPLIANCE-TRAINING, LMS-PATHS, SKILLS-MGMT-PROFILE, LMS-CREDENTIALS, LMS-AUTOMATION, TRAINING-RECORDS-STARTER, IGA-AUTO-PROVISIONING]
+    extra_rows:
+      - {table: data_objects, id: 171, column: catalog_description, to: "Credentials issued to a worker (internal, vendor, or regulatory), with issue date, expiry, issuing body, and renewal rules."}
+      - {table: data_objects, id: 171, column: description, to: "Issued credential against a worker (internal certification, vendor cert, regulatory cert) with issue date, expiry, issuing body, and renewal rules."}
+      - {table: data_object_lifecycle_states, id: 174, column: description, to: "Renewal started before expiry."}
 
 b3:
   # a8 (2026-06-16): user reaffirmed rec "a" (proceed after q1). q1 (Refactor C) is now settled, so

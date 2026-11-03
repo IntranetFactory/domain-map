@@ -1,0 +1,160 @@
+{
+  "taken_at": "2026-11-03T22:31:38.229Z",
+  "rows": [
+    {
+      "key": "data_objects#4",
+      "row": {
+        "id": 4,
+        "data_object_name": "job_applications",
+        "created_at": "2026-10-23T16:06:26.814258+00:00",
+        "updated_at": "2026-10-23T16:06:26.814258+00:00",
+        "search_vector": "'applications':2A 'job':1A",
+        "kind": "domain_owned",
+        "entity_type": "operational_workflow",
+        "singular_label": "Application",
+        "plural_label": "Applications",
+        "description": "A candidate's submission against a specific requisition. Carries pipeline stage, status (active / rejected / withdrawn / hired), source, and the full evaluation history.",
+        "catalog_description": "Candidate submissions against a specific requisition, with pipeline stage, status, source, and full evaluation history.",
+        "is_canonical_bare_word": false,
+        "naming_authority_rationale": "",
+        "has_personal_content": true,
+        "record_status": "new",
+        "notes": "### Authoring note: minimum embedded-shape contract (archived 2026-05-23)\n\nThis contract was originally stored in the (removed) `minimum_embedded_shape` column. Field-level constraints on embedded shells are now enforced by the deployer at deploy time against the canonical entity's `fields` metadata; this note is preserved as authoring intent only.\n\nMinimum embedded-shape contract for `job_applications` — the junction record between a candidate and a requisition with the pipeline-stage lifecycle. Modules that embedded_master applications need the junction-key subset:\n\n- `id` — primary key.\n- `candidate_id` — FK to `candidates`; required (the \"who\" of the application).\n- `requisition_id` — FK to `job_requisitions`; required (the \"what\" of the application).\n- `current_stage` — current pipeline lifecycle state (`applied`, `screening`, `interviewing`, `offer_extended`, `hired`, `rejected`, `withdrawn`); required for any module-level workflow that branches on stage (ATS-INTERVIEWS reads this to know when an interview can be scheduled).\n- `applied_at` — required for time-to-* metrics and SLA enforcement.\n\nThe canonical master `ATS-RECRUITMENT-PIPELINE` extends with source_attribution, screening_result, rejection_reason, etc. — modules deployed standalone see only the junction-key subset."
+      }
+    },
+    {
+      "key": "data_objects#2",
+      "row": {
+        "id": 2,
+        "data_object_name": "job_postings",
+        "created_at": "2026-10-23T16:06:26.814258+00:00",
+        "updated_at": "2026-10-23T16:06:26.814258+00:00",
+        "search_vector": "'job':1A 'postings':2A",
+        "kind": "domain_owned",
+        "entity_type": "operational_workflow",
+        "singular_label": "Job Posting",
+        "plural_label": "Job Postings",
+        "description": "Published, candidate-facing version of a requisition on a career site or job board. One requisition can have many postings (per board, language, or region).",
+        "catalog_description": "Published, candidate-facing versions of a requisition on a career site or job board, one requisition possibly having many postings.",
+        "is_canonical_bare_word": false,
+        "naming_authority_rationale": "",
+        "has_personal_content": false,
+        "record_status": "new",
+        "notes": ""
+      }
+    },
+    {
+      "key": "data_objects#11",
+      "row": {
+        "id": 11,
+        "data_object_name": "job_offers",
+        "created_at": "2026-10-23T16:06:26.814258+00:00",
+        "updated_at": "2026-10-23T16:06:26.814258+00:00",
+        "search_vector": "'job':1A 'offers':2A",
+        "kind": "domain_owned",
+        "entity_type": "operational_workflow",
+        "singular_label": "Offer",
+        "plural_label": "Offers",
+        "description": "Formal employment offer extended to a candidate. Carries compensation components, start date, terms, approval chain, and status (draft / approved / sent / accepted / declined / rescinded).",
+        "catalog_description": "Formal employment offers extended to candidates, with compensation, start date, terms, approval chain, and status.",
+        "is_canonical_bare_word": false,
+        "naming_authority_rationale": "",
+        "has_personal_content": true,
+        "record_status": "new",
+        "notes": "### Authoring note: minimum embedded-shape contract (archived 2026-05-23)\n\nThis contract was originally stored in the (removed) `minimum_embedded_shape` column. Field-level constraints on embedded shells are now enforced by the deployer at deploy time against the canonical entity's `fields` metadata; this note is preserved as authoring intent only.\n\nMinimum embedded-shape contract for `job_offers` — modules that embedded_master offers (`ATS-BACKGROUND-CHECKS`, `ATS-PRE-EMPLOYEE-RECORD`) need the offer-state subset:\n\n- `id` — primary key.\n- `candidate_id` — FK to `candidates`; required (offer addressee).\n- `application_id` — FK to `job_applications`; required (the application this offer resolves).\n- `requisition_id` — FK to `job_requisitions`; required for downstream reporting (offer-acceptance-rate by requisition).\n- `state` — offer lifecycle state (`draft`, `approved`, `extended`, `accepted`, `declined`, `rescinded`); modules read this to gate their own behavior (BACKGROUND-CHECKS only runs after `extended` or `accepted`; PRE-EMPLOYEE-RECORD is only created when `state = accepted`).\n- `extended_at` — required to compute time-to-accept and time-to-start metrics.\n\nThe canonical master `ATS-OFFERS` extends with compensation_components, signature_url, decline_reason, etc."
+      }
+    },
+    {
+      "key": "data_object_lifecycle_states#217",
+      "row": {
+        "id": 217,
+        "data_object_lifecycle_state_label": "job_applications.applied",
+        "created_at": "2026-10-23T16:06:29.988086+00:00",
+        "updated_at": "2026-10-23T16:06:29.988086+00:00",
+        "search_vector": "'job_applications.applied':1A",
+        "data_object_id": 4,
+        "state_name": "applied",
+        "state_order": 1,
+        "description": "Candidate submitted an application against the requisition.",
+        "is_initial": true,
+        "is_terminal": false,
+        "requires_permission": false,
+        "permission_verb_override": "",
+        "notes": "",
+        "record_status": "new",
+        "domain_module_id": null,
+        "process_id": null,
+        "is_high_risk": false
+      }
+    },
+    {
+      "key": "data_object_lifecycle_states#231",
+      "row": {
+        "id": 231,
+        "data_object_lifecycle_state_label": "job_postings.draft",
+        "created_at": "2026-10-23T16:06:29.988086+00:00",
+        "updated_at": "2026-10-23T16:06:29.988086+00:00",
+        "search_vector": "'job_postings.draft':1A",
+        "data_object_id": 2,
+        "state_name": "draft",
+        "state_order": 1,
+        "description": "Posting being composed against a requisition for a specific board or region.",
+        "is_initial": true,
+        "is_terminal": false,
+        "requires_permission": false,
+        "permission_verb_override": "",
+        "notes": "",
+        "record_status": "new",
+        "domain_module_id": null,
+        "process_id": null,
+        "is_high_risk": false
+      }
+    },
+    {
+      "key": "data_object_lifecycle_states#235",
+      "row": {
+        "id": 235,
+        "data_object_lifecycle_state_label": "job_postings.closed",
+        "created_at": "2026-10-23T16:06:29.988086+00:00",
+        "updated_at": "2026-10-23T16:06:29.988086+00:00",
+        "search_vector": "'job_postings.closed':1A",
+        "data_object_id": 2,
+        "state_name": "closed",
+        "state_order": 5,
+        "description": "Posting taken down because the requisition is filled or canceled.",
+        "is_initial": false,
+        "is_terminal": true,
+        "requires_permission": false,
+        "permission_verb_override": "",
+        "notes": "",
+        "record_status": "new",
+        "domain_module_id": null,
+        "process_id": null,
+        "is_high_risk": false
+      }
+    },
+    {
+      "key": "data_object_lifecycle_states#213",
+      "row": {
+        "id": 213,
+        "data_object_lifecycle_state_label": "interviews.completed",
+        "created_at": "2026-10-23T16:06:29.988086+00:00",
+        "updated_at": "2026-11-03T21:26:05.810498+00:00",
+        "search_vector": "'interviews.completed':1A",
+        "data_object_id": 8,
+        "state_name": "completed",
+        "state_order": 3,
+        "description": "Interview took place; scorecards are being collected.",
+        "is_initial": false,
+        "is_terminal": true,
+        "requires_permission": false,
+        "permission_verb_override": "",
+        "notes": "",
+        "record_status": "new",
+        "domain_module_id": null,
+        "process_id": 1014,
+        "is_high_risk": false
+      }
+    }
+  ]
+}

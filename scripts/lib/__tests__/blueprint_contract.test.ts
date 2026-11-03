@@ -34,7 +34,7 @@ const render = (id: number): string => {
 };
 
 describe("access level", () => {
-  test("raci when every gate is wired, gated when one is not, none without gates", () => {
+  test("raci when the blueprint supports it, gated when it does not, none without gates", () => {
     expect(accessLevelFor(deriveModuleModel(mod(IDS.OFFERS), fx.ctx))).toBe("raci");
     expect(accessLevelFor(deriveModuleModel(mod(IDS.STARTER), fx.ctx))).toBe("gated");
     expect(accessLevelFor(deriveModuleModel(mod(IDS.HCM_CORE), fx.ctx))).toBeNull();
@@ -100,9 +100,16 @@ describe.skipIf(!existsSync(DEFAULT_CHECKER))("the architect checker on the conv
     expect(errors("starter-gated")).toEqual([]);
   });
 
-  test("at raci the starter's unwired gate is the one error: no Accountable row holds it", () => {
+  test("at raci the starter is refused: its unwired gate has no Accountable row, so it does not support raci", () => {
     expect(errors("starter-raci")).toEqual([
       "RACI rule: process gate `hiring-starter:flag_do_not_hire` is in the `grant gates [...]` list of 0 accountable rows; under raci exactly one accountable row holds it",
+      "`access_scope: raci` needs `supports_raci: true`",
     ]);
+  });
+
+  test("the generated flag says true for the offers module and false for the starter", () => {
+    expect(render(IDS.OFFERS)).toContain("\nsupports_raci: true\n");
+    expect(render(IDS.STARTER)).toContain("\nsupports_raci: false\n");
+    expect(applyGatedConversion(render(IDS.OFFERS))).toContain("\nsupports_raci: false\n");
   });
 });

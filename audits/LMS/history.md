@@ -724,3 +724,21 @@ attribution, 1121 routing) + Optional b3 section. `status: feedback_needed`, `ne
 Catalog writes this pass: +19 data_objects (1268 + 18 missing), +20 DMDO, +20 rollup, +24 lifecycle
 states, +4 domain_regulations, +1 relationship, +1 reconcile (433 consumer); deletes per a1 above;
 2 necessity PATCHes (948). No `record_status` changed.
+
+## 2026-11-03: Starter text sweep (read-only, no catalog write)
+
+The owner asked for a sweep of the other starters after the Hiring Starter review (bugs 17, 51 and 52). I read every `catalog_description` and state description that `TRAINING-RECORDS-STARTER` carries against what it can lack (SKILL.md Rule #19), with R10 as a prompt.
+
+**Proposed in `q-LMS.md`, overwrites that need approval per item.**
+
+- `B2-SUBSET-TEXT-SIGNATURE-RECORDS`: "one contract may have many", "signed contract document", "if negotiation re-opens" (data object 70, states 819 and 820).
+- `B2-SUBSET-TEXT-LEARNER-CERTIFICATIONS`: "Drives recertification campaigns", "Recertification campaign engaged" (data object 171, state 174).
+
+**Read and left as is.**
+
+- `compliance_assignments` "tied to a regulation, role, location, or hire event": an either/or list, true without `compliance_regulations`. An earlier chat message listed it as a candidate; that did not hold up on reading.
+- `compliance_assignments` state `in_progress` "course or activity": also an either/or.
+- `compliance_assignments` state `waived` "audit reason": R10 reads "audit" as `compliance_audit_records`, but it means a reason on the row.
+- `signature_records` "envelopes": R10 reads this as the `envelopes` entity, but it is what the row is.
+
+`q-LMS.md` was renumbered: the optional research question moved from q3 to q5. `checks:` was not re-recorded.

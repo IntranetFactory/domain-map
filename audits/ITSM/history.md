@@ -393,3 +393,21 @@ Processed `a-ITSM.md` per Rule #22. Resolved domain id 1. All catalog writes are
 - RE-TAG re-points (source-side, sign-off owed in the source domain's audit, NOT executed here): handoffs 682/686 (DATA-AI-PLAT) 8.3.7 -> 8.7.5.9; handoff 841 (GRC) 11.3.1 -> 8.7.5.9; handoffs 703/706 (NCDB/LCAP) 8.6.3 -> 8.7.5.9; plus the resolver also flagged 248 (GRC) 9.8 -> 8.3.7, 642/466/631 (SMP/IGA/ITSM) 8.3.8 -> 8.7.5.9, 162/646 (REMOTE-ACCESS) 8.7.8 -> 8.7.5.9, 893 (CLIN-DEV) 10.3.3 -> 8.7.5.9, 257 (AUDIT) 12.3.2 -> 8.7.5.9. These are coarse-tag hygiene fixes owned by the sending domains.
 - UNOWNED dependency: handoffs 614/615/618 (OBS) carry service_level_objectives / error_groups onto ITSM with no master row anywhere; surfaced on the sender (OBS), not dropped.
 - ORPHANs owned by neighbors (their decision, not ITSM's): CMDB (B2-B9D-OWN-9, -1190, -1299, -1309), ONBOARDING (B2-B9D-OWN-224), ITAM (B2-B9D-OWN-1312). Routed to those domains' backlogs by the resolver; not ITSM gaps.
+
+## 2026-11-03: Starter text sweep (read-only, no catalog write)
+
+The owner asked for a sweep of the other starters after the Hiring Starter review (bugs 17, 51 and 52). I read every `catalog_description` and state description that `ITSM-STARTER` carries against what it can lack (SKILL.md Rule #19), with R10 as a prompt. `service_slas`, `service_catalog_items` and `knowledge_articles` are optional there.
+
+**Proposed in `q-ITSM.md`, overwrites that need approval per item.** Both rows also reach `IT-OPS-STARTER`, so that domain's history points here.
+
+- `B2-SUBSET-TEXT-SERVICE-REQUESTS`: "catalog-driven" and "catalog request" (data object 48, state 265).
+- `B2-SUBSET-TEXT-SERVICE-INCIDENTS`: "SLA clock stopped" (state 258).
+
+**Read and left as is.**
+
+- `service_requests` "distinct from reactive incidents": a contrast, and it stays true without incidents.
+- `service_incidents` state `assigned`: R10 reads "group" as `error_groups`, but it means a support group.
+- `knowledge_articles` "self-service portals and agent-assist tools": describes the real world, and no entity is promised.
+- `service_catalog_items` "service level": an attribute of the item.
+
+The `description` column was read only for rows already proposed, because blueprints do not show it. `checks:` was not re-recorded.
